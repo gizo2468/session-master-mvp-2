@@ -1,15 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
 import { format } from 'date-fns';
 import { AlertTriangle } from 'lucide-react';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
+import SessionTimerCard from '@/components/poker/SessionTimerCard';
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { sessions, updateSession, deleteSession, endSession } = useSessionContext();
+  const { sessions, updateSession, deleteSession, endSession, pauseSession, resumeSession } = useSessionContext();
   
   const session = sessions.find(s => s.id === id);
   
@@ -17,45 +17,13 @@ export default function SessionDetail() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [cashOutAmount, setCashOutAmount] = useState('');
-  const [elapsedTime, setElapsedTime] = useState(session?.sessionDuration || 0);
+  const [timerActive, setTimerActive] = useState(session?.currentStatus === 'running');
   
-  // Track elapsed time for active sessions
   useEffect(() => {
-    let timer: number | undefined;
-    
-    if (session?.isActive && session?.currentStatus === 'running') {
-      timer = window.setInterval(() => {
-        setElapsedTime((prev) => prev + 1);
-      }, 1000);
+    if (session) {
+      setTimerActive(session.currentStatus === 'running');
     }
-    
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [session?.isActive, session?.currentStatus]);
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    location: session?.location || '',
-    buyIn: session?.buyIn.toString() || '',
-    smallBlind: session?.smallBlind.toString() || '',
-    bigBlind: session?.bigBlind.toString() || '',
-    gameType: session?.gameType || 'NLH',
-    format: session?.format || 'Cash',
-  });
-  
-  // Format time function
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-    
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-    }
-    
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
+  }, [session?.currentStatus]);
   
   if (!session) {
     return (
@@ -73,7 +41,6 @@ export default function SessionDetail() {
     );
   }
   
-  // Calculate profit/loss if session is completed
   const isCompleted = !session.isActive && session.cashOut !== undefined;
   let profit = 0;
   let profitClass = '';
@@ -116,13 +83,23 @@ export default function SessionDetail() {
     navigate('/');
   };
   
-  // Handle form changes
+  const handlePauseResume = () => {
+    if (!session) return;
+    
+    if (timerActive) {
+      pauseSession(session.id);
+      setTimerActive(false);
+    } else {
+      resumeSession(session.id);
+      setTimerActive(true);
+    }
+  };
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  // Format date
   const formattedDate = format(new Date(session.startTime), 'MMM d, yyyy h:mm a');
   const formattedEndDate = session.endTime 
     ? format(new Date(session.endTime), 'MMM d, yyyy h:mm a')
@@ -283,22 +260,20 @@ export default function SessionDetail() {
           </div>
         ) : (
           <>
+            {session.isActive && (
+              <SessionTimerCard
+                startTime={session.startTime}
+                gameType={session.gameType}
+                format={session.format}
+                smallBlind={session.smallBlind}
+                bigBlind={session.bigBlind}
+                timerActive={timerActive}
+                onPauseResume={handlePauseResume}
+                onEndSession={() => setShowEndSessionModal(true)}
+              />
+            )}
+            
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              {session.isActive && (
-                <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <AlertTriangle className="h-5 w-5 text-yellow-400" />
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-yellow-700">
-                        This session is currently active - {formatTime(elapsedTime)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <span className="text-sm text-gray-500">Started</span>
@@ -351,6 +326,15 @@ export default function SessionDetail() {
                 )}
               </div>
               
+              {session.isActive && !timerActive && (
+                <button
+                  onClick={handlePauseResume}
+                  className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md mb-3"
+                >
+                  Resume Session
+                </button>
+              )}
+              
               {session.isActive && (
                 <button
                   onClick={() => setShowEndSessionModal(true)}
@@ -371,7 +355,6 @@ export default function SessionDetail() {
         )}
       </div>
       
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
@@ -397,7 +380,6 @@ export default function SessionDetail() {
         </div>
       )}
       
-      {/* End Session Modal */}
       {showEndSessionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">

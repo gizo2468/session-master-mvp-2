@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -18,7 +17,6 @@ export default function ConfirmSession() {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   
-  const [elapsedTime, setElapsedTime] = useState(0);
   const [timerActive, setTimerActive] = useState(true);
   
   const [showEndSessionSheet, setShowEndSessionSheet] = useState(false);
@@ -34,24 +32,9 @@ export default function ConfirmSession() {
       return;
     }
     
-    let interval: NodeJS.Timeout | null = null;
+    setTimerActive(activeSession.currentStatus === 'running');
     
-    if (timerActive) {
-      interval = setInterval(() => {
-        setElapsedTime(prev => {
-          const newTime = prev + 1;
-          if (newTime % 60 === 0) {
-            updateSessionDuration(activeSession.id, newTime / 60);
-          }
-          return newTime;
-        });
-      }, 1000);
-    }
-    
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [activeSession, timerActive, navigate, updateSessionDuration]);
+  }, [activeSession, navigate]);
   
   const handlePauseResume = () => {
     if (!activeSession) return;
@@ -149,7 +132,6 @@ export default function ConfirmSession() {
         <div className="container mx-auto max-w-md px-4 pb-8">
           {/* Session Timer */}
           <SessionTimerCard 
-            elapsedTime={elapsedTime}
             startTime={activeSession.startTime}
             gameType={activeSession.gameType}
             format={activeSession.format}
@@ -181,149 +163,153 @@ export default function ConfirmSession() {
       </main>
       
       {/* End Session Sheet */}
-      <Sheet open={showEndSessionSheet} onOpenChange={setShowEndSessionSheet}>
-        <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>End Session</SheetTitle>
-            <SheetDescription>
-              Enter your cash out amount to complete your session.
-            </SheetDescription>
-          </SheetHeader>
-          
-          <div className="py-6">
-            <div className="mb-4">
-              <label htmlFor="cashout" className="block text-sm font-medium mb-1">
-                Cash Out Amount
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500">$</span>
-                </div>
-                <input
-                  id="cashout"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                  placeholder="0.00"
-                  value={cashOutAmount}
-                  onChange={(e) => setCashOutAmount(e.target.value)}
-                />
-              </div>
-            </div>
+      {showEndSessionSheet && (
+        <Sheet open={showEndSessionSheet} onOpenChange={setShowEndSessionSheet}>
+          <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
+            <SheetHeader>
+              <SheetTitle>End Session</SheetTitle>
+              <SheetDescription>
+                Enter your cash out amount to complete your session.
+              </SheetDescription>
+            </SheetHeader>
             
-            <div className="mb-6">
-              <div className="flex justify-between mb-1">
-                <span className="text-sm">Profit/Loss:</span>
-                <span className={`text-sm font-bold ${
-                  cashOutAmount && parseFloat(cashOutAmount) >= activeSession.buyIn 
-                    ? 'text-green-600' 
-                    : cashOutAmount 
-                      ? 'text-red-600' 
-                      : 'text-gray-500'
-                }`}>
-                  {cashOutAmount 
-                    ? `$${(parseFloat(cashOutAmount) - activeSession.buyIn).toFixed(2)}` 
-                    : '$0.00'}
-                </span>
-              </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                {cashOutAmount && (
-                  <div 
-                    className={`h-full ${
-                      parseFloat(cashOutAmount) >= activeSession.buyIn 
-                        ? 'bg-green-500' 
-                        : 'bg-red-500'
-                    }`}
-                    style={{ 
-                      width: cashOutAmount 
-                        ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - activeSession.buyIn) / activeSession.buyIn * 100), 100)}%` 
-                        : '0%' 
-                    }}
+            <div className="py-6">
+              <div className="mb-4">
+                <label htmlFor="cashout" className="block text-sm font-medium mb-1">
+                  Cash Out Amount
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500">$</span>
+                  </div>
+                  <input
+                    id="cashout"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    placeholder="0.00"
+                    value={cashOutAmount}
+                    onChange={(e) => setCashOutAmount(e.target.value)}
                   />
-                )}
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm">Profit/Loss:</span>
+                  <span className={`text-sm font-bold ${
+                    cashOutAmount && parseFloat(cashOutAmount) >= activeSession.buyIn 
+                      ? 'text-green-600' 
+                      : cashOutAmount 
+                        ? 'text-red-600' 
+                        : 'text-gray-500'
+                  }`}>
+                    {cashOutAmount 
+                      ? `$${(parseFloat(cashOutAmount) - activeSession.buyIn).toFixed(2)}` 
+                      : '$0.00'}
+                  </span>
+                </div>
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  {cashOutAmount && (
+                    <div 
+                      className={`h-full ${
+                        parseFloat(cashOutAmount) >= activeSession.buyIn 
+                          ? 'bg-green-500' 
+                          : 'bg-red-500'
+                      }`}
+                      style={{ 
+                        width: cashOutAmount 
+                          ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - activeSession.buyIn) / activeSession.buyIn * 100), 100)}%` 
+                          : '0%' 
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowEndSessionSheet(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleEndSession}
+                  disabled={!cashOutAmount}
+                  className="flex-1 bg-poker-gold hover:bg-poker-darkGold text-white"
+                >
+                  End Session
+                </Button>
               </div>
             </div>
-            
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setShowEndSessionSheet(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleEndSession}
-                disabled={!cashOutAmount}
-                className="flex-1 bg-poker-gold hover:bg-poker-darkGold text-white"
-              >
-                End Session
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+          </SheetContent>
+        </Sheet>
+      )}
       
       {/* Rebuy Sheet */}
-      <Sheet open={showRebuySheet} onOpenChange={setShowRebuySheet}>
-        <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>Add Rebuy or Add-on</SheetTitle>
-            <SheetDescription>
-              Enter the amount for your rebuy or add-on.
-            </SheetDescription>
-          </SheetHeader>
-          
-          <div className="py-6">
-            <div className="mb-6">
-              <label htmlFor="rebuyAmount" className="block text-sm font-medium mb-1">
-                Amount
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500">$</span>
+      {showRebuySheet && (
+        <Sheet open={showRebuySheet} onOpenChange={setShowRebuySheet}>
+          <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
+            <SheetHeader>
+              <SheetTitle>Add Rebuy or Add-on</SheetTitle>
+              <SheetDescription>
+                Enter the amount for your rebuy or add-on.
+              </SheetDescription>
+            </SheetHeader>
+            
+            <div className="py-6">
+              <div className="mb-6">
+                <label htmlFor="rebuyAmount" className="block text-sm font-medium mb-1">
+                  Amount
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500">$</span>
+                  </div>
+                  <input
+                    id="rebuyAmount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    placeholder="0.00"
+                    value={rebuyAmount}
+                    onChange={(e) => setRebuyAmount(e.target.value)}
+                  />
                 </div>
-                <input
-                  id="rebuyAmount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                  placeholder="0.00"
-                  value={rebuyAmount}
-                  onChange={(e) => setRebuyAmount(e.target.value)}
-                />
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                <Button
+                  onClick={handleAddRebuy}
+                  disabled={!rebuyAmount}
+                  className="bg-poker-gold hover:bg-poker-darkGold text-white"
+                >
+                  Add Rebuy
+                </Button>
+                
+                <Button
+                  onClick={handleAddAddon}
+                  disabled={!rebuyAmount}
+                  className="bg-poker-feltGreen hover:bg-poker-feltGreen/90 text-white"
+                >
+                  Add Add-on
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => setShowRebuySheet(false)}
+                >
+                  Cancel
+                </Button>
               </div>
             </div>
-            
-            <div className="flex flex-col gap-3">
-              <Button
-                onClick={handleAddRebuy}
-                disabled={!rebuyAmount}
-                className="bg-poker-gold hover:bg-poker-darkGold text-white"
-              >
-                Add Rebuy
-              </Button>
-              
-              <Button
-                onClick={handleAddAddon}
-                disabled={!rebuyAmount}
-                className="bg-poker-feltGreen hover:bg-poker-feltGreen/90 text-white"
-              >
-                Add Add-on
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => setShowRebuySheet(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }
