@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -15,21 +14,16 @@ export default function ConfirmSession() {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   
-  // State for session timer
   const [elapsedTime, setElapsedTime] = useState(0);
   const [timerActive, setTimerActive] = useState(true);
   
-  // State for modal dialogs
   const [showEndSessionSheet, setShowEndSessionSheet] = useState(false);
   const [showRebuySheet, setShowRebuySheet] = useState(false);
   
-  // State for end session
   const [cashOutAmount, setCashOutAmount] = useState('');
   
-  // State for rebuy/addon
   const [rebuyAmount, setRebuyAmount] = useState('');
   
-  // Format time from seconds to MM:SS or HH:MM:SS
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -42,7 +36,6 @@ export default function ConfirmSession() {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
   
-  // Timer effect
   useEffect(() => {
     if (!activeSession) {
       navigate('/');
@@ -55,7 +48,6 @@ export default function ConfirmSession() {
       interval = setInterval(() => {
         setElapsedTime(prev => {
           const newTime = prev + 1;
-          // Update session duration every minute
           if (newTime % 60 === 0) {
             updateSessionDuration(activeSession.id, newTime / 60);
           }
@@ -69,7 +61,6 @@ export default function ConfirmSession() {
     };
   }, [activeSession, timerActive, navigate, updateSessionDuration]);
   
-  // Handle pause/resume
   const handlePauseResume = () => {
     if (!activeSession) return;
     
@@ -90,7 +81,6 @@ export default function ConfirmSession() {
     }
   };
   
-  // Handle end session
   const handleEndSession = () => {
     if (!activeSession || !cashOutAmount) return;
     
@@ -103,7 +93,6 @@ export default function ConfirmSession() {
     navigate('/');
   };
   
-  // Handle rebuy/addon
   const handleAddRebuy = () => {
     if (!activeSession || !rebuyAmount) return;
     
@@ -150,7 +139,6 @@ export default function ConfirmSession() {
   
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
       <header className="bg-white shadow-sm px-4 py-4">
         <div className="container mx-auto max-w-md">
           <div className="flex justify-between items-center">
@@ -162,15 +150,13 @@ export default function ConfirmSession() {
               <span>Home</span>
             </button>
             <h1 className="font-serif text-xl font-bold">Live Session</h1>
-            <div className="w-10"></div> {/* Spacer for centering */}
+            <div className="w-10"></div>
           </div>
         </div>
       </header>
       
-      {/* Main Content */}
       <main className="flex-1">
         <div className="container mx-auto max-w-md px-4 py-8">
-          {/* Timer Display */}
           <div className="bg-white rounded-lg shadow-md p-8 mb-6 text-center">
             <div className="mb-2 text-sm text-gray-500">Session Time</div>
             <div className="text-5xl font-mono font-bold mb-3">{formatTime(elapsedTime)}</div>
@@ -209,12 +195,11 @@ export default function ConfirmSession() {
                 variant="destructive"
                 className="flex items-center gap-2"
               >
-                <Icon name="StopCircle" size={16} /> End Session
+                <Icon name="CircleStop" size={16} /> End Session
               </Button>
             </div>
           </div>
           
-          {/* Session Details */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-xl font-medium mb-4">Session Details</h2>
             
@@ -261,7 +246,6 @@ export default function ConfirmSession() {
             </div>
           </div>
           
-          {/* Tournament Controls (if applicable) */}
           {activeSession.format === 'Tournament' && (
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <h2 className="text-xl font-medium mb-4">Tournament Controls</h2>
@@ -280,7 +264,6 @@ export default function ConfirmSession() {
         </div>
       </main>
       
-      {/* End Session Sheet */}
       <Sheet open={showEndSessionSheet} onOpenChange={setShowEndSessionSheet}>
         <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
           <SheetHeader>
@@ -365,7 +348,6 @@ export default function ConfirmSession() {
         </SheetContent>
       </Sheet>
       
-      {/* Rebuy/Add-on Sheet */}
       <Sheet open={showRebuySheet} onOpenChange={setShowRebuySheet}>
         <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
           <SheetHeader>
