@@ -12,6 +12,7 @@ export interface PokerSession {
   endTime?: Date; // Only set when session ends
   notes?: string;
   isActive?: boolean;
+  isOnline?: boolean; // Added for online vs live tracking
 }
 
 export interface SessionFilter {
