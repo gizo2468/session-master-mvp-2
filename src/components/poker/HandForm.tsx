@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +13,7 @@ import CardSelector from './CardSelector';
 import { HandData } from '@/types/poker';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/Lucide';
+import PokerChip from '../Icons';
 
 interface HandFormProps {
   open: boolean;
@@ -23,7 +23,6 @@ interface HandFormProps {
   isEditing?: boolean;
 }
 
-// Form schema validation
 const handFormSchema = z.object({
   cards: z.string().min(4, 'Select at least 2 cards').max(20, 'Maximum 10 cards'),
   position: z.string().min(1, 'Position is required'),
@@ -53,7 +52,6 @@ const HandForm: React.FC<HandFormProps> = ({
   initialData = {},
   isEditing = false
 }) => {
-  // Setup form with initial values
   const form = useForm<FormValues>({
     resolver: zodResolver(handFormSchema),
     defaultValues: {
@@ -91,12 +89,12 @@ const HandForm: React.FC<HandFormProps> = ({
     onSubmit({
       ...values,
       id: initialData.id,
-      image: initialData.image, // Keep the image if it exists
+      image: initialData.image,
     });
     onOpenChange(false);
   };
   
-  const [imagePreview, setImagePreview] = React.useState<string | null>(
+  const [imagePreview, setImagePreview] = useState<string | null>(
     initialData.image || null
   );
   
@@ -113,7 +111,6 @@ const HandForm: React.FC<HandFormProps> = ({
     }
   };
   
-  // Watch the currency type to conditionally render the blinds fields
   const currencyType = form.watch('currencyType');
   
   return (
@@ -240,7 +237,7 @@ const HandForm: React.FC<HandFormProps> = ({
                                 'bg-poker-feltGreen text-white' : 
                                 'bg-white'}`}
                             >
-                              🎟️ Chips
+                              <PokerChip /> Chips
                             </ToggleGroupItem>
                           </ToggleGroup>
                         </FormControl>
