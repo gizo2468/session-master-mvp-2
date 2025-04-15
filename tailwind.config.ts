@@ -28,6 +28,14 @@ export default {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
 				},
+				poker: {
+					gold: '#D4AF37',
+					darkGold: '#B8860B',
+					green: '#1B5E20',
+					feltGreen: '#35654D',
+					red: '#B71C1C',
+					black: '#212121',
+				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))'
