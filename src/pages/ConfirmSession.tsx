@@ -2,12 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
-import { format } from 'date-fns';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import Icon from '@/components/ui/Lucide';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import Icon from '@/components/ui/Lucide';
+import SessionTimerCard from '@/components/poker/SessionTimerCard';
+import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
+import TournamentControlsCard from '@/components/poker/TournamentControlsCard';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 
 export default function ConfirmSession() {
@@ -25,18 +27,6 @@ export default function ConfirmSession() {
   const [cashOutAmount, setCashOutAmount] = useState('');
   
   const [rebuyAmount, setRebuyAmount] = useState('');
-  
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-    
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-    }
-    
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
   
   useEffect(() => {
     if (!activeSession) {
@@ -136,134 +126,51 @@ export default function ConfirmSession() {
     );
   }
   
-  const formattedStartTime = format(new Date(activeSession.startTime), 'h:mm a');
-  const formattedDate = format(new Date(activeSession.startTime), 'MMM d, yyyy');
-  
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white shadow-sm px-4 py-4">
+      <header className="bg-white shadow-sm px-4 py-4 sticky top-0 z-10">
         <div className="container mx-auto max-w-md">
           <div className="flex justify-between items-center">
-            <button 
+            <Button 
               onClick={() => navigate('/')}
-              className="text-poker-feltGreen flex items-center gap-1"
+              variant="ghost"
+              className="text-poker-feltGreen p-0"
             >
-              <Icon name="ArrowLeft" size={16} />
+              <Icon name="ArrowLeft" size={16} className="mr-1" />
               <span>Home</span>
-            </button>
+            </Button>
             <h1 className="font-serif text-xl font-bold">Live Session</h1>
             <div className="w-10"></div>
           </div>
         </div>
       </header>
       
-      <main className="flex-1">
-        <div className="container mx-auto max-w-md px-4 py-8">
-          <div className="bg-white rounded-lg shadow-md p-8 mb-6 text-center">
-            <div className="mb-2 text-sm text-gray-500">Session Time</div>
-            <div className="text-5xl font-mono font-bold mb-3">{formatTime(elapsedTime)}</div>
-            
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="text-left">
-                <div className="text-sm text-gray-500">Started</div>
-                <div className="font-medium">{formattedStartTime}</div>
-                <div className="text-xs text-gray-400">{formattedDate}</div>
-              </div>
-              
-              <div className="text-right">
-                <div className="text-sm text-gray-500">Game</div>
-                <div className="font-medium">{activeSession.gameType}</div>
-                <div className="text-xs text-gray-400">
-                  {activeSession.format} - ${activeSession.smallBlind}/${activeSession.bigBlind}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex justify-around">
-              <Button
-                onClick={handlePauseResume}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                {timerActive ? (
-                  <><Icon name="Pause" size={16} /> Pause</>
-                ) : (
-                  <><Icon name="Play" size={16} /> Resume</>
-                )}
-              </Button>
-              
-              <Button
-                onClick={() => setShowEndSessionSheet(true)}
-                variant="destructive"
-                className="flex items-center gap-2"
-              >
-                <Icon name="CircleStop" size={16} /> End Session
-              </Button>
-            </div>
-          </div>
+      <main className="flex-1 pt-4">
+        <div className="container mx-auto max-w-md px-4 pb-8">
+          {/* Session Timer */}
+          <SessionTimerCard 
+            elapsedTime={elapsedTime}
+            startTime={activeSession.startTime}
+            gameType={activeSession.gameType}
+            format={activeSession.format}
+            smallBlind={activeSession.smallBlind}
+            bigBlind={activeSession.bigBlind}
+            timerActive={timerActive}
+            onPauseResume={handlePauseResume}
+            onEndSession={() => setShowEndSessionSheet(true)}
+          />
           
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-medium mb-4">Session Details</h2>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Location:</span>
-                <span className="font-medium">{activeSession.location}</span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className="text-gray-500">Buy-in:</span>
-                <span className="font-medium">${activeSession.buyIn.toFixed(2)}</span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className="text-gray-500">Blinds:</span>
-                <span className="font-medium">${activeSession.smallBlind}/${activeSession.bigBlind}</span>
-              </div>
-              
-              {activeSession.format === 'Tournament' && (
-                <>
-                  {(activeSession.rebuys && activeSession.rebuys > 0) && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Rebuys:</span>
-                      <span className="font-medium">{activeSession.rebuys}</span>
-                    </div>
-                  )}
-                  
-                  {(activeSession.addOns && activeSession.addOns > 0) && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Add-ons:</span>
-                      <span className="font-medium">{activeSession.addOns}</span>
-                    </div>
-                  )}
-                </>
-              )}
-              
-              {activeSession.notes && (
-                <div className="pt-2">
-                  <span className="text-gray-500 block mb-1">Notes:</span>
-                  <p className="text-sm bg-gray-50 p-3 rounded">{activeSession.notes}</p>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Session Details */}
+          <SessionDetailsCard session={activeSession} />
           
+          {/* Tournament Controls */}
           {activeSession.format === 'Tournament' && (
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <h2 className="text-xl font-medium mb-4">Tournament Controls</h2>
-              
-              <div className="flex flex-col gap-4">
-                <Button
-                  onClick={() => setShowRebuySheet(true)}
-                  variant="outline"
-                  className="w-full flex justify-center items-center gap-2"
-                >
-                  <Icon name="Plus" size={16} /> Add Rebuy/Add-on
-                </Button>
-              </div>
-            </div>
+            <TournamentControlsCard 
+              onAddRebuy={() => setShowRebuySheet(true)}
+            />
           )}
           
+          {/* Hand Management */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <HandManagementPanel 
               sessionId={activeSession.id}
@@ -273,6 +180,7 @@ export default function ConfirmSession() {
         </div>
       </main>
       
+      {/* End Session Sheet */}
       <Sheet open={showEndSessionSheet} onOpenChange={setShowEndSessionSheet}>
         <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
           <SheetHeader>
@@ -357,6 +265,7 @@ export default function ConfirmSession() {
         </SheetContent>
       </Sheet>
       
+      {/* Rebuy Sheet */}
       <Sheet open={showRebuySheet} onOpenChange={setShowRebuySheet}>
         <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
           <SheetHeader>
