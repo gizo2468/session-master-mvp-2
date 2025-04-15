@@ -1,4 +1,17 @@
 
+export interface HandData {
+  id: string;
+  cards: string;
+  position: string;
+  action: string;
+  notes?: string;
+  result?: number | string;
+  resultAmount?: number;
+  image?: string;
+  pokercraftLink?: string;
+  createdAt: Date;
+}
+
 export interface PokerSession {
   id: string;
   gameType: 'NLH' | 'PLO';
@@ -24,6 +37,9 @@ export interface PokerSession {
   sessionDuration?: number; // In minutes
   ploCardCount?: 4 | 5 | 6; // For PLO variants
   currentStatus?: 'running' | 'paused' | 'ended';
+  
+  // Hand tracking
+  hands?: HandData[];
 }
 
 export interface SessionFilter {

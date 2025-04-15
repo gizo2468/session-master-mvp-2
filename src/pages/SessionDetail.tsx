@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
 import { format } from 'date-fns';
 import { AlertTriangle } from 'lucide-react';
+import HandManagementPanel from '@/components/poker/HandManagementPanel';
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -100,7 +101,7 @@ export default function SessionDetail() {
   
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto max-w-md px-4 py-8">
+      <div className="container mx-auto max-w-3xl px-4 py-8">
         <header className="mb-8">
           <button onClick={() => navigate(-1)} className="text-poker-feltGreen mb-4 flex items-center">
             ← Back
@@ -252,83 +253,92 @@ export default function SessionDetail() {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            {session.isActive && (
-              <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <AlertTriangle className="h-5 w-5 text-yellow-400" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-yellow-700">
-                      This session is currently active.
-                    </p>
+          <>
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              {session.isActive && (
+                <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <AlertTriangle className="h-5 w-5 text-yellow-400" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-yellow-700">
+                        This session is currently active.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-            
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <span className="text-sm text-gray-500">Started</span>
-                <p className="font-medium">{formattedDate}</p>
-              </div>
+              )}
               
-              {formattedEndDate && (
+              <div className="flex justify-between items-center mb-6">
                 <div>
-                  <span className="text-sm text-gray-500">Ended</span>
-                  <p className="font-medium">{formattedEndDate}</p>
+                  <span className="text-sm text-gray-500">Started</span>
+                  <p className="font-medium">{formattedDate}</p>
                 </div>
+                
+                {formattedEndDate && (
+                  <div>
+                    <span className="text-sm text-gray-500">Ended</span>
+                    <p className="font-medium">{formattedEndDate}</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex flex-col gap-4 mb-6">
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-gray-500">Game:</span>
+                  <span className="font-medium">{session.gameType}</span>
+                </div>
+                
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-gray-500">Format:</span>
+                  <span className="font-medium">{session.format}</span>
+                </div>
+                
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-gray-500">Buy-in:</span>
+                  <span className="font-medium">${session.buyIn.toFixed(2)}</span>
+                </div>
+                
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-gray-500">Blinds:</span>
+                  <span className="font-medium">${session.smallBlind}/${session.bigBlind}</span>
+                </div>
+                
+                {isCompleted && session.cashOut !== undefined && (
+                  <>
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-gray-500">Cash out:</span>
+                      <span className="font-medium">${session.cashOut.toFixed(2)}</span>
+                    </div>
+                    
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-gray-500">Profit/Loss:</span>
+                      <span className={`font-bold ${profitClass}`}>
+                        {profit > 0 ? '+' : ''}{profit.toFixed(2)}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {session.isActive && (
+                <button
+                  onClick={() => setShowEndSessionModal(true)}
+                  className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md"
+                >
+                  End Session
+                </button>
               )}
             </div>
             
-            <div className="flex flex-col gap-4 mb-6">
-              <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-500">Game:</span>
-                <span className="font-medium">{session.gameType}</span>
-              </div>
-              
-              <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-500">Format:</span>
-                <span className="font-medium">{session.format}</span>
-              </div>
-              
-              <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-500">Buy-in:</span>
-                <span className="font-medium">${session.buyIn.toFixed(2)}</span>
-              </div>
-              
-              <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-500">Blinds:</span>
-                <span className="font-medium">${session.smallBlind}/${session.bigBlind}</span>
-              </div>
-              
-              {isCompleted && session.cashOut !== undefined && (
-                <>
-                  <div className="flex justify-between py-2 border-b">
-                    <span className="text-gray-500">Cash out:</span>
-                    <span className="font-medium">${session.cashOut.toFixed(2)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between py-2 border-b">
-                    <span className="text-gray-500">Profit/Loss:</span>
-                    <span className={`font-bold ${profitClass}`}>
-                      {profit > 0 ? '+' : ''}{profit.toFixed(2)}
-                    </span>
-                  </div>
-                </>
-              )}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <HandManagementPanel 
+                sessionId={session.id} 
+                hands={session.hands || []}
+              />
             </div>
-            
-            {session.isActive && (
-              <button
-                onClick={() => setShowEndSessionModal(true)}
-                className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md"
-              >
-                End Session
-              </button>
-            )}
-          </div>
+          </>
         )}
       </div>
       

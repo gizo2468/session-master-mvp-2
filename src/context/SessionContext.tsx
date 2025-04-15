@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { PokerSession, SessionFilter } from '@/types/poker';
+import { PokerSession, SessionFilter, HandData } from '@/types/poker';
+import { v4 as uuidv4 } from 'uuid';
 
 interface SessionContextType {
   sessions: PokerSession[];
@@ -17,6 +18,10 @@ interface SessionContextType {
   addRebuy: (id: string, amount: number) => void;
   addAddon: (id: string, amount: number) => void;
   setFilters: (filters: SessionFilter) => void;
+  // Hand management methods
+  addHand: (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => void;
+  updateHand: (sessionId: string, hand: HandData) => void;
+  deleteHand: (sessionId: string, handId: string) => void;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -29,7 +34,11 @@ const loadSessions = (): PokerSession[] => {
     return parsed.map((session: PokerSession) => ({
       ...session,
       startTime: new Date(session.startTime),
-      endTime: session.endTime ? new Date(session.endTime) : undefined
+      endTime: session.endTime ? new Date(session.endTime) : undefined,
+      hands: session.hands ? session.hands.map((hand: HandData) => ({
+        ...hand,
+        createdAt: new Date(hand.createdAt)
+      })) : []
     }));
   }
   return [];
@@ -90,6 +99,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       isActive: true,
       currentStatus: 'running' as const,
       sessionDuration: 0,
+      hands: []
     };
     setActiveSession(sessionWithActive);
     addSession(sessionWithActive);
@@ -174,6 +184,57 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       updateSession(updatedSession);
     }
   };
+  
+  // Add a new hand to a session
+  const addHand = (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session) {
+      const newHand: HandData = {
+        ...hand,
+        id: uuidv4(),
+        createdAt: new Date()
+      };
+      
+      const updatedSession = {
+        ...session,
+        hands: [...(session.hands || []), newHand]
+      };
+      
+      updateSession(updatedSession);
+    }
+  };
+  
+  // Update an existing hand
+  const updateHand = (sessionId: string, updatedHand: HandData) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session && session.hands) {
+      const updatedHands = session.hands.map(hand => 
+        hand.id === updatedHand.id ? updatedHand : hand
+      );
+      
+      const updatedSession = {
+        ...session,
+        hands: updatedHands
+      };
+      
+      updateSession(updatedSession);
+    }
+  };
+  
+  // Delete a hand
+  const deleteHand = (sessionId: string, handId: string) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session && session.hands) {
+      const updatedHands = session.hands.filter(hand => hand.id !== handId);
+      
+      const updatedSession = {
+        ...session,
+        hands: updatedHands
+      };
+      
+      updateSession(updatedSession);
+    }
+  };
 
   return (
     <SessionContext.Provider
@@ -192,6 +253,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         addRebuy,
         addAddon,
         setFilters,
+        addHand,
+        updateHand,
+        deleteHand,
       }}
     >
       {children}

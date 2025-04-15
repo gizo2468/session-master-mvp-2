@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -7,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import Icon from '@/components/ui/Lucide';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import HandManagementPanel from '@/components/poker/HandManagementPanel';
 
 export default function ConfirmSession() {
   const navigate = useNavigate();
@@ -261,6 +263,13 @@ export default function ConfirmSession() {
               </div>
             </div>
           )}
+          
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <HandManagementPanel 
+              sessionId={activeSession.id}
+              hands={activeSession.hands || []}
+            />
+          </div>
         </div>
       </main>
       
