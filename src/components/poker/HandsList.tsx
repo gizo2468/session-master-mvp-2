@@ -2,7 +2,7 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, ExternalLink, CircleDollarSign } from 'lucide-react';
+import { Pencil, Trash2, Video, CircleDollarSign } from 'lucide-react';
 import { HandData } from '@/types/poker';
 import CardDisplay from './CardDisplay';
 
@@ -36,17 +36,17 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
               {sortedHands.map((hand) => (
                 <TableRow key={hand.id} className="group">
                   <TableCell className="py-3">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0.5">
                       <CardDisplay cards={hand.cards} size="sm" />
                       {hand.pokercraftLink && (
                         <a 
                           href={hand.pokercraftLink} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="ml-2 text-poker-feltGreen hover:text-poker-feltGreen/80"
+                          className="ml-1 text-poker-feltGreen hover:text-poker-feltGreen/80"
                           aria-label="View hand video"
                         >
-                          <ExternalLink size={16} />
+                          <Video size={16} />
                         </a>
                       )}
                     </div>
