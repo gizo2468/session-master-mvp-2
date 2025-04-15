@@ -238,7 +238,7 @@ const HandForm: React.FC<HandFormProps> = ({
                                 'bg-poker-feltGreen text-white' : 
                                 'bg-white'}`}
                             >
-                              <PokerChip /> Chips
+                              <PokerChip className="h-5 w-5" /> Chips
                             </ToggleGroupItem>
                           </ToggleGroup>
                         </FormControl>
