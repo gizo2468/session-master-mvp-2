@@ -105,7 +105,7 @@ export default function SessionDetail() {
   };
   
   const handleGoBack = () => {
-    navigate(-1);
+    navigate('/');
   };
   
   const formattedDate = format(new Date(session.startTime), 'MMM d, yyyy h:mm a');
