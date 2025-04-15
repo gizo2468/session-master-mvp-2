@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { AlertTriangle } from 'lucide-react';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
+import { Button } from '@/components/ui/button';
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -103,6 +104,10 @@ export default function SessionDetail() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+  
   const formattedDate = format(new Date(session.startTime), 'MMM d, yyyy h:mm a');
   const formattedEndDate = session.endTime 
     ? format(new Date(session.endTime), 'MMM d, yyyy h:mm a')
@@ -112,9 +117,13 @@ export default function SessionDetail() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-3xl px-4 py-8">
         <header className="mb-8">
-          <button onClick={() => navigate(-1)} className="text-poker-feltGreen mb-4 flex items-center">
+          <Button 
+            onClick={handleGoBack} 
+            variant="ghost" 
+            className="text-poker-feltGreen mb-4 flex items-center p-0 hover:bg-transparent"
+          >
             ← Back
-          </button>
+          </Button>
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-serif font-bold">
               {isEditing ? "Edit Session" : session.location}
