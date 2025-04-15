@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
@@ -11,7 +10,6 @@ interface SessionTimerCardProps {
   smallBlind: number;
   bigBlind: number;
   timerActive: boolean;
-  onPauseResume: () => void;
   onEndSession: () => void;
 }
 
@@ -21,14 +19,11 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   format,
   smallBlind,
   bigBlind,
-  timerActive,
-  onPauseResume,
   onEndSession,
 }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   
   useEffect(() => {
-    // Calculate initial elapsed time in seconds since the session started
     const initialElapsedTime = Math.floor((new Date().getTime() - new Date(startTime).getTime()) / 1000);
     setElapsedTime(initialElapsedTime);
     
@@ -81,19 +76,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         </div>
       </div>
       
-      <div className="flex justify-around">
-        <Button
-          onClick={onPauseResume}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          {timerActive ? (
-            <><Icon name="Pause" size={16} /> Pause</>
-          ) : (
-            <><Icon name="Play" size={16} /> Resume</>
-          )}
-        </Button>
-        
+      <div className="flex justify-center">
         <Button
           onClick={onEndSession}
           variant="destructive"

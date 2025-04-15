@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -118,8 +117,6 @@ export default function ConfirmSession() {
             format={activeSession.format}
             smallBlind={activeSession.smallBlind}
             bigBlind={activeSession.bigBlind}
-            timerActive={true}
-            onPauseResume={null}
             onEndSession={() => setShowEndSessionSheet(true)}
           />
           
