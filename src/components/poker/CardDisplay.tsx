@@ -49,7 +49,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({ cards, size = 'md' }) => {
         cardArray.push(
           <div 
             key={`${rank}${suit}`}
-            className={`${sizeClasses[size]} mx-1 bg-white border border-gray-300 rounded shadow-sm flex flex-col items-center justify-between p-1`}
+            className={`${sizeClasses[size]} inline-flex mx-1 bg-white border border-gray-300 rounded shadow-sm flex-col items-center justify-between p-1`}
           >
             <div className="font-bold">{rank}</div>
             <div className={`${suitColor} text-lg`}>{suitSymbol}</div>
@@ -62,7 +62,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({ cards, size = 'md' }) => {
   };
 
   return (
-    <div className="flex flex-wrap">
+    <div className="flex flex-row items-center space-x-2">
       {parseCards()}
     </div>
   );
