@@ -11,6 +11,11 @@ interface SessionContextType {
   deleteSession: (id: string) => void;
   startSession: (session: PokerSession) => void;
   endSession: (id: string, cashOut: number) => void;
+  pauseSession: (id: string) => void;
+  resumeSession: (id: string) => void;
+  updateSessionDuration: (id: string, duration: number) => void;
+  addRebuy: (id: string, amount: number) => void;
+  addAddon: (id: string, amount: number) => void;
   setFilters: (filters: SessionFilter) => void;
 }
 
@@ -61,11 +66,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         session.id === updatedSession.id ? updatedSession : session
       )
     );
+    
+    // Also update active session if it's the same session
+    if (activeSession && activeSession.id === updatedSession.id) {
+      setActiveSession(updatedSession);
+    }
   };
 
   // Delete a session
   const deleteSession = (id: string) => {
     setSessions((prev) => prev.filter((session) => session.id !== id));
+    
+    // Clear active session if it's the deleted one
+    if (activeSession && activeSession.id === id) {
+      setActiveSession(null);
+    }
   };
 
   // Start a new active session
@@ -73,6 +88,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const sessionWithActive = {
       ...session,
       isActive: true,
+      currentStatus: 'running' as const,
+      sessionDuration: 0,
     };
     setActiveSession(sessionWithActive);
     addSession(sessionWithActive);
@@ -87,9 +104,74 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         cashOut,
         endTime: new Date(),
         isActive: false,
+        currentStatus: 'ended' as const,
       };
       updateSession(updatedSession);
       setActiveSession(null);
+    }
+  };
+  
+  // Pause an active session
+  const pauseSession = (id: string) => {
+    const session = sessions.find((s) => s.id === id);
+    if (session && session.isActive) {
+      const updatedSession = {
+        ...session,
+        currentStatus: 'paused' as const,
+      };
+      updateSession(updatedSession);
+    }
+  };
+  
+  // Resume a paused session
+  const resumeSession = (id: string) => {
+    const session = sessions.find((s) => s.id === id);
+    if (session && session.isActive) {
+      const updatedSession = {
+        ...session,
+        currentStatus: 'running' as const,
+      };
+      updateSession(updatedSession);
+    }
+  };
+  
+  // Update the duration of a session
+  const updateSessionDuration = (id: string, duration: number) => {
+    const session = sessions.find((s) => s.id === id);
+    if (session) {
+      const updatedSession = {
+        ...session,
+        sessionDuration: duration,
+      };
+      updateSession(updatedSession);
+    }
+  };
+  
+  // Add a rebuy to a tournament session
+  const addRebuy = (id: string, amount: number) => {
+    const session = sessions.find((s) => s.id === id);
+    if (session) {
+      const currentRebuys = session.rebuys || 0;
+      const updatedSession = {
+        ...session,
+        rebuys: currentRebuys + 1,
+        buyIn: session.buyIn + amount
+      };
+      updateSession(updatedSession);
+    }
+  };
+  
+  // Add an add-on to a tournament session
+  const addAddon = (id: string, amount: number) => {
+    const session = sessions.find((s) => s.id === id);
+    if (session) {
+      const currentAddOns = session.addOns || 0;
+      const updatedSession = {
+        ...session,
+        addOns: currentAddOns + 1,
+        buyIn: session.buyIn + amount
+      };
+      updateSession(updatedSession);
     }
   };
 
@@ -104,6 +186,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         deleteSession,
         startSession,
         endSession,
+        pauseSession,
+        resumeSession,
+        updateSessionDuration,
+        addRebuy,
+        addAddon,
         setFilters,
       }}
     >
