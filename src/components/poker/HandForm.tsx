@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import CardSelector from './CardSelector';
 import { HandData } from '@/types/poker';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface HandFormProps {
   open: boolean;
@@ -91,7 +91,7 @@ const HandForm: React.FC<HandFormProps> = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Hand' : 'Add New Hand'}</DialogTitle>
           <DialogDescription>
@@ -99,182 +99,190 @@ const HandForm: React.FC<HandFormProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="cards"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cards</FormLabel>
-                  <FormControl>
-                    <CardSelector 
-                      selectedCards={field.value} 
-                      onChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Select the cards you were dealt
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="position"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Position</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your position" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {positions.map(position => (
-                        <SelectItem key={position.value} value={position.value}>
-                          {position.label} ({position.value})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="action"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Action</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g., 3-bet pre-flop, check-raised turn" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Brief description of key actions
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="resultAmount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Result Amount</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <span className="text-gray-500">$</span>
-                      </div>
-                      <Input 
-                        type="number"
-                        placeholder="0.00"
-                        className="pl-8"
-                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                        value={field.value !== undefined ? field.value : ''}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Positive for wins, negative for losses
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Any additional details or thoughts about the hand..."
-                      className="h-20"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="space-y-2">
-              <FormLabel>Image</FormLabel>
-              <Input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleImageChange} 
-              />
-              {imagePreview && (
-                <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Hand preview" 
-                    className="max-h-40 rounded border border-gray-200" 
+        <ScrollArea className="max-h-[70vh]">
+          <div className="p-1">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="cards"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cards</FormLabel>
+                      <FormControl>
+                        <CardSelector 
+                          selectedCards={field.value} 
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Select the cards you were dealt
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="position"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Position</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select your position" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {positions.map(position => (
+                            <SelectItem key={position.value} value={position.value}>
+                              {position.label} ({position.value})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="action"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Action</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g., 3-bet pre-flop, check-raised turn" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Brief description of key actions
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="resultAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Result Amount</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <span className="text-gray-500">$</span>
+                          </div>
+                          <Input 
+                            type="number"
+                            placeholder="0.00"
+                            className="pl-8"
+                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                            value={field.value !== undefined ? field.value : ''}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Positive for wins, negative for losses
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Any additional details or thoughts about the hand..."
+                          className="h-20"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="space-y-2">
+                  <FormLabel>Image</FormLabel>
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageChange} 
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={() => {
-                      setImagePreview(null);
-                      form.setValue('image' as any, undefined);
-                    }}
-                  >
-                    Remove Image
-                  </Button>
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img 
+                        src={imagePreview} 
+                        alt="Hand preview" 
+                        className="max-h-40 rounded border border-gray-200" 
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => {
+                          setImagePreview(null);
+                          form.setValue('image' as any, undefined);
+                        }}
+                      >
+                        Remove Image
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="pokercraftLink"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Pokercraft Link</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://pokercraft.com/hand/123456" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Optional: Link to hand replay
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" className="bg-poker-gold hover:bg-poker-darkGold text-white">
-                {isEditing ? 'Save Changes' : 'Add Hand'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+                
+                <FormField
+                  control={form.control}
+                  name="pokercraftLink"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pokercraft Link</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="https://pokercraft.com/hand/123456" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Optional: Link to hand replay
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </form>
+            </Form>
+          </div>
+        </ScrollArea>
+        
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            onClick={form.handleSubmit(handleSubmit)}
+            className="bg-poker-gold hover:bg-poker-darkGold text-white"
+          >
+            {isEditing ? 'Save Changes' : 'Add Hand'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
