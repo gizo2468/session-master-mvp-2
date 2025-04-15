@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -258,7 +259,7 @@ const HandForm: React.FC<HandFormProps> = ({
                               {currencyType === 'currency' ? (
                                 <span className="text-gray-500">$</span>
                               ) : (
-                                <span className="text-gray-500">🎟️</span>
+                                <span className="text-gray-500"><PokerChip className="h-5 w-5" /></span>
                               )}
                             </div>
                             <Input 
@@ -292,7 +293,7 @@ const HandForm: React.FC<HandFormProps> = ({
                           <FormControl>
                             <div className="relative">
                               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <span className="text-gray-500">🎟️</span>
+                                <span className="text-gray-500"><PokerChip className="h-5 w-5" /></span>
                               </div>
                               <Input 
                                 type="number"
@@ -317,7 +318,7 @@ const HandForm: React.FC<HandFormProps> = ({
                           <FormControl>
                             <div className="relative">
                               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <span className="text-gray-500">🎟️</span>
+                                <span className="text-gray-500"><PokerChip className="h-5 w-5" /></span>
                               </div>
                               <Input 
                                 type="number"
