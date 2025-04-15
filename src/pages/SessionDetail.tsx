@@ -19,11 +19,28 @@ export default function SessionDetail() {
   const [cashOutAmount, setCashOutAmount] = useState('');
   const [timerActive, setTimerActive] = useState(session?.currentStatus === 'running');
   
+  const [formData, setFormData] = useState({
+    location: session?.location || '',
+    buyIn: session?.buyIn.toString() || '0',
+    smallBlind: session?.smallBlind.toString() || '0',
+    bigBlind: session?.bigBlind.toString() || '0',
+    gameType: session?.gameType || 'NLH',
+    format: session?.format || 'Cash'
+  });
+  
   useEffect(() => {
     if (session) {
       setTimerActive(session.currentStatus === 'running');
+      setFormData({
+        location: session.location,
+        buyIn: session.buyIn.toString(),
+        smallBlind: session.smallBlind.toString(),
+        bigBlind: session.bigBlind.toString(),
+        gameType: session.gameType,
+        format: session.format
+      });
     }
-  }, [session?.currentStatus]);
+  }, [session]);
   
   if (!session) {
     return (
