@@ -11,7 +11,7 @@ interface SessionContextType {
   updateSession: (session: PokerSession) => void;
   deleteSession: (id: string) => void;
   startSession: (session: PokerSession) => void;
-  endSession: (id: string, cashOut: number) => void;
+  endSession: (id: string, cashOut: number, notes?: string) => void;
   pauseSession: (id: string) => void;
   resumeSession: (id: string) => void;
   updateSessionDuration: (id: string, duration: number) => void;
@@ -106,12 +106,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   // End an active session
-  const endSession = (id: string, cashOut: number) => {
+  const endSession = (id: string, cashOut: number, notes?: string) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
       const updatedSession = {
         ...session,
         cashOut,
+        notes: notes || session.notes,
         endTime: new Date(),
         isActive: false,
         currentStatus: 'ended' as const,

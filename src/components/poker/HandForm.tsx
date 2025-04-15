@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -45,7 +47,7 @@ const HandForm: React.FC<HandFormProps> = ({
     defaultValues: {
       cards: initialData.cards || '',
       position: initialData.position || '',
-      action: initialData.action || '',
+      action: initialData.action || 'Open / Flat',
       resultAmount: initialData.resultAmount || undefined,
       notes: initialData.notes || '',
       pokercraftLink: initialData.pokercraftLink || ''
@@ -61,6 +63,13 @@ const HandForm: React.FC<HandFormProps> = ({
     { label: 'Hijack', value: 'HJ' },
     { label: 'Cutoff', value: 'CO' },
     { label: 'Button', value: 'BTN' }
+  ];
+  
+  const actionTypes = [
+    { label: 'Open / Flat', value: 'Open / Flat' },
+    { label: '3Bet', value: '3Bet' },
+    { label: '4Bet', value: '4Bet' },
+    { label: 'BvB', value: 'BvB' }
   ];
   
   const handleSubmit = (values: FormValues) => {
@@ -158,14 +167,26 @@ const HandForm: React.FC<HandFormProps> = ({
                     <FormItem>
                       <FormLabel>Action</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="e.g., 3-bet pre-flop, check-raised turn" 
-                          {...field} 
-                        />
+                        <ToggleGroup 
+                          type="single" 
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          className="flex flex-wrap justify-between gap-2"
+                        >
+                          {actionTypes.map(actionType => (
+                            <ToggleGroupItem 
+                              key={actionType.value} 
+                              value={actionType.value}
+                              variant="outline"
+                              className={`flex-1 min-w-[110px] py-2 ${field.value === actionType.value ? 
+                                'bg-poker-feltGreen text-white' : 
+                                'bg-white'}`}
+                            >
+                              {actionType.label}
+                            </ToggleGroupItem>
+                          ))}
+                        </ToggleGroup>
                       </FormControl>
-                      <FormDescription>
-                        Brief description of key actions
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -252,16 +273,13 @@ const HandForm: React.FC<HandFormProps> = ({
                   name="pokercraftLink"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Pokercraft Link</FormLabel>
+                      <FormLabel>Add Video Link (Optional)</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="https://pokercraft.com/hand/123456" 
+                          placeholder="https://youtube.com/watch?v=..." 
                           {...field} 
                         />
                       </FormControl>
-                      <FormDescription>
-                        Optional: Link to hand replay
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

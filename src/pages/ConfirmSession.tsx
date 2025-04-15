@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -5,6 +6,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/Lucide';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
@@ -13,16 +15,15 @@ import HandManagementPanel from '@/components/poker/HandManagementPanel';
 
 export default function ConfirmSession() {
   const navigate = useNavigate();
-  const { activeSession, endSession, pauseSession, resumeSession, updateSessionDuration, addRebuy, addAddon } = useSessionContext();
+  const { activeSession, endSession, updateSessionDuration, addRebuy, addAddon, updateSession } = useSessionContext();
   const isMobile = useIsMobile();
   const { toast } = useToast();
-  
-  const [timerActive, setTimerActive] = useState(true);
   
   const [showEndSessionSheet, setShowEndSessionSheet] = useState(false);
   const [showRebuySheet, setShowRebuySheet] = useState(false);
   
   const [cashOutAmount, setCashOutAmount] = useState('');
+  const [sessionNotes, setSessionNotes] = useState('');
   
   const [rebuyAmount, setRebuyAmount] = useState('');
   
@@ -32,35 +33,15 @@ export default function ConfirmSession() {
       return;
     }
     
-    setTimerActive(activeSession.currentStatus === 'running');
-    
   }, [activeSession, navigate]);
-  
-  const handlePauseResume = () => {
-    if (!activeSession) return;
-    
-    if (timerActive) {
-      pauseSession(activeSession.id);
-      setTimerActive(false);
-      toast({
-        title: "Session Paused",
-        description: "Your poker session has been paused."
-      });
-    } else {
-      resumeSession(activeSession.id);
-      setTimerActive(true);
-      toast({
-        title: "Session Resumed",
-        description: "Your poker session has been resumed."
-      });
-    }
-  };
   
   const handleEndSession = () => {
     if (!activeSession || !cashOutAmount) return;
     
-    endSession(activeSession.id, parseFloat(cashOutAmount));
+    // End the session with cashout and notes
+    endSession(activeSession.id, parseFloat(cashOutAmount), sessionNotes);
     setShowEndSessionSheet(false);
+    
     toast({
       title: "Session Ended",
       description: "Your poker session has been successfully recorded."
@@ -137,8 +118,8 @@ export default function ConfirmSession() {
             format={activeSession.format}
             smallBlind={activeSession.smallBlind}
             bigBlind={activeSession.bigBlind}
-            timerActive={timerActive}
-            onPauseResume={handlePauseResume}
+            timerActive={true}
+            onPauseResume={null}
             onEndSession={() => setShowEndSessionSheet(true)}
           />
           
@@ -226,6 +207,20 @@ export default function ConfirmSession() {
                     />
                   )}
                 </div>
+              </div>
+              
+              {/* Notes field added to end session sheet */}
+              <div className="mb-6">
+                <label htmlFor="notes" className="block text-sm font-medium mb-1">
+                  Notes (Optional)
+                </label>
+                <Textarea
+                  id="notes"
+                  className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                  placeholder="Add any notes about this session..."
+                  value={sessionNotes}
+                  onChange={(e) => setSessionNotes(e.target.value)}
+                />
               </div>
               
               <div className="flex gap-3">

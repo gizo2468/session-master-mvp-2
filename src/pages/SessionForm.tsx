@@ -12,7 +12,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/Lucide';
 
 const formSchema = z.object({
@@ -22,13 +21,6 @@ const formSchema = z.object({
   buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "Buy-in amount must be a valid number",
   }),
-  smallBlind: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
-    message: "Small blind must be a valid number",
-  }),
-  bigBlind: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
-    message: "Big blind must be a valid number",
-  }),
-  notes: z.string().optional(),
   isOnline: z.boolean().default(false)
 });
 
@@ -45,9 +37,6 @@ export default function SessionForm() {
       format: 'Cash',
       location: '',
       buyIn: '',
-      smallBlind: '',
-      bigBlind: '',
-      notes: '',
       isOnline: false
     }
   });
@@ -59,10 +48,9 @@ export default function SessionForm() {
       format: values.format,
       location: values.location,
       buyIn: parseFloat(values.buyIn),
-      smallBlind: parseFloat(values.smallBlind),
-      bigBlind: parseFloat(values.bigBlind),
+      smallBlind: 0,
+      bigBlind: 0,
       startTime: new Date(),
-      notes: values.notes,
       isActive: true,
     };
     
@@ -261,78 +249,6 @@ export default function SessionForm() {
                         {...field} 
                       />
                     </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="smallBlind"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-medium">Small Blind</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                          <span className="text-gray-500">$</span>
-                        </div>
-                        <Input 
-                          type="number" 
-                          placeholder="1" 
-                          className="pl-8" 
-                          min="0" 
-                          step="0.01" 
-                          {...field} 
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="bigBlind"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-medium">Big Blind</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                          <span className="text-gray-500">$</span>
-                        </div>
-                        <Input 
-                          type="number" 
-                          placeholder="2" 
-                          className="pl-8" 
-                          min="0" 
-                          step="0.01" 
-                          {...field} 
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-medium">Notes (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Add any notes about this session..." 
-                      className="resize-none" 
-                      {...field} 
-                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

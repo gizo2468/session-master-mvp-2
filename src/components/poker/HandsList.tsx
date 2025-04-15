@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, ExternalLink, CircleDollarSign } from 'lucide-react';
 import { HandData } from '@/types/poker';
 import CardDisplay from './CardDisplay';
-import { format } from 'date-fns';
 
 interface HandsListProps {
   hands: HandData[];
@@ -45,7 +44,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="ml-2 text-poker-feltGreen hover:text-poker-feltGreen/80"
-                          aria-label="View hand on Pokercraft"
+                          aria-label="View hand video"
                         >
                           <ExternalLink size={16} />
                         </a>
