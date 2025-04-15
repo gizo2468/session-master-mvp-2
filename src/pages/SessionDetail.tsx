@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
 import { format } from 'date-fns';
@@ -17,6 +17,22 @@ export default function SessionDetail() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [cashOutAmount, setCashOutAmount] = useState('');
+  const [elapsedTime, setElapsedTime] = useState(session?.sessionDuration || 0);
+  
+  // Track elapsed time for active sessions
+  useEffect(() => {
+    let timer: number | undefined;
+    
+    if (session?.isActive && session?.currentStatus === 'running') {
+      timer = window.setInterval(() => {
+        setElapsedTime((prev) => prev + 1);
+      }, 1000);
+    }
+    
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [session?.isActive, session?.currentStatus]);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -27,6 +43,19 @@ export default function SessionDetail() {
     gameType: session?.gameType || 'NLH',
     format: session?.format || 'Cash',
   });
+  
+  // Format time function
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+    
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
   
   if (!session) {
     return (
@@ -263,7 +292,7 @@ export default function SessionDetail() {
                     </div>
                     <div className="ml-3">
                       <p className="text-sm text-yellow-700">
-                        This session is currently active.
+                        This session is currently active - {formatTime(elapsedTime)}
                       </p>
                     </div>
                   </div>
