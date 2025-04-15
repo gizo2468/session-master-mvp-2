@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
-import { format } from 'date-fns';
+import { format as dateFormat } from 'date-fns';
 
 interface SessionTimerCardProps {
   elapsedTime: number;
@@ -39,8 +39,8 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
   
-  const formattedStartTime = format(new Date(startTime), 'h:mm a');
-  const formattedDate = format(new Date(startTime), 'MMM d, yyyy');
+  const formattedStartTime = dateFormat(new Date(startTime), 'h:mm a');
+  const formattedDate = dateFormat(new Date(startTime), 'MMM d, yyyy');
   
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
