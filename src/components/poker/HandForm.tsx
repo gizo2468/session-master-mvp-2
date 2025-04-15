@@ -13,7 +13,7 @@ import CardSelector from './CardSelector';
 import { HandData } from '@/types/poker';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/Lucide';
-import PokerChip from '../Icons';
+import { PokerChip } from '../Icons';
 
 interface HandFormProps {
   open: boolean;
