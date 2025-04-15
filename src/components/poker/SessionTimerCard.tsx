@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
@@ -9,7 +10,6 @@ interface SessionTimerCardProps {
   format: string;
   smallBlind: number;
   bigBlind: number;
-  timerActive: boolean;
   onEndSession: () => void;
 }
 
@@ -29,16 +29,15 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     
     let timer: number | undefined;
     
-    if (timerActive) {
-      timer = window.setInterval(() => {
-        setElapsedTime(prev => prev + 1);
-      }, 1000);
-    }
+    // Always run the timer (no conditional on timerActive)
+    timer = window.setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000);
     
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [startTime, timerActive]);
+  }, [startTime]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);

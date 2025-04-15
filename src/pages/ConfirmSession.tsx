@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -31,7 +32,6 @@ export default function ConfirmSession() {
       navigate('/');
       return;
     }
-    
   }, [activeSession, navigate]);
   
   const handleEndSession = () => {

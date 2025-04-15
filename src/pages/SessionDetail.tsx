@@ -17,7 +17,6 @@ export default function SessionDetail() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [cashOutAmount, setCashOutAmount] = useState('');
-  const [timerActive, setTimerActive] = useState(session?.currentStatus === 'running');
   
   const [formData, setFormData] = useState({
     location: session?.location || '',
@@ -30,7 +29,6 @@ export default function SessionDetail() {
   
   useEffect(() => {
     if (session) {
-      setTimerActive(session.currentStatus === 'running');
       setFormData({
         location: session.location,
         buyIn: session.buyIn.toString(),
@@ -98,18 +96,6 @@ export default function SessionDetail() {
     deleteSession(session.id);
     setShowDeleteModal(false);
     navigate('/');
-  };
-  
-  const handlePauseResume = () => {
-    if (!session) return;
-    
-    if (timerActive) {
-      pauseSession(session.id);
-      setTimerActive(false);
-    } else {
-      resumeSession(session.id);
-      setTimerActive(true);
-    }
   };
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -284,8 +270,6 @@ export default function SessionDetail() {
                 format={session.format}
                 smallBlind={session.smallBlind}
                 bigBlind={session.bigBlind}
-                timerActive={timerActive}
-                onPauseResume={handlePauseResume}
                 onEndSession={() => setShowEndSessionModal(true)}
               />
             )}
@@ -342,15 +326,6 @@ export default function SessionDetail() {
                   </>
                 )}
               </div>
-              
-              {session.isActive && !timerActive && (
-                <button
-                  onClick={handlePauseResume}
-                  className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md mb-3"
-                >
-                  Resume Session
-                </button>
-              )}
               
               {session.isActive && (
                 <button
