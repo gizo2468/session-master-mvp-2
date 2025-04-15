@@ -13,6 +13,7 @@ import * as z from 'zod';
 import CardSelector from './CardSelector';
 import { HandData } from '@/types/poker';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import Icon from '@/components/ui/Lucide';
 
 interface HandFormProps {
   open: boolean;
@@ -27,9 +28,20 @@ const handFormSchema = z.object({
   cards: z.string().min(4, 'Select at least 2 cards').max(20, 'Maximum 10 cards'),
   position: z.string().min(1, 'Position is required'),
   action: z.string().min(1, 'Action description is required').max(200, 'Action description is too long'),
+  currencyType: z.enum(['currency', 'chips']).default('currency'),
   resultAmount: z.number().optional(),
+  smallBlind: z.number().optional(),
+  bigBlind: z.number().optional(),
   notes: z.string().max(1000, 'Notes are too long').optional(),
   pokercraftLink: z.string().url('Invalid URL format').optional().or(z.literal('')),
+}).refine(data => {
+  if (data.currencyType === 'chips' && (!data.smallBlind || !data.bigBlind)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Small Blind and Big Blind are required for chip values",
+  path: ["smallBlind"]
 });
 
 type FormValues = z.infer<typeof handFormSchema>;
@@ -48,7 +60,10 @@ const HandForm: React.FC<HandFormProps> = ({
       cards: initialData.cards || '',
       position: initialData.position || '',
       action: initialData.action || 'Open / Flat',
+      currencyType: initialData.currencyType || 'currency',
       resultAmount: initialData.resultAmount || undefined,
+      smallBlind: initialData.smallBlind || undefined,
+      bigBlind: initialData.bigBlind || undefined,
       notes: initialData.notes || '',
       pokercraftLink: initialData.pokercraftLink || ''
     }
@@ -97,6 +112,9 @@ const HandForm: React.FC<HandFormProps> = ({
       reader.readAsDataURL(file);
     }
   };
+  
+  // Watch the currency type to conditionally render the blinds fields
+  const currencyType = form.watch('currencyType');
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -192,33 +210,133 @@ const HandForm: React.FC<HandFormProps> = ({
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="resultAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Result Amount</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <span className="text-gray-500">$</span>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="currencyType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Currency Type</FormLabel>
+                        <FormControl>
+                          <ToggleGroup 
+                            type="single" 
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            className="flex justify-center gap-4 my-1"
+                          >
+                            <ToggleGroupItem 
+                              value="currency" 
+                              variant="outline"
+                              className={`flex-1 py-2 ${field.value === 'currency' ? 
+                                'bg-poker-feltGreen text-white' : 
+                                'bg-white'}`}
+                            >
+                              💵 Currency
+                            </ToggleGroupItem>
+                            <ToggleGroupItem 
+                              value="chips" 
+                              variant="outline"
+                              className={`flex-1 py-2 ${field.value === 'chips' ? 
+                                'bg-poker-feltGreen text-white' : 
+                                'bg-white'}`}
+                            >
+                              🎟️ Chips
+                            </ToggleGroupItem>
+                          </ToggleGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                
+                  <FormField
+                    control={form.control}
+                    name="resultAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Result Amount</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                              {currencyType === 'currency' ? (
+                                <span className="text-gray-500">$</span>
+                              ) : (
+                                <span className="text-gray-500">🎟️</span>
+                              )}
+                            </div>
+                            <Input 
+                              type="number"
+                              placeholder="0.00"
+                              className="pl-8"
+                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                              value={field.value !== undefined ? field.value : ''}
+                            />
                           </div>
-                          <Input 
-                            type="number"
-                            placeholder="0.00"
-                            className="pl-8"
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                            value={field.value !== undefined ? field.value : ''}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormDescription>
-                        Positive for wins, negative for losses
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        </FormControl>
+                        <FormDescription>
+                          {currencyType === 'currency' ? 
+                            'Positive for wins, negative for losses' : 
+                            'Tournament chip value won or lost'}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                {currencyType === 'chips' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="smallBlind"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Small Blind</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <span className="text-gray-500">🎟️</span>
+                              </div>
+                              <Input 
+                                type="number"
+                                placeholder="25"
+                                className="pl-8"
+                                onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                value={field.value !== undefined ? field.value : ''}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="bigBlind"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Big Blind</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <span className="text-gray-500">🎟️</span>
+                              </div>
+                              <Input 
+                                type="number"
+                                placeholder="50"
+                                className="pl-8"
+                                onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                value={field.value !== undefined ? field.value : ''}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
                 
                 <FormField
                   control={form.control}

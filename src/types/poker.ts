@@ -7,6 +7,9 @@ export interface HandData {
   notes?: string;
   result?: number | string;
   resultAmount?: number;
+  currencyType?: 'currency' | 'chips';
+  smallBlind?: number;
+  bigBlind?: number;
   image?: string;
   pokercraftLink?: string;
   createdAt: Date;
