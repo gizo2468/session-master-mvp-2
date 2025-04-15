@@ -1,7 +1,22 @@
+
 import React from 'react';
 
-export const Focus = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+interface IconProps extends React.SVGProps<SVGSVGElement> {
+  // Additional props can be added here if needed
+}
+
+export const Focus = (props: IconProps) => (
+  <svg 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    {...props}
+  >
     <circle cx="12" cy="12" r="8" />
     <line x1="12" y1="2" x2="12" y2="4" />
     <line x1="12" y1="20" x2="12" y2="22" />
@@ -10,8 +25,15 @@ export const Focus = () => (
   </svg>
 );
 
-export const PokerChip = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+export const PokerChip = (props: IconProps) => (
+  <svg 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
     <circle cx="12" cy="12" r="10" fill="#B71C1C" />
     <circle cx="12" cy="12" r="8" stroke="white" strokeWidth="2" />
     
