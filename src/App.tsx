@@ -9,6 +9,7 @@ import SessionForm from "./pages/SessionForm";
 import SessionHistory from "./pages/SessionHistory";
 import SessionDetail from "./pages/SessionDetail";
 import ConfirmSession from "./pages/ConfirmSession";
+import FocusModePage from "./pages/FocusModePage";
 import { SessionProvider } from "./context/SessionContext";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/history" element={<SessionHistory />} />
             <Route path="/session/:id" element={<SessionDetail />} />
             <Route path="/confirm-session" element={<ConfirmSession />} />
+            <Route path="/focus-mode" element={<FocusModePage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
