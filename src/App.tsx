@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import SessionForm from "./pages/SessionForm";
 import SessionHistory from "./pages/SessionHistory";
 import SessionDetail from "./pages/SessionDetail";
+import LiveSession from "./pages/LiveSession";
 import ConfirmSession from "./pages/ConfirmSession";
 import FocusModePage from "./pages/FocusModePage";
 import { SessionProvider } from "./context/SessionContext";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/new-session" element={<SessionForm />} />
             <Route path="/history" element={<SessionHistory />} />
             <Route path="/session/:id" element={<SessionDetail />} />
+            <Route path="/live-session/:id" element={<LiveSession />} />
             <Route path="/confirm-session" element={<ConfirmSession />} />
             <Route path="/focus-mode" element={<FocusModePage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

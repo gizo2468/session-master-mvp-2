@@ -22,10 +22,19 @@ export default function SessionCard({ session }: SessionCardProps) {
   
   const timeAgo = formatDistanceToNow(new Date(session.startTime), { addSuffix: true });
   
+  const handleClick = () => {
+    // Route to LiveSession for active sessions, or SessionDetail for completed ones
+    if (session.isActive) {
+      navigate(`/live-session/${session.id}`);
+    } else {
+      navigate(`/session/${session.id}`);
+    }
+  };
+  
   return (
     <div 
       className="bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer"
-      onClick={() => navigate(`/session/${session.id}`)}
+      onClick={handleClick}
     >
       <div className="flex justify-between items-start mb-2">
         <div>

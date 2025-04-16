@@ -52,7 +52,7 @@ const Index = () => {
         
         {activeSession && (
           <button
-            onClick={() => navigate(`/session/${activeSession.id}`)}
+            onClick={() => navigate(`/live-session/${activeSession.id}`)}
             className="fixed bottom-6 right-6 bg-poker-red text-white rounded-full px-4 py-2 shadow-lg"
           >
             Active Session
