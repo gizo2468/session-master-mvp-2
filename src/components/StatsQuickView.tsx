@@ -17,13 +17,15 @@ export default function StatsQuickView() {
   
   const netProfit = sessions.reduce(
     (total, session) => {
-      if (!session.isActive && session.cashOut) {
+      if (!session.isActive && session.cashOut !== undefined) {
         return total + (session.cashOut - session.buyIn);
       }
       return total;
     }, 0
   );
   
+  // Format the profit amount with 2 decimal places
+  const formattedProfit = netProfit ? netProfit.toFixed(2) : "0.00";
   const profitClass = netProfit >= 0 ? 'text-green-500' : 'text-poker-red';
 
   return (
@@ -44,7 +46,7 @@ export default function StatsQuickView() {
         <div className="flex flex-col">
           <span className="text-gray-500 text-sm">Net Profit</span>
           <span className={`text-lg font-bold ${profitClass}`}>
-            ${netProfit.toFixed(2)}
+            ${formattedProfit}
           </span>
         </div>
       </div>
