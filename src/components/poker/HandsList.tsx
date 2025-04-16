@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, Video, CircleDollarSign } from 'lucide-react';
 import { HandData } from '@/types/poker';
 import CardDisplay from './CardDisplay';
+import { PokerChip } from '../Icons';
 
 interface HandsListProps {
   hands: HandData[];
@@ -71,9 +72,15 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
                   <TableCell>
                     {hand.resultAmount !== undefined && (
                       <div className="flex items-center gap-1">
-                        <CircleDollarSign className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                        {hand.currencyType === 'currency' ? (
+                          <CircleDollarSign className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                        ) : (
+                          <PokerChip className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                        )}
                         <span className={hand.resultAmount >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                          {hand.resultAmount >= 0 ? '+' : ''}${Math.abs(hand.resultAmount).toFixed(2)}
+                          {hand.resultAmount >= 0 ? '+' : ''}
+                          {hand.currencyType === 'currency' ? '$' : ''}
+                          {Math.abs(hand.resultAmount).toFixed(2)}
                         </span>
                       </div>
                     )}
