@@ -23,7 +23,7 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
             variant="outline"
             className="w-full flex justify-center items-center gap-2"
           >
-            <Icon name="Plus" size={16} /> Add Rebuy/Add-on
+            <Icon name="Plus" size={16} /> Add Rebuy
           </Button>
         </div>
       </CardContent>

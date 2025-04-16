@@ -15,7 +15,6 @@ interface SessionContextType {
   resumeSession: (id: string) => void;
   updateSessionDuration: (id: string, duration: number) => void;
   addRebuy: (id: string, amount: number) => void;
-  addAddon: (id: string, amount: number) => void;
   setFilters: (filters: SessionFilter) => void;
   addHand: (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => void;
   updateHand: (sessionId: string, hand: HandData) => void;
@@ -153,7 +152,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       updateSession(updatedSession);
     }
   };
-  
+
   const addRebuy = (id: string, amount: number) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
@@ -166,20 +165,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       updateSession(updatedSession);
     }
   };
-  
-  const addAddon = (id: string, amount: number) => {
-    const session = sessions.find((s) => s.id === id);
-    if (session) {
-      const currentAddOns = session.addOns || 0;
-      const updatedSession = {
-        ...session,
-        addOns: currentAddOns + 1,
-        buyIn: session.buyIn + amount
-      };
-      updateSession(updatedSession);
-    }
-  };
-  
+
   const addHand = (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
@@ -243,7 +229,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         resumeSession,
         updateSessionDuration,
         addRebuy,
-        addAddon,
         setFilters,
         addHand,
         updateHand,

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -15,7 +14,7 @@ import HandManagementPanel from '@/components/poker/HandManagementPanel';
 
 export default function ConfirmSession() {
   const navigate = useNavigate();
-  const { activeSession, endSession, updateSessionDuration, addRebuy, addAddon, updateSession } = useSessionContext();
+  const { activeSession, endSession, updateSessionDuration, addRebuy, updateSession } = useSessionContext();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   
@@ -57,18 +56,6 @@ export default function ConfirmSession() {
     toast({
       title: "Rebuy Added",
       description: `$${rebuyAmount} rebuy has been added to your session.`
-    });
-  };
-  
-  const handleAddAddon = () => {
-    if (!activeSession || !rebuyAmount) return;
-    
-    addAddon(activeSession.id, parseFloat(rebuyAmount));
-    setRebuyAmount('');
-    setShowRebuySheet(false);
-    toast({
-      title: "Add-on Added",
-      description: `$${rebuyAmount} add-on has been added to your session.`
     });
   };
   
@@ -246,9 +233,9 @@ export default function ConfirmSession() {
         <Sheet open={showRebuySheet} onOpenChange={setShowRebuySheet}>
           <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
             <SheetHeader>
-              <SheetTitle>Add Rebuy or Add-on</SheetTitle>
+              <SheetTitle>Add Rebuy</SheetTitle>
               <SheetDescription>
-                Enter the amount for your rebuy or add-on.
+                Enter the amount for your rebuy.
               </SheetDescription>
             </SheetHeader>
             
@@ -281,14 +268,6 @@ export default function ConfirmSession() {
                   className="bg-poker-gold hover:bg-poker-darkGold text-white"
                 >
                   Add Rebuy
-                </Button>
-                
-                <Button
-                  onClick={handleAddAddon}
-                  disabled={!rebuyAmount}
-                  className="bg-poker-feltGreen hover:bg-poker-feltGreen/90 text-white"
-                >
-                  Add Add-on
                 </Button>
                 
                 <Button
