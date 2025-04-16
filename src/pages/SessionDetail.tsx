@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -357,11 +358,15 @@ export default function SessionDetail() {
                   <span className="text-gray-500">Buy-in:</span>
                   <span className="font-medium">
                     ${initialBuyIn.toFixed(2)}
-                    {additionalBuyins > 0 && (
-                      <span className="text-gray-600"> (+${additionalBuyins.toFixed(2)})</span>
-                    )}
                   </span>
                 </div>
+                
+                {additionalBuyins > 0 && (
+                  <div className="flex justify-between py-2 border-b">
+                    <span className="text-gray-500">Re-Buy Amount:</span>
+                    <span className="font-medium">${additionalBuyins.toFixed(2)}</span>
+                  </div>
+                )}
                 
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-gray-500">Blinds:</span>
