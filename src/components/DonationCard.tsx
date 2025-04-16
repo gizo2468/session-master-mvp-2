@@ -15,9 +15,9 @@ const DonationCard = () => {
     <Card className="overflow-hidden border-2 border-poker-feltGreen/20 bg-white shadow-md">
       <CardHeader className="bg-gradient-to-r from-poker-feltGreen to-poker-feltGreen/80 text-white pb-4">
         <div className="flex items-center justify-center gap-2 mb-1">
-          <Icon name="heart" className="text-poker-cream animate-pulse" />
+          <Icon name="Heart" className="text-poker-cream animate-pulse" />
           <CardTitle className="text-2xl font-serif text-center">Support SessionMaster</CardTitle>
-          <Icon name="heart" className="text-poker-cream animate-pulse" />
+          <Icon name="Heart" className="text-poker-cream animate-pulse" />
         </div>
       </CardHeader>
       
@@ -34,7 +34,7 @@ const DonationCard = () => {
           className="px-8 py-2 bg-poker-gold hover:bg-poker-darkGold text-white font-medium rounded-full shadow-md flex items-center gap-2"
           variant="poker"
         >
-          <Icon name="heart-handshake" size={18} />
+          <Icon name="HeartHandshake" size={18} />
           Donate Now
         </Button>
       </CardFooter>
