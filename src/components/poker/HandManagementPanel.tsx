@@ -37,6 +37,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   const { toast } = useToast();
   
   const handleAddHand = (handData: Partial<HandData>) => {
+    // Make sure we're passing all data including image
     addHand(sessionId, handData as Omit<HandData, 'id' | 'createdAt'>);
     toast({
       title: 'Hand Added',
@@ -47,10 +48,17 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   
   const handleEditHand = (handData: Partial<HandData>) => {
     if (editingHand && handData.id) {
-      updateHand(sessionId, {
+      const updatedHandData = {
         ...editingHand,
         ...handData,
-      });
+      };
+      
+      // Ensure image is preserved if it wasn't changed
+      if (handData.image === undefined && editingHand.image) {
+        updatedHandData.image = editingHand.image;
+      }
+      
+      updateHand(sessionId, updatedHandData);
       toast({
         title: 'Hand Updated',
         description: 'Your hand has been successfully updated.',

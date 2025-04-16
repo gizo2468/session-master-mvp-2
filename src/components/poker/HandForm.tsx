@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ const handFormSchema = z.object({
   bigBlind: z.number().optional(),
   notes: z.string().max(1000, 'Notes are too long').optional(),
   pokercraftLink: z.string().url('Invalid URL format').optional().or(z.literal('')),
+  image: z.any().optional(),
 }).refine(data => {
   if (data.currencyType === 'chips' && (!data.smallBlind || !data.bigBlind)) {
     return false;
@@ -63,7 +65,8 @@ const HandForm: React.FC<HandFormProps> = ({
       smallBlind: initialData.smallBlind || undefined,
       bigBlind: initialData.bigBlind || undefined,
       notes: initialData.notes || '',
-      pokercraftLink: initialData.pokercraftLink || ''
+      pokercraftLink: initialData.pokercraftLink || '',
+      image: initialData.image || undefined
     }
   });
   
@@ -85,18 +88,19 @@ const HandForm: React.FC<HandFormProps> = ({
     { label: 'BvB', value: 'BvB' }
   ];
   
-  const handleSubmit = (values: FormValues) => {
-    onSubmit({
-      ...values,
-      id: initialData.id,
-      image: initialData.image,
-    });
-    onOpenChange(false);
-  };
-  
   const [imagePreview, setImagePreview] = useState<string | null>(
     initialData.image || null
   );
+  
+  const handleSubmit = (values: FormValues) => {
+    // Include the image in the submission
+    onSubmit({
+      ...values,
+      id: initialData.id,
+      image: imagePreview // Use imagePreview instead of form value
+    });
+    onOpenChange(false);
+  };
   
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -105,7 +109,7 @@ const HandForm: React.FC<HandFormProps> = ({
       reader.onloadend = () => {
         const result = reader.result as string;
         setImagePreview(result);
-        form.setValue('image' as any, result);
+        form.setValue('image', result); // Set the form value
       };
       reader.readAsDataURL(file);
     }
@@ -382,7 +386,7 @@ const HandForm: React.FC<HandFormProps> = ({
                         className="mt-2"
                         onClick={() => {
                           setImagePreview(null);
-                          form.setValue('image' as any, undefined);
+                          form.setValue('image', undefined);
                         }}
                       >
                         Remove Image
