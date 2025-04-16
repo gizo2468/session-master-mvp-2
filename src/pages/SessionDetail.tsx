@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -67,6 +66,27 @@ export default function SessionDetail() {
     profitClass = profit >= 0 ? 'text-green-500' : 'text-poker-red';
   }
   
+  const calculateAdditionalBuyins = () => {
+    if (session.initialBuyIn) {
+      return session.buyIn - session.initialBuyIn;
+    }
+    
+    let additional = 0;
+    
+    if (session.rebuys && session.rebuys > 0) {
+      additional += ((session.rebuys || 0) * (session.tournamentBuyIn || session.buyIn / session.rebuys));
+    }
+    
+    if (session.addOns && session.addOns > 0) {
+      additional += ((session.addOns || 0) * (session.tournamentBuyIn || session.buyIn / session.addOns));
+    }
+    
+    return additional;
+  };
+  
+  const additionalBuyins = calculateAdditionalBuyins();
+  const initialBuyIn = session.initialBuyIn || (session.buyIn - additionalBuyins);
+  
   const handleSaveEdit = () => {
     if (!session) return;
     
@@ -114,7 +134,6 @@ export default function SessionDetail() {
     ? format(new Date(session.endTime), 'MMM d, yyyy h:mm a')
     : null;
     
-  // Calculate session duration
   const calculateDuration = () => {
     if (!session.endTime) return null;
     
@@ -336,7 +355,12 @@ export default function SessionDetail() {
                 
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-gray-500">Buy-in:</span>
-                  <span className="font-medium">${session.buyIn !== undefined ? session.buyIn.toFixed(2) : '0.00'}</span>
+                  <span className="font-medium">
+                    ${initialBuyIn.toFixed(2)}
+                    {additionalBuyins > 0 && (
+                      <span className="text-gray-600"> (+${additionalBuyins.toFixed(2)})</span>
+                    )}
+                  </span>
                 </div>
                 
                 <div className="flex justify-between py-2 border-b">
