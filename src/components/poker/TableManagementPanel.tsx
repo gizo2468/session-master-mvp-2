@@ -50,11 +50,14 @@ const TableManagementPanel: React.FC<TableManagementPanelProps> = ({ sessionId }
   const tables = activeSession?.tables || [];
   
   const handleAddTable = (data: TableFormValues) => {
+    const buyInAmount = parseFloat(data.buyIn);
+    
     const newTableId = addTable(sessionId, {
       name: data.name,
       gameType: data.gameType,
       format: data.format,
-      buyIn: parseFloat(data.buyIn),
+      buyIn: buyInAmount,
+      initialBuyIn: buyInAmount,  // Add this line to fix the TS error
       smallBlind: parseFloat(data.smallBlind),
       bigBlind: parseFloat(data.bigBlind),
     });

@@ -1,36 +1,41 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PokerSession } from '@/types/poker';
+import { PokerSession, PokerTable } from '@/types/poker';
 
 interface SessionDetailsCardProps {
   session: PokerSession;
 }
 
 const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
-  // Calculate the total of rebuys and addons
+  // Get the first table for backwards compatibility
+  const primaryTable = session.tables && session.tables.length > 0 ? session.tables[0] : null;
+  
+  // Calculate the total of rebuys and addons for the primary table
   const calculateAdditionalBuyins = () => {
-    if (session.initialBuyIn) {
+    if (!primaryTable) return 0;
+    
+    if (primaryTable.initialBuyIn) {
       // If initialBuyIn exists, return the difference between total and initial
-      return session.buyIn - session.initialBuyIn;
+      return primaryTable.buyIn - primaryTable.initialBuyIn;
     }
     
     // Fallback calculation (for backward compatibility)
     let additional = 0;
     
-    if (session.rebuys && session.rebuys > 0) {
-      additional += ((session.rebuys || 0) * (session.tournamentBuyIn || session.buyIn / session.rebuys));
+    if (primaryTable.rebuys && primaryTable.rebuys > 0) {
+      additional += ((primaryTable.rebuys || 0) * (primaryTable.tournamentBuyIn || primaryTable.buyIn / primaryTable.rebuys));
     }
     
-    if (session.addOns && session.addOns > 0) {
-      additional += ((session.addOns || 0) * (session.tournamentBuyIn || session.buyIn / session.addOns));
+    if (primaryTable.addOns && primaryTable.addOns > 0) {
+      additional += ((primaryTable.addOns || 0) * (primaryTable.tournamentBuyIn || primaryTable.buyIn / primaryTable.addOns));
     }
     
     return additional;
   };
   
-  const additionalBuyins = calculateAdditionalBuyins();
-  const initialBuyIn = session.initialBuyIn || (session.buyIn - additionalBuyins);
+  const additionalBuyins = primaryTable ? calculateAdditionalBuyins() : 0;
+  const initialBuyIn = primaryTable ? (primaryTable.initialBuyIn || (primaryTable.buyIn - additionalBuyins)) : 0;
   
   return (
     <Card className="bg-white rounded-lg shadow-md mb-6">
@@ -44,35 +49,39 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             <span className="font-medium">{session.location}</span>
           </div>
           
-          <div className="flex justify-between">
-            <span className="text-gray-500">Buy-in:</span>
-            <span className="font-medium">
-              ${initialBuyIn.toFixed(2)}
-              {additionalBuyins > 0 && <span className="text-gray-600"> (+${additionalBuyins.toFixed(2)})</span>}
-            </span>
-          </div>
-          
-          {(session.smallBlind && session.bigBlind) ? (
-            <div className="flex justify-between">
-              <span className="text-gray-500">Blinds:</span>
-              <span className="font-medium">${session.smallBlind}/${session.bigBlind}</span>
-            </div>
-          ) : null}
-          
-          {session.format === 'Tournament' && (
+          {primaryTable && (
             <>
-              {(session.rebuys && session.rebuys > 0) && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Rebuys:</span>
-                  <span className="font-medium">{session.rebuys}</span>
-                </div>
-              )}
+              <div className="flex justify-between">
+                <span className="text-gray-500">Buy-in:</span>
+                <span className="font-medium">
+                  ${initialBuyIn.toFixed(2)}
+                  {additionalBuyins > 0 && <span className="text-gray-600"> (+${additionalBuyins.toFixed(2)})</span>}
+                </span>
+              </div>
               
-              {(session.addOns && session.addOns > 0) && (
+              {(primaryTable.smallBlind && primaryTable.bigBlind) ? (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Add-ons:</span>
-                  <span className="font-medium">{session.addOns}</span>
+                  <span className="text-gray-500">Blinds:</span>
+                  <span className="font-medium">${primaryTable.smallBlind}/${primaryTable.bigBlind}</span>
                 </div>
+              ) : null}
+              
+              {primaryTable.format === 'Tournament' && (
+                <>
+                  {(primaryTable.rebuys && primaryTable.rebuys > 0) && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Rebuys:</span>
+                      <span className="font-medium">{primaryTable.rebuys}</span>
+                    </div>
+                  )}
+                  
+                  {(primaryTable.addOns && primaryTable.addOns > 0) && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Add-ons:</span>
+                      <span className="font-medium">{primaryTable.addOns}</span>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
