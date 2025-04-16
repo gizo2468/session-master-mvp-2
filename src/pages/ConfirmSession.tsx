@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -19,12 +20,9 @@ export default function ConfirmSession() {
   const { toast } = useToast();
   
   const [showEndSessionSheet, setShowEndSessionSheet] = useState(false);
-  const [showRebuySheet, setShowRebuySheet] = useState(false);
   
   const [cashOutAmount, setCashOutAmount] = useState('');
   const [sessionNotes, setSessionNotes] = useState('');
-  
-  const [rebuyAmount, setRebuyAmount] = useState('');
   
   useEffect(() => {
     if (!activeSession) {
@@ -47,15 +45,13 @@ export default function ConfirmSession() {
     navigate('/');
   };
   
-  const handleAddRebuy = () => {
-    if (!activeSession || !rebuyAmount) return;
+  const handleAddRebuy = (amount: number) => {
+    if (!activeSession) return;
     
-    addRebuy(activeSession.id, parseFloat(rebuyAmount));
-    setRebuyAmount('');
-    setShowRebuySheet(false);
+    addRebuy(activeSession.id, amount);
     toast({
       title: "Rebuy Added",
-      description: `$${rebuyAmount} rebuy has been added to your session.`
+      description: `$${amount.toFixed(2)} rebuy has been added to your session.`
     });
   };
   
@@ -113,7 +109,8 @@ export default function ConfirmSession() {
           {/* Tournament Controls */}
           {activeSession.format === 'Tournament' && (
             <TournamentControlsCard 
-              onAddRebuy={() => setShowRebuySheet(true)}
+              session={activeSession}
+              onAddRebuy={handleAddRebuy}
             />
           )}
           
@@ -221,60 +218,6 @@ export default function ConfirmSession() {
                   className="flex-1 bg-poker-gold hover:bg-poker-darkGold text-white"
                 >
                   End Session
-                </Button>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-      )}
-      
-      {/* Rebuy Sheet */}
-      {showRebuySheet && (
-        <Sheet open={showRebuySheet} onOpenChange={setShowRebuySheet}>
-          <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
-            <SheetHeader>
-              <SheetTitle>Add Rebuy</SheetTitle>
-              <SheetDescription>
-                Enter the amount for your rebuy.
-              </SheetDescription>
-            </SheetHeader>
-            
-            <div className="py-6">
-              <div className="mb-6">
-                <label htmlFor="rebuyAmount" className="block text-sm font-medium mb-1">
-                  Amount
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500">$</span>
-                  </div>
-                  <input
-                    id="rebuyAmount"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                    placeholder="0.00"
-                    value={rebuyAmount}
-                    onChange={(e) => setRebuyAmount(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="flex flex-col gap-3">
-                <Button
-                  onClick={handleAddRebuy}
-                  disabled={!rebuyAmount}
-                  className="bg-poker-gold hover:bg-poker-darkGold text-white"
-                >
-                  Add Rebuy
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={() => setShowRebuySheet(false)}
-                >
-                  Cancel
                 </Button>
               </div>
             </div>
