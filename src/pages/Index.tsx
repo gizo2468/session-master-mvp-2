@@ -6,6 +6,7 @@ import StatsQuickView from '@/components/StatsQuickView';
 import FocusModeButton from '@/components/FocusModeButton';
 import { useSessionContext } from '@/context/SessionContext';
 import SessionCard from '@/components/SessionCard';
+import Logo from '@/components/Logo';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -20,8 +21,7 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-md px-4 py-8">
         <header className="mb-8">
-          <h1 className="text-3xl text-poker-black font-bold font-serif text-center mb-1">Poker Tracker</h1>
-          <p className="text-center text-gray-500 text-sm">Track your poker sessions</p>
+          <Logo className="mb-2" />
         </header>
         
         <div className="flex justify-center mb-10">

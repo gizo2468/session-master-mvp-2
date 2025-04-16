@@ -45,3 +45,22 @@ export const PokerChip = (props: IconProps) => (
     <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="2" strokeDasharray="20 20" fill="none" />
   </svg>
 );
+
+export const LogoChip = (props: IconProps) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <circle cx="12" cy="12" r="10" fill="#B71C1C" />
+    <circle cx="12" cy="12" r="8" stroke="white" strokeWidth="2" />
+    
+    <path d="M12 4l1.5 2.5h-3L12 4z" fill="white" transform="rotate(0 12 12)"/>
+    <path d="M12 4l1.5 2.5h-3L12 4z" fill="white" transform="rotate(90 12 12)"/>
+    <path d="M12 4l1.5 2.5h-3L12 4z" fill="white" transform="rotate(180 12 12)"/>
+    <path d="M12 4l1.5 2.5h-3L12 4z" fill="white" transform="rotate(270 12 12)"/>
+    
+    <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="1.5" strokeDasharray="20 20" fill="none" />
+  </svg>
+);

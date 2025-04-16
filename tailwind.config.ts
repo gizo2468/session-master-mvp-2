@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -35,6 +36,7 @@ export default {
 					feltGreen: '#35654D',
 					red: '#B71C1C',
 					black: '#212121',
+					cream: '#FEF7CD', // Adding cream color for "Session" text
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
