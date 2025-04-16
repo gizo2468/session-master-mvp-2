@@ -7,6 +7,7 @@ import FocusModeButton from '@/components/FocusModeButton';
 import { useSessionContext } from '@/context/SessionContext';
 import SessionCard from '@/components/SessionCard';
 import Logo from '@/components/Logo';
+import DonationCard from '@/components/DonationCard';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -49,6 +50,11 @@ const Index = () => {
             No sessions yet. Start tracking your first poker session!
           </div>
         )}
+        
+        {/* Donation Card - Added at the bottom of the page */}
+        <div className="mt-10 mb-16">
+          <DonationCard />
+        </div>
         
         {activeSession && (
           <button
