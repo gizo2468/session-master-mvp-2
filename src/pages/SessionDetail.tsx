@@ -364,6 +364,11 @@ export default function SessionDetail() {
                 </div>
                 
                 <div className="flex justify-between py-2 border-b">
+                  <span className="text-gray-500">Re-Buys:</span>
+                  <span className="font-medium">{session.rebuys}</span>
+                </div>
+                
+                <div className="flex justify-between py-2 border-b">
                   <span className="text-gray-500">Blinds:</span>
                   <span className="font-medium">${session.smallBlind || 0}/${session.bigBlind || 0}</span>
                 </div>
