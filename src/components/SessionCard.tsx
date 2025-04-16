@@ -38,7 +38,7 @@ export default function SessionCard({ session }: SessionCardProps) {
     >
       <div className="flex justify-between items-start mb-2">
         <div>
-          <h3 className="font-bold text-lg">{session.location}</h3>
+          <h3 className="font-extrabold text-lg tracking-tight">{session.location}</h3>
           <p className="text-gray-500 text-sm">{timeAgo}</p>
         </div>
         {session.isActive ? (

@@ -91,7 +91,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-medium">Hands Played</h3>
+        <h3 className="text-xl font-extrabold tracking-tight">Hands Played</h3>
         <Button 
           onClick={() => setIsAddHandOpen(true)}
           className="bg-poker-gold hover:bg-poker-darkGold text-white"

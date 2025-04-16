@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -102,5 +103,11 @@
   
   h1, h2, h3, h4, h5, h6, .font-serif {
     font-family: 'Playfair Display', serif;
+  }
+  
+  /* Adding rounded headers styling */
+  h3 {
+    font-family: 'Nunito', 'Playfair Display', sans-serif;
+    @apply font-extrabold tracking-tight;
   }
 }

@@ -32,7 +32,7 @@ const Index = () => {
         <StatsQuickView />
         
         <div className="mb-4 flex justify-between items-center">
-          <h2 className="font-serif text-xl font-bold">Recent Sessions</h2>
+          <h2 className="font-extrabold text-xl tracking-tight">Recent Sessions</h2>
           <button 
             className="text-sm text-poker-feltGreen"
             onClick={() => navigate('/history')}

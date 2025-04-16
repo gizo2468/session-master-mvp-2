@@ -23,7 +23,7 @@ export function FocusModeDialog({ open, onOpenChange }: FocusModeDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-serif text-center">Select Focus Duration</DialogTitle>
+          <DialogTitle className="text-xl font-extrabold tracking-tight text-center">Select Focus Duration</DialogTitle>
         </DialogHeader>
         
         <div className="grid grid-cols-2 gap-4 py-4">
@@ -33,7 +33,7 @@ export function FocusModeDialog({ open, onOpenChange }: FocusModeDialogProps) {
           >
             <CardContent className="flex flex-col items-center justify-center p-6">
               <Timer className="h-10 w-10 mb-2 text-poker-gold" />
-              <span className="font-serif text-xl">10 minutes</span>
+              <span className="font-extrabold text-xl tracking-tight">10 minutes</span>
             </CardContent>
           </Card>
           
@@ -43,7 +43,7 @@ export function FocusModeDialog({ open, onOpenChange }: FocusModeDialogProps) {
           >
             <CardContent className="flex flex-col items-center justify-center p-6">
               <Timer className="h-10 w-10 mb-2 text-poker-gold" />
-              <span className="font-serif text-xl">15 minutes</span>
+              <span className="font-extrabold text-xl tracking-tight">15 minutes</span>
             </CardContent>
           </Card>
         </div>

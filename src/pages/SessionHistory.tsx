@@ -40,7 +40,7 @@ export default function SessionHistory() {
           <button onClick={() => navigate(-1)} className="text-poker-feltGreen mb-4 flex items-center">
             ← Back
           </button>
-          <h1 className="text-2xl font-serif font-bold">Session History</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">Session History</h1>
         </header>
         
         <FilterBar />
@@ -57,4 +57,4 @@ export default function SessionHistory() {
       </div>
     </div>
   );
-}
+};

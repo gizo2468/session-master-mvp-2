@@ -44,7 +44,7 @@ export function PokerTips() {
       {tips.map((tip, index) => (
         <Card key={index} className="mb-4">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-serif flex items-center">
+            <CardTitle className="text-lg font-extrabold tracking-tight flex items-center">
               <PokerChip className="mr-2 h-5 w-5 text-poker-red" />
               {tip.title}
             </CardTitle>

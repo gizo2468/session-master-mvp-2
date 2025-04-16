@@ -16,7 +16,7 @@ const DonationCard = () => {
       <CardHeader className="bg-gradient-to-r from-poker-feltGreen to-poker-feltGreen/80 text-white pb-4">
         <div className="flex items-center justify-center gap-2 mb-1">
           <Icon name="Heart" className="text-poker-cream animate-pulse" />
-          <CardTitle className="text-2xl font-serif text-center">Support SessionMaster</CardTitle>
+          <CardTitle className="text-2xl font-extrabold tracking-tight text-center">Support SessionMaster</CardTitle>
           <Icon name="Heart" className="text-poker-cream animate-pulse" />
         </div>
       </CardHeader>
