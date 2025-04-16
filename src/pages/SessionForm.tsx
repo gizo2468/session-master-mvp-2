@@ -42,12 +42,14 @@ export default function SessionForm() {
   });
   
   const onSubmit = (values: FormValues) => {
+    const buyInAmount = parseFloat(values.buyIn);
     const newSession: PokerSession = {
       id: uuidv4(),
       gameType: values.gameType,
       format: values.format,
       location: values.location,
-      buyIn: parseFloat(values.buyIn),
+      buyIn: buyInAmount,
+      initialBuyIn: buyInAmount, // Add initialBuyIn property with the same value as buyIn
       smallBlind: 0,
       bigBlind: 0,
       startTime: new Date(),
