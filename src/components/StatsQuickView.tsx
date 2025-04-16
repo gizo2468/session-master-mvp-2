@@ -7,31 +7,18 @@ export default function StatsQuickView() {
   // Calculate stats
   const totalSessions = sessions.filter(s => !s.isActive).length;
   
-  // Calculate wins based on total profit across all tables
   const wins = sessions.filter(
-    s => !s.isActive && s.tables.reduce((total, table) => (
-      table.cashOut ? total + (table.cashOut - table.buyIn) : total
-    ), 0) > 0
+    s => !s.isActive && s.cashOut && s.cashOut > s.buyIn
   ).length;
   
-  // Calculate losses based on total profit across all tables
   const losses = sessions.filter(
-    s => !s.isActive && s.tables.reduce((total, table) => (
-      table.cashOut ? total + (table.cashOut - table.buyIn) : total
-    ), 0) < 0
+    s => !s.isActive && s.cashOut && s.cashOut < s.buyIn
   ).length;
   
-  // Calculate net profit
   const netProfit = sessions.reduce(
     (total, session) => {
-      if (!session.isActive) {
-        const sessionProfit = session.tables.reduce((tableTotal, table) => {
-          if (table.cashOut) {
-            return tableTotal + (table.cashOut - table.buyIn);
-          }
-          return tableTotal;
-        }, 0);
-        return total + sessionProfit;
+      if (!session.isActive && session.cashOut) {
+        return total + (session.cashOut - session.buyIn);
       }
       return total;
     }, 0

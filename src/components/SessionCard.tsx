@@ -10,25 +10,15 @@ interface SessionCardProps {
 export default function SessionCard({ session }: SessionCardProps) {
   const navigate = useNavigate();
   
-  // Calculate profit/loss across all tables
-  const isCompleted = !session.isActive;
+  // Calculate profit/loss
+  const isCompleted = !session.isActive && session.cashOut !== undefined;
   let profit = 0;
   let profitClass = '';
   
-  if (isCompleted) {
-    profit = session.tables.reduce((total, table) => {
-      if (table.cashOut !== undefined) {
-        return total + (table.cashOut - table.buyIn);
-      }
-      return total;
-    }, 0);
-    
+  if (isCompleted && session.cashOut !== undefined) {
+    profit = session.cashOut - session.buyIn;
     profitClass = profit >= 0 ? 'text-green-500' : 'text-poker-red';
   }
-  
-  // Count active tables
-  const activeTables = session.tables.filter(table => table.isActive).length;
-  const totalTables = session.tables.length;
   
   const timeAgo = formatDistanceToNow(new Date(session.startTime), { addSuffix: true });
   
@@ -54,8 +44,9 @@ export default function SessionCard({ session }: SessionCardProps) {
       </div>
       
       <div className="flex justify-between text-sm text-gray-600">
+        <span>{session.gameType} • {session.format}</span>
         <span>
-          Tables: {totalTables} {activeTables > 0 ? `(${activeTables} active)` : ''}
+          {session.smallBlind}/{session.bigBlind}
         </span>
       </div>
     </div>

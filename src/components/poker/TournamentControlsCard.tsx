@@ -27,13 +27,8 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
   session,
   onAddRebuy
 }) => {
-  // Get the primary table for this session
-  const primaryTable = session.tables && session.tables.length > 0 ? session.tables[0] : null;
-  
   // Calculate the original buy-in amount
-  const rebuyAmount = primaryTable ? 
-    (primaryTable.initialBuyIn || primaryTable.tournamentBuyIn || primaryTable.buyIn) : 0;
-    
+  const rebuyAmount = session.initialBuyIn || session.tournamentBuyIn || session.buyIn;
   const [isRebuyDialogOpen, setIsRebuyDialogOpen] = useState(false);
   const [customRebuyAmount, setCustomRebuyAmount] = useState('');
   
@@ -49,20 +44,17 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
       setCustomRebuyAmount('');
     }
   };
-  
-  // Determine the format from the primary table
-  const tableFormat = primaryTable?.format || 'Cash';
 
   return (
     <Card className="bg-white rounded-lg shadow-md mb-6">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-medium">
-          {tableFormat === 'Tournament' ? 'Tournament Controls' : 'Cash Game Controls'}
+          {session.format === 'Tournament' ? 'Tournament Controls' : 'Cash Game Controls'}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="flex flex-col gap-4">
-          {tableFormat === 'Tournament' ? (
+          {session.format === 'Tournament' ? (
             // Tournament fixed rebuy
             <AlertDialog>
               <AlertDialogTrigger asChild>

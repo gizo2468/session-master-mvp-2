@@ -1,91 +1,90 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { differenceInMinutes, format } from 'date-fns';
+import Icon from '@/components/ui/Lucide';
+import { format as dateFormat } from 'date-fns';
 
 interface SessionTimerCardProps {
   startTime: Date;
-  location: string;
+  gameType: string;
+  format: string;
+  smallBlind: number;
+  bigBlind: number;
   onEndSession: () => void;
 }
 
-const formatTime = (minutes: number) => {
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  
-  return `${hours}h ${remainingMinutes}m`;
-};
-
 const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   startTime,
-  location,
-  onEndSession
+  gameType,
+  format,
+  smallBlind,
+  bigBlind,
+  onEndSession,
 }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [isRunning, setIsRunning] = useState(true);
   
   useEffect(() => {
-    // Calculate initial elapsed time
-    const initialElapsedMinutes = differenceInMinutes(
-      new Date(),
-      new Date(startTime)
-    );
+    const initialElapsedTime = Math.floor((new Date().getTime() - new Date(startTime).getTime()) / 1000);
+    setElapsedTime(initialElapsedTime);
     
-    setElapsedTime(initialElapsedMinutes);
+    let timer: number | undefined;
     
-    // Set up timer to update elapsed time
-    const timer = setInterval(() => {
-      if (isRunning) {
-        setElapsedTime(prev => prev + 1);
-      }
-    }, 60000); // Update every minute
+    // Always run the timer (no conditional on timerActive)
+    timer = window.setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000);
     
     return () => {
-      clearInterval(timer);
+      if (timer) clearInterval(timer);
     };
-  }, [startTime, isRunning]);
-  
-  const toggleTimer = () => {
-    setIsRunning(prev => !prev);
+  }, [startTime]);
+
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+    
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
   
-  // Format date and time
-  const startTimeFormatted = format(new Date(startTime), "MMM d, yyyy h:mm a");
+  const formattedStartTime = dateFormat(new Date(startTime), 'h:mm a');
+  const formattedDate = dateFormat(new Date(startTime), 'MMM d, yyyy');
   
   return (
-    <Card className="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
-      <div className="bg-poker-feltGreen text-white p-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="font-medium text-lg">{location}</h2>
-            <p className="text-xs opacity-80">Started {startTimeFormatted}</p>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold">{formatTime(elapsedTime)}</div>
-            <p className="text-xs opacity-80">Session Duration</p>
+    <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
+      <div className="mb-2 text-sm text-gray-500">Session Time</div>
+      <div className="text-5xl font-mono font-bold mb-3">{formatTime(elapsedTime)}</div>
+      
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="text-left">
+          <div className="text-sm text-gray-500">Started</div>
+          <div className="font-medium">{formattedStartTime}</div>
+          <div className="text-xs text-gray-400">{formattedDate}</div>
+        </div>
+        
+        <div className="text-right">
+          <div className="text-sm text-gray-500">Game</div>
+          <div className="font-medium">{gameType}</div>
+          <div className="text-xs text-gray-400">
+            {format} - ${smallBlind}/${bigBlind}
           </div>
         </div>
       </div>
-      <CardContent className="p-4 flex justify-between items-center">
+      
+      <div className="flex justify-center">
         <Button
-          variant="outline"
-          size="sm"
-          onClick={toggleTimer}
-          className="text-poker-feltGreen border-poker-feltGreen"
-        >
-          {isRunning ? "Pause Timer" : "Resume Timer"}
-        </Button>
-        
-        <Button
-          variant="destructive"
-          size="sm"
           onClick={onEndSession}
+          variant="destructive"
+          className="flex items-center gap-2"
         >
-          End Session
+          <Icon name="CircleStop" size={16} /> End Session
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

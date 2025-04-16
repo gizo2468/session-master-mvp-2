@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { HandData } from '@/types/poker';
 import HandsList from './HandsList';
 import HandForm from './HandForm';
@@ -21,16 +21,12 @@ import {
 
 interface HandManagementPanelProps {
   sessionId: string;
-  tableId: string;
   hands?: HandData[];
-  onClose?: () => void;
 }
 
 const HandManagementPanel: React.FC<HandManagementPanelProps> = ({ 
   sessionId,
-  tableId,
-  hands = [],
-  onClose,
+  hands = []
 }) => {
   const [isAddHandOpen, setIsAddHandOpen] = useState(false);
   const [isEditHandOpen, setIsEditHandOpen] = useState(false);
@@ -41,7 +37,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   const { toast } = useToast();
   
   const handleAddHand = (handData: Partial<HandData>) => {
-    addHand(sessionId, tableId, handData as Omit<HandData, 'id' | 'createdAt' | 'tableId'>);
+    addHand(sessionId, handData as Omit<HandData, 'id' | 'createdAt'>);
     toast({
       title: 'Hand Added',
       description: 'Your hand has been successfully added.',
@@ -51,7 +47,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   
   const handleEditHand = (handData: Partial<HandData>) => {
     if (editingHand && handData.id) {
-      updateHand(sessionId, tableId, {
+      updateHand(sessionId, {
         ...editingHand,
         ...handData,
       });
@@ -75,7 +71,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   
   const confirmDeleteHand = () => {
     if (handToDelete) {
-      deleteHand(sessionId, tableId, handToDelete);
+      deleteHand(sessionId, handToDelete);
       setHandToDelete(null);
       toast({
         title: 'Hand Deleted',
@@ -87,28 +83,15 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-medium">Hands</h3>
-        <div className="flex space-x-2">
-          <Button 
-            onClick={() => setIsAddHandOpen(true)}
-            className="bg-poker-gold hover:bg-poker-darkGold text-white"
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-2" /> 
-            Add Hand
-          </Button>
-          
-          {onClose && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={onClose}
-            >
-              <X className="h-4 w-4 mr-1" />
-              Close
-            </Button>
-          )}
-        </div>
+        <h3 className="text-xl font-medium">Hands Played</h3>
+        <Button 
+          onClick={() => setIsAddHandOpen(true)}
+          className="bg-poker-gold hover:bg-poker-darkGold text-white"
+          size="sm"
+        >
+          <Plus className="h-4 w-4 mr-2" /> 
+          Add Hand
+        </Button>
       </div>
       
       <HandsList 

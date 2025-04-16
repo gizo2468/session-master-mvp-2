@@ -13,23 +13,23 @@ export interface HandData {
   image?: string;
   pokercraftLink?: string;
   createdAt: Date;
-  tableId?: string; // New field to associate a hand with a specific table
 }
 
-export interface PokerTable {
+export interface PokerSession {
   id: string;
-  name: string;
   gameType: 'NLH' | 'PLO';
-  format: 'Cash' | 'Tournament';
-  buyIn: number;
-  initialBuyIn: number;
-  cashOut?: number;
+  format: 'Cash' | 'Tournament' | 'Live Cash' | 'Live Tournament' | 'Online Cash' | 'Online Tournament' | 'Home Game';
+  location: string;
+  initialBuyIn: number; // Initial buy-in amount
+  buyIn: number;        // Total buy-in amount (initial + rebuys + addons)
+  cashOut?: number; // Only set when session ends
   smallBlind: number;
   bigBlind: number;
   startTime: Date;
-  endTime?: Date;
+  endTime?: Date; // Only set when session ends
   notes?: string;
-  isActive: boolean;
+  isActive?: boolean;
+  isOnline?: boolean; // Added for online vs live tracking
   
   // Tournament specific fields
   tournamentBuyIn?: number;
@@ -37,20 +37,13 @@ export interface PokerTable {
   addOns?: number;
   finalPosition?: number;
   
+  // Live session specific fields
+  sessionDuration?: number; // In minutes
+  ploCardCount?: 4 | 5 | 6; // For PLO variants
+  currentStatus?: 'running' | 'paused' | 'ended';
+  
   // Hand tracking
   hands?: HandData[];
-}
-
-export interface PokerSession {
-  id: string;
-  location: string;
-  startTime: Date;
-  endTime?: Date;
-  isActive: boolean;
-  notes?: string;
-  
-  // Tables within this session
-  tables: PokerTable[];
 }
 
 export interface SessionFilter {
