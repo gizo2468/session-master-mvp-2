@@ -6,6 +6,7 @@ import { AlertTriangle } from 'lucide-react';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +26,8 @@ export default function SessionDetail() {
     smallBlind: '0',
     bigBlind: '0',
     gameType: 'NLH',
-    format: 'Cash'
+    format: 'Cash',
+    notes: ''
   });
   
   useEffect(() => {
@@ -36,7 +38,8 @@ export default function SessionDetail() {
         smallBlind: session.smallBlind !== undefined ? session.smallBlind.toString() : '0',
         bigBlind: session.bigBlind !== undefined ? session.bigBlind.toString() : '0',
         gameType: session.gameType || 'NLH',
-        format: session.format || 'Cash'
+        format: session.format || 'Cash',
+        notes: session.notes || ''
       });
     }
   }, [session]);
@@ -98,6 +101,7 @@ export default function SessionDetail() {
       bigBlind: parseFloat(formData.bigBlind),
       gameType: formData.gameType as 'NLH' | 'PLO',
       format: formData.format as 'Cash' | 'Tournament',
+      notes: formData.notes
     };
     
     updateSession(updatedSession);
@@ -120,7 +124,7 @@ export default function SessionDetail() {
     navigate('/');
   };
   
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -247,7 +251,7 @@ export default function SessionDetail() {
               </div>
             </div>
             
-            <div className="mb-6 grid grid-cols-2 gap-4">
+            <div className="mb-4 grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-gray-700 mb-2" htmlFor="smallBlind">
                   Small Blind
@@ -289,6 +293,20 @@ export default function SessionDetail() {
                   />
                 </div>
               </div>
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2" htmlFor="notes">
+                Notes
+              </label>
+              <Textarea
+                id="notes"
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                placeholder="Add session notes here..."
+                className="min-h-[100px]"
+              />
             </div>
             
             <div className="flex gap-3">
