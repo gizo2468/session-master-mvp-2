@@ -33,9 +33,9 @@ export default function SessionDetail() {
     if (session) {
       setFormData({
         location: session.location || '',
-        buyIn: session.buyIn?.toString() || '0',
-        smallBlind: session.smallBlind?.toString() || '0',
-        bigBlind: session.bigBlind?.toString() || '0',
+        buyIn: session.buyIn !== undefined ? session.buyIn.toString() : '0',
+        smallBlind: session.smallBlind !== undefined ? session.smallBlind.toString() : '0',
+        bigBlind: session.bigBlind !== undefined ? session.bigBlind.toString() : '0',
         gameType: session.gameType || 'NLH',
         format: session.format || 'Cash'
       });
@@ -312,12 +312,12 @@ export default function SessionDetail() {
                 
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-gray-500">Buy-in:</span>
-                  <span className="font-medium">${session.buyIn.toFixed(2)}</span>
+                  <span className="font-medium">${session.buyIn !== undefined ? session.buyIn.toFixed(2) : '0.00'}</span>
                 </div>
                 
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-gray-500">Blinds:</span>
-                  <span className="font-medium">${session.smallBlind}/${session.bigBlind}</span>
+                  <span className="font-medium">${session.smallBlind || 0}/${session.bigBlind || 0}</span>
                 </div>
                 
                 {isCompleted && session.cashOut !== undefined && (
