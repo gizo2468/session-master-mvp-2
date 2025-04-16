@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
-import { format } from 'date-fns';
+import { format, differenceInMinutes, differenceInHours } from 'date-fns';
 import { AlertTriangle } from 'lucide-react';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
@@ -113,6 +113,23 @@ export default function SessionDetail() {
   const formattedEndDate = session.endTime 
     ? format(new Date(session.endTime), 'MMM d, yyyy h:mm a')
     : null;
+    
+  // Calculate session duration
+  const calculateDuration = () => {
+    if (!session.endTime) return null;
+    
+    const start = new Date(session.startTime);
+    const end = new Date(session.endTime);
+    const hours = differenceInHours(end, start);
+    const minutes = differenceInMinutes(end, start) % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+  
+  const sessionDuration = session.endTime ? calculateDuration() : null;
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -291,8 +308,15 @@ export default function SessionDetail() {
                   <p className="font-medium">{formattedDate}</p>
                 </div>
                 
+                {sessionDuration && (
+                  <div className="text-center">
+                    <span className="text-sm text-gray-500">Duration</span>
+                    <p className="font-medium">{sessionDuration}</p>
+                  </div>
+                )}
+                
                 {formattedEndDate && (
-                  <div>
+                  <div className="text-right">
                     <span className="text-sm text-gray-500">Ended</span>
                     <p className="font-medium">{formattedEndDate}</p>
                   </div>
