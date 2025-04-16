@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -5,7 +6,6 @@ import { format, differenceInMinutes, differenceInHours } from 'date-fns';
 import { AlertTriangle } from 'lucide-react';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
-import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
 import { Button } from '@/components/ui/button';
 
 export default function SessionDetail() {
@@ -301,10 +301,6 @@ export default function SessionDetail() {
               />
             )}
             
-            {!isEditing && (
-              <SessionDetailsCard session={session} />
-            )}
-            
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <div className="flex justify-between items-center mb-6">
                 <div>
@@ -327,26 +323,48 @@ export default function SessionDetail() {
                 )}
               </div>
               
-              {isCompleted && session.cashOut !== undefined && (
-                <>
-                  <div className="flex justify-between py-2 border-b">
-                    <span className="text-gray-500">Cash out:</span>
-                    <span className="font-medium">${session.cashOut.toFixed(2)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between py-2 border-b">
-                    <span className="text-gray-500">Profit/Loss:</span>
-                    <span className={`font-bold ${profitClass}`}>
-                      {profit > 0 ? '+' : ''}{profit.toFixed(2)}
-                    </span>
-                  </div>
-                </>
-              )}
+              <div className="flex flex-col gap-4 mb-6">
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-gray-500">Game:</span>
+                  <span className="font-medium">{session.gameType}</span>
+                </div>
+                
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-gray-500">Format:</span>
+                  <span className="font-medium">{session.format}</span>
+                </div>
+                
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-gray-500">Buy-in:</span>
+                  <span className="font-medium">${session.buyIn !== undefined ? session.buyIn.toFixed(2) : '0.00'}</span>
+                </div>
+                
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-gray-500">Blinds:</span>
+                  <span className="font-medium">${session.smallBlind || 0}/${session.bigBlind || 0}</span>
+                </div>
+                
+                {isCompleted && session.cashOut !== undefined && (
+                  <>
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-gray-500">Cash out:</span>
+                      <span className="font-medium">${session.cashOut.toFixed(2)}</span>
+                    </div>
+                    
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-gray-500">Profit/Loss:</span>
+                      <span className={`font-bold ${profitClass}`}>
+                        {profit > 0 ? '+' : ''}{profit.toFixed(2)}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
               
               {session.isActive && (
                 <button
                   onClick={() => setShowEndSessionModal(true)}
-                  className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md mt-4"
+                  className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md"
                 >
                   End Session
                 </button>
