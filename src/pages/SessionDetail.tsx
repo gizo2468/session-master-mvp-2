@@ -386,6 +386,13 @@ export default function SessionDetail() {
                         {profit > 0 ? '+' : ''}{profit.toFixed(2)}
                       </span>
                     </div>
+                    
+                    {session.notes && (
+                      <div className="flex flex-col py-2 border-b">
+                        <span className="text-gray-500 mb-1">Session Notes:</span>
+                        <p className="text-sm bg-gray-50 p-3 rounded">{session.notes}</p>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -457,6 +464,25 @@ export default function SessionDetail() {
                   required
                 />
               </div>
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2" htmlFor="notes">Session Notes</label>
+              <textarea
+                id="notes"
+                placeholder="How did your session go? Note any significant hands, reads, or things to improve..."
+                className="w-full p-3 border border-gray-300 rounded-md min-h-[100px]"
+                value={session.notes || ''}
+                onChange={(e) => {
+                  if (session) {
+                    const updatedSession = {
+                      ...session,
+                      notes: e.target.value
+                    };
+                    updateSession(updatedSession);
+                  }
+                }}
+              ></textarea>
             </div>
             
             <div className="flex gap-4">
