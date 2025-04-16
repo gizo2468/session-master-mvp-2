@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -106,13 +105,11 @@ export default function ConfirmSession() {
           {/* Session Details */}
           <SessionDetailsCard session={activeSession} />
           
-          {/* Tournament Controls */}
-          {activeSession.format === 'Tournament' && (
-            <TournamentControlsCard 
-              session={activeSession}
-              onAddRebuy={handleAddRebuy}
-            />
-          )}
+          {/* Controls for both Cash Game and Tournament */}
+          <TournamentControlsCard 
+            session={activeSession}
+            onAddRebuy={handleAddRebuy}
+          />
           
           {/* Hand Management */}
           <div className="bg-white rounded-lg shadow-md p-6">
@@ -190,7 +187,6 @@ export default function ConfirmSession() {
                 </div>
               </div>
               
-              {/* Notes field added to end session sheet */}
               <div className="mb-6">
                 <label htmlFor="notes" className="block text-sm font-medium mb-1">
                   Notes (Optional)

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
@@ -14,6 +14,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { PokerSession } from '@/types/poker';
 
 interface TournamentControlsCardProps {
@@ -27,42 +29,115 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
 }) => {
   // Calculate the original buy-in amount
   const rebuyAmount = session.initialBuyIn || session.tournamentBuyIn || session.buyIn;
-
+  const [isRebuyDialogOpen, setIsRebuyDialogOpen] = useState(false);
+  const [customRebuyAmount, setCustomRebuyAmount] = useState('');
+  
   const handleConfirmRebuy = () => {
     onAddRebuy(rebuyAmount);
+  };
+
+  const handleConfirmCustomRebuy = () => {
+    const amount = parseFloat(customRebuyAmount);
+    if (!isNaN(amount) && amount > 0) {
+      onAddRebuy(amount);
+      setIsRebuyDialogOpen(false);
+      setCustomRebuyAmount('');
+    }
   };
 
   return (
     <Card className="bg-white rounded-lg shadow-md mb-6">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium">Tournament Controls</CardTitle>
+        <CardTitle className="text-lg font-medium">
+          {session.format === 'Tournament' ? 'Tournament Controls' : 'Cash Game Controls'}
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="flex flex-col gap-4">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
+          {session.format === 'Tournament' ? (
+            // Tournament fixed rebuy
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full flex justify-center items-center gap-2"
+                >
+                  <Icon name="Plus" size={16} /> Add Rebuy
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Rebuy</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to add a Rebuy for ${rebuyAmount.toFixed(2)}?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleConfirmRebuy} className="bg-poker-gold hover:bg-poker-darkGold text-white">
+                    Confirm Rebuy
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : (
+            // Cash game flexible rebuy
+            <>
               <Button
                 variant="outline"
                 className="w-full flex justify-center items-center gap-2"
+                onClick={() => setIsRebuyDialogOpen(true)}
               >
                 <Icon name="Plus" size={16} /> Add Rebuy
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirm Rebuy</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to add a Rebuy for ${rebuyAmount.toFixed(2)}?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleConfirmRebuy} className="bg-poker-gold hover:bg-poker-darkGold text-white">
-                  Confirm Rebuy
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+              
+              <Dialog open={isRebuyDialogOpen} onOpenChange={setIsRebuyDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add Cash Game Rebuy</DialogTitle>
+                    <DialogDescription>
+                      Enter the amount you want to add as a rebuy.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <label htmlFor="rebuy-amount" className="text-sm font-medium mb-2 block">
+                      Rebuy Amount
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500">$</span>
+                      </div>
+                      <Input
+                        id="rebuy-amount"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        placeholder="0.00"
+                        className="pl-8"
+                        value={customRebuyAmount}
+                        onChange={(e) => setCustomRebuyAmount(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsRebuyDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleConfirmCustomRebuy}
+                      disabled={!customRebuyAmount || parseFloat(customRebuyAmount) <= 0}
+                      className="bg-poker-gold hover:bg-poker-darkGold text-white"
+                    >
+                      Add Rebuy
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>
