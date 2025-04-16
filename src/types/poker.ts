@@ -20,7 +20,8 @@ export interface PokerSession {
   gameType: 'NLH' | 'PLO';
   format: 'Cash' | 'Tournament' | 'Live Cash' | 'Live Tournament' | 'Online Cash' | 'Online Tournament' | 'Home Game';
   location: string;
-  buyIn: number;
+  initialBuyIn: number; // Initial buy-in amount
+  buyIn: number;        // Total buy-in amount (initial + rebuys + addons)
   cashOut?: number; // Only set when session ends
   smallBlind: number;
   bigBlind: number;

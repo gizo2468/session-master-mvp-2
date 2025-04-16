@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,7 +17,6 @@ interface SessionContextType {
   addRebuy: (id: string, amount: number) => void;
   addAddon: (id: string, amount: number) => void;
   setFilters: (filters: SessionFilter) => void;
-  // Hand management methods
   addHand: (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => void;
   updateHand: (sessionId: string, hand: HandData) => void;
   deleteHand: (sessionId: string, handId: string) => void;
@@ -26,25 +24,29 @@ interface SessionContextType {
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
-// Load data from localStorage
 const loadSessions = (): PokerSession[] => {
   const savedSessions = localStorage.getItem('pokerSessions');
   if (savedSessions) {
     const parsed = JSON.parse(savedSessions);
-    return parsed.map((session: PokerSession) => ({
-      ...session,
-      startTime: new Date(session.startTime),
-      endTime: session.endTime ? new Date(session.endTime) : undefined,
-      hands: session.hands ? session.hands.map((hand: HandData) => ({
-        ...hand,
-        createdAt: new Date(hand.createdAt)
-      })) : []
-    }));
+    return parsed.map((session: PokerSession) => {
+      if (!session.initialBuyIn) {
+        session.initialBuyIn = session.buyIn - ((session.rebuys || 0) * (session.tournamentBuyIn || 0)) - 
+                              ((session.addOns || 0) * (session.tournamentBuyIn || 0));
+      }
+      return {
+        ...session,
+        startTime: new Date(session.startTime),
+        endTime: session.endTime ? new Date(session.endTime) : undefined,
+        hands: session.hands ? session.hands.map((hand: HandData) => ({
+          ...hand,
+          createdAt: new Date(hand.createdAt)
+        })) : []
+      };
+    });
   }
   return [];
 };
 
-// Find active session if any
 const findActiveSession = (sessions: PokerSession[]): PokerSession | null => {
   return sessions.find(session => session.isActive) || null;
 };
@@ -58,17 +60,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     location: '',
   });
   
-  // Save sessions to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('pokerSessions', JSON.stringify(sessions));
   }, [sessions]);
 
-  // Add a new session
   const addSession = (session: PokerSession) => {
-    setSessions((prev) => [...prev, session]);
+    const sessionWithInitialBuyIn = {
+      ...session,
+      initialBuyIn: session.buyIn
+    };
+    setSessions((prev) => [...prev, sessionWithInitialBuyIn]);
   };
 
-  // Update an existing session
   const updateSession = (updatedSession: PokerSession) => {
     setSessions((prev) =>
       prev.map((session) =>
@@ -76,26 +79,23 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       )
     );
     
-    // Also update active session if it's the same session
     if (activeSession && activeSession.id === updatedSession.id) {
       setActiveSession(updatedSession);
     }
   };
 
-  // Delete a session
   const deleteSession = (id: string) => {
     setSessions((prev) => prev.filter((session) => session.id !== id));
     
-    // Clear active session if it's the deleted one
     if (activeSession && activeSession.id === id) {
       setActiveSession(null);
     }
   };
 
-  // Start a new active session
   const startSession = (session: PokerSession) => {
     const sessionWithActive = {
       ...session,
+      initialBuyIn: session.buyIn,
       isActive: true,
       currentStatus: 'running' as const,
       sessionDuration: 0,
@@ -105,7 +105,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     addSession(sessionWithActive);
   };
 
-  // End an active session
   const endSession = (id: string, cashOut: number, notes?: string) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
@@ -122,7 +121,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Pause an active session
   const pauseSession = (id: string) => {
     const session = sessions.find((s) => s.id === id);
     if (session && session.isActive) {
@@ -134,7 +132,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Resume a paused session
   const resumeSession = (id: string) => {
     const session = sessions.find((s) => s.id === id);
     if (session && session.isActive) {
@@ -146,7 +143,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Update the duration of a session
   const updateSessionDuration = (id: string, duration: number) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
@@ -158,7 +154,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Add a rebuy to a tournament session
   const addRebuy = (id: string, amount: number) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
@@ -172,7 +167,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Add an add-on to a tournament session
   const addAddon = (id: string, amount: number) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
@@ -186,7 +180,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Add a new hand to a session
   const addHand = (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
@@ -205,7 +198,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Update an existing hand
   const updateHand = (sessionId: string, updatedHand: HandData) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session && session.hands) {
@@ -222,7 +214,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Delete a hand
   const deleteHand = (sessionId: string, handId: string) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session && session.hands) {

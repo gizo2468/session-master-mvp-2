@@ -10,6 +10,12 @@ interface SessionDetailsCardProps {
 const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   // Calculate the total of rebuys and addons
   const calculateAdditionalBuyins = () => {
+    if (session.initialBuyIn) {
+      // If initialBuyIn exists, return the difference between total and initial
+      return session.buyIn - session.initialBuyIn;
+    }
+    
+    // Fallback calculation (for backward compatibility)
     let additional = 0;
     
     if (session.rebuys && session.rebuys > 0) {
@@ -24,6 +30,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   };
   
   const additionalBuyins = calculateAdditionalBuyins();
+  const initialBuyIn = session.initialBuyIn || (session.buyIn - additionalBuyins);
   
   return (
     <Card className="bg-white rounded-lg shadow-md mb-6">
@@ -40,7 +47,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           <div className="flex justify-between">
             <span className="text-gray-500">Buy-in:</span>
             <span className="font-medium">
-              ${session.buyIn.toFixed(2)}
+              ${initialBuyIn.toFixed(2)}
               {additionalBuyins > 0 && <span className="text-gray-600"> (+${additionalBuyins.toFixed(2)})</span>}
             </span>
           </div>
