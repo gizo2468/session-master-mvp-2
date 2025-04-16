@@ -8,13 +8,14 @@ export default function StatsQuickView() {
   const totalSessions = sessions.filter(s => !s.isActive).length;
   
   const wins = sessions.filter(
-    s => !s.isActive && s.cashOut && s.cashOut > s.buyIn
+    s => !s.isActive && s.cashOut !== undefined && s.cashOut > s.buyIn
   ).length;
   
   const losses = sessions.filter(
-    s => !s.isActive && s.cashOut && s.cashOut < s.buyIn
+    s => !s.isActive && s.cashOut !== undefined && s.cashOut < s.buyIn
   ).length;
   
+  // Properly calculate net profit by adding up profits and losses from all completed sessions
   const netProfit = sessions.reduce(
     (total, session) => {
       if (!session.isActive && session.cashOut !== undefined) {
@@ -24,8 +25,8 @@ export default function StatsQuickView() {
     }, 0
   );
   
-  // Format the profit amount with 2 decimal places
-  const formattedProfit = netProfit ? netProfit.toFixed(2) : "0.00";
+  // Format the profit amount with 2 decimal places and include dollar sign
+  const formattedProfit = netProfit !== undefined ? netProfit.toFixed(2) : "0.00";
   const profitClass = netProfit >= 0 ? 'text-green-500' : 'text-poker-red';
 
   return (
