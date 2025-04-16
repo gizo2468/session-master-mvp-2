@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -282,59 +281,67 @@ const HandForm: React.FC<HandFormProps> = ({
                   />
                 </div>
                 
-                {currencyType === 'chips' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="smallBlind"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Small Blind</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <span className="text-gray-500"><PokerChip className="h-5 w-5" /></span>
-                              </div>
-                              <Input 
-                                type="number"
-                                placeholder="25"
-                                className="pl-8"
-                                onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                                value={field.value !== undefined ? field.value : ''}
-                              />
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <FormField
+                    control={form.control}
+                    name="smallBlind"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Small Blind</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                              <span className="text-gray-500">
+                                {currencyType === 'currency' ? '💵' : <PokerChip className="h-5 w-5" />}
+                              </span>
                             </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <Input 
+                              type="number"
+                              placeholder="Small Blind"
+                              className="pl-8"
+                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                              value={field.value !== undefined ? field.value : ''}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          {currencyType === 'currency' ? 'Cash game small blind' : 'Tournament small blind'}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                     
-                    <FormField
-                      control={form.control}
-                      name="bigBlind"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Big Blind</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <span className="text-gray-500"><PokerChip className="h-5 w-5" /></span>
-                              </div>
-                              <Input 
-                                type="number"
-                                placeholder="50"
-                                className="pl-8"
-                                onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                                value={field.value !== undefined ? field.value : ''}
-                              />
+                  <FormField
+                    control={form.control}
+                    name="bigBlind"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Big Blind</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                              <span className="text-gray-500">
+                                {currencyType === 'currency' ? '💵' : <PokerChip className="h-5 w-5" />}
+                              </span>
                             </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
+                            <Input 
+                              type="number"
+                              placeholder="Big Blind"
+                              className="pl-8"
+                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                              value={field.value !== undefined ? field.value : ''}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          {currencyType === 'currency' ? 'Cash game big blind' : 'Tournament big blind'}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
                 <FormField
                   control={form.control}
