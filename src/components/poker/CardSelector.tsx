@@ -28,10 +28,11 @@ const CardSelector: React.FC<CardSelectorProps> = ({ selectedCards, onChange, ma
     // Check if card is already selected
     if (selectedCards.includes(card)) return;
     
+    // Add the new card to the selection
     const newCards = selectedCards + card;
     onChange(newCards);
     
-    // Reset selections
+    // Reset selections after adding
     setSelectedRank('');
     setSelectedSuit('');
   };
@@ -139,10 +140,16 @@ const CardSelector: React.FC<CardSelectorProps> = ({ selectedCards, onChange, ma
           type="button"
           onClick={addCard}
           disabled={!selectedRank || !selectedSuit}
-          className="py-2 px-4 bg-poker-feltGreen text-white rounded disabled:bg-gray-300 disabled:text-gray-500"
+          className="py-2 px-4 bg-poker-feltGreen text-white rounded disabled:bg-gray-300 disabled:text-gray-500 hover:bg-green-800 transition-colors"
         >
           Add Card
         </button>
+      </div>
+      
+      {/* Debug info */}
+      <div className="text-xs text-gray-500">
+        <div>Selected rank: {selectedRank || 'none'}</div>
+        <div>Selected suit: {selectedSuit || 'none'}</div>
       </div>
     </div>
   );
