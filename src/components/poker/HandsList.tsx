@@ -1,11 +1,14 @@
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, Video, CircleDollarSign, Image, X } from 'lucide-react';
+import { Pencil, Trash2, Video, CircleDollarSign, Image, X, MessageSquare } from 'lucide-react';
 import { HandData } from '@/types/poker';
 import CardDisplay from './CardDisplay';
 import { PokerChip } from '../Icons';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface HandsListProps {
   hands: HandData[];
@@ -67,6 +70,26 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
                           >
                             <Video size={16} />
                           </a>
+                        )}
+                        {hand.notes && (
+                          <TooltipProvider>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  className="text-gray-500 hover:text-gray-700"
+                                  aria-label="View hand notes"
+                                >
+                                  <MessageSquare size={16} />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80 p-4">
+                                <div className="space-y-2">
+                                  <h4 className="font-medium">Hand Notes</h4>
+                                  <p className="text-sm text-gray-700">{hand.notes}</p>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </TooltipProvider>
                         )}
                       </div>
                     </div>
