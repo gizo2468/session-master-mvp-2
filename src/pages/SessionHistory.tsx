@@ -4,7 +4,7 @@ import { useSessionContext } from '@/context/SessionContext';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { FilterBar } from '@/components/ui/FilterBar';
+import FilterBar from '@/components/ui/FilterBar';
 import { useFilter } from '@/hooks/use-filter';
 import Icon from '@/components/ui/Lucide';
 
@@ -182,7 +182,7 @@ export default function SessionHistory() {
                         <p className="text-sm text-gray-500">{formattedDate}</p>
                       </div>
                       <span className={`font-bold ${sessionProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        {sessionProfit >= 0 ? '+' : ''}${Math.abs(sessionProfit).toFixed(2)}
+                        {sessionProfit >= 0 ? '+' : ''}{Math.abs(sessionProfit).toFixed(2)}
                       </span>
                     </div>
                     

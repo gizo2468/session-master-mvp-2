@@ -1,18 +1,24 @@
 
 import React, { useState } from 'react';
 import { Filter } from 'lucide-react';
-import { useSessionContext } from '@/context/SessionContext';
 import { SessionFilter } from '@/types/poker';
 
-export default function FilterBar() {
-  const { filters, setFilters } = useSessionContext();
+interface FilterOption {
+  key: string;
+  options: string[];
+}
+
+interface FilterBarProps {
+  filters: Record<string, string>;
+  onChange: (key: string, value: string) => void;
+  options: FilterOption[];
+}
+
+export default function FilterBar({ filters, onChange, options }: FilterBarProps) {
   const [isOpen, setIsOpen] = useState(false);
   
-  const handleFilterChange = (key: keyof SessionFilter, value: string) => {
-    setFilters({
-      ...filters,
-      [key]: value,
-    });
+  const handleFilterChange = (key: string, value: string) => {
+    onChange(key, value);
   };
   
   return (
@@ -28,31 +34,24 @@ export default function FilterBar() {
       {isOpen && (
         <div className="bg-white rounded-lg shadow-md p-4 mt-2">
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-500 block mb-1">Game Type</label>
-              <select 
-                className="w-full p-2 border rounded"
-                value={filters.gameType}
-                onChange={(e) => handleFilterChange('gameType', e.target.value)}
-              >
-                <option value="All">All Games</option>
-                <option value="NLH">No Limit Hold'em</option>
-                <option value="PLO">Pot Limit Omaha</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="text-sm text-gray-500 block mb-1">Format</label>
-              <select 
-                className="w-full p-2 border rounded"
-                value={filters.format}
-                onChange={(e) => handleFilterChange('format', e.target.value)}
-              >
-                <option value="All">All Formats</option>
-                <option value="Cash">Cash</option>
-                <option value="Tournament">Tournament</option>
-              </select>
-            </div>
+            {options.map((option) => (
+              <div key={option.key}>
+                <label className="text-sm text-gray-500 block mb-1">
+                  {option.key === 'gameType' ? 'Game Type' : 
+                   option.key === 'format' ? 'Format' : 
+                   option.key.charAt(0).toUpperCase() + option.key.slice(1)}
+                </label>
+                <select 
+                  className="w-full p-2 border rounded"
+                  value={filters[option.key] || ''}
+                  onChange={(e) => handleFilterChange(option.key, e.target.value)}
+                >
+                  {option.options.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
             
             <div className="col-span-2">
               <label className="text-sm text-gray-500 block mb-1">Location</label>
