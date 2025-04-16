@@ -1,11 +1,11 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, Video, CircleDollarSign, Image } from 'lucide-react';
+import { Pencil, Trash2, Video, CircleDollarSign, Image, X } from 'lucide-react';
 import { HandData } from '@/types/poker';
 import CardDisplay from './CardDisplay';
 import { PokerChip } from '../Icons';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface HandsListProps {
   hands: HandData[];
@@ -18,6 +18,14 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
   const sortedHands = [...hands].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
+
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const openImageModal = (imageData: string) => {
+    setSelectedImage(imageData);
+    setImageModalOpen(true);
+  };
 
   return (
     <div className="w-full overflow-hidden">
@@ -41,9 +49,13 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
                       <CardDisplay cards={hand.cards} size="sm" />
                       <div className="ml-1 flex items-center space-x-1">
                         {hand.image && (
-                          <span className="text-blue-500 hover:text-blue-600" title="Hand has image">
+                          <button
+                            onClick={() => openImageModal(hand.image as string)}
+                            className="text-blue-500 hover:text-blue-600" 
+                            title="View hand image"
+                          >
                             <Image size={16} />
-                          </span>
+                          </button>
                         )}
                         {hand.pokercraftLink && (
                           <a 
@@ -125,6 +137,28 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
           <p className="text-sm">Click "Add Hand" to start tracking your hands.</p>
         </div>
       )}
+
+      <Dialog open={imageModalOpen} onOpenChange={setImageModalOpen}>
+        <DialogContent className="max-w-3xl p-1 bg-transparent border-none">
+          <div className="relative bg-black rounded-lg overflow-hidden">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="absolute top-2 right-2 text-white bg-black/50 hover:bg-black/70 rounded-full p-1 z-10"
+              onClick={() => setImageModalOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+            {selectedImage && (
+              <img 
+                src={selectedImage} 
+                alt="Hand image" 
+                className="w-full h-auto max-h-[80vh] object-contain"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
