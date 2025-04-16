@@ -2,7 +2,7 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, Video, CircleDollarSign } from 'lucide-react';
+import { Pencil, Trash2, Video, CircleDollarSign, Image } from 'lucide-react';
 import { HandData } from '@/types/poker';
 import CardDisplay from './CardDisplay';
 import { PokerChip } from '../Icons';
@@ -39,17 +39,24 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
                   <TableCell className="py-3">
                     <div className="flex items-center gap-0.5">
                       <CardDisplay cards={hand.cards} size="sm" />
-                      {hand.pokercraftLink && (
-                        <a 
-                          href={hand.pokercraftLink} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="ml-1 text-poker-feltGreen hover:text-poker-feltGreen/80"
-                          aria-label="View hand video"
-                        >
-                          <Video size={16} />
-                        </a>
-                      )}
+                      <div className="ml-1 flex items-center space-x-1">
+                        {hand.image && (
+                          <span className="text-blue-500 hover:text-blue-600" title="Hand has image">
+                            <Image size={16} />
+                          </span>
+                        )}
+                        {hand.pokercraftLink && (
+                          <a 
+                            href={hand.pokercraftLink} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-poker-feltGreen hover:text-poker-feltGreen/80"
+                            aria-label="View hand video"
+                          >
+                            <Video size={16} />
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
