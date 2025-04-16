@@ -8,14 +8,14 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ className }) => {
   return (
-    <div className={`flex items-center justify-center ${className || ''}`}>
-      <h1 className="text-4xl font-bold font-serif tracking-wide flex items-center select-none">
-        <span className="text-poker-cream">Sessi</span>
+    <div className={`w-full flex items-center justify-center ${className || ''}`}>
+      <h1 className="text-5xl font-extrabold font-serif tracking-wide flex items-center select-none">
+        <span className="text-[#D4AF37] font-black">Sessi</span>
         <span className="relative inline-flex mx-[-3px]">
-          <LogoChip className="w-8 h-8 transform translate-y-[1px]" />
+          <LogoChip className="w-10 h-10 transform translate-y-[1px]" />
         </span>
-        <span className="text-poker-cream">n</span>
-        <span className="text-poker-feltGreen">Master</span>
+        <span className="text-[#D4AF37] font-black">n</span>
+        <span className="text-poker-feltGreen font-black">Master</span>
       </h1>
     </div>
   );
