@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { PokerSession, SessionFilter, HandData } from '@/types/poker';
+import { PokerSession, PokerTable, SessionFilter, HandData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 
 interface SessionContextType {
@@ -9,16 +9,21 @@ interface SessionContextType {
   addSession: (session: PokerSession) => void;
   updateSession: (session: PokerSession) => void;
   deleteSession: (id: string) => void;
-  startSession: (session: PokerSession) => void;
-  endSession: (id: string, cashOut: number, notes?: string) => void;
-  pauseSession: (id: string) => void;
-  resumeSession: (id: string) => void;
-  updateSessionDuration: (id: string, duration: number) => void;
-  addRebuy: (id: string, amount: number) => void;
+  startSession: (sessionData: Omit<PokerSession, 'id' | 'startTime' | 'isActive' | 'tables'>) => void;
+  endSession: (id: string, notes?: string) => void;
+  updateSessionNotes: (id: string, notes: string) => void;
+  
+  addTable: (sessionId: string, table: Omit<PokerTable, 'id' | 'startTime' | 'isActive' | 'hands'>) => string;
+  updateTable: (sessionId: string, table: PokerTable) => void;
+  endTable: (sessionId: string, tableId: string, cashOut: number, notes?: string) => void;
+  deleteTable: (sessionId: string, tableId: string) => void;
+  
+  addHand: (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => void;
+  updateHand: (sessionId: string, tableId: string, hand: HandData) => void;
+  deleteHand: (sessionId: string, tableId: string, handId: string) => void;
+  
   setFilters: (filters: SessionFilter) => void;
-  addHand: (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => void;
-  updateHand: (sessionId: string, hand: HandData) => void;
-  deleteHand: (sessionId: string, handId: string) => void;
+  addRebuy: (sessionId: string, tableId: string, amount: number) => void;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -27,19 +32,58 @@ const loadSessions = (): PokerSession[] => {
   const savedSessions = localStorage.getItem('pokerSessions');
   if (savedSessions) {
     const parsed = JSON.parse(savedSessions);
-    return parsed.map((session: PokerSession) => {
-      if (!session.initialBuyIn) {
-        session.initialBuyIn = session.buyIn - ((session.rebuys || 0) * (session.tournamentBuyIn || 0)) - 
-                              ((session.addOns || 0) * (session.tournamentBuyIn || 0));
+    
+    return parsed.map((session: any) => {
+      if (!session.tables) {
+        const newTable: PokerTable = {
+          id: uuidv4(),
+          name: `${session.gameType} ${session.format}`,
+          gameType: session.gameType,
+          format: session.format,
+          buyIn: session.buyIn,
+          initialBuyIn: session.initialBuyIn || session.buyIn,
+          cashOut: session.cashOut,
+          smallBlind: session.smallBlind,
+          bigBlind: session.bigBlind,
+          startTime: new Date(session.startTime),
+          endTime: session.endTime ? new Date(session.endTime) : undefined,
+          notes: session.notes,
+          isActive: session.isActive || false,
+          tournamentBuyIn: session.tournamentBuyIn,
+          rebuys: session.rebuys,
+          addOns: session.addOns,
+          finalPosition: session.finalPosition,
+          hands: session.hands ? session.hands.map((hand: any) => ({
+            ...hand,
+            tableId: hand.tableId || uuidv4(),
+            createdAt: new Date(hand.createdAt)
+          })) : []
+        };
+        
+        return {
+          id: session.id,
+          location: session.location,
+          startTime: new Date(session.startTime),
+          endTime: session.endTime ? new Date(session.endTime) : undefined,
+          isActive: session.isActive || false,
+          notes: session.notes,
+          tables: [newTable]
+        };
       }
+      
       return {
         ...session,
         startTime: new Date(session.startTime),
         endTime: session.endTime ? new Date(session.endTime) : undefined,
-        hands: session.hands ? session.hands.map((hand: HandData) => ({
-          ...hand,
-          createdAt: new Date(hand.createdAt)
-        })) : []
+        tables: session.tables.map((table: any) => ({
+          ...table,
+          startTime: new Date(table.startTime),
+          endTime: table.endTime ? new Date(table.endTime) : undefined,
+          hands: table.hands ? table.hands.map((hand: any) => ({
+            ...hand,
+            createdAt: new Date(hand.createdAt)
+          })) : []
+        }))
       };
     });
   }
@@ -64,11 +108,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [sessions]);
 
   const addSession = (session: PokerSession) => {
-    const sessionWithInitialBuyIn = {
-      ...session,
-      initialBuyIn: session.buyIn
-    };
-    setSessions((prev) => [...prev, sessionWithInitialBuyIn]);
+    setSessions((prev) => [...prev, session]);
   };
 
   const updateSession = (updatedSession: PokerSession) => {
@@ -91,126 +131,242 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const startSession = (session: PokerSession) => {
-    const sessionWithActive = {
-      ...session,
-      initialBuyIn: session.buyIn,
+  const startSession = (sessionData: Omit<PokerSession, 'id' | 'startTime' | 'isActive' | 'tables'>) => {
+    const newSession: PokerSession = {
+      id: uuidv4(),
+      ...sessionData,
+      startTime: new Date(),
       isActive: true,
-      currentStatus: 'running' as const,
-      sessionDuration: 0,
-      hands: []
+      tables: []
     };
-    setActiveSession(sessionWithActive);
-    addSession(sessionWithActive);
+    
+    setActiveSession(newSession);
+    addSession(newSession);
   };
 
-  const endSession = (id: string, cashOut: number, notes?: string) => {
+  const endSession = (id: string, notes?: string) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
+      const updatedTables = session.tables.map(table => {
+        if (table.isActive) {
+          return {
+            ...table,
+            endTime: new Date(),
+            isActive: false
+          };
+        }
+        return table;
+      });
+      
       const updatedSession = {
         ...session,
-        cashOut,
-        notes: notes || session.notes,
+        tables: updatedTables,
         endTime: new Date(),
         isActive: false,
-        currentStatus: 'ended' as const,
+        notes: notes !== undefined ? notes : session.notes
       };
+      
       updateSession(updatedSession);
       setActiveSession(null);
     }
   };
   
-  const pauseSession = (id: string) => {
+  const updateSessionNotes = (id: string, notes: string) => {
     const session = sessions.find((s) => s.id === id);
-    if (session && session.isActive) {
+    if (session) {
       const updatedSession = {
         ...session,
-        currentStatus: 'paused' as const,
+        notes
       };
       updateSession(updatedSession);
     }
   };
   
-  const resumeSession = (id: string) => {
-    const session = sessions.find((s) => s.id === id);
-    if (session && session.isActive) {
-      const updatedSession = {
-        ...session,
-        currentStatus: 'running' as const,
-      };
-      updateSession(updatedSession);
-    }
-  };
-  
-  const updateSessionDuration = (id: string, duration: number) => {
-    const session = sessions.find((s) => s.id === id);
+  const addTable = (sessionId: string, tableData: Omit<PokerTable, 'id' | 'startTime' | 'isActive' | 'hands'>) => {
+    const session = sessions.find((s) => s.id === sessionId);
     if (session) {
-      const updatedSession = {
-        ...session,
-        sessionDuration: duration,
-      };
-      updateSession(updatedSession);
-    }
-  };
-
-  const addRebuy = (id: string, amount: number) => {
-    const session = sessions.find((s) => s.id === id);
-    if (session) {
-      const currentRebuys = session.rebuys || 0;
-      const updatedSession = {
-        ...session,
-        rebuys: currentRebuys + 1,
-        buyIn: session.buyIn + amount
-      };
-      updateSession(updatedSession);
-    }
-  };
-
-  const addHand = (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session) {
-      const newHand: HandData = {
-        ...hand,
-        id: uuidv4(),
-        createdAt: new Date()
+      const newTableId = uuidv4();
+      const newTable: PokerTable = {
+        id: newTableId,
+        ...tableData,
+        startTime: new Date(),
+        isActive: true,
+        initialBuyIn: tableData.buyIn,
+        hands: []
       };
       
       const updatedSession = {
         ...session,
-        hands: [...(session.hands || []), newHand]
+        tables: [...session.tables, newTable]
       };
       
       updateSession(updatedSession);
+      return newTableId;
     }
+    return "";
   };
   
-  const updateHand = (sessionId: string, updatedHand: HandData) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session && session.hands) {
-      const updatedHands = session.hands.map(hand => 
-        hand.id === updatedHand.id ? updatedHand : hand
+  const updateTable = (sessionId: string, updatedTable: PokerTable) => {
+    const session = sessions.find((s) => s.id === sessionId);
+    if (session) {
+      const updatedTables = session.tables.map(table => 
+        table.id === updatedTable.id ? updatedTable : table
       );
       
       const updatedSession = {
         ...session,
-        hands: updatedHands
+        tables: updatedTables
       };
       
       updateSession(updatedSession);
     }
   };
   
-  const deleteHand = (sessionId: string, handId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session && session.hands) {
-      const updatedHands = session.hands.filter(hand => hand.id !== handId);
+  const endTable = (sessionId: string, tableId: string, cashOut: number, notes?: string) => {
+    const session = sessions.find((s) => s.id === sessionId);
+    if (session) {
+      const updatedTables = session.tables.map(table => {
+        if (table.id === tableId) {
+          return {
+            ...table,
+            cashOut,
+            endTime: new Date(),
+            isActive: false,
+            notes: notes !== undefined ? notes : table.notes
+          };
+        }
+        return table;
+      });
       
       const updatedSession = {
         ...session,
-        hands: updatedHands
+        tables: updatedTables
       };
       
       updateSession(updatedSession);
+    }
+  };
+  
+  const deleteTable = (sessionId: string, tableId: string) => {
+    const session = sessions.find((s) => s.id === sessionId);
+    if (session) {
+      const updatedTables = session.tables.filter(table => table.id !== tableId);
+      
+      const updatedSession = {
+        ...session,
+        tables: updatedTables
+      };
+      
+      updateSession(updatedSession);
+    }
+  };
+  
+  const addHand = (sessionId: string, tableId: string, handData: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session) {
+      const tableIndex = session.tables.findIndex(t => t.id === tableId);
+      if (tableIndex !== -1) {
+        const newHand: HandData = {
+          ...handData,
+          id: uuidv4(),
+          createdAt: new Date(),
+          tableId: tableId
+        };
+        
+        const updatedTable = {
+          ...session.tables[tableIndex],
+          hands: [...(session.tables[tableIndex].hands || []), newHand]
+        };
+        
+        const updatedTables = [...session.tables];
+        updatedTables[tableIndex] = updatedTable;
+        
+        const updatedSession = {
+          ...session,
+          tables: updatedTables
+        };
+        
+        updateSession(updatedSession);
+      }
+    }
+  };
+  
+  const updateHand = (sessionId: string, tableId: string, updatedHand: HandData) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session) {
+      const tableIndex = session.tables.findIndex(t => t.id === tableId);
+      if (tableIndex !== -1 && session.tables[tableIndex].hands) {
+        const updatedHands = session.tables[tableIndex].hands!.map(hand => 
+          hand.id === updatedHand.id ? updatedHand : hand
+        );
+        
+        const updatedTable = {
+          ...session.tables[tableIndex],
+          hands: updatedHands
+        };
+        
+        const updatedTables = [...session.tables];
+        updatedTables[tableIndex] = updatedTable;
+        
+        const updatedSession = {
+          ...session,
+          tables: updatedTables
+        };
+        
+        updateSession(updatedSession);
+      }
+    }
+  };
+  
+  const deleteHand = (sessionId: string, tableId: string, handId: string) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session) {
+      const tableIndex = session.tables.findIndex(t => t.id === tableId);
+      if (tableIndex !== -1 && session.tables[tableIndex].hands) {
+        const updatedHands = session.tables[tableIndex].hands!.filter(hand => hand.id !== handId);
+        
+        const updatedTable = {
+          ...session.tables[tableIndex],
+          hands: updatedHands
+        };
+        
+        const updatedTables = [...session.tables];
+        updatedTables[tableIndex] = updatedTable;
+        
+        const updatedSession = {
+          ...session,
+          tables: updatedTables
+        };
+        
+        updateSession(updatedSession);
+      }
+    }
+  };
+  
+  const addRebuy = (sessionId: string, tableId: string, amount: number) => {
+    const session = sessions.find((s) => s.id === sessionId);
+    if (session) {
+      const tableIndex = session.tables.findIndex(t => t.id === tableId);
+      if (tableIndex !== -1) {
+        const table = session.tables[tableIndex];
+        const currentRebuys = table.rebuys || 0;
+        
+        const updatedTable = {
+          ...table,
+          rebuys: currentRebuys + 1,
+          buyIn: table.buyIn + amount
+        };
+        
+        const updatedTables = [...session.tables];
+        updatedTables[tableIndex] = updatedTable;
+        
+        const updatedSession = {
+          ...session,
+          tables: updatedTables
+        };
+        
+        updateSession(updatedSession);
+      }
     }
   };
 
@@ -225,14 +381,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         deleteSession,
         startSession,
         endSession,
-        pauseSession,
-        resumeSession,
-        updateSessionDuration,
-        addRebuy,
-        setFilters,
+        updateSessionNotes,
+        addTable,
+        updateTable,
+        endTable,
+        deleteTable,
         addHand,
         updateHand,
         deleteHand,
+        setFilters,
+        addRebuy,
       }}
     >
       {children}

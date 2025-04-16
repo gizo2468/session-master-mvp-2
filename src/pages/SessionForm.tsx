@@ -2,26 +2,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
-import { PokerSession } from '@/types/poker';
-import { v4 as uuidv4 } from 'uuid';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/Lucide';
 
 const formSchema = z.object({
-  gameType: z.enum(['NLH', 'PLO']),
-  format: z.enum(['Cash', 'Tournament']),
-  location: z.string().min(1, "Location is required"),
-  buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
-    message: "Buy-in amount must be a valid number",
-  }),
-  isOnline: z.boolean().default(false)
+  location: z.string().min(1, "Location is required")
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -33,30 +24,15 @@ export default function SessionForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      gameType: 'NLH',
-      format: 'Cash',
       location: '',
-      buyIn: '',
-      isOnline: false
     }
   });
   
   const onSubmit = (values: FormValues) => {
-    const buyInAmount = parseFloat(values.buyIn);
-    const newSession: PokerSession = {
-      id: uuidv4(),
-      gameType: values.gameType,
-      format: values.format,
+    startSession({
       location: values.location,
-      buyIn: buyInAmount,
-      initialBuyIn: buyInAmount, // Add initialBuyIn property with the same value as buyIn
-      smallBlind: 0,
-      bigBlind: 0,
-      startTime: new Date(),
-      isActive: true,
-    };
-    
-    startSession(newSession);
+      notes: ""
+    });
     navigate('/confirm-session');
   };
   
@@ -79,178 +55,15 @@ export default function SessionForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="bg-white rounded-lg shadow-md p-6 space-y-6">
             <FormField
               control={form.control}
-              name="gameType"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel className="text-base font-medium">Game Type</FormLabel>
-                  <FormControl>
-                    <RadioGroup 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value} 
-                      className="grid grid-cols-2 gap-4"
-                    >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem 
-                            value="NLH" 
-                            id="nlh" 
-                            className="sr-only peer" 
-                          />
-                        </FormControl>
-                        <label 
-                          htmlFor="nlh" 
-                          className={`flex-1 cursor-pointer py-3 px-4 rounded-md border text-center ${
-                            field.value === 'NLH' 
-                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
-                              : 'bg-white text-gray-700 border-gray-300'
-                          }`}
-                        >
-                          No Limit Hold'em
-                        </label>
-                      </FormItem>
-                      
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem 
-                            value="PLO" 
-                            id="plo" 
-                            className="sr-only peer" 
-                          />
-                        </FormControl>
-                        <label 
-                          htmlFor="plo" 
-                          className={`flex-1 cursor-pointer py-3 px-4 rounded-md border text-center ${
-                            field.value === 'PLO' 
-                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
-                              : 'bg-white text-gray-700 border-gray-300'
-                          }`}
-                        >
-                          Pot Limit Omaha
-                        </label>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="format"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel className="text-base font-medium">Format</FormLabel>
-                  <FormControl>
-                    <RadioGroup 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value} 
-                      className="grid grid-cols-2 gap-4"
-                    >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem 
-                            value="Cash" 
-                            id="cash" 
-                            className="sr-only peer" 
-                          />
-                        </FormControl>
-                        <label 
-                          htmlFor="cash" 
-                          className={`flex-1 cursor-pointer py-3 px-4 rounded-md border text-center ${
-                            field.value === 'Cash' 
-                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
-                              : 'bg-white text-gray-700 border-gray-300'
-                          }`}
-                        >
-                          Cash Game
-                        </label>
-                      </FormItem>
-                      
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem 
-                            value="Tournament" 
-                            id="tournament" 
-                            className="sr-only peer" 
-                          />
-                        </FormControl>
-                        <label 
-                          htmlFor="tournament" 
-                          className={`flex-1 cursor-pointer py-3 px-4 rounded-md border text-center ${
-                            field.value === 'Tournament' 
-                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
-                              : 'bg-white text-gray-700 border-gray-300'
-                          }`}
-                        >
-                          Tournament
-                        </label>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="isOnline"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Online Game</FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      Check this if you're playing online
-                    </p>
-                  </div>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">Location</FormLabel>
+                  <FormLabel className="text-base font-medium">Session Location</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="Enter casino or home game name" 
+                      placeholder="Enter casino, home game, online site, etc." 
                       {...field} 
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="buyIn"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-medium">Buy-in Amount</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <span className="text-gray-500">$</span>
-                      </div>
-                      <Input 
-                        type="number" 
-                        placeholder="0.00" 
-                        className="pl-8" 
-                        min="0" 
-                        step="0.01" 
-                        {...field} 
-                      />
-                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
