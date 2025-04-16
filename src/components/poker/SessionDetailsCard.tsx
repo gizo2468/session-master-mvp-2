@@ -52,6 +52,13 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             </span>
           </div>
           
+          {(session.rebuys && session.rebuys > 0) && (
+            <div className="flex justify-between">
+              <span className="text-gray-500">Rebuys:</span>
+              <span className="font-medium">${(session.rebuys * (session.tournamentBuyIn || session.buyIn / session.rebuys)).toFixed(2)}</span>
+            </div>
+          )}
+          
           {(session.smallBlind && session.bigBlind) ? (
             <div className="flex justify-between">
               <span className="text-gray-500">Blinds:</span>
@@ -61,13 +68,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           
           {session.format === 'Tournament' && (
             <>
-              {(session.rebuys && session.rebuys > 0) && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Rebuys:</span>
-                  <span className="font-medium">{session.rebuys}</span>
-                </div>
-              )}
-              
               {(session.addOns && session.addOns > 0) && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">Add-ons:</span>
