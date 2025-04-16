@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -91,6 +91,25 @@ const HandForm: React.FC<HandFormProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(
     initialData.image || null
   );
+  
+  // Reset form when opening modal for new entries
+  useEffect(() => {
+    if (open && !isEditing) {
+      form.reset({
+        cards: '',
+        position: '',
+        action: 'Open / Flat',
+        currencyType: 'currency',
+        resultAmount: undefined,
+        smallBlind: undefined,
+        bigBlind: undefined,
+        notes: '',
+        pokercraftLink: '',
+        image: undefined
+      });
+      setImagePreview(null);
+    }
+  }, [open, isEditing, form]);
   
   const handleSubmit = (values: FormValues) => {
     // Include the image in the submission

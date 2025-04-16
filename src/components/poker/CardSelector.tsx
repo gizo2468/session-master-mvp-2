@@ -28,10 +28,11 @@ const CardSelector: React.FC<CardSelectorProps> = ({ selectedCards, onChange, ma
     // Check if card is already selected
     if (selectedCards.includes(card)) return;
     
+    // Add the new card to the selected cards string
     const newCards = selectedCards + card;
     onChange(newCards);
     
-    // Reset selections
+    // Reset selections after adding a card
     setSelectedRank('');
     setSelectedSuit('');
   };
@@ -76,7 +77,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({ selectedCards, onChange, ma
         cards.push(
           <div 
             key={i/2}
-            className="flex items-center bg-white border border-gray-300 rounded px-2 py-1 mr-2 mb-2"
+            className="flex items-center bg-white border border-gray-300 rounded px-2 py-1 mr-2 mb-2 cursor-pointer hover:bg-gray-100"
             onClick={() => removeCard(i/2)}
           >
             <span className="font-bold">{rank}</span>
@@ -106,7 +107,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({ selectedCards, onChange, ma
                 className={`h-8 w-8 flex items-center justify-center border ${
                   selectedRank === rank 
                     ? 'bg-poker-gold text-white border-poker-gold' 
-                    : 'bg-white border-gray-300'
+                    : 'bg-white border-gray-300 hover:bg-gray-100'
                 } rounded`}
               >
                 {rank}
@@ -126,7 +127,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({ selectedCards, onChange, ma
                 className={`h-8 w-8 flex items-center justify-center text-xl border ${
                   selectedSuit === suit.symbol 
                     ? 'bg-poker-gold text-white border-poker-gold' 
-                    : `bg-white ${suit.color}`
+                    : `bg-white ${suit.color} hover:bg-gray-100`
                 } rounded`}
               >
                 {suit.display}
@@ -139,7 +140,9 @@ const CardSelector: React.FC<CardSelectorProps> = ({ selectedCards, onChange, ma
           type="button"
           onClick={addCard}
           disabled={!selectedRank || !selectedSuit}
-          className="py-2 px-4 bg-poker-feltGreen text-white rounded disabled:bg-gray-300 disabled:text-gray-500"
+          className={`py-2 px-4 ${!selectedRank || !selectedSuit 
+            ? 'bg-gray-300 text-gray-500' 
+            : 'bg-poker-feltGreen text-white hover:bg-green-700'} rounded`}
         >
           Add Card
         </button>
