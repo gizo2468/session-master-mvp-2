@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -69,6 +69,40 @@ const HandForm: React.FC<HandFormProps> = ({
       image: initialData.image || undefined
     }
   });
+  
+  // Reset form when modal opens for adding a new hand (not editing)
+  useEffect(() => {
+    if (open && !isEditing) {
+      form.reset({
+        cards: '',
+        position: '',
+        action: 'Open / Flat',
+        currencyType: 'currency',
+        resultAmount: undefined,
+        smallBlind: undefined,
+        bigBlind: undefined,
+        notes: '',
+        pokercraftLink: '',
+        image: undefined
+      });
+      setImagePreview(null);
+    } else if (open && isEditing && initialData) {
+      // When editing, set the form with initial data
+      form.reset({
+        cards: initialData.cards || '',
+        position: initialData.position || '',
+        action: initialData.action || 'Open / Flat',
+        currencyType: initialData.currencyType || 'currency',
+        resultAmount: initialData.resultAmount || undefined,
+        smallBlind: initialData.smallBlind || undefined,
+        bigBlind: initialData.bigBlind || undefined,
+        notes: initialData.notes || '',
+        pokercraftLink: initialData.pokercraftLink || '',
+        image: initialData.image || undefined
+      });
+      setImagePreview(initialData.image || null);
+    }
+  }, [open, isEditing, initialData, form]);
   
   const positions = [
     { label: 'Small Blind', value: 'SB' },
