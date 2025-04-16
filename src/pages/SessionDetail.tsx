@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -20,23 +21,23 @@ export default function SessionDetail() {
   const [cashOutAmount, setCashOutAmount] = useState('');
   
   const [formData, setFormData] = useState({
-    location: session?.location || '',
-    buyIn: session?.buyIn.toString() || '0',
-    smallBlind: session?.smallBlind.toString() || '0',
-    bigBlind: session?.bigBlind.toString() || '0',
-    gameType: session?.gameType || 'NLH',
-    format: session?.format || 'Cash'
+    location: '',
+    buyIn: '0',
+    smallBlind: '0',
+    bigBlind: '0',
+    gameType: 'NLH',
+    format: 'Cash'
   });
   
   useEffect(() => {
     if (session) {
       setFormData({
-        location: session.location,
-        buyIn: session.buyIn.toString(),
-        smallBlind: session.smallBlind.toString(),
-        bigBlind: session.bigBlind.toString(),
-        gameType: session.gameType,
-        format: session.format
+        location: session.location || '',
+        buyIn: session.buyIn?.toString() || '0',
+        smallBlind: session.smallBlind?.toString() || '0',
+        bigBlind: session.bigBlind?.toString() || '0',
+        gameType: session.gameType || 'NLH',
+        format: session.format || 'Cash'
       });
     }
   }, [session]);
