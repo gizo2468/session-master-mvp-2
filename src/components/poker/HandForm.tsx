@@ -170,6 +170,37 @@ const HandForm: React.FC<HandFormProps> = ({
                   )}
                 />
                 
+                {/* Moved the Image upload field here */}
+                <div className="space-y-2">
+                  <FormLabel>Image</FormLabel>
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageChange} 
+                  />
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img 
+                        src={imagePreview} 
+                        alt="Hand preview" 
+                        className="max-h-40 rounded border border-gray-200" 
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => {
+                          setImagePreview(null);
+                          form.setValue('image', undefined);
+                        }}
+                      >
+                        Remove Image
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                
                 <FormField
                   control={form.control}
                   name="position"
@@ -383,36 +414,6 @@ const HandForm: React.FC<HandFormProps> = ({
                     </FormItem>
                   )}
                 />
-                
-                <div className="space-y-2">
-                  <FormLabel>Image</FormLabel>
-                  <Input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleImageChange} 
-                  />
-                  {imagePreview && (
-                    <div className="mt-2">
-                      <img 
-                        src={imagePreview} 
-                        alt="Hand preview" 
-                        className="max-h-40 rounded border border-gray-200" 
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="mt-2"
-                        onClick={() => {
-                          setImagePreview(null);
-                          form.setValue('image', undefined);
-                        }}
-                      >
-                        Remove Image
-                      </Button>
-                    </div>
-                  )}
-                </div>
                 
                 <FormField
                   control={form.control}
