@@ -34,7 +34,7 @@ const handFormSchema = z.object({
   bigBlind: z.number().optional(),
   notes: z.string().max(1000, 'Notes are too long').optional(),
   pokercraftLink: z.string().url('Invalid URL format').optional().or(z.literal('')),
-  image: z.any().optional(),
+  image: z.string().optional().or(z.any().optional()), // image is optional
 }).refine(data => {
   if (data.currencyType === 'chips' && (!data.smallBlind || !data.bigBlind)) {
     return false;
