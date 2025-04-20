@@ -54,6 +54,8 @@ export default function SessionForm() {
       initialBuyIn: buyInAmount,
       isActive: true,
       startTime: new Date(),
+      smallBlind: 0,
+      bigBlind: 0,
       // Other table fields (like rebuys, addOns, etc) are optional for basic cash/tournament tracking
     };
 
