@@ -80,7 +80,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
             className="flex-1"
             onClick={() => setShowRebuyDialog(true)}
           >
-            <Icon name="plus" className="mr-1 h-4 w-4" /> Rebuy
+            <Icon name="Plus" className="mr-1 h-4 w-4" /> Rebuy
           </Button>
           <Button 
             variant="destructive" 

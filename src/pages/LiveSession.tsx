@@ -15,6 +15,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { TableData } from '@/types/poker';
 import TableCard from '@/components/poker/TableCard';
 import AddTableForm from '@/components/poker/AddTableForm';
+import { format } from 'date-fns';
 
 export default function LiveSession() {
   const { id } = useParams<{ id: string }>();
@@ -186,7 +187,7 @@ export default function LiveSession() {
                 className="bg-poker-gold hover:bg-poker-darkGold text-white"
                 size="sm"
               >
-                <Icon name="plus" className="h-4 w-4 mr-2" /> 
+                <Icon name="Plus" className="h-4 w-4 mr-2" /> 
                 Add Table
               </Button>
             </div>
@@ -235,8 +236,8 @@ export default function LiveSession() {
                             )}
                           </div>
                           <div className="text-sm text-gray-600">
-                            {dateFormat(new Date(table.startTime), 'MMM d, h:mm a')}
-                            {table.endTime && ` - ${dateFormat(new Date(table.endTime), 'h:mm a')}`}
+                            {format(new Date(table.startTime), 'MMM d, h:mm a')}
+                            {table.endTime && ` - ${format(new Date(table.endTime), 'h:mm a')}`}
                           </div>
                         </div>
                       ))}
