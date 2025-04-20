@@ -1,5 +1,6 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { PokerSession, SessionFilter, HandData } from '@/types/poker';
+import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 
 interface SessionContextType {
@@ -19,6 +20,11 @@ interface SessionContextType {
   addHand: (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => void;
   updateHand: (sessionId: string, hand: HandData) => void;
   deleteHand: (sessionId: string, handId: string) => void;
+  // New table methods
+  addTable: (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
+  updateTable: (sessionId: string, table: TableData) => void;
+  endTable: (sessionId: string, tableId: string, cashOut: number, notes?: string) => void;
+  addTableRebuy: (sessionId: string, tableId: string, amount: number) => void;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -32,7 +38,8 @@ const loadSessions = (): PokerSession[] => {
         session.initialBuyIn = session.buyIn - ((session.rebuys || 0) * (session.tournamentBuyIn || 0)) - 
                               ((session.addOns || 0) * (session.tournamentBuyIn || 0));
       }
-      return {
+      
+      const processedSession = {
         ...session,
         startTime: new Date(session.startTime),
         endTime: session.endTime ? new Date(session.endTime) : undefined,
@@ -41,6 +48,17 @@ const loadSessions = (): PokerSession[] => {
           createdAt: new Date(hand.createdAt)
         })) : []
       };
+      
+      // Process tables if they exist
+      if (session.tables) {
+        processedSession.tables = session.tables.map((table: TableData) => ({
+          ...table,
+          startTime: new Date(table.startTime),
+          endTime: table.endTime ? new Date(table.endTime) : undefined
+        }));
+      }
+      
+      return processedSession;
     });
   }
   return [];
@@ -98,7 +116,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       isActive: true,
       currentStatus: 'running' as const,
       sessionDuration: 0,
-      hands: []
+      hands: [],
+      tables: []
     };
     setActiveSession(sessionWithActive);
     addSession(sessionWithActive);
@@ -107,6 +126,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const endSession = (id: string, cashOut: number, notes?: string) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
+      // Check if any tables are still active
+      const hasActiveTables = session.tables && session.tables.some(table => table.isActive);
+      
+      if (hasActiveTables) {
+        throw new Error("Cannot end session while tables are still active");
+      }
+      
       const updatedSession = {
         ...session,
         cashOut,
@@ -184,11 +210,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  const updateHand = (sessionId: string, updatedHand: HandData) => {
+  const updateHand = (sessionId: string, hand: HandData) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session && session.hands) {
-      const updatedHands = session.hands.map(hand => 
-        hand.id === updatedHand.id ? updatedHand : hand
+      const updatedHands = session.hands.map(h => 
+        h.id === hand.id ? hand : h
       );
       
       const updatedSession = {
@@ -208,6 +234,104 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const updatedSession = {
         ...session,
         hands: updatedHands
+      };
+      
+      updateSession(updatedSession);
+    }
+  };
+  
+  // New table methods
+  const addTable = (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session) {
+      const newTable: TableData = {
+        ...table,
+        id: uuidv4(),
+        startTime: new Date(),
+        isActive: true,
+        initialBuyIn: table.buyIn,
+      };
+      
+      const updatedSession = {
+        ...session,
+        tables: [...(session.tables || []), newTable],
+        buyIn: session.buyIn + table.buyIn // Update session total buy-in
+      };
+      
+      updateSession(updatedSession);
+    }
+  };
+  
+  const updateTable = (sessionId: string, updatedTable: TableData) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session && session.tables) {
+      // Calculate the difference in buy-in if it changed
+      const originalTable = session.tables.find(t => t.id === updatedTable.id);
+      const buyInDifference = originalTable ? updatedTable.buyIn - originalTable.buyIn : 0;
+      
+      const updatedTables = session.tables.map(table => 
+        table.id === updatedTable.id ? updatedTable : table
+      );
+      
+      const updatedSession = {
+        ...session,
+        tables: updatedTables,
+        buyIn: session.buyIn + buyInDifference // Update session total buy-in
+      };
+      
+      updateSession(updatedSession);
+    }
+  };
+  
+  const endTable = (sessionId: string, tableId: string, cashOut: number, notes?: string) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session && session.tables) {
+      const updatedTables = session.tables.map(table => {
+        if (table.id === tableId) {
+          return {
+            ...table,
+            isActive: false,
+            endTime: new Date(),
+            cashOut,
+            notes: notes || table.notes
+          };
+        }
+        return table;
+      });
+      
+      const updatedSession = {
+        ...session,
+        tables: updatedTables
+      };
+      
+      updateSession(updatedSession);
+    }
+  };
+  
+  const addTableRebuy = (sessionId: string, tableId: string, amount: number) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session && session.tables) {
+      const updatedTables = session.tables.map(table => {
+        if (table.id === tableId) {
+          const currentRebuys = table.rebuys || 0;
+          return {
+            ...table,
+            rebuys: currentRebuys + 1,
+            buyIn: table.buyIn + amount
+          };
+        }
+        return table;
+      });
+      
+      // Find the updated table to calculate the session buyIn difference
+      const updatedTable = updatedTables.find(t => t.id === tableId);
+      const originalTable = session.tables.find(t => t.id === tableId);
+      const buyInDifference = (updatedTable && originalTable) ? updatedTable.buyIn - originalTable.buyIn : 0;
+      
+      const updatedSession = {
+        ...session,
+        tables: updatedTables,
+        buyIn: session.buyIn + buyInDifference // Update session total buy-in
       };
       
       updateSession(updatedSession);
@@ -233,6 +357,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         addHand,
         updateHand,
         deleteHand,
+        addTable,
+        updateTable,
+        endTable,
+        addTableRebuy,
       }}
     >
       {children}

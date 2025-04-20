@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
 import { useToast } from '@/hooks/use-toast';
@@ -12,17 +12,30 @@ import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { TableData } from '@/types/poker';
+import TableCard from '@/components/poker/TableCard';
+import AddTableForm from '@/components/poker/AddTableForm';
 
 export default function LiveSession() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { sessions, activeSession, endSession, updateSessionDuration, addRebuy } = useSessionContext();
+  const { 
+    sessions, 
+    activeSession, 
+    endSession, 
+    updateSessionDuration, 
+    addRebuy,
+    addTable,
+    endTable,
+    addTableRebuy
+  } = useSessionContext();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   
-  const [showEndSessionSheet, setShowEndSessionSheet] = React.useState(false);
-  const [cashOutAmount, setCashOutAmount] = React.useState('');
-  const [sessionNotes, setSessionNotes] = React.useState('');
+  const [showEndSessionSheet, setShowEndSessionSheet] = useState(false);
+  const [cashOutAmount, setCashOutAmount] = useState('');
+  const [sessionNotes, setSessionNotes] = useState('');
+  const [showAddTableForm, setShowAddTableForm] = useState(false);
   
   // Determine which session to display - either by ID param or active session
   const session = id 
@@ -45,6 +58,19 @@ export default function LiveSession() {
   const handleEndSession = () => {
     if (!session || !cashOutAmount) return;
     
+    // Check if there are any active tables
+    const hasActiveTables = session.tables && session.tables.some(table => table.isActive);
+    
+    if (hasActiveTables) {
+      toast({
+        title: "Cannot End Session",
+        description: "You must end all active tables before ending the session.",
+        variant: "destructive"
+      });
+      setShowEndSessionSheet(false);
+      return;
+    }
+    
     // End the session with cashout and notes
     endSession(session.id, parseFloat(cashOutAmount), sessionNotes);
     setShowEndSessionSheet(false);
@@ -66,6 +92,36 @@ export default function LiveSession() {
     });
   };
   
+  const handleAddTable = (tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
+    if (!session) return;
+    
+    addTable(session.id, tableData);
+    toast({
+      title: "Table Added",
+      description: `${tableData.name} has been added to your session.`
+    });
+  };
+  
+  const handleEndTable = (tableId: string, cashOut: number, notes?: string) => {
+    if (!session) return;
+    
+    endTable(session.id, tableId, cashOut, notes);
+    toast({
+      title: "Table Ended",
+      description: "The table has been successfully ended."
+    });
+  };
+  
+  const handleAddTableRebuy = (tableId: string, amount: number) => {
+    if (!session) return;
+    
+    addTableRebuy(session.id, tableId, amount);
+    toast({
+      title: "Rebuy Added",
+      description: `$${amount.toFixed(2)} rebuy has been added to the table.`
+    });
+  };
+  
   if (!session) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -82,6 +138,10 @@ export default function LiveSession() {
       </div>
     );
   }
+  
+  // Check if there are active tables
+  const activeTables = session.tables?.filter(table => table.isActive) || [];
+  const inactiveTables = session.tables?.filter(table => !table.isActive) || [];
   
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -117,6 +177,76 @@ export default function LiveSession() {
           {/* Session Details */}
           <SessionDetailsCard session={session} />
           
+          {/* Tables Section */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-extrabold tracking-tight">Tables</h3>
+              <Button 
+                onClick={() => setShowAddTableForm(true)}
+                className="bg-poker-gold hover:bg-poker-darkGold text-white"
+                size="sm"
+              >
+                <Icon name="plus" className="h-4 w-4 mr-2" /> 
+                Add Table
+              </Button>
+            </div>
+            
+            {activeTables.length === 0 && inactiveTables.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-md">
+                <p className="mb-2">No tables added yet.</p>
+                <p className="text-sm">Click "Add Table" to start tracking multiple tables.</p>
+              </div>
+            ) : (
+              <div>
+                {activeTables.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-lg font-bold mb-2">Active Tables</h4>
+                    <div className="space-y-3">
+                      {activeTables.map((table) => (
+                        <TableCard 
+                          key={table.id} 
+                          table={table} 
+                          onEndTable={handleEndTable}
+                          onAddRebuy={handleAddTableRebuy}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {inactiveTables.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-bold mb-2">Completed Tables</h4>
+                    <div className="space-y-3">
+                      {inactiveTables.map((table) => (
+                        <div key={table.id} className="bg-gray-50 p-4 rounded-lg">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h3 className="font-bold">{table.name || table.location}</h3>
+                              <p className="text-sm text-gray-600">{table.gameType} • {table.format}</p>
+                            </div>
+                            {table.cashOut !== undefined && (
+                              <div className={`text-lg font-bold ${
+                                table.cashOut >= table.buyIn ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {table.cashOut >= table.buyIn ? '+' : ''}
+                                ${(table.cashOut - table.buyIn).toFixed(2)}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {dateFormat(new Date(table.startTime), 'MMM d, h:mm a')}
+                            {table.endTime && ` - ${dateFormat(new Date(table.endTime), 'h:mm a')}`}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
           {/* Controls for both Cash Game and Tournament */}
           <TournamentControlsCard 
             session={session}
@@ -132,6 +262,13 @@ export default function LiveSession() {
           </div>
         </div>
       </main>
+      
+      {/* Add Table Form */}
+      <AddTableForm
+        open={showAddTableForm}
+        onOpenChange={setShowAddTableForm}
+        onAddTable={handleAddTable}
+      />
       
       {/* End Session Sheet */}
       {showEndSessionSheet && (

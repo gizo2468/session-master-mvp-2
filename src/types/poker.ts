@@ -15,6 +15,27 @@ export interface HandData {
   createdAt: Date;
 }
 
+export interface TableData {
+  id: string;
+  name: string;
+  format: 'Cash' | 'Tournament';
+  gameType: 'NLH' | 'PLO';
+  location: string;
+  buyIn: number;
+  initialBuyIn: number;
+  cashOut?: number;
+  smallBlind: number;
+  bigBlind: number;
+  startTime: Date;
+  endTime?: Date;
+  isActive: boolean;
+  rebuys?: number;
+  addOns?: number;
+  tournamentBuyIn?: number;
+  notes?: string;
+  finalPosition?: number;
+}
+
 export interface PokerSession {
   id: string;
   gameType: 'NLH' | 'PLO';
@@ -44,6 +65,9 @@ export interface PokerSession {
   
   // Hand tracking
   hands?: HandData[];
+
+  // Multi-table support
+  tables?: TableData[];
 }
 
 export interface SessionFilter {
