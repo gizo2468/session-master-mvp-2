@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewSessionButton from '@/components/NewSessionButton';
@@ -55,15 +54,6 @@ const Index = () => {
         <div className="mt-10 mb-16">
           <DonationCard />
         </div>
-        
-        {activeSession && (
-          <button
-            onClick={() => navigate(`/live-session/${activeSession.id}`)}
-            className="fixed bottom-6 right-6 bg-poker-red text-white rounded-full px-4 py-2 shadow-lg"
-          >
-            Active Session
-          </button>
-        )}
         
         <FocusModeButton />
       </div>

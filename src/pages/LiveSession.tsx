@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -38,19 +37,16 @@ export default function LiveSession() {
   const [sessionNotes, setSessionNotes] = useState('');
   const [showAddTableForm, setShowAddTableForm] = useState(false);
   
-  // Determine which session to display - either by ID param or active session
   const session = id 
     ? sessions.find(s => s.id === id && s.isActive) 
     : activeSession;
   
   useEffect(() => {
-    // If no valid active session, redirect to home
     if (!session) {
       navigate('/');
       return;
     }
     
-    // If the session exists but isn't active, redirect to session detail page
     if (session && !session.isActive) {
       navigate(`/session/${session.id}`);
     }
@@ -59,7 +55,6 @@ export default function LiveSession() {
   const handleEndSession = () => {
     if (!session || !cashOutAmount) return;
     
-    // Check if there are any active tables
     const hasActiveTables = session.tables && session.tables.some(table => table.isActive);
     
     if (hasActiveTables) {
@@ -72,7 +67,6 @@ export default function LiveSession() {
       return;
     }
     
-    // End the session with cashout and notes
     endSession(session.id, parseFloat(cashOutAmount), sessionNotes);
     setShowEndSessionSheet(false);
     
@@ -140,7 +134,6 @@ export default function LiveSession() {
     );
   }
   
-  // Check if there are active tables
   const activeTables = session.tables?.filter(table => table.isActive) || [];
   const inactiveTables = session.tables?.filter(table => !table.isActive) || [];
   
@@ -165,7 +158,6 @@ export default function LiveSession() {
       
       <main className="flex-1 pt-4">
         <div className="container mx-auto max-w-md px-4 pb-8">
-          {/* Session Timer */}
           <SessionTimerCard 
             startTime={session.startTime}
             gameType={session.gameType}
@@ -175,10 +167,8 @@ export default function LiveSession() {
             onEndSession={() => setShowEndSessionSheet(true)}
           />
           
-          {/* Session Details */}
           <SessionDetailsCard session={session} />
           
-          {/* Tables Section */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-extrabold tracking-tight">Tables</h3>
@@ -248,13 +238,11 @@ export default function LiveSession() {
             )}
           </div>
           
-          {/* Controls for both Cash Game and Tournament */}
           <TournamentControlsCard 
             session={session}
             onAddRebuy={handleAddRebuy}
           />
           
-          {/* Hand Management */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <HandManagementPanel 
               sessionId={session.id}
@@ -264,14 +252,13 @@ export default function LiveSession() {
         </div>
       </main>
       
-      {/* Add Table Form */}
       <AddTableForm
         open={showAddTableForm}
         onOpenChange={setShowAddTableForm}
         onAddTable={handleAddTable}
+        fixedFormat={session.format === 'Cash' ? 'Cash' : session.format === 'Tournament' ? 'Tournament' : undefined}
       />
       
-      {/* End Session Sheet */}
       {showEndSessionSheet && (
         <Sheet open={showEndSessionSheet} onOpenChange={setShowEndSessionSheet}>
           <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">

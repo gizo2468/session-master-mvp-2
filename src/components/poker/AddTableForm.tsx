@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -11,11 +10,12 @@ interface AddTableFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddTable: (tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
+  fixedFormat?: 'Cash' | 'Tournament';
 }
 
-const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTable }) => {
+const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTable, fixedFormat }) => {
   const [tableName, setTableName] = useState('');
-  const [format, setFormat] = useState<'Cash' | 'Tournament'>('Cash');
+  const [format, setFormat] = useState<'Cash' | 'Tournament'>(fixedFormat || 'Cash');
   const [gameType, setGameType] = useState<'NLH' | 'PLO'>('NLH');
   const [location, setLocation] = useState('');
   const [buyIn, setBuyIn] = useState('');
@@ -23,15 +23,19 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
   const [bigBlind, setBigBlind] = useState('');
   const [tournamentBuyIn, setTournamentBuyIn] = useState('');
 
+  useEffect(() => {
+    if (fixedFormat) {
+      setFormat(fixedFormat);
+    }
+  }, [fixedFormat]);
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required fields
     if (!tableName || !location || !buyIn || !smallBlind || !bigBlind) {
       return;
     }
     
-    // If tournament format but no tournament buy-in, set it to the buy-in amount
     const finalTournamentBuyIn = format === 'Tournament' && !tournamentBuyIn 
       ? parseFloat(buyIn)
       : tournamentBuyIn 
@@ -59,7 +63,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
   
   const resetForm = () => {
     setTableName('');
-    setFormat('Cash');
+    setFormat(fixedFormat || 'Cash');
     setGameType('NLH');
     setLocation('');
     setBuyIn('');
@@ -92,20 +96,26 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
 
           <div className="space-y-2">
             <Label>Format</Label>
-            <RadioGroup 
-              value={format} 
-              onValueChange={(value) => setFormat(value as 'Cash' | 'Tournament')}
-              className="flex space-x-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Cash" id="cash" />
-                <Label htmlFor="cash" className="cursor-pointer">Cash</Label>
+            {fixedFormat ? (
+              <div className="flex items-center h-10 rounded border px-3 bg-gray-100 text-gray-700 font-semibold">
+                {fixedFormat}
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Tournament" id="tournament" />
-                <Label htmlFor="tournament" className="cursor-pointer">Tournament</Label>
-              </div>
-            </RadioGroup>
+            ) : (
+              <RadioGroup 
+                value={format} 
+                onValueChange={(value) => setFormat(value as 'Cash' | 'Tournament')}
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Cash" id="cash" />
+                  <Label htmlFor="cash" className="cursor-pointer">Cash</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Tournament" id="tournament" />
+                  <Label htmlFor="tournament" className="cursor-pointer">Tournament</Label>
+                </div>
+              </RadioGroup>
+            )}
           </div>
 
           <div className="space-y-2">
