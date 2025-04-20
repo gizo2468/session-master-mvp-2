@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -113,7 +112,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
                   </TableCell>
                   <TableCell>
                     {hand.resultAmount !== undefined && (
-                      <div className="flex flex-col items-start gap-0.5">
+                      <div className="flex flex-col items-center gap-0.5">
                         <div className="flex items-center gap-1">
                           {hand.currencyType === 'currency' ? (
                             <CircleDollarSign className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
@@ -127,7 +126,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
                           </span>
                         </div>
                         {(hand.smallBlind !== undefined || hand.bigBlind !== undefined) && (hand.smallBlind || hand.bigBlind) !== 0 && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 text-center">
                             (
                             {hand.currencyType === 'currency' ? '$' : ''}
                             {hand.smallBlind !== undefined ? Number(hand.smallBlind).toString() : '0'}
@@ -200,4 +199,3 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
 };
 
 export default HandsList;
-
