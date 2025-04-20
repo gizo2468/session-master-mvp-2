@@ -113,19 +113,21 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
                   </TableCell>
                   <TableCell>
                     {hand.resultAmount !== undefined && (
-                      <div className="flex items-center gap-1">
-                        {hand.currencyType === 'currency' ? (
-                          <CircleDollarSign className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
-                        ) : (
-                          <PokerChip className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
-                        )}
-                        <span className={hand.resultAmount >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                          {hand.resultAmount >= 0 ? '+' : ''}
-                          {hand.currencyType === 'currency' ? '$' : ''}
-                          {Math.abs(hand.resultAmount).toFixed(2)}
-                        </span>
+                      <div className="flex flex-col items-start gap-0.5">
+                        <div className="flex items-center gap-1">
+                          {hand.currencyType === 'currency' ? (
+                            <CircleDollarSign className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                          ) : (
+                            <PokerChip className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                          )}
+                          <span className={hand.resultAmount >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                            {hand.resultAmount >= 0 ? '+' : ''}
+                            {hand.currencyType === 'currency' ? '$' : ''}
+                            {Math.abs(hand.resultAmount).toFixed(2)}
+                          </span>
+                        </div>
                         {(hand.smallBlind !== undefined || hand.bigBlind !== undefined) && (hand.smallBlind || hand.bigBlind) !== 0 && (
-                          <span className="ml-1 text-xs text-gray-500">
+                          <span className="text-xs text-gray-500">
                             (
                             {hand.currencyType === 'currency' ? '$' : ''}
                             {hand.smallBlind !== undefined ? Number(hand.smallBlind).toString() : '0'}
@@ -198,3 +200,4 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
 };
 
 export default HandsList;
+
