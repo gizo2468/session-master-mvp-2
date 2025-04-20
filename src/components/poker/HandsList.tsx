@@ -124,6 +124,17 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
                           {hand.currencyType === 'currency' ? '$' : ''}
                           {Math.abs(hand.resultAmount).toFixed(2)}
                         </span>
+                        {(hand.smallBlind !== undefined || hand.bigBlind !== undefined) && (hand.smallBlind || hand.bigBlind) !== 0 && (
+                          <span className="ml-1 text-xs text-gray-500">
+                            (
+                            {hand.currencyType === 'currency' ? '$' : ''}
+                            {hand.smallBlind !== undefined ? Number(hand.smallBlind).toString() : '0'}
+                            /
+                            {hand.currencyType === 'currency' ? '$' : ''}
+                            {hand.bigBlind !== undefined ? Number(hand.bigBlind).toString() : '0'}
+                            )
+                          </span>
+                        )}
                       </div>
                     )}
                   </TableCell>
