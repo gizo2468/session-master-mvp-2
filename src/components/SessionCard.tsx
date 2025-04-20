@@ -1,4 +1,3 @@
-
 import { PokerSession, TableData } from '@/types/poker';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -35,6 +34,7 @@ export default function SessionCard({ session }: SessionCardProps) {
   // Table summary bubble logic (matching session format only)
   let tableCount = 0;
   if (session.tables && session.tables.length > 0) {
+    // Always count ALL tables that match the original format (not just after-the-fact)
     tableCount = session.tables.filter(
       (table: TableData) => table.format === session.format
     ).length;

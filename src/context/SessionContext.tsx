@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
@@ -20,7 +19,6 @@ interface SessionContextType {
   addHand: (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => void;
   updateHand: (sessionId: string, hand: HandData) => void;
   deleteHand: (sessionId: string, handId: string) => void;
-  // New table methods
   addTable: (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
   updateTable: (sessionId: string, table: TableData) => void;
   endTable: (sessionId: string, tableId: string, cashOut: number, notes?: string) => void;
@@ -49,7 +47,6 @@ const loadSessions = (): PokerSession[] => {
         })) : []
       };
       
-      // Process tables if they exist
       if (session.tables) {
         processedSession.tables = session.tables.map((table: TableData) => ({
           ...table,
@@ -76,7 +73,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     format: 'All',
     location: '',
   });
-  
+
   useEffect(() => {
     localStorage.setItem('pokerSessions', JSON.stringify(sessions));
   }, [sessions]);
@@ -86,6 +83,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       ...session,
       initialBuyIn: session.buyIn
     };
+
     setSessions((prev) => [...prev, sessionWithInitialBuyIn]);
   };
 
@@ -117,7 +115,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       currentStatus: 'running' as const,
       sessionDuration: 0,
       hands: [],
-      tables: []
+      tables: session.tables !== undefined ? session.tables : []
     };
     setActiveSession(sessionWithActive);
     addSession(sessionWithActive);
@@ -126,7 +124,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const endSession = (id: string, cashOut: number, notes?: string) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
-      // Check if any tables are still active
       const hasActiveTables = session.tables && session.tables.some(table => table.isActive);
       
       if (hasActiveTables) {
@@ -240,7 +237,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // New table methods
   const addTable = (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
@@ -255,7 +251,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const updatedSession = {
         ...session,
         tables: [...(session.tables || []), newTable],
-        buyIn: session.buyIn + table.buyIn // Update session total buy-in
+        buyIn: session.buyIn + table.buyIn
       };
       
       updateSession(updatedSession);
@@ -265,7 +261,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const updateTable = (sessionId: string, updatedTable: TableData) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session && session.tables) {
-      // Calculate the difference in buy-in if it changed
       const originalTable = session.tables.find(t => t.id === updatedTable.id);
       const buyInDifference = originalTable ? updatedTable.buyIn - originalTable.buyIn : 0;
       
@@ -276,7 +271,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const updatedSession = {
         ...session,
         tables: updatedTables,
-        buyIn: session.buyIn + buyInDifference // Update session total buy-in
+        buyIn: session.buyIn + buyInDifference
       };
       
       updateSession(updatedSession);
@@ -323,7 +318,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         return table;
       });
       
-      // Find the updated table to calculate the session buyIn difference
       const updatedTable = updatedTables.find(t => t.id === tableId);
       const originalTable = session.tables.find(t => t.id === tableId);
       const buyInDifference = (updatedTable && originalTable) ? updatedTable.buyIn - originalTable.buyIn : 0;
@@ -331,7 +325,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const updatedSession = {
         ...session,
         tables: updatedTables,
-        buyIn: session.buyIn + buyInDifference // Update session total buy-in
+        buyIn: session.buyIn + buyInDifference
       };
       
       updateSession(updatedSession);

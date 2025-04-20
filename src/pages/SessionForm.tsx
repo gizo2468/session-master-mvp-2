@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -43,17 +42,33 @@ export default function SessionForm() {
   
   const onSubmit = (values: FormValues) => {
     const buyInAmount = parseFloat(values.buyIn);
+
+    // Generate an initial table for the new session:
+    const initialTable = {
+      id: uuidv4(),
+      name: '', // Optionally customize initial table name, could be session.location or empty
+      gameType: values.gameType,
+      format: values.format,
+      location: values.location,
+      buyIn: buyInAmount,
+      initialBuyIn: buyInAmount,
+      isActive: true,
+      startTime: new Date(),
+      // Other table fields (like rebuys, addOns, etc) are optional for basic cash/tournament tracking
+    };
+
     const newSession: PokerSession = {
       id: uuidv4(),
       gameType: values.gameType,
       format: values.format,
       location: values.location,
       buyIn: buyInAmount,
-      initialBuyIn: buyInAmount, // Add initialBuyIn property with the same value as buyIn
+      initialBuyIn: buyInAmount,
       smallBlind: 0,
       bigBlind: 0,
       startTime: new Date(),
       isActive: true,
+      tables: [initialTable], // Ensure the initial table is counted in all logic
     };
     
     startSession(newSession);
