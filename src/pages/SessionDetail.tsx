@@ -7,6 +7,7 @@ import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import TableDetailsCard from '@/components/poker/TableDetailsCard';
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -424,6 +425,21 @@ export default function SessionDetail() {
                 </button>
               )}
             </div>
+            
+            {!session.isActive && Array.isArray(session.tables) && session.tables.length > 0 && (
+              <div className="mb-6">
+                <h2 className="text-lg font-bold mb-4">Tables Played</h2>
+                {session.tables.map(table => {
+                  let tableHands: undefined | typeof session.hands = undefined;
+                  if (Array.isArray(session.hands) && session.hands.length > 0) {
+                    tableHands = session.hands;
+                  }
+                  return (
+                    <TableDetailsCard key={table.id} table={table} hands={tableHands} />
+                  );
+                })}
+              </div>
+            )}
             
             <div className="bg-white rounded-lg shadow-md p-6">
               <HandManagementPanel 
