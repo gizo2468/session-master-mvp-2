@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -26,7 +25,7 @@ interface HandFormProps {
 
 const handFormSchema = z.object({
   cards: z.string().min(4, 'Select at least 2 cards').max(20, 'Maximum 10 cards'),
-  position: z.string().min(1, 'Position is required'),
+  position: z.string().optional(),
   action: z.string().min(1, 'Action description is required').max(200, 'Action description is too long'),
   currencyType: z.enum(['currency', 'chips']).default('currency'),
   resultAmount: z.number().optional(),
@@ -34,7 +33,7 @@ const handFormSchema = z.object({
   bigBlind: z.number().optional(),
   notes: z.string().max(1000, 'Notes are too long').optional(),
   pokercraftLink: z.string().url('Invalid URL format').optional().or(z.literal('')),
-  image: z.string().optional().or(z.any().optional()), // image is optional
+  image: z.string().optional().or(z.any().optional()),
 }).refine(data => {
   if (data.currencyType === 'chips' && (!data.smallBlind || !data.bigBlind)) {
     return false;
@@ -92,7 +91,6 @@ const HandForm: React.FC<HandFormProps> = ({
     initialData.image || null
   );
   
-  // Reset form when opening modal for new entries
   useEffect(() => {
     if (open && !isEditing) {
       form.reset({
@@ -112,11 +110,10 @@ const HandForm: React.FC<HandFormProps> = ({
   }, [open, isEditing, form]);
   
   const handleSubmit = (values: FormValues) => {
-    // Include the image in the submission
     onSubmit({
       ...values,
       id: initialData.id,
-      image: imagePreview // Use imagePreview instead of form value
+      image: imagePreview
     });
     onOpenChange(false);
   };
@@ -128,7 +125,7 @@ const HandForm: React.FC<HandFormProps> = ({
       reader.onloadend = () => {
         const result = reader.result as string;
         setImagePreview(result);
-        form.setValue('image', result); // Set the form value
+        form.setValue('image', result);
       };
       reader.readAsDataURL(file);
     }
@@ -170,7 +167,6 @@ const HandForm: React.FC<HandFormProps> = ({
                   )}
                 />
                 
-                {/* Moved the Image upload field here */}
                 <div className="space-y-2">
                   <FormLabel>Image</FormLabel>
                   <Input 
@@ -206,7 +202,7 @@ const HandForm: React.FC<HandFormProps> = ({
                   name="position"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Position</FormLabel>
+                      <FormLabel>Position (Optional)</FormLabel>
                       <Select 
                         onValueChange={field.onChange} 
                         defaultValue={field.value}
@@ -224,6 +220,9 @@ const HandForm: React.FC<HandFormProps> = ({
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormDescription>
+                        Where you were seated at the table
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
