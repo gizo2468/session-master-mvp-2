@@ -1,3 +1,6 @@
+
+// Update to replace manual Cash Out entry with automatic sum from closed tables and show static display.
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -33,7 +36,6 @@ export default function LiveSession() {
   const { toast } = useToast();
   
   const [showEndSessionSheet, setShowEndSessionSheet] = useState(false);
-  const [cashOutAmount, setCashOutAmount] = useState('');
   const [sessionNotes, setSessionNotes] = useState('');
   const [showAddTableForm, setShowAddTableForm] = useState(false);
   
@@ -51,10 +53,18 @@ export default function LiveSession() {
       navigate(`/session/${session.id}`);
     }
   }, [session, navigate]);
-  
+
+  // Calculate the auto Cash Out amount from all completed tables (isActive: false)
+  const autoCashOutAmount = session?.tables?.reduce((acc, table) => {
+    if (table.isActive === false && typeof table.cashOut === 'number') {
+      return acc + table.cashOut;
+    }
+    return acc;
+  }, 0) ?? 0;
+
   const handleEndSession = () => {
-    if (!session || !cashOutAmount) return;
-    
+    if (!session) return;
+
     const hasActiveTables = session.tables && session.tables.some(table => table.isActive);
     
     if (hasActiveTables) {
@@ -67,7 +77,8 @@ export default function LiveSession() {
       return;
     }
     
-    endSession(session.id, parseFloat(cashOutAmount), sessionNotes);
+    // Use calculated autoCashOutAmount for ending session (no manual input)
+    endSession(session.id, autoCashOutAmount, sessionNotes);
     setShowEndSessionSheet(false);
     
     toast({
@@ -265,7 +276,7 @@ export default function LiveSession() {
             <SheetHeader>
               <SheetTitle>End Session</SheetTitle>
               <SheetDescription>
-                Enter your cash out amount to complete your session.
+                The Cash Out Amount is automatically calculated from all closed tables in this session.
               </SheetDescription>
             </SheetHeader>
             
@@ -274,20 +285,8 @@ export default function LiveSession() {
                 <label htmlFor="cashout" className="block text-sm font-medium mb-1">
                   Cash Out Amount
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500">$</span>
-                  </div>
-                  <input
-                    id="cashout"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                    placeholder="0.00"
-                    value={cashOutAmount}
-                    onChange={(e) => setCashOutAmount(e.target.value)}
-                  />
+                <div className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-900 text-lg font-semibold select-text">
+                  ${autoCashOutAmount.toFixed(2)}
                 </div>
               </div>
               
@@ -295,32 +294,26 @@ export default function LiveSession() {
                 <div className="flex justify-between mb-1">
                   <span className="text-sm">Profit/Loss:</span>
                   <span className={`text-sm font-bold ${
-                    cashOutAmount && parseFloat(cashOutAmount) >= session.buyIn 
+                    autoCashOutAmount >= session.buyIn 
                       ? 'text-green-600' 
-                      : cashOutAmount 
+                      : autoCashOutAmount < session.buyIn
                         ? 'text-red-600' 
-                        : 'text-gray-500'
+                        : 'text-gray-800'
                   }`}>
-                    {cashOutAmount 
-                      ? `$${(parseFloat(cashOutAmount) - session.buyIn).toFixed(2)}` 
-                      : '$0.00'}
+                    {`$${(autoCashOutAmount - session.buyIn).toFixed(2)}`}
                   </span>
                 </div>
                 <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  {cashOutAmount && (
-                    <div 
-                      className={`h-full ${
-                        parseFloat(cashOutAmount) >= session.buyIn 
-                          ? 'bg-green-500' 
-                          : 'bg-red-500'
-                      }`}
-                      style={{ 
-                        width: cashOutAmount 
-                          ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - session.buyIn) / session.buyIn * 100), 100)}%` 
-                          : '0%' 
-                      }}
-                    />
-                  )}
+                  <div 
+                    className={`h-full ${
+                      autoCashOutAmount >= session.buyIn 
+                        ? 'bg-green-500' 
+                        : 'bg-red-500'
+                    }`}
+                    style={{ 
+                      width: `${Math.min(Math.abs((autoCashOutAmount - session.buyIn) / session.buyIn * 100), 100)}%`
+                    }}
+                  />
                 </div>
               </div>
               
@@ -347,7 +340,7 @@ export default function LiveSession() {
                 </Button>
                 <Button
                   onClick={handleEndSession}
-                  disabled={!cashOutAmount}
+                  disabled={false}
                   className="flex-1 bg-poker-gold hover:bg-poker-darkGold text-white"
                 >
                   End Session
@@ -360,3 +353,4 @@ export default function LiveSession() {
     </div>
   );
 }
+
