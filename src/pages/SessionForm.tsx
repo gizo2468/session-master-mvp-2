@@ -74,7 +74,7 @@ export default function SessionForm() {
     };
     
     startSession(newSession);
-    navigate('/confirm-session');
+    navigate(`/live-session/${newSession.id}`);
   };
   
   return (
