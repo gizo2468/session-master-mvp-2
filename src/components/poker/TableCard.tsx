@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
   const [cashOutAmount, setCashOutAmount] = useState('');
   const [tableNotes, setTableNotes] = useState(table.notes || '');
   const [showRebuyDialog, setShowRebuyDialog] = useState(false);
-  const [rebuyAmount, setRebuyAmount] = useState(table.format === 'Tournament' ? table.tournamentBuyIn?.toString() || '' : '');
+  const [rebuyDialogAmount, setRebuyDialogAmount] = useState(table.format === 'Tournament' ? table.tournamentBuyIn?.toString() || '' : '');
 
   const formattedStartTime = dateFormat(new Date(table.startTime), 'h:mm a');
   const formattedDate = dateFormat(new Date(table.startTime), 'MMM d, yyyy');
@@ -38,8 +39,8 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
   };
 
   const handleAddRebuy = () => {
-    if (rebuyAmount) {
-      onAddRebuy(table.id, parseFloat(rebuyAmount));
+    if (rebuyDialogAmount) {
+      onAddRebuy(table.id, parseFloat(rebuyDialogAmount));
       setShowRebuyDialog(false);
     }
   };
@@ -223,8 +224,8 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                   step="0.01"
                   className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                   placeholder="0.00"
-                  value={rebuyAmount}
-                  onChange={(e) => setRebuyAmount(e.target.value)}
+                  value={rebuyDialogAmount}
+                  onChange={(e) => setRebuyDialogAmount(e.target.value)}
                   readOnly={table.format === 'Tournament'}
                 />
               </div>
@@ -244,7 +245,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
               </Button>
               <Button
                 onClick={handleAddRebuy}
-                disabled={!rebuyAmount}
+                disabled={!rebuyDialogAmount}
                 className="bg-poker-gold hover:bg-poker-darkGold text-white"
               >
                 Add Rebuy

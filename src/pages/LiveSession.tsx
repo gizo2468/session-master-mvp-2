@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -166,7 +167,7 @@ export default function LiveSession() {
         <div className="container mx-auto max-w-md px-4 pb-8">
           {session?.tableName && (
             <div className="bg-poker-feltGreen/10 rounded-md py-2 px-4 mb-3 flex items-center gap-2 text-poker-black font-medium">
-              <Icon name="list" className="w-5 h-5 text-poker-feltGreen" />
+              <Icon name="List" className="w-5 h-5 text-poker-feltGreen" />
               Current Playing From:&nbsp;
               <span className="font-bold text-poker-feltGreen">{session.tableName}</span>
             </div>
