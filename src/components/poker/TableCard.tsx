@@ -26,7 +26,14 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
   const [cashOutAmount, setCashOutAmount] = useState('');
   const [tableNotes, setTableNotes] = useState(table.notes || '');
   const [showRebuyDialog, setShowRebuyDialog] = useState(false);
-  const [rebuyDialogAmount, setRebuyDialogAmount] = useState(table.format === 'Tournament' ? table.tournamentBuyIn?.toString() || '' : '');
+  
+  // Initialize the rebuy amount based on table format
+  // For tournament tables, we should use the table's buyIn if tournamentBuyIn is not available
+  const initialRebuyAmount = table.format === 'Tournament' 
+    ? (table.tournamentBuyIn || table.initialBuyIn || table.buyIn).toString()
+    : '';
+  
+  const [rebuyDialogAmount, setRebuyDialogAmount] = useState(initialRebuyAmount);
 
   const formattedStartTime = dateFormat(new Date(table.startTime), 'h:mm a');
   const formattedDate = dateFormat(new Date(table.startTime), 'MMM d, yyyy');
@@ -43,6 +50,17 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
       onAddRebuy(table.id, parseFloat(rebuyDialogAmount));
       setShowRebuyDialog(false);
     }
+  };
+  
+  // Reset rebuyDialogAmount when opening the dialog
+  const openRebuyDialog = () => {
+    // For tournaments, set the amount to the tournament buy-in or initial buy-in
+    if (table.format === 'Tournament') {
+      setRebuyDialogAmount((table.tournamentBuyIn || table.initialBuyIn || table.buyIn).toString());
+    } else {
+      setRebuyDialogAmount('');
+    }
+    setShowRebuyDialog(true);
   };
 
   return (
@@ -85,7 +103,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
           <Button 
             variant="outline" 
             className="flex-1"
-            onClick={() => setShowRebuyDialog(true)}
+            onClick={openRebuyDialog}
           >
             <Icon name="Plus" className="mr-1 h-4 w-4" /> Rebuy
           </Button>
@@ -245,7 +263,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
               </Button>
               <Button
                 onClick={handleAddRebuy}
-                disabled={!rebuyDialogAmount}
+                disabled={!rebuyDialogAmount || parseFloat(rebuyDialogAmount) <= 0}
                 className="bg-poker-gold hover:bg-poker-darkGold text-white"
               >
                 Add Rebuy
