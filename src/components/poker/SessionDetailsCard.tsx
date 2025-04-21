@@ -1,27 +1,20 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession } from '@/types/poker';
+import { Badge } from "@/components/ui/badge";
+import { DollarSign, CircleDollarSign } from "lucide-react";
 
 interface SessionDetailsCardProps {
   session: PokerSession;
 }
 
 const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
-  // New buy-in/display logic for summary:
-  // TOTAL_BUYIN_AMOUNT: sum of initial buy-ins across tables
-  // TABLE_COUNT: number of tables in session
-  // TOTAL_REBUY_AMOUNT: sum of all rebuys across tables (amount, not count)
-  // REBUY_COUNT: total count of rebuys across all tables
-  
   const tables = session.tables || [];
 
-  // Calculate total initial buyin and rebuys
   let totalInitialBuyin = 0, totalRebuyAmount = 0, rebuyCount = 0;
   tables.forEach((t) => {
     totalInitialBuyin += t.initialBuyIn || 0;
     if (t.rebuys && t.rebuys > 0) {
-      // Rebuy amount = (t.buyIn - t.initialBuyIn)
       totalRebuyAmount += (t.buyIn - t.initialBuyIn);
       rebuyCount += t.rebuys;
     }
@@ -39,24 +32,37 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             <span className="text-gray-500">Location:</span>
             <span className="font-medium">{session.location}</span>
           </div>
-          {/* Updated buy-in logic */}
-          <div className="flex justify-between">
-            <span className="text-gray-500">Buy-in:</span>
-            <span className="font-medium">
-              ${totalInitialBuyin.toFixed(2)} for {tableCount} table{tableCount !== 1 ? "s" : ""}
-              {(totalRebuyAmount > 0 || rebuyCount > 0) && (
-                <span className="text-gray-600">
-                  {" "}
-                  (+${totalRebuyAmount.toFixed(2)} from {rebuyCount} rebuy{rebuyCount !== 1 ? "s" : ""})
+          <div className="flex items-center gap-2 mt-1 mb-1">
+            <Badge
+              variant="secondary"
+              className="flex items-center gap-1 bg-[#E5DEFF] text-[#222] px-3 py-1 border-0 font-normal text-sm"
+            >
+              <DollarSign className="w-4 h-4 text-[#7E69AB]" />
+              <span className="font-bold">${totalInitialBuyin.toFixed(2)}</span>
+              <span className="ml-1 opacity-70 text-xs">
+                Buy-In {tableCount ? `(${tableCount} table${tableCount !== 1 ? "s" : ""})` : ""}
+              </span>
+            </Badge>
+            {totalRebuyAmount > 0 || rebuyCount > 0 ? (
+              <Badge
+                variant="outline"
+                className="flex items-center gap-1 border-green-400 text-green-800 bg-[#F2FCE2] px-3 py-1 font-normal text-sm"
+              >
+                <CircleDollarSign className="w-4 h-4 text-green-600" />
+                <span className="font-bold">
+                  +${totalRebuyAmount.toFixed(2)}
                 </span>
-              )}
-            </span>
+                <span className="ml-1 opacity-70 text-xs">
+                  from {rebuyCount} rebuy{rebuyCount !== 1 ? "s" : ""}
+                </span>
+              </Badge>
+            ) : null}
           </div>
           
           {(session.smallBlind && session.bigBlind) ? (
             <div className="flex justify-between">
               <span className="text-gray-500">Blinds:</span>
-              <span className="font-medium">${session.smallBlind}/${session.bigBlind}</span>
+              <span className="font-medium">${session.smallBlind}/{session.bigBlind}</span>
             </div>
           ) : null}
           
