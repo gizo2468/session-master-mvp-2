@@ -1,6 +1,3 @@
-
-// Update to replace manual Cash Out entry with automatic sum from closed tables and show static display.
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -54,7 +51,6 @@ export default function LiveSession() {
     }
   }, [session, navigate]);
 
-  // Calculate the auto Cash Out amount from all completed tables (isActive: false)
   const autoCashOutAmount = session?.tables?.reduce((acc, table) => {
     if (table.isActive === false && typeof table.cashOut === 'number') {
       return acc + table.cashOut;
@@ -77,7 +73,6 @@ export default function LiveSession() {
       return;
     }
     
-    // Use calculated autoCashOutAmount for ending session (no manual input)
     endSession(session.id, autoCashOutAmount, sessionNotes);
     setShowEndSessionSheet(false);
     
@@ -353,4 +348,3 @@ export default function LiveSession() {
     </div>
   );
 }
-
