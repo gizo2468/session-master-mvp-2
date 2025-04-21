@@ -4,14 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableData, HandData } from '@/types/poker';
 import { format } from 'date-fns';
 import { ArrowUp, ArrowDown } from 'lucide-react';
-import HandsList from './HandsList';
 
 interface TableDetailsCardProps {
   table: TableData;
   hands?: HandData[];
 }
 
-export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, hands }) => {
+export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => {
   // Profit/loss calculation
   const profit = (table.cashOut ?? 0) - (table.buyIn ?? 0);
   const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
@@ -92,13 +91,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, hands
             <div className="text-xs bg-gray-50 p-2 rounded">{table.notes}</div>
           </div>
         )}
-        {/* Hands played in this table */}
-        {Array.isArray(hands) && hands.length > 0 && (
-          <div className="mt-4">
-            <h4 className="font-semibold mb-2 text-sm">Hands Played</h4>
-            <HandsList hands={hands} onEditHand={() => {}} onDeleteHand={() => {}} />
-          </div>
-        )}
+        {/* Removed hands display section */}
       </CardContent>
     </Card>
   );
