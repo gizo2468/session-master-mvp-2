@@ -164,6 +164,13 @@ export default function LiveSession() {
       
       <main className="flex-1 pt-4">
         <div className="container mx-auto max-w-md px-4 pb-8">
+          {session?.tableName && (
+            <div className="bg-poker-feltGreen/10 rounded-md py-2 px-4 mb-3 flex items-center gap-2 text-poker-black font-medium">
+              <Icon name="list" className="w-5 h-5 text-poker-feltGreen" />
+              Current Playing From:&nbsp;
+              <span className="font-bold text-poker-feltGreen">{session.tableName}</span>
+            </div>
+          )}
           <SessionTimerCard 
             startTime={session.startTime}
             gameType={session.gameType}

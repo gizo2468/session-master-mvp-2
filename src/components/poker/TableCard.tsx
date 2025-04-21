@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +30,8 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
   const formattedStartTime = dateFormat(new Date(table.startTime), 'h:mm a');
   const formattedDate = dateFormat(new Date(table.startTime), 'MMM d, yyyy');
 
+  const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
+
   const handleEndTable = () => {
     onEndTable(table.id, parseFloat(cashOutAmount), tableNotes);
     setShowEndTableDialog(false);
@@ -60,7 +61,12 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="text-gray-600">Buy-in:</span>
-            <span className="font-medium">${table.buyIn.toFixed(2)}</span>
+            <span className="font-medium">
+              ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+              {rebuyAmount > 0 && (
+                <span className="text-gray-500"> (+${rebuyAmount.toFixed(2)})</span>
+              )}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Blinds:</span>

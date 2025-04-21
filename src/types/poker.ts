@@ -40,6 +40,7 @@ export interface PokerSession {
   id: string;
   gameType: 'NLH' | 'PLO';
   format: 'Cash' | 'Tournament' | 'Live Cash' | 'Live Tournament' | 'Online Cash' | 'Online Tournament' | 'Home Game';
+  tableName?: string; // <-- Added tableName for session-level
   location: string;
   initialBuyIn: number; // Initial buy-in amount
   buyIn: number;        // Total buy-in amount (initial + rebuys + addons)

@@ -14,9 +14,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/Lucide';
 
 const formSchema = z.object({
+  tableName: z.string().min(1, "Table Name is required"),
   gameType: z.enum(['NLH', 'PLO']),
   format: z.enum(['Cash', 'Tournament']),
-  location: z.string().min(1, "Location is required"),
+  location: z.string().min(1, "Online Platform is required"),
   buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "Buy-in amount must be a valid number",
   }),
@@ -32,6 +33,7 @@ export default function SessionForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      tableName: "",
       gameType: 'NLH',
       format: 'Cash',
       location: '',
@@ -43,10 +45,9 @@ export default function SessionForm() {
   const onSubmit = (values: FormValues) => {
     const buyInAmount = parseFloat(values.buyIn);
 
-    // Generate an initial table for the new session:
     const initialTable = {
       id: uuidv4(),
-      name: '', // Optionally customize initial table name, could be session.location or empty
+      name: values.tableName,
       gameType: values.gameType,
       format: values.format,
       location: values.location,
@@ -56,13 +57,13 @@ export default function SessionForm() {
       startTime: new Date(),
       smallBlind: 0,
       bigBlind: 0,
-      // Other table fields (like rebuys, addOns, etc) are optional for basic cash/tournament tracking
     };
 
     const newSession: PokerSession = {
       id: uuidv4(),
       gameType: values.gameType,
       format: values.format,
+      tableName: values.tableName,
       location: values.location,
       buyIn: buyInAmount,
       initialBuyIn: buyInAmount,
@@ -70,7 +71,7 @@ export default function SessionForm() {
       bigBlind: 0,
       startTime: new Date(),
       isActive: true,
-      tables: [initialTable], // Ensure the initial table is counted in all logic
+      tables: [initialTable],
     };
     
     startSession(newSession);
@@ -94,6 +95,23 @@ export default function SessionForm() {
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="bg-white rounded-lg shadow-md p-6 space-y-6">
+            <FormField
+              control={form.control}
+              name="tableName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Table Name</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder='e.g. "My house", "Vegas Trip"' 
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <FormField
               control={form.control}
               name="gameType"
@@ -236,10 +254,10 @@ export default function SessionForm() {
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">Location</FormLabel>
+                  <FormLabel className="text-base font-medium">Online Platform (or App/Site)</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="Enter casino or home game name" 
+                      placeholder="Enter GG Poker, PokerStars, etc" 
                       {...field} 
                     />
                   </FormControl>

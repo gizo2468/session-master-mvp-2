@@ -8,30 +8,26 @@ interface SessionDetailsCardProps {
 }
 
 const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
-  // Calculate the total of rebuys and addons
-  const calculateAdditionalBuyins = () => {
-    if (session.initialBuyIn) {
-      // If initialBuyIn exists, return the difference between total and initial
-      return session.buyIn - session.initialBuyIn;
-    }
-    
-    // Fallback calculation (for backward compatibility)
-    let additional = 0;
-    
-    if (session.rebuys && session.rebuys > 0) {
-      additional += ((session.rebuys || 0) * (session.tournamentBuyIn || session.buyIn / session.rebuys));
-    }
-    
-    if (session.addOns && session.addOns > 0) {
-      additional += ((session.addOns || 0) * (session.tournamentBuyIn || session.buyIn / session.addOns));
-    }
-    
-    return additional;
-  };
+  // New buy-in/display logic for summary:
+  // TOTAL_BUYIN_AMOUNT: sum of initial buy-ins across tables
+  // TABLE_COUNT: number of tables in session
+  // TOTAL_REBUY_AMOUNT: sum of all rebuys across tables (amount, not count)
+  // REBUY_COUNT: total count of rebuys across all tables
   
-  const additionalBuyins = calculateAdditionalBuyins();
-  const initialBuyIn = session.initialBuyIn || (session.buyIn - additionalBuyins);
-  
+  const tables = session.tables || [];
+
+  // Calculate total initial buyin and rebuys
+  let totalInitialBuyin = 0, totalRebuyAmount = 0, rebuyCount = 0;
+  tables.forEach((t) => {
+    totalInitialBuyin += t.initialBuyIn || 0;
+    if (t.rebuys && t.rebuys > 0) {
+      // Rebuy amount = (t.buyIn - t.initialBuyIn)
+      totalRebuyAmount += (t.buyIn - t.initialBuyIn);
+      rebuyCount += t.rebuys;
+    }
+  });
+  const tableCount = tables.length;
+
   return (
     <Card className="bg-white rounded-lg shadow-md mb-6">
       <CardHeader className="pb-2">
@@ -43,12 +39,17 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             <span className="text-gray-500">Location:</span>
             <span className="font-medium">{session.location}</span>
           </div>
-          
+          {/* Updated buy-in logic */}
           <div className="flex justify-between">
             <span className="text-gray-500">Buy-in:</span>
             <span className="font-medium">
-              ${initialBuyIn.toFixed(2)}
-              {additionalBuyins > 0 && <span className="text-gray-600"> (+${additionalBuyins.toFixed(2)})</span>}
+              ${totalInitialBuyin.toFixed(2)} for {tableCount} table{tableCount !== 1 ? "s" : ""}
+              {(totalRebuyAmount > 0 || rebuyCount > 0) && (
+                <span className="text-gray-600">
+                  {" "}
+                  (+${totalRebuyAmount.toFixed(2)} from {rebuyCount} rebuy{rebuyCount !== 1 ? "s" : ""})
+                </span>
+              )}
             </span>
           </div>
           
