@@ -35,10 +35,10 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           </div>
           <div className="flex items-center gap-2 mt-1 mb-1">
             <Badge
-              variant="secondary"
-              className="flex items-center gap-1 bg-poker-gold text-white px-3 py-1 border-0 font-normal text-sm"
+              variant="outline"
+              className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
             >
-              <DollarSign className="w-4 h-4 text-white" />
+              <DollarSign className="w-4 h-4 text-gray-600" />
               <span className="font-bold">${totalInitialBuyin.toFixed(2)}</span>
               <span className="ml-1 opacity-80 text-xs">
                 Buy-In {tableCount ? `(${tableCount} table${tableCount !== 1 ? "s" : ""})` : ""}
