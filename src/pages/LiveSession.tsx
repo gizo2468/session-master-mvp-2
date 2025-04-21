@@ -239,6 +239,25 @@ export default function LiveSession() {
                               </div>
                             )}
                           </div>
+                          {/* Add Buy-In summary line under profit/loss */}
+                          <div className="flex items-center text-sm mt-1">
+                            <span className="text-gray-600 font-medium mr-1">Buy-In:</span>
+                            {/* Show the original buy-in (or initialBuyIn if present) */}
+                            <span className="font-semibold">
+                              ${(table.initialBuyIn ?? table.buyIn).toFixed(2)}
+                            </span>
+                            {/* Show rebuy/add-on badge if total > 0 */}
+                            {(() => {
+                              const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
+                              const addOnTotal = table.addOns ? table.addOns : 0;
+                              const extra = rebuyTotal + addOnTotal;
+                              return extra > 0 ? (
+                                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                                  (+${extra.toFixed(2)})
+                                </span>
+                              ) : null;
+                            })()}
+                          </div>
                           <div className="text-sm text-gray-600">
                             {format(new Date(table.startTime), 'MMM d, h:mm a')}
                             {table.endTime && ` - ${format(new Date(table.endTime), 'h:mm a')}`}
