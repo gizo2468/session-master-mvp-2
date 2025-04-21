@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession } from '@/types/poker';
@@ -35,30 +36,30 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           <div className="flex items-center gap-2 mt-1 mb-1">
             <Badge
               variant="secondary"
-              className="flex items-center gap-1 bg-[#E5DEFF] text-[#222] px-3 py-1 border-0 font-normal text-sm"
+              className="flex items-center gap-1 bg-poker-gold text-white px-3 py-1 border-0 font-normal text-sm"
             >
-              <DollarSign className="w-4 h-4 text-[#7E69AB]" />
+              <DollarSign className="w-4 h-4 text-white" />
               <span className="font-bold">${totalInitialBuyin.toFixed(2)}</span>
-              <span className="ml-1 opacity-70 text-xs">
+              <span className="ml-1 opacity-80 text-xs">
                 Buy-In {tableCount ? `(${tableCount} table${tableCount !== 1 ? "s" : ""})` : ""}
               </span>
             </Badge>
             {totalRebuyAmount > 0 || rebuyCount > 0 ? (
               <Badge
                 variant="outline"
-                className="flex items-center gap-1 border-green-400 text-green-800 bg-[#F2FCE2] px-3 py-1 font-normal text-sm"
+                className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
               >
-                <CircleDollarSign className="w-4 h-4 text-green-600" />
+                <CircleDollarSign className="w-4 h-4 text-gray-600" />
                 <span className="font-bold">
                   +${totalRebuyAmount.toFixed(2)}
                 </span>
-                <span className="ml-1 opacity-70 text-xs">
+                <span className="ml-1 opacity-80 text-xs">
                   from {rebuyCount} rebuy{rebuyCount !== 1 ? "s" : ""}
                 </span>
               </Badge>
             ) : null}
           </div>
-          
+
           {(session.smallBlind && session.bigBlind) ? (
             <div className="flex justify-between">
               <span className="text-gray-500">Blinds:</span>
@@ -97,3 +98,4 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
 };
 
 export default SessionDetailsCard;
+
