@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewSessionButton from '@/components/NewSessionButton';
@@ -33,7 +34,7 @@ const Index = () => {
         
         <div className="mb-4 flex justify-between items-center">
           <h2 className="font-extrabold text-xl tracking-tight">
-            Recent Sessions (Active={activeSessionsCount})
+            Recent Sessions (Active {activeSessionsCount})
           </h2>
           <button 
             className="text-sm text-poker-feltGreen"
@@ -65,3 +66,4 @@ const Index = () => {
 };
 
 export default Index;
+
