@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession } from '@/types/poker';
@@ -30,7 +29,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
       <CardContent className="pt-0">
         <div className="space-y-3">
           <div className="flex justify-between">
-            <span className="text-gray-500">Location:</span>
+            <span className="text-gray-500">Playing From:</span>
             <span className="font-medium">{session.location}</span>
           </div>
           <div className="flex items-center gap-2 mt-1 mb-1">
@@ -59,14 +58,12 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               </Badge>
             ) : null}
           </div>
-
-          {(session.smallBlind && session.bigBlind) ? (
+          {session.smallBlind && session.bigBlind ? (
             <div className="flex justify-between">
               <span className="text-gray-500">Blinds:</span>
               <span className="font-medium">${session.smallBlind}/{session.bigBlind}</span>
             </div>
           ) : null}
-          
           {session.format === 'Tournament' && (
             <>
               {(session.rebuys && session.rebuys > 0) && (
@@ -75,7 +72,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
                   <span className="font-medium">{session.rebuys}</span>
                 </div>
               )}
-              
               {(session.addOns && session.addOns > 0) && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">Add-ons:</span>
@@ -84,7 +80,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               )}
             </>
           )}
-          
           {session.notes && (
             <div className="pt-2">
               <span className="text-gray-500 block mb-1">Notes:</span>
@@ -98,4 +93,3 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
 };
 
 export default SessionDetailsCard;
-

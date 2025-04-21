@@ -164,13 +164,6 @@ export default function LiveSession() {
       
       <main className="flex-1 pt-4">
         <div className="container mx-auto max-w-md px-4 pb-8">
-          {session?.tableName && (
-            <div className="bg-poker-feltGreen/10 rounded-md py-2 px-4 mb-3 flex items-center gap-2 text-poker-black font-medium">
-              <Icon name="List" className="w-5 h-5 text-poker-feltGreen" />
-              Current Playing From:&nbsp;
-              <span className="font-bold text-poker-feltGreen">{session.tableName}</span>
-            </div>
-          )}
           <SessionTimerCard 
             startTime={session.startTime}
             gameType={session.gameType}
@@ -180,7 +173,12 @@ export default function LiveSession() {
             onEndSession={() => setShowEndSessionSheet(true)}
           />
           
-          <SessionDetailsCard session={session} />
+          <SessionDetailsCard 
+            session={{
+              ...session,
+              location: session.tableName || session.location
+            }}
+          />
           
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex justify-between items-center mb-4">
@@ -227,6 +225,7 @@ export default function LiveSession() {
                           <div className="flex justify-between items-start mb-2">
                             <div>
                               <h3 className="font-bold">{table.name || table.location}</h3>
+                              <p className="text-xs text-gray-500 font-semibold mt-0.5">{table.location}</p>
                               <p className="text-sm text-gray-600">{table.gameType} • {table.format}</p>
                             </div>
                             {table.cashOut !== undefined && (

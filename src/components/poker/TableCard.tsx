@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,8 +26,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
   const [tableNotes, setTableNotes] = useState(table.notes || '');
   const [showRebuyDialog, setShowRebuyDialog] = useState(false);
   
-  // Initialize the rebuy amount based on table format
-  // For tournament tables, we should use the table's buyIn if tournamentBuyIn is not available
   const initialRebuyAmount = table.format === 'Tournament' 
     ? (table.tournamentBuyIn || table.initialBuyIn || table.buyIn).toString()
     : '';
@@ -52,9 +49,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
     }
   };
   
-  // Reset rebuyDialogAmount when opening the dialog
   const openRebuyDialog = () => {
-    // For tournaments, set the amount to the tournament buy-in or initial buy-in
     if (table.format === 'Tournament') {
       setRebuyDialogAmount((table.tournamentBuyIn || table.initialBuyIn || table.buyIn).toString());
     } else {
@@ -69,6 +64,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
         <div className="flex justify-between items-start mb-2">
           <div>
             <h3 className="font-bold text-lg">{table.name || table.location}</h3>
+            <p className="text-xs text-gray-500 font-semibold mt-0.5">{table.location}</p>
             <p className="text-sm text-gray-600">{table.gameType} • {table.format}</p>
           </div>
           <div className="text-sm text-gray-600 text-right">
@@ -89,7 +85,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Blinds:</span>
-            <span className="font-medium">${table.smallBlind}/${table.bigBlind}</span>
+            <span className="font-medium">${table.smallBlind}/{table.bigBlind}</span>
           </div>
           {table.rebuys && table.rebuys > 0 && (
             <div className="flex justify-between">
@@ -117,7 +113,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
         </div>
       </Card>
 
-      {/* End Table Dialog */}
       <Dialog open={showEndTableDialog} onOpenChange={setShowEndTableDialog}>
         <DialogContent>
           <DialogHeader>
@@ -214,7 +209,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
         </DialogContent>
       </Dialog>
 
-      {/* Rebuy Dialog */}
       <Dialog open={showRebuyDialog} onOpenChange={setShowRebuyDialog}>
         <DialogContent>
           <DialogHeader>
