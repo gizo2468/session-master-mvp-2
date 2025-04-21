@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -239,14 +238,11 @@ export default function LiveSession() {
                               </div>
                             )}
                           </div>
-                          {/* Add Buy-In summary line under profit/loss */}
                           <div className="flex items-center text-sm mt-1">
                             <span className="text-gray-600 font-medium mr-1">Buy-In:</span>
-                            {/* Show the original buy-in (or initialBuyIn if present) */}
                             <span className="font-semibold">
                               ${(table.initialBuyIn ?? table.buyIn).toFixed(2)}
                             </span>
-                            {/* Show rebuy/add-on badge if total > 0 */}
                             {(() => {
                               const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
                               const addOnTotal = table.addOns ? table.addOns : 0;
@@ -257,6 +253,12 @@ export default function LiveSession() {
                                 </span>
                               ) : null;
                             })()}
+                          </div>
+                          <div className="flex items-center text-sm mt-1">
+                            <span className="text-gray-600 font-medium mr-1">Cash Out:</span>
+                            <span className="font-semibold">
+                              ${(table.cashOut !== undefined ? table.cashOut : 0).toFixed(2)}
+                            </span>
                           </div>
                           <div className="text-sm text-gray-600">
                             {format(new Date(table.startTime), 'MMM d, h:mm a')}
