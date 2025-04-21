@@ -12,7 +12,8 @@ const Index = () => {
   const navigate = useNavigate();
   const { sessions, activeSession } = useSessionContext();
   
-  // Sort sessions by start time (newest first)
+  const activeSessionsCount = activeSession ? 1 : 0;
+  
   const recentSessions = [...sessions]
     .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
     .slice(0, 3);
@@ -31,7 +32,9 @@ const Index = () => {
         <StatsQuickView />
         
         <div className="mb-4 flex justify-between items-center">
-          <h2 className="font-extrabold text-xl tracking-tight">Recent Sessions</h2>
+          <h2 className="font-extrabold text-xl tracking-tight">
+            Recent Sessions (Active={activeSessionsCount})
+          </h2>
           <button 
             className="text-sm text-poker-feltGreen"
             onClick={() => navigate('/history')}
