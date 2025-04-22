@@ -1,74 +1,64 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PokerSession } from '@/types/poker';
-import { Badge } from "@/components/ui/badge";
-import { DollarSign, CircleDollarSign } from "lucide-react";
+import { Card, CardContent } from '@/components/ui/card';
+import { TableData } from '@/types/poker';
 
-interface SessionDetailsCardProps {
-  session: PokerSession;
+interface TableDetailsCardProps {
+  table: TableData;
 }
 
-const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
-  const tables = session.tables || [];
-
-  // Calculate total initial buy-ins and rebuys across all tables
-  let totalInitialBuyin = 0, totalRebuyAmount = 0, rebuyCount = 0;
-  tables.forEach((t) => {
-    totalInitialBuyin += t.initialBuyIn;
-    const tableRebuyAmount = t.buyIn - t.initialBuyIn;
-    if (tableRebuyAmount > 0) {
-      totalRebuyAmount += tableRebuyAmount;
-      rebuyCount += t.rebuys || 0;
-    }
-  });
-  const tableCount = tables.length;
+const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => {
+  const profit = table.cashOut !== undefined ? table.cashOut - table.buyIn : 0;
+  const isProfitable = profit >= 0;
 
   return (
-    <Card className="bg-white rounded-lg shadow-md mb-6">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium">Session Details</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <span className="text-gray-500">Playing From:</span>
-            <span className="font-medium">{session.location}</span>
+    <Card className="bg-white rounded-lg shadow-md mb-3">
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <h3 className="font-bold">{table.name || table.location}</h3>
+            <p className="text-sm text-gray-600">{table.gameType} • {table.format}</p>
           </div>
-          <div className="flex items-center gap-2 mt-1 mb-1">
-            <Badge
-              variant="outline"
-              className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
-            >
-              <DollarSign className="w-4 h-4 text-gray-600" />
-              <span className="font-bold text-poker-gold">${totalInitialBuyin.toFixed(2)}</span>
-              <span className="ml-1 opacity-80 text-xs">
-                {tableCount ? `(from ${tableCount} table${tableCount !== 1 ? "s" : ""})` : ""}
-              </span>
-            </Badge>
-            {totalRebuyAmount > 0 && (
-              <Badge
-                variant="outline"
-                className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
-              >
-                <CircleDollarSign className="w-4 h-4 text-gray-600" />
-                <span className="font-bold text-poker-gold">+${totalRebuyAmount.toFixed(2)}</span>
-                <span className="ml-1 opacity-80 text-xs">
-                  from {rebuyCount} rebuy{rebuyCount !== 1 ? "s" : ""}
-                </span>
-              </Badge>
-            )}
-          </div>
-          {session.smallBlind && session.bigBlind ? (
-            <div className="flex justify-between">
-              <span className="text-gray-500">Blinds:</span>
-              <span className="font-medium">${session.smallBlind}/{session.bigBlind}</span>
+          {table.cashOut !== undefined && (
+            <div className={`text-lg font-bold ${
+              isProfitable ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {isProfitable ? '+' : ''}${profit.toFixed(2)}
             </div>
-          ) : null}
-          {session.notes && (
-            <div className="pt-2">
-              <span className="text-gray-500 block mb-1">Notes:</span>
-              <p className="text-sm bg-gray-50 p-3 rounded">{session.notes}</p>
+          )}
+        </div>
+
+        <div className="space-y-2 mt-3">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-600 text-sm">Buy-In:</span>
+            <span className="font-medium">
+              <span className="text-poker-gold font-bold">${table.initialBuyIn.toFixed(2)}</span>
+              {table.buyIn > table.initialBuyIn && (
+                <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                  (+${(table.buyIn - table.initialBuyIn).toFixed(2)} from {table.rebuys || 0} rebuy{table.rebuys !== 1 ? 's' : ''})
+                </span>
+              )}
+            </span>
+          </div>
+
+          {table.format === 'Cash' && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 text-sm">Blinds:</span>
+              <span className="font-medium">${table.smallBlind}/{table.bigBlind}</span>
+            </div>
+          )}
+
+          {table.format === 'Tournament' && table.startingBB && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 text-sm">Starting BBs:</span>
+              <span className="font-medium">{table.startingBB}</span>
+            </div>
+          )}
+
+          {table.cashOut !== undefined && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 text-sm">Cash Out:</span>
+              <span className="font-medium text-poker-gold">${table.cashOut.toFixed(2)}</span>
             </div>
           )}
         </div>
@@ -77,4 +67,4 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   );
 };
 
-export default SessionDetailsCard;
+export default TableDetailsCard;
