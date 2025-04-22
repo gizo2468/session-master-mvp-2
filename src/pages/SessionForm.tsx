@@ -13,16 +13,27 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/Lucide';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+
+const TOURNAMENT_TYPES = [
+  'Re-Buy Tournament',
+  'Bounty',
+  'Progressive Bounty (PKO)',
+  'Mystery Bounty',
+  'Turbo / Hyper',
+  'Satellite'
+];
 
 const formSchema = z.object({
-  tableName: z.string().min(1, "Table Name is required"),
   gameType: z.enum(['NLH', 'PLO']),
   format: z.enum(['Cash', 'Tournament']),
-  location: z.string().min(1, "Online Platform is required"),
+  location: z.string().min(1, "Location is required"),
   buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "Buy-in amount must be a valid number",
   }),
-  isOnline: z.boolean().default(false)
+  isOnline: z.boolean().default(false),
+  startingBB: z.string().optional(),
+  tournamentType: z.string().optional()
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -34,12 +45,13 @@ export default function SessionForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      tableName: "",
       gameType: 'NLH',
       format: 'Cash',
       location: '',
       buyIn: '',
-      isOnline: false
+      isOnline: false,
+      startingBB: '',
+      tournamentType: undefined
     }
   });
   
@@ -48,7 +60,6 @@ export default function SessionForm() {
 
     const initialTable = {
       id: uuidv4(),
-      name: values.tableName,
       gameType: values.gameType,
       format: values.format,
       location: values.location,
@@ -58,13 +69,16 @@ export default function SessionForm() {
       startTime: new Date(),
       smallBlind: 0,
       bigBlind: 0,
+      ...(values.format === 'Tournament' && {
+        startingBB: values.startingBB ? parseInt(values.startingBB) : undefined,
+        tournamentTypes: values.tournamentType ? [values.tournamentType] : undefined
+      })
     };
 
     const newSession: PokerSession = {
       id: uuidv4(),
       gameType: values.gameType,
       format: values.format,
-      tableName: values.tableName,
       location: values.location,
       buyIn: buyInAmount,
       initialBuyIn: buyInAmount,
@@ -72,12 +86,18 @@ export default function SessionForm() {
       bigBlind: 0,
       startTime: new Date(),
       isActive: true,
+      ...(values.format === 'Tournament' && {
+        startingBB: values.startingBB ? parseInt(values.startingBB) : undefined,
+        tournamentTypes: values.tournamentType ? [values.tournamentType] : undefined
+      }),
       tables: [initialTable],
     };
     
     startSession(newSession);
     navigate(`/live-session/${newSession.id}`);
   };
+
+  const format = form.watch('format');
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -96,23 +116,6 @@ export default function SessionForm() {
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="bg-white rounded-lg shadow-md p-6 space-y-6">
-            <FormField
-              control={form.control}
-              name="tableName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-medium">Table Name</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder='e.g. "My house", "Vegas Trip"' 
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
             <FormField
               control={form.control}
               name="gameType"
@@ -228,6 +231,48 @@ export default function SessionForm() {
                 </FormItem>
               )}
             />
+
+            {format === 'Tournament' && (
+              <FormField
+                control={form.control}
+                name="tournamentType"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel className="text-base font-medium">Tournament Type</FormLabel>
+                    <FormControl>
+                      <RadioGroup 
+                        onValueChange={field.onChange} 
+                        value={field.value} 
+                        className="flex flex-wrap gap-2"
+                      >
+                        {TOURNAMENT_TYPES.map((type) => (
+                          <FormItem key={type} className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem 
+                                value={type}
+                                id={type}
+                                className="sr-only peer"
+                              />
+                            </FormControl>
+                            <label
+                              htmlFor={type}
+                              className={`cursor-pointer px-3 py-1 rounded-full text-sm ${
+                                field.value === type
+                                  ? 'bg-poker-gold text-white'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                            >
+                              {type}
+                            </label>
+                          </FormItem>
+                        ))}
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             
             <FormField
               control={form.control}
@@ -255,10 +300,10 @@ export default function SessionForm() {
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">Online Platform (or App/Site)</FormLabel>
+                  <FormLabel className="text-base font-medium">Location</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="Enter GG Poker, PokerStars, etc" 
+                      placeholder="Casino name or online site" 
                       {...field} 
                     />
                   </FormControl>
@@ -292,6 +337,27 @@ export default function SessionForm() {
                 </FormItem>
               )}
             />
+
+            {format === 'Tournament' && (
+              <FormField
+                control={form.control}
+                name="startingBB"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium">Starting BB Amount</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="Enter starting big blinds" 
+                        min="0"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             
             <Button
               type="submit"

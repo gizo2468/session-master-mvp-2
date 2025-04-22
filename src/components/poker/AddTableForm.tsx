@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -32,7 +31,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
   const [smallBlind, setSmallBlind] = useState('');
   const [bigBlind, setBigBlind] = useState('');
   const [startingBB, setStartingBB] = useState('');
-  const [selectedTournamentTypes, setSelectedTournamentTypes] = useState<string[]>([]);
+  const [tournamentType, setTournamentType] = useState<string>('');
 
   useEffect(() => {
     if (fixedFormat) {
@@ -59,7 +58,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
       }),
       ...(format === 'Tournament' && {
         startingBB: startingBB ? parseInt(startingBB) : undefined,
-        tournamentTypes: selectedTournamentTypes.length > 0 ? selectedTournamentTypes : undefined,
+        tournamentTypes: tournamentType ? [tournamentType] : undefined,
       }),
       rebuys: 0,
       addOns: 0,
@@ -78,7 +77,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
     setSmallBlind('');
     setBigBlind('');
     setStartingBB('');
-    setSelectedTournamentTypes([]);
+    setTournamentType('');
   };
 
   return (
@@ -115,22 +114,31 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
           {format === 'Tournament' && (
             <div className="space-y-2">
               <Label>Tournament Type</Label>
-              <ToggleGroup 
-                type="multiple"
+              <RadioGroup 
+                value={tournamentType}
+                onValueChange={setTournamentType}
                 className="flex flex-wrap gap-2"
-                value={selectedTournamentTypes}
-                onValueChange={setSelectedTournamentTypes}
               >
                 {TOURNAMENT_TYPES.map((type) => (
-                  <ToggleGroupItem
-                    key={type}
-                    value={type}
-                    className="px-3 py-1 rounded-full text-sm bg-gray-100 data-[state=on]:bg-poker-gold data-[state=on]:text-white"
-                  >
-                    {type}
-                  </ToggleGroupItem>
+                  <div key={type} className="flex items-center">
+                    <RadioGroupItem 
+                      value={type}
+                      id={`type-${type}`}
+                      className="sr-only peer"
+                    />
+                    <Label
+                      htmlFor={`type-${type}`}
+                      className={`cursor-pointer px-3 py-1 rounded-full text-sm ${
+                        tournamentType === type
+                          ? 'bg-poker-gold text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {type}
+                    </Label>
+                  </div>
                 ))}
-              </ToggleGroup>
+              </RadioGroup>
             </div>
           )}
 
