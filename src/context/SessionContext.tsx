@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
@@ -99,7 +100,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           toast({
             title: "Storage limit reached",
             description: `Some older sessions have been removed from local storage to save space.`,
-            variant: "warning"
+            variant: "default" // Changed from "warning" to "default"
           });
         }
       }
