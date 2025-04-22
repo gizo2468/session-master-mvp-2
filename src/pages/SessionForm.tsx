@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -83,7 +84,7 @@ export default function SessionForm() {
       <div className="container mx-auto max-w-md px-4 py-8">
         <header className="mb-8">
           <button 
-            onClick={() => navigate(-1)} 
+            onClick={() => navigate('/')} 
             className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:underline"
           >
             <Icon name="ArrowLeft" size={16} />
