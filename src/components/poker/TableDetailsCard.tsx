@@ -1,67 +1,90 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableData } from '@/types/poker';
+import { format } from 'date-fns';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 
 interface TableDetailsCardProps {
   table: TableData;
 }
 
-const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => {
-  const profit = table.cashOut !== undefined ? table.cashOut - table.buyIn : 0;
-  const isProfitable = profit >= 0;
+export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => {
+  // Profit/loss calculation
+  const profit = (table.cashOut ?? 0) - (table.buyIn ?? 0);
+  const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
+  const formattedStart = format(new Date(table.startTime), 'MMM d, h:mm a');
+  const formattedEnd = table.endTime ? format(new Date(table.endTime), 'MMM d, h:mm a') : null;
+  
+  // Calculate rebuy amount
+  const rebuyAmount = table.buyIn - table.initialBuyIn;
 
   return (
-    <Card className="bg-white rounded-lg shadow-md mb-3">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-2">
+    <Card className="bg-white rounded-lg shadow mb-6">
+      <CardHeader>
+        <CardTitle className="text-base flex items-center justify-between">
           <div>
-            <h3 className="font-bold">{table.name || table.location}</h3>
-            <p className="text-sm text-gray-600">{table.gameType} • {table.format}</p>
-          </div>
-          {table.cashOut !== undefined && (
-            <div className={`text-lg font-bold ${
-              isProfitable ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {isProfitable ? '+' : ''}${profit.toFixed(2)}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-2 mt-3">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600 text-sm">Buy-In:</span>
-            <span className="font-medium">
-              <span className="text-poker-gold font-bold">${table.initialBuyIn.toFixed(2)}</span>
-              {table.buyIn > table.initialBuyIn && (
-                <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
-                  (+${(table.buyIn - table.initialBuyIn).toFixed(2)} from {table.rebuys || 0} rebuy{table.rebuys !== 1 ? 's' : ''})
-                </span>
-              )}
+            <span>{table.name || table.location}</span>
+            <span className="text-sm text-gray-500 font-normal ml-2">
+              {table.gameType} • {table.format}
             </span>
           </div>
-
-          {table.format === 'Cash' && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-sm">Blinds:</span>
-              <span className="font-medium">${table.smallBlind}/{table.bigBlind}</span>
+          <span className={`${profitClass} font-bold text-right`}>
+            {profit >= 0 ? (
+              <ArrowUp className="w-4 h-4 inline mr-1" />
+            ) : (
+              <ArrowDown className="w-4 h-4 inline mr-1" />
+            )}
+            ${Math.abs(profit).toFixed(2)}
+          </span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-4 text-sm">
+          <div>
+            <span className="text-gray-500">Start:</span>
+            <div>{formattedStart}</div>
+          </div>
+          {formattedEnd && (
+            <div>
+              <span className="text-gray-500">End:</span>
+              <div>{formattedEnd}</div>
             </div>
           )}
-
-          {table.format === 'Tournament' && table.startingBB && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-sm">Starting BBs:</span>
-              <span className="font-medium">{table.startingBB}</span>
+          <div>
+            <span className="text-gray-500">Buy-in:</span>
+            <div>
+              ${table.initialBuyIn.toFixed(2)}
+              {rebuyAmount > 0 && (
+                <span className="text-gray-600 ml-1">
+                  (+${rebuyAmount.toFixed(2)})
+                </span>
+              )}
+            </div>
+          </div>
+          <div>
+            <span className="text-gray-500">Blinds:</span>
+            <div>${table.smallBlind}/{table.bigBlind}</div>
+          </div>
+          {table.rebuys !== undefined && table.rebuys > 0 && (
+            <div>
+              <span className="text-gray-500">Rebuys:</span>
+              <div>{table.rebuys}</div>
             </div>
           )}
-
           {table.cashOut !== undefined && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-sm">Cash Out:</span>
-              <span className="font-medium text-poker-gold">${table.cashOut.toFixed(2)}</span>
+            <div>
+              <span className="text-gray-500">Cash Out:</span>
+              <div>${table.cashOut.toFixed(2)}</div>
             </div>
           )}
         </div>
+        {table.notes && (
+          <div className="mt-2">
+            <span className="text-gray-500 block mb-1">Notes:</span>
+            <div className="text-xs bg-gray-50 p-2 rounded">{table.notes}</div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

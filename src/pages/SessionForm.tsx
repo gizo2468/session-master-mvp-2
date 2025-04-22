@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -14,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/Lucide';
 
 const formSchema = z.object({
+  tableName: z.string().min(1, "Table Name is required"),
   gameType: z.enum(['NLH', 'PLO']),
   format: z.enum(['Cash', 'Tournament']),
   location: z.string().min(1, "Online Platform is required"),
@@ -32,6 +34,7 @@ export default function SessionForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      tableName: "",
       gameType: 'NLH',
       format: 'Cash',
       location: '',
@@ -43,10 +46,25 @@ export default function SessionForm() {
   const onSubmit = (values: FormValues) => {
     const buyInAmount = parseFloat(values.buyIn);
 
+    const initialTable = {
+      id: uuidv4(),
+      name: values.tableName,
+      gameType: values.gameType,
+      format: values.format,
+      location: values.location,
+      buyIn: buyInAmount,
+      initialBuyIn: buyInAmount,
+      isActive: true,
+      startTime: new Date(),
+      smallBlind: 0,
+      bigBlind: 0,
+    };
+
     const newSession: PokerSession = {
       id: uuidv4(),
       gameType: values.gameType,
       format: values.format,
+      tableName: values.tableName,
       location: values.location,
       buyIn: buyInAmount,
       initialBuyIn: buyInAmount,
@@ -54,7 +72,7 @@ export default function SessionForm() {
       bigBlind: 0,
       startTime: new Date(),
       isActive: true,
-      tables: [],
+      tables: [initialTable],
     };
     
     startSession(newSession);
@@ -78,6 +96,22 @@ export default function SessionForm() {
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="bg-white rounded-lg shadow-md p-6 space-y-6">
+            <FormField
+              control={form.control}
+              name="tableName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Table Name</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder='e.g. "My house", "Vegas Trip"' 
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <FormField
               control={form.control}
@@ -221,10 +255,10 @@ export default function SessionForm() {
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">Location</FormLabel>
+                  <FormLabel className="text-base font-medium">Online Platform (or App/Site)</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="e.g. Casino name or online site" 
+                      placeholder="Enter GG Poker, PokerStars, etc" 
                       {...field} 
                     />
                   </FormControl>
