@@ -15,8 +15,7 @@ import {
   AlertDialogDescription, 
   AlertDialogFooter, 
   AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 
 interface HandManagementPanelProps {
@@ -37,32 +36,50 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   const { toast } = useToast();
   
   const handleAddHand = (handData: Partial<HandData>) => {
-    // Make sure we're passing all data including image
-    addHand(sessionId, handData as Omit<HandData, 'id' | 'createdAt'>);
-    toast({
-      title: 'Hand Added',
-      description: 'Your hand has been successfully added.',
-    });
-    setIsAddHandOpen(false);
+    try {
+      // Make sure we're passing all data including image
+      addHand(sessionId, handData as Omit<HandData, 'id' | 'createdAt'>);
+      toast({
+        title: 'Hand Added',
+        description: 'Your hand has been successfully added.',
+      });
+      setIsAddHandOpen(false);
+    } catch (error) {
+      toast({
+        title: 'Error Adding Hand',
+        description: 'There was a problem saving the hand data.',
+        variant: 'destructive'
+      });
+      console.error("Error adding hand:", error);
+    }
   };
   
   const handleEditHand = (handData: Partial<HandData>) => {
     if (editingHand && handData.id) {
-      const updatedHandData = {
-        ...editingHand,
-        ...handData,
-      };
-      
-      // Ensure image is preserved if it wasn't changed
-      if (handData.image === undefined && editingHand.image) {
-        updatedHandData.image = editingHand.image;
+      try {
+        const updatedHandData = {
+          ...editingHand,
+          ...handData,
+        };
+        
+        // Ensure image is preserved if it wasn't changed
+        if (handData.image === undefined && editingHand.image) {
+          updatedHandData.image = editingHand.image;
+        }
+        
+        updateHand(sessionId, updatedHandData);
+        toast({
+          title: 'Hand Updated',
+          description: 'Your hand has been successfully updated.',
+        });
+      } catch (error) {
+        toast({
+          title: 'Error Updating Hand',
+          description: 'There was a problem saving the updated hand data.',
+          variant: 'destructive'
+        });
+        console.error("Error updating hand:", error);
       }
-      
-      updateHand(sessionId, updatedHandData);
-      toast({
-        title: 'Hand Updated',
-        description: 'Your hand has been successfully updated.',
-      });
     }
     setEditingHand(null);
     setIsEditHandOpen(false);
@@ -79,12 +96,21 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   
   const confirmDeleteHand = () => {
     if (handToDelete) {
-      deleteHand(sessionId, handToDelete);
-      setHandToDelete(null);
-      toast({
-        title: 'Hand Deleted',
-        description: 'Your hand has been successfully deleted.',
-      });
+      try {
+        deleteHand(sessionId, handToDelete);
+        setHandToDelete(null);
+        toast({
+          title: 'Hand Deleted',
+          description: 'Your hand has been successfully deleted.',
+        });
+      } catch (error) {
+        toast({
+          title: 'Error Deleting Hand',
+          description: 'There was a problem deleting the hand.',
+          variant: 'destructive'
+        });
+        console.error("Error deleting hand:", error);
+      }
     }
   };
   

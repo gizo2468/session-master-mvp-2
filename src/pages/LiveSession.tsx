@@ -73,54 +73,99 @@ export default function LiveSession() {
       return;
     }
     
-    endSession(session.id, autoCashOutAmount, sessionNotes);
-    setShowEndSessionSheet(false);
-    
-    toast({
-      title: "Session Ended",
-      description: "Your poker session has been successfully recorded."
-    });
-    navigate('/');
+    try {
+      endSession(session.id, autoCashOutAmount, sessionNotes);
+      setShowEndSessionSheet(false);
+      
+      toast({
+        title: "Session Ended",
+        description: "Your poker session has been successfully recorded."
+      });
+      navigate('/');
+    } catch (error) {
+      console.error("Error ending session:", error);
+      toast({
+        title: "Error Ending Session",
+        description: "There was a problem saving your session. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleAddRebuy = (amount: number) => {
     if (!session) return;
     
-    addRebuy(session.id, amount);
-    toast({
-      title: "Rebuy Added",
-      description: `$${amount.toFixed(2)} rebuy has been added to your session.`
-    });
+    try {
+      addRebuy(session.id, amount);
+      toast({
+        title: "Rebuy Added",
+        description: `$${amount.toFixed(2)} rebuy has been added to your session.`
+      });
+    } catch (error) {
+      console.error("Error adding rebuy:", error);
+      toast({
+        title: "Error Adding Rebuy",
+        description: "There was a problem adding the rebuy. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleAddTable = (tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
     if (!session) return;
     
-    addTable(session.id, tableData);
-    toast({
-      title: "Table Added",
-      description: `${tableData.name} has been added to your session.`
-    });
+    try {
+      addTable(session.id, tableData);
+      toast({
+        title: "Table Added",
+        description: `${tableData.name} has been added to your session.`
+      });
+    } catch (error) {
+      console.error("Error adding table:", error);
+      toast({
+        title: "Error Adding Table",
+        description: "There was a problem adding the table. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleEndTable = (tableId: string, cashOut: number, notes?: string) => {
     if (!session) return;
     
-    endTable(session.id, tableId, cashOut, notes);
-    toast({
-      title: "Table Ended",
-      description: "The table has been successfully ended."
-    });
+    try {
+      endTable(session.id, tableId, cashOut, notes);
+      toast({
+        title: "Table Ended",
+        description: "The table has been successfully ended."
+      });
+    } catch (error) {
+      console.error("Error ending table:", error);
+      toast({
+        title: "Error Ending Table",
+        description: "There was a problem ending the table. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleAddTableRebuy = (tableId: string, amount: number) => {
     if (!session) return;
     
-    addTableRebuy(session.id, tableId, amount);
-    toast({
-      title: "Rebuy Added",
-      description: `$${amount.toFixed(2)} rebuy has been added to the table.`
-    });
+    try {
+      addTableRebuy(session.id, tableId, amount);
+      toast({
+        title: "Rebuy Added",
+        description: `$${amount.toFixed(2)} rebuy has been added to the table.`
+      });
+    } catch (error) {
+      console.error("Error adding table rebuy:", error);
+      toast({
+        title: "Error Adding Rebuy",
+        description: "There was a problem adding the rebuy. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   if (!session) {

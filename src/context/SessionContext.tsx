@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
+import { useToast } from '@/hooks/use-toast';
 
 interface SessionContextType {
   sessions: PokerSession[];
@@ -27,36 +28,42 @@ interface SessionContextType {
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
+const MAX_STORED_SESSIONS = 50;
+
 const loadSessions = (): PokerSession[] => {
-  const savedSessions = localStorage.getItem('pokerSessions');
-  if (savedSessions) {
-    const parsed = JSON.parse(savedSessions);
-    return parsed.map((session: PokerSession) => {
-      if (!session.initialBuyIn) {
-        session.initialBuyIn = session.buyIn - ((session.rebuys || 0) * (session.tournamentBuyIn || 0)) - 
-                              ((session.addOns || 0) * (session.tournamentBuyIn || 0));
-      }
-      
-      const processedSession = {
-        ...session,
-        startTime: new Date(session.startTime),
-        endTime: session.endTime ? new Date(session.endTime) : undefined,
-        hands: session.hands ? session.hands.map((hand: HandData) => ({
-          ...hand,
-          createdAt: new Date(hand.createdAt)
-        })) : []
-      };
-      
-      if (session.tables) {
-        processedSession.tables = session.tables.map((table: TableData) => ({
-          ...table,
-          startTime: new Date(table.startTime),
-          endTime: table.endTime ? new Date(table.endTime) : undefined
-        }));
-      }
-      
-      return processedSession;
-    });
+  try {
+    const savedSessions = localStorage.getItem('pokerSessions');
+    if (savedSessions) {
+      const parsed = JSON.parse(savedSessions);
+      return parsed.map((session: PokerSession) => {
+        if (!session.initialBuyIn) {
+          session.initialBuyIn = session.buyIn - ((session.rebuys || 0) * (session.tournamentBuyIn || 0)) - 
+                                ((session.addOns || 0) * (session.tournamentBuyIn || 0));
+        }
+        
+        const processedSession = {
+          ...session,
+          startTime: new Date(session.startTime),
+          endTime: session.endTime ? new Date(session.endTime) : undefined,
+          hands: session.hands ? session.hands.map((hand: HandData) => ({
+            ...hand,
+            createdAt: new Date(hand.createdAt)
+          })) : []
+        };
+        
+        if (session.tables) {
+          processedSession.tables = session.tables.map((table: TableData) => ({
+            ...table,
+            startTime: new Date(table.startTime),
+            endTime: table.endTime ? new Date(table.endTime) : undefined
+          }));
+        }
+        
+        return processedSession;
+      });
+    }
+  } catch (error) {
+    console.error("Error loading sessions from localStorage:", error);
   }
   return [];
 };
@@ -73,10 +80,49 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     format: 'All',
     location: '',
   });
+  const { toast } = useToast();
 
   useEffect(() => {
-    localStorage.setItem('pokerSessions', JSON.stringify(sessions));
-  }, [sessions]);
+    try {
+      const sortedSessions = [...sessions].sort((a, b) => 
+        new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+      );
+      
+      let sessionsToStore = sortedSessions;
+      
+      if (sortedSessions.length > MAX_STORED_SESSIONS) {
+        const activeSessions = sortedSessions.filter(s => s.isActive);
+        const inactiveSessions = sortedSessions.filter(s => !s.isActive).slice(0, MAX_STORED_SESSIONS - activeSessions.length);
+        sessionsToStore = [...activeSessions, ...inactiveSessions];
+        
+        if (sortedSessions.length !== sessionsToStore.length) {
+          toast({
+            title: "Storage limit reached",
+            description: `Some older sessions have been removed from local storage to save space.`,
+            variant: "warning"
+          });
+        }
+      }
+      
+      localStorage.setItem('pokerSessions', JSON.stringify(sessionsToStore));
+    } catch (error) {
+      console.error("Failed to save sessions to localStorage:", error);
+      
+      toast({
+        title: "Storage issue detected",
+        description: "There was a problem saving your sessions. Try clearing some old sessions to free up space.",
+        variant: "destructive"
+      });
+      
+      if (activeSession) {
+        try {
+          localStorage.setItem('activeSession', JSON.stringify(activeSession));
+        } catch (e) {
+          console.error("Failed to save active session:", e);
+        }
+      }
+    }
+  }, [sessions, toast]);
 
   const addSession = (session: PokerSession) => {
     const sessionWithInitialBuyIn = {
