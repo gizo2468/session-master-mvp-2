@@ -1,4 +1,3 @@
-
 export interface HandData {
   id: string;
   cards: string;
@@ -17,15 +16,15 @@ export interface HandData {
 
 export interface TableData {
   id: string;
-  name: string;
+  name?: string;
   format: 'Cash' | 'Tournament';
   gameType: 'NLH' | 'PLO';
   location: string;
   buyIn: number;
   initialBuyIn: number;
   cashOut?: number;
-  smallBlind: number;
-  bigBlind: number;
+  smallBlind?: number;
+  bigBlind?: number;
   startTime: Date;
   endTime?: Date;
   isActive: boolean;
@@ -34,40 +33,37 @@ export interface TableData {
   tournamentBuyIn?: number;
   notes?: string;
   finalPosition?: number;
+  startingBB?: number;
+  tournamentTypes?: string[];
 }
 
 export interface PokerSession {
   id: string;
   gameType: 'NLH' | 'PLO';
   format: 'Cash' | 'Tournament' | 'Live Cash' | 'Live Tournament' | 'Online Cash' | 'Online Tournament' | 'Home Game';
-  tableName?: string; // <-- Added tableName for session-level
+  tableName?: string;
   location: string;
-  initialBuyIn: number; // Initial buy-in amount
-  buyIn: number;        // Total buy-in amount (initial + rebuys + addons)
-  cashOut?: number; // Only set when session ends
+  initialBuyIn: number;
+  buyIn: number;
+  cashOut?: number;
   smallBlind: number;
   bigBlind: number;
   startTime: Date;
-  endTime?: Date; // Only set when session ends
+  endTime?: Date;
   notes?: string;
   isActive?: boolean;
-  isOnline?: boolean; // Added for online vs live tracking
-  
-  // Tournament specific fields
+  isOnline?: boolean;
+
   tournamentBuyIn?: number;
   rebuys?: number;
   addOns?: number;
   finalPosition?: number;
-  
-  // Live session specific fields
-  sessionDuration?: number; // In minutes
-  ploCardCount?: 4 | 5 | 6; // For PLO variants
-  currentStatus?: 'running' | 'paused' | 'ended';
-  
-  // Hand tracking
-  hands?: HandData[];
 
-  // Multi-table support
+  sessionDuration?: number;
+  ploCardCount?: 4 | 5 | 6;
+  currentStatus?: 'running' | 'paused' | 'ended';
+
+  hands?: HandData[];
   tables?: TableData[];
 }
 

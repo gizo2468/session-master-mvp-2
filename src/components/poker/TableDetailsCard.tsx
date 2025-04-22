@@ -10,13 +10,10 @@ interface TableDetailsCardProps {
 }
 
 export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => {
-  // Profit/loss calculation
   const profit = (table.cashOut ?? 0) - (table.buyIn ?? 0);
   const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
   const formattedStart = format(new Date(table.startTime), 'MMM d, h:mm a');
   const formattedEnd = table.endTime ? format(new Date(table.endTime), 'MMM d, h:mm a') : null;
-  
-  // Calculate rebuy amount
   const rebuyAmount = table.buyIn - table.initialBuyIn;
 
   return (
@@ -24,7 +21,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
       <CardHeader>
         <CardTitle className="text-base flex items-center justify-between">
           <div>
-            <span>{table.name || table.location}</span>
+            <span>{table.location}</span>
             <span className="text-sm text-gray-500 font-normal ml-2">
               {table.gameType} • {table.format}
             </span>
@@ -62,10 +59,30 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
               )}
             </div>
           </div>
-          <div>
-            <span className="text-gray-500">Blinds:</span>
-            <div>${table.smallBlind}/{table.bigBlind}</div>
-          </div>
+          {table.format === 'Cash' && (
+            <div>
+              <span className="text-gray-500">Blinds:</span>
+              <div>${table.smallBlind}/{table.bigBlind}</div>
+            </div>
+          )}
+          {table.format === 'Tournament' && table.startingBB && (
+            <div>
+              <span className="text-gray-500">Starting BBs:</span>
+              <div>{table.startingBB}</div>
+            </div>
+          )}
+          {table.tournamentTypes && table.tournamentTypes.length > 0 && (
+            <div className="col-span-2">
+              <span className="text-gray-500">Tournament Type:</span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {table.tournamentTypes.map((type) => (
+                  <span key={type} className="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                    {type}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           {table.rebuys !== undefined && table.rebuys > 0 && (
             <div>
               <span className="text-gray-500">Rebuys:</span>
@@ -75,7 +92,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           {table.cashOut !== undefined && (
             <div>
               <span className="text-gray-500">Cash Out:</span>
-              <div>${table.cashOut.toFixed(2)}</div>
+              <div className="font-bold text-poker-gold">${table.cashOut.toFixed(2)}</div>
             </div>
           )}
         </div>
