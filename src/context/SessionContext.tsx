@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,7 +22,13 @@ interface SessionContextType {
   deleteHand: (sessionId: string, handId: string) => void;
   addTable: (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
   updateTable: (sessionId: string, table: TableData) => void;
-  endTable: (sessionId: string, tableId: string, cashOut: number, notes?: string) => void;
+  endTable: (
+    sessionId: string, 
+    tableId: string, 
+    cashOut: number, 
+    notes?: string,
+    bounty?: { bountyCount?: number, bountyAmount?: number }
+  ) => void;
   addTableRebuy: (sessionId: string, tableId: string, amount: number) => void;
 }
 
@@ -100,7 +105,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           toast({
             title: "Storage limit reached",
             description: `Some older sessions have been removed from local storage to save space.`,
-            variant: "default" // Changed from "warning" to "default"
+            variant: "default"
           });
         }
       }
@@ -325,7 +330,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  const endTable = (sessionId: string, tableId: string, cashOut: number, notes?: string) => {
+  const endTable = (
+    sessionId: string, 
+    tableId: string, 
+    cashOut: number, 
+    notes?: string,
+    bounty?: { bountyCount?: number, bountyAmount?: number }
+  ) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session && session.tables) {
       const updatedTables = session.tables.map(table => {
@@ -335,7 +346,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             isActive: false,
             endTime: new Date(),
             cashOut,
-            notes: notes || table.notes
+            notes: notes || table.notes,
+            ...(bounty?.bountyCount !== undefined && { bountyCount: bounty.bountyCount }),
+            ...(bounty?.bountyAmount !== undefined && { bountyAmount: bounty.bountyAmount })
           };
         }
         return table;

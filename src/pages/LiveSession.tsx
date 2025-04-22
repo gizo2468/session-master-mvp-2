@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -139,6 +140,7 @@ export default function LiveSession() {
     if (!session) return;
     
     try {
+      // Fix here: passing bountyCount and bountyAmount inside the bounty object
       endTable(session.id, tableId, cashOut, notes, bounty);
       toast({
         title: "Table Ended",
