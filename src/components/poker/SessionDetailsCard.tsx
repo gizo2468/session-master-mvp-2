@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession } from '@/types/poker';
@@ -11,12 +12,14 @@ interface SessionDetailsCardProps {
 const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   const tables = session.tables || [];
 
+  // Calculate total initial buy-ins and rebuys across all tables
   let totalInitialBuyin = 0, totalRebuyAmount = 0, rebuyCount = 0;
   tables.forEach((t) => {
-    totalInitialBuyin += t.initialBuyIn || 0;
-    if (t.rebuys && t.rebuys > 0) {
-      totalRebuyAmount += (t.buyIn - t.initialBuyIn);
-      rebuyCount += t.rebuys;
+    totalInitialBuyin += t.initialBuyIn;
+    const tableRebuyAmount = t.buyIn - t.initialBuyIn;
+    if (tableRebuyAmount > 0) {
+      totalRebuyAmount += tableRebuyAmount;
+      rebuyCount += t.rebuys || 0;
     }
   });
   const tableCount = tables.length;
@@ -40,23 +43,21 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               <DollarSign className="w-4 h-4 text-gray-600" />
               <span className="font-bold">${totalInitialBuyin.toFixed(2)}</span>
               <span className="ml-1 opacity-80 text-xs">
-                Buy-In {tableCount ? `(${tableCount} table${tableCount !== 1 ? "s" : ""})` : ""}
+                {tableCount ? `(from ${tableCount} table${tableCount !== 1 ? "s" : ""})` : ""}
               </span>
             </Badge>
-            {totalRebuyAmount > 0 || rebuyCount > 0 ? (
+            {totalRebuyAmount > 0 && (
               <Badge
                 variant="outline"
                 className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
               >
                 <CircleDollarSign className="w-4 h-4 text-gray-600" />
-                <span className="font-bold">
-                  +${totalRebuyAmount.toFixed(2)}
-                </span>
+                <span className="font-bold">+${totalRebuyAmount.toFixed(2)}</span>
                 <span className="ml-1 opacity-80 text-xs">
                   from {rebuyCount} rebuy{rebuyCount !== 1 ? "s" : ""}
                 </span>
               </Badge>
-            ) : null}
+            )}
           </div>
           {session.smallBlind && session.bigBlind ? (
             <div className="flex justify-between">
@@ -64,22 +65,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               <span className="font-medium">${session.smallBlind}/{session.bigBlind}</span>
             </div>
           ) : null}
-          {session.format === 'Tournament' && (
-            <>
-              {(session.rebuys && session.rebuys > 0) && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Rebuys:</span>
-                  <span className="font-medium">{session.rebuys}</span>
-                </div>
-              )}
-              {(session.addOns && session.addOns > 0) && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Add-ons:</span>
-                  <span className="font-medium">{session.addOns}</span>
-                </div>
-              )}
-            </>
-          )}
           {session.notes && (
             <div className="pt-2">
               <span className="text-gray-500 block mb-1">Notes:</span>
