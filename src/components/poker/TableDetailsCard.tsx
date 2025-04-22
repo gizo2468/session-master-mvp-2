@@ -1,93 +1,80 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TableData } from '@/types/poker';
-import { format } from 'date-fns';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { PokerSession } from '@/types/poker';
+import { Badge } from "@/components/ui/badge";
+import { DollarSign, CircleDollarSign } from "lucide-react";
 
-interface TableDetailsCardProps {
-  table: TableData;
+interface SessionDetailsCardProps {
+  session: PokerSession;
 }
 
-export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => {
-  // Profit/loss calculation
-  const profit = (table.cashOut ?? 0) - (table.buyIn ?? 0);
-  const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
-  const formattedStart = format(new Date(table.startTime), 'MMM d, h:mm a');
-  const formattedEnd = table.endTime ? format(new Date(table.endTime), 'MMM d, h:mm a') : null;
-  
-  // Calculate rebuy amount
-  const rebuyAmount = table.buyIn - table.initialBuyIn;
+const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
+  const tables = session.tables || [];
+
+  // Calculate total initial buy-ins and rebuys across all tables
+  let totalInitialBuyin = 0, totalRebuyAmount = 0, rebuyCount = 0;
+  tables.forEach((t) => {
+    totalInitialBuyin += t.initialBuyIn;
+    const tableRebuyAmount = t.buyIn - t.initialBuyIn;
+    if (tableRebuyAmount > 0) {
+      totalRebuyAmount += tableRebuyAmount;
+      rebuyCount += t.rebuys || 0;
+    }
+  });
+  const tableCount = tables.length;
 
   return (
-    <Card className="bg-white rounded-lg shadow mb-6">
-      <CardHeader>
-        <CardTitle className="text-base flex items-center justify-between">
-          <div>
-            <span>{table.name || table.location}</span>
-            <span className="text-sm text-gray-500 font-normal ml-2">
-              {table.gameType} • {table.format}
-            </span>
-          </div>
-          <span className={`${profitClass} font-bold text-right`}>
-            {profit >= 0 ? (
-              <ArrowUp className="w-4 h-4 inline mr-1" />
-            ) : (
-              <ArrowDown className="w-4 h-4 inline mr-1" />
-            )}
-            ${Math.abs(profit).toFixed(2)}
-          </span>
-        </CardTitle>
+    <Card className="bg-white rounded-lg shadow-md mb-6">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-medium">Session Details</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-4 text-sm">
-          <div>
-            <span className="text-gray-500">Start:</span>
-            <div>{formattedStart}</div>
+      <CardContent className="pt-0">
+        <div className="space-y-3">
+          <div className="flex justify-between">
+            <span className="text-gray-500">Playing From:</span>
+            <span className="font-medium">{session.location}</span>
           </div>
-          {formattedEnd && (
-            <div>
-              <span className="text-gray-500">End:</span>
-              <div>{formattedEnd}</div>
-            </div>
-          )}
-          <div>
-            <span className="text-gray-500">Buy-in:</span>
-            <div>
-              ${table.initialBuyIn.toFixed(2)}
-              {rebuyAmount > 0 && (
-                <span className="text-gray-600 ml-1">
-                  (+${rebuyAmount.toFixed(2)})
+          <div className="flex items-center gap-2 mt-1 mb-1">
+            <Badge
+              variant="outline"
+              className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
+            >
+              <DollarSign className="w-4 h-4 text-gray-600" />
+              <span className="font-bold text-poker-gold">${totalInitialBuyin.toFixed(2)}</span>
+              <span className="ml-1 opacity-80 text-xs">
+                {tableCount ? `(from ${tableCount} table${tableCount !== 1 ? "s" : ""})` : ""}
+              </span>
+            </Badge>
+            {totalRebuyAmount > 0 && (
+              <Badge
+                variant="outline"
+                className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
+              >
+                <CircleDollarSign className="w-4 h-4 text-gray-600" />
+                <span className="font-bold text-poker-gold">+${totalRebuyAmount.toFixed(2)}</span>
+                <span className="ml-1 opacity-80 text-xs">
+                  from {rebuyCount} rebuy{rebuyCount !== 1 ? "s" : ""}
                 </span>
-              )}
-            </div>
+              </Badge>
+            )}
           </div>
-          <div>
-            <span className="text-gray-500">Blinds:</span>
-            <div>${table.smallBlind}/{table.bigBlind}</div>
-          </div>
-          {table.rebuys !== undefined && table.rebuys > 0 && (
-            <div>
-              <span className="text-gray-500">Rebuys:</span>
-              <div>{table.rebuys}</div>
+          {session.smallBlind && session.bigBlind ? (
+            <div className="flex justify-between">
+              <span className="text-gray-500">Blinds:</span>
+              <span className="font-medium">${session.smallBlind}/{session.bigBlind}</span>
             </div>
-          )}
-          {table.cashOut !== undefined && (
-            <div>
-              <span className="text-gray-500">Cash Out:</span>
-              <div>${table.cashOut.toFixed(2)}</div>
+          ) : null}
+          {session.notes && (
+            <div className="pt-2">
+              <span className="text-gray-500 block mb-1">Notes:</span>
+              <p className="text-sm bg-gray-50 p-3 rounded">{session.notes}</p>
             </div>
           )}
         </div>
-        {table.notes && (
-          <div className="mt-2">
-            <span className="text-gray-500 block mb-1">Notes:</span>
-            <div className="text-xs bg-gray-50 p-2 rounded">{table.notes}</div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
 };
 
-export default TableDetailsCard;
+export default SessionDetailsCard;

@@ -14,14 +14,13 @@ interface AddTableFormProps {
 }
 
 const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTable, fixedFormat }) => {
-  const [tableName, setTableName] = useState('');
   const [format, setFormat] = useState<'Cash' | 'Tournament'>(fixedFormat || 'Cash');
   const [gameType, setGameType] = useState<'NLH' | 'PLO'>('NLH');
   const [location, setLocation] = useState('');
   const [buyIn, setBuyIn] = useState('');
   const [smallBlind, setSmallBlind] = useState('');
   const [bigBlind, setBigBlind] = useState('');
-  const [tournamentBuyIn, setTournamentBuyIn] = useState('');
+  const [startingBB, setStartingBB] = useState('');
 
   useEffect(() => {
     if (fixedFormat) {
@@ -32,26 +31,20 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!tableName || !location || !buyIn || !smallBlind || !bigBlind) {
+    if (!location || !buyIn || (format === 'Cash' && (!smallBlind || !bigBlind))) {
       return;
     }
     
-    const finalTournamentBuyIn = format === 'Tournament' && !tournamentBuyIn 
-      ? parseFloat(buyIn)
-      : tournamentBuyIn 
-        ? parseFloat(tournamentBuyIn) 
-        : undefined;
-    
     const tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'> = {
-      name: tableName,
+      name: location,
       format,
       gameType,
       location,
       buyIn: parseFloat(buyIn),
       initialBuyIn: parseFloat(buyIn),
-      smallBlind: parseFloat(smallBlind),
-      bigBlind: parseFloat(bigBlind),
-      tournamentBuyIn: finalTournamentBuyIn,
+      smallBlind: format === 'Cash' ? parseFloat(smallBlind) : 0,
+      bigBlind: format === 'Cash' ? parseFloat(bigBlind) : 0,
+      startingBB: format === 'Tournament' && startingBB ? parseInt(startingBB, 10) : undefined,
       rebuys: 0,
       addOns: 0,
     };
@@ -62,14 +55,13 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
   };
   
   const resetForm = () => {
-    setTableName('');
     setFormat(fixedFormat || 'Cash');
     setGameType('NLH');
     setLocation('');
     setBuyIn('');
     setSmallBlind('');
     setBigBlind('');
-    setTournamentBuyIn('');
+    setStartingBB('');
   };
 
   return (
@@ -84,12 +76,12 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
         
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="tableName">Table Name</Label>
+            <Label htmlFor="location">Location</Label>
             <Input
-              id="tableName"
-              placeholder="Table 1, Morning Session, etc."
-              value={tableName}
-              onChange={(e) => setTableName(e.target.value)}
+              id="location"
+              placeholder="Casino name or online site"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
               required
             />
           </div>
@@ -137,17 +129,6 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              placeholder="Casino name or online site"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="buyIn">Buy-in Amount ($)</Label>
             <Input
               id="buyIn"
@@ -161,49 +142,48 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="smallBlind">Small Blind</Label>
-              <Input
-                id="smallBlind"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="1"
-                value={smallBlind}
-                onChange={(e) => setSmallBlind(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bigBlind">Big Blind</Label>
-              <Input
-                id="bigBlind"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="2"
-                value={bigBlind}
-                onChange={(e) => setBigBlind(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
           {format === 'Tournament' && (
             <div className="space-y-2">
-              <Label htmlFor="tournamentBuyIn">
-                Tournament Entry Fee <span className="text-xs text-gray-500">(Optional)</span>
-              </Label>
+              <Label htmlFor="startingBB">Starting BB Amount</Label>
               <Input
-                id="tournamentBuyIn"
+                id="startingBB"
                 type="number"
                 min="0"
-                step="0.01"
-                placeholder="Same as buy-in if left blank"
-                value={tournamentBuyIn}
-                onChange={(e) => setTournamentBuyIn(e.target.value)}
+                placeholder="Starting big blinds amount"
+                value={startingBB}
+                onChange={(e) => setStartingBB(e.target.value)}
               />
+            </div>
+          )}
+
+          {format === 'Cash' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="smallBlind">Small Blind</Label>
+                <Input
+                  id="smallBlind"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="1"
+                  value={smallBlind}
+                  onChange={(e) => setSmallBlind(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bigBlind">Big Blind</Label>
+                <Input
+                  id="bigBlind"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="2"
+                  value={bigBlind}
+                  onChange={(e) => setBigBlind(e.target.value)}
+                  required
+                />
+              </div>
             </div>
           )}
 
