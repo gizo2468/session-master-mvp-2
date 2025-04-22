@@ -27,7 +27,11 @@ interface SessionContextType {
     tableId: string, 
     cashOut: number, 
     notes?: string,
-    bounty?: { bountyCount?: number, bountyAmount?: number }
+    bounty?: { 
+      bountyCount?: number, 
+      bountyAmount?: number,
+      finalPosition?: number 
+    }
   ) => void;
   addTableRebuy: (sessionId: string, tableId: string, amount: number) => void;
 }
@@ -335,7 +339,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     tableId: string, 
     cashOut: number, 
     notes?: string,
-    bounty?: { bountyCount?: number, bountyAmount?: number }
+    bounty?: { 
+      bountyCount?: number, 
+      bountyAmount?: number,
+      finalPosition?: number 
+    }
   ) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session && session.tables) {
@@ -348,7 +356,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             cashOut,
             notes: notes || table.notes,
             ...(bounty?.bountyCount !== undefined && { bountyCount: bounty.bountyCount }),
-            ...(bounty?.bountyAmount !== undefined && { bountyAmount: bounty.bountyAmount })
+            ...(bounty?.bountyAmount !== undefined && { bountyAmount: bounty.bountyAmount }),
+            ...(bounty?.finalPosition !== undefined && { finalPosition: bounty.finalPosition })
           };
         }
         return table;

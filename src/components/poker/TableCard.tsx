@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 interface TableCardProps {
   table: TableData;
-  onEndTable: (tableId: string, cashOut: number, notes?: string, bounty?: { bountyCount?: number, bountyAmount?: number }) => void;
+  onEndTable: (tableId: string, cashOut: number, notes?: string, bounty?: { bountyCount?: number, bountyAmount?: number, finalPosition?: number }) => void;
   onAddRebuy: (tableId: string, amount: number) => void;
 }
 
@@ -27,6 +27,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
   const [showRebuyDialog, setShowRebuyDialog] = useState(false);
   const [bountyCount, setBountyCount] = useState('');
   const [bountyAmount, setBountyAmount] = useState('');
+  const [finalPosition, setFinalPosition] = useState('');
 
   const initialRebuyAmount = table.format === 'Tournament' 
     ? (table.tournamentBuyIn || table.initialBuyIn || table.buyIn).toString()
@@ -49,10 +50,11 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
       table.id, 
       parseFloat(cashOutAmount), 
       tableNotes,
-      isBountyTournament ? {
+      {
         bountyCount: bountyCount ? parseInt(bountyCount) : undefined,
         bountyAmount: bountyAmount ? parseFloat(bountyAmount) : undefined,
-      } : undefined
+        finalPosition: finalPosition ? parseInt(finalPosition) : undefined
+      }
     );
     setShowEndTableDialog(false);
   };
@@ -110,7 +112,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
             </span>
           </div>
           
-          {table.format === 'Tournament' && table.startingBB && (
+          {table.format === 'Tournament' && !table.isActive && table.startingBB && (
             <div className="flex justify-between">
               <span className="text-gray-600">Starting BBs:</span>
               <span className="font-medium">{table.startingBB}BB</span>
@@ -144,23 +146,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
           </div>
         ) : (
           <div className="mt-2 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Cash Out:</span>
-              <span className="font-semibold text-lg text-poker-gold">
-                ${(table.cashOut ?? 0).toFixed(2)}
-              </span>
-            </div>
-            <div className="text-sm text-gray-600">
-              {dateFormat(new Date(table.startTime), 'MMM d, h:mm a')}
-              {table.endTime && (
-                <>
-                  {` - ${dateFormat(new Date(table.endTime), 'h:mm a')}`}
-                  <div className="mt-1">
-                    Duration: {differenceInMinutes(new Date(table.endTime), new Date(table.startTime))}m
-                  </div>
-                </>
-              )}
-            </div>
             {table.format === 'Tournament' && (
               <div className="space-y-1 mt-2 text-sm">
                 {table.bountyCount > 0 && table.tournamentTypes?.some(type => 
@@ -179,8 +164,31 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                     <span className="font-medium text-poker-gold">${table.bountyAmount.toFixed(2)}</span>
                   </div>
                 )}
+                {table.finalPosition && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Final Position:</span>
+                    <span className="font-medium">{table.finalPosition}th</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Total Cash Out:</span>
+                  <span className="font-semibold text-lg text-poker-gold">
+                    ${(table.cashOut ?? 0).toFixed(2)}
+                  </span>
+                </div>
               </div>
             )}
+            <div className="text-sm text-gray-600">
+              {dateFormat(new Date(table.startTime), 'MMM d, h:mm a')}
+              {table.endTime && (
+                <>
+                  {` - ${dateFormat(new Date(table.endTime), 'h:mm a')}`}
+                  <div className="mt-1">
+                    Duration: {differenceInMinutes(new Date(table.endTime), new Date(table.startTime))}m
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
       </Card>
@@ -216,6 +224,23 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                   />
                 </div>
               </div>
+
+              {table.format === 'Tournament' && (
+                <div>
+                  <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
+                    Final Position (Optional)
+                  </label>
+                  <input
+                    id="finalPosition"
+                    type="number"
+                    min="1"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    placeholder="Enter your final position (e.g. 3 for 3rd)"
+                    value={finalPosition}
+                    onChange={(e) => setFinalPosition(e.target.value)}
+                  />
+                </div>
+              )}
 
               {isBountyTournament && (
                 <>
