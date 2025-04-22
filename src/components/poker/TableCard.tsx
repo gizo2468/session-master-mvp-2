@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TableData } from '@/types/poker';
-import { format as dateFormat } from 'date-fns';
+import { format as dateFormat, differenceInMinutes } from 'date-fns';
 import Icon from '@/components/ui/Lucide';
 import { 
   Dialog,
@@ -39,7 +39,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
 
   const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
 
-  const showBountyFields = table.format === 'Tournament' && 
+  const isBountyTournament = table.format === 'Tournament' && 
     table.tournamentTypes?.some(type => 
       ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
     );
@@ -49,7 +49,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
       table.id, 
       parseFloat(cashOutAmount), 
       tableNotes,
-      showBountyFields ? {
+      isBountyTournament ? {
         bountyCount: bountyCount ? parseInt(bountyCount) : undefined,
         bountyAmount: bountyAmount ? parseFloat(bountyAmount) : undefined,
       } : undefined
@@ -78,7 +78,9 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
         <div className="flex justify-between items-start mb-2">
           <div>
             <h3 className="font-bold text-lg">{table.location}</h3>
-            <p className="text-sm text-gray-600">{table.gameType} • {table.format}</p>
+            <p className="text-sm text-gray-600">
+              {table.gameType} • {table.format}
+            </p>
             {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
               <span className="inline-block mt-1 px-2 py-0.5 bg-poker-gold/10 text-poker-gold text-xs rounded-full">
                 {table.tournamentTypes[0]}
@@ -96,16 +98,21 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
             <span className="text-gray-600">Buy-in:</span>
             <span className="font-medium">
               ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
-              {rebuyAmount > 0 && (
-                <span className="text-gray-500"> (+${rebuyAmount.toFixed(2)})</span>
-              )}
+              {(() => {
+                const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
+                const addOnTotal = table.addOns ? table.addOns : 0;
+                const extra = rebuyTotal + addOnTotal;
+                return extra > 0 ? (
+                  <span className="text-gray-500"> (+${extra.toFixed(2)})</span>
+                ) : null;
+              })()}
             </span>
           </div>
           
           {table.format === 'Tournament' && table.startingBB && (
             <div className="flex justify-between">
               <span className="text-gray-600">Starting BBs:</span>
-              <span className="font-medium">{table.startingBB}</span>
+              <span className="font-medium">{table.startingBB}BB</span>
             </div>
           )}
           
@@ -115,31 +122,62 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
               <span className="font-medium">${table.smallBlind}/{table.bigBlind}</span>
             </div>
           )}
-          
-          {table.rebuys && table.rebuys > 0 && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Rebuys:</span>
-              <span className="font-medium">{table.rebuys}</span>
-            </div>
-          )}
         </div>
 
-        <div className="mt-4 flex gap-2 justify-between">
-          <Button 
-            variant="outline" 
-            className="flex-1"
-            onClick={openRebuyDialog}
-          >
-            <Icon name="Plus" className="mr-1 h-4 w-4" /> Rebuy
-          </Button>
-          <Button 
-            variant="destructive" 
-            className="flex-1"
-            onClick={() => setShowEndTableDialog(true)}
-          >
-            <Icon name="CircleStop" className="mr-1 h-4 w-4" /> End Table
-          </Button>
-        </div>
+        {table.isActive ? (
+          <div className="mt-4 flex gap-2 justify-between">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={openRebuyDialog}
+            >
+              <Icon name="Plus" className="mr-1 h-4 w-4" /> Rebuy
+            </Button>
+            <Button 
+              variant="destructive" 
+              className="flex-1"
+              onClick={() => setShowEndTableDialog(true)}
+            >
+              <Icon name="CircleStop" className="mr-1 h-4 w-4" /> End Table
+            </Button>
+          </div>
+        ) : (
+          <div className="mt-2 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Cash Out:</span>
+              <span className="font-semibold text-poker-gold">
+                ${(table.cashOut ?? 0).toFixed(2)}
+              </span>
+            </div>
+            <div className="text-sm text-gray-600">
+              {dateFormat(new Date(table.startTime), 'MMM d, h:mm a')}
+              {table.endTime && (
+                <>
+                  {` - ${dateFormat(new Date(table.endTime), 'h:mm a')}`}
+                  <div className="mt-1">
+                    Duration: {differenceInMinutes(new Date(table.endTime), new Date(table.startTime))}m
+                  </div>
+                </>
+              )}
+            </div>
+            {table.format === 'Tournament' && (
+              <div className="space-y-1 mt-2 text-sm">
+                {table.bountyCount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Players Eliminated:</span>
+                    <span className="font-medium">{table.bountyCount}</span>
+                  </div>
+                )}
+                {table.bountyAmount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Bounty Collected:</span>
+                    <span className="font-medium">${table.bountyAmount.toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </Card>
 
       <Dialog open={showEndTableDialog} onOpenChange={setShowEndTableDialog}>
@@ -174,7 +212,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                 </div>
               </div>
 
-              {showBountyFields && (
+              {isBountyTournament && (
                 <>
                   <div>
                     <label htmlFor="bountyCount" className="block text-sm font-medium mb-1">
