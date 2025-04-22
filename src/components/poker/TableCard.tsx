@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 interface TableCardProps {
   table: TableData;
-  onEndTable: (tableId: string, cashOut: number, notes?: string) => void;
+  onEndTable: (tableId: string, cashOut: number, notes?: string, bounty?: { bountyCount?: number, bountyAmount?: number }) => void;
   onAddRebuy: (tableId: string, amount: number) => void;
 }
 
@@ -25,7 +25,9 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
   const [cashOutAmount, setCashOutAmount] = useState('');
   const [tableNotes, setTableNotes] = useState(table.notes || '');
   const [showRebuyDialog, setShowRebuyDialog] = useState(false);
-  
+  const [bountyCount, setBountyCount] = useState('');
+  const [bountyAmount, setBountyAmount] = useState('');
+
   const initialRebuyAmount = table.format === 'Tournament' 
     ? (table.tournamentBuyIn || table.initialBuyIn || table.buyIn).toString()
     : '';
@@ -37,9 +39,21 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
 
   const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
 
+  const showBountyFields = table.format === 'Tournament' && 
+    table.tournamentTypes?.some(type => 
+      ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
+    );
+
   const handleEndTable = () => {
-    onEndTable(table.id, parseFloat(cashOutAmount), tableNotes);
-    setShowEndTableDialog(false);
+    onEndTable(
+      table.id, 
+      parseFloat(cashOutAmount), 
+      tableNotes,
+      showBountyFields ? {
+        bountyCount: bountyCount ? parseInt(bountyCount) : undefined,
+        bountyAmount: bountyAmount ? parseFloat(bountyAmount) : undefined,
+      } : undefined
+    );
   };
 
   const handleAddRebuy = () => {
@@ -63,9 +77,13 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
       <Card className="bg-white p-4 mb-4">
         <div className="flex justify-between items-start mb-2">
           <div>
-            <h3 className="font-bold text-lg">{table.name || table.location}</h3>
-            <p className="text-xs text-gray-500 font-semibold mt-0.5">{table.location}</p>
+            <h3 className="font-bold text-lg">{table.location}</h3>
             <p className="text-sm text-gray-600">{table.gameType} • {table.format}</p>
+            {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
+              <span className="inline-block mt-1 px-2 py-0.5 bg-poker-gold/10 text-poker-gold text-xs rounded-full">
+                {table.tournamentTypes[0]}
+              </span>
+            )}
           </div>
           <div className="text-sm text-gray-600 text-right">
             <p>{formattedStartTime}</p>
@@ -83,10 +101,21 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
               )}
             </span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Blinds:</span>
-            <span className="font-medium">${table.smallBlind}/{table.bigBlind}</span>
-          </div>
+          
+          {table.format === 'Tournament' && table.startingBB && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Starting BBs:</span>
+              <span className="font-medium">{table.startingBB}</span>
+            </div>
+          )}
+          
+          {table.format === 'Cash' && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Blinds:</span>
+              <span className="font-medium">${table.smallBlind}/{table.bigBlind}</span>
+            </div>
+          )}
+          
           {table.rebuys && table.rebuys > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">Rebuys:</span>
@@ -123,74 +152,116 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
           </DialogHeader>
           
           <div className="py-4">
-            <div className="mb-4">
-              <label htmlFor="tableCashout" className="block text-sm font-medium mb-1">
-                Cash Out Amount
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500">$</span>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="tableCashout" className="block text-sm font-medium mb-1">
+                  Cash Out Amount
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500">$</span>
+                  </div>
+                  <input
+                    id="tableCashout"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    placeholder="0.00"
+                    value={cashOutAmount}
+                    onChange={(e) => setCashOutAmount(e.target.value)}
+                  />
                 </div>
-                <input
-                  id="tableCashout"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                  placeholder="0.00"
-                  value={cashOutAmount}
-                  onChange={(e) => setCashOutAmount(e.target.value)}
+              </div>
+
+              {showBountyFields && (
+                <>
+                  <div>
+                    <label htmlFor="bountyCount" className="block text-sm font-medium mb-1">
+                      Players Eliminated (Optional)
+                    </label>
+                    <input
+                      id="bountyCount"
+                      type="number"
+                      min="0"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      placeholder="Number of players eliminated"
+                      value={bountyCount}
+                      onChange={(e) => setBountyCount(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="bountyAmount" className="block text-sm font-medium mb-1">
+                      Total Bounty Collected (Optional)
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500">$</span>
+                      </div>
+                      <input
+                        id="bountyAmount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                        placeholder="0.00"
+                        value={bountyAmount}
+                        onChange={(e) => setBountyAmount(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              <div className="mb-6">
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm">Profit/Loss:</span>
+                  <span className={`text-sm font-bold ${
+                    cashOutAmount && parseFloat(cashOutAmount) >= table.buyIn 
+                      ? 'text-green-600' 
+                      : cashOutAmount 
+                        ? 'text-red-600' 
+                        : 'text-gray-500'
+                  }`}>
+                    {cashOutAmount 
+                      ? `$${(parseFloat(cashOutAmount) - table.buyIn).toFixed(2)}` 
+                      : '$0.00'}
+                  </span>
+                </div>
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  {cashOutAmount && (
+                    <div 
+                      className={`h-full ${
+                        parseFloat(cashOutAmount) >= table.buyIn 
+                          ? 'bg-green-500' 
+                          : 'bg-red-500'
+                      }`}
+                      style={{ 
+                        width: cashOutAmount 
+                          ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - table.buyIn) / table.buyIn * 100), 100)}%` 
+                          : '0%' 
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <label htmlFor="tableNotes" className="block text-sm font-medium mb-1">
+                  Notes (Optional)
+                </label>
+                <Textarea
+                  id="tableNotes"
+                  className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                  placeholder="Add any notes about this table..."
+                  value={tableNotes}
+                  onChange={(e) => setTableNotes(e.target.value)}
                 />
               </div>
             </div>
             
-            <div className="mb-6">
-              <div className="flex justify-between mb-1">
-                <span className="text-sm">Profit/Loss:</span>
-                <span className={`text-sm font-bold ${
-                  cashOutAmount && parseFloat(cashOutAmount) >= table.buyIn 
-                    ? 'text-green-600' 
-                    : cashOutAmount 
-                      ? 'text-red-600' 
-                      : 'text-gray-500'
-                }`}>
-                  {cashOutAmount 
-                    ? `$${(parseFloat(cashOutAmount) - table.buyIn).toFixed(2)}` 
-                    : '$0.00'}
-                </span>
-              </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                {cashOutAmount && (
-                  <div 
-                    className={`h-full ${
-                      parseFloat(cashOutAmount) >= table.buyIn 
-                        ? 'bg-green-500' 
-                        : 'bg-red-500'
-                    }`}
-                    style={{ 
-                      width: cashOutAmount 
-                        ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - table.buyIn) / table.buyIn * 100), 100)}%` 
-                        : '0%' 
-                    }}
-                  />
-                )}
-              </div>
-            </div>
-            
-            <div className="mb-6">
-              <label htmlFor="tableNotes" className="block text-sm font-medium mb-1">
-                Notes (Optional)
-              </label>
-              <Textarea
-                id="tableNotes"
-                className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                placeholder="Add any notes about this table..."
-                value={tableNotes}
-                onChange={(e) => setTableNotes(e.target.value)}
-              />
-            </div>
-            
-            <DialogFooter>
+            <DialogFooter className="mt-6">
               <Button
                 variant="outline"
                 onClick={() => setShowEndTableDialog(false)}

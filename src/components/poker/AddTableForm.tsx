@@ -91,6 +91,17 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              placeholder="Casino name or online site"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              required
+            />
+          </div>
+
           {!fixedFormat && (
             <div className="space-y-2">
               <Label>Format</Label>
@@ -158,17 +169,6 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
                 <Label htmlFor="plo" className="cursor-pointer">PLO</Label>
               </div>
             </RadioGroup>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              placeholder="Casino name or online site"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              required
-            />
           </div>
 
           <div className="space-y-2">

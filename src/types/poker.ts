@@ -34,6 +34,8 @@ export interface TableData {
   notes?: string;
   finalPosition?: number;
   startingBB?: number;
+  bountyCount?: number;
+  bountyAmount?: number;
   tournamentTypes?: string[];
 }
 

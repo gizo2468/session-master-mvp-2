@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession } from '@/types/poker';
@@ -35,15 +34,15 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             <span className="text-gray-500">Playing From:</span>
             <span className="font-medium">{session.location}</span>
           </div>
-          <div className="flex items-center gap-2 mt-1 mb-1">
+          <div className="flex items-start gap-2 mt-1 mb-1">
             <Badge
               variant="outline"
               className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
             >
               <DollarSign className="w-4 h-4 text-gray-600" />
-              <span className="font-bold">${totalInitialBuyin.toFixed(2)}</span>
+              <span className="font-bold text-poker-gold">${totalInitialBuyin.toFixed(2)}</span>
               <span className="ml-1 opacity-80 text-xs">
-                {tableCount ? `(from ${tableCount} table${tableCount !== 1 ? "s" : ""})` : ""}
+                from {tableCount} table{tableCount !== 1 ? "s" : ""}
               </span>
             </Badge>
             {totalRebuyAmount > 0 && (
@@ -52,7 +51,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
                 className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
               >
                 <CircleDollarSign className="w-4 h-4 text-gray-600" />
-                <span className="font-bold">+${totalRebuyAmount.toFixed(2)}</span>
+                <span className="font-bold text-poker-gold">+${totalRebuyAmount.toFixed(2)}</span>
                 <span className="ml-1 opacity-80 text-xs">
                   from {rebuyCount} rebuy{rebuyCount !== 1 ? "s" : ""}
                 </span>
