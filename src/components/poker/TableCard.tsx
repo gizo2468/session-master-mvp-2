@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -145,7 +146,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
           <div className="mt-2 space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Cash Out:</span>
-              <span className="font-semibold text-poker-gold">
+              <span className="font-semibold text-lg text-poker-gold">
                 ${(table.cashOut ?? 0).toFixed(2)}
               </span>
             </div>
@@ -162,16 +163,20 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
             </div>
             {table.format === 'Tournament' && (
               <div className="space-y-1 mt-2 text-sm">
-                {table.bountyCount > 0 && (
+                {table.bountyCount > 0 && table.tournamentTypes?.some(type => 
+                  ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
+                ) && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Players Eliminated:</span>
                     <span className="font-medium">{table.bountyCount}</span>
                   </div>
                 )}
-                {table.bountyAmount > 0 && (
+                {table.bountyAmount > 0 && table.tournamentTypes?.some(type => 
+                  ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
+                ) && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Bounty Collected:</span>
-                    <span className="font-medium">${table.bountyAmount.toFixed(2)}</span>
+                    <span className="text-gray-600">Total Bounty Collected:</span>
+                    <span className="font-medium text-poker-gold">${table.bountyAmount.toFixed(2)}</span>
                   </div>
                 )}
               </div>
