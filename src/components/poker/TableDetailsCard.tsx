@@ -71,7 +71,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           {table.format === 'Tournament' && table.startingBB && (
             <div>
               <span className="text-gray-500">Starting BBs:</span>
-              <div>{table.startingBB}</div>
+              <div>{table.startingBB}BB</div>
             </div>
           )}
           {table.tournamentTypes && table.tournamentTypes.length > 0 && (
