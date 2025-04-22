@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -146,6 +145,12 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                   <div className="flex justify-between">
                     <span className="text-gray-600">Starting BBs:</span>
                     <span className="font-medium">{table.startingBB}BB</span>
+                  </div>
+                )}
+                {table.tournamentTypes?.[0] && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Tournament Type:</span>
+                    <span className="font-medium">{table.tournamentTypes[0]}</span>
                   </div>
                 )}
                 {table.bountyCount > 0 && table.tournamentTypes?.some(type => 
