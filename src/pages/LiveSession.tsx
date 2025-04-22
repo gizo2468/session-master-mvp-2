@@ -130,11 +130,16 @@ export default function LiveSession() {
     }
   };
   
-  const handleEndTable = (tableId: string, cashOut: number, notes?: string) => {
+  const handleEndTable = (
+    tableId: string, 
+    cashOut: number, 
+    notes?: string,
+    bounty?: { bountyCount?: number, bountyAmount?: number }
+  ) => {
     if (!session) return;
     
     try {
-      endTable(session.id, tableId, cashOut, notes);
+      endTable(session.id, tableId, cashOut, notes, bounty);
       toast({
         title: "Table Ended",
         description: "The table has been successfully ended."
@@ -300,11 +305,43 @@ export default function LiveSession() {
                           </div>
                           <div className="flex items-center text-sm mt-1">
                             <span className="text-gray-600 font-medium mr-1">Cash Out:</span>
-                            <span className="font-semibold">
+                            <span className="font-semibold text-lg text-poker-gold">
                               ${(table.cashOut !== undefined ? table.cashOut : 0).toFixed(2)}
                             </span>
                           </div>
-                          <div className="text-sm text-gray-600">
+                          {table.format === 'Tournament' && table.startingBB && (
+                            <div className="flex items-center text-sm mt-1">
+                              <span className="text-gray-600 font-medium mr-1">Starting BBs:</span>
+                              <span className="font-semibold">{table.startingBB}BB</span>
+                            </div>
+                          )}
+                          {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
+                            <div className="flex items-center text-sm mt-1">
+                              <span className="text-gray-600 font-medium mr-1">Tournament Type:</span>
+                              <span className="inline-flex px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                                {table.tournamentTypes[0]}
+                              </span>
+                            </div>
+                          )}
+                          {table.format === 'Tournament' && 
+                           table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
+                           table.bountyCount !== undefined && 
+                           table.bountyCount > 0 && (
+                            <div className="flex items-center text-sm mt-1">
+                              <span className="text-gray-600 font-medium mr-1">Players Eliminated:</span>
+                              <span className="font-semibold">{table.bountyCount}</span>
+                            </div>
+                          )}
+                          {table.format === 'Tournament' && 
+                           table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
+                           table.bountyAmount !== undefined && 
+                           table.bountyAmount > 0 && (
+                            <div className="flex items-center text-sm mt-1">
+                              <span className="text-gray-600 font-medium mr-1">Total Bounty Collected:</span>
+                              <span className="font-semibold text-poker-gold">${table.bountyAmount.toFixed(2)}</span>
+                            </div>
+                          )}
+                          <div className="text-sm text-gray-600 mt-1">
                             {format(new Date(table.startTime), 'MMM d, h:mm a')}
                             {table.endTime && ` - ${format(new Date(table.endTime), 'h:mm a')}`}
                           </div>

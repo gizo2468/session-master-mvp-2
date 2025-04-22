@@ -86,16 +86,16 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
               </div>
             </div>
           )}
-          {isBountyTournament && table.bountyCount > 0 && (
+          {isBountyTournament && table.bountyCount !== undefined && table.bountyCount > 0 && (
             <div>
               <span className="text-gray-500">Players Eliminated:</span>
               <div>{table.bountyCount}</div>
             </div>
           )}
-          {isBountyTournament && table.bountyAmount > 0 && (
+          {isBountyTournament && table.bountyAmount !== undefined && table.bountyAmount > 0 && (
             <div>
               <span className="text-gray-500">Total Bounty Collected:</span>
-              <div className="text-poker-gold">${table.bountyAmount.toFixed(2)}</div>
+              <div className="text-poker-gold font-medium">${table.bountyAmount.toFixed(2)}</div>
             </div>
           )}
         </div>

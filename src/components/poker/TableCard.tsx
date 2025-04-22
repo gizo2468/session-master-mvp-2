@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,6 +54,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
         bountyAmount: bountyAmount ? parseFloat(bountyAmount) : undefined,
       } : undefined
     );
+    setShowEndTableDialog(false);
   };
 
   const handleAddRebuy = () => {
