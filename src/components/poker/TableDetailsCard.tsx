@@ -62,12 +62,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
               )}
             </div>
           </div>
-          <div>
-            <span className="text-gray-500">Cash Out:</span>
-            <div className="font-bold text-lg text-poker-gold">
-              ${(table.cashOut ?? 0).toFixed(2)}
-            </div>
-          </div>
+          
           {table.format === 'Tournament' && table.startingBB && (
             <div>
               <span className="text-gray-500">Starting BBs:</span>
@@ -98,6 +93,12 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
               <div className="text-poker-gold font-medium">${table.bountyAmount.toFixed(2)}</div>
             </div>
           )}
+          <div>
+            <span className="text-gray-500">Total Cash Out:</span>
+            <div className="font-bold text-lg text-poker-gold">
+              ${(table.cashOut ?? 0).toFixed(2)}
+            </div>
+          </div>
         </div>
         {table.notes && (
           <div className="mt-2">
