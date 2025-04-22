@@ -430,12 +430,8 @@ export default function SessionDetail() {
               <div className="mb-6">
                 <h2 className="text-lg font-bold mb-4">Tables Played</h2>
                 {session.tables.map(table => {
-                  let tableHands: undefined | typeof session.hands = undefined;
-                  if (Array.isArray(session.hands) && session.hands.length > 0) {
-                    tableHands = session.hands;
-                  }
                   return (
-                    <TableDetailsCard key={table.id} table={table} hands={tableHands} />
+                    <TableDetailsCard key={table.id} table={table} />
                   );
                 })}
               </div>
