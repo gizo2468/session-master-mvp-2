@@ -45,7 +45,7 @@ const ConnectionCodeDisplay = () => {
           variant="outline" 
           className="w-full flex items-center justify-center gap-2"
         >
-          <Icon name="copy" size={16} />
+          <Icon name="Copy" size={16} />
           {copied ? "Copied!" : "Copy Code"}
         </Button>
       </CardContent>

@@ -21,7 +21,7 @@ const ConnectCoach = () => {
             onClick={() => navigate('/')} 
             className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:underline"
           >
-            <Icon name="arrow-left" size={16} />
+            <Icon name="ArrowLeft" size={16} />
             <span>Back</span>
           </button>
           <h1 className="text-2xl font-serif font-bold text-poker-black">Connect with a Coach</h1>

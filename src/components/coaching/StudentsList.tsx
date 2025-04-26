@@ -24,7 +24,7 @@ const StudentsList = () => {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Icon name="users" />
+            <Icon name="Users" />
             My Students
           </CardTitle>
         </CardHeader>
@@ -42,7 +42,7 @@ const StudentsList = () => {
     <Card className="mb-6">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <Icon name="users" />
+          <Icon name="Users" />
           My Students ({students.length})
         </CardTitle>
       </CardHeader>
@@ -58,7 +58,7 @@ const StudentsList = () => {
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
-                      <Icon name="user-minus" size={18} />
+                      <Icon name="UserMinus" size={18} />
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>

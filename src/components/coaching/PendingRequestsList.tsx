@@ -16,7 +16,7 @@ const PendingRequestsList = () => {
     <Card className="mb-6">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <Icon name="user-plus" />
+          <Icon name="UserPlus" />
           Pending Connection Requests
         </CardTitle>
       </CardHeader>

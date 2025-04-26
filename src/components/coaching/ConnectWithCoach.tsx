@@ -25,7 +25,7 @@ const ConnectWithCoach = () => {
     <Card className="mb-6">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <Icon name="link" />
+          <Icon name="Link" />
           Connect with a Coach
         </CardTitle>
         <CardDescription>

@@ -17,7 +17,7 @@ const CoachConnection = () => {
     <Card className="mb-6">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <Icon name="user" />
+          <Icon name="User" />
           Your Coach
         </CardTitle>
       </CardHeader>

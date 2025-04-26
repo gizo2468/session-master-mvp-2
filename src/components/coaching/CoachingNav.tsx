@@ -19,7 +19,7 @@ const CoachingNav = () => {
             size="sm" 
             className="flex items-center gap-2"
           >
-            <Icon name="user" size={16} />
+            <Icon name="User" size={16} />
             Coach
             {isCoach && pendingRequests.length > 0 && (
               <span className="bg-white text-poker-feltGreen text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -35,7 +35,7 @@ const CoachingNav = () => {
             size="sm"
             className="flex items-center gap-2"
           >
-            <Icon name="link" size={16} />
+            <Icon name="Link" size={16} />
             Student
           </Button>
         </Link>
