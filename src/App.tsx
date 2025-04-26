@@ -11,7 +11,10 @@ import SessionDetail from "./pages/SessionDetail";
 import LiveSession from "./pages/LiveSession";
 import ConfirmSession from "./pages/ConfirmSession";
 import FocusModePage from "./pages/FocusModePage";
+import CoachProfile from "./pages/CoachProfile";
+import ConnectCoach from "./pages/ConnectCoach";
 import { SessionProvider } from "./context/SessionContext";
+import { CoachStudentProvider } from "./context/CoachStudentContext";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 // Create a new query client instance
@@ -23,19 +26,23 @@ const App = () => (
       <Toaster />
       <Sonner />
       <SessionProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/new-session" element={<SessionForm />} />
-            <Route path="/history" element={<SessionHistory />} />
-            <Route path="/session/:id" element={<SessionDetail />} />
-            <Route path="/live-session/:id" element={<LiveSession />} />
-            <Route path="/confirm-session" element={<ConfirmSession />} />
-            <Route path="/focus-mode" element={<FocusModePage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <CoachStudentProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/new-session" element={<SessionForm />} />
+              <Route path="/history" element={<SessionHistory />} />
+              <Route path="/session/:id" element={<SessionDetail />} />
+              <Route path="/live-session/:id" element={<LiveSession />} />
+              <Route path="/confirm-session" element={<ConfirmSession />} />
+              <Route path="/focus-mode" element={<FocusModePage />} />
+              <Route path="/coach-profile" element={<CoachProfile />} />
+              <Route path="/connect-coach" element={<ConnectCoach />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </CoachStudentProvider>
       </SessionProvider>
     </QueryClientProvider>
   </TooltipPrimitive.Provider>

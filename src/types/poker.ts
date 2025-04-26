@@ -1,3 +1,4 @@
+
 export interface HandData {
   id: string;
   cards: string;
@@ -73,4 +74,39 @@ export interface SessionFilter {
   gameType?: 'NLH' | 'PLO' | 'All';
   format?: 'Cash' | 'Tournament' | 'Live Cash' | 'Live Tournament' | 'Online Cash' | 'Online Tournament' | 'Home Game' | 'All';
   location?: string;
+}
+
+// Coach-student connection feature types
+export interface CoachProfile {
+  id: string;
+  userId: string;
+  displayName: string;
+  bio?: string;
+  activeCode?: ConnectionCode;
+  students: string[]; // Array of student IDs
+  createdAt: Date;
+}
+
+export interface StudentProfile {
+  id: string;
+  userId: string;
+  displayName: string;
+  coachId?: string; // ID of the connected coach, if any
+  createdAt: Date;
+}
+
+export interface ConnectionCode {
+  id: string;
+  code: string;
+  coachId: string;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+export interface ConnectionRequest {
+  id: string;
+  coachId: string;
+  studentId: string;
+  status: 'pending' | 'approved' | 'declined';
+  createdAt: Date;
 }

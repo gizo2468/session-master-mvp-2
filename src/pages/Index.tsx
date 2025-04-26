@@ -8,6 +8,8 @@ import { useSessionContext } from '@/context/SessionContext';
 import SessionCard from '@/components/SessionCard';
 import Logo from '@/components/Logo';
 import DonationCard from '@/components/DonationCard';
+import CoachingNav from '@/components/coaching/CoachingNav';
+import ConnectionNotification from '@/components/coaching/ConnectionNotification';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -54,6 +56,10 @@ const Index = () => {
           </div>
         )}
         
+        {/* Coaching Navigation */}
+        <CoachingNav />
+        <ConnectionNotification />
+        
         {/* Donation Card - Added at the bottom of the page */}
         <div className="mt-10 mb-16">
           <DonationCard />
@@ -66,4 +72,3 @@ const Index = () => {
 };
 
 export default Index;
-
