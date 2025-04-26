@@ -34,22 +34,22 @@ export const CommentForm = ({
     { 
       value: 'common_mistake', 
       label: 'Common Mistake', 
-      icon: <Icon name="AlertTriangle" size={14} /> 
+      icon: <Icon name="alert-triangle" size={14} /> 
     },
     { 
       value: 'aggressive_play', 
       label: 'Aggressive Play', 
-      icon: <Icon name="Zap" size={14} /> 
+      icon: <Icon name="zap" size={14} /> 
     },
     { 
       value: 'good_decision', 
       label: 'Good Decision', 
-      icon: <Icon name="ThumbsUp" size={14} /> 
+      icon: <Icon name="thumbs-up" size={14} /> 
     },
     { 
       value: 'needs_review', 
       label: 'Needs Review', 
-      icon: <Icon name="Search" size={14} /> 
+      icon: <Icon name="search" size={14} /> 
     }
   ];
   

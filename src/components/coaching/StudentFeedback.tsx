@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,11 +73,11 @@ export const StudentFeedback = ({ studentId }: { studentId: string }) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'read':
-        return <Icon name="Check" size={14} className="text-blue-500" />;
+        return <Icon name="check" size={14} className="text-blue-500" />;
       case 'implemented':
-        return <Icon name="Check" size={14} className="text-green-500" />;
+        return <Icon name="check" size={14} className="text-green-500" />;
       case 'needs_clarification':
-        return <Icon name="AlertTriangle" size={14} className="text-amber-500" />;
+        return <Icon name="alert-triangle" size={14} className="text-amber-500" />;
       default:
         return null;
     }
@@ -89,7 +88,7 @@ export const StudentFeedback = ({ studentId }: { studentId: string }) => {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Icon name="Archive" />
+            <Icon name="archive" />
             <span>Feedback Archive</span>
           </CardTitle>
         </CardHeader>
@@ -102,7 +101,7 @@ export const StudentFeedback = ({ studentId }: { studentId: string }) => {
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-8"
               />
-              <Icon name="Search" className="absolute left-2 top-2.5 text-gray-400" size={16} />
+              <Icon name="search" className="absolute left-2 top-2.5 text-gray-400" size={16} />
             </div>
             
             <Select value={filter} onValueChange={setFilter}>
