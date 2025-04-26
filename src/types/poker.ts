@@ -85,6 +85,7 @@ export interface CoachProfile {
   activeCode?: ConnectionCode;
   students: string[]; // Array of student IDs
   createdAt: Date;
+  comments?: CoachComment[]; // New field for comments
 }
 
 export interface StudentProfile {
@@ -93,6 +94,8 @@ export interface StudentProfile {
   displayName: string;
   coachId?: string; // ID of the connected coach, if any
   createdAt: Date;
+  lastActivity?: Date; // Track last activity time
+  sessionCount?: number; // Count of saved sessions
 }
 
 export interface ConnectionCode {
@@ -109,4 +112,30 @@ export interface ConnectionRequest {
   studentId: string;
   status: 'pending' | 'approved' | 'declined';
   createdAt: Date;
+}
+
+// New types for coaching features
+export type CommentTag = 
+  'common_mistake' | 
+  'aggressive_play' | 
+  'good_decision' | 
+  'needs_review';
+
+export interface CoachComment {
+  id: string;
+  coachId: string;
+  studentId: string;
+  sessionId: string;
+  handId?: string; // Optional - if commenting on a specific hand
+  content: string;
+  tag?: CommentTag;
+  createdAt: Date;
+  status: 'unread' | 'read' | 'implemented' | 'needs_clarification';
+}
+
+export interface StudentActivity {
+  studentId: string;
+  isLive: boolean;
+  lastSessionId?: string;
+  lastSessionTime?: Date;
 }

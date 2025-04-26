@@ -13,21 +13,39 @@ const CoachingNav = () => {
     <div className="mt-8">
       <Separator className="my-4" />
       <div className="flex justify-center gap-4">
-        <Link to="/coach-profile">
-          <Button 
-            variant={isCoach ? "poker" : "outline"} 
-            size="sm" 
-            className="flex items-center gap-2"
-          >
-            <Icon name="User" size={16} />
-            Coach
-            {isCoach && pendingRequests.length > 0 && (
-              <span className="bg-white text-poker-feltGreen text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {pendingRequests.length}
-              </span>
-            )}
-          </Button>
-        </Link>
+        {isCoach ? (
+          <Link to="/coach-dashboard">
+            <Button 
+              variant="poker" 
+              size="sm" 
+              className="flex items-center gap-2"
+            >
+              <Icon name="User" size={16} />
+              Coach Dashboard
+              {pendingRequests.length > 0 && (
+                <span className="bg-white text-poker-feltGreen text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {pendingRequests.length}
+                </span>
+              )}
+            </Button>
+          </Link>
+        ) : (
+          <Link to="/coach-profile">
+            <Button 
+              variant={isCoach ? "poker" : "outline"} 
+              size="sm" 
+              className="flex items-center gap-2"
+            >
+              <Icon name="User" size={16} />
+              Coach
+              {isCoach && pendingRequests.length > 0 && (
+                <span className="bg-white text-poker-feltGreen text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {pendingRequests.length}
+                </span>
+              )}
+            </Button>
+          </Link>
+        )}
         
         <Link to="/connect-coach">
           <Button 

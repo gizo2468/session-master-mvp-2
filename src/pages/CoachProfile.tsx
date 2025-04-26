@@ -53,6 +53,15 @@ const CoachProfile = () => {
               </CardHeader>
               <CardContent>
                 <GenerateCodeButton />
+                {coachProfile.students.length > 0 && (
+                  <Button 
+                    onClick={() => navigate('/coach-dashboard')}
+                    variant="outline"
+                    className="w-full mt-2"
+                  >
+                    Go to Coach Dashboard
+                  </Button>
+                )}
               </CardContent>
             </Card>
             

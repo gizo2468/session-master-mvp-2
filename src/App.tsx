@@ -13,6 +13,10 @@ import ConfirmSession from "./pages/ConfirmSession";
 import FocusModePage from "./pages/FocusModePage";
 import CoachProfile from "./pages/CoachProfile";
 import ConnectCoach from "./pages/ConnectCoach";
+import CoachDashboard from "./pages/CoachDashboard";
+import CoachStudentDetail from "./pages/CoachStudentDetail";
+import CoachSessionReview from "./pages/CoachSessionReview";
+import CoachFeedbackArchive from "./pages/CoachFeedbackArchive";
 import { SessionProvider } from "./context/SessionContext";
 import { CoachStudentProvider } from "./context/CoachStudentContext";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
@@ -38,6 +42,10 @@ const App = () => (
               <Route path="/focus-mode" element={<FocusModePage />} />
               <Route path="/coach-profile" element={<CoachProfile />} />
               <Route path="/connect-coach" element={<ConnectCoach />} />
+              <Route path="/coach-dashboard" element={<CoachDashboard />} />
+              <Route path="/coach/student/:studentId" element={<CoachStudentDetail />} />
+              <Route path="/coach/student/:studentId/session/:sessionId" element={<CoachSessionReview />} />
+              <Route path="/coach/feedback-archive" element={<CoachFeedbackArchive />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
