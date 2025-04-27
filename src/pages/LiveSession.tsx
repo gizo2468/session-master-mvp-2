@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -140,7 +139,6 @@ export default function LiveSession() {
     if (!session) return;
     
     try {
-      // Fix here: passing bountyCount and bountyAmount inside the bounty object
       endTable(session.id, tableId, cashOut, notes, bounty);
       toast({
         title: "Table Ended",
@@ -305,19 +303,15 @@ export default function LiveSession() {
                               ) : null;
                             })()}
                           </div>
-                          <div className="flex items-center text-sm mt-1">
-                            <span className="text-gray-600 font-medium mr-1">Cash Out:</span>
-                            <span className="font-semibold text-lg text-poker-gold">
-                              ${(table.cashOut !== undefined ? table.cashOut : 0).toFixed(2)}
-                            </span>
-                          </div>
+                          
                           {table.format === 'Tournament' && table.startingBB && (
                             <div className="flex items-center text-sm mt-1">
                               <span className="text-gray-600 font-medium mr-1">Starting BBs:</span>
                               <span className="font-semibold">{table.startingBB}BB</span>
                             </div>
                           )}
-                          {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
+                          
+                          {table.tournamentTypes && table.tournamentTypes.length > 0 && (
                             <div className="flex items-center text-sm mt-1">
                               <span className="text-gray-600 font-medium mr-1">Tournament Type:</span>
                               <span className="inline-flex px-2 py-0.5 bg-gray-100 rounded-full text-xs">
@@ -325,6 +319,7 @@ export default function LiveSession() {
                               </span>
                             </div>
                           )}
+                          
                           {table.format === 'Tournament' && 
                            table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
                            table.bountyCount !== undefined && 
@@ -334,6 +329,7 @@ export default function LiveSession() {
                               <span className="font-semibold">{table.bountyCount}</span>
                             </div>
                           )}
+                          
                           {table.format === 'Tournament' && 
                            table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
                            table.bountyAmount !== undefined && 
@@ -343,6 +339,14 @@ export default function LiveSession() {
                               <span className="font-semibold text-poker-gold">${table.bountyAmount.toFixed(2)}</span>
                             </div>
                           )}
+                          
+                          <div className="flex items-center text-sm mt-1">
+                            <span className="text-gray-600 font-medium mr-1">Cash Out:</span>
+                            <span className="font-semibold text-lg text-poker-gold">
+                              ${(table.cashOut !== undefined ? table.cashOut : 0).toFixed(2)}
+                            </span>
+                          </div>
+                          
                           <div className="text-sm text-gray-600 mt-1">
                             {format(new Date(table.startTime), 'MMM d, h:mm a')}
                             {table.endTime && ` - ${format(new Date(table.endTime), 'h:mm a')}`}
