@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ const CoachStudentDetail = () => {
   const navigate = useNavigate();
   const { studentId } = useParams<{ studentId: string }>();
   const { students, isCoach } = useCoachStudent();
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
   
   // Find the student
   const student = students.find(s => s.id === studentId);
@@ -22,6 +24,9 @@ const CoachStudentDetail = () => {
     return null;
   }
   
+  // Determine which tab to display based on query parameter
+  const defaultTab = tabParam === 'feedback' ? 'feedback' : 'sessions';
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -30,7 +35,7 @@ const CoachStudentDetail = () => {
             onClick={() => navigate('/coach-dashboard')} 
             className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:underline"
           >
-            <Icon name="ArrowLeft" size={16} />
+            <Icon name="arrow-left" size={16} />
             <span>Back to Dashboard</span>
           </button>
           
@@ -47,14 +52,14 @@ const CoachStudentDetail = () => {
           </div>
         </header>
         
-        <Tabs defaultValue="sessions">
+        <Tabs defaultValue={defaultTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="sessions" className="flex items-center gap-1">
-              <Icon name="Clock" size={16} />
+              <Icon name="clock" size={16} />
               <span>Sessions</span>
             </TabsTrigger>
             <TabsTrigger value="feedback" className="flex items-center gap-1">
-              <Icon name="MessageSquare" size={16} />
+              <Icon name="message-square" size={16} />
               <span>Feedback</span>
             </TabsTrigger>
           </TabsList>

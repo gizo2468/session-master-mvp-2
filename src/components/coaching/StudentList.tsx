@@ -60,7 +60,7 @@ const StudentList = () => {
                   className="h-8 w-8 p-0"
                   onClick={() => navigate(`/coach/student/${student.id}`)}
                 >
-                  <Icon name="ArrowRight" size={16} />
+                  <Icon name="arrow-right" size={16} />
                 </Button>
                 
                 <AlertDialog>
@@ -70,7 +70,7 @@ const StudentList = () => {
                       size="sm" 
                       className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
                     >
-                      <Icon name="UserMinus" size={16} />
+                      <Icon name="user-minus" size={16} />
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -99,7 +99,7 @@ const StudentList = () => {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => navigate(`/coach/student/${student.id}/sessions`)}
+                onClick={() => navigate(`/coach/student/${student.id}?tab=sessions`)}
                 className="text-xs"
               >
                 View Sessions
@@ -108,7 +108,7 @@ const StudentList = () => {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => navigate(`/coach/student/${student.id}/feedback`)}
+                onClick={() => navigate(`/coach/student/${student.id}?tab=feedback`)}
                 className="text-xs"
               >
                 View Feedback
