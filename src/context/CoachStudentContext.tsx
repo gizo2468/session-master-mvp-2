@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
@@ -40,17 +39,93 @@ export const useCoachStudent = () => {
 export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { toast } = useToast();
 
+  // Initialize with mock students data
+  const mockStudents: StudentProfile[] = [
+    {
+      id: '1',
+      userId: 'user-mock1',
+      displayName: 'Alex Thompson',
+      createdAt: new Date('2024-01-15'),
+      sessionCount: 12,
+      lastActivity: new Date('2024-04-25'),
+      coachId: 'coach-1'
+    },
+    {
+      id: '2',
+      userId: 'user-mock2',
+      displayName: 'Sarah Chen',
+      createdAt: new Date('2024-02-01'),
+      sessionCount: 8,
+      lastActivity: new Date('2024-04-26'),
+      coachId: 'coach-1'
+    },
+    {
+      id: '3',
+      userId: 'user-mock3',
+      displayName: 'Mike Rodriguez',
+      createdAt: new Date('2024-03-10'),
+      sessionCount: 4,
+      lastActivity: new Date('2024-04-24'),
+      coachId: 'coach-1'
+    }
+  ];
+
+  // Mock comments for the coach profile
+  const mockComments: CoachComment[] = [
+    {
+      id: 'c1',
+      coachId: 'coach-1',
+      studentId: '1',
+      sessionId: 'session-1',
+      content: 'Excellent 3-bet sizing against aggressive opponents. Keep it up!',
+      tag: 'good_decision',
+      createdAt: new Date('2024-04-26'),
+      status: 'unread'
+    },
+    {
+      id: 'c2',
+      coachId: 'coach-1',
+      studentId: '2',
+      sessionId: 'session-2',
+      content: 'Consider checking back more often on dry flops when out of position.',
+      tag: 'common_mistake',
+      createdAt: new Date('2024-04-25'),
+      status: 'read'
+    },
+    {
+      id: 'c3',
+      coachId: 'coach-1',
+      studentId: '3',
+      sessionId: 'session-3',
+      content: '4-betting light in late position showed great awareness of stack dynamics.',
+      tag: 'aggressive_play',
+      createdAt: new Date('2024-04-24'),
+      status: 'implemented'
+    }
+  ];
+
   // State for coach
   const [isCoach, setIsCoach] = useState<boolean>(false);
   const [coachProfile, setCoachProfile] = useState<CoachProfile | null>(null);
-  const [students, setStudents] = useState<StudentProfile[]>([]);
+  const [students, setStudents] = useState<StudentProfile[]>(mockStudents);
   const [pendingRequests, setPendingRequests] = useState<ConnectionRequest[]>([]);
   const [connectionCode, setConnectionCode] = useState<string | null>(null);
   
-  // State for student
-  const [isStudent, setIsStudent] = useState<boolean>(false);
-  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
-  const [connectedCoach, setConnectedCoach] = useState<CoachProfile | null>(null);
+  // Create a mock coach profile if none exists
+  useEffect(() => {
+    const mockCoach: CoachProfile = {
+      id: 'coach-1',
+      userId: 'user-coach1',
+      displayName: 'Coach Demo',
+      bio: 'Experienced poker coach specializing in tournament strategy',
+      students: mockStudents.map(s => s.id),
+      comments: mockComments,
+      createdAt: new Date('2024-01-01'),
+    };
+    
+    setCoachProfile(mockCoach);
+    setIsCoach(true);
+  }, []);
 
   // Load data from localStorage on component mount
   useEffect(() => {

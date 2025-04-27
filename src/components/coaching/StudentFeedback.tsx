@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,8 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Icon from '@/components/ui/Lucide';
 import { CoachComment, CommentTag } from '@/types/poker';
 
-// In a real app, this would come from a database query
-// For this demo, we'll create mock feedback
 const createMockFeedback = (studentId: string) => {
   const feedback: CoachComment[] = [];
   const tags: CommentTag[] = ['common_mistake', 'aggressive_play', 'good_decision', 'needs_review'];
@@ -40,10 +37,8 @@ export const StudentFeedback = ({ studentId }: { studentId: string }) => {
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState<string>('');
   
-  // Create mock feedback for the demo
   const allFeedback = createMockFeedback(studentId);
   
-  // Apply filters
   const filteredFeedback = allFeedback.filter(comment => {
     if (filter !== 'all' && comment.tag !== filter) {
       return false;
@@ -74,11 +69,11 @@ export const StudentFeedback = ({ studentId }: { studentId: string }) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'read':
-        return <Icon name="Check" size={14} className="text-blue-500" />;
+        return <Icon name="check" size={14} className="text-blue-500" />;
       case 'implemented':
-        return <Icon name="Check" size={14} className="text-green-500" />;
+        return <Icon name="check" size={14} className="text-green-500" />;
       case 'needs_clarification':
-        return <Icon name="AlertTriangle" size={14} className="text-amber-500" />;
+        return <Icon name="alert-triangle" size={14} className="text-amber-500" />;
       default:
         return null;
     }
