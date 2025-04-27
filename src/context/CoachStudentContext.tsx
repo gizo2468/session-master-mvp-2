@@ -1,7 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
-import { CoachProfile, StudentProfile, ConnectionRequest, ConnectionCode } from '@/types/poker';
+import { CoachProfile, StudentProfile, ConnectionRequest, ConnectionCode, CoachComment } from '@/types/poker';
 
 interface CoachStudentContextType {
   // Coach methods
@@ -110,6 +111,11 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [students, setStudents] = useState<StudentProfile[]>(mockStudents);
   const [pendingRequests, setPendingRequests] = useState<ConnectionRequest[]>([]);
   const [connectionCode, setConnectionCode] = useState<string | null>(null);
+  
+  // State for student
+  const [isStudent, setIsStudent] = useState<boolean>(false);
+  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
+  const [connectedCoach, setConnectedCoach] = useState<CoachProfile | null>(null);
   
   // Create a mock coach profile if none exists
   useEffect(() => {
