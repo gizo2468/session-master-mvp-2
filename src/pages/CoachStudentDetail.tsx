@@ -30,7 +30,7 @@ const CoachStudentDetail = () => {
             onClick={() => navigate('/coach-dashboard')} 
             className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:underline"
           >
-            <Icon name="arrow-left" size={16} />
+            <Icon name="ArrowLeft" size={16} />
             <span>Back to Dashboard</span>
           </button>
           
@@ -50,11 +50,11 @@ const CoachStudentDetail = () => {
         <Tabs defaultValue="sessions">
           <TabsList className="mb-6">
             <TabsTrigger value="sessions" className="flex items-center gap-1">
-              <Icon name="clock" size={16} />
+              <Icon name="Clock" size={16} />
               <span>Sessions</span>
             </TabsTrigger>
             <TabsTrigger value="feedback" className="flex items-center gap-1">
-              <Icon name="message-square" size={16} />
+              <Icon name="MessageSquare" size={16} />
               <span>Feedback</span>
             </TabsTrigger>
           </TabsList>
