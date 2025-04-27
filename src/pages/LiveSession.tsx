@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
-import TournamentControlsCard from '@/components/poker/TournamentControlsCard';
+// Removed TournamentControlsCard import
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
