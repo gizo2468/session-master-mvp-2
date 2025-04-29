@@ -1,3 +1,4 @@
+
 export interface HandData {
   id: string;
   cards: string;
@@ -70,7 +71,7 @@ export interface PokerSession {
 }
 
 export interface SessionFilter {
-  gameType?: 'NLH' | 'PLO' | 'All';
+  gameType?: 'NLH' | 'PLO' | 'Mixed' | 'Other' | 'All';
   format?: 'Cash' | 'Tournament' | 'Live Cash' | 'Live Tournament' | 'Online Cash' | 'Online Tournament' | 'Home Game' | 'All';
   location?: string;
 }
