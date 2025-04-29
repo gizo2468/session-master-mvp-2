@@ -22,6 +22,7 @@ import PlayerDashboard from "./pages/PlayerDashboard";
 import Settings from "./pages/Settings";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+import ResetPassword from "./pages/auth/ResetPassword";
 import { SessionProvider } from "./context/SessionContext";
 import { CoachStudentProvider } from "./context/CoachStudentContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -46,6 +47,7 @@ const App = () => (
                   {/* Auth Routes */}
                   <Route path="/auth/login" element={<Login />} />
                   <Route path="/auth/signup" element={<Signup />} />
+                  <Route path="/auth/reset-password" element={<ResetPassword />} />
                   
                   {/* Protected Routes */}
                   <Route 

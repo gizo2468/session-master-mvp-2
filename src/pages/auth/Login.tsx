@@ -82,7 +82,9 @@ const Login: React.FC = () => {
     setIsResettingPassword(true);
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(values.email);
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
       
       if (error) {
         throw error;
@@ -175,7 +177,7 @@ const Login: React.FC = () => {
             className="text-sm text-gray-600 p-0 h-auto"
             onClick={handlePasswordResetClick}
           >
-            Forgot your password? Reset it here
+            Forgot your password? Click here to reset
           </Button>
         </CardFooter>
       </Card>
