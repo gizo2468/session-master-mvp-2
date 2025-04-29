@@ -195,11 +195,7 @@ const AccountSettings: React.FC = () => {
                     <FormItem>
                       <FormLabel>Online Nickname</FormLabel>
                       <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="e.g., OmriGrinder, CoachOP, etc." 
-                          maxLength={20}
-                        />
+                        <Input {...field} maxLength={20} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -209,7 +205,6 @@ const AccountSettings: React.FC = () => {
                 <FormItem>
                   <FormLabel>{t('email')}</FormLabel>
                   <Input value={user?.email} disabled />
-                  <FormMessage>{t('email')}</FormMessage>
                 </FormItem>
                 
                 <div className="flex justify-end">
@@ -231,11 +226,11 @@ const AccountSettings: React.FC = () => {
         
         <Separator className="my-8" />
         
-        {/* Password Reset Section - Improved Styling */}
+        {/* Password Reset Section - Simplified */}
         <div className="bg-white p-6 rounded-lg border border-border shadow-sm">
           <h3 className="text-lg font-medium mb-4 text-left">{t('reset_password')}</h3>
           <p className="text-muted-foreground mb-4">
-            Reset your password securely via email. You will receive a link to create a new password.
+            {t('reset_password_description')}
           </p>
           <div className="flex justify-end">
             <Button 
