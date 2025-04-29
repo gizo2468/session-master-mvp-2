@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Icon from '@/components/ui/Lucide';
+import { supabase } from '@/integrations/supabase/client';
 
 const profileFormSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters' }),
@@ -20,28 +22,17 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-const passwordFormSchema = z.object({
-  currentPassword: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-  newPassword: z.string().min(6, { message: 'New password must be at least 6 characters' }),
-  confirmPassword: z.string().min(6),
-}).refine(data => data.newPassword === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
-
-type PasswordFormValues = z.infer<typeof passwordFormSchema>;
-
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
 const AccountSettings: React.FC = () => {
-  const { user, updateUser, logout, changePassword } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileImage, setProfileImage] = useState<string | undefined>(user?.profilePicture);
   const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
-  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   
   // Profile form
   const profileForm = useForm<ProfileFormValues>({
@@ -49,16 +40,6 @@ const AccountSettings: React.FC = () => {
     defaultValues: {
       fullName: user?.fullName || '',
       onlineNickname: user?.onlineNickname || '',
-    },
-  });
-
-  // Password form
-  const passwordForm = useForm<PasswordFormValues>({
-    resolver: zodResolver(passwordFormSchema),
-    defaultValues: {
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
     },
   });
 
@@ -75,17 +56,32 @@ const AccountSettings: React.FC = () => {
     }, 500);
   };
 
-  // Handle password form submission
-  const onPasswordSubmit = async (values: PasswordFormValues) => {
-    setIsSubmittingPassword(true);
+  // Handle password reset via email
+  const handlePasswordResetEmail = async () => {
+    if (!user?.email) return;
+    
+    setIsResettingPassword(true);
     
     try {
-      await changePassword(values.currentPassword, values.newPassword);
-      passwordForm.reset();
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: window.location.origin + '/settings',
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: t('password_reset_sent'),
+        description: t('password_reset_email_sent'),
+      });
     } catch (error) {
-      // Error is handled in changePassword function
+      console.error('Error sending password reset email:', error);
+      toast({
+        title: t('error'),
+        description: error instanceof Error ? error.message : t('password_reset_failed'),
+        variant: 'destructive',
+      });
     } finally {
-      setIsSubmittingPassword(false);
+      setIsResettingPassword(false);
     }
   };
 
@@ -228,67 +224,34 @@ const AccountSettings: React.FC = () => {
         
         <Separator className="my-8" />
         
-        {/* Password Change Section */}
+        {/* Password Reset Section */}
         <div>
           <h3 className="text-lg font-medium mb-4">{t('change_password')}</h3>
-          <Form {...passwordForm}>
-            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
-              <FormField
-                control={passwordForm.control}
-                name="currentPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('current_password')}</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              {t('password_reset_description', 'Reset your password securely using a link sent to your email.')}
+            </p>
+            
+            <div className="flex justify-end">
+              <Button 
+                type="button" 
+                onClick={handlePasswordResetEmail} 
+                disabled={isResettingPassword || !user?.email}
+              >
+                {isResettingPassword ? (
+                  <>
+                    <Icon name="Loader" className="mr-2 h-4 w-4 animate-spin" />
+                    {t('sending_reset_link')}
+                  </>
+                ) : (
+                  <>
+                    <Icon name="Mail" className="mr-2 h-4 w-4" />
+                    {t('reset_password_via_email')}
+                  </>
                 )}
-              />
-              
-              <FormField
-                control={passwordForm.control}
-                name="newPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('new_password')}</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={passwordForm.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('confirm_password')}</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="flex justify-end">
-                <Button type="submit" disabled={isSubmittingPassword}>
-                  {isSubmittingPassword ? (
-                    <>
-                      <Icon name="Loader" className="mr-2 h-4 w-4 animate-spin" />
-                      {t('loading')}
-                    </>
-                  ) : (
-                    t('change_password')
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Form>
+              </Button>
+            </div>
+          </div>
         </div>
         
         <Separator className="my-8" />
