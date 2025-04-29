@@ -1,539 +1,204 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useSessionContext } from '@/context/SessionContext';
-import { format, differenceInMinutes, differenceInHours } from 'date-fns';
-import { AlertTriangle } from 'lucide-react';
-import HandManagementPanel from '@/components/poker/HandManagementPanel';
-import SessionTimerCard from '@/components/poker/SessionTimerCard';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import TableDetailsCard from '@/components/poker/TableDetailsCard';
 
-export default function SessionDetail() {
-  const { id } = useParams<{ id: string }>();
+import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { useSessionContext } from '@/context/SessionContext';
+import { useLanguage } from '@/context/LanguageContext';
+import TableDetailsCard from '@/components/poker/TableDetailsCard';
+import SessionStatsCard from '@/components/poker/SessionStatsCard';
+import HandsList from '@/components/poker/HandsList';
+import NotesList from '@/components/poker/NotesList';
+import Icon from '@/components/ui/Lucide';
+import { PokerSession } from '@/types/poker';
+
+const SessionDetail = () => {
+  const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const { sessions, updateSession, deleteSession, endSession, pauseSession, resumeSession } = useSessionContext();
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const { sessions, updateSession, deleteSession } = useSessionContext();
   
-  const session = sessions.find(s => s.id === id);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showNotesDialog, setShowNotesDialog] = useState(false);
+  const [notes, setNotes] = useState('');
   
-  const [isEditing, setIsEditing] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showEndSessionModal, setShowEndSessionModal] = useState(false);
-  const [cashOutAmount, setCashOutAmount] = useState('');
-  
-  const [formData, setFormData] = useState({
-    location: '',
-    buyIn: '0',
-    smallBlind: '0',
-    bigBlind: '0',
-    gameType: 'NLH',
-    format: 'Cash',
-    notes: ''
-  });
-  
-  useEffect(() => {
-    if (session) {
-      setFormData({
-        location: session.location || '',
-        buyIn: session.buyIn !== undefined ? session.buyIn.toString() : '0',
-        smallBlind: session.smallBlind !== undefined ? session.smallBlind.toString() : '0',
-        bigBlind: session.bigBlind !== undefined ? session.bigBlind.toString() : '0',
-        gameType: session.gameType || 'NLH',
-        format: session.format || 'Cash',
-        notes: session.notes || ''
-      });
-    }
-  }, [session]);
+  // Find the session based on ID
+  const session = sessions.find((s) => s.id === sessionId);
   
   if (!session) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold mb-4">Session not found</h1>
-          <button
-            onClick={() => navigate('/')}
-            className="py-2 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md"
-          >
-            Go Home
-          </button>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">{t('session_not_found')}</h1>
+          <Button onClick={() => navigate('/')}>{t('back_to_home')}</Button>
         </div>
       </div>
     );
   }
   
-  const isCompleted = !session.isActive && session.cashOut !== undefined;
-  let profit = 0;
-  let profitClass = '';
-  
-  if (isCompleted && session.cashOut !== undefined) {
-    profit = session.cashOut - session.buyIn;
-    profitClass = profit >= 0 ? 'text-green-500' : 'text-poker-red';
-  }
-  
-  const calculateAdditionalBuyins = () => {
-    if (session.initialBuyIn) {
-      return session.buyIn - session.initialBuyIn;
-    }
-    
-    let additional = 0;
-    
-    if (session.rebuys && session.rebuys > 0) {
-      additional += ((session.rebuys || 0) * (session.tournamentBuyIn || session.buyIn / session.rebuys));
-    }
-    
-    if (session.addOns && session.addOns > 0) {
-      additional += ((session.addOns || 0) * (session.tournamentBuyIn || session.buyIn / session.addOns));
-    }
-    
-    return additional;
-  };
-  
-  const additionalBuyins = calculateAdditionalBuyins();
-  const initialBuyIn = session.initialBuyIn || (session.buyIn - additionalBuyins);
-  
-  const handleSaveEdit = () => {
-    if (!session) return;
-    
-    const updatedSession = {
-      ...session,
-      location: formData.location,
-      buyIn: parseFloat(formData.buyIn),
-      smallBlind: parseFloat(formData.smallBlind),
-      bigBlind: parseFloat(formData.bigBlind),
-      gameType: formData.gameType as 'NLH' | 'PLO',
-      format: formData.format as 'Cash' | 'Tournament',
-      notes: formData.notes
-    };
-    
-    updateSession(updatedSession);
-    setIsEditing(false);
-  };
-  
-  const handleEndSession = () => {
-    if (!session || !cashOutAmount) return;
-    
-    endSession(session.id, parseFloat(cashOutAmount));
-    setShowEndSessionModal(false);
-    navigate('/');
-  };
-  
-  const handleDelete = () => {
-    if (!session) return;
-    
+  const handleDeleteSession = () => {
     deleteSession(session.id);
-    setShowDeleteModal(false);
+    toast({
+      title: t('session_deleted'),
+      description: t('session_deleted_desc'),
+    });
     navigate('/');
   };
   
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleUpdateNotes = () => {
+    updateSession(session.id, { notes });
+    setShowNotesDialog(false);
+    toast({
+      title: t('success'),
+      description: t('notes_updated'),
+    });
   };
   
-  const handleGoBack = () => {
-    navigate('/');
+  const openNotesDialog = () => {
+    setNotes(session.notes || '');
+    setShowNotesDialog(true);
   };
   
-  const formattedDate = format(new Date(session.startTime), 'MMM d, yyyy h:mm a');
-  const formattedEndDate = session.endTime 
-    ? format(new Date(session.endTime), 'MMM d, yyyy h:mm a')
-    : null;
-    
-  const calculateDuration = () => {
-    if (!session.endTime) return null;
-    
-    const start = new Date(session.startTime);
-    const end = new Date(session.endTime);
-    const hours = differenceInHours(end, start);
-    const minutes = differenceInMinutes(end, start) % 60;
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    }
-    return `${minutes}m`;
-  };
-  
-  const sessionDuration = session.endTime ? calculateDuration() : null;
+  // Format the date string
+  const formattedDate = format(new Date(session.startTime), 'PPP');
   
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto max-w-3xl px-4 py-8">
+      <div className="container mx-auto max-w-md px-4 py-8">
         <header className="mb-8">
-          <Button 
-            onClick={handleGoBack} 
-            variant="ghost" 
-            className="text-poker-feltGreen mb-4 flex items-center p-0 hover:bg-transparent"
+          <button 
+            onClick={() => navigate(-1)} 
+            className="text-poker-feltGreen mb-4 flex items-center"
           >
-            ← Back
-          </Button>
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-serif font-bold">
-              {isEditing ? "Edit Session" : session.location}
-            </h1>
-            {!isEditing && (
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => setIsEditing(true)}
-                  className="text-sm py-1 px-3 border border-gray-300 rounded"
-                >
-                  Edit
-                </button>
-                <button 
-                  onClick={() => setShowDeleteModal(true)}
-                  className="text-sm py-1 px-3 border border-red-300 text-poker-red rounded"
-                >
-                  Delete
-                </button>
+            <Icon name="ArrowLeft" size={16} className="mr-1 icon-flip-rtl" />
+            <span>{t('back')}</span>
+          </button>
+          
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight">{session.location}</h1>
+              <p className="text-gray-500">{formattedDate}</p>
+              <div className="flex mt-1">
+                <span className="text-sm bg-gray-100 px-2 py-0.5 rounded mr-2 rtl-fix-padding">
+                  {session.gameType}
+                </span>
+                <span className="text-sm bg-gray-100 px-2 py-0.5 rounded rtl-fix-padding">
+                  {session.format}
+                </span>
               </div>
-            )}
+            </div>
+            
+            <div className="flex space-x-2 rtl-component-fix">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={openNotesDialog}
+                className="flex items-center"
+              >
+                <Icon name="Edit" size={14} className="mr-1" /> {t('edit')}
+              </Button>
+              
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => setShowDeleteDialog(true)}
+                className="flex items-center"
+              >
+                <Icon name="Trash2" size={14} className="mr-1" /> {t('delete')}
+              </Button>
+            </div>
           </div>
         </header>
         
-        {isEditing ? (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2" htmlFor="location">
-                Location
-              </label>
-              <input
-                id="location"
-                name="location"
-                type="text"
-                value={formData.location}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md"
-              />
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Game Type</label>
-              <select
-                name="gameType"
-                value={formData.gameType}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md"
-              >
-                <option value="NLH">No Limit Hold'em</option>
-                <option value="PLO">Pot Limit Omaha</option>
-              </select>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Format</label>
-              <select
-                name="format"
-                value={formData.format}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md"
-              >
-                <option value="Cash">Cash Game</option>
-                <option value="Tournament">Tournament</option>
-              </select>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2" htmlFor="buyin">
-                Buy-in Amount
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <span className="text-gray-500">$</span>
-                </div>
-                <input
-                  id="buyin"
-                  name="buyIn"
-                  type="number"
-                  value={formData.buyIn}
-                  onChange={handleChange}
-                  className="w-full p-3 pl-8 border border-gray-300 rounded-md"
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-            </div>
-            
-            <div className="mb-4 grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-gray-700 mb-2" htmlFor="smallBlind">
-                  Small Blind
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <span className="text-gray-500">$</span>
-                  </div>
-                  <input
-                    id="smallBlind"
-                    name="smallBlind"
-                    type="number"
-                    value={formData.smallBlind}
-                    onChange={handleChange}
-                    className="w-full p-3 pl-8 border border-gray-300 rounded-md"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-gray-700 mb-2" htmlFor="bigBlind">
-                  Big Blind
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <span className="text-gray-500">$</span>
-                  </div>
-                  <input
-                    id="bigBlind"
-                    name="bigBlind"
-                    type="number"
-                    value={formData.bigBlind}
-                    onChange={handleChange}
-                    className="w-full p-3 pl-8 border border-gray-300 rounded-md"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="mb-6">
-              <label className="block text-gray-700 mb-2" htmlFor="notes">
-                Notes
-              </label>
-              <Textarea
-                id="notes"
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                placeholder="Add session notes here..."
-                className="min-h-[100px]"
-              />
-            </div>
-            
-            <div className="flex gap-3">
-              <button
-                onClick={handleSaveEdit}
-                className="flex-1 py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md"
-              >
-                Save Changes
-              </button>
-              
-              <button
-                onClick={() => setIsEditing(false)}
-                className="flex-1 py-3 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-md"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+        {session.tables && session.tables.length > 0 ? (
+          session.tables.map((table) => (
+            <TableDetailsCard key={table.id} table={table} />
+          ))
         ) : (
-          <>
-            {session.isActive && (
-              <SessionTimerCard
-                startTime={session.startTime}
-                gameType={session.gameType}
-                format={session.format}
-                smallBlind={session.smallBlind}
-                bigBlind={session.bigBlind}
-                onEndSession={() => setShowEndSessionModal(true)}
-              />
-            )}
-            
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <span className="text-sm text-gray-500">Started</span>
-                  <p className="font-medium">{formattedDate}</p>
-                </div>
-                
-                {sessionDuration && (
-                  <div className="text-center">
-                    <span className="text-sm text-gray-500">Duration</span>
-                    <p className="font-medium">{sessionDuration}</p>
-                  </div>
-                )}
-                
-                {formattedEndDate && (
-                  <div className="text-right">
-                    <span className="text-sm text-gray-500">Ended</span>
-                    <p className="font-medium">{formattedEndDate}</p>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex flex-col gap-4 mb-6">
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Game:</span>
-                  <span className="font-medium">{session.gameType}</span>
-                </div>
-                
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Format:</span>
-                  <span className="font-medium">{session.format}</span>
-                </div>
-                
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Buy-in:</span>
-                  <span className="font-medium">
-                    ${initialBuyIn.toFixed(2)}
-                    {additionalBuyins > 0 && (
-                      <span className="text-gray-600"> (+${additionalBuyins.toFixed(2)})</span>
-                    )}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Re-Buys:</span>
-                  <span className="font-medium">{session.rebuys}</span>
-                </div>
-                
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Blinds:</span>
-                  <span className="font-medium">${session.smallBlind || 0}/${session.bigBlind || 0}</span>
-                </div>
-                
-                {isCompleted && session.cashOut !== undefined && (
-                  <>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-500">Cash out:</span>
-                      <span className="font-medium">${session.cashOut.toFixed(2)}</span>
-                    </div>
-                    
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-500">Profit/Loss:</span>
-                      <span className={`font-bold ${profitClass}`}>
-                        {profit > 0 ? '+' : ''}{profit.toFixed(2)}
-                      </span>
-                    </div>
-                    
-                    {session.notes && (
-                      <div className="flex flex-col py-2 border-b">
-                        <span className="text-gray-500 mb-1">Session Notes:</span>
-                        <p className="text-sm bg-gray-50 p-3 rounded">{session.notes}</p>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-              
-              {session.isActive && (
-                <button
-                  onClick={() => setShowEndSessionModal(true)}
-                  className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md"
-                >
-                  End Session
-                </button>
-              )}
-            </div>
-            
-            {!session.isActive && Array.isArray(session.tables) && session.tables.length > 0 && (
-              <div className="mb-6">
-                <h2 className="text-lg font-bold mb-4">Tables Played</h2>
-                {session.tables.map(table => {
-                  return (
-                    <TableDetailsCard key={table.id} table={table} />
-                  );
-                })}
-              </div>
-            )}
-            
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <HandManagementPanel 
-                sessionId={session.id} 
-                hands={session.hands || []}
-              />
-            </div>
-          </>
+          <SessionStatsCard session={session} />
         )}
+        
+        {session.hands && session.hands.length > 0 && (
+          <div className="mb-8">
+            <h2 className="font-extrabold text-xl tracking-tight mb-4">{t('hands')}</h2>
+            <HandsList hands={session.hands} />
+          </div>
+        )}
+        
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-extrabold text-xl tracking-tight">{t('notes')}</h2>
+            <Button variant="ghost" size="sm" onClick={openNotesDialog}>
+              <Icon name="Edit" size={14} className="mr-1" /> {t('edit')}
+            </Button>
+          </div>
+          {session.notes ? (
+            <div className="bg-white p-4 rounded-lg shadow">
+              <p className="whitespace-pre-wrap">{session.notes}</p>
+            </div>
+          ) : (
+            <div className="bg-white p-4 rounded-lg shadow text-center text-gray-500">
+              <p>{t('no_notes')}</p>
+              <Button 
+                variant="ghost" 
+                className="mt-2 text-poker-feltGreen"
+                onClick={openNotesDialog}
+              >
+                {t('add_notes')}
+              </Button>
+            </div>
+          )}
+        </div>
+        
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('confirm_delete')}</DialogTitle>
+              <DialogDescription>
+                {t('delete_session_warning')}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                {t('cancel')}
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteSession}>
+                {t('delete')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Notes Dialog */}
+        <Dialog open={showNotesDialog} onOpenChange={setShowNotesDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('edit_session_notes')}</DialogTitle>
+            </DialogHeader>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="min-h-[200px]"
+              placeholder={t('session_notes_placeholder')}
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowNotesDialog(false)}>
+                {t('cancel')}
+              </Button>
+              <Button onClick={handleUpdateNotes}>
+                {t('save')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-      
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Delete Session</h2>
-            <p className="mb-6">Are you sure you want to delete this session? This action cannot be undone.</p>
-            
-            <div className="flex gap-4">
-              <button
-                onClick={handleDelete}
-                className="flex-1 py-2 px-4 bg-poker-red hover:bg-red-700 text-white font-bold rounded-md"
-              >
-                Delete
-              </button>
-              
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-md"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {showEndSessionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">End Session</h2>
-            <p className="mb-4">Please enter your cash out amount:</p>
-            
-            <div className="mb-6">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <span className="text-gray-500">$</span>
-                </div>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  className="w-full p-3 pl-8 border border-gray-300 rounded-md"
-                  value={cashOutAmount}
-                  onChange={(e) => setCashOutAmount(e.target.value)}
-                  min="0"
-                  step="0.01"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="mb-6">
-              <label className="block text-gray-700 mb-2" htmlFor="notes">Session Notes</label>
-              <textarea
-                id="notes"
-                placeholder="How did your session go? Note any significant hands, reads, or things to improve..."
-                className="w-full p-3 border border-gray-300 rounded-md min-h-[100px]"
-                value={session.notes || ''}
-                onChange={(e) => {
-                  if (session) {
-                    const updatedSession = {
-                      ...session,
-                      notes: e.target.value
-                    };
-                    updateSession(updatedSession);
-                  }
-                }}
-              ></textarea>
-            </div>
-            
-            <div className="flex gap-4">
-              <button
-                onClick={handleEndSession}
-                className="flex-1 py-2 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md"
-                disabled={!cashOutAmount}
-              >
-                End Session
-              </button>
-              
-              <button
-                onClick={() => setShowEndSessionModal(false)}
-                className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-md"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
-}
+};
+
+export default SessionDetail;

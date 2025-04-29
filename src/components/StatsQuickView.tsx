@@ -1,8 +1,10 @@
 
 import { useSessionContext } from '@/context/SessionContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function StatsQuickView() {
   const { sessions } = useSessionContext();
+  const { t } = useLanguage();
   
   // Calculate stats
   const totalSessions = sessions.filter(s => !s.isActive).length;
@@ -38,21 +40,21 @@ export default function StatsQuickView() {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-      <h2 className="text-xl font-extrabold tracking-tight mb-4 text-center">Session Stats</h2>
+      <h2 className="text-xl font-extrabold tracking-tight mb-4 text-center">{t('session_stats')}</h2>
       
       <div className="grid grid-cols-3 gap-4 text-center">
         <div className="flex flex-col">
-          <span className="text-gray-500 text-sm">Sessions</span>
+          <span className="text-gray-500 text-sm">{t('sessions')}</span>
           <span className="text-lg font-bold">{totalSessions}</span>
         </div>
         
         <div className="flex flex-col">
-          <span className="text-gray-500 text-sm">Record</span>
+          <span className="text-gray-500 text-sm">{t('record')}</span>
           <span className="text-lg font-bold">{wins}W - {losses}L</span>
         </div>
         
         <div className="flex flex-col">
-          <span className="text-gray-500 text-sm">Net Profit</span>
+          <span className="text-gray-500 text-sm">{t('net_profit')}</span>
           <span className={`text-lg font-bold ${profitClass}`}>
             ${formattedProfit}
           </span>

@@ -40,6 +40,9 @@ const translations: Translations = {
     "copied": "Copied",
     "share": "Share",
     "submit": "Submit",
+    "active": "ACTIVE",
+    "minutes": "minutes",
+    "hands": "Hands",
 
     // Navigation
     "home": "Home",
@@ -50,6 +53,7 @@ const translations: Translations = {
     "tables": "Tables",
     "stats": "Stats",
     "history": "History",
+    "session_history": "Session History",
     
     // Auth
     "login": "Log In",
@@ -95,6 +99,8 @@ const translations: Translations = {
     "current_plan": "Current Plan",
     "student_slots": "Student Slots",
     "support_request": "Submit Support Request",
+    "legal_information": "Legal Information",
+    "review_terms_policies": "Review our terms and policies",
     "terms_of_service": "Terms of Service",
     "privacy_policy": "Privacy Policy",
     
@@ -132,6 +138,21 @@ const translations: Translations = {
     "starting_bbs": "Starting BBs",
     "start": "Start",
     "end": "End",
+    "no_sessions_yet": "No sessions yet. Start tracking your first poker session!",
+    "no_sessions_found": "No sessions found. Adjust your filters or start a new session.",
+    "delete_session_warning": "This action cannot be undone. This will permanently delete the session and all related data.",
+    "confirm_delete": "Confirm Delete",
+    "session_not_found": "Session not found",
+    "back_to_home": "Back to Home",
+    "session_deleted": "Session Deleted",
+    "session_deleted_desc": "The session has been permanently deleted.",
+    "notes_updated": "Notes Updated",
+    "edit_session_notes": "Edit Session Notes",
+    "session_notes_placeholder": "Add notes about your session here...",
+    "no_notes": "No notes added yet.",
+    "add_notes": "Add Notes",
+    "cash_games_amount": "Cash Games Amount",
+    "tournaments_amount": "Tournaments Amount",
     
     // Coach-Student System
     "coach_profile": "Coach Profile",
@@ -160,6 +181,8 @@ const translations: Translations = {
     "enter_focus_mode": "Enter Focus Mode",
     "exit_focus_mode": "Exit Focus Mode",
     "poker_tips": "Poker Tips",
+    "focus_mode_description": "Select how long you want to stay in focus mode.",
+    "focus_mode_warning": "Your phone will be locked in focus mode for the selected duration to help you concentrate on your game.",
     
     // Error Messages
     "error_required_field": "This field is required",
@@ -169,13 +192,26 @@ const translations: Translations = {
     "storage_issue": "Storage Issue",
     "profile_update_no_persist": "Profile updated, but changes may not persist after logout.",
     
-    // Added translations for SupportSettings
-    "legal_information": "Legal Information",
-    "review_terms_policies": "Review our terms and policies",
-    
     // Added translations for StudentSettings
     "disconnect_confirmation": "Are you sure you want to disconnect from this coach? This will remove your connection with them.",
-    "upgrade_to_coach_description": "Upgrade your account to become a coach and start helping other players improve their game"
+    "upgrade_to_coach_description": "Upgrade your account to become a coach and start helping other players improve their game",
+    "coaching": "Coaching",
+    "player_dashboard": "Player Dashboard",
+    "session_ended": "Session Ended",
+    "session_ended_success": "Your poker session has been successfully recorded.",
+    "rebuy_added": "Rebuy Added",
+    "rebuy_added_description": "rebuy has been added to your session.",
+    "no_active_session": "No active session",
+    "no_active_session_description": "There is no active poker session at the moment.",
+    "return_to_home": "Return to Home",
+    "enter_cash_out_amount": "Enter your cash out amount to complete your session.",
+    "confirm_exit_focus_mode": "Are you sure you want to exit Focus Mode?",
+    "strategic_tips": "Strategic Tips",
+    "focus_mode_description_active": "Stay focused on your game and avoid distractions",
+    "emergency_unlock": "Emergency Unlock",
+    "all_games": "All Games",
+    "all_formats": "All Formats",
+    "location": "Location",
   },
   
   he: {
@@ -205,6 +241,9 @@ const translations: Translations = {
     "copied": "הועתק",
     "share": "שתף",
     "submit": "שלח",
+    "active": "פעיל",
+    "minutes": "דקות",
+    "hands": "ידיים",
 
     // Navigation
     "home": "בית",
@@ -215,6 +254,7 @@ const translations: Translations = {
     "tables": "שולחנות",
     "stats": "סטטיסטיקות",
     "history": "היסטוריה",
+    "session_history": "היסטורית סשנים",
     
     // Auth
     "login": "התחבר",
@@ -260,6 +300,8 @@ const translations: Translations = {
     "current_plan": "תכנית נוכחית",
     "student_slots": "מקומות תלמידים",
     "support_request": "שלח בקשת תמיכה",
+    "legal_information": "מידע משפטי",
+    "review_terms_policies": "עיין בתנאים ובמדיניות שלנו",
     "terms_of_service": "תנאי שימוש",
     "privacy_policy": "מדיניות פרטיות",
     
@@ -297,6 +339,21 @@ const translations: Translations = {
     "starting_bbs": "בליינדים התחלתיים",
     "start": "התחלה",
     "end": "סיום",
+    "no_sessions_yet": "אין סשנים עדיין. התחל לעקוב אחר סשן הפוקר הראשון שלך!",
+    "no_sessions_found": "לא נמצאו סשנים. התאם את הסינון או התחל סשן חדש.",
+    "delete_session_warning": "פעולה זו אינה ניתנת לביטול. פעולה זו תמחק לצמיתות את הסשן ואת כל הנתונים הקשורים אליו.",
+    "confirm_delete": "אישור מחיקה",
+    "session_not_found": "הסשן לא נמצא",
+    "back_to_home": "חזרה לדף הבית",
+    "session_deleted": "הסשן נמחק",
+    "session_deleted_desc": "הסשן נמחק לצמיתות.",
+    "notes_updated": "הערות עודכנו",
+    "edit_session_notes": "ערוך הערות סשן",
+    "session_notes_placeholder": "הוסף הערות על הסשן כאן...",
+    "no_notes": "טרם נוספו הערות.",
+    "add_notes": "הוסף הערות",
+    "cash_games_amount": "כמות משחקי קופה",
+    "tournaments_amount": "כמות טורנירים",
     
     // Coach-Student System
     "coach_profile": "פרופיל מאמן",
@@ -325,6 +382,8 @@ const translations: Translations = {
     "enter_focus_mode": "כנס למצב ריכוז",
     "exit_focus_mode": "צא ממצב ריכוז",
     "poker_tips": "טיפים לפוקר",
+    "focus_mode_description": "בחר למשך כמה זמן ברצונך להישאר במצב ריכוז.",
+    "focus_mode_warning": "הטלפון שלך יהיה נעול במצב ריכוז למשך הזמן שבחרת כדי לעזור לך להתרכז במשחק.",
     
     // Error Messages
     "error_required_field": "שדה זה הוא חובה",
@@ -334,13 +393,26 @@ const translations: Translations = {
     "storage_issue": "בעיית אחסון",
     "profile_update_no_persist": "הפרופיל עודכן, אך השינויים עשויים לא להישמר אחרי התנתקות.",
     
-    // Added translations for SupportSettings
-    "legal_information": "מידע משפטי",
-    "review_terms_policies": "עיין בתנאים ובמדיניות שלנו",
-    
     // Added translations for StudentSettings
     "disconnect_confirmation": "האם אתה בטוח שברצונך להתנתק ממאמן זה? פעולה זו תסיר את החיבור ביניכם.",
-    "upgrade_to_coach_description": "שדרג את החשבון שלך כדי להפוך למאמן ולהתחיל לעזור לשחקנים אחרים לשפר את המשחק שלהם"
+    "upgrade_to_coach_description": "שדרג את החשבון שלך כדי להפוך למאמן ולהתחיל לעזור לשחקנים אחרים לשפר את המשחק שלהם",
+    "coaching": "אימון",
+    "player_dashboard": "לוח בקרת שחקן",
+    "session_ended": "הסשן הסתיים",
+    "session_ended_success": "סשן הפוקר שלך נרשם בהצלחה.",
+    "rebuy_added": "ריבאי נוסף",
+    "rebuy_added_description": "ריבאי נוסף לסשן שלך.",
+    "no_active_session": "אין סשן פעיל",
+    "no_active_session_description": "אין כרגע סשן פוקר פעיל.",
+    "return_to_home": "חזור לדף הבית",
+    "enter_cash_out_amount": "הזן את סכום הפדיון שלך כדי להשלים את הסשן.",
+    "confirm_exit_focus_mode": "האם אתה בטוח שברצונך לצאת ממצב הריכוז?",
+    "strategic_tips": "טיפים אסטרטגיים",
+    "focus_mode_description_active": "התרכז במשחק שלך והימנע מהסחות דעת",
+    "emergency_unlock": "שחרור חירום",
+    "all_games": "כל המשחקים",
+    "all_formats": "כל הפורמטים",
+    "location": "מיקום",
   }
 };
 

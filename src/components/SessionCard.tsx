@@ -1,7 +1,9 @@
+
 import { PokerSession, TableData } from '@/types/poker';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import TableCountBubble from './poker/TableCountBubble';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface SessionCardProps {
   session: PokerSession;
@@ -9,6 +11,7 @@ interface SessionCardProps {
 
 export default function SessionCard({ session }: SessionCardProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
   // Calculate profit/loss
   const isCompleted = !session.isActive && session.cashOut !== undefined;
@@ -60,7 +63,7 @@ export default function SessionCard({ session }: SessionCardProps) {
         </div>
         {session.isActive ? (
           <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
-            ACTIVE
+            {t('active')}
           </span>
         ) : (
           <span className={`text-lg font-bold ${profitClass}`}>

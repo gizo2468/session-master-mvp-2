@@ -1,54 +1,68 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
-import { useCoachStudent } from '@/context/CoachStudentContext';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 const CoachingNav = () => {
-  const { pendingRequests } = useCoachStudent();
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   
-  // Return null if we don't have a user yet
+  const isCoach = user?.role === 'coach';
+  
   if (!user) return null;
   
-  // Show different navigation based on user role
   return (
-    <div className="mt-8">
-      <Separator className="my-4" />
-      <div className="flex justify-center">
-        {user.role === 'coach' ? (
-          <Link to="/coach-profile">
+    <Card className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 className="font-extrabold text-xl tracking-tight mb-4">{t('coaching')}</h2>
+      
+      <div className="grid grid-cols-2 gap-4">
+        {isCoach ? (
+          <>
             <Button 
-              variant="poker" 
-              size="sm" 
-              className="flex items-center gap-2"
+              variant="outline" 
+              className="flex flex-col items-center justify-center py-6 h-auto"
+              onClick={() => navigate('/coach-profile')}
             >
-              <Icon name="User" size={16} />
-              Coach Profile
-              {pendingRequests.length > 0 && (
-                <span className="bg-white text-poker-feltGreen text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {pendingRequests.length}
-                </span>
-              )}
+              <Icon name="Users" className="h-6 w-6 mb-2" />
+              <span>{t('coach_profile')}</span>
             </Button>
-          </Link>
+            
+            <Button 
+              variant="outline" 
+              className="flex flex-col items-center justify-center py-6 h-auto"
+              onClick={() => navigate('/coach-dashboard')}
+            >
+              <Icon name="LayoutDashboard" className="h-6 w-6 mb-2" />
+              <span>{t('coach_dashboard')}</span>
+            </Button>
+          </>
         ) : (
-          <Link to="/player-dashboard">
+          <>
             <Button 
-              variant="poker" 
-              size="sm" 
-              className="flex items-center gap-2"
+              variant="outline" 
+              className="flex flex-col items-center justify-center py-6 h-auto"
+              onClick={() => navigate('/player-dashboard')}
             >
-              <Icon name="User" size={16} />
-              Player Dashboard
+              <Icon name="LayoutDashboard" className="h-6 w-6 mb-2" />
+              <span>{t('player_dashboard')}</span>
             </Button>
-          </Link>
+            
+            <Button 
+              variant="outline" 
+              className="flex flex-col items-center justify-center py-6 h-auto"
+              onClick={() => navigate('/connect-coach')}
+            >
+              <Icon name="UserPlus" className="h-6 w-6 mb-2" />
+              <span>{t('connect_with_coach')}</span>
+            </Button>
+          </>
         )}
       </div>
-    </div>
+    </Card>
   );
 };
 
