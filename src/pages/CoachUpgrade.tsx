@@ -83,7 +83,7 @@ const CoachUpgrade = () => {
                   <ul className="space-y-2">
                     {plan.features.map((feature, i) => (
                       <li key={i} className="flex items-center">
-                        <Icon name="Check" className="h-4 w-4 mr-2 text-poker-gold" />
+                        <Icon name="check" className="h-4 w-4 mr-2 text-poker-gold" />
                         <span className="text-sm">{feature}</span>
                       </li>
                     ))}
@@ -113,7 +113,7 @@ const CoachUpgrade = () => {
           </p>
           {currentTier === 'free' && (
             <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 p-3 rounded-md">
-              <Icon name="AlertTriangle" size={16} />
+              <Icon name="alert-triangle" size={16} />
               <span>
                 Free plan is limited to {coachTiers.free.maxStudents} students and basic management features only.
               </span>

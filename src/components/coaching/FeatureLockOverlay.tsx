@@ -13,18 +13,20 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({ featureName }) 
   
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-md backdrop-blur-sm z-10">
-      <div className="text-center p-4">
-        <div className="mb-3 text-white">
-          <Icon name="Lock" size={32} className="mx-auto mb-2" />
-          <h3 className="text-lg font-bold">{featureName} Locked</h3>
-          <p className="text-sm opacity-80">Upgrade your coach tier to access this feature</p>
+      <div className="text-center p-6 max-w-xs">
+        <div className="mb-4 text-white">
+          <Icon name="lock" size={36} className="mx-auto mb-3" />
+          <h3 className="text-xl font-bold">{featureName} Locked</h3>
+          <p className="text-sm opacity-90 mt-2">
+            Upgrade your coach tier to access this feature and unlock all coaching tools
+          </p>
         </div>
         <Button 
-          variant="poker" 
-          size="sm" 
+          variant="default" 
           onClick={() => navigate('/coach-upgrade')}
-          className="mt-2"
+          className="mt-3 bg-poker-gold hover:bg-poker-darkGold"
         >
+          <Icon name="package-plus" size={16} className="mr-2" />
           Upgrade Now
         </Button>
       </div>

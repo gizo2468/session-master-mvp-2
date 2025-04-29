@@ -3,17 +3,31 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useCoachStudent } from '@/context/CoachStudentContext';
+import { useAuth } from '@/context/AuthContext';
 import Icon from '@/components/ui/Lucide';
 import GenerateCodeButton from '@/components/coaching/GenerateCodeButton';
 import ConnectionCodeDisplay from '@/components/coaching/ConnectionCodeDisplay';
 import PendingRequestsList from '@/components/coaching/PendingRequestsList';
 import StudentsList from '@/components/coaching/StudentsList';
 import CreateCoachProfileForm from '@/components/coaching/CreateCoachProfileForm';
+import { coachTiers, hasFeatureAccess, isAtStudentLimit, getMaxStudents } from '@/utils/coachTiers';
+import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
+import { Progress } from '@/components/ui/progress';
 
 const CoachProfile = () => {
   const navigate = useNavigate();
-  const { isCoach, coachProfile } = useCoachStudent();
+  const { isCoach, coachProfile, students } = useCoachStudent();
+  const { user } = useAuth();
+  
+  // Get coach tier information
+  const coachTier = user?.coachTier || 'free';
+  const tierDetails = coachTiers[coachTier];
+  const studentCount = students.length;
+  const maxStudents = getMaxStudents(coachTier);
+  const studentPercentage = maxStudents > 0 ? (studentCount / maxStudents) * 100 : 0;
+  const atStudentLimit = isAtStudentLimit(coachTier, studentCount);
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -44,29 +58,76 @@ const CoachProfile = () => {
         
         {isCoach && coachProfile && (
           <div>
+            {/* Coach tier info card */}
             <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="text-xl">{coachProfile.displayName}</CardTitle>
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-xl">{coachProfile.displayName}</CardTitle>
+                  <Badge className={`${coachTier === 'free' ? 'bg-gray-500' : 'bg-poker-gold'}`}>
+                    {tierDetails.name}
+                  </Badge>
+                </div>
                 {coachProfile.bio && (
                   <CardDescription>{coachProfile.bio}</CardDescription>
                 )}
               </CardHeader>
               <CardContent>
-                <GenerateCodeButton />
-                {coachProfile.students.length > 0 && (
-                  <Button 
-                    onClick={() => navigate('/coach-dashboard')}
-                    variant="outline"
-                    className="w-full mt-2"
-                  >
-                    Go to Coach Dashboard
-                  </Button>
-                )}
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Student Capacity</span>
+                      <span className={atStudentLimit ? "text-red-600 font-medium" : ""}>
+                        {studentCount} / {maxStudents} students
+                      </span>
+                    </div>
+                    <Progress 
+                      value={studentPercentage} 
+                      className={`h-2 ${
+                        studentPercentage > 90 ? 'bg-red-100' : 
+                        studentPercentage > 70 ? 'bg-amber-100' : 'bg-gray-100'
+                      }`} 
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <GenerateCodeButton />
+                    {coachTier === 'free' && (
+                      <Button 
+                        onClick={() => navigate('/coach-upgrade')}
+                        variant="default"
+                        className="w-full bg-poker-gold hover:bg-poker-darkGold"
+                      >
+                        <Icon name="package-plus" size={16} className="mr-2" />
+                        Upgrade Plan
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {coachProfile.students.length > 0 && (
+                    <Button 
+                      onClick={() => navigate('/coach-dashboard')}
+                      variant="outline"
+                      className="w-full mt-2"
+                    >
+                      Go to Coach Dashboard
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
             
-            <ConnectionCodeDisplay />
+            {/* Connection Code Component wrapped with overlay if at student limit */}
+            <div className="relative">
+              <ConnectionCodeDisplay />
+              {atStudentLimit && (
+                <FeatureLockOverlay featureName="Additional Students" />
+              )}
+            </div>
+            
+            {/* Pending Requests Component */}
             <PendingRequestsList />
+            
+            {/* Students List Component */}
             <StudentsList />
           </div>
         )}

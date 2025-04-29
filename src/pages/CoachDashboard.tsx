@@ -12,6 +12,7 @@ import LiveSessionIndicators from '@/components/coaching/LiveSessionIndicators';
 import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
 import { coachTiers, hasFeatureAccess, getMaxStudents } from '@/utils/coachTiers';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 const CoachDashboard = () => {
   const navigate = useNavigate();
@@ -34,6 +35,8 @@ const CoachDashboard = () => {
   const hasStudentManagement = true; // Free tier has this
   const hasFeedbackAccess = hasFeatureAccess(user.role, coachTier, 'Session Feedback');
   const hasAnalyticsAccess = hasFeatureAccess(user.role, coachTier, 'Advanced Analytics');
+  const hasCommentTagging = hasFeatureAccess(user.role, coachTier, 'Comment Tagging');
+  const hasNotifications = hasFeatureAccess(user.role, coachTier, 'Notification System');
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -59,12 +62,12 @@ const CoachDashboard = () => {
             >
               {coachTier === 'free' ? (
                 <>
-                  <Icon name="Star" size={16} />
+                  <Icon name="package-plus" size={16} />
                   <span>Upgrade</span>
                 </>
               ) : (
                 <>
-                  <Icon name="Star" size={16} />
+                  <Icon name="badge-check" size={16} />
                   <span>{tierDetails.name}</span>
                 </>
               )}
@@ -81,6 +84,9 @@ const CoachDashboard = () => {
                 <span className={`${coachTier === 'free' ? 'text-gray-700' : 'text-poker-gold font-medium'}`}>
                   {tierDetails.name}
                 </span>
+                {coachTier !== 'free' && (
+                  <Badge className="bg-poker-gold ml-2">Paid</Badge>
+                )}
               </div>
               <div className="text-sm text-gray-600">
                 Students: {studentCount} / {maxStudents}
@@ -97,12 +103,12 @@ const CoachDashboard = () => {
               <div className="text-xs text-gray-500">
                 {coachTier === 'free' ? (
                   <span className="flex items-center gap-1">
-                    <Icon name="AlertCircle" size={14} />
+                    <Icon name="alert-circle" size={14} />
                     Limited features available
                   </span>
                 ) : (
                   <span className="flex items-center gap-1">
-                    <Icon name="Check" size={14} className="text-poker-gold" />
+                    <Icon name="check" size={14} className="text-poker-gold" />
                     Full access to coach features
                   </span>
                 )}
@@ -121,10 +127,11 @@ const CoachDashboard = () => {
         </Card>
         
         <div className="grid grid-cols-1 gap-6 mb-6">
+          {/* Student Management - Always available */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Icon name="Users" />
+                <Icon name="users" />
                 <span>Student Management</span>
               </CardTitle>
             </CardHeader>
@@ -133,11 +140,12 @@ const CoachDashboard = () => {
             </CardContent>
           </Card>
           
+          {/* Live Sessions - Locked for free tier */}
           <div className="relative">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Icon name="Activity" />
+                  <Icon name="activity" />
                   <span>Live Sessions</span>
                 </CardTitle>
               </CardHeader>
@@ -150,11 +158,12 @@ const CoachDashboard = () => {
             )}
           </div>
           
+          {/* Recent Feedback - Locked for free tier */}
           <div className="relative">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Icon name="MessageSquare" />
+                  <Icon name="message-square" />
                   <span>Recent Feedback</span>
                 </CardTitle>
               </CardHeader>
