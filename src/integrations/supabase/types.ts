@@ -52,21 +52,30 @@ export type Database = {
         Row: {
           created_at: string
           end_time: string
+          game_type: string | null
           id: string
+          notes: string | null
+          session_type: string | null
           start_time: string
           user_id: string
         }
         Insert: {
           created_at?: string
           end_time: string
+          game_type?: string | null
           id?: string
+          notes?: string | null
+          session_type?: string | null
           start_time: string
           user_id?: string
         }
         Update: {
           created_at?: string
           end_time?: string
+          game_type?: string | null
           id?: string
+          notes?: string | null
+          session_type?: string | null
           start_time?: string
           user_id?: string
         }

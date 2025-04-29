@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
@@ -147,7 +148,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         await supabase.from('sessions').insert({
           user_id: user.id,
           start_time: new Date(session.startTime).toISOString(),
-          end_time: new Date(session.endTime).toISOString()
+          end_time: new Date(session.endTime).toISOString(),
+          session_type: session.format,
+          game_type: session.gameType,
+          notes: session.notes || null
         });
         
         toast({
