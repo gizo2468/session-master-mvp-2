@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,16 @@ import { useLanguage } from '@/context/LanguageContext';
 import Icon from '@/components/ui/Lucide';
 import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
 
 // Mock subscription data
 const mockSubscription = {
@@ -67,10 +77,32 @@ const plans = [
 const BillingSettings: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  
+  const { cancelCoachSubscription } = useAuth();
+  const { toast } = useToast();
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+
   // Handle plan badge click
   const handlePlanBadgeClick = () => {
     navigate('/coach-upgrade');
+  };
+
+  const handleCancelSubscription = async () => {
+    try {
+      await cancelCoachSubscription();
+      setCancelDialogOpen(false);
+      toast({
+        title: t('subscription_cancelled'),
+        description: t('subscription_cancelled_description'),
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error cancelling subscription:", error);
+      toast({
+        title: t('error'),
+        description: t('subscription_cancel_error'),
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -119,6 +151,16 @@ const BillingSettings: React.FC = () => {
                 </div>
               </div>
             </CardContent>
+            <CardFooter className="flex justify-end border-t pt-4">
+              <Button 
+                variant="outline" 
+                className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 flex items-center gap-2"
+                onClick={() => setCancelDialogOpen(true)}
+              >
+                <Icon name="X" size={16} />
+                {t('cancel_subscription')}
+              </Button>
+            </CardFooter>
           </Card>
         </div>
         
@@ -173,6 +215,44 @@ const BillingSettings: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Subscription Cancellation Dialog */}
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{t('cancel_subscription_title')}</DialogTitle>
+            <DialogDescription>
+              {t('cancel_subscription_confirmation')}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="bg-amber-50 border border-amber-200 rounded-md p-3 my-2">
+            <div className="flex gap-2 items-start">
+              <Icon name="AlertTriangle" className="text-amber-600 mt-0.5" size={16} />
+              <span className="text-sm text-amber-800">
+                {t('cancel_subscription_warning')}
+              </span>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-end mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setCancelDialogOpen(false)}
+              className="sm:mt-0"
+            >
+              {t('keep_plan')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelSubscription}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {t('confirm_cancel_subscription')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
