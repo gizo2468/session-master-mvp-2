@@ -6,10 +6,28 @@ import { useNavigate } from 'react-router-dom';
 
 interface FeatureLockOverlayProps {
   featureName: string;
+  isUpgradeButton?: boolean;
 }
 
-const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({ featureName }) => {
+const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({ 
+  featureName, 
+  isUpgradeButton = false 
+}) => {
   const navigate = useNavigate();
+  
+  if (isUpgradeButton) {
+    return (
+      <Button 
+        variant="default" 
+        onClick={() => navigate('/coach-upgrade')}
+        className="bg-poker-gold hover:bg-poker-darkGold ml-2"
+        size="sm"
+      >
+        <Icon name="package-plus" size={16} className="mr-1" />
+        Change Plan
+      </Button>
+    );
+  }
   
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-md backdrop-blur-sm z-10">

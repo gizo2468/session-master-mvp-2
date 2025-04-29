@@ -63,9 +63,13 @@ const CoachProfile = () => {
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-xl">{coachProfile.displayName}</CardTitle>
-                  <Badge className={`${coachTier === 'free' ? 'bg-gray-500' : 'bg-poker-gold'}`}>
-                    {tierDetails.name}
-                  </Badge>
+                  <div className="flex items-center">
+                    <Badge className={`${coachTier === 'free' ? 'bg-gray-500' : 'bg-poker-gold'}`}>
+                      {tierDetails.name}
+                    </Badge>
+                    {/* Always show the Change Plan button */}
+                    {coachTier !== 'elite' && <FeatureLockOverlay featureName="" isUpgradeButton={true} />}
+                  </div>
                 </div>
                 {coachProfile.bio && (
                   <CardDescription>{coachProfile.bio}</CardDescription>
