@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +29,7 @@ interface AuthContextType {
   updateUser: (userData: Partial<User>) => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   upgradeCoachTier: (tier: CoachTier) => void;
+  cancelCoachSubscription: () => Promise<void>; // Add the missing method
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -353,6 +355,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  // Function to cancel coach subscription
+  const cancelCoachSubscription = async (): Promise<void> => {
+    if (!user || user.role !== 'coach') {
+      toast({
+        title: "Cancellation failed",
+        description: "Only coaches with active subscriptions can cancel",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // In a real app, this would call a subscription management API
+    // For this demo, we'll just set the tier back to 'free'
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Set coach tier back to free
+      updateUser({ coachTier: 'free' });
+      
+      // Return success
+      return;
+    } catch (error) {
+      console.error("Error cancelling subscription:", error);
+      throw new Error("Failed to cancel subscription");
+    }
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
@@ -363,6 +393,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUser,
     changePassword,
     upgradeCoachTier,
+    cancelCoachSubscription, // Add the function to the context value
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
