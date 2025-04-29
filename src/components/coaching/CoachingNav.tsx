@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/context/AuthContext';
 
 const CoachingNav = () => {
-  const { isCoach, isStudent, pendingRequests } = useCoachStudent();
+  const { pendingRequests } = useCoachStudent();
   const { user } = useAuth();
   
   // Return null if we don't have a user yet

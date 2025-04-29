@@ -51,15 +51,6 @@ const ConnectCoach = () => {
             
             <CoachConnection />
             <ConnectWithCoach />
-            
-            <div className="mt-10 flex justify-center">
-              <Button 
-                onClick={() => navigate('/coach-profile')}
-                variant="outline"
-              >
-                Switch to Coach View
-              </Button>
-            </div>
           </div>
         )}
       </div>

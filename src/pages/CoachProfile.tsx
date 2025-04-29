@@ -68,15 +68,6 @@ const CoachProfile = () => {
             <ConnectionCodeDisplay />
             <PendingRequestsList />
             <StudentsList />
-            
-            <div className="mt-10 flex justify-center">
-              <Button 
-                onClick={() => navigate('/connect-coach')}
-                variant="outline"
-              >
-                Switch to Student View
-              </Button>
-            </div>
           </div>
         )}
       </div>
