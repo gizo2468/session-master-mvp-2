@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewSessionButton from '@/components/NewSessionButton';
@@ -25,17 +26,20 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-md px-4 py-8">
-        <header className="mb-8 flex justify-between items-center">
-          <Logo className="mb-2" />
+        <header className="mb-8 relative">
+          {/* Settings button positioned absolutely in the top-right */}
           <Button 
             variant="ghost" 
-            size="sm"
+            size="icon"
             onClick={() => navigate('/settings')}
-            className="flex items-center gap-1"
+            className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-gray-600 hover:text-poker-feltGreen"
+            aria-label="Settings"
           >
-            <Icon name="Settings" size={18} />
-            Settings
+            <Icon name="Settings" size={20} />
           </Button>
+          
+          {/* Logo centered in the container */}
+          <Logo className="mb-2 mx-auto" />
         </header>
         
         <div className="flex justify-center mb-10">
