@@ -40,13 +40,13 @@ const Settings: React.FC = () => {
           <Tabs defaultValue="account" dir={dir as "ltr" | "rtl"} className="w-full">
             <div className="border-b">
               <div className="container px-4">
-                <TabsList className="flex w-full overflow-x-auto no-scrollbar">
-                  <TabsTrigger value="account" className="flex-1">{t('account_settings')}</TabsTrigger>
-                  <TabsTrigger value="app" className="flex-1">{t('app_settings')}</TabsTrigger>
-                  {isCoach && <TabsTrigger value="coach" className="flex-1">{t('coach_settings')}</TabsTrigger>}
-                  {isStudent && <TabsTrigger value="student" className="flex-1">{t('student_settings')}</TabsTrigger>}
-                  {isCoach && <TabsTrigger value="billing" className="flex-1">{t('billing')}</TabsTrigger>}
-                  <TabsTrigger value="support" className="flex-1">{t('help')}</TabsTrigger>
+                <TabsList className="w-full py-2 gap-2">
+                  <TabsTrigger value="account">{t('account_settings')}</TabsTrigger>
+                  <TabsTrigger value="app">{t('app_settings')}</TabsTrigger>
+                  {isCoach && <TabsTrigger value="coach">{t('coach_settings')}</TabsTrigger>}
+                  {isStudent && <TabsTrigger value="student">{t('student_settings')}</TabsTrigger>}
+                  {isCoach && <TabsTrigger value="billing">{t('billing')}</TabsTrigger>}
+                  <TabsTrigger value="support">{t('help')}</TabsTrigger>
                 </TabsList>
               </div>
             </div>
