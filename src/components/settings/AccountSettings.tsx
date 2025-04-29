@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +15,7 @@ import Icon from '@/components/ui/Lucide';
 
 const profileFormSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  onlineNickname: z.string().max(20, { message: 'Nickname must be 20 characters or less' }).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -48,6 +48,7 @@ const AccountSettings: React.FC = () => {
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       fullName: user?.fullName || '',
+      onlineNickname: user?.onlineNickname || '',
     },
   });
 
@@ -66,7 +67,10 @@ const AccountSettings: React.FC = () => {
     setIsSubmittingProfile(true);
     
     setTimeout(() => {
-      updateUser({ fullName: values.fullName });
+      updateUser({ 
+        fullName: values.fullName,
+        onlineNickname: values.onlineNickname
+      });
       setIsSubmittingProfile(false);
     }, 500);
   };
@@ -175,6 +179,24 @@ const AccountSettings: React.FC = () => {
                       <FormLabel>{t('full_name')}</FormLabel>
                       <FormControl>
                         <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={profileForm.control}
+                  name="onlineNickname"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Online Nickname</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          placeholder="e.g., OmriGrinder, CoachOP, etc." 
+                          maxLength={20}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

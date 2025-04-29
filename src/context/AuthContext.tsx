@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
@@ -8,6 +7,7 @@ export interface User {
   id: string;
   email: string;
   fullName: string;
+  onlineNickname?: string;
   profilePicture?: string;
   role: UserRole;
   coachTier?: CoachTier;
@@ -262,7 +262,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           toast({
             title: "Storage Issue",
             description: "Profile updated, but changes may not persist after logout.",
-            variant: "warning",
+            variant: "default",
           });
           return;
         }

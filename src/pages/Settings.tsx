@@ -39,8 +39,8 @@ const Settings: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <Tabs defaultValue="account" dir={dir as "ltr" | "rtl"} className="w-full">
             <div className="border-b">
-              <div className="container px-4">
-                <TabsList className="w-full py-2 gap-2">
+              <div className="container px-4 py-2">
+                <TabsList className="flex flex-wrap gap-2 justify-start w-full">
                   <TabsTrigger value="account">{t('account_settings')}</TabsTrigger>
                   <TabsTrigger value="app">{t('app_settings')}</TabsTrigger>
                   {isCoach && <TabsTrigger value="coach">{t('coach_settings')}</TabsTrigger>}
@@ -52,33 +52,33 @@ const Settings: React.FC = () => {
             </div>
             
             <div className="p-6">
-              <TabsContent value="account">
+              <TabsContent value="account" className="mt-6">
                 <AccountSettings />
               </TabsContent>
               
-              <TabsContent value="app">
+              <TabsContent value="app" className="mt-6">
                 <AppSettings />
               </TabsContent>
               
               {isCoach && (
-                <TabsContent value="coach">
+                <TabsContent value="coach" className="mt-6">
                   <CoachSettings />
                 </TabsContent>
               )}
               
               {isStudent && (
-                <TabsContent value="student">
+                <TabsContent value="student" className="mt-6">
                   <StudentSettings />
                 </TabsContent>
               )}
               
               {isCoach && (
-                <TabsContent value="billing">
+                <TabsContent value="billing" className="mt-6">
                   <BillingSettings />
                 </TabsContent>
               )}
               
-              <TabsContent value="support">
+              <TabsContent value="support" className="mt-6">
                 <SupportSettings />
               </TabsContent>
             </div>
