@@ -13,7 +13,7 @@ import SessionStatsCard from '@/components/poker/SessionStatsCard';
 import HandsList from '@/components/poker/HandsList';
 import NotesList from '@/components/poker/NotesList';
 import Icon from '@/components/ui/Lucide';
-import { PokerSession } from '@/types/poker';
+import { PokerSession, HandData } from '@/types/poker';
 
 const SessionDetail = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -44,23 +44,36 @@ const SessionDetail = () => {
     deleteSession(session.id);
     toast({
       title: t('session_deleted'),
-      description: t('session_deleted_desc'),
+      description: t('session_deleted_desc')
     });
     navigate('/');
   };
   
   const handleUpdateNotes = () => {
-    updateSession(session.id, { notes });
+    updateSession({
+      ...session,
+      notes
+    });
     setShowNotesDialog(false);
     toast({
       title: t('success'),
-      description: t('notes_updated'),
+      description: t('notes_updated')
     });
   };
   
   const openNotesDialog = () => {
     setNotes(session.notes || '');
     setShowNotesDialog(true);
+  };
+  
+  const handleEditHand = (hand: HandData) => {
+    // This is a placeholder function, implement if needed
+    console.log("Edit hand:", hand);
+  };
+  
+  const handleDeleteHand = (handId: string) => {
+    // This is a placeholder function, implement if needed
+    console.log("Delete hand:", handId);
   };
   
   // Format the date string
@@ -125,34 +138,15 @@ const SessionDetail = () => {
         {session.hands && session.hands.length > 0 && (
           <div className="mb-8">
             <h2 className="font-extrabold text-xl tracking-tight mb-4">{t('hands')}</h2>
-            <HandsList hands={session.hands} />
+            <HandsList 
+              hands={session.hands} 
+              onEditHand={handleEditHand} 
+              onDeleteHand={handleDeleteHand} 
+            />
           </div>
         )}
         
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-extrabold text-xl tracking-tight">{t('notes')}</h2>
-            <Button variant="ghost" size="sm" onClick={openNotesDialog}>
-              <Icon name="Edit" size={14} className="mr-1" /> {t('edit')}
-            </Button>
-          </div>
-          {session.notes ? (
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="whitespace-pre-wrap">{session.notes}</p>
-            </div>
-          ) : (
-            <div className="bg-white p-4 rounded-lg shadow text-center text-gray-500">
-              <p>{t('no_notes')}</p>
-              <Button 
-                variant="ghost" 
-                className="mt-2 text-poker-feltGreen"
-                onClick={openNotesDialog}
-              >
-                {t('add_notes')}
-              </Button>
-            </div>
-          )}
-        </div>
+        <NotesList notes={session.notes} onEditNotes={openNotesDialog} />
         
         {/* Delete Confirmation Dialog */}
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
