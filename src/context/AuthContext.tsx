@@ -132,6 +132,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error("Error fetching user profile:", error);
         setUser(createUserFromSupabaseUser(supabaseUser));
       } else if (data) {
+        // Safely cast the database values to the required types
+        const userRole = data.role as UserRole;
+        const language = (data.language === 'en' || data.language === 'he') ? data.language as 'en' | 'he' : 'en';
+        
+        let coachTierValue: CoachTier | undefined = undefined;
+        if (userRole === 'coach' && data.coach_tier) {
+          // Cast coach_tier to CoachTier if it's a valid value
+          const validCoachTiers: CoachTier[] = ['free', 'starter', 'pro', 'elite'];
+          coachTierValue = validCoachTiers.includes(data.coach_tier as CoachTier) 
+            ? data.coach_tier as CoachTier 
+            : 'free';
+        }
+
+        // Parse notification preferences or provide defaults
+        let notificationPrefs = {
+          liveSessionStart: true,
+          newFeedback: true,
+        };
+
+        if (data.notification_preferences && typeof data.notification_preferences === 'object') {
+          notificationPrefs = {
+            liveSessionStart: !!data.notification_preferences.liveSessionStart,
+            newFeedback: !!data.notification_preferences.newFeedback,
+          };
+        }
+
         // If profile exists, use it to set user data
         setUser({
           id: supabaseUser.id,
@@ -139,13 +165,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           fullName: data.full_name || supabaseUser.user_metadata?.fullName || 'New User',
           onlineNickname: data.online_nickname,
           profilePicture: optimizeImageData(data.profile_picture),
-          role: data.role || 'student',
-          coachTier: data.role === 'coach' ? data.coach_tier || 'free' : undefined,
-          language: data.language || 'en',
-          notificationPreferences: data.notification_preferences || {
-            liveSessionStart: true,
-            newFeedback: true,
-          },
+          role: userRole,
+          coachTier: coachTierValue,
+          language: language,
+          notificationPreferences: notificationPrefs,
         });
       } else {
         // If no profile exists, use data from auth user
