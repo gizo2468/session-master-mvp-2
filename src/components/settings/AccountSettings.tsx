@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -70,7 +71,9 @@ const AccountSettings: React.FC = () => {
     
     try {
       // Send password reset email using Supabase
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email);
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: "https://session-master-mvp.lovable.app/auth/reset-password"
+      });
       
       if (error) {
         throw error;
