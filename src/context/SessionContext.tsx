@@ -2,6 +2,8 @@ import React, { createContext, useState, useContext, ReactNode, useEffect } from
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SessionContextType {
   sessions: PokerSession[];
@@ -91,6 +93,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     location: '',
   });
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     try {
@@ -133,6 +136,34 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [sessions, toast]);
+
+  // Sync completed sessions to Supabase
+  const syncSessionToSupabase = async (session: PokerSession) => {
+    if (!user) return;
+    
+    try {
+      // Only sync completed sessions to Supabase
+      if (!session.isActive && session.endTime) {
+        await supabase.from('sessions').insert({
+          user_id: user.id,
+          start_time: new Date(session.startTime).toISOString(),
+          end_time: new Date(session.endTime).toISOString()
+        });
+        
+        toast({
+          title: "Session saved to cloud",
+          description: "Your session has been backed up to your account.",
+        });
+      }
+    } catch (error) {
+      console.error("Error syncing session to Supabase:", error);
+      toast({
+        title: "Cloud sync failed",
+        description: "Unable to save session to cloud. Your data is still saved locally.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const addSession = (session: PokerSession) => {
     const sessionWithInitialBuyIn = {
@@ -196,6 +227,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       };
       updateSession(updatedSession);
       setActiveSession(null);
+      
+      // Sync to Supabase if user is logged in
+      syncSessionToSupabase(updatedSession);
     }
   };
   
