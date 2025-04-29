@@ -20,7 +20,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const Login: React.FC = () => {
-  const { login, isLoading } = useAuth();
+  const { login, signup, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -39,6 +39,16 @@ const Login: React.FC = () => {
     try {
       await login(values.email, values.password);
       navigate(from, { replace: true });
+    } catch (error) {
+      // Error is handled in the AuthContext
+    }
+  };
+
+  const handleSignUp = async () => {
+    const values = form.getValues();
+    try {
+      await signup(values.email, values.password, 'New User', 'student');
+      navigate('/', { replace: true });
     } catch (error) {
       // Error is handled in the AuthContext
     }
@@ -98,6 +108,22 @@ const Login: React.FC = () => {
                   'Sign In'
                 )}
               </Button>
+              <Button 
+                type="button"
+                variant="outline"
+                className="w-full mt-2" 
+                disabled={isLoading}
+                onClick={handleSignUp}
+              >
+                {isLoading ? (
+                  <>
+                    <Icon name="Loader" className="mr-2 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  'Sign Up'
+                )}
+              </Button>
             </form>
           </Form>
         </CardContent>
@@ -105,7 +131,7 @@ const Login: React.FC = () => {
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
             <Link to="/auth/signup" className="text-poker-gold hover:underline">
-              Sign Up
+              Sign Up with details
             </Link>
           </p>
         </CardFooter>
