@@ -151,11 +151,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           newFeedback: true,
         };
 
+        // Properly handle the JSON type from the database
         if (data.notification_preferences && typeof data.notification_preferences === 'object') {
-          notificationPrefs = {
-            liveSessionStart: !!data.notification_preferences.liveSessionStart,
-            newFeedback: !!data.notification_preferences.newFeedback,
-          };
+          const preferences = data.notification_preferences as Record<string, any>;
+          
+          // Check if specific properties exist and are boolean
+          if ('liveSessionStart' in preferences) {
+            notificationPrefs.liveSessionStart = Boolean(preferences.liveSessionStart);
+          }
+          
+          if ('newFeedback' in preferences) {
+            notificationPrefs.newFeedback = Boolean(preferences.newFeedback);
+          }
         }
 
         // If profile exists, use it to set user data
