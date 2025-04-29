@@ -1,8 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole, CoachTier } from '@/types/poker';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface User {
   id: string;
@@ -29,7 +30,7 @@ interface AuthContextType {
   updateUser: (userData: Partial<User>) => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   upgradeCoachTier: (tier: CoachTier) => void;
-  cancelCoachSubscription: () => Promise<void>; // Add the missing method
+  cancelCoachSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,100 +55,130 @@ const optimizeImageData = (imageDataUrl: string | undefined): string | undefined
   }
   
   // For large profile images, return a placeholder instead
-  // In a real app, you might want to use a service like Cloudinary or S3 for image storage
   return 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNlMmUyZTIiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiPnVzZXI8L3RleHQ+PC9zdmc+';
+};
+
+// Helper function to convert Supabase User to our App User
+const createUserFromSupabaseUser = (supabaseUser: SupabaseUser, role: UserRole = 'student'): User => {
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email || '',
+    fullName: supabaseUser.user_metadata?.fullName || 'New User',
+    onlineNickname: supabaseUser.user_metadata?.onlineNickname,
+    profilePicture: supabaseUser.user_metadata?.profilePicture,
+    role: supabaseUser.user_metadata?.role || role,
+    coachTier: supabaseUser.user_metadata?.role === 'coach' 
+      ? supabaseUser.user_metadata?.coachTier || 'free' 
+      : undefined,
+    language: supabaseUser.user_metadata?.language || 'en',
+    notificationPreferences: supabaseUser.user_metadata?.notificationPreferences || {
+      liveSessionStart: true,
+      newFeedback: true,
+    }
+  };
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  // Initialize auth and set up session listener
   useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setSession(currentSession);
+        
+        if (currentSession?.user) {
+          // Only fetch user metadata after auth state change with timeout
+          setTimeout(() => {
+            fetchAndSetUser(currentSession.user);
+          }, 0);
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      
+      if (currentSession?.user) {
+        fetchAndSetUser(currentSession.user);
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Fetch user data and update the state
+  const fetchAndSetUser = async (supabaseUser: SupabaseUser) => {
     try {
-      // Check for existing user in localStorage
-      const storedUser = localStorage.getItem('sessionMasterUser');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', supabaseUser.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        setUser(createUserFromSupabaseUser(supabaseUser));
+      } else if (data) {
+        // If profile exists, use it to set user data
+        setUser({
+          id: supabaseUser.id,
+          email: supabaseUser.email || '',
+          fullName: data.full_name || supabaseUser.user_metadata?.fullName || 'New User',
+          onlineNickname: data.online_nickname,
+          profilePicture: optimizeImageData(data.profile_picture),
+          role: data.role || 'student',
+          coachTier: data.role === 'coach' ? data.coach_tier || 'free' : undefined,
+          language: data.language || 'en',
+          notificationPreferences: data.notification_preferences || {
+            liveSessionStart: true,
+            newFeedback: true,
+          },
+        });
+      } else {
+        // If no profile exists, use data from auth user
+        setUser(createUserFromSupabaseUser(supabaseUser));
       }
     } catch (error) {
-      console.error("Error loading user from localStorage:", error);
-      // If there's an error loading, don't crash the app
-      localStorage.removeItem('sessionMasterUser');
+      console.error("Error fetching user data:", error);
+      setUser(createUserFromSupabaseUser(supabaseUser));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
 
-  // Save user data to localStorage whenever it changes
-  useEffect(() => {
-    if (user) {
-      try {
-        // Optimize profile picture before saving to reduce storage size
-        const optimizedUser = {
-          ...user,
-          profilePicture: optimizeImageData(user.profilePicture)
-        };
-        
-        localStorage.setItem('sessionMasterUser', JSON.stringify(optimizedUser));
-      } catch (error) {
-        console.error("Failed to save user to localStorage:", error);
-        toast({
-          title: "Storage Error",
-          description: "Unable to save user data. Some settings might not persist.",
-          variant: "destructive"
-        });
-      }
-    }
-  }, [user, toast]);
-
-  // Mock authentication functions
+  // Authentication methods
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Get all users from localStorage
-      let users;
-      try {
-        const usersData = localStorage.getItem('sessionMasterUsers') || '[]';
-        users = JSON.parse(usersData);
-      } catch (error) {
-        console.error("Error parsing users from localStorage:", error);
-        users = [];
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
       }
-      
-      // Find user with matching email
-      const foundUser = users.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
-      
-      // Check if user exists and password matches
-      if (!foundUser) {
-        throw new Error('User not found');
-      }
-      
-      if (foundUser.password !== password) {
-        throw new Error('Invalid password');
-      }
-      
-      // Remove password from user object before storing in state
-      const { password: _, ...userWithoutPassword } = foundUser;
-      
-      // Optimize profile picture to prevent storage issues
-      const optimizedUser = {
-        ...userWithoutPassword,
-        profilePicture: optimizeImageData(userWithoutPassword.profilePicture)
-      };
-      
-      setUser(optimizedUser);
+
       toast({
         title: "Login successful",
-        description: `Welcome back, ${foundUser.fullName}!`,
+        description: `Welcome back!`,
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Login failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
       throw error;
@@ -159,66 +190,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string, fullName: string, role: UserRole) => {
     setIsLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Get all users from localStorage
-      let users;
-      try {
-        const usersData = localStorage.getItem('sessionMasterUsers') || '[]';
-        users = JSON.parse(usersData);
-      } catch (error) {
-        console.error("Error parsing users from localStorage:", error);
-        users = [];
-      }
-      
-      // Check if user with this email already exists
-      if (users.some((u: any) => u.email.toLowerCase() === email.toLowerCase())) {
-        throw new Error('User with this email already exists');
-      }
-      
-      // Create new user object with role
-      const newUser: User & { password: string } = {
-        id: uuidv4(),
+      const { data, error } = await supabase.auth.signUp({
         email,
-        password, // In a real app, this would be hashed
-        fullName,
-        role,
-        coachTier: role === 'coach' ? 'free' : undefined,
-        language: 'en', // Default language is English
-        notificationPreferences: {
-          liveSessionStart: true,
-          newFeedback: true,
+        password,
+        options: {
+          data: {
+            fullName,
+            role,
+            coachTier: role === 'coach' ? 'free' : undefined,
+            language: 'en',
+            notificationPreferences: {
+              liveSessionStart: true,
+              newFeedback: true,
+            },
+          },
         },
-      };
-      
-      // Add new user to users array
-      users.push(newUser);
-      
-      try {
-        localStorage.setItem('sessionMasterUsers', JSON.stringify(users));
-      } catch (error) {
-        console.error("Failed to save users to localStorage:", error);
-        toast({
-          title: "Storage Error",
-          description: "Unable to complete signup due to browser storage limitations.",
-          variant: "destructive",
-        });
-        throw new Error("Registration failed due to storage limitations");
+      });
+
+      if (error) {
+        throw error;
       }
-      
-      // Remove password from user object before storing in state
-      const { password: _, ...userWithoutPassword } = newUser;
-      
-      setUser(userWithoutPassword);
+
       toast({
         title: "Sign up successful",
         description: `Welcome, ${fullName}!`,
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Sign up failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
       throw error;
@@ -227,16 +227,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('sessionMasterUser');
-    setUser(null);
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out",
-    });
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Logout failed",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
-  const updateUser = (userData: Partial<User>) => {
+  const updateUser = async (userData: Partial<User>) => {
     if (!user) return;
     
     try {
@@ -246,39 +254,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         optimizedUserData.profilePicture = optimizeImageData(userData.profilePicture);
       }
       
+      // Update user metadata in Supabase auth
+      const { error: authError } = await supabase.auth.updateUser({
+        data: optimizedUserData,
+      });
+
+      if (authError) {
+        throw authError;
+      }
+
+      // Also update the profile in the profiles table if it exists
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          full_name: optimizedUserData.fullName || user.fullName,
+          online_nickname: optimizedUserData.onlineNickname || user.onlineNickname,
+          profile_picture: optimizedUserData.profilePicture || user.profilePicture,
+          role: optimizedUserData.role || user.role,
+          coach_tier: user.role === 'coach' ? optimizedUserData.coachTier || user.coachTier : null,
+          language: optimizedUserData.language || user.language,
+          notification_preferences: optimizedUserData.notificationPreferences || user.notificationPreferences,
+        });
+
+      if (profileError) {
+        throw profileError;
+      }
+      
       const updatedUser = { ...user, ...optimizedUserData };
       setUser(updatedUser);
-      
-      // Also update the user in the users array
-      const usersData = localStorage.getItem('sessionMasterUsers');
-      if (usersData) {
-        const users = JSON.parse(usersData);
-        const updatedUsers = users.map((u: any) => 
-          u.id === user.id ? { ...u, ...optimizedUserData } : u
-        );
-        
-        try {
-          localStorage.setItem('sessionMasterUsers', JSON.stringify(updatedUsers));
-        } catch (error) {
-          console.error("Failed to update user in localStorage:", error);
-          toast({
-            title: "Storage Issue",
-            description: "Profile updated, but changes may not persist after logout.",
-            variant: "default",
-          });
-          return;
-        }
-      }
       
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating user:", error);
       toast({
         title: "Update failed",
-        description: "Failed to update profile. Please try again.",
+        description: error.message || "Failed to update profile. Please try again.",
         variant: "destructive",
       });
     }
@@ -291,43 +305,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     setIsLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // In Supabase v2, to change password we need to:
+      // 1. Sign in with the current password to verify
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
       
-      // Get all users from localStorage
-      const usersData = localStorage.getItem('sessionMasterUsers');
-      if (!usersData) {
-        throw new Error('User data not found');
-      }
-      
-      const users = JSON.parse(usersData);
-      
-      // Find current user
-      const currentUser = users.find((u: any) => u.id === user.id);
-      
-      // Check if current password matches
-      if (!currentUser || currentUser.password !== currentPassword) {
+      if (signInError) {
         throw new Error('Current password is incorrect');
       }
       
-      // Update password
-      currentUser.password = newPassword;
+      // 2. Update the password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
       
-      // Save updated users array to localStorage
-      try {
-        localStorage.setItem('sessionMasterUsers', JSON.stringify(users));
-      } catch (error) {
-        throw new Error('Failed to save password due to storage limitations');
+      if (updateError) {
+        throw updateError;
       }
       
       toast({
         title: "Password changed",
         description: "Your password has been successfully updated",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Password change failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
       throw error;
@@ -337,7 +342,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Function to upgrade coach tier
-  const upgradeCoachTier = (tier: CoachTier) => {
+  const upgradeCoachTier = async (tier: CoachTier) => {
     if (!user || user.role !== 'coach') {
       toast({
         title: "Upgrade failed",
@@ -347,7 +352,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    updateUser({ coachTier: tier });
+    await updateUser({ coachTier: tier });
 
     toast({
       title: "Tier upgraded",
@@ -366,20 +371,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
     
-    // In a real app, this would call a subscription management API
-    // For this demo, we'll just set the tier back to 'free'
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       // Set coach tier back to free
-      updateUser({ coachTier: 'free' });
+      await updateUser({ coachTier: 'free' });
       
       // Return success
+      toast({
+        title: "Subscription canceled",
+        description: "Your subscription has been successfully canceled",
+      });
       return;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error cancelling subscription:", error);
-      throw new Error("Failed to cancel subscription");
+      throw new Error(error.message || "Failed to cancel subscription");
     }
   };
 
@@ -393,7 +397,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUser,
     changePassword,
     upgradeCoachTier,
-    cancelCoachSubscription, // Add the function to the context value
+    cancelCoachSubscription,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
