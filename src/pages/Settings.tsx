@@ -13,6 +13,7 @@ import StudentSettings from '@/components/settings/StudentSettings';
 import AppSettings from '@/components/settings/AppSettings';
 import BillingSettings from '@/components/settings/BillingSettings';
 import SupportSettings from '@/components/settings/SupportSettings';
+import StatsSettings from '@/components/settings/StatsSettings';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ const Settings: React.FC = () => {
                 <TabsList className="flex flex-wrap gap-2 justify-start w-full">
                   <TabsTrigger value="account">{t('account_settings')}</TabsTrigger>
                   <TabsTrigger value="app">{t('app_settings')}</TabsTrigger>
+                  <TabsTrigger value="stats">Statistics</TabsTrigger>
                   {isCoach && <TabsTrigger value="coach">{t('coach_settings')}</TabsTrigger>}
                   {isStudent && <TabsTrigger value="student">{t('student_settings')}</TabsTrigger>}
                   {isCoach && <TabsTrigger value="billing">{t('billing')}</TabsTrigger>}
@@ -58,6 +60,10 @@ const Settings: React.FC = () => {
               
               <TabsContent value="app" className="mt-6">
                 <AppSettings />
+              </TabsContent>
+              
+              <TabsContent value="stats" className="mt-6">
+                <StatsSettings />
               </TabsContent>
               
               {isCoach && (

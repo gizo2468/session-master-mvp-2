@@ -83,7 +83,14 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      session_summary_by_user: {
+        Row: {
+          full_name: string | null
+          session_count: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
