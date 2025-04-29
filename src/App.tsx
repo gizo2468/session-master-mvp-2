@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import SessionForm from "./pages/SessionForm";
@@ -17,8 +17,14 @@ import CoachDashboard from "./pages/CoachDashboard";
 import CoachStudentDetail from "./pages/CoachStudentDetail";
 import CoachSessionReview from "./pages/CoachSessionReview";
 import CoachFeedbackArchive from "./pages/CoachFeedbackArchive";
+import Settings from "./pages/Settings";
+import Login from "./pages/auth/Login";
+import Signup from "./pages/auth/Signup";
 import { SessionProvider } from "./context/SessionContext";
 import { CoachStudentProvider } from "./context/CoachStudentContext";
+import { AuthProvider } from "./context/AuthContext";
+import { LanguageProvider } from "./context/LanguageContext";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 // Create a new query client instance
@@ -29,29 +35,141 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <Toaster />
       <Sonner />
-      <SessionProvider>
-        <CoachStudentProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/new-session" element={<SessionForm />} />
-              <Route path="/history" element={<SessionHistory />} />
-              <Route path="/session/:id" element={<SessionDetail />} />
-              <Route path="/live-session/:id" element={<LiveSession />} />
-              <Route path="/confirm-session" element={<ConfirmSession />} />
-              <Route path="/focus-mode" element={<FocusModePage />} />
-              <Route path="/coach-profile" element={<CoachProfile />} />
-              <Route path="/connect-coach" element={<ConnectCoach />} />
-              <Route path="/coach-dashboard" element={<CoachDashboard />} />
-              <Route path="/coach/student/:studentId" element={<CoachStudentDetail />} />
-              <Route path="/coach/student/:studentId/session/:sessionId" element={<CoachSessionReview />} />
-              <Route path="/coach/feedback-archive" element={<CoachFeedbackArchive />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </CoachStudentProvider>
-      </SessionProvider>
+      <AuthProvider>
+        <LanguageProvider>
+          <SessionProvider>
+            <CoachStudentProvider>
+              <BrowserRouter>
+                <Routes>
+                  {/* Auth Routes */}
+                  <Route path="/auth/login" element={<Login />} />
+                  <Route path="/auth/signup" element={<Signup />} />
+                  
+                  {/* Protected Routes */}
+                  <Route 
+                    path="/" 
+                    element={
+                      <ProtectedRoute>
+                        <Index />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/new-session" 
+                    element={
+                      <ProtectedRoute>
+                        <SessionForm />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/history" 
+                    element={
+                      <ProtectedRoute>
+                        <SessionHistory />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/session/:id" 
+                    element={
+                      <ProtectedRoute>
+                        <SessionDetail />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/live-session/:id" 
+                    element={
+                      <ProtectedRoute>
+                        <LiveSession />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/confirm-session" 
+                    element={
+                      <ProtectedRoute>
+                        <ConfirmSession />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/focus-mode" 
+                    element={
+                      <ProtectedRoute>
+                        <FocusModePage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/coach-profile" 
+                    element={
+                      <ProtectedRoute>
+                        <CoachProfile />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/connect-coach" 
+                    element={
+                      <ProtectedRoute>
+                        <ConnectCoach />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/coach-dashboard" 
+                    element={
+                      <ProtectedRoute>
+                        <CoachDashboard />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/coach/student/:studentId" 
+                    element={
+                      <ProtectedRoute>
+                        <CoachStudentDetail />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/coach/student/:studentId/session/:sessionId" 
+                    element={
+                      <ProtectedRoute>
+                        <CoachSessionReview />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/coach/feedback-archive" 
+                    element={
+                      <ProtectedRoute>
+                        <CoachFeedbackArchive />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/settings" 
+                    element={
+                      <ProtectedRoute>
+                        <Settings />
+                      </ProtectedRoute>
+                    } 
+                  />
+
+                  {/* Redirect to login if accessing the root when not logged in */}
+                  <Route path="/" element={<Navigate to="/auth/login" replace />} />
+                  
+                  {/* Catch-all route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </CoachStudentProvider>
+          </SessionProvider>
+        </LanguageProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </TooltipPrimitive.Provider>
 );
