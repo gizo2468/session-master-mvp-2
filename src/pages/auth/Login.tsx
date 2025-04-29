@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAuth } from '@/context/AuthContext';
 import Icon from '@/components/ui/Lucide';
 import Logo from '@/components/Logo';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -23,6 +24,8 @@ const Login: React.FC = () => {
   const { login, signup, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
+  const [isSigningUp, setIsSigningUp] = useState(false);
   
   // Get redirect path from location state or default to home
   const from = (location.state as { from?: string })?.from || '/';
@@ -45,12 +48,32 @@ const Login: React.FC = () => {
   };
 
   const handleSignUp = async () => {
-    const values = form.getValues();
+    setIsSigningUp(true);
+    
     try {
+      const values = form.getValues();
+      
+      // Validate form before attempting signup
+      const isValid = await form.trigger();
+      if (!isValid) {
+        setIsSigningUp(false);
+        return;
+      }
+      
+      // Attempt to create a new user
       await signup(values.email, values.password, 'New User', 'student');
+      
+      // Show success message
+      toast({
+        title: "Account created!",
+        description: "Your account has been successfully created.",
+      });
+      
+      // Navigate to home page
       navigate('/', { replace: true });
     } catch (error) {
-      // Error is handled in the AuthContext
+      // Error handling is managed in AuthContext, but we need to reset signing up state
+      setIsSigningUp(false);
     }
   };
 
@@ -99,7 +122,7 @@ const Login: React.FC = () => {
                 className="w-full mt-2" 
                 disabled={isLoading}
               >
-                {isLoading ? (
+                {isLoading && !isSigningUp ? (
                   <>
                     <Icon name="Loader" className="mr-2 animate-spin" />
                     Signing in...
@@ -112,10 +135,10 @@ const Login: React.FC = () => {
                 type="button"
                 variant="outline"
                 className="w-full mt-2" 
-                disabled={isLoading}
+                disabled={isLoading || isSigningUp}
                 onClick={handleSignUp}
               >
-                {isLoading ? (
+                {isSigningUp ? (
                   <>
                     <Icon name="Loader" className="mr-2 animate-spin" />
                     Creating account...
