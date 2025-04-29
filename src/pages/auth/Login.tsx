@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import Icon from '@/components/ui/Lucide';
 import Logo from '@/components/Logo';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -21,15 +21,15 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const Login: React.FC = () => {
-  const { login, signup, isLoading } = useAuth();
+  const { login, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const [isSigningUp, setIsSigningUp] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   
   // Get redirect path from location state or default to home
   const from = (location.state as { from?: string })?.from || '/';
-
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,33 +47,39 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleSignUp = async () => {
-    setIsSigningUp(true);
+  const handlePasswordReset = async () => {
+    const email = form.getValues("email");
+    setIsResettingPassword(true);
+    
+    if (!email || !form.formState.dirtyFields.email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address first",
+        variant: "destructive",
+      });
+      setIsResettingPassword(false);
+      return;
+    }
     
     try {
-      const values = form.getValues();
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
       
-      // Validate form before attempting signup
-      const isValid = await form.trigger();
-      if (!isValid) {
-        setIsSigningUp(false);
-        return;
+      if (error) {
+        throw error;
       }
       
-      // Attempt to create a new user
-      await signup(values.email, values.password, 'New User', 'student');
-      
-      // Show success message
       toast({
-        title: "Account created!",
-        description: "Your account has been successfully created.",
+        title: "Password reset email sent",
+        description: "If an account exists with this email, you'll receive instructions to reset your password.",
       });
-      
-      // Navigate to home page
-      navigate('/', { replace: true });
-    } catch (error) {
-      // Error handling is managed in AuthContext, but we need to reset signing up state
-      setIsSigningUp(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Could not send reset email. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResettingPassword(false);
     }
   };
 
@@ -122,7 +128,7 @@ const Login: React.FC = () => {
                 className="w-full mt-2" 
                 disabled={isLoading}
               >
-                {isLoading && !isSigningUp ? (
+                {isLoading ? (
                   <>
                     <Icon name="Loader" className="mr-2 animate-spin" />
                     Signing in...
@@ -131,32 +137,31 @@ const Login: React.FC = () => {
                   'Sign In'
                 )}
               </Button>
-              <Button 
-                type="button"
-                variant="outline"
-                className="w-full mt-2" 
-                disabled={isLoading || isSigningUp}
-                onClick={handleSignUp}
-              >
-                {isSigningUp ? (
-                  <>
-                    <Icon name="Loader" className="mr-2 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  'Sign Up'
-                )}
-              </Button>
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex flex-col gap-2 items-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
             <Link to="/auth/signup" className="text-poker-gold hover:underline">
               Sign Up with details
             </Link>
           </p>
+          <Button 
+            variant="link" 
+            className="text-sm text-gray-600 p-0 h-auto"
+            onClick={handlePasswordReset}
+            disabled={isResettingPassword}
+          >
+            {isResettingPassword ? (
+              <>
+                <Icon name="Loader" className="mr-1 h-3 w-3 animate-spin" />
+                Sending reset email...
+              </>
+            ) : (
+              'Forgot your password? Reset it here'
+            )}
+          </Button>
         </CardFooter>
       </Card>
     </div>
