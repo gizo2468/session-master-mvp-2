@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewSessionButton from '@/components/NewSessionButton';
@@ -10,6 +9,8 @@ import Logo from '@/components/Logo';
 import DonationCard from '@/components/DonationCard';
 import CoachingNav from '@/components/coaching/CoachingNav';
 import ConnectionNotification from '@/components/coaching/ConnectionNotification';
+import Icon from '@/components/ui/Lucide';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -24,8 +25,17 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-md px-4 py-8">
-        <header className="mb-8">
+        <header className="mb-8 flex justify-between items-center">
           <Logo className="mb-2" />
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/settings')}
+            className="flex items-center gap-1"
+          >
+            <Icon name="Settings" size={18} />
+            Settings
+          </Button>
         </header>
         
         <div className="flex justify-center mb-10">
