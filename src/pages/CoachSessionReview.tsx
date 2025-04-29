@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/Lucide';
 import TableDetailsCard from '@/components/poker/TableDetailsCard';
@@ -11,6 +10,8 @@ import HandsList from '@/components/poker/HandsList';
 import { CommentForm } from '@/components/coaching/CommentForm';
 import { CommentTag } from '@/types/poker';
 import { HandData, TableData } from '@/types/poker';
+import CardDisplay from '@/components/poker/CardDisplay';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Mock session data for the demo
 const createMockSessionData = (sessionId: string) => {
@@ -81,6 +82,14 @@ const CoachSessionReview = () => {
     setIsCommentFormOpen(true);
   };
   
+  const handleEditHand = () => {
+    // This would be implemented in a real application
+  };
+  
+  const handleDeleteHand = () => {
+    // This would be implemented in a real application
+  };
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -138,9 +147,28 @@ const CoachSessionReview = () => {
                   <tbody>
                     {hands.map(hand => (
                       <tr key={hand.id} className="border-b hover:bg-gray-50">
-                        <td className="p-3">{hand.cards}</td>
-                        <td className="p-3">{hand.position}</td>
-                        <td className="p-3 max-w-sm truncate" title={hand.action}>{hand.action}</td>
+                        <td className="p-3">
+                          <CardDisplay cards={hand.cards} size="sm" />
+                        </td>
+                        <td className="p-3">
+                          <span className="inline-flex items-center justify-center px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
+                            {hand.position}
+                          </span>
+                        </td>
+                        <td className="p-3 max-w-sm">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="truncate cursor-help" title={hand.action}>
+                                  {hand.action}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-sm bg-white p-3 shadow-lg border rounded-lg">
+                                <p className="text-sm">{hand.action}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </td>
                         <td className={`p-3 font-medium ${
                           hand.resultAmount && hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'
                         }`}>
