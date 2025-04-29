@@ -1,4 +1,3 @@
-
 export interface HandData {
   id: string;
   cards: string;
@@ -138,4 +137,17 @@ export interface StudentActivity {
   isLive: boolean;
   lastSessionId?: string;
   lastSessionTime?: Date;
+}
+
+// New types for coach tier system
+export type UserRole = 'student' | 'coach';
+
+export type CoachTier = 'free' | 'starter' | 'pro' | 'elite';
+
+export interface CoachTierDetails {
+  name: string;
+  tier: CoachTier;
+  price: number;
+  maxStudents: number;
+  features: string[];
 }

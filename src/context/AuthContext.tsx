@@ -1,14 +1,15 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
+import { UserRole, CoachTier } from '@/types/poker';
 
 export interface User {
   id: string;
   email: string;
   fullName: string;
   profilePicture?: string;
-  role: 'coach' | 'student';
+  role: UserRole;
+  coachTier?: CoachTier;
   language: 'en' | 'he';
   notificationPreferences: {
     liveSessionStart: boolean;
@@ -21,10 +22,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, fullName: string) => Promise<void>;
+  signup: (email: string, password: string, fullName: string, role: UserRole) => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  upgradeCoachTier: (tier: CoachTier) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -100,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signup = async (email: string, password: string, fullName: string) => {
+  const signup = async (email: string, password: string, fullName: string, role: UserRole) => {
     setIsLoading(true);
     try {
       // Simulate API call delay
@@ -114,13 +116,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('User with this email already exists');
       }
       
-      // Create new user object
+      // Create new user object with role
       const newUser: User & { password: string } = {
         id: uuidv4(),
         email,
         password, // In a real app, this would be hashed
         fullName,
-        role: 'student', // Default role is student
+        role,
+        coachTier: role === 'coach' ? 'free' : undefined,
         language: 'en', // Default language is English
         notificationPreferences: {
           liveSessionStart: true,
@@ -223,6 +226,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // New function to upgrade coach tier
+  const upgradeCoachTier = (tier: CoachTier) => {
+    if (!user || user.role !== 'coach') {
+      toast({
+        title: "Upgrade failed",
+        description: "Only coaches can upgrade their tier",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateUser({ coachTier: tier });
+
+    toast({
+      title: "Tier upgraded",
+      description: `Your account has been upgraded to ${tier} tier!`,
+    });
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
@@ -232,6 +254,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     updateUser,
     changePassword,
+    upgradeCoachTier,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

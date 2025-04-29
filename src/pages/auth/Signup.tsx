@@ -11,12 +11,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAuth } from '@/context/AuthContext';
 import Icon from '@/components/ui/Lucide';
 import Logo from '@/components/Logo';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { UserRole } from '@/types/poker';
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters long' }),
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters long' }),
   confirmPassword: z.string(),
+  role: z.enum(['student', 'coach'], { required_error: 'Please select a role' }),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],
@@ -35,17 +38,31 @@ const Signup: React.FC = () => {
       email: '',
       password: '',
       confirmPassword: '',
+      role: 'student',
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await signup(values.email, values.password, values.fullName);
+      await signup(values.email, values.password, values.fullName, values.role as UserRole);
       navigate('/');
     } catch (error) {
       // Error is handled in the AuthContext
     }
   };
+
+  const roleOptions = [
+    {
+      value: 'student',
+      label: 'Student',
+      description: 'Track your poker sessions and connect with coaches for feedback',
+    },
+    { 
+      value: 'coach',
+      label: 'Coach',
+      description: 'Help students improve their poker game with insights and feedback',
+    },
+  ];
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
@@ -112,6 +129,37 @@ const Signup: React.FC = () => {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>I am a:</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        {roleOptions.map((option) => (
+                          <FormItem className="flex items-center space-x-3 space-y-0" key={option.value}>
+                            <FormControl>
+                              <RadioGroupItem value={option.value} />
+                            </FormControl>
+                            <div className="space-y-1">
+                              <FormLabel className="font-medium">{option.label}</FormLabel>
+                              <p className="text-xs text-gray-500">{option.description}</p>
+                            </div>
+                          </FormItem>
+                        ))}
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <Button 
                 type="submit" 
                 variant="poker" 
