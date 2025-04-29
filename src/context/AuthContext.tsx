@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
@@ -39,26 +40,64 @@ export const useAuth = () => {
   return context;
 };
 
+const MAX_PROFILE_IMAGE_SIZE = 50 * 1024; // 50KB limit for profile images
+
+// Function to optimize image data to prevent storage quota issues
+const optimizeImageData = (imageDataUrl: string | undefined): string | undefined => {
+  if (!imageDataUrl) return undefined;
+  
+  // If it's already small enough, just return it
+  if (imageDataUrl.length <= MAX_PROFILE_IMAGE_SIZE) {
+    return imageDataUrl;
+  }
+  
+  // For large profile images, return a placeholder instead
+  // In a real app, you might want to use a service like Cloudinary or S3 for image storage
+  return 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNlMmUyZTIiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiPnVzZXI8L3RleHQ+PC9zdmc+';
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for existing user in localStorage
-    const storedUser = localStorage.getItem('sessionMasterUser');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    try {
+      // Check for existing user in localStorage
+      const storedUser = localStorage.getItem('sessionMasterUser');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error("Error loading user from localStorage:", error);
+      // If there's an error loading, don't crash the app
+      localStorage.removeItem('sessionMasterUser');
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
   // Save user data to localStorage whenever it changes
   useEffect(() => {
     if (user) {
-      localStorage.setItem('sessionMasterUser', JSON.stringify(user));
+      try {
+        // Optimize profile picture before saving to reduce storage size
+        const optimizedUser = {
+          ...user,
+          profilePicture: optimizeImageData(user.profilePicture)
+        };
+        
+        localStorage.setItem('sessionMasterUser', JSON.stringify(optimizedUser));
+      } catch (error) {
+        console.error("Failed to save user to localStorage:", error);
+        toast({
+          title: "Storage Error",
+          description: "Unable to save user data. Some settings might not persist.",
+          variant: "destructive"
+        });
+      }
     }
-  }, [user]);
+  }, [user, toast]);
 
   // Mock authentication functions
   const login = async (email: string, password: string) => {
@@ -68,7 +107,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Get all users from localStorage
-      const users = JSON.parse(localStorage.getItem('sessionMasterUsers') || '[]');
+      let users;
+      try {
+        const usersData = localStorage.getItem('sessionMasterUsers') || '[]';
+        users = JSON.parse(usersData);
+      } catch (error) {
+        console.error("Error parsing users from localStorage:", error);
+        users = [];
+      }
       
       // Find user with matching email
       const foundUser = users.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
@@ -85,7 +131,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Remove password from user object before storing in state
       const { password: _, ...userWithoutPassword } = foundUser;
       
-      setUser(userWithoutPassword);
+      // Optimize profile picture to prevent storage issues
+      const optimizedUser = {
+        ...userWithoutPassword,
+        profilePicture: optimizeImageData(userWithoutPassword.profilePicture)
+      };
+      
+      setUser(optimizedUser);
       toast({
         title: "Login successful",
         description: `Welcome back, ${foundUser.fullName}!`,
@@ -109,7 +161,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Get all users from localStorage
-      const users = JSON.parse(localStorage.getItem('sessionMasterUsers') || '[]');
+      let users;
+      try {
+        const usersData = localStorage.getItem('sessionMasterUsers') || '[]';
+        users = JSON.parse(usersData);
+      } catch (error) {
+        console.error("Error parsing users from localStorage:", error);
+        users = [];
+      }
       
       // Check if user with this email already exists
       if (users.some((u: any) => u.email.toLowerCase() === email.toLowerCase())) {
@@ -133,7 +192,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Add new user to users array
       users.push(newUser);
-      localStorage.setItem('sessionMasterUsers', JSON.stringify(users));
+      
+      try {
+        localStorage.setItem('sessionMasterUsers', JSON.stringify(users));
+      } catch (error) {
+        console.error("Failed to save users to localStorage:", error);
+        toast({
+          title: "Storage Error",
+          description: "Unable to complete signup due to browser storage limitations.",
+          variant: "destructive",
+        });
+        throw new Error("Registration failed due to storage limitations");
+      }
       
       // Remove password from user object before storing in state
       const { password: _, ...userWithoutPassword } = newUser;
@@ -167,20 +237,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateUser = (userData: Partial<User>) => {
     if (!user) return;
     
-    const updatedUser = { ...user, ...userData };
-    setUser(updatedUser);
-    
-    // Also update the user in the users array
-    const users = JSON.parse(localStorage.getItem('sessionMasterUsers') || '[]');
-    const updatedUsers = users.map((u: any) => 
-      u.id === user.id ? { ...u, ...userData } : u
-    );
-    localStorage.setItem('sessionMasterUsers', JSON.stringify(updatedUsers));
-    
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been successfully updated",
-    });
+    try {
+      // If updating profile picture, optimize it first
+      let optimizedUserData = { ...userData };
+      if (userData.profilePicture) {
+        optimizedUserData.profilePicture = optimizeImageData(userData.profilePicture);
+      }
+      
+      const updatedUser = { ...user, ...optimizedUserData };
+      setUser(updatedUser);
+      
+      // Also update the user in the users array
+      const usersData = localStorage.getItem('sessionMasterUsers');
+      if (usersData) {
+        const users = JSON.parse(usersData);
+        const updatedUsers = users.map((u: any) => 
+          u.id === user.id ? { ...u, ...optimizedUserData } : u
+        );
+        
+        try {
+          localStorage.setItem('sessionMasterUsers', JSON.stringify(updatedUsers));
+        } catch (error) {
+          console.error("Failed to update user in localStorage:", error);
+          toast({
+            title: "Storage Issue",
+            description: "Profile updated, but changes may not persist after logout.",
+            variant: "warning",
+          });
+          return;
+        }
+      }
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been successfully updated",
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast({
+        title: "Update failed",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const changePassword = async (currentPassword: string, newPassword: string) => {
@@ -194,7 +293,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Get all users from localStorage
-      const users = JSON.parse(localStorage.getItem('sessionMasterUsers') || '[]');
+      const usersData = localStorage.getItem('sessionMasterUsers');
+      if (!usersData) {
+        throw new Error('User data not found');
+      }
+      
+      const users = JSON.parse(usersData);
       
       // Find current user
       const currentUser = users.find((u: any) => u.id === user.id);
@@ -208,7 +312,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       currentUser.password = newPassword;
       
       // Save updated users array to localStorage
-      localStorage.setItem('sessionMasterUsers', JSON.stringify(users));
+      try {
+        localStorage.setItem('sessionMasterUsers', JSON.stringify(users));
+      } catch (error) {
+        throw new Error('Failed to save password due to storage limitations');
+      }
       
       toast({
         title: "Password changed",
@@ -226,7 +334,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // New function to upgrade coach tier
+  // Function to upgrade coach tier
   const upgradeCoachTier = (tier: CoachTier) => {
     if (!user || user.role !== 'coach') {
       toast({
