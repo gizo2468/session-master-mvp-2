@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import Icon from '@/components/ui/Lucide';
 import GenerateCodeButton from '@/components/coaching/GenerateCodeButton';
 import ConnectionCodeDisplay from '@/components/coaching/ConnectionCodeDisplay';
@@ -21,6 +22,7 @@ const CoachProfile = () => {
   const navigate = useNavigate();
   const { isCoach, coachProfile, students } = useCoachStudent();
   const { user } = useAuth();
+  const { t } = useLanguage();
   
   // Get coach tier information
   const coachTier = user?.coachTier || 'free';
@@ -44,17 +46,17 @@ const CoachProfile = () => {
             className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:underline"
           >
             <Icon name="ArrowLeft" size={16} />
-            <span>Back</span>
+            <span>{t('back')}</span>
           </button>
-          <h1 className="text-2xl font-serif font-bold text-poker-black">Coach Profile</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your students and connection codes</p>
+          <h1 className="text-2xl font-serif font-bold text-poker-black">{t('coach_profile')}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t('manage_your_students')}</p>
         </header>
         
         {!isCoach && (
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Become a Coach</CardTitle>
-              <CardDescription>Create your coach profile to connect with students</CardDescription>
+              <CardTitle>{t('become_coach')}</CardTitle>
+              <CardDescription>{t('create_account')}</CardDescription>
             </CardHeader>
             <CardContent>
               <CreateCoachProfileForm />
@@ -86,7 +88,7 @@ const CoachProfile = () => {
                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Click to change plan</p>
+                        <p>{t('upgrade_plan')}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -99,9 +101,9 @@ const CoachProfile = () => {
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between text-sm mb-1">
-                      <span>Student Capacity</span>
+                      <span>{t('student_capacity')}</span>
                       <span className={atStudentLimit ? "text-red-600 font-medium" : ""}>
-                        {studentCount} / {maxStudents} students
+                        {studentCount} / {maxStudents} {t('students').toLowerCase()}
                       </span>
                     </div>
                     <Progress 
@@ -122,7 +124,7 @@ const CoachProfile = () => {
                         className="w-full bg-poker-gold hover:bg-poker-darkGold"
                       >
                         <Icon name="package-plus" size={16} className="mr-2" />
-                        Upgrade Plan
+                        {t('upgrade_plan')}
                       </Button>
                     )}
                   </div>
@@ -133,7 +135,7 @@ const CoachProfile = () => {
                       variant="outline"
                       className="w-full mt-2"
                     >
-                      Go to Coach Dashboard
+                      {t('coach_dashboard')}
                     </Button>
                   )}
                 </div>
@@ -144,7 +146,7 @@ const CoachProfile = () => {
             <div className="relative">
               <ConnectionCodeDisplay />
               {atStudentLimit && (
-                <FeatureLockOverlay featureName="Additional Students" />
+                <FeatureLockOverlay featureName={t('student_slots')} />
               )}
             </div>
             

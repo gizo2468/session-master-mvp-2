@@ -68,7 +68,7 @@ const StudentSettings: React.FC = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>{t('confirm')}</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to disconnect from {coach.displayName}? This will remove your connection with this coach.
+                              {t('disconnect_confirmation')}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -101,9 +101,9 @@ const StudentSettings: React.FC = () => {
           <h3 className="text-lg font-medium">{t('upgrade_to_coach')}</h3>
           <Card>
             <CardContent className="pt-6">
-              <h4 className="text-lg font-medium mb-2">Become a Coach</h4>
+              <h4 className="text-lg font-medium mb-2">{t('become_coach')}</h4>
               <p className="text-sm text-gray-500 mb-4">
-                Upgrade your account to become a coach and start helping other players improve their game
+                {t('upgrade_to_coach_description')}
               </p>
               <Button 
                 variant="poker"

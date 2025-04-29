@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -190,7 +191,7 @@ const AccountSettings: React.FC = () => {
                   name="onlineNickname"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Online Nickname</FormLabel>
+                      <FormLabel>{t('online_nickname')}</FormLabel>
                       <FormControl>
                         <Input 
                           {...field} 

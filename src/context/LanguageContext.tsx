@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
@@ -12,19 +11,45 @@ interface Translations {
   };
 }
 
-// Basic translations
+// Comprehensive translations for the entire app
 const translations: Translations = {
   en: {
-    // General
+    // General UI
     "app_name": "Session Master",
     "save": "Save",
     "cancel": "Cancel",
     "confirm": "Confirm",
     "delete": "Delete",
+    "edit": "Edit",
     "back": "Back",
     "loading": "Loading...",
     "success": "Success",
     "error": "Error",
+    "yes": "Yes",
+    "no": "No",
+    "add": "Add",
+    "remove": "Remove",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "view": "View",
+    "view_all": "View All",
+    "more": "More",
+    "less": "Less",
+    "copy": "Copy",
+    "copied": "Copied",
+    "share": "Share",
+    "submit": "Submit",
+
+    // Navigation
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "settings": "Settings",
+    "sessions": "Sessions",
+    "tables": "Tables",
+    "stats": "Stats",
+    "history": "History",
     
     // Auth
     "login": "Log In",
@@ -34,6 +59,7 @@ const translations: Translations = {
     "password": "Password",
     "confirm_password": "Confirm Password",
     "full_name": "Full Name",
+    "online_nickname": "Online Nickname",
     "welcome_back": "Welcome Back",
     "sign_in_prompt": "Sign in to access your account",
     "create_account": "Create Account",
@@ -42,7 +68,6 @@ const translations: Translations = {
     "dont_have_account": "Don't have an account?",
     
     // Settings
-    "settings": "Settings",
     "account_settings": "Account Settings",
     "coach_settings": "Coach Settings",
     "student_settings": "Student Settings",
@@ -73,23 +98,123 @@ const translations: Translations = {
     "terms_of_service": "Terms of Service",
     "privacy_policy": "Privacy Policy",
     
+    // Session Tracking
+    "new_session": "New Session",
+    "live_session": "Live Session",
+    "end_session": "End Session",
+    "session_stats": "Session Stats",
+    "recent_sessions": "Recent Sessions",
+    "active_sessions": "Active Sessions",
+    "tournament": "Tournament",
+    "cash_game": "Cash Game",
+    "net_profit": "Net Profit",
+    "record": "Record",
+    "buy_in": "Buy-in",
+    "cash_out": "Cash out",
+    "rebuy": "Rebuy",
+    "re_buys": "Re-Buys",
+    "blinds": "Blinds",
+    "format": "Format",
+    "game": "Game",
+    "started": "Started",
+    "ended": "Ended",
+    "duration": "Duration",
+    "profit_loss": "Profit/Loss",
+    "add_rebuy": "Add Rebuy",
+    "add_hand": "Add Hand",
+    "notes": "Notes",
+    "session_notes": "Session Notes",
+    "tables_played": "Tables Played",
+    "players_eliminated": "Players Eliminated",
+    "total_bounty_collected": "Total Bounty Collected",
+    "total_cash_out": "Total Cash Out",
+    "tournament_type": "Tournament Type",
+    "starting_bbs": "Starting BBs",
+    "start": "Start",
+    "end": "End",
+    
+    // Coach-Student System
+    "coach_profile": "Coach Profile",
+    "student_profile": "Student Profile",
+    "coach_dashboard": "Coach Dashboard",
+    "manage_your_students": "Manage your students and connection codes",
+    "student_capacity": "Student Capacity",
+    "live_sessions": "Live Sessions",
+    "recent_feedback": "Recent Feedback",
+    "feedback_archive": "Feedback Archive",
+    "session_review": "Session Review",
+    "add_comment": "Add Comment",
+    "add_session_comment": "Add Session Comment",
+    "become_coach": "Become a Coach",
+    "share_code_with_students": "Share this code with your students to connect with them",
+    "students": "Students",
+    "connect_with_coach": "Connect with a Coach",
+    "no_connected_coaches": "No connected coaches",
+    "view_feedback": "View Feedback",
+    "coach_tier_upgrade": "Coach Tier Upgrade",
+    "current_coach_plan": "Current Plan",
+    "student_management": "Student Management",
+    
+    // Focus Mode
+    "focus_mode": "Focus Mode",
+    "enter_focus_mode": "Enter Focus Mode",
+    "exit_focus_mode": "Exit Focus Mode",
+    "poker_tips": "Poker Tips",
+    
     // Error Messages
     "error_required_field": "This field is required",
     "error_invalid_email": "Please enter a valid email address",
     "error_password_length": "Password must be at least 6 characters long",
     "error_passwords_dont_match": "Passwords don't match",
+    "storage_issue": "Storage Issue",
+    "profile_update_no_persist": "Profile updated, but changes may not persist after logout.",
+    
+    // Added translations for SupportSettings
+    "legal_information": "Legal Information",
+    "review_terms_policies": "Review our terms and policies",
+    
+    // Added translations for StudentSettings
+    "disconnect_confirmation": "Are you sure you want to disconnect from this coach? This will remove your connection with them.",
+    "upgrade_to_coach_description": "Upgrade your account to become a coach and start helping other players improve their game"
   },
+  
   he: {
-    // General
+    // General UI
     "app_name": "מנהל סשנים",
     "save": "שמור",
     "cancel": "בטל",
     "confirm": "אשר",
     "delete": "מחק",
+    "edit": "ערוך",
     "back": "חזור",
     "loading": "טוען...",
     "success": "הצלחה",
     "error": "שגיאה",
+    "yes": "כן",
+    "no": "לא",
+    "add": "הוסף",
+    "remove": "הסר",
+    "search": "חפש",
+    "filter": "סנן",
+    "sort": "מיין",
+    "view": "צפה",
+    "view_all": "צפה בהכל",
+    "more": "עוד",
+    "less": "פחות",
+    "copy": "העתק",
+    "copied": "הועתק",
+    "share": "שתף",
+    "submit": "שלח",
+
+    // Navigation
+    "home": "בית",
+    "dashboard": "לוח בקרה",
+    "profile": "פרופיל",
+    "settings": "הגדרות",
+    "sessions": "סשנים",
+    "tables": "שולחנות",
+    "stats": "סטטיסטיקות",
+    "history": "היסטוריה",
     
     // Auth
     "login": "התחבר",
@@ -99,6 +224,7 @@ const translations: Translations = {
     "password": "סיסמה",
     "confirm_password": "אימות סיסמה",
     "full_name": "שם מלא",
+    "online_nickname": "כינוי מקוון",
     "welcome_back": "ברוך שובך",
     "sign_in_prompt": "התחבר כדי לגשת לחשבון שלך",
     "create_account": "צור חשבון",
@@ -107,7 +233,6 @@ const translations: Translations = {
     "dont_have_account": "אין לך חשבון?",
     
     // Settings
-    "settings": "הגדרות",
     "account_settings": "הגדרות חשבון",
     "coach_settings": "הגדרות מאמן",
     "student_settings": "הגדרות תלמיד",
@@ -138,11 +263,84 @@ const translations: Translations = {
     "terms_of_service": "תנאי שימוש",
     "privacy_policy": "מדיניות פרטיות",
     
+    // Session Tracking
+    "new_session": "סשן חדש",
+    "live_session": "סשן חי",
+    "end_session": "סיים סשן",
+    "session_stats": "נתוני סשן",
+    "recent_sessions": "סשנים אחרונים",
+    "active_sessions": "סשנים פעילים",
+    "tournament": "טורניר",
+    "cash_game": "משחק קופה",
+    "net_profit": "רווח נקי",
+    "record": "רקורד",
+    "buy_in": "קניה",
+    "cash_out": "פדיון",
+    "rebuy": "קנייה מחדש",
+    "re_buys": "קניות מחדש",
+    "blinds": "בליינדים",
+    "format": "פורמט",
+    "game": "משחק",
+    "started": "התחיל",
+    "ended": "הסתיים",
+    "duration": "משך זמן",
+    "profit_loss": "רווח/הפסד",
+    "add_rebuy": "הוסף קנייה מחדש",
+    "add_hand": "הוסף יד",
+    "notes": "הערות",
+    "session_notes": "הערות סשן",
+    "tables_played": "שולחנות ששוחקו",
+    "players_eliminated": "שחקנים שהודחו",
+    "total_bounty_collected": "סך באונטי שנאסף",
+    "total_cash_out": "סך פדיון",
+    "tournament_type": "סוג טורניר",
+    "starting_bbs": "בליינדים התחלתיים",
+    "start": "התחלה",
+    "end": "סיום",
+    
+    // Coach-Student System
+    "coach_profile": "פרופיל מאמן",
+    "student_profile": "פרופיל תלמיד",
+    "coach_dashboard": "לוח בקרה למאמן",
+    "manage_your_students": "נהל את התלמידים שלך וקודי חיבור",
+    "student_capacity": "קיבולת תלמידים",
+    "live_sessions": "סשנים חיים",
+    "recent_feedback": "משוב אחרון",
+    "feedback_archive": "ארכיון משוב",
+    "session_review": "סקירת סשן",
+    "add_comment": "הוסף תגובה",
+    "add_session_comment": "הוסף תגובה לסשן",
+    "become_coach": "הפוך למאמן",
+    "share_code_with_students": "שתף קוד זה עם התלמידים שלך כדי להתחבר איתם",
+    "students": "תלמידים",
+    "connect_with_coach": "התחבר עם מאמן",
+    "no_connected_coaches": "אין מאמנים מחוברים",
+    "view_feedback": "צפה במשוב",
+    "coach_tier_upgrade": "שדרוג רמת מאמן",
+    "current_coach_plan": "תכנית נוכחית",
+    "student_management": "ניהול תלמידים",
+    
+    // Focus Mode
+    "focus_mode": "מצב ריכוז",
+    "enter_focus_mode": "כנס למצב ריכוז",
+    "exit_focus_mode": "צא ממצב ריכוז",
+    "poker_tips": "טיפים לפוקר",
+    
     // Error Messages
     "error_required_field": "שדה זה הוא חובה",
     "error_invalid_email": "אנא הזן כתובת אימייל תקינה",
     "error_password_length": "הסיסמה חייבת להיות באורך של 6 תווים לפחות",
     "error_passwords_dont_match": "הסיסמאות אינן תואמות",
+    "storage_issue": "בעיית אחסון",
+    "profile_update_no_persist": "הפרופיל עודכן, אך השינויים עשויים לא להישמר אחרי התנתקות.",
+    
+    // Added translations for SupportSettings
+    "legal_information": "מידע משפטי",
+    "review_terms_policies": "עיין בתנאים ובמדיניות שלנו",
+    
+    // Added translations for StudentSettings
+    "disconnect_confirmation": "האם אתה בטוח שברצונך להתנתק ממאמן זה? פעולה זו תסיר את החיבור ביניכם.",
+    "upgrade_to_coach_description": "שדרג את החשבון שלך כדי להפוך למאמן ולהתחיל לעזור לשחקנים אחרים לשפר את המשחק שלהם"
   }
 };
 
@@ -182,6 +380,16 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Set document direction based on language
   useEffect(() => {
     document.documentElement.dir = language === 'he' ? 'rtl' : 'ltr';
+    
+    // Also set a data attribute on the html element for additional styling hooks
+    document.documentElement.setAttribute('data-language', language);
+    
+    // Apply RTL-specific styles at the document level when needed
+    if (language === 'he') {
+      document.body.classList.add('rtl-language');
+    } else {
+      document.body.classList.remove('rtl-language');
+    }
   }, [language]);
 
   // Set language and update user preferences if logged in

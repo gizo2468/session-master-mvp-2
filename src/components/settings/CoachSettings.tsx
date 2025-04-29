@@ -24,7 +24,7 @@ const CoachSettings: React.FC = () => {
     
     toast({
       title: t('success'),
-      description: "Connection code copied to clipboard",
+      description: t('copied'),
     });
     
     // Reset copied state after 2 seconds
@@ -48,7 +48,7 @@ const CoachSettings: React.FC = () => {
                     {connectionCode}
                   </div>
                   <p className="text-sm text-gray-500">
-                    Share this code with your students to connect with them
+                    {t('share_code_with_students')}
                   </p>
                 </div>
                 

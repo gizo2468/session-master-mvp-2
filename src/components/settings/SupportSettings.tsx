@@ -18,7 +18,7 @@ const SupportSettings: React.FC = () => {
           <CardHeader>
             <CardTitle>{t('support_request')}</CardTitle>
             <CardDescription>
-              Get help with any issues or questions about the app
+              {t('support_request')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -32,9 +32,9 @@ const SupportSettings: React.FC = () => {
         {/* Legal Documents Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Legal Information</CardTitle>
+            <CardTitle>{t('legal_information')}</CardTitle>
             <CardDescription>
-              Review our terms and policies
+              {t('review_terms_policies')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
