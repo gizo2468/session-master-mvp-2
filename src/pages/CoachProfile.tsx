@@ -40,7 +40,15 @@ const CoachProfile = () => {
             <Icon name="ArrowLeft" size={16} />
             <span>Back</span>
           </button>
-          <h1 className="text-2xl font-serif font-bold text-poker-black">Coach Profile</h1>
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-serif font-bold text-poker-black">Coach Profile</h1>
+            <div className="flex items-center">
+              <Badge className={`${coachTier === 'free' ? 'bg-gray-500' : 'bg-poker-gold'}`}>
+                {tierDetails.name}
+              </Badge>
+              {coachTier !== 'elite' && <FeatureLockOverlay featureName="" isUpgradeButton={true} />}
+            </div>
+          </div>
           <p className="text-gray-500 text-sm mt-1">Manage your students and connection codes</p>
         </header>
         
@@ -63,13 +71,6 @@ const CoachProfile = () => {
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-xl">{coachProfile.displayName}</CardTitle>
-                  <div className="flex items-center">
-                    <Badge className={`${coachTier === 'free' ? 'bg-gray-500' : 'bg-poker-gold'}`}>
-                      {tierDetails.name}
-                    </Badge>
-                    {/* Always show the Change Plan button */}
-                    {coachTier !== 'elite' && <FeatureLockOverlay featureName="" isUpgradeButton={true} />}
-                  </div>
                 </div>
                 {coachProfile.bio && (
                   <CardDescription>{coachProfile.bio}</CardDescription>

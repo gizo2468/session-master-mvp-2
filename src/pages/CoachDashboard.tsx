@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -54,24 +53,12 @@ const CoachDashboard = () => {
               <h1 className="text-2xl font-serif font-bold text-poker-black">Coach Dashboard</h1>
               <p className="text-gray-500 text-sm mt-1">Manage your students and provide feedback</p>
             </div>
-            <Button
-              onClick={() => navigate('/coach-upgrade')} 
-              variant={coachTier === 'free' ? 'poker' : 'outline'}
-              size="sm"
-              className="flex items-center gap-1"
-            >
-              {coachTier === 'free' ? (
-                <>
-                  <Icon name="package-plus" size={16} />
-                  <span>Upgrade</span>
-                </>
-              ) : (
-                <>
-                  <Icon name="badge-check" size={16} />
-                  <span>{tierDetails.name}</span>
-                </>
-              )}
-            </Button>
+            <div className="flex items-center">
+              <Badge className={`${coachTier === 'free' ? 'bg-gray-500' : 'bg-poker-gold'}`}>
+                {tierDetails.name}
+              </Badge>
+              {coachTier !== 'elite' && <FeatureLockOverlay featureName="" isUpgradeButton={true} />}
+            </div>
           </div>
         </header>
         
