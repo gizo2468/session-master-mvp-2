@@ -15,6 +15,7 @@ import CreateCoachProfileForm from '@/components/coaching/CreateCoachProfileForm
 import { coachTiers, hasFeatureAccess, isAtStudentLimit, getMaxStudents } from '@/utils/coachTiers';
 import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
 import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const CoachProfile = () => {
   const navigate = useNavigate();
@@ -28,6 +29,11 @@ const CoachProfile = () => {
   const maxStudents = getMaxStudents(coachTier);
   const studentPercentage = maxStudents > 0 ? (studentCount / maxStudents) * 100 : 0;
   const atStudentLimit = isAtStudentLimit(coachTier, studentCount);
+  
+  // Handle plan badge click
+  const handlePlanBadgeClick = () => {
+    navigate('/coach-upgrade');
+  };
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -63,13 +69,27 @@ const CoachProfile = () => {
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-xl">{coachProfile.displayName}</CardTitle>
-                  <div className="flex items-center">
-                    <Badge className={`${coachTier === 'free' ? 'bg-gray-500' : 'bg-poker-gold'}`}>
-                      {tierDetails.name}
-                    </Badge>
-                    {/* Always show the Change Plan button */}
-                    {coachTier !== 'elite' && <FeatureLockOverlay featureName="" isUpgradeButton={true} />}
-                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge 
+                          onClick={handlePlanBadgeClick}
+                          className={`
+                            cursor-pointer transition-all hover:ring-2 hover:ring-opacity-50
+                            ${coachTier === 'free' ? 'bg-gray-500 hover:bg-gray-600 hover:ring-gray-400' : 
+                            coachTier === 'starter' ? 'bg-blue-500 hover:bg-blue-600 hover:ring-blue-400' :
+                            coachTier === 'pro' ? 'bg-poker-gold hover:bg-poker-darkGold hover:ring-poker-gold' :
+                            'bg-purple-600 hover:bg-purple-700 hover:ring-purple-500'}
+                          `}
+                        >
+                          {tierDetails.name}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Click to change plan</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
                 {coachProfile.bio && (
                   <CardDescription>{coachProfile.bio}</CardDescription>
