@@ -105,7 +105,12 @@ const CoachDashboard = () => {
                   </Tooltip>
                 </TooltipProvider>
                 {coachTier !== 'free' && (
-                  <Badge className="bg-poker-gold ml-2">Paid</Badge>
+                  <Badge 
+                    className="bg-poker-gold ml-2 cursor-pointer hover:bg-poker-darkGold"
+                    onClick={handlePlanBadgeClick}
+                  >
+                    Paid
+                  </Badge>
                 )}
               </div>
               <div className="text-sm text-gray-600">
@@ -136,7 +141,7 @@ const CoachDashboard = () => {
               {coachTier === 'free' && (
                 <Button 
                   variant="link" 
-                  onClick={() => navigate('/coach-upgrade')}
+                  onClick={handlePlanBadgeClick}
                   className="text-xs p-0 h-auto"
                 >
                   View available plans

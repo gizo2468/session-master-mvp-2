@@ -36,7 +36,7 @@ const CoachUpgrade = () => {
       <div className="container mx-auto max-w-5xl px-4 py-8">
         <header className="mb-8">
           <Button 
-            onClick={() => navigate('/')} 
+            onClick={() => navigate(-1)} 
             variant="ghost"
             className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:bg-transparent hover:text-poker-green"
           >

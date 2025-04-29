@@ -67,7 +67,7 @@ const CoachProfile = () => {
             {/* Coach tier info card */}
             <Card className="mb-6">
               <CardHeader className="pb-3">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-start">
                   <CardTitle className="text-xl">{coachProfile.displayName}</CardTitle>
                   <TooltipProvider>
                     <Tooltip>
@@ -117,7 +117,7 @@ const CoachProfile = () => {
                     <GenerateCodeButton />
                     {coachTier === 'free' && (
                       <Button 
-                        onClick={() => navigate('/coach-upgrade')}
+                        onClick={handlePlanBadgeClick}
                         variant="default"
                         className="w-full bg-poker-gold hover:bg-poker-darkGold"
                       >

@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/context/LanguageContext';
 import Icon from '@/components/ui/Lucide';
+import { useNavigate } from 'react-router-dom';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Mock subscription data
 const mockSubscription = {
@@ -64,6 +66,12 @@ const plans = [
 
 const BillingSettings: React.FC = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  
+  // Handle plan badge click
+  const handlePlanBadgeClick = () => {
+    navigate('/coach-upgrade');
+  };
 
   return (
     <div className="space-y-6">
@@ -82,7 +90,21 @@ const BillingSettings: React.FC = () => {
                     {mockSubscription.price} {t('per_month')}
                   </CardDescription>
                 </div>
-                <Badge className="bg-poker-gold hover:bg-poker-darkGold">{t('current_plan')}</Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge 
+                        onClick={handlePlanBadgeClick}
+                        className="bg-poker-gold hover:bg-poker-darkGold cursor-pointer transition-colors"
+                      >
+                        {t('current_plan')}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{t('click_to_change_plan')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </CardHeader>
             <CardContent>
@@ -141,6 +163,7 @@ const BillingSettings: React.FC = () => {
                     variant={plan.current ? "outline" : "poker"} 
                     className="w-full"
                     disabled={plan.current}
+                    onClick={() => navigate('/coach-upgrade')}
                   >
                     {plan.current ? t('current_plan') : t('upgrade')}
                   </Button>
