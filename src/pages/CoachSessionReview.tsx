@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +11,7 @@ import { CommentTag } from '@/types/poker';
 import { HandData, TableData } from '@/types/poker';
 import CardDisplay from '@/components/poker/CardDisplay';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Mock session data for the demo
 const createMockSessionData = (sessionId: string) => {
@@ -133,62 +133,64 @@ const CoachSessionReview = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left border-b">
-                      <th className="p-3 font-medium text-gray-600">Cards</th>
-                      <th className="p-3 font-medium text-gray-600">Position</th>
-                      <th className="p-3 font-medium text-gray-600">Action</th>
-                      <th className="p-3 font-medium text-gray-600">Result</th>
-                      <th className="p-3 font-medium text-gray-600"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {hands.map(hand => (
-                      <tr key={hand.id} className="border-b hover:bg-gray-50">
-                        <td className="p-3">
-                          <CardDisplay cards={hand.cards} size="sm" />
-                        </td>
-                        <td className="p-3">
-                          <span className="inline-flex items-center justify-center px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
-                            {hand.position}
-                          </span>
-                        </td>
-                        <td className="p-3 max-w-sm">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="truncate cursor-help" title={hand.action}>
-                                  {hand.action}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-sm bg-white p-3 shadow-lg border rounded-lg">
-                                <p className="text-sm">{hand.action}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </td>
-                        <td className={`p-3 font-medium ${
-                          hand.resultAmount && hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {hand.resultAmount && hand.resultAmount >= 0 ? '+' : ''}
-                          ${hand.resultAmount && Math.abs(Number(hand.resultAmount)).toFixed(2)}
-                        </td>
-                        <td className="p-3 text-right">
-                          <Button
-                            onClick={() => openCommentForm(hand.id)}
-                            variant="ghost"
-                            size="sm"
-                          >
-                            <Icon name="MessageSquare" size={16} />
-                          </Button>
-                        </td>
+              <ScrollArea className="h-[400px] rounded-md">
+                <div className="overflow-hidden">
+                  <table className="w-full">
+                    <thead className="sticky top-0 bg-white">
+                      <tr className="text-left border-b">
+                        <th className="p-3 font-medium text-gray-600">Cards</th>
+                        <th className="p-3 font-medium text-gray-600">Position</th>
+                        <th className="p-3 font-medium text-gray-600">Action</th>
+                        <th className="p-3 font-medium text-gray-600">Result</th>
+                        <th className="p-3 font-medium text-gray-600"></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {hands.map(hand => (
+                        <tr key={hand.id} className="border-b hover:bg-gray-50">
+                          <td className="p-3">
+                            <CardDisplay cards={hand.cards} size="sm" />
+                          </td>
+                          <td className="p-3">
+                            <span className="inline-flex items-center justify-center px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
+                              {hand.position}
+                            </span>
+                          </td>
+                          <td className="p-3 max-w-sm">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="truncate cursor-help" title={hand.action}>
+                                    {hand.action}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm bg-white p-3 shadow-lg border rounded-lg">
+                                  <p className="text-sm">{hand.action}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </td>
+                          <td className={`p-3 font-medium ${
+                            hand.resultAmount && hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {hand.resultAmount && hand.resultAmount >= 0 ? '+' : ''}
+                            ${hand.resultAmount && Math.abs(Number(hand.resultAmount)).toFixed(2)}
+                          </td>
+                          <td className="p-3 text-right">
+                            <Button
+                              onClick={() => openCommentForm(hand.id)}
+                              variant="ghost"
+                              size="sm"
+                            >
+                              <Icon name="MessageSquare" size={16} />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </ScrollArea>
             </CardContent>
           </Card>
         </div>
