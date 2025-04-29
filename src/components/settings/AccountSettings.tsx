@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -62,7 +63,7 @@ const AccountSettings: React.FC = () => {
     setIsResettingPassword(true);
     
     try {
-      // The resetPasswordForEmail function only takes one argument (email)
+      // Fix: The resetPasswordForEmail function only takes one argument (email)
       const { error } = await supabase.auth.resetPasswordForEmail(user.email);
       
       if (error) throw error;
