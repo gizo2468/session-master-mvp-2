@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
@@ -54,6 +53,9 @@ const translations: Translations = {
     "change_password": "Change Password",
     "current_password": "Current Password",
     "new_password": "New Password",
+    "reset_password": "Reset Password",
+    "send_reset_link": "Send Reset Link",
+    "sending": "Sending...",
     "language": "Language",
     "notifications": "Notifications",
     "session_notifications": "Live Session Notifications",
@@ -119,6 +121,9 @@ const translations: Translations = {
     "change_password": "שנה סיסמה",
     "current_password": "סיסמה נוכחית",
     "new_password": "סיסמה חדשה",
+    "reset_password": "אפס סיסמה",
+    "send_reset_link": "שלח קישור לאיפוס",
+    "sending": "שולח...",
     "language": "שפה",
     "notifications": "התראות",
     "session_notifications": "התראות סשנים בשידור חי",

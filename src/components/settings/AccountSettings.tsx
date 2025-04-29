@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -232,9 +231,9 @@ const AccountSettings: React.FC = () => {
         
         <Separator className="my-8" />
         
-        {/* Password Reset Section */}
-        <div>
-          <h3 className="text-lg font-medium mb-4">{t('reset_password')}</h3>
+        {/* Password Reset Section - Improved Styling */}
+        <div className="bg-white p-6 rounded-lg border border-border shadow-sm">
+          <h3 className="text-lg font-medium mb-4 text-left">{t('reset_password')}</h3>
           <p className="text-muted-foreground mb-4">
             Reset your password securely via email. You will receive a link to create a new password.
           </p>
@@ -242,16 +241,18 @@ const AccountSettings: React.FC = () => {
             <Button 
               onClick={handleResetPasswordViaEmail}
               disabled={isResettingPassword}
+              variant="poker"
+              className="flex items-center gap-2"
             >
               {isResettingPassword ? (
                 <>
-                  <Icon name="Loader" className="mr-2 h-4 w-4 animate-spin" />
+                  <Icon name="Loader" className="h-4 w-4 animate-spin" />
                   {t('sending')}
                 </>
               ) : (
                 <>
-                  <Icon name="Mail" className="mr-2 h-4 w-4" />
-                  {t('send_reset_link')}
+                  <Icon name="Mail" className="h-4 w-4" />
+                  {t('send_reset_link') || "Send Reset Link"}
                 </>
               )}
             </Button>
