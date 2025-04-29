@@ -156,10 +156,10 @@ const CoachUpgrade = () => {
             {!isOnFreePlan && (
               <Button 
                 variant="outline" 
-                className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 flex items-center gap-2"
+                className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 flex items-center gap-1 text-xs px-2 py-1 h-8"
                 onClick={() => setCancelDialogOpen(true)}
               >
-                <Icon name="X" size={16} />
+                <Icon name="X" size={14} />
                 Cancel Subscription
               </Button>
             )}
