@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -63,9 +62,7 @@ const AccountSettings: React.FC = () => {
     setIsResettingPassword(true);
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: window.location.origin + '/settings',
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email);
       
       if (error) throw error;
       
