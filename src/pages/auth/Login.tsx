@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,13 +13,26 @@ import Icon from '@/components/ui/Lucide';
 import Logo from '@/components/Logo';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters long' }),
 });
 
+const resetPasswordSchema = z.object({
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+});
+
 type FormValues = z.infer<typeof formSchema>;
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 const Login: React.FC = () => {
   const { login, isLoading } = useAuth();
@@ -26,6 +40,7 @@ const Login: React.FC = () => {
   const location = useLocation();
   const { toast } = useToast();
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
   
   // Get redirect path from location state or default to home
   const from = (location.state as { from?: string })?.from || '/';
@@ -38,6 +53,13 @@ const Login: React.FC = () => {
     },
   });
 
+  const resetPasswordForm = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      email: '',
+    },
+  });
+
   const onSubmit = async (values: FormValues) => {
     try {
       await login(values.email, values.password);
@@ -47,22 +69,20 @@ const Login: React.FC = () => {
     }
   };
 
-  const handlePasswordReset = async () => {
-    const email = form.getValues("email");
+  const handlePasswordResetClick = () => {
+    // Get the email from the login form if it exists
+    const loginEmail = form.getValues("email");
+    if (loginEmail) {
+      resetPasswordForm.setValue("email", loginEmail);
+    }
+    setShowResetDialog(true);
+  };
+
+  const handlePasswordReset = async (values: ResetPasswordFormValues) => {
     setIsResettingPassword(true);
     
-    if (!email || !form.formState.dirtyFields.email) {
-      toast({
-        title: "Email required",
-        description: "Please enter your email address first",
-        variant: "destructive",
-      });
-      setIsResettingPassword(false);
-      return;
-    }
-    
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email);
       
       if (error) {
         throw error;
@@ -72,6 +92,9 @@ const Login: React.FC = () => {
         title: "Password reset email sent",
         description: "If an account exists with this email, you'll receive instructions to reset your password.",
       });
+
+      setShowResetDialog(false);
+      resetPasswordForm.reset();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -150,20 +173,65 @@ const Login: React.FC = () => {
           <Button 
             variant="link" 
             className="text-sm text-gray-600 p-0 h-auto"
-            onClick={handlePasswordReset}
-            disabled={isResettingPassword}
+            onClick={handlePasswordResetClick}
           >
-            {isResettingPassword ? (
-              <>
-                <Icon name="Loader" className="mr-1 h-3 w-3 animate-spin" />
-                Sending reset email...
-              </>
-            ) : (
-              'Forgot your password? Reset it here'
-            )}
+            Forgot your password? Reset it here
           </Button>
         </CardFooter>
       </Card>
+
+      {/* Password Reset Dialog */}
+      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Reset your password</DialogTitle>
+            <DialogDescription>
+              Enter your email address and we'll send you instructions to reset your password.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...resetPasswordForm}>
+            <form onSubmit={resetPasswordForm.handleSubmit(handlePasswordReset)} className="space-y-4">
+              <FormField
+                control={resetPasswordForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="your.email@example.com" {...field} autoFocus />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowResetDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={isResettingPassword}
+                >
+                  {isResettingPassword ? (
+                    <>
+                      <Icon name="Loader" className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    'Send Reset Link'
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
