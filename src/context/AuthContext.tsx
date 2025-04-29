@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
@@ -294,11 +293,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw authError;
       }
 
-      // Also update the profile in the profiles table if it exists
+      // FIXED: Update the profiles table using .update() with correct eq condition
+      // This ensures we match the RLS policy requiring auth.uid() = id
       const { error: profileError } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
+        .update({
           full_name: optimizedUserData.fullName || user.fullName,
           online_nickname: optimizedUserData.onlineNickname || user.onlineNickname,
           profile_picture: optimizedUserData.profilePicture || user.profilePicture,
@@ -306,7 +305,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           coach_tier: user.role === 'coach' ? optimizedUserData.coachTier || user.coachTier : null,
           language: optimizedUserData.language || user.language,
           notification_preferences: optimizedUserData.notificationPreferences || user.notificationPreferences,
-        });
+        })
+        .eq('id', user.id); // Explicitly match on user ID to satisfy RLS policy
 
       if (profileError) {
         throw profileError;
