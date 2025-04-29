@@ -36,7 +36,7 @@ const Settings: React.FC = () => {
           <h1 className="text-2xl font-serif font-bold text-poker-black">{t('settings')}</h1>
         </header>
         
-        <Tabs defaultValue="account" dir={dir} className="space-y-4">
+        <Tabs defaultValue="account" dir={dir as "ltr" | "rtl"} className="space-y-4">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 gap-2">
             <TabsTrigger value="account">{t('account_settings')}</TabsTrigger>
             <TabsTrigger value="app">{t('app_settings')}</TabsTrigger>
