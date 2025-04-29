@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { LockKeyhole, AlertTriangle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PokerTips } from '@/components/FocusMode/PokerTips';
@@ -61,7 +60,7 @@ const FocusModePage = () => {
   };
   
   const handleEmergencyUnlock = () => {
-    if (window.confirm(t('confirm_exit_focus_mode', 'Are you sure you want to exit Focus Mode?'))) {
+    if (window.confirm(t('confirm_exit_focus_mode'))) {
       navigate('/');
     }
   };
@@ -73,7 +72,7 @@ const FocusModePage = () => {
           <LockKeyhole className="h-20 w-20 text-poker-gold mb-4" />
           <h1 className="text-3xl font-bold font-serif text-center mb-2">{t('focus_mode')} {t('active')}</h1>
           <div className="text-5xl font-bold mb-6 text-poker-black">{formatTime(timeLeft)}</div>
-          <p className="text-center text-gray-500 mb-8">{t('focus_mode_description_active', 'Stay focused on your game and avoid distractions')}</p>
+          <p className="text-center text-gray-500 mb-8">{t('focus_mode_description_active')}</p>
           
           <Button 
             variant="destructive" 
@@ -81,12 +80,12 @@ const FocusModePage = () => {
             onClick={handleEmergencyUnlock}
           >
             <AlertTriangle className="mr-2 h-4 w-4" />
-            {t('emergency_unlock', 'Emergency Unlock')}
+            {t('emergency_unlock')}
           </Button>
         </div>
         
         <div className="mb-4">
-          <h2 className="font-serif text-xl font-bold mb-4">{t('strategic_tips', 'Strategic Tips')}</h2>
+          <h2 className="font-serif text-xl font-bold mb-4">{t('strategic_tips')}</h2>
           <ScrollArea className="h-[300px] rounded-md border p-4">
             <PokerTips />
           </ScrollArea>

@@ -37,7 +37,7 @@ const FocusModeButton = () => {
           <DialogHeader>
             <DialogTitle>{t('focus_mode')}</DialogTitle>
             <DialogDescription>
-              {t('focus_mode_description', 'Select how long you want to stay in focus mode.')}
+              {t('focus_mode_description')}
             </DialogDescription>
           </DialogHeader>
           
@@ -60,7 +60,7 @@ const FocusModeButton = () => {
             </div>
             
             <p className="text-sm text-gray-500 mb-4">
-              {t('focus_mode_warning', 'Your phone will be locked in focus mode for the selected duration to help you concentrate on your game.')}
+              {t('focus_mode_warning')}
             </p>
           </div>
           

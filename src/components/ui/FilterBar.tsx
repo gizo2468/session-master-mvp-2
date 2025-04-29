@@ -4,10 +4,19 @@ import { useLanguage } from '@/context/LanguageContext';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { SessionFilter } from '@/types/poker';
 
 const FilterBar = () => {
   const { filters, setFilters } = useSessionContext();
   const { t } = useLanguage();
+  
+  const handleGameTypeChange = (value: 'NLH' | 'PLO' | 'Mixed' | 'Other' | 'All') => {
+    setFilters({ ...filters, gameType: value });
+  };
+
+  const handleFormatChange = (value: 'Cash' | 'Tournament' | 'Live Cash' | 'Live Tournament' | 'Online Cash' | 'Online Tournament' | 'Home Game' | 'All') => {
+    setFilters({ ...filters, format: value });
+  };
   
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
@@ -33,7 +42,7 @@ const FilterBar = () => {
             </Label>
             <Select
               value={filters.gameType || 'All'}
-              onValueChange={(value) => setFilters({ ...filters, gameType: value })}
+              onValueChange={handleGameTypeChange}
             >
               <SelectTrigger id="game-filter" className="w-full">
                 <SelectValue placeholder={t('all_games')} />
@@ -54,7 +63,7 @@ const FilterBar = () => {
             </Label>
             <Select
               value={filters.format || 'All'}
-              onValueChange={(value) => setFilters({ ...filters, format: value })}
+              onValueChange={handleFormatChange}
             >
               <SelectTrigger id="format-filter" className="w-full">
                 <SelectValue placeholder={t('all_formats')} />
@@ -63,6 +72,11 @@ const FilterBar = () => {
                 <SelectItem value="All">{t('all_formats')}</SelectItem>
                 <SelectItem value="Cash">{t('cash_game')}</SelectItem>
                 <SelectItem value="Tournament">{t('tournament')}</SelectItem>
+                <SelectItem value="Live Cash">Live {t('cash_game')}</SelectItem>
+                <SelectItem value="Live Tournament">Live {t('tournament')}</SelectItem>
+                <SelectItem value="Online Cash">Online {t('cash_game')}</SelectItem>
+                <SelectItem value="Online Tournament">Online {t('tournament')}</SelectItem>
+                <SelectItem value="Home Game">{t('home_game')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
