@@ -87,6 +87,8 @@ export type Database = {
         Row: {
           full_name: string | null
           session_count: number | null
+          total_hours_played: number | null
+          total_minutes_played: number | null
           user_id: string | null
         }
         Relationships: []
