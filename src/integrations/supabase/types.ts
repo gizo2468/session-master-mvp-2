@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          coach_tier: string | null
+          created_at: string
+          full_name: string
+          id: string
+          language: string
+          notification_preferences: Json
+          online_nickname: string | null
+          profile_picture: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          coach_tier?: string | null
+          created_at?: string
+          full_name: string
+          id: string
+          language?: string
+          notification_preferences?: Json
+          online_nickname?: string | null
+          profile_picture?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          coach_tier?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          language?: string
+          notification_preferences?: Json
+          online_nickname?: string | null
+          profile_picture?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           created_at: string

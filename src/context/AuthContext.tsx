@@ -121,6 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fetch user data and update the state
   const fetchAndSetUser = async (supabaseUser: SupabaseUser) => {
     try {
+      // Query the profiles table we just created
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
