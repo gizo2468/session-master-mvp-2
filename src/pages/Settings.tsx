@@ -33,61 +33,57 @@ const Settings: React.FC = () => {
             <Icon name="ArrowLeft" size={16} />
             <span>{t('back')}</span>
           </Button>
-          <h1 className="text-2xl font-serif font-bold text-poker-black">{t('settings')}</h1>
+          <h1 className="text-2xl font-serif font-bold text-poker-black mb-6">{t('settings')}</h1>
         </header>
         
-        <Tabs defaultValue="account" dir={dir as "ltr" | "rtl"} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 gap-2">
-            <TabsTrigger value="account">{t('account_settings')}</TabsTrigger>
-            <TabsTrigger value="app">{t('app_settings')}</TabsTrigger>
-            {isCoach && <TabsTrigger value="coach">{t('coach_settings')}</TabsTrigger>}
-            {isStudent && <TabsTrigger value="student">{t('student_settings')}</TabsTrigger>}
-            {isCoach && <TabsTrigger value="billing">{t('billing')}</TabsTrigger>}
-            <TabsTrigger value="support">{t('help')}</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="account">
-            <Card className="p-6">
-              <AccountSettings />
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="app">
-            <Card className="p-6">
-              <AppSettings />
-            </Card>
-          </TabsContent>
-          
-          {isCoach && (
-            <TabsContent value="coach">
-              <Card className="p-6">
-                <CoachSettings />
-              </Card>
-            </TabsContent>
-          )}
-          
-          {isStudent && (
-            <TabsContent value="student">
-              <Card className="p-6">
-                <StudentSettings />
-              </Card>
-            </TabsContent>
-          )}
-          
-          {isCoach && (
-            <TabsContent value="billing">
-              <Card className="p-6">
-                <BillingSettings />
-              </Card>
-            </TabsContent>
-          )}
-          
-          <TabsContent value="support">
-            <Card className="p-6">
-              <SupportSettings />
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <Tabs defaultValue="account" dir={dir as "ltr" | "rtl"} className="w-full">
+            <div className="border-b">
+              <div className="container px-4">
+                <TabsList className="flex w-full overflow-x-auto no-scrollbar">
+                  <TabsTrigger value="account" className="flex-1">{t('account_settings')}</TabsTrigger>
+                  <TabsTrigger value="app" className="flex-1">{t('app_settings')}</TabsTrigger>
+                  {isCoach && <TabsTrigger value="coach" className="flex-1">{t('coach_settings')}</TabsTrigger>}
+                  {isStudent && <TabsTrigger value="student" className="flex-1">{t('student_settings')}</TabsTrigger>}
+                  {isCoach && <TabsTrigger value="billing" className="flex-1">{t('billing')}</TabsTrigger>}
+                  <TabsTrigger value="support" className="flex-1">{t('help')}</TabsTrigger>
+                </TabsList>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <TabsContent value="account">
+                <AccountSettings />
+              </TabsContent>
+              
+              <TabsContent value="app">
+                <AppSettings />
+              </TabsContent>
+              
+              {isCoach && (
+                <TabsContent value="coach">
+                  <CoachSettings />
+                </TabsContent>
+              )}
+              
+              {isStudent && (
+                <TabsContent value="student">
+                  <StudentSettings />
+                </TabsContent>
+              )}
+              
+              {isCoach && (
+                <TabsContent value="billing">
+                  <BillingSettings />
+                </TabsContent>
+              )}
+              
+              <TabsContent value="support">
+                <SupportSettings />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
