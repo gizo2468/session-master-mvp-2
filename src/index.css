@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,54 +6,88 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
+
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
+
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
+
+    /* Updating primary colors to match casino theme */
+    --primary: 43 77% 52%; /* Gold */
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 144 54% 24%; /* Felt Green */
+    --secondary-foreground: 210 40% 98%;
+
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
+
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
-    --radius: 0.75rem;
 
-    /* Poker themed colors */
-    --poker-feltGreen: 135 60% 20%;
-    --poker-green: 135 60% 30%;
-    --poker-black: 0 0% 10%;
-    --poker-gold: 40 90% 50%;
-    --poker-darkGold: 40 95% 40%;
-    --poker-red: 0 90% 50%;
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
+
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
+
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
+
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
+
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
+
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
+
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
+
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -62,82 +95,23 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
   }
-
-  /* RTL language support */
-  [dir="rtl"] .flex-row {
-    flex-direction: row-reverse;
+  
+  h1, h2, h3, h4, h5, h6, .font-serif {
+    font-family: 'Playfair Display', serif;
   }
-
-  [dir="rtl"] .mr-1,
-  [dir="rtl"] .mr-2,
-  [dir="rtl"] .mr-3,
-  [dir="rtl"] .mr-4 {
-    margin-right: 0;
+  
+  /* Center-align all h2, h3, h4 headers everywhere in the app */
+  h2, h3, h4 {
+    @apply text-center;
   }
-
-  [dir="rtl"] .mr-1 {
-    margin-left: 0.25rem;
+  
+  /* Adding rounded headers styling */
+  h3 {
+    font-family: 'Nunito', 'Playfair Display', sans-serif;
+    @apply font-extrabold tracking-tight;
   }
-
-  [dir="rtl"] .mr-2 {
-    margin-left: 0.5rem;
-  }
-
-  [dir="rtl"] .mr-3 {
-    margin-left: 0.75rem;
-  }
-
-  [dir="rtl"] .mr-4 {
-    margin-left: 1rem;
-  }
-
-  /* Flip icons for RTL */
-  [dir="rtl"] .icon-flip-rtl {
-    transform: scaleX(-1);
-  }
-
-  /* Force LTR for specific elements like code, numbers, etc. */
-  .force-ltr {
-    direction: ltr;
-  }
-
-  /* Add some padding to fix alignment issues in RTL mode */
-  [dir="rtl"] .rtl-fix-padding {
-    padding-right: 0.5rem;
-    padding-left: 0.5rem;
-  }
-}
-
-/* Add this for tailwind gradient buttons etc... */
-@layer components {
-  .btn-gradient-gold {
-    @apply bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-white;
-  }
-
-  .poker-card {
-    @apply bg-white rounded-lg shadow-md overflow-hidden;
-  }
-}
-
-/* Fix RTL issues with the shadcn components */
-[dir="rtl"] .rtl-component-fix {
-  text-align: right;
-}
-
-[dir="rtl"] .shadow-right {
-  box-shadow: -4px 0 10px rgba(0, 0, 0, 0.1);
-}
-
-/* Override Tailwind's default RTL fixing for flex items */
-[dir="rtl"] .rtl-override {
-  flex-direction: row !important;
-}
-
-/* For number values that shouldn't be flipped in RTL */
-.no-flip {
-  unicode-bidi: isolate;
 }

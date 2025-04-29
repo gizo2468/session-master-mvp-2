@@ -3,6 +3,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
@@ -67,7 +68,7 @@ const AppSettings: React.FC = () => {
                       onValueChange={(value) => handleLanguageChange(value as Language)}
                     >
                       <SelectTrigger className="w-full md:w-[240px]">
-                        <SelectValue placeholder={t('language')} />
+                        <SelectValue placeholder="Select Language" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="en">
@@ -98,11 +99,11 @@ const AppSettings: React.FC = () => {
                 control={form.control}
                 name="liveSessionNotifications"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rtl-component-fix">
+                  <FormItem className="flex flex-row items-center justify-between">
                     <div className="space-y-0.5">
                       <FormLabel>{t('session_notifications')}</FormLabel>
                       <FormDescription>
-                        {t('session_notifications')}
+                        Receive notifications when live sessions start
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -119,11 +120,11 @@ const AppSettings: React.FC = () => {
                 control={form.control}
                 name="newFeedbackNotifications"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rtl-component-fix">
+                  <FormItem className="flex flex-row items-center justify-between">
                     <div className="space-y-0.5">
                       <FormLabel>{t('feedback_notifications')}</FormLabel>
                       <FormDescription>
-                        {t('feedback_notifications')}
+                        Receive notifications when new feedback is provided
                       </FormDescription>
                     </div>
                     <FormControl>

@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { LockKeyhole, AlertTriangle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PokerTips } from '@/components/FocusMode/PokerTips';
-import { useLanguage } from '@/context/LanguageContext';
 
 interface LocationState {
   duration: number;
@@ -14,7 +14,6 @@ interface LocationState {
 const FocusModePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useLanguage();
   const { duration = 10 } = (location.state as LocationState) || {};
   
   const [timeLeft, setTimeLeft] = useState(duration * 60);
@@ -60,7 +59,7 @@ const FocusModePage = () => {
   };
   
   const handleEmergencyUnlock = () => {
-    if (window.confirm(t('confirm_exit_focus_mode'))) {
+    if (window.confirm('Are you sure you want to exit Focus Mode?')) {
       navigate('/');
     }
   };
@@ -70,9 +69,9 @@ const FocusModePage = () => {
       <div className="container mx-auto max-w-md px-4 py-8 flex-1 flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center mb-8">
           <LockKeyhole className="h-20 w-20 text-poker-gold mb-4" />
-          <h1 className="text-3xl font-bold font-serif text-center mb-2">{t('focus_mode')} {t('active')}</h1>
+          <h1 className="text-3xl font-bold font-serif text-center mb-2">Focus Mode Active</h1>
           <div className="text-5xl font-bold mb-6 text-poker-black">{formatTime(timeLeft)}</div>
-          <p className="text-center text-gray-500 mb-8">{t('focus_mode_description_active')}</p>
+          <p className="text-center text-gray-500 mb-8">Stay focused on your game and avoid distractions</p>
           
           <Button 
             variant="destructive" 
@@ -80,12 +79,12 @@ const FocusModePage = () => {
             onClick={handleEmergencyUnlock}
           >
             <AlertTriangle className="mr-2 h-4 w-4" />
-            {t('emergency_unlock')}
+            Emergency Unlock
           </Button>
         </div>
         
         <div className="mb-4">
-          <h2 className="font-serif text-xl font-bold mb-4">{t('strategic_tips')}</h2>
+          <h2 className="font-serif text-xl font-bold mb-4">Strategic Tips</h2>
           <ScrollArea className="h-[300px] rounded-md border p-4">
             <PokerTips />
           </ScrollArea>

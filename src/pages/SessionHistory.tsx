@@ -2,15 +2,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
-import { useLanguage } from '@/context/LanguageContext';
 import FilterBar from '@/components/ui/FilterBar';
 import SessionCard from '@/components/SessionCard';
-import Icon from '@/components/ui/Lucide';
 
 export default function SessionHistory() {
   const navigate = useNavigate();
   const { sessions, filters } = useSessionContext();
-  const { t } = useLanguage();
   
   // Filter sessions based on selected filters
   const filteredSessions = sessions.filter(session => {
@@ -41,10 +38,9 @@ export default function SessionHistory() {
       <div className="container mx-auto max-w-md px-4 py-8">
         <header className="mb-8">
           <button onClick={() => navigate(-1)} className="text-poker-feltGreen mb-4 flex items-center">
-            <Icon name="ArrowLeft" className="mr-1 icon-flip-rtl" size={16} />
-            <span>{t('back')}</span>
+            ← Back
           </button>
-          <h1 className="text-2xl font-extrabold tracking-tight">{t('session_history')}</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">Session History</h1>
         </header>
         
         <FilterBar />
@@ -55,7 +51,7 @@ export default function SessionHistory() {
           ))
         ) : (
           <div className="bg-white rounded-lg shadow-md p-4 text-center text-gray-500">
-            {t('no_sessions_found')}
+            No sessions found. Adjust your filters or start a new session.
           </div>
         )}
       </div>
