@@ -98,8 +98,8 @@ export default function TopPlayersBySessionsTable() {
                 <TableRow key={player.user_id}>
                   <TableCell className="font-medium">{player.full_name}</TableCell>
                   <TableCell>{player.session_count}</TableCell>
-                  <TableCell>{player.total_hours_played.toFixed(1)}</TableCell>
-                  <TableCell>{player.total_minutes_played.toFixed(0)}</TableCell>
+                  <TableCell>{player.total_hours_played}</TableCell>
+                  <TableCell>{player.total_minutes_played}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
