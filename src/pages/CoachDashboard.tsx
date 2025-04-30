@@ -8,7 +8,6 @@ import { useAuth } from '@/context/AuthContext';
 import Icon from '@/components/ui/Lucide';
 import StudentList from '@/components/coaching/StudentList';
 import { Separator } from '@/components/ui/separator';
-import LiveSessionIndicators from '@/components/coaching/LiveSessionIndicators';
 import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
 import { coachTiers, hasFeatureAccess, getMaxStudents } from '@/utils/coachTiers';
 import { Progress } from '@/components/ui/progress';
@@ -186,24 +185,6 @@ const CoachDashboard = () => {
                   <StudentList />
                 </CardContent>
               </Card>
-              
-              {/* Live Sessions - Locked for free tier */}
-              <div className="relative">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Icon name="activity" />
-                      <span>Live Sessions</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <LiveSessionIndicators />
-                  </CardContent>
-                </Card>
-                {!hasAnalyticsAccess && (
-                  <FeatureLockOverlay featureName="Live Session Tracking" />
-                )}
-              </div>
               
               {/* Recent Feedback - Locked for free tier */}
               <div className="relative">
