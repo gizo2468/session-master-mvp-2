@@ -82,12 +82,15 @@ const CoachSessionReview = () => {
     setIsCommentFormOpen(true);
   };
   
-  const handleEditHand = () => {
-    // This would be implemented in a real application
+  // These functions are placeholders to satisfy HandsList props requirements
+  const handleEditHand = (hand: HandData) => {
+    // In coach review mode, editing is disabled
+    console.log('Edit hand not available in review mode');
   };
   
-  const handleDeleteHand = () => {
-    // This would be implemented in a real application
+  const handleDeleteHand = (handId: string) => {
+    // In coach review mode, deletion is disabled
+    console.log('Delete hand not available in review mode');
   };
   
   return (
@@ -133,64 +136,13 @@ const CoachSessionReview = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[400px] rounded-md">
-                <div className="overflow-hidden">
-                  <table className="w-full">
-                    <thead className="sticky top-0 bg-white">
-                      <tr className="text-left border-b">
-                        <th className="p-3 font-medium text-gray-600">Cards</th>
-                        <th className="p-3 font-medium text-gray-600">Position</th>
-                        <th className="p-3 font-medium text-gray-600">Action</th>
-                        <th className="p-3 font-medium text-gray-600">Result</th>
-                        <th className="p-3 font-medium text-gray-600"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {hands.map(hand => (
-                        <tr key={hand.id} className="border-b hover:bg-gray-50">
-                          <td className="p-3">
-                            <CardDisplay cards={hand.cards} size="sm" />
-                          </td>
-                          <td className="p-3">
-                            <span className="inline-flex items-center justify-center px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
-                              {hand.position}
-                            </span>
-                          </td>
-                          <td className="p-3 max-w-sm">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="truncate cursor-help" title={hand.action}>
-                                    {hand.action}
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-sm bg-white p-3 shadow-lg border rounded-lg">
-                                  <p className="text-sm">{hand.action}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </td>
-                          <td className={`p-3 font-medium ${
-                            hand.resultAmount && hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {hand.resultAmount && hand.resultAmount >= 0 ? '+' : ''}
-                            ${hand.resultAmount && Math.abs(Number(hand.resultAmount)).toFixed(2)}
-                          </td>
-                          <td className="p-3 text-right">
-                            <Button
-                              onClick={() => openCommentForm(hand.id)}
-                              variant="ghost"
-                              size="sm"
-                            >
-                              <Icon name="MessageSquare" size={16} />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </ScrollArea>
+              <div className="h-[400px]">
+                <HandsList 
+                  hands={hands} 
+                  onEditHand={handleEditHand}
+                  onDeleteHand={handleDeleteHand}
+                />
+              </div>
             </CardContent>
           </Card>
         </div>
