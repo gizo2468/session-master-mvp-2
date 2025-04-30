@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/Lucide';
 import TableDetailsCard from '@/components/poker/TableDetailsCard';
-import HandsList from '@/components/poker/HandsList';
+import CoachHandsList from '@/components/coaching/CoachHandsList';
 import { CommentForm } from '@/components/coaching/CommentForm';
 import { CommentTag } from '@/types/poker';
 import { HandData, TableData } from '@/types/poker';
@@ -82,17 +82,6 @@ const CoachSessionReview = () => {
     setIsCommentFormOpen(true);
   };
   
-  // These functions are placeholders to satisfy HandsList props requirements
-  const handleEditHand = (hand: HandData) => {
-    // In coach review mode, editing is disabled
-    console.log('Edit hand not available in review mode');
-  };
-  
-  const handleDeleteHand = (handId: string) => {
-    // In coach review mode, deletion is disabled
-    console.log('Delete hand not available in review mode');
-  };
-  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -137,10 +126,9 @@ const CoachSessionReview = () => {
             </CardHeader>
             <CardContent>
               <div className="h-[400px]">
-                <HandsList 
+                <CoachHandsList 
                   hands={hands} 
-                  onEditHand={handleEditHand}
-                  onDeleteHand={handleDeleteHand}
+                  onAddFeedback={openCommentForm}
                 />
               </div>
             </CardContent>
