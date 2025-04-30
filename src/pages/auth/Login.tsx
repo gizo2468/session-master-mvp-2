@@ -63,9 +63,11 @@ const Login: React.FC = () => {
   // Check if user is already authenticated and redirect if so
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(from, { replace: true });
+      // Always redirect to home page '/' instead of using the 'from' variable
+      // which might contain '/settings' or other paths
+      navigate('/', { replace: true });
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, navigate]);
 
   const onSubmit = async (values: FormValues) => {
     try {
