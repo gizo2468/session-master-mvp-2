@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,11 +18,15 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 
+// Import the Stripe component
+import StripePaymentRequest from '@/components/payment/StripePaymentRequest';
+
 const CoachUpgrade = () => {
   const navigate = useNavigate();
   const { user, upgradeCoachTier, cancelCoachSubscription } = useAuth();
   const { toast } = useToast();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [selectedTier, setSelectedTier] = useState<CoachTier | null>(null);
   
   // Redirect to home if not a coach
   React.useEffect(() => {
@@ -32,8 +36,15 @@ const CoachUpgrade = () => {
   }, [user, navigate]);
   
   const handleUpgrade = (tier: CoachTier) => {
-    upgradeCoachTier(tier);
-    navigate('/coach-dashboard');
+    setSelectedTier(tier);
+  };
+
+  const handleUpgradeConfirm = () => {
+    if (selectedTier) {
+      upgradeCoachTier(selectedTier);
+      setSelectedTier(null);
+      navigate('/coach-dashboard');
+    }
   };
 
   const handleCancelSubscription = async () => {
@@ -121,7 +132,7 @@ const CoachUpgrade = () => {
                   </ul>
                 </CardContent>
                 
-                <CardFooter className="border-t p-4">
+                <CardFooter className="border-t p-4 flex flex-col gap-2">
                   <Button 
                     variant={currentTier === plan.tier ? "outline" : "poker"}
                     className="w-full"
@@ -130,6 +141,18 @@ const CoachUpgrade = () => {
                   >
                     {currentTier === plan.tier ? "Current Plan" : "Upgrade"}
                   </Button>
+                  
+                  {currentTier !== plan.tier && (
+                    <div id={`payment-request-button-${plan.tier}`} className="w-full">
+                      <StripePaymentRequest 
+                        amount={plan.price * 100} 
+                        planName={plan.name}
+                        tier={plan.tier}
+                        elementId={`payment-request-button-${plan.tier}`}
+                        onSuccess={handleUpgradeConfirm}
+                      />
+                    </div>
+                  )}
                 </CardFooter>
               </Card>
             ))}
