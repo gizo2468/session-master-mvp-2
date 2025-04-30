@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { MessageSquare } from 'lucide-react';
 import { HandData } from '@/types/poker';
 import CardDisplay from '../poker/CardDisplay';
 import { PokerChip } from '../Icons';
+import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CoachHandsListProps {
@@ -47,31 +49,18 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({ hands, onAddFeedback })
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="text-sm font-medium line-clamp-2 cursor-help">
-                              {hand.action}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <p>{hand.action}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <AdaptiveTooltip content={<p>{hand.action}</p>}>
+                        <div className="text-sm font-medium line-clamp-2">
+                          {hand.action}
+                        </div>
+                      </AdaptiveTooltip>
+                      
                       {hand.notes && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="text-xs text-gray-500 italic line-clamp-1 cursor-help">
-                                {hand.notes}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs">
-                              <p>{hand.notes}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <AdaptiveTooltip content={<p>{hand.notes}</p>}>
+                          <div className="text-xs text-gray-500 italic line-clamp-1">
+                            {hand.notes}
+                          </div>
+                        </AdaptiveTooltip>
                       )}
                     </div>
                   </TableCell>

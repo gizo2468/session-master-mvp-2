@@ -8,6 +8,7 @@ import { PokerChip } from '../Icons';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 
 interface HandsListProps {
   hands: HandData[];
@@ -100,34 +101,22 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="text-sm font-medium line-clamp-2 cursor-help">
-                              {hand.action}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <p>{hand.action}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <AdaptiveTooltip content={<p>{hand.action}</p>}>
+                        <div className="text-sm font-medium line-clamp-2">
+                          {hand.action}
+                        </div>
+                      </AdaptiveTooltip>
+                      
                       {hand.notes && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="text-xs text-gray-500 italic line-clamp-1 cursor-help">
-                                {hand.notes}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs">
-                              <p>{hand.notes}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <AdaptiveTooltip content={<p>{hand.notes}</p>}>
+                          <div className="text-xs text-gray-500 italic line-clamp-1">
+                            {hand.notes}
+                          </div>
+                        </AdaptiveTooltip>
                       )}
                     </div>
                   </TableCell>
+                  
                   <TableCell>
                     {hand.resultAmount !== undefined && (
                       <div className="flex flex-col items-center gap-0.5">
