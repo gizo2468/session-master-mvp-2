@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -35,7 +35,7 @@ type FormValues = z.infer<typeof formSchema>;
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 const Login: React.FC = () => {
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -60,10 +60,18 @@ const Login: React.FC = () => {
     },
   });
 
+  // Check if user is already authenticated and redirect if so
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
+
   const onSubmit = async (values: FormValues) => {
     try {
       await login(values.email, values.password);
-      navigate(from, { replace: true });
+      // Don't navigate here - let the useEffect handle redirection
+      // when isAuthenticated changes
     } catch (error) {
       // Error is handled in the AuthContext
     }
