@@ -100,13 +100,31 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
-                      <div className="text-sm font-medium line-clamp-2" title={hand.action}>
-                        {hand.action}
-                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-sm font-medium line-clamp-2 cursor-help">
+                              {hand.action}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>{hand.action}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       {hand.notes && (
-                        <div className="text-xs text-gray-500 italic line-clamp-1" title={hand.notes}>
-                          {hand.notes}
-                        </div>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="text-xs text-gray-500 italic line-clamp-1 cursor-help">
+                                {hand.notes}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p>{hand.notes}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </div>
                   </TableCell>
