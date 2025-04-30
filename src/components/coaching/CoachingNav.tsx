@@ -18,7 +18,20 @@ const CoachingNav = () => {
   return (
     <div className="mt-8">
       <Separator className="my-4" />
-      <div className="flex justify-center">
+      <div className="flex flex-col items-center gap-3">
+        {user.role === 'coach' && (
+          <Link to="/coach-dashboard">
+            <Button 
+              variant="poker" 
+              size="sm" 
+              className="flex items-center gap-2 w-full"
+            >
+              <Icon name="BarChart2" size={16} />
+              Coach Dashboard
+            </Button>
+          </Link>
+        )}
+        
         {user.role === 'coach' ? (
           <Link to="/coach-profile">
             <Button 
