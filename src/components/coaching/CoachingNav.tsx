@@ -19,28 +19,15 @@ const CoachingNav = () => {
     <div className="mt-8">
       <Separator className="my-4" />
       <div className="flex flex-col items-center gap-3">
-        {user.role === 'coach' && (
-          <Link to="/coach-dashboard">
-            <Button 
-              variant="poker" 
-              size="sm" 
-              className="flex items-center gap-2 w-full"
-            >
-              <Icon name="BarChart2" size={16} />
-              Coach Dashboard
-            </Button>
-          </Link>
-        )}
-        
         {user.role === 'coach' ? (
-          <Link to="/coach-profile">
+          <Link to="/coach-dashboard">
             <Button 
               variant="poker" 
               size="sm" 
               className="flex items-center gap-2"
             >
-              <Icon name="User" size={16} />
-              Coach Profile
+              <Icon name="BarChart2" size={16} />
+              Coach Dashboard
               {pendingRequests.length > 0 && (
                 <span className="bg-white text-poker-feltGreen text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {pendingRequests.length}
