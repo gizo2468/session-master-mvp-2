@@ -18,7 +18,6 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import StripePaymentRequest from '@/components/payment/StripePaymentRequest';
 
 // Mock subscription data
 const mockSubscription = {
@@ -34,7 +33,6 @@ const plans = [
     id: 'basic',
     name: 'Basic',
     price: '$9.99',
-    priceInCents: 999,
     billingCycle: '/month',
     description: 'Perfect for new coaches',
     features: [
@@ -43,13 +41,11 @@ const plans = [
     ],
     studentSlots: 10,
     current: false,
-    tier: 'starter',
   },
   {
     id: 'pro',
     name: 'Pro Coach',
     price: '$19.99',
-    priceInCents: 1999,
     billingCycle: '/month',
     description: 'For established coaches',
     features: [
@@ -60,13 +56,11 @@ const plans = [
     studentSlots: 20,
     current: true,
     popular: true,
-    tier: 'pro',
   },
   {
     id: 'elite',
     name: 'Elite Coach',
     price: '$39.99',
-    priceInCents: 3999,
     billingCycle: '/month',
     description: 'For professional coaches',
     features: [
@@ -77,14 +71,13 @@ const plans = [
     ],
     studentSlots: 50,
     current: false,
-    tier: 'elite',
   },
 ];
 
 const BillingSettings: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { cancelCoachSubscription, upgradeCoachTier } = useAuth();
+  const { cancelCoachSubscription } = useAuth();
   const { toast } = useToast();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
@@ -110,15 +103,6 @@ const BillingSettings: React.FC = () => {
         variant: "destructive",
       });
     }
-  };
-
-  const handleUpgradeSuccess = (tier: string) => {
-    upgradeCoachTier(tier as any);
-    toast({
-      title: t('subscription_updated'),
-      description: t('subscription_updated_description'),
-      variant: "default",
-    });
   };
 
   return (
@@ -216,7 +200,7 @@ const BillingSettings: React.FC = () => {
                     ))}
                   </ul>
                 </CardContent>
-                <CardFooter className="pt-4 space-y-2 flex flex-col">
+                <CardFooter className="pt-4">
                   <Button 
                     variant={plan.current ? "outline" : "poker"} 
                     className="w-full"
@@ -225,18 +209,6 @@ const BillingSettings: React.FC = () => {
                   >
                     {plan.current ? t('current_plan') : t('upgrade')}
                   </Button>
-                  
-                  {!plan.current && (
-                    <div id={`payment-request-button-${plan.id}`} className="w-full">
-                      <StripePaymentRequest 
-                        amount={plan.priceInCents} 
-                        planName={plan.name}
-                        tier={plan.tier as any}
-                        elementId={`payment-request-button-${plan.id}`}
-                        onSuccess={() => handleUpgradeSuccess(plan.tier)}
-                      />
-                    </div>
-                  )}
                 </CardFooter>
               </Card>
             ))}
