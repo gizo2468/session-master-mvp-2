@@ -148,11 +148,7 @@ const CoachSessionReview = () => {
                   <Icon name="message-square" size={16} className="text-gray-500" />
                   <span>Add Session Comment</span>
                   <div className="absolute -top-1.5 -right-1.5 bg-poker-gold rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
-                    <Icon 
-                      name="dollar-sign" 
-                      size={10} 
-                      className="text-white"
-                    />
+                    <span className="text-white text-xs font-bold">$</span>
                   </div>
                 </Button>
               </AdaptiveTooltip>

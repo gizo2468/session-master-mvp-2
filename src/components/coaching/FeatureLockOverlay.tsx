@@ -37,11 +37,7 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
         <div className="relative">
           <Icon name="package-plus" size={16} />
           <div className="absolute -top-1.5 -right-1.5 bg-poker-gold rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
-            <Icon 
-              name="dollar-sign" 
-              size={10} 
-              className="text-white"
-            />
+            <span className="text-white text-xs font-bold">$</span>
           </div>
         </div>
         <span className="text-gray-700">Change Plan</span>
@@ -56,11 +52,7 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
           <div className="relative inline-block mx-auto mb-3">
             <Icon name="lock" size={36} className="mx-auto" />
             <div className="absolute -top-2 -right-2 bg-poker-gold rounded-full w-7 h-7 flex items-center justify-center shadow-sm">
-              <Icon 
-                name="dollar-sign" 
-                size={16} 
-                className="text-white"
-              />
+              <span className="text-white text-sm font-bold">$</span>
             </div>
           </div>
           <h3 className="text-xl font-bold">{featureName} Locked</h3>
@@ -73,7 +65,7 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
           onClick={handleUpgradeClick}
           className="mt-3 bg-poker-gold hover:bg-poker-darkGold"
         >
-          <Icon name="dollar-sign" size={16} className="mr-2" />
+          <span className="mr-2 font-bold">$</span>
           <span>Upgrade Now</span>
         </Button>
       </div>
