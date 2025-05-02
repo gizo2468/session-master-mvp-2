@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -147,11 +148,13 @@ const CoachSessionReview = () => {
                 >
                   <div className="relative">
                     <Icon name="message-square" size={16} className="text-gray-500" />
-                    <Icon 
-                      name="dollar-sign" 
-                      size={10} 
-                      className="absolute -top-1 -right-1 text-poker-gold bg-white rounded-full p-0.5 border border-poker-gold"
-                    />
+                    <div className="absolute -top-1.5 -right-1.5 bg-white rounded-full p-0.5 border border-poker-gold">
+                      <Icon 
+                        name="dollar-sign" 
+                        size={10} 
+                        className="text-poker-gold"
+                      />
+                    </div>
                   </div>
                   <span>Add Session Comment</span>
                 </Button>
