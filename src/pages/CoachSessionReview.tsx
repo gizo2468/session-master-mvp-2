@@ -144,15 +144,15 @@ const CoachSessionReview = () => {
                 <Button 
                   onClick={() => openCommentForm()}
                   variant="outline"
-                  className="bg-gray-200 hover:bg-gray-300 border border-gray-300 opacity-90 flex items-center gap-2 text-gray-700"
+                  className="bg-gray-200 hover:bg-gray-300 border border-gray-300 opacity-90 flex items-center gap-2 text-gray-700 relative"
                 >
                   <div className="relative">
                     <Icon name="message-square" size={16} className="text-gray-500" />
-                    <div className="absolute -top-1.5 -right-1.5 bg-white rounded-full p-0.5 border border-poker-gold">
+                    <div className="absolute -top-1.5 -right-1.5 bg-poker-gold rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
                       <Icon 
                         name="dollar-sign" 
                         size={10} 
-                        className="text-poker-gold"
+                        className="text-white"
                       />
                     </div>
                   </div>

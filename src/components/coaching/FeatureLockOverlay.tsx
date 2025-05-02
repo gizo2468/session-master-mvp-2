@@ -36,11 +36,11 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
       >
         <div className="relative">
           <Icon name="package-plus" size={16} />
-          <div className="absolute -top-1.5 -right-1.5 bg-white rounded-full p-0.5 border border-poker-gold">
+          <div className="absolute -top-1.5 -right-1.5 bg-poker-gold rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
             <Icon 
               name="dollar-sign" 
               size={10} 
-              className="text-poker-gold"
+              className="text-white"
             />
           </div>
         </div>
@@ -55,11 +55,11 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
         <div className="mb-4 text-white">
           <div className="relative inline-block mx-auto mb-3">
             <Icon name="lock" size={36} className="mx-auto" />
-            <div className="absolute -top-2 -right-2 bg-white/20 rounded-full p-1 border border-poker-gold">
+            <div className="absolute -top-2 -right-2 bg-poker-gold rounded-full w-7 h-7 flex items-center justify-center shadow-sm">
               <Icon 
                 name="dollar-sign" 
                 size={16} 
-                className="text-poker-gold"
+                className="text-white"
               />
             </div>
           </div>
