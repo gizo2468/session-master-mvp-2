@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { MessageSquare } from 'lucide-react';
@@ -8,8 +8,6 @@ import CardDisplay from '../poker/CardDisplay';
 import { PokerChip } from '../Icons';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
 import Icon from '@/components/ui/Lucide';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,7 +23,6 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
   hasCommentAccess = true 
 }) => {
   const navigate = useNavigate();
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   
   // Sort hands by createdAt date
   const sortedHands = [...hands].sort((a, b) => 
@@ -36,7 +33,8 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
     if (hasCommentAccess) {
       onAddFeedback(handId);
     } else {
-      setIsUpgradeModalOpen(true);
+      // Direct navigation to upgrade page instead of showing modal
+      navigate('/coach-upgrade');
     }
   };
 
@@ -135,57 +133,6 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
           <p className="mb-2">No hands recorded yet.</p>
         </div>
       )}
-
-      {/* Upgrade Modal */}
-      <Dialog open={isUpgradeModalOpen} onOpenChange={setIsUpgradeModalOpen}>
-        <DialogContent className="max-w-md">
-          <div className="flex flex-col items-center text-center p-4">
-            <div className="mb-6">
-              <div className="w-16 h-16 bg-poker-gold rounded-full flex items-center justify-center mx-auto mb-4">
-                <Icon name="lock" size={24} className="text-white" />
-              </div>
-              <h2 className="text-xl font-bold">Unlock Hand Feedback</h2>
-              <p className="text-gray-600 mt-2">
-                Upgrade your coach tier to provide detailed feedback on specific hands to help your students improve.
-              </p>
-            </div>
-            
-            <div className="w-full space-y-4">
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h3 className="font-medium mb-1">Pro Coach</h3>
-                <p className="text-sm text-gray-600 mb-3">Unlock hand-level feedback for up to 10 students</p>
-                <Button
-                  variant="poker"
-                  className="w-full"
-                  onClick={() => navigate('/coach-upgrade')}
-                >
-                  Upgrade to Pro
-                </Button>
-              </div>
-              
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h3 className="font-medium mb-1">Elite Coach</h3>
-                <p className="text-sm text-gray-600 mb-3">Unlimited feedback and premium features</p>
-                <Button
-                  variant="felt"
-                  className="w-full"
-                  onClick={() => navigate('/coach-upgrade')}
-                >
-                  Upgrade to Elite
-                </Button>
-              </div>
-            </div>
-            
-            <Button
-              variant="ghost"
-              className="mt-4"
-              onClick={() => setIsUpgradeModalOpen(false)}
-            >
-              Maybe later
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

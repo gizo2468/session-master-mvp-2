@@ -15,11 +15,15 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
 }) => {
   const navigate = useNavigate();
   
+  const handleUpgradeClick = () => {
+    navigate('/coach-upgrade');
+  };
+  
   if (isUpgradeButton) {
     return (
       <Button 
         variant="default" 
-        onClick={() => navigate('/coach-upgrade')}
+        onClick={handleUpgradeClick}
         className="bg-poker-gold hover:bg-poker-darkGold ml-2"
         size="sm"
       >
@@ -41,7 +45,7 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
         </div>
         <Button 
           variant="default" 
-          onClick={() => navigate('/coach-upgrade')}
+          onClick={handleUpgradeClick}
           className="mt-3 bg-poker-gold hover:bg-poker-darkGold"
         >
           <Icon name="package-plus" size={16} className="mr-2" />
