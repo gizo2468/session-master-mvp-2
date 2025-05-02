@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -9,8 +10,6 @@ import CoachHandsList from '@/components/coaching/CoachHandsList';
 import { CommentForm } from '@/components/coaching/CommentForm';
 import { CommentTag } from '@/types/poker';
 import { HandData, TableData } from '@/types/poker';
-import CardDisplay from '@/components/poker/CardDisplay';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/context/AuthContext';
 import { hasFeatureAccess } from '@/utils/coachTiers';
 
@@ -56,6 +55,7 @@ const createMockSessionData = (sessionId: string) => {
 
 const CoachSessionReview = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { studentId, sessionId } = useParams<{ studentId: string; sessionId: string }>();
   const { user } = useAuth();
@@ -84,7 +84,9 @@ const CoachSessionReview = () => {
   
   const openCommentForm = (handId?: string) => {
     if (!hasCommentAccess) {
-      // Navigate directly to coach upgrade page instead of showing a modal
+      // Store current location before navigating
+      localStorage.setItem('previousLocation', location.pathname);
+      // Navigate to coach upgrade page
       navigate('/coach-upgrade');
       return;
     }
@@ -92,6 +94,15 @@ const CoachSessionReview = () => {
     setSelectedHandId(handId);
     setIsCommentFormOpen(true);
   };
+  
+  // Check if we're returning from the upgrade page
+  useEffect(() => {
+    const previousLocation = localStorage.getItem('previousLocation');
+    if (previousLocation === location.pathname) {
+      // Clear the stored location to prevent this from running again
+      localStorage.removeItem('previousLocation');
+    }
+  }, [location.pathname]);
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -101,7 +112,7 @@ const CoachSessionReview = () => {
             onClick={() => navigate(`/coach/student/${studentId}`)} 
             className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:underline"
           >
-            <Icon name="ArrowLeft" size={16} />
+            <Icon name="arrow-left" size={16} />
             <span>Back to Student</span>
           </button>
           
@@ -120,13 +131,13 @@ const CoachSessionReview = () => {
             <Button 
               onClick={() => openCommentForm()}
               variant="poker"
-              className={`flex items-center gap-2 ${!hasCommentAccess ? 'opacity-50' : ''}`}
+              className="flex items-center gap-2 relative"
             >
-              <Icon name="MessageSquare" size={16} />
+              <Icon name="message-square" size={16} />
               <span>Add Session Comment</span>
               {!hasCommentAccess && (
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-poker-gold rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">$</span>
+                  <Icon name="dollar-sign" size={12} className="text-white" />
                 </div>
               )}
             </Button>
@@ -136,7 +147,7 @@ const CoachSessionReview = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Icon name="List" />
+                <Icon name="list" />
                 <span>Hands</span>
               </CardTitle>
             </CardHeader>

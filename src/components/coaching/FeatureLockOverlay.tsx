@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface FeatureLockOverlayProps {
   featureName: string;
@@ -14,8 +14,11 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
   isUpgradeButton = false 
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const handleUpgradeClick = () => {
+    // Store current location before navigating
+    localStorage.setItem('previousLocation', location.pathname);
     navigate('/coach-upgrade');
   };
   
@@ -24,11 +27,14 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
       <Button 
         variant="default" 
         onClick={handleUpgradeClick}
-        className="bg-poker-gold hover:bg-poker-darkGold ml-2"
+        className="bg-poker-gold hover:bg-poker-darkGold ml-2 relative"
         size="sm"
       >
         <Icon name="package-plus" size={16} className="mr-1" />
-        Change Plan
+        <span>Change Plan</span>
+        <div className="absolute -top-1 -right-1 w-4 h-4 bg-poker-gold border-2 border-white rounded-full flex items-center justify-center">
+          <Icon name="dollar-sign" size={10} className="text-white" />
+        </div>
       </Button>
     );
   }
@@ -48,8 +54,8 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
           onClick={handleUpgradeClick}
           className="mt-3 bg-poker-gold hover:bg-poker-darkGold"
         >
-          <Icon name="package-plus" size={16} className="mr-2" />
-          Upgrade Now
+          <Icon name="dollar-sign" size={16} className="mr-2" />
+          <span>Upgrade Now</span>
         </Button>
       </div>
     </div>

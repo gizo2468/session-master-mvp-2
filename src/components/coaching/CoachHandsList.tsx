@@ -7,7 +7,6 @@ import { HandData } from '@/types/poker';
 import CardDisplay from '../poker/CardDisplay';
 import { PokerChip } from '../Icons';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Icon from '@/components/ui/Lucide';
 import { useNavigate } from 'react-router-dom';
 
@@ -33,7 +32,7 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
     if (hasCommentAccess) {
       onAddFeedback(handId);
     } else {
-      // Direct navigation to upgrade page instead of showing modal
+      // Navigate to upgrade page
       navigate('/coach-upgrade');
     }
   };
@@ -112,13 +111,13 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
                       size="sm" 
                       variant="ghost" 
                       onClick={() => handleFeedbackClick(hand.id)}
-                      className={`h-8 w-8 p-0 ${hasCommentAccess ? 'text-poker-feltGreen hover:text-poker-feltGreen/80' : 'text-gray-400'}`}
+                      className="h-8 w-8 p-0 relative"
                       aria-label="Add feedback"
                     >
-                      <MessageSquare className="h-4 w-4" />
+                      <MessageSquare className={`h-4 w-4 ${hasCommentAccess ? 'text-poker-feltGreen hover:text-poker-feltGreen/80' : 'text-gray-400'}`} />
                       {!hasCommentAccess && (
                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-poker-gold rounded-full flex items-center justify-center">
-                          <span className="text-white text-[8px] font-bold">$</span>
+                          <Icon name="dollar-sign" size={8} className="text-white" />
                         </div>
                       )}
                     </Button>
