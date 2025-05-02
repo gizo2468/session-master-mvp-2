@@ -43,7 +43,7 @@ const Signup: React.FC = () => {
       password: '',
       confirmPassword: '',
       role: 'student',
-      agreeToTerms: false as any, // Fixed: Changed from false to any to prevent type error
+      agreeToTerms: false as unknown as true, // Using type assertion to fix the TS error
     },
   });
 

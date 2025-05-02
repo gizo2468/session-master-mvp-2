@@ -33,73 +33,69 @@ const PrivacyPolicy: React.FC = () => {
             </p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">1. Information We Collect</h2>
+            <p>We collect the following types of data:</p>
             <ul className="list-disc pl-6 mb-4">
-              <li>Account Information: email address and unique user ID (via Supabase)</li>
-              <li>Session Data: session type, duration, results, etc.</li>
-              <li>Coach Feedback: comments on sessions (if connected to a coach)</li>
-              <li>Device Info: basic technical data (no Android ID or persistent identifiers)</li>
+              <li>Account Information: When you register or sign in, we collect your email address and a secure identifier (UUID) through our authentication provider (Supabase).</li>
+              <li>Session Data: We collect and store poker session details you enter, such as session type, duration, location, and results.</li>
+              <li>Coach Feedback: If you are connected to a coach, they may view your session data and leave comments.</li>
+              <li>Device Info: We may collect non-personal technical information (e.g., OS version, screen size) to improve the app's functionality.</li>
             </ul>
+            <p>We do not collect Android ID, device MAC address, or any persistent device identifiers.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">2. How We Use Your Information</h2>
+            <p>Your data is used to:</p>
             <ul className="list-disc pl-6 mb-4">
-              <li>To provide and personalize the app experience</li>
-              <li>To store your session history</li>
-              <li>To allow coach-student feedback</li>
-              <li>To analyze and improve the app</li>
+              <li>Provide and personalize the app experience.</li>
+              <li>Store and track your poker sessions and history.</li>
+              <li>Allow coach-student feedback functionality (if connected).</li>
+              <li>Improve and analyze app performance.</li>
             </ul>
 
             <h2 className="text-xl font-bold mt-6 mb-3">3. Legal Basis for Processing</h2>
+            <p>We process your data under the following lawful bases:</p>
             <ul className="list-disc pl-6 mb-4">
-              <li>User Consent</li>
-              <li>Legitimate Interest</li>
-              <li>Contractual Necessity</li>
+              <li>User Consent (e.g., accepting Terms & Privacy on signup).</li>
+              <li>Legitimate Interest (e.g., app improvement).</li>
+              <li>Contractual Necessity (e.g., managing your account and data).</li>
             </ul>
 
             <h2 className="text-xl font-bold mt-6 mb-3">4. Data Sharing</h2>
+            <p>We do not sell or rent your data to third parties. Your data may be shared only in the following cases:</p>
             <ul className="list-disc pl-6 mb-4">
-              <li>With your connected coach</li>
-              <li>With Supabase (for secure hosting)</li>
-              <li>If legally required</li>
+              <li>With coaches you actively connect with via pairing code.</li>
+              <li>With service providers (e.g., Supabase) who help us store and secure your data under strict confidentiality agreements.</li>
+              <li>When required by law.</li>
             </ul>
 
             <h2 className="text-xl font-bold mt-6 mb-3">5. Data Storage and Retention</h2>
-            <ul className="list-disc pl-6 mb-4">
-              <li>Stored securely via Supabase (encrypted)</li>
-              <li>Deleted upon account deletion or request</li>
-            </ul>
+            <p>All user data is securely stored using Supabase, a cloud database provider. Data is encrypted in transit and at rest.</p>
+            <p>We retain your data as long as your account is active. If you delete your account or request deletion, all associated data will be permanently erased.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">6. Your Rights</h2>
+            <p>Depending on your jurisdiction, you may have rights to:</p>
             <ul className="list-disc pl-6 mb-4">
-              <li>Access/export your data</li>
-              <li>Request deletion</li>
-              <li>Revoke consent</li>
-              <li>Contact us: <a href="mailto:sessionmaster11@gmail.com" className="text-poker-gold hover:underline">sessionmaster11@gmail.com</a></li>
+              <li>Access or export your data.</li>
+              <li>Request data deletion.</li>
+              <li>Revoke consent.</li>
+              <li>File a complaint with a data protection authority.</li>
             </ul>
+            <p>Requests can be sent to: <a href="mailto:sessionmaster11@gmail.com" className="text-poker-gold hover:underline">sessionmaster11@gmail.com</a></p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">7. Children's Privacy</h2>
-            <ul className="list-disc pl-6 mb-4">
-              <li>Not intended for users under 16</li>
-            </ul>
+            <p>SessionMaster is not intended for users under the age of 16. We do not knowingly collect personal data from children.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">8. Security</h2>
-            <ul className="list-disc pl-6 mb-4">
-              <li>Industry-standard encryption and access control</li>
-            </ul>
+            <p>We take all reasonable steps to protect your personal data from unauthorized access or loss, including encryption, access controls, and secure infrastructure.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">9. International Transfers</h2>
-            <ul className="list-disc pl-6 mb-4">
-              <li>Data may be processed outside your country with proper safeguards</li>
-            </ul>
+            <p>We rely on Supabase and other third-party services that may process data outside your country. These transfers are protected by appropriate legal safeguards such as the EU-U.S. and Swiss-U.S. Data Privacy Frameworks.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">10. Changes to This Policy</h2>
-            <ul className="list-disc pl-6 mb-4">
-              <li>Updates will be reflected with a new effective date and user notice</li>
-            </ul>
+            <p>We may update this Privacy Policy occasionally. When we do, we will update the "Effective Date" and notify users as required.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">11. Contact</h2>
-            <ul className="list-disc pl-6 mb-4">
-              <li>Email: <a href="mailto:sessionmaster11@gmail.com" className="text-poker-gold hover:underline">sessionmaster11@gmail.com</a></li>
-            </ul>
+            <p>If you have questions or concerns, please contact us at:</p>
+            <p>📧 <a href="mailto:sessionmaster11@gmail.com" className="text-poker-gold hover:underline">sessionmaster11@gmail.com</a></p>
           </div>
         </div>
       </div>
