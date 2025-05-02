@@ -12,6 +12,7 @@ import CoachSettings from '@/components/settings/CoachSettings';
 import StudentSettings from '@/components/settings/StudentSettings';
 import AppSettings from '@/components/settings/AppSettings';
 import BillingSettings from '@/components/settings/BillingSettings';
+import LegalSettings from '@/components/settings/LegalSettings';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
@@ -77,6 +78,10 @@ const Settings: React.FC = () => {
               )}
             </div>
           </Tabs>
+
+          <div className="px-6 pb-6 pt-2">
+            <LegalSettings />
+          </div>
         </div>
       </div>
     </div>

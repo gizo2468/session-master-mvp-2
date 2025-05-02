@@ -13,6 +13,7 @@ import Icon from '@/components/ui/Lucide';
 import Logo from '@/components/Logo';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { UserRole } from '@/types/poker';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters long' }),
@@ -20,6 +21,9 @@ const formSchema = z.object({
   password: z.string().min(6, { message: 'Password must be at least 6 characters long' }),
   confirmPassword: z.string(),
   role: z.enum(['student', 'coach'], { required_error: 'Please select a role' }),
+  agreeToTerms: z.literal(true, {
+    errorMap: () => ({ message: "You must agree to the Terms of Use and Privacy Policy" })
+  }),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],
@@ -39,6 +43,7 @@ const Signup: React.FC = () => {
       password: '',
       confirmPassword: '',
       role: 'student',
+      agreeToTerms: false,
     },
   });
 
@@ -156,6 +161,42 @@ const Signup: React.FC = () => {
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="agreeToTerms"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm font-normal">
+                        I agree to the{' '}
+                        <Link 
+                          to="/legal/terms" 
+                          className="text-poker-gold hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Terms of Use
+                        </Link>{' '}
+                        and{' '}
+                        <Link 
+                          to="/legal/privacy" 
+                          className="text-poker-gold hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Privacy Policy
+                        </Link>
+                      </FormLabel>
+                      <FormMessage />
+                    </div>
                   </FormItem>
                 )}
               />

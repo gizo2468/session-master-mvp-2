@@ -23,6 +23,8 @@ import Settings from "./pages/Settings";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ResetPassword from "./pages/auth/ResetPassword";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import TermsOfUse from "./pages/legal/TermsOfUse";
 import { SessionProvider } from "./context/SessionContext";
 import { CoachStudentProvider } from "./context/CoachStudentContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -48,6 +50,10 @@ const App = () => (
                   <Route path="/auth/login" element={<Login />} />
                   <Route path="/auth/signup" element={<Signup />} />
                   <Route path="/auth/reset-password" element={<ResetPassword />} />
+                  
+                  {/* Legal Pages - Available without authentication */}
+                  <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/legal/terms" element={<TermsOfUse />} />
                   
                   {/* Protected Routes */}
                   <Route 
