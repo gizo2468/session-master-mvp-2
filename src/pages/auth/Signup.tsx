@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -42,7 +43,7 @@ const Signup: React.FC = () => {
       password: '',
       confirmPassword: '',
       role: 'student',
-      agreeToTerms: undefined as unknown as true,
+      agreeToTerms: false as any, // Fixed: Changed from false to any to prevent type error
     },
   });
 
