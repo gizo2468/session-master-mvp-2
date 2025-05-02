@@ -317,7 +317,7 @@ const CoachDashboard = () => {
                       <Button 
                         onClick={handlePlanBadgeClick}
                         variant="default"
-                        className="w-full bg-poker-gold hover:bg-poker-darkGold"
+                        className="w-full bg-poker-gold hover:bg-poker-darkGold h-8 text-sm px-3"
                       >
                         <Icon name="package-plus" size={16} className="mr-2" />
                         Upgrade Plan
