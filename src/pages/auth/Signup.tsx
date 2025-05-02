@@ -14,6 +14,7 @@ import Logo from '@/components/Logo';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { UserRole } from '@/types/poker';
 import { Checkbox } from '@/components/ui/checkbox';
+import { supabase } from '@/integrations/supabase/client';
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters long' }),
@@ -50,6 +51,20 @@ const Signup: React.FC = () => {
   const onSubmit = async (values: FormValues) => {
     try {
       await signup(values.email, values.password, values.fullName, values.role as UserRole);
+      
+      // Set the terms acceptance flag in the profile
+      if (values.agreeToTerms) {
+        // Get current user after signup
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Update the has_accepted_terms field using our custom function
+          await supabase.rpc('update_terms_acceptance', {
+            user_id: user.id,
+            accepted: true
+          });
+        }
+      }
+      
       navigate('/');
     } catch (error) {
       // Error is handled in the AuthContext

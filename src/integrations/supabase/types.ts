@@ -13,9 +13,14 @@ export type Database = {
         Row: {
           coach_tier: string | null
           created_at: string
+          deletion_requested: boolean | null
+          email: string | null
           full_name: string
+          has_accepted_terms: boolean | null
           id: string
+          is_active: boolean | null
           language: string
+          last_login_at: string | null
           notification_preferences: Json
           online_nickname: string | null
           profile_picture: string | null
@@ -25,9 +30,14 @@ export type Database = {
         Insert: {
           coach_tier?: string | null
           created_at?: string
+          deletion_requested?: boolean | null
+          email?: string | null
           full_name: string
+          has_accepted_terms?: boolean | null
           id: string
+          is_active?: boolean | null
           language?: string
+          last_login_at?: string | null
           notification_preferences?: Json
           online_nickname?: string | null
           profile_picture?: string | null
@@ -37,9 +47,14 @@ export type Database = {
         Update: {
           coach_tier?: string | null
           created_at?: string
+          deletion_requested?: boolean | null
+          email?: string | null
           full_name?: string
+          has_accepted_terms?: boolean | null
           id?: string
+          is_active?: boolean | null
           language?: string
+          last_login_at?: string | null
           notification_preferences?: Json
           online_nickname?: string | null
           profile_picture?: string | null
@@ -107,7 +122,10 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      update_terms_acceptance: {
+        Args: { user_id: string; accepted: boolean }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

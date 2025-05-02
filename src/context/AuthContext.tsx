@@ -13,6 +13,9 @@ export interface User {
   role: UserRole;
   coachTier?: CoachTier;
   language: 'en' | 'he';
+  hasAcceptedTerms?: boolean;
+  lastLoginAt?: Date;
+  isActive?: boolean;
   notificationPreferences: {
     liveSessionStart: boolean;
     newFeedback: boolean;
@@ -70,6 +73,8 @@ const createUserFromSupabaseUser = (supabaseUser: SupabaseUser, role: UserRole =
       ? supabaseUser.user_metadata?.coachTier || 'free' 
       : undefined,
     language: supabaseUser.user_metadata?.language || 'en',
+    hasAcceptedTerms: false,
+    isActive: true,
     notificationPreferences: supabaseUser.user_metadata?.notificationPreferences || {
       liveSessionStart: true,
       newFeedback: true,
@@ -167,15 +172,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // If profile exists, use it to set user data
         setUser({
           id: supabaseUser.id,
-          email: supabaseUser.email || '',
+          email: data.email || supabaseUser.email || '',
           fullName: data.full_name || supabaseUser.user_metadata?.fullName || 'New User',
           onlineNickname: data.online_nickname,
           profilePicture: optimizeImageData(data.profile_picture),
           role: userRole,
           coachTier: coachTierValue,
           language: language,
+          hasAcceptedTerms: Boolean(data.has_accepted_terms),
+          lastLoginAt: data.last_login_at ? new Date(data.last_login_at) : undefined,
+          isActive: Boolean(data.is_active),
           notificationPreferences: notificationPrefs,
         });
+
+        // Update last login time when fetching user data after login
+        if (session) {
+          updateLastLogin(supabaseUser.id);
+        }
       } else {
         // If no profile exists, use data from auth user
         setUser(createUserFromSupabaseUser(supabaseUser));
@@ -185,6 +198,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(createUserFromSupabaseUser(supabaseUser));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Helper function to update last_login_at
+  const updateLastLogin = async (userId: string) => {
+    try {
+      await supabase
+        .from('profiles')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', userId);
+    } catch (error) {
+      console.error("Error updating last login time:", error);
     }
   };
 
@@ -199,6 +224,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         throw error;
+      }
+
+      if (data.user) {
+        // Update last login time
+        updateLastLogin(data.user.id);
       }
 
       toast({
@@ -293,8 +323,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw authError;
       }
 
-      // FIXED: Update the profiles table using .update() with correct eq condition
-      // This ensures we match the RLS policy requiring auth.uid() = id
+      // Update the profiles table with new data
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -305,6 +334,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           coach_tier: user.role === 'coach' ? optimizedUserData.coachTier || user.coachTier : null,
           language: optimizedUserData.language || user.language,
           notification_preferences: optimizedUserData.notificationPreferences || user.notificationPreferences,
+          has_accepted_terms: optimizedUserData.hasAcceptedTerms !== undefined ? optimizedUserData.hasAcceptedTerms : user.hasAcceptedTerms,
+          is_active: optimizedUserData.isActive !== undefined ? optimizedUserData.isActive : user.isActive,
         })
         .eq('id', user.id); // Explicitly match on user ID to satisfy RLS policy
 
@@ -433,3 +464,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export default AuthContext;

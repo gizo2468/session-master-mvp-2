@@ -14,10 +14,12 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Icon from '@/components/ui/Lucide';
 import { supabase } from '@/integrations/supabase/client';
+import { Switch } from '@/components/ui/switch';
 
 const profileFormSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters' }),
   onlineNickname: z.string().max(20, { message: 'Nickname must be 20 characters or less' }).optional(),
+  hasAcceptedTerms: z.boolean().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -34,12 +36,21 @@ const AccountSettings: React.FC = () => {
   const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   
+  // Format last login date if available
+  const lastLoginFormatted = user?.lastLoginAt 
+    ? new Intl.DateTimeFormat('en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      }).format(user.lastLoginAt)
+    : 'No recent login';
+  
   // Profile form
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       fullName: user?.fullName || '',
       onlineNickname: user?.onlineNickname || '',
+      hasAcceptedTerms: user?.hasAcceptedTerms || false,
     },
   });
 
@@ -50,7 +61,8 @@ const AccountSettings: React.FC = () => {
     setTimeout(() => {
       updateUser({ 
         fullName: values.fullName,
-        onlineNickname: values.onlineNickname
+        onlineNickname: values.onlineNickname,
+        hasAcceptedTerms: values.hasAcceptedTerms
       });
       setIsSubmittingProfile(false);
     }, 500);
@@ -208,7 +220,41 @@ const AccountSettings: React.FC = () => {
                 <FormItem>
                   <FormLabel>{t('email')}</FormLabel>
                   <Input value={user?.email} disabled />
+                  <p className="text-xs text-gray-500 mt-1">Last login: {lastLoginFormatted}</p>
                 </FormItem>
+
+                <FormField
+                  control={profileForm.control}
+                  name="hasAcceptedTerms"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <div className="space-y-0.5">
+                        <FormLabel>Accepted Terms</FormLabel>
+                        <p className="text-xs text-muted-foreground">
+                          {field.value 
+                            ? "You have accepted our Terms and Privacy Policy" 
+                            : "You must accept our Terms and Privacy Policy to use all features"}
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            if (checked === false) {
+                              toast({
+                                title: "Warning",
+                                description: "You cannot revoke your acceptance of Terms",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            field.onChange(checked);
+                          }}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
                 
                 <div className="flex justify-end">
                   <Button type="submit" disabled={isSubmittingProfile}>
