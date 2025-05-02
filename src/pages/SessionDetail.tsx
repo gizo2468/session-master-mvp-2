@@ -1,18 +1,21 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
-import { format, differenceInMinutes, differenceInHours } from 'date-fns';
-import { AlertTriangle } from 'lucide-react';
+import { differenceInMinutes, differenceInHours, format } from 'date-fns';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import TableDetailsCard from '@/components/poker/TableDetailsCard';
+import SessionHeader from '@/components/session/SessionHeader';
+import SessionEditForm from '@/components/session/SessionEditForm';
+import SessionDetailsDisplay from '@/components/session/SessionDetailsDisplay';
+import TablesList from '@/components/session/TablesList';
+import SessionDeleteModal from '@/components/session/SessionDeleteModal';
+import SessionEndModal from '@/components/session/SessionEndModal';
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { sessions, updateSession, deleteSession, endSession, pauseSession, resumeSession } = useSessionContext();
+  const { sessions, updateSession, deleteSession, endSession } = useSessionContext();
   
   const session = sessions.find(s => s.id === id);
   
@@ -130,6 +133,16 @@ export default function SessionDetail() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
+  const handleNotesChange = (notes: string) => {
+    if (session) {
+      const updatedSession = {
+        ...session,
+        notes
+      };
+      updateSession(updatedSession);
+    }
+  };
+  
   const handleGoBack = () => {
     navigate('/');
   };
@@ -158,174 +171,21 @@ export default function SessionDetail() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-3xl px-4 py-8">
-        <header className="mb-8">
-          <Button 
-            onClick={handleGoBack} 
-            variant="ghost" 
-            className="text-poker-feltGreen mb-4 flex items-center p-0 hover:bg-transparent"
-          >
-            ← Back
-          </Button>
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-serif font-bold">
-              {isEditing ? "Edit Session" : session.location}
-            </h1>
-            {!isEditing && (
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => setIsEditing(true)}
-                  className="text-sm py-1 px-3 border border-gray-300 rounded"
-                >
-                  Edit
-                </button>
-                <button 
-                  onClick={() => setShowDeleteModal(true)}
-                  className="text-sm py-1 px-3 border border-red-300 text-poker-red rounded"
-                >
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
-        </header>
+        <SessionHeader
+          isEditing={isEditing}
+          locationName={session.location}
+          onBackClick={handleGoBack}
+          onEditClick={() => setIsEditing(true)}
+          onDeleteClick={() => setShowDeleteModal(true)}
+        />
         
         {isEditing ? (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2" htmlFor="location">
-                Location
-              </label>
-              <input
-                id="location"
-                name="location"
-                type="text"
-                value={formData.location}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md"
-              />
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Game Type</label>
-              <select
-                name="gameType"
-                value={formData.gameType}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md"
-              >
-                <option value="NLH">No Limit Hold'em</option>
-                <option value="PLO">Pot Limit Omaha</option>
-              </select>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Format</label>
-              <select
-                name="format"
-                value={formData.format}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md"
-              >
-                <option value="Cash">Cash Game</option>
-                <option value="Tournament">Tournament</option>
-              </select>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2" htmlFor="buyin">
-                Buy-in Amount
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <span className="text-gray-500">$</span>
-                </div>
-                <input
-                  id="buyin"
-                  name="buyIn"
-                  type="number"
-                  value={formData.buyIn}
-                  onChange={handleChange}
-                  className="w-full p-3 pl-8 border border-gray-300 rounded-md"
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-            </div>
-            
-            <div className="mb-4 grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-gray-700 mb-2" htmlFor="smallBlind">
-                  Small Blind
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <span className="text-gray-500">$</span>
-                  </div>
-                  <input
-                    id="smallBlind"
-                    name="smallBlind"
-                    type="number"
-                    value={formData.smallBlind}
-                    onChange={handleChange}
-                    className="w-full p-3 pl-8 border border-gray-300 rounded-md"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-gray-700 mb-2" htmlFor="bigBlind">
-                  Big Blind
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <span className="text-gray-500">$</span>
-                  </div>
-                  <input
-                    id="bigBlind"
-                    name="bigBlind"
-                    type="number"
-                    value={formData.bigBlind}
-                    onChange={handleChange}
-                    className="w-full p-3 pl-8 border border-gray-300 rounded-md"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="mb-6">
-              <label className="block text-gray-700 mb-2" htmlFor="notes">
-                Notes
-              </label>
-              <Textarea
-                id="notes"
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                placeholder="Add session notes here..."
-                className="min-h-[100px]"
-              />
-            </div>
-            
-            <div className="flex gap-3">
-              <button
-                onClick={handleSaveEdit}
-                className="flex-1 py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md"
-              >
-                Save Changes
-              </button>
-              
-              <button
-                onClick={() => setIsEditing(false)}
-                className="flex-1 py-3 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-md"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+          <SessionEditForm
+            formData={formData}
+            handleChange={handleChange}
+            handleSaveEdit={handleSaveEdit}
+            setIsEditing={setIsEditing}
+          />
         ) : (
           <>
             {session.isActive && (
@@ -339,102 +199,21 @@ export default function SessionDetail() {
               />
             )}
             
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <span className="text-sm text-gray-500">Started</span>
-                  <p className="font-medium">{formattedDate}</p>
-                </div>
-                
-                {sessionDuration && (
-                  <div className="text-center">
-                    <span className="text-sm text-gray-500">Duration</span>
-                    <p className="font-medium">{sessionDuration}</p>
-                  </div>
-                )}
-                
-                {formattedEndDate && (
-                  <div className="text-right">
-                    <span className="text-sm text-gray-500">Ended</span>
-                    <p className="font-medium">{formattedEndDate}</p>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex flex-col gap-4 mb-6">
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Game:</span>
-                  <span className="font-medium">{session.gameType}</span>
-                </div>
-                
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Format:</span>
-                  <span className="font-medium">{session.format}</span>
-                </div>
-                
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Buy-in:</span>
-                  <span className="font-medium">
-                    ${initialBuyIn.toFixed(2)}
-                    {additionalBuyins > 0 && (
-                      <span className="text-gray-600"> (+${additionalBuyins.toFixed(2)})</span>
-                    )}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Re-Buys:</span>
-                  <span className="font-medium">{session.rebuys}</span>
-                </div>
-                
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Blinds:</span>
-                  <span className="font-medium">${session.smallBlind || 0}/${session.bigBlind || 0}</span>
-                </div>
-                
-                {isCompleted && session.cashOut !== undefined && (
-                  <>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-500">Cash out:</span>
-                      <span className="font-medium">${session.cashOut.toFixed(2)}</span>
-                    </div>
-                    
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-500">Profit/Loss:</span>
-                      <span className={`font-bold ${profitClass}`}>
-                        {profit > 0 ? '+' : ''}{profit.toFixed(2)}
-                      </span>
-                    </div>
-                    
-                    {session.notes && (
-                      <div className="flex flex-col py-2 border-b">
-                        <span className="text-gray-500 mb-1">Session Notes:</span>
-                        <p className="text-sm bg-gray-50 p-3 rounded">{session.notes}</p>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-              
-              {session.isActive && (
-                <button
-                  onClick={() => setShowEndSessionModal(true)}
-                  className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md"
-                >
-                  End Session
-                </button>
-              )}
-            </div>
+            <SessionDetailsDisplay
+              session={session}
+              isCompleted={isCompleted}
+              profit={profit}
+              profitClass={profitClass}
+              formattedDate={formattedDate}
+              formattedEndDate={formattedEndDate}
+              sessionDuration={sessionDuration}
+              initialBuyIn={initialBuyIn}
+              additionalBuyins={additionalBuyins}
+              onEndSession={() => setShowEndSessionModal(true)}
+            />
             
-            {!session.isActive && Array.isArray(session.tables) && session.tables.length > 0 && (
-              <div className="mb-6">
-                <h2 className="text-lg font-bold mb-4">Tables Played</h2>
-                {session.tables.map(table => {
-                  return (
-                    <TableDetailsCard key={table.id} table={table} />
-                  );
-                })}
-              </div>
+            {!session.isActive && Array.isArray(session.tables) && (
+              <TablesList tables={session.tables} />
             )}
             
             <div className="bg-white rounded-lg shadow-md p-6">
@@ -447,93 +226,21 @@ export default function SessionDetail() {
         )}
       </div>
       
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Delete Session</h2>
-            <p className="mb-6">Are you sure you want to delete this session? This action cannot be undone.</p>
-            
-            <div className="flex gap-4">
-              <button
-                onClick={handleDelete}
-                className="flex-1 py-2 px-4 bg-poker-red hover:bg-red-700 text-white font-bold rounded-md"
-              >
-                Delete
-              </button>
-              
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-md"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <SessionDeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirmDelete={handleDelete}
+      />
       
-      {showEndSessionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">End Session</h2>
-            <p className="mb-4">Please enter your cash out amount:</p>
-            
-            <div className="mb-6">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <span className="text-gray-500">$</span>
-                </div>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  className="w-full p-3 pl-8 border border-gray-300 rounded-md"
-                  value={cashOutAmount}
-                  onChange={(e) => setCashOutAmount(e.target.value)}
-                  min="0"
-                  step="0.01"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="mb-6">
-              <label className="block text-gray-700 mb-2" htmlFor="notes">Session Notes</label>
-              <textarea
-                id="notes"
-                placeholder="How did your session go? Note any significant hands, reads, or things to improve..."
-                className="w-full p-3 border border-gray-300 rounded-md min-h-[100px]"
-                value={session.notes || ''}
-                onChange={(e) => {
-                  if (session) {
-                    const updatedSession = {
-                      ...session,
-                      notes: e.target.value
-                    };
-                    updateSession(updatedSession);
-                  }
-                }}
-              ></textarea>
-            </div>
-            
-            <div className="flex gap-4">
-              <button
-                onClick={handleEndSession}
-                className="flex-1 py-2 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md"
-                disabled={!cashOutAmount}
-              >
-                End Session
-              </button>
-              
-              <button
-                onClick={() => setShowEndSessionModal(false)}
-                className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-md"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <SessionEndModal
+        isOpen={showEndSessionModal}
+        onClose={() => setShowEndSessionModal(false)}
+        onConfirmEnd={handleEndSession}
+        cashOutAmount={cashOutAmount}
+        setCashOutAmount={setCashOutAmount}
+        notes={session.notes || ''}
+        onNotesChange={handleNotesChange}
+      />
     </div>
   );
 }
