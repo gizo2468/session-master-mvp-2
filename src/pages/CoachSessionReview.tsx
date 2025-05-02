@@ -11,11 +11,12 @@ import { CommentForm } from '@/components/coaching/CommentForm';
 import { CommentTag } from '@/types/poker';
 import { HandData, TableData } from '@/types/poker';
 import CardDisplay from '@/components/poker/CardDisplay';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/context/AuthContext';
 import { hasFeatureAccess } from '@/utils/coachTiers';
 import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 // Mock session data for the demo
 const createMockSessionData = (sessionId: string) => {
@@ -65,6 +66,7 @@ const CoachSessionReview = () => {
   
   const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
   const [selectedHandId, setSelectedHandId] = useState<string | undefined>(undefined);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   
   // In a real app, we would fetch this data from API/database
   const { table, hands } = createMockSessionData(sessionId || '');
@@ -86,7 +88,10 @@ const CoachSessionReview = () => {
   };
   
   const openCommentForm = (handId?: string) => {
-    if (!hasCommentAccess) return;
+    if (!hasCommentAccess) {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
     
     setSelectedHandId(handId);
     setIsCommentFormOpen(true);
@@ -116,44 +121,19 @@ const CoachSessionReview = () => {
           
           {/* Session comment button */}
           <div className="flex justify-end">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="relative">
-                    <Button 
-                      onClick={hasCommentAccess ? () => openCommentForm() : undefined} 
-                      variant="poker"
-                      className={`flex items-center gap-2 ${!hasCommentAccess ? 'opacity-50' : ''}`}
-                      disabled={!hasCommentAccess}
-                    >
-                      <Icon name="MessageSquare" size={16} />
-                      <span>Add Session Comment</span>
-                    </Button>
-                    {!hasCommentAccess && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-poker-gold rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">$</span>
-                      </div>
-                    )}
-                  </span>
-                </TooltipTrigger>
-                {!hasCommentAccess && (
-                  <TooltipContent className="bg-white w-64 p-3">
-                    <div className="flex flex-col items-center text-center">
-                      <p className="text-sm font-medium mb-2">Session Comments Locked</p>
-                      <p className="text-xs text-gray-600 mb-3">Upgrade your coach tier to provide session-level feedback to your students.</p>
-                      <Button 
-                        variant="poker" 
-                        size="sm"
-                        className="bg-poker-gold hover:bg-poker-darkGold w-full"
-                        onClick={() => navigate('/coach-upgrade')}
-                      >
-                        Upgrade Now
-                      </Button>
-                    </div>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
+            <Button 
+              onClick={() => openCommentForm()}
+              variant="poker"
+              className={`flex items-center gap-2 ${!hasCommentAccess ? 'opacity-50' : ''}`}
+            >
+              <Icon name="MessageSquare" size={16} />
+              <span>Add Session Comment</span>
+              {!hasCommentAccess && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-poker-gold rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">$</span>
+                </div>
+              )}
+            </Button>
           </div>
           
           {/* Hands section */}
@@ -182,6 +162,57 @@ const CoachSessionReview = () => {
           onSubmit={handleAddComment}
           context={selectedHandId ? 'hand' : 'session'}
         />
+
+        {/* Upgrade Modal */}
+        <Dialog open={isUpgradeModalOpen} onOpenChange={setIsUpgradeModalOpen}>
+          <DialogContent className="max-w-md">
+            <div className="flex flex-col items-center text-center p-4">
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-poker-gold rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Icon name="lock" size={24} className="text-white" />
+                </div>
+                <h2 className="text-xl font-bold">Unlock Feedback Features</h2>
+                <p className="text-gray-600 mt-2">
+                  Upgrade your coach tier to provide detailed feedback to your students on sessions and individual hands.
+                </p>
+              </div>
+              
+              <div className="w-full space-y-4">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h3 className="font-medium mb-1">Pro Coach</h3>
+                  <p className="text-sm text-gray-600 mb-3">Unlock hand-level feedback for up to 10 students</p>
+                  <Button
+                    variant="poker"
+                    className="w-full"
+                    onClick={() => navigate('/coach-upgrade')}
+                  >
+                    Upgrade to Pro
+                  </Button>
+                </div>
+                
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h3 className="font-medium mb-1">Elite Coach</h3>
+                  <p className="text-sm text-gray-600 mb-3">Unlimited feedback and premium features</p>
+                  <Button
+                    variant="felt"
+                    className="w-full"
+                    onClick={() => navigate('/coach-upgrade')}
+                  >
+                    Upgrade to Elite
+                  </Button>
+                </div>
+              </div>
+              
+              <Button
+                variant="ghost"
+                className="mt-4"
+                onClick={() => setIsUpgradeModalOpen(false)}
+              >
+                Maybe later
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
