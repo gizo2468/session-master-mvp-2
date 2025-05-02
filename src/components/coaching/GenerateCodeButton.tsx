@@ -12,7 +12,7 @@ const GenerateCodeButton = () => {
         <Button 
           onClick={disableConnectionCode}
           variant="destructive"
-          className="w-full h-8 text-sm px-3"
+          className="w-full h-7 text-xs px-2.5"
         >
           Disable Connection Code
         </Button>
@@ -20,7 +20,7 @@ const GenerateCodeButton = () => {
         <Button 
           onClick={generateConnectionCode}
           variant="poker"
-          className="w-full h-8 text-sm px-3"
+          className="w-full h-7 text-xs px-2.5"
         >
           Generate Connection Code
         </Button>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -311,15 +310,15 @@ const CoachDashboard = () => {
                     />
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex justify-center gap-2">
                     <GenerateCodeButton />
                     {coachTier === 'free' && (
                       <Button 
                         onClick={handlePlanBadgeClick}
                         variant="default"
-                        className="w-full bg-poker-gold hover:bg-poker-darkGold h-8 text-sm px-3"
+                        className="w-full bg-poker-gold hover:bg-poker-darkGold h-7 text-xs px-2.5"
                       >
-                        <Icon name="package-plus" size={16} className="mr-2" />
+                        <Icon name="package-plus" size={14} className="mr-1.5" />
                         Upgrade Plan
                       </Button>
                     )}
