@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 interface FeatureLockOverlayProps {
   featureName: string;
@@ -25,16 +26,23 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
   if (isUpgradeButton) {
     return (
       <Button 
-        variant="default" 
+        variant="ghost"
         onClick={handleUpgradeClick}
-        className="bg-poker-gold hover:bg-poker-darkGold ml-2 relative"
+        className={cn(
+          "bg-gray-200 hover:bg-gray-300 border border-gray-300 opacity-90 ml-2 relative",
+          "flex items-center gap-1.5 h-9 px-3"
+        )}
         size="sm"
       >
-        <Icon name="package-plus" size={16} className="mr-1" />
-        <span>Change Plan</span>
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-poker-gold border-2 border-white rounded-full flex items-center justify-center">
-          <Icon name="dollar-sign" size={10} className="text-white" />
+        <div className="relative">
+          <Icon name="package-plus" size={16} />
+          <Icon 
+            name="lock" 
+            size={10} 
+            className="absolute -top-1 -right-1 text-poker-gold bg-white rounded-full p-0.5 border border-poker-gold" 
+          />
         </div>
+        <span className="text-gray-700">Change Plan</span>
       </Button>
     );
   }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +11,7 @@ import { CommentTag } from '@/types/poker';
 import { HandData, TableData } from '@/types/poker';
 import { useAuth } from '@/context/AuthContext';
 import { hasFeatureAccess } from '@/utils/coachTiers';
+import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 
 // Mock session data for the demo
 const createMockSessionData = (sessionId: string) => {
@@ -128,19 +128,34 @@ const CoachSessionReview = () => {
           
           {/* Session comment button */}
           <div className="flex justify-end">
-            <Button 
-              onClick={() => openCommentForm()}
-              variant="poker"
-              className="flex items-center gap-2 relative"
-            >
-              <Icon name="message-square" size={16} />
-              <span>Add Session Comment</span>
-              {!hasCommentAccess && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-poker-gold rounded-full flex items-center justify-center">
-                  <Icon name="dollar-sign" size={12} className="text-white" />
-                </div>
-              )}
-            </Button>
+            {hasCommentAccess ? (
+              <Button 
+                onClick={() => openCommentForm()}
+                variant="poker"
+                className="flex items-center gap-2"
+              >
+                <Icon name="message-square" size={16} />
+                <span>Add Session Comment</span>
+              </Button>
+            ) : (
+              <AdaptiveTooltip content={<p>Upgrade to leave session feedback</p>}>
+                <Button 
+                  onClick={() => openCommentForm()}
+                  variant="outline"
+                  className="bg-gray-200 hover:bg-gray-300 border border-gray-300 opacity-90 flex items-center gap-2 text-gray-700"
+                >
+                  <div className="relative">
+                    <Icon name="message-square" size={16} className="text-gray-500" />
+                    <Icon 
+                      name="lock" 
+                      size={10} 
+                      className="absolute -top-1 -right-1 text-poker-gold bg-white rounded-full p-0.5 border border-poker-gold"
+                    />
+                  </div>
+                  <span>Add Session Comment</span>
+                </Button>
+              </AdaptiveTooltip>
+            )}
           </div>
           
           {/* Hands section */}

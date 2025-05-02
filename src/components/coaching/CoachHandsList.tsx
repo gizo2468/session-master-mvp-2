@@ -8,7 +8,7 @@ import CardDisplay from '../poker/CardDisplay';
 import { PokerChip } from '../Icons';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import Icon from '@/components/ui/Lucide';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface CoachHandsListProps {
   hands: HandData[];
@@ -22,6 +22,7 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
   hasCommentAccess = true 
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Sort hands by createdAt date
   const sortedHands = [...hands].sort((a, b) => 
@@ -32,7 +33,8 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
     if (hasCommentAccess) {
       onAddFeedback(handId);
     } else {
-      // Navigate to upgrade page
+      // Store current location before navigating to upgrade page
+      localStorage.setItem('previousLocation', location.pathname);
       navigate('/coach-upgrade');
     }
   };
@@ -107,20 +109,36 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => handleFeedbackClick(hand.id)}
-                      className="h-8 w-8 p-0 relative"
-                      aria-label="Add feedback"
-                    >
-                      <MessageSquare className={`h-4 w-4 ${hasCommentAccess ? 'text-poker-feltGreen hover:text-poker-feltGreen/80' : 'text-gray-400'}`} />
-                      {!hasCommentAccess && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-poker-gold rounded-full flex items-center justify-center">
-                          <Icon name="dollar-sign" size={8} className="text-white" />
-                        </div>
-                      )}
-                    </Button>
+                    {hasCommentAccess ? (
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleFeedbackClick(hand.id)}
+                        className="h-8 w-8 p-0 relative"
+                        aria-label="Add feedback"
+                      >
+                        <MessageSquare className="h-4 w-4 text-poker-feltGreen hover:text-poker-feltGreen/80" />
+                      </Button>
+                    ) : (
+                      <AdaptiveTooltip content={<p>Upgrade to leave hand feedback</p>}>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => handleFeedbackClick(hand.id)}
+                          className="h-8 w-8 p-0 bg-gray-200 hover:bg-gray-300 border border-gray-300 opacity-90"
+                          aria-label="Locked feedback - upgrade required"
+                        >
+                          <div className="relative flex items-center justify-center w-full h-full">
+                            <MessageSquare className="h-4 w-4 text-gray-500" />
+                            <Icon 
+                              name="lock" 
+                              size={10} 
+                              className="absolute -top-1 -right-1 text-poker-gold bg-white rounded-full p-0.5 border border-poker-gold"
+                            />
+                          </div>
+                        </Button>
+                      </AdaptiveTooltip>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
