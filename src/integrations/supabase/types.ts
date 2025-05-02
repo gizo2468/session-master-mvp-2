@@ -93,6 +93,18 @@ export type Database = {
         }
         Relationships: []
       }
+      sessions_readable: {
+        Row: {
+          "Duration (minutes)": number | null
+          "Player Name": string | null
+          "Session End": string | null
+          "Session ID": string | null
+          "Session Start": string | null
+          "Session Type": string | null
+          "User ID": string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
