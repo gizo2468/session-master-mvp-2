@@ -37,9 +37,9 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
         <div className="relative">
           <Icon name="package-plus" size={16} />
           <Icon 
-            name="lock" 
+            name="dollar-sign" 
             size={10} 
-            className="absolute -top-1 -right-1 text-poker-gold bg-white rounded-full p-0.5 border border-poker-gold" 
+            className="absolute -top-1 -right-1 text-poker-gold bg-white rounded-full p-0.5 border border-poker-gold"
           />
         </div>
         <span className="text-gray-700">Change Plan</span>
@@ -51,7 +51,14 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
     <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-md backdrop-blur-sm z-10">
       <div className="text-center p-6 max-w-xs">
         <div className="mb-4 text-white">
-          <Icon name="lock" size={36} className="mx-auto mb-3" />
+          <div className="relative inline-block mx-auto mb-3">
+            <Icon name="lock" size={36} className="mx-auto" />
+            <Icon 
+              name="dollar-sign" 
+              size={16} 
+              className="absolute -top-2 -right-2 text-poker-gold bg-white/20 rounded-full p-1 border border-poker-gold"
+            />
+          </div>
           <h3 className="text-xl font-bold">{featureName} Locked</h3>
           <p className="text-sm opacity-90 mt-2">
             Upgrade your coach tier to access this feature and unlock all coaching tools

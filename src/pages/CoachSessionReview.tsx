@@ -12,6 +12,7 @@ import { HandData, TableData } from '@/types/poker';
 import { useAuth } from '@/context/AuthContext';
 import { hasFeatureAccess } from '@/utils/coachTiers';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
+import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
 
 // Mock session data for the demo
 const createMockSessionData = (sessionId: string) => {
@@ -147,7 +148,7 @@ const CoachSessionReview = () => {
                   <div className="relative">
                     <Icon name="message-square" size={16} className="text-gray-500" />
                     <Icon 
-                      name="lock" 
+                      name="dollar-sign" 
                       size={10} 
                       className="absolute -top-1 -right-1 text-poker-gold bg-white rounded-full p-0.5 border border-poker-gold"
                     />

@@ -131,7 +131,7 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
                           <div className="relative flex items-center justify-center w-full h-full">
                             <MessageSquare className="h-4 w-4 text-gray-500" />
                             <Icon 
-                              name="lock" 
+                              name="dollar-sign" 
                               size={10} 
                               className="absolute -top-1 -right-1 text-poker-gold bg-white rounded-full p-0.5 border border-poker-gold"
                             />
