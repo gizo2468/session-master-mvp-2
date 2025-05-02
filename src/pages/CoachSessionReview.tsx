@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -114,23 +115,45 @@ const CoachSessionReview = () => {
           <TableDetailsCard table={table} />
           
           {/* Session comment button */}
-          <div className="flex justify-end relative">
-            <Button 
-              onClick={() => openCommentForm()} 
-              variant="poker"
-              className={`flex items-center gap-2 ${!hasCommentAccess ? 'opacity-50 pointer-events-none' : ''}`}
-              disabled={!hasCommentAccess}
-            >
-              <Icon name="MessageSquare" size={16} />
-              <span>Add Session Comment</span>
-            </Button>
-            
-            {!hasCommentAccess && (
-              <FeatureLockOverlay 
-                featureName="Session Comments"
-                isUpgradeButton={true}
-              />
-            )}
+          <div className="flex justify-end">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="relative">
+                    <Button 
+                      onClick={hasCommentAccess ? () => openCommentForm() : undefined} 
+                      variant="poker"
+                      className={`flex items-center gap-2 ${!hasCommentAccess ? 'opacity-50' : ''}`}
+                      disabled={!hasCommentAccess}
+                    >
+                      <Icon name="MessageSquare" size={16} />
+                      <span>Add Session Comment</span>
+                    </Button>
+                    {!hasCommentAccess && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-poker-gold rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">$</span>
+                      </div>
+                    )}
+                  </span>
+                </TooltipTrigger>
+                {!hasCommentAccess && (
+                  <TooltipContent className="bg-white w-64 p-3">
+                    <div className="flex flex-col items-center text-center">
+                      <p className="text-sm font-medium mb-2">Session Comments Locked</p>
+                      <p className="text-xs text-gray-600 mb-3">Upgrade your coach tier to provide session-level feedback to your students.</p>
+                      <Button 
+                        variant="poker" 
+                        size="sm"
+                        className="bg-poker-gold hover:bg-poker-darkGold w-full"
+                        onClick={() => navigate('/coach-upgrade')}
+                      >
+                        Upgrade Now
+                      </Button>
+                    </div>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </div>
           
           {/* Hands section */}
@@ -142,16 +165,12 @@ const CoachSessionReview = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px] relative">
+              <div className="h-[400px]">
                 <CoachHandsList 
                   hands={hands} 
                   onAddFeedback={openCommentForm}
                   hasCommentAccess={hasCommentAccess}
                 />
-                
-                {!hasCommentAccess && (
-                  <FeatureLockOverlay featureName="Hand Comments" />
-                )}
               </div>
             </CardContent>
           </Card>

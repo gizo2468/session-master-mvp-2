@@ -96,25 +96,47 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="relative">
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => onAddFeedback(hand.id)}
-                            className={`h-8 w-8 p-0 ${hasCommentAccess ? 'text-poker-feltGreen hover:text-poker-feltGreen/80' : 'text-gray-400'}`}
-                            aria-label="Add feedback"
-                            disabled={!hasCommentAccess}
-                          >
-                            <MessageSquare className="h-4 w-4" />
-                          </Button>
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {hasCommentAccess ? 'Add comment' : 'Upgrade to add comments'}
-                      </TooltipContent>
-                    </Tooltip>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="relative inline-block">
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={hasCommentAccess ? () => onAddFeedback(hand.id) : undefined}
+                              className={`h-8 w-8 p-0 ${hasCommentAccess ? 'text-poker-feltGreen hover:text-poker-feltGreen/80' : 'text-gray-400'}`}
+                              aria-label="Add feedback"
+                              disabled={!hasCommentAccess}
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                            {!hasCommentAccess && (
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-poker-gold rounded-full flex items-center justify-center">
+                                <span className="text-white text-[8px] font-bold">$</span>
+                              </div>
+                            )}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className={!hasCommentAccess ? "bg-white w-64 p-3" : ""}>
+                          {!hasCommentAccess ? (
+                            <div className="flex flex-col items-center text-center">
+                              <p className="text-sm font-medium mb-2">Hand Feedback Locked</p>
+                              <p className="text-xs text-gray-600 mb-3">Upgrade your coach tier to provide hand-level feedback to your students.</p>
+                              <Button 
+                                variant="poker" 
+                                size="sm"
+                                className="bg-poker-gold hover:bg-poker-darkGold w-full"
+                                onClick={() => window.location.href = '/coach-upgrade'}
+                              >
+                                Upgrade Now
+                              </Button>
+                            </div>
+                          ) : (
+                            'Add comment'
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </TableCell>
                 </TableRow>
               ))}
