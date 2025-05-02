@@ -12,6 +12,9 @@ import { HandData, TableData } from '@/types/poker';
 import CardDisplay from '@/components/poker/CardDisplay';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAuth } from '@/context/AuthContext';
+import { hasFeatureAccess } from '@/utils/coachTiers';
+import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
 
 // Mock session data for the demo
 const createMockSessionData = (sessionId: string) => {
@@ -57,12 +60,16 @@ const CoachSessionReview = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { studentId, sessionId } = useParams<{ studentId: string; sessionId: string }>();
+  const { user } = useAuth();
   
   const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
   const [selectedHandId, setSelectedHandId] = useState<string | undefined>(undefined);
   
   // In a real app, we would fetch this data from API/database
   const { table, hands } = createMockSessionData(sessionId || '');
+  
+  // Check if user has access to comment feature
+  const hasCommentAccess = hasFeatureAccess(user?.role, user?.coachTier, 'Comment Tagging');
   
   const handleAddComment = (content: string, tag: CommentTag | undefined) => {
     // In a real app, we would save this to the database
@@ -78,6 +85,8 @@ const CoachSessionReview = () => {
   };
   
   const openCommentForm = (handId?: string) => {
+    if (!hasCommentAccess) return;
+    
     setSelectedHandId(handId);
     setIsCommentFormOpen(true);
   };
@@ -105,15 +114,23 @@ const CoachSessionReview = () => {
           <TableDetailsCard table={table} />
           
           {/* Session comment button */}
-          <div className="flex justify-end">
+          <div className="flex justify-end relative">
             <Button 
               onClick={() => openCommentForm()} 
               variant="poker"
-              className="flex items-center gap-2"
+              className={`flex items-center gap-2 ${!hasCommentAccess ? 'opacity-50 pointer-events-none' : ''}`}
+              disabled={!hasCommentAccess}
             >
               <Icon name="MessageSquare" size={16} />
               <span>Add Session Comment</span>
             </Button>
+            
+            {!hasCommentAccess && (
+              <FeatureLockOverlay 
+                featureName="Session Comments"
+                isUpgradeButton={true}
+              />
+            )}
           </div>
           
           {/* Hands section */}
@@ -125,11 +142,16 @@ const CoachSessionReview = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px]">
+              <div className="h-[400px] relative">
                 <CoachHandsList 
                   hands={hands} 
                   onAddFeedback={openCommentForm}
+                  hasCommentAccess={hasCommentAccess}
                 />
+                
+                {!hasCommentAccess && (
+                  <FeatureLockOverlay featureName="Hand Comments" />
+                )}
               </div>
             </CardContent>
           </Card>

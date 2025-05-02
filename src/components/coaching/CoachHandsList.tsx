@@ -8,13 +8,19 @@ import CardDisplay from '../poker/CardDisplay';
 import { PokerChip } from '../Icons';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
 
 interface CoachHandsListProps {
   hands: HandData[];
   onAddFeedback: (handId: string) => void;
+  hasCommentAccess?: boolean;
 }
 
-const CoachHandsList: React.FC<CoachHandsListProps> = ({ hands, onAddFeedback }) => {
+const CoachHandsList: React.FC<CoachHandsListProps> = ({ 
+  hands, 
+  onAddFeedback,
+  hasCommentAccess = true 
+}) => {
   // Sort hands by createdAt date
   const sortedHands = [...hands].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -90,15 +96,25 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({ hands, onAddFeedback })
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => onAddFeedback(hand.id)}
-                      className="h-8 w-8 p-0 text-poker-feltGreen hover:text-poker-feltGreen/80"
-                      aria-label="Add feedback"
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="relative">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => onAddFeedback(hand.id)}
+                            className={`h-8 w-8 p-0 ${hasCommentAccess ? 'text-poker-feltGreen hover:text-poker-feltGreen/80' : 'text-gray-400'}`}
+                            aria-label="Add feedback"
+                            disabled={!hasCommentAccess}
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {hasCommentAccess ? 'Add comment' : 'Upgrade to add comments'}
+                      </TooltipContent>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))}
