@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -146,17 +145,15 @@ const CoachSessionReview = () => {
                   variant="outline"
                   className="bg-gray-200 hover:bg-gray-300 border border-gray-300 opacity-90 flex items-center gap-2 text-gray-700 relative"
                 >
-                  <div className="relative">
-                    <Icon name="message-square" size={16} className="text-gray-500" />
-                    <div className="absolute -top-1.5 -right-1.5 bg-poker-gold rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
-                      <Icon 
-                        name="dollar-sign" 
-                        size={10} 
-                        className="text-white"
-                      />
-                    </div>
-                  </div>
+                  <Icon name="message-square" size={16} className="text-gray-500" />
                   <span>Add Session Comment</span>
+                  <div className="absolute -top-1.5 -right-1.5 bg-poker-gold rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
+                    <Icon 
+                      name="dollar-sign" 
+                      size={10} 
+                      className="text-white"
+                    />
+                  </div>
                 </Button>
               </AdaptiveTooltip>
             )}
