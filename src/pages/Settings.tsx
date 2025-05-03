@@ -13,6 +13,8 @@ import StudentSettings from '@/components/settings/StudentSettings';
 import AppSettings from '@/components/settings/AppSettings';
 import BillingSettings from '@/components/settings/BillingSettings';
 import LegalSettings from '@/components/settings/LegalSettings';
+import DonationCard from '@/components/DonationCard';
+import { Separator } from '@/components/ui/separator';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
@@ -79,7 +81,15 @@ const Settings: React.FC = () => {
             </div>
           </Tabs>
 
-          <div className="px-6 pb-6 pt-2">
+          {/* Donation card placed between tabs content and legal section */}
+          <div className="px-6 pb-0">
+            <Separator className="my-6" />
+            <DonationCard />
+          </div>
+
+          {/* Legal section */}
+          <div className="px-6 pb-6">
+            <Separator className="my-6" />
             <LegalSettings />
           </div>
         </div>

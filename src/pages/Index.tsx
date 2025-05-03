@@ -7,7 +7,6 @@ import FocusModeButton from '@/components/FocusModeButton';
 import { useSessionContext } from '@/context/SessionContext';
 import SessionCard from '@/components/SessionCard';
 import Logo from '@/components/Logo';
-import DonationCard from '@/components/DonationCard';
 import CoachingNav from '@/components/coaching/CoachingNav';
 import ConnectionNotification from '@/components/coaching/ConnectionNotification';
 import Icon from '@/components/ui/Lucide';
@@ -73,11 +72,6 @@ const Index = () => {
         {/* Coaching Navigation */}
         <CoachingNav />
         <ConnectionNotification />
-        
-        {/* Donation Card - Added at the bottom of the page */}
-        <div className="mt-10 mb-16">
-          <DonationCard />
-        </div>
         
         <FocusModeButton />
       </div>
