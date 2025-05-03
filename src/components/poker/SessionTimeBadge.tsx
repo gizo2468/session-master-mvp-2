@@ -54,9 +54,9 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
           {title}
         </div>
         <div className="w-full flex items-center justify-center py-3">
-          <div className="flex items-center justify-center w-full">
+          <div className="flex items-center justify-center text-center w-full px-3">
             {getBadgeIcon()}
-            <span className="font-medium text-sm">{formatDisplayValue()}</span>
+            <span className="font-medium text-sm w-full text-center">{formatDisplayValue()}</span>
           </div>
         </div>
       </Badge>
