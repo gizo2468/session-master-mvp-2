@@ -44,6 +44,9 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   const tableCount = tables.length;
   const profitClass = totalProfit >= 0 ? "text-green-600" : "text-red-600";
 
+  // Determine if blinds should be shown - ONLY for Cash format
+  const shouldShowBlinds = session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined;
+
   return (
     <Card className="bg-white rounded-lg shadow-md mb-6">
       <CardHeader className="pb-2">
@@ -96,13 +99,13 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             </div>
           )}
           
-          {/* Only show blinds for Cash game format */}
-          {session.format === 'Cash' && session.smallBlind && session.bigBlind ? (
+          {/* Only show blinds row if it's a Cash game format AND has valid blinds values */}
+          {shouldShowBlinds && (
             <div className="flex justify-between">
               <span className="text-gray-500">Blinds:</span>
               <span className="font-medium">${session.smallBlind}/{session.bigBlind}</span>
             </div>
-          ) : null}
+          )}
           
           {session.notes && (
             <div className="pt-2">
