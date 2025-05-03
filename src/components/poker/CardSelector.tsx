@@ -2,6 +2,7 @@
 import React from 'react';
 import { Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface CardSelectorProps {
   selectedCards: string;
@@ -10,6 +11,7 @@ interface CardSelectorProps {
 }
 
 const CardSelector: React.FC<CardSelectorProps> = ({ selectedCards, onChange, maxCards = 10 }) => {
+  // Updated ranks to display in descending order (A to 2)
   const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
   const suits = [
     { symbol: 's', display: '♠', color: 'text-black' },
@@ -73,13 +75,13 @@ const CardSelector: React.FC<CardSelectorProps> = ({ selectedCards, onChange, ma
   return (
     <div className="space-y-4">
       {/* Display selected cards */}
-      <div className="flex flex-wrap gap-2 min-h-12">
+      <div className="flex flex-wrap gap-2 min-h-12 mb-2">
         {parseSelectedCards().map((card, index) => {
           const { display, color } = getSuitInfo(card.suit);
           return (
             <div
               key={index}
-              className="flex items-center justify-center bg-white border border-gray-300 rounded-md px-2 py-1 shadow-sm"
+              className="flex items-center justify-center bg-white border border-gray-300 rounded-md px-2 py-1 shadow-sm hover:bg-gray-50 cursor-pointer"
               onClick={() => toggleCard(card.rank, card.suit)}
             >
               <span className="font-bold">{card.rank}</span>
@@ -104,38 +106,42 @@ const CardSelector: React.FC<CardSelectorProps> = ({ selectedCards, onChange, ma
         {selectedCardCount} / {maxCards} cards selected
       </div>
       
-      {/* Card grid selector */}
-      <div className="bg-gray-100 rounded-lg p-3">
+      {/* New unified grid-based card selector */}
+      <div className="bg-gray-100 rounded-lg p-4">
+        {/* Grid layout with ranks as rows and suits as columns */}
         <div className="grid grid-cols-4 gap-2">
+          {/* Header row with suit symbols */}
           {suits.map(suit => (
-            <div key={suit.symbol} className="flex justify-center">
-              <span className={`text-xl ${suit.color}`}>{suit.display}</span>
+            <div key={suit.symbol} className={`flex justify-center ${suit.color} text-xl pb-1`}>
+              {suit.display}
             </div>
           ))}
-        </div>
-        
-        <div className="mt-2 border-t border-gray-200 pt-2">
+          
+          {/* Card grid */}
           {ranks.map(rank => (
-            <div key={rank} className="grid grid-cols-4 gap-2 mb-2">
+            <React.Fragment key={rank}>
               {suits.map(suit => {
                 const isSelected = isCardSelected(rank, suit.symbol);
                 return (
-                  <div
+                  <button
                     key={`${rank}${suit.symbol}`}
-                    className={`
-                      h-12 flex items-center justify-center rounded-md cursor-pointer border
-                      ${isSelected 
-                        ? 'bg-poker-gold text-white border-poker-gold shadow-md' 
-                        : 'bg-white hover:bg-gray-50 border-gray-300'}
-                    `}
                     onClick={() => toggleCard(rank, suit.symbol)}
+                    className={cn(
+                      "flex flex-col items-center justify-center h-12 rounded-md transition-all",
+                      isSelected 
+                        ? "bg-poker-gold text-white border-2 border-poker-darkGold shadow-md" 
+                        : "bg-white hover:bg-gray-50 border border-gray-300"
+                    )}
+                    disabled={selectedCardCount >= maxCards && !isSelected}
                   >
-                    <span className="font-bold mr-1">{rank}</span>
-                    <span className={`${isSelected ? 'text-white' : suit.color}`}>{suit.display}</span>
-                  </div>
+                    <span className="font-bold">{rank}</span>
+                    <span className={isSelected ? "text-white" : suit.color}>
+                      {suit.display}
+                    </span>
+                  </button>
                 );
               })}
-            </div>
+            </React.Fragment>
           ))}
         </div>
       </div>
