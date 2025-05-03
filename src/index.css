@@ -2,12 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .grid-cols-13 {
-    grid-template-columns: repeat(13, minmax(0, 1fr));
-  }
-}
-
 @layer base {
   :root {
     --background: 0 0% 100%;

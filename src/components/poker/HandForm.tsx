@@ -34,8 +34,6 @@ const handFormSchema = z.object({
   notes: z.string().max(1000, 'Notes are too long').optional(),
   pokercraftLink: z.string().url('Invalid URL format').optional().or(z.literal('')),
   image: z.string().optional().or(z.any().optional()),
-  gameType: z.enum(['NLH', 'PLO']).default('NLH'),
-  ploCardCount: z.enum(['4', '5', '6']).default('4').optional(),
 }).refine(data => {
   if (data.currencyType === 'chips' && (!data.smallBlind || !data.bigBlind)) {
     return false;
@@ -67,30 +65,9 @@ const HandForm: React.FC<HandFormProps> = ({
       bigBlind: initialData.bigBlind || undefined,
       notes: initialData.notes || '',
       pokercraftLink: initialData.pokercraftLink || '',
-      image: initialData.image || undefined,
-      gameType: 'NLH', // Default to Hold'em
-      ploCardCount: '4', // Default to 4 card PLO
+      image: initialData.image || undefined
     }
   });
-  
-  // Get current form values for reactive UI updates
-  const gameType = form.watch('gameType');
-  const ploCardCount = form.watch('ploCardCount');
-  const selectedCards = form.watch('cards');
-  
-  // Determine max cards based on game type and PLO variant
-  const getMaxCards = (): number => {
-    if (gameType === 'NLH') return 2;
-    if (gameType === 'PLO') {
-      switch (ploCardCount) {
-        case '4': return 4;
-        case '5': return 5;
-        case '6': return 6;
-        default: return 4;
-      }
-    }
-    return 6; // Default fallback
-  };
   
   const positions = [
     { label: 'Small Blind', value: 'SB' },
@@ -126,9 +103,7 @@ const HandForm: React.FC<HandFormProps> = ({
         bigBlind: undefined,
         notes: '',
         pokercraftLink: '',
-        image: undefined,
-        gameType: 'NLH',
-        ploCardCount: '4',
+        image: undefined
       });
       setImagePreview(null);
     }
@@ -157,6 +132,7 @@ const HandForm: React.FC<HandFormProps> = ({
   };
   
   const currencyType = form.watch('currencyType');
+  const selectedCards = form.watch('cards');
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -172,75 +148,6 @@ const HandForm: React.FC<HandFormProps> = ({
           <div className="p-1">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="gameType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Game Type</FormLabel>
-                        <Select 
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            // Reset cards when changing game type
-                            form.setValue('cards', '');
-                          }}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Game Type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="NLH">Hold'em</SelectItem>
-                            <SelectItem value="PLO">Omaha</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Select your poker variant
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {gameType === 'PLO' && (
-                    <FormField
-                      control={form.control}
-                      name="ploCardCount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Omaha Variant</FormLabel>
-                          <Select 
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                              // Reset cards when changing PLO variant
-                              form.setValue('cards', '');
-                            }}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select Variant" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="4">4 Cards</SelectItem>
-                              <SelectItem value="5">5 Cards</SelectItem>
-                              <SelectItem value="6">6 Cards</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Number of cards in Omaha
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                </div>
-                
                 <FormField
                   control={form.control}
                   name="cards"
@@ -251,11 +158,11 @@ const HandForm: React.FC<HandFormProps> = ({
                         <CardSelector 
                           selectedCards={field.value} 
                           onChange={field.onChange}
-                          maxCards={getMaxCards()}
+                          maxCards={6}
                         />
                       </FormControl>
                       <FormDescription>
-                        Select {getMaxCards()} cards for your {gameType === 'NLH' ? 'Hold\'em' : `${ploCardCount}-card Omaha`} hand
+                        Select up to 6 cards for your hand
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -537,7 +444,7 @@ const HandForm: React.FC<HandFormProps> = ({
           <Button 
             type="submit" 
             onClick={form.handleSubmit(handleSubmit)}
-            disabled={!selectedCards || selectedCards.length < getMaxCards() * 2}
+            disabled={!selectedCards || selectedCards.length < 2}
             className="bg-poker-gold hover:bg-poker-darkGold text-white"
           >
             {isEditing ? 'Save Changes' : 'Add Hand'}

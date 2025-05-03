@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
-import { Trash2, Check } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Tooltip } from '@/components/ui/tooltip';
 
 interface CardSelectorProps {
   selectedCards: string;
@@ -14,7 +13,7 @@ interface CardSelectorProps {
 const CardSelector: React.FC<CardSelectorProps> = ({ 
   selectedCards, 
   onChange, 
-  maxCards = 6 // Default max
+  maxCards = 6 // Changed default max to 6 as requested
 }) => {
   // State to track the current selection process
   const [currentSelection, setCurrentSelection] = useState<{
@@ -99,9 +98,6 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   // Count of selected cards
   const selectedCardCount = selectedCards.length / 2;
   
-  // Check if we've reached the maximum number of cards
-  const isMaxReached = selectedCardCount >= maxCards;
-  
   return (
     <div className="space-y-3">
       {/* Display selected cards */}
@@ -145,46 +141,44 @@ const CardSelector: React.FC<CardSelectorProps> = ({
       
       {/* New keyboard-style card input layout */}
       <div className="bg-gray-100 rounded-lg p-3">
-        {/* Card ranks section - single row */}
-        <div className="grid grid-cols-13 gap-1 mb-4">
+        {/* Card ranks section - 2 rows of buttons */}
+        <div className="grid grid-cols-7 gap-2 mb-4">
           {ranks.map((rank) => (
-            <Tooltip key={rank} content={isMaxReached ? "Maximum cards reached" : undefined}>
-              <button
-                onClick={() => handleRankSelect(rank)}
-                disabled={isMaxReached}
-                className={cn(
-                  "py-3 rounded-md font-bold text-lg transition-all",
-                  currentSelection.rank === rank 
-                    ? "bg-poker-gold text-white shadow-md" 
-                    : "bg-gray-300 hover:bg-gray-200 text-gray-800",
-                  isMaxReached && "opacity-50 cursor-not-allowed"
-                )}
-              >
-                {rank}
-              </button>
-            </Tooltip>
+            <button
+              key={rank}
+              onClick={() => handleRankSelect(rank)}
+              disabled={selectedCardCount >= maxCards}
+              className={cn(
+                "py-3 rounded-md font-bold text-lg transition-all",
+                currentSelection.rank === rank 
+                  ? "bg-poker-gold text-white shadow-md" 
+                  : "bg-gray-300 hover:bg-gray-200 text-gray-800",
+                selectedCardCount >= maxCards && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              {rank}
+            </button>
           ))}
         </div>
         
-        {/* Card suits section - single row */}
+        {/* Card suits section */}
         <div className="grid grid-cols-4 gap-3 mb-4">
           {suits.map((suit) => (
-            <Tooltip key={suit.symbol} content={isMaxReached ? "Maximum cards reached" : undefined}>
-              <button
-                onClick={() => handleSuitSelect(suit.symbol)}
-                disabled={isMaxReached}
-                className={cn(
-                  "py-3 rounded-md text-2xl transition-all flex items-center justify-center",
-                  currentSelection.suit === suit.symbol
-                    ? "bg-poker-gold text-white shadow-md" 
-                    : "bg-gray-300 hover:bg-gray-200",
-                  suit.color,
-                  isMaxReached && "opacity-50 cursor-not-allowed"
-                )}
-              >
-                {suit.display}
-              </button>
-            </Tooltip>
+            <button
+              key={suit.symbol}
+              onClick={() => handleSuitSelect(suit.symbol)}
+              disabled={selectedCardCount >= maxCards}
+              className={cn(
+                "py-3 rounded-md text-2xl transition-all flex items-center justify-center",
+                currentSelection.suit === suit.symbol
+                  ? "bg-poker-gold text-white shadow-md" 
+                  : "bg-gray-300 hover:bg-gray-200",
+                suit.color,
+                selectedCardCount >= maxCards && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              {suit.display}
+            </button>
           ))}
         </div>
         
@@ -200,11 +194,11 @@ const CardSelector: React.FC<CardSelectorProps> = ({
           </Button>
           
           <Button
-            onClick={() => {}}  // Form submission handled by parent component
+            onClick={() => {}} // Form submission handled by parent component
             disabled={selectedCardCount === 0}
             className="bg-poker-gold hover:bg-poker-darkGold text-white font-medium"
           >
-            <Check size={16} className="mr-1" /> DONE
+            DONE
           </Button>
         </div>
       </div>

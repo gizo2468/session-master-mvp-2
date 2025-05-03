@@ -12,8 +12,6 @@ export interface HandData {
   image?: string;
   pokercraftLink?: string;
   createdAt: Date;
-  gameType?: 'NLH' | 'PLO';
-  ploCardCount?: '4' | '5' | '6';
 }
 
 export interface TableData {
