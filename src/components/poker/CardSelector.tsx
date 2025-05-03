@@ -152,6 +152,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
+                    type="button" // Explicitly set button type to prevent form submission
                     onClick={() => handleRankSelect(rank)}
                     disabled={isMaxReached}
                     className={cn(
@@ -182,6 +183,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
+                    type="button" // Explicitly set button type to prevent form submission
                     onClick={() => handleSuitSelect(suit.symbol)}
                     disabled={isMaxReached}
                     className={cn(
@@ -209,6 +211,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
         {/* Action buttons */}
         <div className="grid grid-cols-2 gap-3">
           <Button 
+            type="button" // Explicitly set button type to prevent form submission
             variant="outline"
             onClick={clearSelectedCards}
             className="flex items-center justify-center gap-2"
@@ -218,7 +221,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
           </Button>
           
           <Button
-            onClick={() => {}}  // Form submission handled by parent component
+            type="button" // Explicitly set button type so it doesn't submit the form
             disabled={selectedCardCount === 0}
             className="bg-poker-gold hover:bg-poker-darkGold text-white font-medium"
           >

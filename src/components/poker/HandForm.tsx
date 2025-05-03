@@ -125,6 +125,18 @@ const HandForm: React.FC<HandFormProps> = ({
   }, [open, isEditing, form]);
   
   const handleSubmit = (values: FormValues) => {
+    // Only submit if we have adequate cards for the game type
+    const requiredCardCount = gameType === 'NLH' ? 2 : 4; // Minimum 4 cards for PLO
+    
+    if ((values.cards.length / 2) < requiredCardCount) {
+      // Show validation error instead of submitting
+      form.setError("cards", {
+        type: "manual", 
+        message: `Select at least ${requiredCardCount} cards for ${gameType === 'NLH' ? 'Texas Hold\'em' : 'Omaha'}`
+      });
+      return;
+    }
+    
     onSubmit({
       ...values,
       id: initialData.id,
@@ -161,7 +173,16 @@ const HandForm: React.FC<HandFormProps> = ({
         <ScrollArea className="max-h-[70vh]">
           <div className="p-1">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+              <form onSubmit={(e) => {
+                // Prevent form submission on enter key
+                if (e.nativeEvent instanceof KeyboardEvent && e.nativeEvent.key === 'Enter') {
+                  e.preventDefault();
+                  return false;
+                }
+                
+                // Allow normal form submission through the explicit submit button
+                form.handleSubmit(handleSubmit)(e);
+              }} className="space-y-6">
                 <FormField
                   control={form.control}
                   name="gameType"
@@ -517,9 +538,11 @@ const HandForm: React.FC<HandFormProps> = ({
             Cancel
           </Button>
           <Button 
-            type="submit" 
-            onClick={form.handleSubmit(handleSubmit)}
-            disabled={!selectedCards || (gameType === 'NLH' && selectedCards.length !== 4)}
+            type="button" // Change from submit to button type
+            onClick={form.handleSubmit(handleSubmit)} // Explicitly call handleSubmit
+            disabled={!selectedCards || 
+              (gameType === 'NLH' && selectedCards.length !== 4) || 
+              (gameType === 'PLO' && selectedCards.length < 8)}
             className="bg-poker-gold hover:bg-poker-darkGold text-white"
           >
             {isEditing ? 'Save Changes' : 'Add Hand'}
