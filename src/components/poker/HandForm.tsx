@@ -24,7 +24,7 @@ interface HandFormProps {
 }
 
 const handFormSchema = z.object({
-  cards: z.string().min(4, 'Select at least 2 cards').max(20, 'Maximum 10 cards'),
+  cards: z.string().min(2, 'Select at least 1 card').max(12, 'Maximum 6 cards'), // Updated for 6 card max (12 chars)
   position: z.string().optional(),
   action: z.string().min(1, 'Action description is required').max(200, 'Action description is too long'),
   currencyType: z.enum(['currency', 'chips']).default('currency'),
@@ -132,6 +132,7 @@ const HandForm: React.FC<HandFormProps> = ({
   };
   
   const currencyType = form.watch('currencyType');
+  const selectedCards = form.watch('cards');
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -157,10 +158,11 @@ const HandForm: React.FC<HandFormProps> = ({
                         <CardSelector 
                           selectedCards={field.value} 
                           onChange={field.onChange}
+                          maxCards={6}
                         />
                       </FormControl>
                       <FormDescription>
-                        Select the cards you were dealt
+                        Select up to 6 cards for your hand
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -442,6 +444,7 @@ const HandForm: React.FC<HandFormProps> = ({
           <Button 
             type="submit" 
             onClick={form.handleSubmit(handleSubmit)}
+            disabled={!selectedCards || selectedCards.length < 2}
             className="bg-poker-gold hover:bg-poker-darkGold text-white"
           >
             {isEditing ? 'Save Changes' : 'Add Hand'}
