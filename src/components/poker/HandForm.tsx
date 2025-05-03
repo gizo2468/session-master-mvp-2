@@ -183,6 +183,7 @@ const HandForm: React.FC<HandFormProps> = ({
                 // Allow normal form submission through the explicit submit button
                 form.handleSubmit(handleSubmit)(e);
               }} className="space-y-6">
+                {/* Game Type Selection */}
                 <FormField
                   control={form.control}
                   name="gameType"
@@ -244,6 +245,7 @@ const HandForm: React.FC<HandFormProps> = ({
                   )}
                 />
                 
+                {/* Card Selection */}
                 <FormField
                   control={form.control}
                   name="cards"
@@ -258,7 +260,9 @@ const HandForm: React.FC<HandFormProps> = ({
                         />
                       </FormControl>
                       <FormDescription>
-                        Select {gameType === 'NLH' ? 'exactly 2' : 'up to 6'} cards for your {gameType === 'NLH' ? 'Hold\'em' : 'Omaha'} hand
+                        {gameType === 'NLH' 
+                          ? 'Select exactly 2 cards - click a card to remove it' 
+                          : 'Select between 4-6 cards - click a card to remove it'}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -538,8 +542,8 @@ const HandForm: React.FC<HandFormProps> = ({
             Cancel
           </Button>
           <Button 
-            type="button" // Change from submit to button type
-            onClick={form.handleSubmit(handleSubmit)} // Explicitly call handleSubmit
+            type="button"
+            onClick={form.handleSubmit(handleSubmit)}
             disabled={!selectedCards || 
               (gameType === 'NLH' && selectedCards.length !== 4) || 
               (gameType === 'PLO' && selectedCards.length < 8)}

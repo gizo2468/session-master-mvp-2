@@ -1,7 +1,6 @@
 
-import React, { useState } from 'react';
-import { Trash2, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useMemo } from 'react';
+import { Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -37,7 +36,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   ];
   
   // Parse selected cards into array of card objects
-  const parseSelectedCards = () => {
+  const selectedCardObjects = useMemo(() => {
     const cards = [];
     for (let i = 0; i < selectedCards.length; i += 2) {
       if (i + 1 < selectedCards.length) {
@@ -47,7 +46,16 @@ const CardSelector: React.FC<CardSelectorProps> = ({
       }
     }
     return cards;
-  };
+  }, [selectedCards]);
+  
+  // Get set of selected card combinations for easy lookup
+  const selectedCardSet = useMemo(() => {
+    const cardSet = new Set();
+    selectedCardObjects.forEach(card => {
+      cardSet.add(card.rank + card.suit);
+    });
+    return cardSet;
+  }, [selectedCardObjects]);
   
   // Get suit display and color info
   const getSuitInfo = (suitSymbol: string) => {
@@ -64,7 +72,12 @@ const CardSelector: React.FC<CardSelectorProps> = ({
     // If a suit is already selected, add the card and reset
     if (currentSelection.suit) {
       const card = rank + currentSelection.suit;
-      onChange(selectedCards + card);
+      
+      // Check if this card is already selected
+      if (!selectedCardSet.has(card)) {
+        onChange(selectedCards + card);
+      }
+      
       setCurrentSelection({ rank: null, suit: null });
     }
   };
@@ -78,16 +91,20 @@ const CardSelector: React.FC<CardSelectorProps> = ({
     // If a rank is already selected, add the card and reset
     if (currentSelection.rank) {
       const card = currentSelection.rank + suitSymbol;
-      onChange(selectedCards + card);
+      
+      // Check if this card is already selected
+      if (!selectedCardSet.has(card)) {
+        onChange(selectedCards + card);
+      }
+      
       setCurrentSelection({ rank: null, suit: null });
     }
   };
   
-  // Remove last card from selection
-  const removeLastCard = () => {
-    if (selectedCards.length >= 2) {
-      onChange(selectedCards.slice(0, -2));
-    }
+  // Remove an individual card by index
+  const removeCard = (index: number) => {
+    const newSelectedCards = selectedCards.slice(0, index * 2) + selectedCards.slice((index + 1) * 2);
+    onChange(newSelectedCards);
   };
   
   // Clear all selected cards
@@ -102,21 +119,28 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   // Check if we've reached the maximum number of cards
   const isMaxReached = selectedCardCount >= maxCards;
   
+  // Check if a specific card is already selected
+  const isCardSelected = (rank: string, suit: string) => {
+    return selectedCardSet.has(rank + suit);
+  };
+  
   return (
     <div className="space-y-3">
       {/* Display selected cards */}
       <div className="flex justify-between items-center">
         <div className="flex gap-2 overflow-x-auto py-1 pb-2 flex-grow">
-          {parseSelectedCards().map((card, index) => {
+          {selectedCardObjects.map((card, index) => {
             const { display, color } = getSuitInfo(card.suit);
             return (
-              <div
+              <button
                 key={index}
-                className="flex items-center justify-center bg-white border border-gray-300 rounded-md px-3 py-2 shadow-sm"
+                type="button"
+                onClick={() => removeCard(index)}
+                className="flex items-center justify-center bg-white border border-gray-300 rounded-md px-3 py-2 shadow-sm hover:bg-gray-50 transition-colors"
               >
                 <span className="font-bold">{card.rank}</span>
                 <span className={`ml-1 ${color}`}>{display}</span>
-              </div>
+              </button>
             );
           })}
           
@@ -129,9 +153,10 @@ const CardSelector: React.FC<CardSelectorProps> = ({
         
         {selectedCardCount > 0 && (
           <button
-            onClick={removeLastCard}
+            onClick={clearSelectedCards}
+            type="button"
             className="ml-2 text-gray-500 hover:text-gray-800"
-            aria-label="Remove last card"
+            aria-label="Clear all cards"
           >
             <Trash2 size={20} />
           </button>
@@ -143,24 +168,24 @@ const CardSelector: React.FC<CardSelectorProps> = ({
         {selectedCardCount} / {maxCards} cards selected
       </div>
       
-      {/* New keyboard-style card input layout */}
+      {/* Card selection keyboard layout */}
       <div className="bg-gray-100 rounded-lg p-3">
         {/* Card ranks section - single row */}
-        <div className="grid grid-cols-13 gap-1 mb-4">
+        <div className="grid grid-cols-13 gap-1.5 mb-5">
           {ranks.map((rank) => (
             <TooltipProvider key={rank}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    type="button" // Explicitly set button type to prevent form submission
+                    type="button"
                     onClick={() => handleRankSelect(rank)}
-                    disabled={isMaxReached}
+                    disabled={isMaxReached || suits.every(suit => isCardSelected(rank, suit.symbol))}
                     className={cn(
-                      "py-3 rounded-md font-bold text-lg transition-all",
+                      "py-3.5 rounded-md font-bold text-lg transition-all",
                       currentSelection.rank === rank 
                         ? "bg-poker-gold text-white shadow-md" 
                         : "bg-gray-300 hover:bg-gray-200 text-gray-800",
-                      isMaxReached && "opacity-50 cursor-not-allowed"
+                      (isMaxReached || suits.every(suit => isCardSelected(rank, suit.symbol))) && "opacity-50 cursor-not-allowed"
                     )}
                   >
                     {rank}
@@ -171,28 +196,33 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                     <p>Maximum cards reached</p>
                   </TooltipContent>
                 )}
+                {!isMaxReached && suits.every(suit => isCardSelected(rank, suit.symbol)) && (
+                  <TooltipContent>
+                    <p>All {rank} cards are already selected</p>
+                  </TooltipContent>
+                )}
               </Tooltip>
             </TooltipProvider>
           ))}
         </div>
         
         {/* Card suits section - single row */}
-        <div className="grid grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-4 gap-4">
           {suits.map((suit) => (
             <TooltipProvider key={suit.symbol}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    type="button" // Explicitly set button type to prevent form submission
+                    type="button"
                     onClick={() => handleSuitSelect(suit.symbol)}
-                    disabled={isMaxReached}
+                    disabled={isMaxReached || ranks.every(rank => isCardSelected(rank, suit.symbol))}
                     className={cn(
-                      "py-3 rounded-md text-2xl transition-all flex items-center justify-center",
+                      "py-2.5 rounded-md text-xl transition-all flex items-center justify-center",
                       currentSelection.suit === suit.symbol
                         ? "bg-poker-gold text-white shadow-md" 
                         : "bg-gray-300 hover:bg-gray-200",
                       suit.color,
-                      isMaxReached && "opacity-50 cursor-not-allowed"
+                      (isMaxReached || ranks.every(rank => isCardSelected(rank, suit.symbol))) && "opacity-50 cursor-not-allowed"
                     )}
                   >
                     {suit.display}
@@ -203,30 +233,14 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                     <p>Maximum cards reached</p>
                   </TooltipContent>
                 )}
+                {!isMaxReached && ranks.every(rank => isCardSelected(rank, suit.symbol)) && (
+                  <TooltipContent>
+                    <p>All {suit.display} cards are already selected</p>
+                  </TooltipContent>
+                )}
               </Tooltip>
             </TooltipProvider>
           ))}
-        </div>
-        
-        {/* Action buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          <Button 
-            type="button" // Explicitly set button type to prevent form submission
-            variant="outline"
-            onClick={clearSelectedCards}
-            className="flex items-center justify-center gap-2"
-            disabled={selectedCardCount === 0}
-          >
-            <Trash2 size={16} /> Clear All
-          </Button>
-          
-          <Button
-            type="button" // Explicitly set button type so it doesn't submit the form
-            disabled={selectedCardCount === 0}
-            className="bg-poker-gold hover:bg-poker-darkGold text-white font-medium"
-          >
-            <Check size={16} className="mr-1" /> DONE
-          </Button>
         </div>
       </div>
     </div>
