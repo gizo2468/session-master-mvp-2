@@ -33,11 +33,13 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
     const parts = value.split('\n');
     if (parts.length === 2) {
       return (
-        <span className="text-center w-full block">
-          {parts[0]}
-          <span className="mx-1 opacity-70">•</span>
-          {parts[1]}
-        </span>
+        <div className="flex flex-col items-center justify-center w-full text-center">
+          <span className="block w-full text-center">{parts[0]}</span>
+          <span className="block w-full text-center">
+            <span className="opacity-70 mx-1">•</span>
+            {parts[1]}
+          </span>
+        </div>
       );
     }
     
@@ -50,14 +52,16 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
         variant={variant}
         className="flex flex-col items-center justify-center w-full p-0 overflow-hidden shadow-sm h-full"
       >
-        {/* Adding explicit border-b to ensure it appears on all badges */}
+        {/* Explicit border styling to ensure consistent appearance across all badges */}
         <div className="w-full py-1.5 px-3 font-bold text-center border-b border-gray-200 bg-opacity-50 text-sm">
           {title}
         </div>
         <div className="w-full flex items-center justify-center py-3">
-          <div className="flex items-center justify-center text-center w-full px-3">
+          <div className="flex items-center justify-center w-full px-3">
             {getBadgeIcon()}
-            <span className="font-medium text-sm w-full text-center block">{formatDisplayValue()}</span>
+            <div className="font-medium text-sm w-full text-center">
+              {formatDisplayValue()}
+            </div>
           </div>
         </div>
       </Badge>
