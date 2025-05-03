@@ -70,26 +70,52 @@ export default function SessionDetail() {
     profitClass = profit >= 0 ? 'text-green-500' : 'text-poker-red';
   }
   
-  const calculateAdditionalBuyins = () => {
-    if (session.initialBuyIn) {
-      return session.buyIn - session.initialBuyIn;
+  // Calculate total initial buy-ins across all tables
+  const calculateTotalInitialBuyin = () => {
+    if (!session.tables || session.tables.length === 0) {
+      return session.initialBuyIn || session.buyIn;
     }
     
-    let additional = 0;
+    let totalInitialBuyin = 0;
+    session.tables.forEach((table) => {
+      totalInitialBuyin += table.initialBuyIn || 0;
+    });
     
-    if (session.rebuys && session.rebuys > 0) {
-      additional += ((session.rebuys || 0) * (session.tournamentBuyIn || session.buyIn / session.rebuys));
-    }
-    
-    if (session.addOns && session.addOns > 0) {
-      additional += ((session.addOns || 0) * (session.tournamentBuyIn || session.buyIn / session.addOns));
-    }
-    
-    return additional;
+    return totalInitialBuyin;
   };
   
+  // Calculate additional buy-ins (rebuys, add-ons)
+  const calculateAdditionalBuyins = () => {
+    if (!session.tables || session.tables.length === 0) {
+      if (session.initialBuyIn) {
+        return session.buyIn - session.initialBuyIn;
+      }
+      
+      let additional = 0;
+      
+      if (session.rebuys && session.rebuys > 0) {
+        additional += ((session.rebuys || 0) * (session.tournamentBuyIn || session.buyIn / session.rebuys));
+      }
+      
+      if (session.addOns && session.addOns > 0) {
+        additional += ((session.addOns || 0) * (session.tournamentBuyIn || session.buyIn / session.addOns));
+      }
+      
+      return additional;
+    }
+    
+    // Calculate from tables
+    let totalBuyin = 0, totalInitialBuyin = 0;
+    session.tables.forEach((table) => {
+      totalBuyin += table.buyIn || 0;
+      totalInitialBuyin += table.initialBuyIn || 0;
+    });
+    
+    return totalBuyin - totalInitialBuyin;
+  };
+  
+  const totalInitialBuyin = calculateTotalInitialBuyin();
   const additionalBuyins = calculateAdditionalBuyins();
-  const initialBuyIn = session.initialBuyIn || (session.buyIn - additionalBuyins);
   
   const handleSaveEdit = () => {
     if (!session) return;
@@ -375,7 +401,7 @@ export default function SessionDetail() {
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-gray-500">Buy-in:</span>
                   <span className="font-medium">
-                    ${initialBuyIn.toFixed(2)}
+                    ${totalInitialBuyin.toFixed(2)}
                     {additionalBuyins > 0 && (
                       <span className="text-gray-600"> (+${additionalBuyins.toFixed(2)})</span>
                     )}

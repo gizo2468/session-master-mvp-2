@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession } from '@/types/poker';
@@ -21,6 +22,14 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
       rebuyCount += t.rebuys || 0;
     }
   });
+  
+  // If there are no tables, use session's own initial buy-in
+  if (tables.length === 0) {
+    totalInitialBuyin = session.initialBuyIn;
+    totalRebuyAmount = session.buyIn - session.initialBuyIn;
+    rebuyCount = session.rebuys || 0;
+  }
+  
   const tableCount = tables.length;
 
   return (
@@ -42,7 +51,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               <DollarSign className="w-4 h-4 text-gray-600" />
               <span className="font-bold text-poker-gold">${totalInitialBuyin.toFixed(2)}</span>
               <span className="ml-1 opacity-80 text-xs">
-                from {tableCount} table{tableCount !== 1 ? "s" : ""}
+                {tableCount > 0 ? `from ${tableCount} table${tableCount !== 1 ? "s" : ""}` : "buy-in"}
               </span>
             </Badge>
             {totalRebuyAmount > 0 && (
