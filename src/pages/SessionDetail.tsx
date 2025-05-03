@@ -205,6 +205,9 @@ export default function SessionDetail() {
   
   const sessionDuration = session.endTime ? calculateDuration() : null;
   
+  // Determine if blinds should be shown - strict check for Cash format only
+  const shouldShowBlinds = session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined;
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-3xl px-4 py-8">
@@ -437,10 +440,13 @@ export default function SessionDetail() {
                   <span className="font-medium">{totalRebuys}</span>
                 </div>
                 
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Blinds:</span>
-                  <span className="font-medium">${session.smallBlind || 0}/${session.bigBlind || 0}</span>
-                </div>
+                {/* Only show blinds for Cash game format */}
+                {shouldShowBlinds && (
+                  <div className="flex justify-between py-2 border-b">
+                    <span className="text-gray-500">Blinds:</span>
+                    <span className="font-medium">${session.smallBlind || 0}/${session.bigBlind || 0}</span>
+                  </div>
+                )}
                 
                 {isCompleted && session.cashOut !== undefined && (
                   <>
