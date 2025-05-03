@@ -13,7 +13,6 @@ export interface HandData {
   pokercraftLink?: string;
   createdAt: Date;
   gameType?: 'NLH' | 'PLO';
-  ploCardCount?: '4' | '5' | '6';
 }
 
 export interface TableData {
@@ -64,7 +63,6 @@ export interface PokerSession {
   finalPosition?: number;
 
   sessionDuration?: number;
-  ploCardCount?: 4 | 5 | 6;
   currentStatus?: 'running' | 'paused' | 'ended';
 
   hands?: HandData[];

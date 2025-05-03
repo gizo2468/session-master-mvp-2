@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Trash2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Tooltip } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CardSelectorProps {
   selectedCards: string;
@@ -148,43 +148,61 @@ const CardSelector: React.FC<CardSelectorProps> = ({
         {/* Card ranks section - single row */}
         <div className="grid grid-cols-13 gap-1 mb-4">
           {ranks.map((rank) => (
-            <Tooltip key={rank} content={isMaxReached ? "Maximum cards reached" : undefined}>
-              <button
-                onClick={() => handleRankSelect(rank)}
-                disabled={isMaxReached}
-                className={cn(
-                  "py-3 rounded-md font-bold text-lg transition-all",
-                  currentSelection.rank === rank 
-                    ? "bg-poker-gold text-white shadow-md" 
-                    : "bg-gray-300 hover:bg-gray-200 text-gray-800",
-                  isMaxReached && "opacity-50 cursor-not-allowed"
+            <TooltipProvider key={rank}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => handleRankSelect(rank)}
+                    disabled={isMaxReached}
+                    className={cn(
+                      "py-3 rounded-md font-bold text-lg transition-all",
+                      currentSelection.rank === rank 
+                        ? "bg-poker-gold text-white shadow-md" 
+                        : "bg-gray-300 hover:bg-gray-200 text-gray-800",
+                      isMaxReached && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    {rank}
+                  </button>
+                </TooltipTrigger>
+                {isMaxReached && (
+                  <TooltipContent>
+                    <p>Maximum cards reached</p>
+                  </TooltipContent>
                 )}
-              >
-                {rank}
-              </button>
-            </Tooltip>
+              </Tooltip>
+            </TooltipProvider>
           ))}
         </div>
         
         {/* Card suits section - single row */}
         <div className="grid grid-cols-4 gap-3 mb-4">
           {suits.map((suit) => (
-            <Tooltip key={suit.symbol} content={isMaxReached ? "Maximum cards reached" : undefined}>
-              <button
-                onClick={() => handleSuitSelect(suit.symbol)}
-                disabled={isMaxReached}
-                className={cn(
-                  "py-3 rounded-md text-2xl transition-all flex items-center justify-center",
-                  currentSelection.suit === suit.symbol
-                    ? "bg-poker-gold text-white shadow-md" 
-                    : "bg-gray-300 hover:bg-gray-200",
-                  suit.color,
-                  isMaxReached && "opacity-50 cursor-not-allowed"
+            <TooltipProvider key={suit.symbol}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => handleSuitSelect(suit.symbol)}
+                    disabled={isMaxReached}
+                    className={cn(
+                      "py-3 rounded-md text-2xl transition-all flex items-center justify-center",
+                      currentSelection.suit === suit.symbol
+                        ? "bg-poker-gold text-white shadow-md" 
+                        : "bg-gray-300 hover:bg-gray-200",
+                      suit.color,
+                      isMaxReached && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    {suit.display}
+                  </button>
+                </TooltipTrigger>
+                {isMaxReached && (
+                  <TooltipContent>
+                    <p>Maximum cards reached</p>
+                  </TooltipContent>
                 )}
-              >
-                {suit.display}
-              </button>
-            </Tooltip>
+              </Tooltip>
+            </TooltipProvider>
           ))}
         </div>
         

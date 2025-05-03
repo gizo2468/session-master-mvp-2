@@ -14,6 +14,7 @@ import { HandData } from '@/types/poker';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/Lucide';
 import { PokerChip } from '../Icons';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface HandFormProps {
   open: boolean;
@@ -35,7 +36,6 @@ const handFormSchema = z.object({
   pokercraftLink: z.string().url('Invalid URL format').optional().or(z.literal('')),
   image: z.string().optional().or(z.any().optional()),
   gameType: z.enum(['NLH', 'PLO']).default('NLH'),
-  ploCardCount: z.enum(['4', '5', '6']).default('4').optional(),
 }).refine(data => {
   if (data.currencyType === 'chips' && (!data.smallBlind || !data.bigBlind)) {
     return false;
@@ -68,27 +68,18 @@ const HandForm: React.FC<HandFormProps> = ({
       notes: initialData.notes || '',
       pokercraftLink: initialData.pokercraftLink || '',
       image: initialData.image || undefined,
-      gameType: 'NLH', // Default to Hold'em
-      ploCardCount: '4', // Default to 4 card PLO
+      gameType: initialData.gameType || 'NLH',
     }
   });
   
   // Get current form values for reactive UI updates
   const gameType = form.watch('gameType');
-  const ploCardCount = form.watch('ploCardCount');
   const selectedCards = form.watch('cards');
   
-  // Determine max cards based on game type and PLO variant
+  // Determine max cards based on game type
   const getMaxCards = (): number => {
     if (gameType === 'NLH') return 2;
-    if (gameType === 'PLO') {
-      switch (ploCardCount) {
-        case '4': return 4;
-        case '5': return 5;
-        case '6': return 6;
-        default: return 4;
-      }
-    }
+    if (gameType === 'PLO') return 6; // Allow up to 6 cards for PLO variants
     return 6; // Default fallback
   };
   
@@ -128,7 +119,6 @@ const HandForm: React.FC<HandFormProps> = ({
         pokercraftLink: '',
         image: undefined,
         gameType: 'NLH',
-        ploCardCount: '4',
       });
       setImagePreview(null);
     }
@@ -172,74 +162,66 @@ const HandForm: React.FC<HandFormProps> = ({
           <div className="p-1">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="gameType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Game Type</FormLabel>
-                        <Select 
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            // Reset cards when changing game type
-                            form.setValue('cards', '');
-                          }}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Game Type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="NLH">Hold'em</SelectItem>
-                            <SelectItem value="PLO">Omaha</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Select your poker variant
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {gameType === 'PLO' && (
-                    <FormField
-                      control={form.control}
-                      name="ploCardCount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Omaha Variant</FormLabel>
-                          <Select 
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                              // Reset cards when changing PLO variant
-                              form.setValue('cards', '');
-                            }}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select Variant" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="4">4 Cards</SelectItem>
-                              <SelectItem value="5">5 Cards</SelectItem>
-                              <SelectItem value="6">6 Cards</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Number of cards in Omaha
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                <FormField
+                  control={form.control}
+                  name="gameType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Game Type</FormLabel>
+                      <FormControl>
+                        <div className="flex gap-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => field.onChange('NLH')}
+                                  className={`flex-1 py-2 px-4 rounded-full transition-all ${
+                                    field.value === 'NLH' 
+                                      ? 'bg-poker-gold text-white' 
+                                      : 'bg-gray-100 text-gray-700'
+                                  }`}
+                                >
+                                  Texas Hold'em
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Select exactly 2 cards</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => field.onChange('PLO')}
+                                  className={`flex-1 py-2 px-4 rounded-full transition-all ${
+                                    field.value === 'PLO' 
+                                      ? 'bg-poker-gold text-white' 
+                                      : 'bg-gray-100 text-gray-700'
+                                  }`}
+                                >
+                                  Omaha
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Select up to 6 cards - based on your Omaha variant</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        {gameType === 'NLH' 
+                          ? 'Texas Hold\'em - select exactly 2 cards' 
+                          : 'Omaha - select between 4-6 cards depending on variant'}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
+                />
                 
                 <FormField
                   control={form.control}
@@ -255,7 +237,7 @@ const HandForm: React.FC<HandFormProps> = ({
                         />
                       </FormControl>
                       <FormDescription>
-                        Select {getMaxCards()} cards for your {gameType === 'NLH' ? 'Hold\'em' : `${ploCardCount}-card Omaha`} hand
+                        Select {gameType === 'NLH' ? 'exactly 2' : 'up to 6'} cards for your {gameType === 'NLH' ? 'Hold\'em' : 'Omaha'} hand
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -537,7 +519,7 @@ const HandForm: React.FC<HandFormProps> = ({
           <Button 
             type="submit" 
             onClick={form.handleSubmit(handleSubmit)}
-            disabled={!selectedCards || selectedCards.length < getMaxCards() * 2}
+            disabled={!selectedCards || (gameType === 'NLH' && selectedCards.length !== 4)}
             className="bg-poker-gold hover:bg-poker-darkGold text-white"
           >
             {isEditing ? 'Save Changes' : 'Add Hand'}
