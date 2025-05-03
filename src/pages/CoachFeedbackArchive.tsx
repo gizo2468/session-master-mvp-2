@@ -130,7 +130,7 @@ const CoachFeedbackArchive = () => {
             <span>Back to Dashboard</span>
           </button>
           
-          <h1 className="text-2xl font-serif font-bold text-poker-black">Feedback Archive</h1>
+          <h1 className="text-2xl font-bold text-poker-black">Feedback Archive</h1>
           <p className="text-gray-500 text-sm mt-1">
             View and search all feedback you've provided to students
           </p>

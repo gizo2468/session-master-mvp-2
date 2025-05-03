@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -69,7 +68,7 @@ const FocusModePage = () => {
       <div className="container mx-auto max-w-md px-4 py-8 flex-1 flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center mb-8">
           <LockKeyhole className="h-20 w-20 text-poker-gold mb-4" />
-          <h1 className="text-3xl font-bold font-serif text-center mb-2">Focus Mode Active</h1>
+          <h1 className="text-3xl font-bold text-center mb-2">Focus Mode Active</h1>
           <div className="text-5xl font-bold mb-6 text-poker-black">{formatTime(timeLeft)}</div>
           <p className="text-center text-gray-500 mb-8">Stay focused on your game and avoid distractions</p>
           
@@ -84,7 +83,7 @@ const FocusModePage = () => {
         </div>
         
         <div className="mb-4">
-          <h2 className="font-serif text-xl font-bold mb-4">Strategic Tips</h2>
+          <h2 className="font-medium text-xl mb-4">Strategic Tips</h2>
           <ScrollArea className="h-[300px] rounded-md border p-4">
             <PokerTips />
           </ScrollArea>

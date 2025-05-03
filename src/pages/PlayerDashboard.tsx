@@ -24,7 +24,7 @@ const PlayerDashboard = () => {
           </button>
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-serif font-bold text-poker-black">Player Dashboard</h1>
+              <h1 className="text-2xl font-bold text-poker-black">Player Dashboard</h1>
               <p className="text-gray-500 text-sm mt-1">Track your progress and manage coaching</p>
             </div>
           </div>

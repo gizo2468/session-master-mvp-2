@@ -27,7 +27,7 @@ export default function NewSessionButton() {
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center">
         <Icon name="Clock" className="w-10 h-10 text-white mb-1" />
-        <span className="font-serif text-white text-base font-bold tracking-wide text-center">
+        <span className="text-white text-base font-bold tracking-wide text-center">
           NEW<br />SESSION
         </span>
       </div>

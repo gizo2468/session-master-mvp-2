@@ -61,7 +61,7 @@ const CoachDashboard = () => {
           </button>
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-serif font-bold text-poker-black">Coach Dashboard</h1>
+              <h1 className="text-2xl font-bold text-poker-black">Coach Dashboard</h1>
               <p className="text-gray-500 text-sm mt-1">Manage your students and provide feedback</p>
             </div>
             <TooltipProvider>

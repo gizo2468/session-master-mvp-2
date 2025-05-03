@@ -9,7 +9,7 @@ interface LogoProps {
 const Logo: React.FC<LogoProps> = ({ className }) => {
   return (
     <div className={`w-full flex flex-col items-center justify-center ${className || ''}`}>
-      <h1 className="font-extrabold font-serif tracking-wide flex flex-col items-center select-none">
+      <h1 className="font-extrabold tracking-wide flex flex-col items-center select-none">
         <div className="flex items-center">
           <span className="text-5xl text-[#D4AF37] font-black [text-shadow:1px_1px_1px_black]">Sessi</span>
           <span className="relative inline-flex mx-[-3px]">

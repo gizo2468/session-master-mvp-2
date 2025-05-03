@@ -39,7 +39,7 @@ const Settings: React.FC = () => {
             <Icon name="ArrowLeft" size={16} />
             <span>{t('back')}</span>
           </Button>
-          <h1 className="text-2xl font-serif font-bold text-poker-black mb-6">{t('settings')}</h1>
+          <h1 className="text-2xl font-bold text-poker-black mb-6">{t('settings')}</h1>
         </header>
         
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">

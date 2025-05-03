@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -115,7 +116,7 @@ export default function SessionForm() {
             <Icon name="ArrowLeft" size={16} />
             <span>Back</span>
           </button>
-          <h1 className="text-2xl font-serif font-bold text-poker-black">Start New Session</h1>
+          <h1 className="text-2xl font-bold text-poker-black">Start New Session</h1>
           <p className="text-gray-500 text-sm mt-1">Track your poker performance</p>
         </header>
         

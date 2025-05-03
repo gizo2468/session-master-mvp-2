@@ -46,7 +46,7 @@ const CoachProfile = () => {
             <Icon name="ArrowLeft" size={16} />
             <span>Back</span>
           </button>
-          <h1 className="text-2xl font-serif font-bold text-poker-black">Coach Profile</h1>
+          <h1 className="text-2xl font-bold text-poker-black">Coach Profile</h1>
           <p className="text-gray-500 text-sm mt-1">Manage your students and connection codes</p>
         </header>
         

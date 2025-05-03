@@ -75,7 +75,7 @@ const CoachUpgrade = () => {
             <span>Back</span>
           </Button>
           
-          <h1 className="text-2xl font-serif font-bold text-poker-black mb-2">Coach Tier Upgrade</h1>
+          <h1 className="text-2xl font-bold text-poker-black mb-2">Coach Tier Upgrade</h1>
           <p className="text-gray-600">
             Upgrade your coaching capabilities with our tiered plans designed to grow with your coaching business
           </p>

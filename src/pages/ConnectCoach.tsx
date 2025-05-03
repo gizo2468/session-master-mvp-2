@@ -24,7 +24,7 @@ const ConnectCoach = () => {
             <Icon name="ArrowLeft" size={16} />
             <span>Back</span>
           </button>
-          <h1 className="text-2xl font-serif font-bold text-poker-black">Connect with a Coach</h1>
+          <h1 className="text-2xl font-bold text-poker-black">Connect with a Coach</h1>
           <p className="text-gray-500 text-sm mt-1">Get personalized poker coaching</p>
         </header>
         

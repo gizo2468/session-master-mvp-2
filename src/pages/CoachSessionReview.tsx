@@ -117,7 +117,7 @@ const CoachSessionReview = () => {
             <span>Back to Student</span>
           </button>
           
-          <h1 className="text-2xl font-serif font-bold text-poker-black">Session Review</h1>
+          <h1 className="text-2xl font-bold text-poker-black">Session Review</h1>
           <p className="text-gray-500 text-sm mt-1">
             {table.gameType} {table.format} @ {table.location}
           </p>

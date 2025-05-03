@@ -44,7 +44,7 @@ const CoachStudentDetail = () => {
               {student.displayName.substring(0, 1).toUpperCase()}
             </div>
             <div>
-              <h1 className="text-2xl font-serif font-bold text-poker-black">{student.displayName}</h1>
+              <h1 className="text-2xl font-bold text-poker-black">{student.displayName}</h1>
               <p className="text-gray-500 text-sm">
                 Connected since {new Date(student.createdAt).toLocaleDateString()}
               </p>
