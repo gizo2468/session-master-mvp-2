@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 
 interface CardSelectorProps {
   selectedCards: string;
@@ -8,33 +8,29 @@ interface CardSelectorProps {
 }
 
 const CardSelector: React.FC<CardSelectorProps> = ({ selectedCards, onChange, maxCards = 10 }) => {
-  const [selectedRank, setSelectedRank] = useState<string>('');
-  const [selectedSuit, setSelectedSuit] = useState<string>('');
-  
   const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
   const suits = [
-    { symbol: 'h', display: '♥', color: 'text-red-600 border-red-400' },
-    { symbol: 'd', display: '♦', color: 'text-red-600 border-red-400' },
-    { symbol: 's', display: '♠', color: 'text-black border-gray-400' },
-    { symbol: 'c', display: '♣', color: 'text-black border-gray-400' },
+    { symbol: 'h', display: '♥', color: 'text-red-600' },
+    { symbol: 'd', display: '♦', color: 'text-red-600' },
+    { symbol: 's', display: '♠', color: 'text-black' },
+    { symbol: 'c', display: '♣', color: 'text-black' },
   ];
   
-  const addCard = () => {
-    if (!selectedRank || !selectedSuit) return;
+  const handleCardClick = (rank: string, suitSymbol: string) => {
     if (selectedCards.length / 2 >= maxCards) return;
     
-    const card = selectedRank + selectedSuit;
+    const card = rank + suitSymbol;
     
     // Check if card is already selected
-    if (selectedCards.includes(card)) return;
+    if (selectedCards.includes(card)) {
+      // If already selected, remove it (toggle behavior)
+      removeCard(selectedCards.indexOf(card) / 2);
+      return;
+    }
     
     // Add the new card to the selected cards string
     const newCards = selectedCards + card;
     onChange(newCards);
-    
-    // Reset selections after adding a card
-    setSelectedRank('');
-    setSelectedSuit('');
   };
   
   const removeCard = (index: number) => {
@@ -79,6 +75,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({ selectedCards, onChange, ma
             key={i/2}
             className="flex items-center bg-white border border-gray-300 rounded px-2 py-1 mr-2 mb-2 cursor-pointer hover:bg-gray-100"
             onClick={() => removeCard(i/2)}
+            title="Click to remove"
           >
             <span className="font-bold">{rank}</span>
             <span className={`${colorClass} ml-1`}>{suitSymbol}</span>
@@ -91,61 +88,61 @@ const CardSelector: React.FC<CardSelectorProps> = ({ selectedCards, onChange, ma
   
   return (
     <div className="space-y-4">
+      {/* Selected Cards */}
       <div className="flex flex-wrap gap-2">
         {renderSelectedCards()}
+        {selectedCards.length === 0 && (
+          <div className="text-gray-400 italic">No cards selected. Click cards from the grid below.</div>
+        )}
       </div>
       
-      <div className="space-y-3">
-        <div>
-          <label className="block text-sm font-medium mb-2">Rank</label>
-          <div className="grid grid-cols-7 gap-2">
-            {ranks.map(rank => (
-              <button
-                key={rank}
-                type="button"
-                onClick={() => setSelectedRank(rank)}
-                className={`h-8 w-8 flex items-center justify-center border ${
-                  selectedRank === rank 
-                    ? 'bg-poker-gold text-white border-poker-gold' 
-                    : 'bg-white border-gray-300 hover:bg-gray-100'
-                } rounded`}
-              >
-                {rank}
-              </button>
-            ))}
-          </div>
+      {/* Card Grid */}
+      <div className="border rounded-md p-4 bg-gray-50">
+        {/* Grid Header - Rank Labels */}
+        <div className="grid grid-cols-14 gap-1 mb-1">
+          <div className="col-span-1"></div> {/* Empty corner cell */}
+          {ranks.map(rank => (
+            <div key={rank} className="text-center font-bold text-xs py-1">{rank}</div>
+          ))}
         </div>
         
-        <div>
-          <label className="block text-sm font-medium mb-2">Suit</label>
-          <div className="flex gap-2">
-            {suits.map(suit => (
-              <button
-                key={suit.symbol}
-                type="button"
-                onClick={() => setSelectedSuit(suit.symbol)}
-                className={`h-8 w-8 flex items-center justify-center text-xl border ${
-                  selectedSuit === suit.symbol 
-                    ? 'bg-poker-gold text-white border-poker-gold' 
-                    : `bg-white ${suit.color} hover:bg-gray-100`
-                } rounded`}
-              >
-                {suit.display}
-              </button>
-            ))}
+        {/* Card Grid with Suits */}
+        {suits.map(suit => (
+          <div key={suit.symbol} className="grid grid-cols-14 gap-1 mb-1">
+            {/* Suit label on left */}
+            <div className={`${suit.color} text-center text-lg flex items-center justify-center`}>
+              {suit.display}
+            </div>
+            
+            {/* Cards for this suit */}
+            {ranks.map(rank => {
+              const cardString = rank + suit.symbol;
+              const isSelected = selectedCards.includes(cardString);
+              
+              return (
+                <div 
+                  key={`${rank}${suit.symbol}`}
+                  onClick={() => handleCardClick(rank, suit.symbol)}
+                  className={`
+                    flex items-center justify-center border rounded cursor-pointer p-1 h-8
+                    ${isSelected ? 'bg-poker-gold text-white border-poker-gold' : 'bg-white hover:bg-gray-100 border-gray-300'}
+                    ${selectedCards.length / 2 >= maxCards && !isSelected ? 'opacity-50 cursor-not-allowed' : ''}
+                  `}
+                  title={isSelected ? "Click to remove" : "Click to add"}
+                >
+                  <span className="font-bold mr-0.5">{rank}</span>
+                  <span className={isSelected ? 'text-white' : suit.color}>{suit.display}</span>
+                </div>
+              );
+            })}
           </div>
-        </div>
+        ))}
         
-        <button
-          type="button"
-          onClick={addCard}
-          disabled={!selectedRank || !selectedSuit}
-          className={`py-2 px-4 ${!selectedRank || !selectedSuit 
-            ? 'bg-gray-300 text-gray-500' 
-            : 'bg-poker-feltGreen text-white hover:bg-green-700'} rounded`}
-        >
-          Add Card
-        </button>
+        {/* Info text */}
+        <div className="mt-3 text-xs text-gray-500 flex justify-between items-center">
+          <span>Click to add/remove cards</span>
+          <span className="font-medium">{selectedCards.length / 2} / {maxCards} cards selected</span>
+        </div>
       </div>
     </div>
   );
