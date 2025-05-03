@@ -73,7 +73,8 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             </div>
           )}
           
-          <div className="flex flex-row flex-wrap items-start gap-2 mt-1 mb-1">
+          {/* Center-aligned summary pills */}
+          <div className="flex flex-row flex-wrap items-start justify-center gap-2 mt-1 mb-1">
             <Badge
               variant="outline"
               className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
