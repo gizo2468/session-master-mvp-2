@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,10 +18,14 @@ import { Separator } from '@/components/ui/separator';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { t, dir } = useLanguage();
   const isCoach = user?.role === 'coach';
   const isStudent = user?.role === 'student';
+  
+  // Check if we're on the main settings page (not a subpage)
+  const isMainSettingsPage = location.pathname === '/settings';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -81,17 +85,22 @@ const Settings: React.FC = () => {
             </div>
           </Tabs>
 
-          {/* Donation card placed between tabs content and legal section */}
-          <div className="px-6 pb-0">
-            <Separator className="my-6" />
-            <DonationCard />
-          </div>
+          {/* Only show donation card and legal section on the main settings page */}
+          {isMainSettingsPage && (
+            <>
+              {/* Donation card placed between tabs content and legal section */}
+              <div className="px-6 pb-0">
+                <Separator className="my-6" />
+                <DonationCard />
+              </div>
 
-          {/* Legal section */}
-          <div className="px-6 pb-6">
-            <Separator className="my-6" />
-            <LegalSettings />
-          </div>
+              {/* Legal section */}
+              <div className="px-6 pb-6">
+                <Separator className="my-6" />
+                <LegalSettings />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
