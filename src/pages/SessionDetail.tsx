@@ -114,8 +114,23 @@ export default function SessionDetail() {
     return totalBuyin - totalInitialBuyin;
   };
   
+  // Calculate total rebuy count across all tables
+  const calculateTotalRebuys = () => {
+    if (!session.tables || session.tables.length === 0) {
+      return session.rebuys || 0;
+    }
+    
+    let totalRebuys = 0;
+    session.tables.forEach((table) => {
+      totalRebuys += table.rebuys || 0;
+    });
+    
+    return totalRebuys;
+  };
+  
   const totalInitialBuyin = calculateTotalInitialBuyin();
   const additionalBuyins = calculateAdditionalBuyins();
+  const totalRebuys = calculateTotalRebuys();
   
   const handleSaveEdit = () => {
     if (!session) return;
@@ -410,7 +425,7 @@ export default function SessionDetail() {
                 
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-gray-500">Re-Buys:</span>
-                  <span className="font-medium">{session.rebuys}</span>
+                  <span className="font-medium">{totalRebuys}</span>
                 </div>
                 
                 <div className="flex justify-between py-2 border-b">
