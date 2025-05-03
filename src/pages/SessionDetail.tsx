@@ -62,13 +62,6 @@ export default function SessionDetail() {
   }
   
   const isCompleted = !session.isActive && session.cashOut !== undefined;
-  let profit = 0;
-  let profitClass = '';
-  
-  if (isCompleted && session.cashOut !== undefined) {
-    profit = session.cashOut - session.buyIn;
-    profitClass = profit >= 0 ? 'text-green-500' : 'text-poker-red';
-  }
   
   // Calculate total initial buy-ins across all tables
   const calculateTotalInitialBuyin = () => {
@@ -128,9 +121,25 @@ export default function SessionDetail() {
     return totalRebuys;
   };
   
+  // Calculate total profit/loss from all tables
+  const calculateTotalProfitLoss = () => {
+    if (!session.tables || session.tables.length === 0) {
+      return (session.cashOut || 0) - session.buyIn;
+    }
+    
+    let totalProfit = 0;
+    session.tables.forEach((table) => {
+      totalProfit += (table.cashOut || 0) - table.buyIn;
+    });
+    
+    return totalProfit;
+  };
+  
   const totalInitialBuyin = calculateTotalInitialBuyin();
   const additionalBuyins = calculateAdditionalBuyins();
   const totalRebuys = calculateTotalRebuys();
+  const profit = calculateTotalProfitLoss();
+  const profitClass = profit >= 0 ? 'text-green-500' : 'text-poker-red';
   
   const handleSaveEdit = () => {
     if (!session) return;

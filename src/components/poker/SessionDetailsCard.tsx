@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession } from '@/types/poker';
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, CircleDollarSign } from "lucide-react";
+import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown } from "lucide-react";
 
 interface SessionDetailsCardProps {
   session: PokerSession;
@@ -30,7 +30,19 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
     rebuyCount = session.rebuys || 0;
   }
   
+  // Calculate total profit/loss from all tables
+  let totalProfit = 0;
+  if (tables.length > 0) {
+    tables.forEach((table) => {
+      totalProfit += (table.cashOut || 0) - table.buyIn;
+    });
+  } else {
+    // If there are no tables, use session's own profit calculation
+    totalProfit = (session.cashOut || 0) - session.buyIn;
+  }
+  
   const tableCount = tables.length;
+  const profitClass = totalProfit >= 0 ? "text-green-600" : "text-red-600";
 
   return (
     <Card className="bg-white rounded-lg shadow-md mb-6">
@@ -67,6 +79,23 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               </Badge>
             )}
           </div>
+          
+          {!session.isActive && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500">Profit/Loss:</span>
+              <div className="flex items-center gap-1">
+                {totalProfit >= 0 ? (
+                  <TrendingUp className="w-4 h-4 text-green-600" />
+                ) : (
+                  <TrendingDown className="w-4 h-4 text-red-600" />
+                )}
+                <span className={`font-bold ${profitClass}`}>
+                  {totalProfit >= 0 ? '+' : ''}${Math.abs(totalProfit).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
+          
           {session.smallBlind && session.bigBlind ? (
             <div className="flex justify-between">
               <span className="text-gray-500">Blinds:</span>
