@@ -17,6 +17,15 @@ const config: CapacitorConfig = {
       keystoreAliasPassword: undefined,
       releaseType: 'AAB'
     }
+  },
+  plugins: {
+    CapacitorHttp: {
+      enabled: true
+    }
+  },
+  // Add Supabase specific configuration
+  ios: {
+    contentInset: 'automatic'
   }
 };
 
