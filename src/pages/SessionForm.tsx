@@ -16,6 +16,7 @@ import Icon from '@/components/ui/Lucide';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const TOURNAMENT_TYPES = [
+  'Freezeout',
   'Re-Buy Tournament',
   'Bounty',
   'Progressive Bounty (PKO)',

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ interface AddTableFormProps {
 }
 
 const TOURNAMENT_TYPES = [
+  'Freezeout',
   'Re-Buy Tournament',
   'Bounty',
   'Progressive Bounty (PKO)',
