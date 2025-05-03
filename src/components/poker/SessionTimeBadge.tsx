@@ -28,7 +28,7 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
   };
 
   return (
-    <div className="flex-1">
+    <div className="flex-1 min-w-0">
       <Badge 
         variant={variant}
         className="flex flex-col items-center justify-center w-full p-0 overflow-hidden shadow-sm h-full"

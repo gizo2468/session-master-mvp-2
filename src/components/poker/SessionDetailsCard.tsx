@@ -58,7 +58,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             <span className="text-gray-500">Playing From:</span>
             <span className="font-medium">{session.location}</span>
           </div>
-          <div className="flex items-start gap-2 mt-1 mb-1">
+          <div className="flex flex-row flex-wrap items-start gap-2 mt-1 mb-1">
             <Badge
               variant="outline"
               className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"

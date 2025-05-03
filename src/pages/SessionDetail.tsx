@@ -401,7 +401,7 @@ export default function SessionDetail() {
             )}
             
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-4 mb-6`}>
+              <div className="flex flex-row flex-wrap gap-4 mb-6">
                 <SessionTimeBadge
                   title="Started"
                   value={`${formattedDate}\n${formattedTime}`}
