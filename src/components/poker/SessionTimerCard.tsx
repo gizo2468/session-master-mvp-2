@@ -54,6 +54,9 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   const formattedStartTime = dateFormat(new Date(startTime), 'h:mm a');
   const formattedDate = dateFormat(new Date(startTime), 'MMM d, yyyy');
   
+  // IMPORTANT: Only show blinds for Cash format - strict check to ensure it's never shown for Tournament
+  const shouldShowBlinds = format === 'Cash' && smallBlind !== undefined && bigBlind !== undefined;
+  
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
       <div className="mb-2 text-sm text-gray-500">Session Time</div>
@@ -70,7 +73,10 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
           <div className="text-sm text-gray-500">Game</div>
           <div className="font-medium">{gameType}</div>
           <div className="text-xs text-gray-400">
-            {format} - ${smallBlind}/${bigBlind}
+            {format}
+            {shouldShowBlinds && (
+              <> - ${smallBlind}/${bigBlind}</>
+            )}
           </div>
         </div>
       </div>
