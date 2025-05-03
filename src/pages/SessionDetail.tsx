@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import TableDetailsCard from '@/components/poker/TableDetailsCard';
 import SessionTimeBadge from '@/components/poker/SessionTimeBadge';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +17,7 @@ export default function SessionDetail() {
   const { sessions, updateSession, deleteSession, endSession, pauseSession, resumeSession } = useSessionContext();
   
   const session = sessions.find(s => s.id === id);
+  const isMobile = useIsMobile();
   
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -399,7 +401,7 @@ export default function SessionDetail() {
             )}
             
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-4 mb-6`}>
                 <SessionTimeBadge
                   title="Started"
                   value={`${formattedDate}\n${formattedTime}`}

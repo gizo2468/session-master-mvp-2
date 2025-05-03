@@ -2,6 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, Timer } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type BadgeVariant = 'timeStarted' | 'timeDuration' | 'timeEnded';
 
@@ -27,10 +28,10 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex-1">
       <Badge 
         variant={variant}
-        className="flex flex-col items-center justify-center w-full p-0 overflow-hidden shadow-sm"
+        className="flex flex-col items-center justify-center w-full p-0 overflow-hidden shadow-sm h-full"
       >
         <div className="w-full py-2 px-3 font-bold text-center border-b border-gray-200 bg-opacity-50 text-sm">
           {title}

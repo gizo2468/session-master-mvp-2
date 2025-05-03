@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableData } from '@/types/poker';
 import { format } from 'date-fns';
 import { ArrowUp, ArrowDown } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TableDetailsCardProps {
   table: TableData;
@@ -18,6 +19,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
   const isBountyTournament = table.tournamentTypes?.some(type => 
     ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
   );
+  const isMobile = useIsMobile();
 
   return (
     <Card className="bg-white rounded-lg shadow mb-6">
