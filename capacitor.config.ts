@@ -16,7 +16,8 @@ const config: CapacitorConfig = {
       keystorePassword: undefined,
       keystoreAliasPassword: undefined,
       releaseType: 'AAB'
-    }
+    },
+    iconPath: 'public/lovable-uploads/f2365416-2998-43f2-a84a-393da76f67d4.png' 
   },
   plugins: {
     CapacitorHttp: {
