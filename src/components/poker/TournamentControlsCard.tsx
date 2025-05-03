@@ -17,6 +17,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { PokerSession } from '@/types/poker';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TournamentControlsCardProps {
   session: PokerSession;
@@ -32,6 +33,12 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
   const [isRebuyDialogOpen, setIsRebuyDialogOpen] = useState(false);
   const [customRebuyAmount, setCustomRebuyAmount] = useState('');
   
+  // Check if this is a Freezeout tournament
+  const isFreezeout = session.format === 'Tournament' && 
+                      session.tables?.some(table => 
+                        table.tournamentTypes?.includes('Freezeout')
+                      );
+  
   const handleConfirmRebuy = () => {
     onAddRebuy(rebuyAmount);
   };
@@ -45,6 +52,12 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
     }
   };
 
+  // If there are no active tables or tables at all, don't show the controls
+  const hasActiveTables = session.tables?.some(table => table.isActive) ?? false;
+  if (!hasActiveTables && (session.tables?.length ?? 0) > 0) {
+    return null;
+  }
+
   return (
     <Card className="bg-white rounded-lg shadow-md mb-6">
       <CardHeader className="pb-2">
@@ -56,30 +69,51 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
         <div className="flex flex-col gap-4">
           {session.format === 'Tournament' ? (
             // Tournament fixed rebuy
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full flex justify-center items-center gap-2"
-                >
-                  <Icon name="Plus" size={16} /> Add Rebuy
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirm Rebuy</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to add a Rebuy for ${rebuyAmount.toFixed(2)}?
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleConfirmRebuy} className="bg-poker-gold hover:bg-poker-darkGold text-white">
-                    Confirm Rebuy
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            isFreezeout ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <Button
+                        variant="outline"
+                        className="w-full flex justify-center items-center gap-2 opacity-50 cursor-not-allowed"
+                        disabled={true}
+                      >
+                        <Icon name="Plus" size={16} /> Add Rebuy
+                      </Button>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Rebuys are not allowed in Freezeout tournaments</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full flex justify-center items-center gap-2"
+                  >
+                    <Icon name="Plus" size={16} /> Add Rebuy
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Rebuy</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to add a Rebuy for ${rebuyAmount.toFixed(2)}?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleConfirmRebuy} className="bg-poker-gold hover:bg-poker-darkGold text-white">
+                      Confirm Rebuy
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )
           ) : (
             // Cash game flexible rebuy
             <>

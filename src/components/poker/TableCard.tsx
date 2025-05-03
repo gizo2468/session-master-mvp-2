@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import {
   DialogTitle 
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TableCardProps {
   table: TableData;
@@ -44,6 +46,9 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
     table.tournamentTypes?.some(type => 
       ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
     );
+    
+  const isFreezeout = table.format === 'Tournament' && 
+    table.tournamentTypes?.some(type => type === 'Freezeout');
 
   const handleEndTable = () => {
     onEndTable(
@@ -122,13 +127,34 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
 
         {table.isActive ? (
           <div className="mt-4 flex gap-2 justify-between">
-            <Button 
-              variant="outline" 
-              className="flex-1"
-              onClick={openRebuyDialog}
-            >
-              <Icon name="Plus" className="mr-1 h-4 w-4" /> Rebuy
-            </Button>
+            {isFreezeout ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        className="w-full opacity-50 cursor-not-allowed"
+                        disabled={true}
+                      >
+                        <Icon name="Plus" className="mr-1 h-4 w-4" /> Rebuy
+                      </Button>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Rebuys are not allowed in Freezeout tournaments</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={openRebuyDialog}
+              >
+                <Icon name="Plus" className="mr-1 h-4 w-4" /> Rebuy
+              </Button>
+            )}
             <Button 
               variant="destructive" 
               className="flex-1"
