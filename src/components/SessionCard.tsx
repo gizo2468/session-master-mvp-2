@@ -1,3 +1,4 @@
+
 import { PokerSession, TableData } from '@/types/poker';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -40,6 +41,9 @@ export default function SessionCard({ session }: SessionCardProps) {
     ).length;
   }
   
+  // IMPORTANT: Only show blinds for Cash format - strict check to ensure it's never shown for Tournament
+  const shouldShowBlinds = session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined;
+  
   return (
     <div 
       className="bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer"
@@ -71,9 +75,11 @@ export default function SessionCard({ session }: SessionCardProps) {
       
       <div className="flex justify-between text-sm text-gray-600">
         <span>{session.gameType} • {session.format}</span>
-        <span>
-          {session.smallBlind}/{session.bigBlind}
-        </span>
+        {shouldShowBlinds && (
+          <span>
+            {session.smallBlind}/{session.bigBlind}
+          </span>
+        )}
       </div>
     </div>
   );
