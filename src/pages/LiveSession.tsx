@@ -205,7 +205,7 @@ export default function LiveSession() {
               <Icon name="ArrowLeft" size={16} className="mr-1" />
               <span>Home</span>
             </Button>
-            <h1 className="font-serif text-xl font-bold">Live Session</h1>
+            <h1 className="text-xl font-bold">Live Session</h1>
             <div className="w-10"></div>
           </div>
         </div>
