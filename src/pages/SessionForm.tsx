@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -324,14 +323,13 @@ export default function SessionForm() {
                 name="physicalLocation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Physical Location</FormLabel>
+                    <FormLabel className="text-base font-medium">Played from (location):</FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 
                       />
                     </FormControl>
                     <FormMessage />
-                    <p className="text-xs text-gray-500 mt-1">Where are you physically playing this online game from?</p>
                   </FormItem>
                 )}
               />

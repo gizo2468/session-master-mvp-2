@@ -54,18 +54,22 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-3">
-          <div className="flex justify-between">
-            <span className="text-gray-500">Playing From:</span>
-            <span className="font-medium">{session.location}</span>
-          </div>
+          {/* Only show "Playing From" if it's not an online game */}
+          {!session.isOnline && (
+            <div className="flex justify-between">
+              <span className="text-gray-500">Playing From:</span>
+              <span className="font-medium">{session.location}</span>
+            </div>
+          )}
           
-          {session.isOnline && session.physicalLocation && (
+          {/* Show online game information */}
+          {session.isOnline && (
             <div className="flex justify-between items-center">
-              <span className="text-gray-500 flex items-center gap-1">
-                <Globe className="h-4 w-4" />
-                <span>Online Game – Played from:</span>
-              </span>
-              <span className="font-medium">{session.physicalLocation}</span>
+              <div className="flex items-center gap-1.5">
+                <Globe className="h-4 w-4 text-gray-600" />
+                <span className="text-gray-500">Online Game – Played from:</span>
+              </div>
+              <span className="font-medium">{session.physicalLocation || "Not specified"}</span>
             </div>
           )}
           
