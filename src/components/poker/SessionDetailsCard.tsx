@@ -96,12 +96,14 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             </div>
           )}
           
-          {session.smallBlind && session.bigBlind ? (
+          {/* Only show blinds for Cash game format */}
+          {session.format === 'Cash' && session.smallBlind && session.bigBlind ? (
             <div className="flex justify-between">
               <span className="text-gray-500">Blinds:</span>
               <span className="font-medium">${session.smallBlind}/{session.bigBlind}</span>
             </div>
           ) : null}
+          
           {session.notes && (
             <div className="pt-2">
               <span className="text-gray-500 block mb-1">Notes:</span>
