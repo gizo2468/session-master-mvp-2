@@ -8,6 +8,7 @@ import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import TableDetailsCard from '@/components/poker/TableDetailsCard';
+import SessionTimeBadge from '@/components/poker/SessionTimeBadge';
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -184,9 +185,14 @@ export default function SessionDetail() {
     navigate('/');
   };
   
-  const formattedDate = format(new Date(session.startTime), 'MMM d, yyyy h:mm a');
+  const formattedDate = format(new Date(session.startTime), 'MMM d, yyyy');
+  const formattedTime = format(new Date(session.startTime), 'h:mm a');
+  
   const formattedEndDate = session.endTime 
-    ? format(new Date(session.endTime), 'MMM d, yyyy h:mm a')
+    ? format(new Date(session.endTime), 'MMM d, yyyy')
+    : null;
+  const formattedEndTime = session.endTime 
+    ? format(new Date(session.endTime), 'h:mm a')
     : null;
     
   const calculateDuration = () => {
@@ -393,24 +399,30 @@ export default function SessionDetail() {
             )}
             
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <span className="text-sm text-gray-500">Started</span>
-                  <p className="font-medium">{formattedDate}</p>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <SessionTimeBadge
+                  title="Started"
+                  value={`${formattedDate}\n${formattedTime}`}
+                  variant="timeStarted"
+                  type="started"
+                />
                 
                 {sessionDuration && (
-                  <div className="text-center">
-                    <span className="text-sm text-gray-500">Duration</span>
-                    <p className="font-medium">{sessionDuration}</p>
-                  </div>
+                  <SessionTimeBadge
+                    title="Duration"
+                    value={sessionDuration}
+                    variant="timeDuration"
+                    type="duration"
+                  />
                 )}
                 
-                {formattedEndDate && (
-                  <div className="text-right">
-                    <span className="text-sm text-gray-500">Ended</span>
-                    <p className="font-medium">{formattedEndDate}</p>
-                  </div>
+                {formattedEndDate && formattedEndTime && (
+                  <SessionTimeBadge
+                    title="Ended"
+                    value={`${formattedEndDate}\n${formattedEndTime}`}
+                    variant="timeEnded"
+                    type="ended"
+                  />
                 )}
               </div>
               

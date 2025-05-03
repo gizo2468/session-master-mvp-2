@@ -19,6 +19,10 @@ const badgeVariants = cva(
         success: "border-transparent bg-green-100 text-green-800 hover:bg-green-200",
         warning: "border-transparent bg-amber-100 text-amber-800 hover:bg-amber-200",
         info: "border-transparent bg-blue-100 text-blue-800 hover:bg-blue-200",
+        // New variants for session time badges
+        timeStarted: "border-transparent bg-poker-cream text-poker-black rounded-xl",
+        timeDuration: "border-transparent bg-gray-100 text-poker-black rounded-xl",
+        timeEnded: "border-transparent bg-gray-200 text-poker-black rounded-xl",
       },
     },
     defaultVariants: {
