@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession } from '@/types/poker';
@@ -63,7 +62,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               variant="outline"
               className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
             >
-              <DollarSign className="w-4 h-4 text-gray-600" />
+              <DollarSign className="w-4 h-4 text-gray-600 flex-shrink-0" />
               <span className="font-bold text-poker-gold">${totalInitialBuyin.toFixed(2)}</span>
               <span className="ml-1 opacity-80 text-xs">
                 {tableCount > 0 ? `from ${tableCount} table${tableCount !== 1 ? "s" : ""}` : "buy-in"}
@@ -74,7 +73,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
                 variant="outline"
                 className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
               >
-                <CircleDollarSign className="w-4 h-4 text-gray-600" />
+                <CircleDollarSign className="w-4 h-4 text-gray-600 flex-shrink-0" />
                 <span className="font-bold text-poker-gold">+${totalRebuyAmount.toFixed(2)}</span>
                 <span className="ml-1 opacity-80 text-xs">
                   from {rebuyCount} rebuy{rebuyCount !== 1 ? "s" : ""}

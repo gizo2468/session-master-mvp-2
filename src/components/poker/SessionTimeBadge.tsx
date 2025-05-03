@@ -17,11 +17,11 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
   const getBadgeIcon = () => {
     switch (type) {
       case 'started':
-        return <Calendar className="w-4 h-4 mr-1 text-poker-black opacity-70" />;
+        return <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />;
       case 'duration':
-        return <Timer className="w-4 h-4 mr-1 text-poker-black opacity-70" />;
+        return <Timer className="w-4 h-4 mr-2 flex-shrink-0" />;
       case 'ended':
-        return <Clock className="w-4 h-4 mr-1 text-poker-black opacity-70" />;
+        return <Clock className="w-4 h-4 mr-2 flex-shrink-0" />;
       default:
         return null;
     }
@@ -38,7 +38,7 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
     const parts = value.split('\n');
     if (parts.length === 2) {
       return (
-        <span>
+        <span className="text-center">
           {parts[0]}
           <span className="mx-1 opacity-70">•</span>
           {parts[1]}
@@ -58,8 +58,8 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
         <div className="w-full py-1.5 px-3 font-bold text-center border-b border-gray-200 bg-opacity-50 text-sm">
           {title}
         </div>
-        <div className="w-full py-2 px-3 flex items-center justify-center">
-          <div className="flex items-center">
+        <div className="w-full py-2.5 px-3 flex items-center justify-center">
+          <div className="flex items-center justify-center w-full">
             {getBadgeIcon()}
             <span className="font-medium text-sm">{formatDisplayValue()}</span>
           </div>
