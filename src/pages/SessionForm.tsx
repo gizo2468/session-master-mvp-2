@@ -29,6 +29,7 @@ const formSchema = z.object({
   gameType: z.enum(['NLH', 'PLO']),
   format: z.enum(['Cash', 'Tournament']),
   location: z.string().min(1, "Location is required"),
+  physicalLocation: z.string().optional(),
   buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "Buy-in amount must be a valid number",
   }),
@@ -49,6 +50,7 @@ export default function SessionForm() {
       gameType: 'NLH',
       format: 'Cash',
       location: '',
+      physicalLocation: '',
       buyIn: '',
       isOnline: false,
       startingBB: '',
@@ -81,12 +83,14 @@ export default function SessionForm() {
       gameType: values.gameType,
       format: values.format,
       location: values.location,
+      physicalLocation: values.isOnline ? values.physicalLocation : undefined,
       buyIn: buyInAmount,
       initialBuyIn: buyInAmount,
       smallBlind: 0,
       bigBlind: 0,
       startTime: new Date(),
       isActive: true,
+      isOnline: values.isOnline,
       ...(values.format === 'Tournament' && {
         startingBB: values.startingBB ? parseInt(values.startingBB) : undefined,
         tournamentTypes: values.tournamentType ? [values.tournamentType] : undefined
@@ -99,6 +103,7 @@ export default function SessionForm() {
   };
 
   const format = form.watch('format');
+  const isOnline = form.watch('isOnline');
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -312,6 +317,25 @@ export default function SessionForm() {
                 </FormItem>
               )}
             />
+            
+            {isOnline && (
+              <FormField
+                control={form.control}
+                name="physicalLocation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium">Physical Location</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="text-xs text-gray-500 mt-1">Where are you physically playing this online game from?</p>
+                  </FormItem>
+                )}
+              />
+            )}
             
             <FormField
               control={form.control}

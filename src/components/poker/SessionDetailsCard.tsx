@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession } from '@/types/poker';
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown } from "lucide-react";
+import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe } from "lucide-react";
 
 interface SessionDetailsCardProps {
   session: PokerSession;
@@ -58,6 +58,17 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             <span className="text-gray-500">Playing From:</span>
             <span className="font-medium">{session.location}</span>
           </div>
+          
+          {session.isOnline && session.physicalLocation && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500 flex items-center gap-1">
+                <Globe className="h-4 w-4" />
+                <span>Online Game – Played from:</span>
+              </span>
+              <span className="font-medium">{session.physicalLocation}</span>
+            </div>
+          )}
+          
           <div className="flex flex-row flex-wrap items-start gap-2 mt-1 mb-1">
             <Badge
               variant="outline"
