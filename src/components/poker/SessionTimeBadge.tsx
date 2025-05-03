@@ -27,19 +27,41 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
     }
   };
 
+  // Format the value string to display better
+  const formatDisplayValue = () => {
+    // Handle different types of values
+    if (type === 'duration') {
+      return value; // Duration is already compact
+    }
+    
+    // For dates, format them more cleanly
+    const parts = value.split('\n');
+    if (parts.length === 2) {
+      return (
+        <span>
+          {parts[0]}
+          <span className="mx-1 opacity-70">•</span>
+          {parts[1]}
+        </span>
+      );
+    }
+    
+    return value;
+  };
+
   return (
     <div className="flex-1 min-w-0">
       <Badge 
         variant={variant}
         className="flex flex-col items-center justify-center w-full p-0 overflow-hidden shadow-sm h-full"
       >
-        <div className="w-full py-2 px-3 font-bold text-center border-b border-gray-200 bg-opacity-50 text-sm">
+        <div className="w-full py-1.5 px-3 font-bold text-center border-b border-gray-200 bg-opacity-50 text-sm">
           {title}
         </div>
-        <div className="w-full p-3 flex items-center justify-center">
+        <div className="w-full py-2 px-3 flex items-center justify-center">
           <div className="flex items-center">
             {getBadgeIcon()}
-            <span className="font-medium text-sm">{value}</span>
+            <span className="font-medium text-sm">{formatDisplayValue()}</span>
           </div>
         </div>
       </Badge>
