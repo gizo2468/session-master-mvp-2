@@ -42,37 +42,35 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex justify-between items-start mb-4">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <div>
-              <span className="text-gray-500">Start:</span>
-              <div>{formattedStart}</div>
-            </div>
-            {formattedEnd && (
-              <div>
-                <span className="text-gray-500">End:</span>
-                <div>{formattedEnd}</div>
-              </div>
-            )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm mb-4">
+          <div>
+            <span className="text-gray-500">Start:</span>
+            <div>{formattedStart}</div>
           </div>
-          
-          {/* Styled Buy-in and Rebuy section to match TableCard.tsx */}
-          <div className="flex items-center gap-4">
+          {formattedEnd && (
+            <div>
+              <span className="text-gray-500">End:</span>
+              <div>{formattedEnd}</div>
+            </div>
+          )}
+        </div>
+        
+        {/* Styled Buy-in and Rebuy section to match active tables in Live Session */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="text-right">
+            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
+            <span className="font-bold text-2xl">
+              ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+            </span>
+          </div>
+          {rebuyAmount > 0 && (
             <div className="text-right">
-              <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
-              <span className="font-bold text-xl">
-                ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+              <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
+              <span className="font-bold text-2xl text-amber-600">
+                +${rebuyAmount.toFixed(2)}
               </span>
             </div>
-            {rebuyAmount > 0 && (
-              <div className="text-right">
-                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
-                <span className="font-bold text-xl text-amber-600">
-                  +${rebuyAmount.toFixed(2)}
-                </span>
-              </div>
-            )}
-          </div>
+          )}
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mb-4 text-sm">
