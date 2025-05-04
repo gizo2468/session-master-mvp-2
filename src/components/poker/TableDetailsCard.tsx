@@ -5,6 +5,7 @@ import { TableData } from '@/types/poker';
 import { format } from 'date-fns';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Separator } from '@/components/ui/separator';
 
 interface TableDetailsCardProps {
   table: TableData;
@@ -42,7 +43,8 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm mb-4">
+        {/* Aligned Start and End Times horizontally */}
+        <div className="flex justify-between items-center mb-4 text-sm">
           <div>
             <span className="text-gray-500">Start:</span>
             <div>{formattedStart}</div>
@@ -73,44 +75,65 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           )}
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mb-4 text-sm">
+        {/* Condensed final three fields into a single row with separators */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs mb-4">
           {table.format === 'Tournament' && table.startingBB && (
-            <div>
-              <span className="text-gray-500">Starting BBs:</span>
-              <div>{table.startingBB}BB</div>
+            <div className="flex items-center">
+              <span className="text-gray-500 mr-1">Starting BBs:</span>
+              <span>{table.startingBB}BB</span>
             </div>
           )}
+          
+          {table.format === 'Tournament' && table.startingBB && table.tournamentTypes && table.tournamentTypes.length > 0 && (
+            <span className="text-gray-400">•</span>
+          )}
+          
           {table.tournamentTypes && table.tournamentTypes.length > 0 && (
-            <div className="col-span-1 sm:col-span-2">
-              <span className="text-gray-500">Tournament Type:</span>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {table.tournamentTypes.map((type) => (
-                  <span key={type} className="text-xs bg-gray-100 px-2 py-1 rounded-full">
-                    {type}
-                  </span>
+            <div className="flex items-center">
+              <span className="text-gray-500 mr-1">Tournament Type:</span>
+              <span className="flex flex-wrap gap-1">
+                {table.tournamentTypes.map((type, index) => (
+                  <React.Fragment key={type}>
+                    {index > 0 && <span>,</span>}
+                    <span>{type}</span>
+                  </React.Fragment>
                 ))}
-              </div>
+              </span>
             </div>
           )}
-          {isBountyTournament && table.bountyCount !== undefined && table.bountyCount > 0 && (
-            <div>
-              <span className="text-gray-500">Players Eliminated:</span>
-              <div>{table.bountyCount}</div>
+          
+          {((table.format === 'Tournament' && table.startingBB) || 
+            (table.tournamentTypes && table.tournamentTypes.length > 0)) && 
+            (table.cashOut !== undefined) && (
+            <span className="text-gray-400">•</span>
+          )}
+          
+          {table.cashOut !== undefined && (
+            <div className="flex items-center ml-auto">
+              <span className="text-gray-500 mr-1">Total Cash Out:</span>
+              <span className="font-semibold text-poker-gold">${(table.cashOut ?? 0).toFixed(2)}</span>
             </div>
           )}
-          {isBountyTournament && table.bountyAmount !== undefined && table.bountyAmount > 0 && (
-            <div>
-              <span className="text-gray-500">Total Bounty Collected:</span>
-              <div className="text-poker-gold font-medium">${table.bountyAmount.toFixed(2)}</div>
-            </div>
-          )}
-          <div>
-            <span className="text-gray-500">Total Cash Out:</span>
-            <div className="font-bold text-lg text-poker-gold">
-              ${(table.cashOut ?? 0).toFixed(2)}
-            </div>
-          </div>
         </div>
+        
+        {/* Additional tournament-specific fields */}
+        {isBountyTournament && (table.bountyCount !== undefined || table.bountyAmount !== undefined) && (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs mb-4">
+            {table.bountyCount !== undefined && table.bountyCount > 0 && (
+              <div>
+                <span className="text-gray-500">Players Eliminated:</span>
+                <div>{table.bountyCount}</div>
+              </div>
+            )}
+            {table.bountyAmount !== undefined && table.bountyAmount > 0 && (
+              <div>
+                <span className="text-gray-500">Total Bounty Collected:</span>
+                <div className="text-poker-gold font-medium">${table.bountyAmount.toFixed(2)}</div>
+              </div>
+            )}
+          </div>
+        )}
+        
         {table.notes && (
           <div className="mt-2">
             <span className="text-gray-500 block mb-1">Notes:</span>
