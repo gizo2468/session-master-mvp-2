@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableData } from '@/types/poker';
@@ -14,7 +15,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
   const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
   const formattedStart = format(new Date(table.startTime), 'MMM d, h:mm a');
   const formattedEnd = table.endTime ? format(new Date(table.endTime), 'MMM d, h:mm a') : null;
-  const rebuyAmount = table.buyIn - table.initialBuyIn;
+  const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
   const isBountyTournament = table.tournamentTypes?.some(type => 
     ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
   );
@@ -41,29 +42,40 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-4 text-sm">
-          <div>
-            <span className="text-gray-500">Start:</span>
-            <div>{formattedStart}</div>
-          </div>
-          {formattedEnd && (
+        <div className="flex justify-between items-start mb-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
             <div>
-              <span className="text-gray-500">End:</span>
-              <div>{formattedEnd}</div>
+              <span className="text-gray-500">Start:</span>
+              <div>{formattedStart}</div>
             </div>
-          )}
-          <div>
-            <span className="text-gray-500">Buy-in:</span>
-            <div>
-              <span className="font-bold">${table.initialBuyIn.toFixed(2)}</span>
-              {rebuyAmount > 0 && (
-                <span className="text-amber-600 font-bold ml-1">
-                  (+${rebuyAmount.toFixed(2)})
-                </span>
-              )}
-            </div>
+            {formattedEnd && (
+              <div>
+                <span className="text-gray-500">End:</span>
+                <div>{formattedEnd}</div>
+              </div>
+            )}
           </div>
           
+          {/* Styled Buy-in and Rebuy section to match TableCard.tsx */}
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
+              <span className="font-bold text-xl">
+                ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+              </span>
+            </div>
+            {rebuyAmount > 0 && (
+              <div className="text-right">
+                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
+                <span className="font-bold text-xl text-amber-600">
+                  +${rebuyAmount.toFixed(2)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mb-4 text-sm">
           {table.format === 'Tournament' && table.startingBB && (
             <div>
               <span className="text-gray-500">Starting BBs:</span>
@@ -71,7 +83,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
             </div>
           )}
           {table.tournamentTypes && table.tournamentTypes.length > 0 && (
-            <div className="col-span-2">
+            <div className="col-span-1 sm:col-span-2">
               <span className="text-gray-500">Tournament Type:</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {table.tournamentTypes.map((type) => (
