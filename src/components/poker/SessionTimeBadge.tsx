@@ -24,18 +24,15 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
       );
     }
     
-    // For dates, format them more consistently between started and ended badges
+    // For dates, format them more cleanly
     const parts = value.split('\n');
     if (parts.length === 2) {
-      // Extract date and time parts
-      const datePart = parts[0];
-      const timePart = parts[1];
-
-      // For both started and ended badges, use the same layout
       return (
         <div className="flex flex-col items-center justify-center w-full text-center">
-          <span className="block w-full text-center">{datePart}</span>
-          <span className="block w-full text-center">{timePart}</span>
+          <span className="block w-full text-center">{parts[0]}</span>
+          <span className="block w-full text-center">
+            {parts[1]}
+          </span>
         </div>
       );
     }
