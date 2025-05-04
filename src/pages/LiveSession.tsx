@@ -50,6 +50,15 @@ export default function LiveSession() {
   const [pendingRebuyTableId, setPendingRebuyTableId] = useState<string | null>(null);
   const [pendingRebuyAmount, setPendingRebuyAmount] = useState(0);
   
+  // Add states for end table dialog
+  const [showEndTableDialog, setShowEndTableDialog] = useState(false);
+  const [pendingEndTableId, setPendingEndTableId] = useState<string | null>(null);
+  const [cashOutAmount, setCashOutAmount] = useState('');
+  const [tableNotes, setTableNotes] = useState('');
+  const [bountyCount, setBountyCount] = useState('');
+  const [bountyAmount, setBountyAmount] = useState('');
+  const [finalPosition, setFinalPosition] = useState('');
+  
   const session = id 
     ? sessions.find(s => s.id === id && s.isActive) 
     : activeSession;
@@ -180,11 +189,66 @@ export default function LiveSession() {
     }
   };
   
+  // Modified to initiate the end table process with dialog
+  const handleInitiateEndTable = (tableId: string) => {
+    setPendingEndTableId(tableId);
+    setCashOutAmount('');
+    setTableNotes('');
+    setBountyCount('');
+    setBountyAmount('');
+    setFinalPosition('');
+    setShowEndTableDialog(true);
+  };
+  
+  // Modified to handle the final end table confirmation
+  const handleConfirmEndTable = () => {
+    if (!session || !pendingEndTableId || !cashOutAmount) return;
+    
+    try {
+      endTable(
+        session.id, 
+        pendingEndTableId, 
+        parseFloat(cashOutAmount), 
+        tableNotes,
+        {
+          bountyCount: bountyCount ? parseInt(bountyCount) : undefined,
+          bountyAmount: bountyAmount ? parseFloat(bountyAmount) : undefined,
+          finalPosition: finalPosition ? parseInt(finalPosition) : undefined
+        }
+      );
+      toast({
+        title: "Table Ended",
+        description: "The table has been successfully ended."
+      });
+    } catch (error) {
+      console.error("Error ending table:", error);
+      toast({
+        title: "Error Ending Table",
+        description: "There was a problem ending the table. Please try again.",
+        variant: "destructive"
+      });
+    }
+    
+    // Reset states
+    setShowEndTableDialog(false);
+    setPendingEndTableId(null);
+  };
+  
+  const handleCancelEndTable = () => {
+    setShowEndTableDialog(false);
+    setPendingEndTableId(null);
+    setCashOutAmount('');
+    setTableNotes('');
+    setBountyCount('');
+    setBountyAmount('');
+    setFinalPosition('');
+  };
+  
   const handleEndTable = (
     tableId: string, 
     cashOut: number, 
     notes?: string,
-    bounty?: { bountyCount?: number, bountyAmount?: number }
+    bounty?: { bountyCount?: number, bountyAmount?: number, finalPosition?: number }
   ) => {
     if (!session) return;
     
@@ -242,6 +306,14 @@ export default function LiveSession() {
   
   const activeTables = session.tables?.filter(table => table.isActive) || [];
   const inactiveTables = session.tables?.filter(table => !table.isActive) || [];
+  
+  // Helper function to check if a table is a bounty tournament
+  const isBountyTournament = (table: TableData) => {
+    return table.format === 'Tournament' && 
+      table.tournamentTypes?.some(type => 
+        ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
+      );
+  };
   
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -385,9 +457,9 @@ export default function LiveSession() {
                             <Button 
                               variant="destructive" 
                               className="flex-1"
-                              onClick={() => handleEndTable(table.id, 0)}
+                              onClick={() => handleInitiateEndTable(table.id)}
                             >
-                              <Icon name="x" className="mr-1 h-4 w-4" /> End Table
+                              <Icon name="CircleStop" className="mr-1 h-4 w-4" /> End Table
                             </Button>
                           </div>
                         </div>
@@ -570,6 +642,165 @@ export default function LiveSession() {
               Yes
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* End Table Dialog */}
+      <Dialog open={showEndTableDialog} onOpenChange={setShowEndTableDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>End Table</DialogTitle>
+            <DialogDescription>
+              Enter your cash out amount to complete this table.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="tableCashout" className="block text-sm font-medium mb-1">
+                  Cash Out Amount
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500">$</span>
+                  </div>
+                  <input
+                    id="tableCashout"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    placeholder="0.00"
+                    value={cashOutAmount}
+                    onChange={(e) => setCashOutAmount(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.format === 'Tournament' && (
+                <div>
+                  <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
+                    Final Position (Optional)
+                  </label>
+                  <input
+                    id="finalPosition"
+                    type="number"
+                    min="1"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    placeholder="Enter your final position (e.g. 3 for 3rd)"
+                    value={finalPosition}
+                    onChange={(e) => setFinalPosition(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId) && 
+               isBountyTournament(session.tables.find(t => t.id === pendingEndTableId)!) && (
+                <>
+                  <div>
+                    <label htmlFor="bountyCount" className="block text-sm font-medium mb-1">
+                      Players Eliminated (Optional)
+                    </label>
+                    <input
+                      id="bountyCount"
+                      type="number"
+                      min="0"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      placeholder="Number of players eliminated"
+                      value={bountyCount}
+                      onChange={(e) => setBountyCount(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="bountyAmount" className="block text-sm font-medium mb-1">
+                      Total Bounty Collected (Optional)
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500">$</span>
+                      </div>
+                      <input
+                        id="bountyAmount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                        placeholder="0.00"
+                        value={bountyAmount}
+                        onChange={(e) => setBountyAmount(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              <div className="mb-6">
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm">Profit/Loss:</span>
+                  <span className={`text-sm font-bold ${
+                    cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.buyIn && 
+                    parseFloat(cashOutAmount) >= (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)
+                      ? 'text-green-600' 
+                      : cashOutAmount 
+                        ? 'text-red-600' 
+                        : 'text-gray-500'
+                  }`}>
+                    {cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)
+                      ? `$${(parseFloat(cashOutAmount) - (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)).toFixed(2)}` 
+                      : '$0.00'}
+                  </span>
+                </div>
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  {cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId) && (
+                    <div 
+                      className={`h-full ${
+                        parseFloat(cashOutAmount) >= (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)
+                          ? 'bg-green-500' 
+                          : 'bg-red-500'
+                      }`}
+                      style={{ 
+                        width: cashOutAmount 
+                          ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)) / 
+                              (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 1) * 100), 100)}%` 
+                          : '0%' 
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <label htmlFor="tableNotes" className="block text-sm font-medium mb-1">
+                  Notes (Optional)
+                </label>
+                <Textarea
+                  id="tableNotes"
+                  className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                  placeholder="Add any notes about this table..."
+                  value={tableNotes}
+                  onChange={(e) => setTableNotes(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <DialogFooter className="mt-6">
+              <Button
+                variant="outline"
+                onClick={handleCancelEndTable}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmEndTable}
+                disabled={!cashOutAmount}
+                className="bg-poker-gold hover:bg-poker-darkGold text-white"
+              >
+                End Table
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
       
