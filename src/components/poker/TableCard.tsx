@@ -114,7 +114,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
 
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-gray-600">Buy-in:</span>
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
