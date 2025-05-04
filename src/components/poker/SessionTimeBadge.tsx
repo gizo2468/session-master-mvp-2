@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Timer } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 type BadgeVariant = 'timeStarted' | 'timeDuration' | 'timeEnded';
@@ -14,10 +14,10 @@ interface SessionTimeBadgeProps {
 }
 
 const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, variant, type }) => {
-  // Only show icon for the duration badge as requested
+  // Get badge icon for the duration badge
   const getBadgeIcon = () => {
     if (type === 'duration') {
-      return <Timer className="w-4 h-4 mr-2 flex-shrink-0" />;
+      return <Clock className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />;
     }
     return null;
   };
@@ -26,7 +26,12 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
   const formatDisplayValue = () => {
     // Handle different types of values
     if (type === 'duration') {
-      return value; // Duration is already compact
+      return (
+        <div className="flex items-center justify-center w-full">
+          {getBadgeIcon()}
+          <span>{value}</span>
+        </div>
+      );
     }
     
     // For dates, format them more cleanly
@@ -57,7 +62,6 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
         </div>
         <div className="w-full flex items-center justify-center py-3">
           <div className="flex items-center justify-center w-full px-3">
-            {getBadgeIcon()}
             <div className="font-medium text-sm w-full text-center">
               {formatDisplayValue()}
             </div>
