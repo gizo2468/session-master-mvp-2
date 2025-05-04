@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -97,44 +98,63 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
             )}
           </div>
           <div className="text-sm text-gray-600 text-right">
-            <p>{formattedStartTime}</p>
-            <p>{formattedDate}</p>
+            <p>{dateFormat(new Date(table.startTime), 'MMM d, yyyy')}</p>
           </div>
         </div>
 
-        {/* Display timer with badge styling */}
-        {table.isActive && (
-          <div className="mt-2 mb-3">
-            <TableTimerDisplay 
-              startTime={table.startTime} 
-              className="text-sm font-semibold" 
-            />
+        {/* Redesigned Start, Duration row with better visual balance */}
+        <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 pb-4">
+          <div className="flex flex-1 justify-center items-center">
+            <div className="text-center">
+              <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
+              <div className="font-medium">{dateFormat(new Date(table.startTime), 'h:mm a')}</div>
+            </div>
           </div>
-        )}
+          
+          <div className="flex-1 flex justify-center items-center border-x border-gray-100 px-4">
+            <div className="text-center">
+              <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
+              <TableTimerDisplay 
+                startTime={table.startTime}
+                endTime={table.endTime}
+                isActive={table.isActive}
+                className="flex justify-center"
+              />
+            </div>
+          </div>
+          
+          {!table.isActive && table.endTime && (
+            <div className="flex-1 flex justify-center items-center">
+              <div className="text-center">
+                <div className="text-gray-500 font-medium text-xs uppercase mb-1">End</div>
+                <div className="font-medium">{dateFormat(new Date(table.endTime), 'h:mm a')}</div>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
-                <span className="font-bold text-xl">
-                  ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
-                </span>
-              </div>
-              {(() => {
-                const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
-                const addOnTotal = table.addOns ? table.addOns : 0;
-                const extra = rebuyTotal + addOnTotal;
-                return extra > 0 ? (
-                  <div className="text-right">
-                    <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
-                    <span className="font-bold text-xl text-amber-600">
-                      +${extra.toFixed(2)}
-                    </span>
-                  </div>
-                ) : null;
-              })()}
+          {/* Styled Buy-in and Rebuy section to match active tables in Live Session */}
+          <div className="flex items-center gap-4 mb-4">
+            <div className="text-right">
+              <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
+              <span className="font-bold text-2xl">
+                ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+              </span>
             </div>
+            {(() => {
+              const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
+              const addOnTotal = table.addOns ? table.addOns : 0;
+              const extra = rebuyTotal + addOnTotal;
+              return extra > 0 ? (
+                <div className="text-right">
+                  <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
+                  <span className="font-bold text-2xl text-amber-600">
+                    +${extra.toFixed(2)}
+                  </span>
+                </div>
+              ) : null;
+            })()}
           </div>
           
           {table.format === 'Cash' && (
@@ -186,7 +206,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
         ) : (
           <div className="mt-2 space-y-2">
             {table.format === 'Tournament' && (
-              <div className="space-y-1 mt-2 text-sm">
+              <div className="space-y-1 mt-2 text-xs">
                 {table.format === 'Tournament' && table.startingBB && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Starting BBs:</span>
@@ -215,24 +235,34 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                     <span className="font-medium text-poker-gold">${table.bountyAmount.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Total Cash Out:</span>
-                  <span className="font-semibold text-lg text-poker-gold">
-                    ${(table.cashOut ?? 0).toFixed(2)}
-                  </span>
-                </div>
                 {table.finalPosition && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Final Position:</span>
                     <span className="font-medium">{table.finalPosition}th</span>
                   </div>
                 )}
+                
+                {/* Repositioned Total Cash Out to be more prominent */}
+                {table.cashOut !== undefined && (
+                  <div className="flex flex-col items-center justify-center mt-4 mb-2">
+                    <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL CASH OUT</span>
+                    <span className="font-bold text-2xl text-poker-gold">
+                      ${(table.cashOut ?? 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
-            <div className="text-sm text-gray-600 mt-1">
-              {dateFormat(new Date(table.startTime), 'MMM d, h:mm a')}
-              {table.endTime && ` - ${dateFormat(new Date(table.endTime), 'h:mm a')}`}
-            </div>
+            
+            {/* Display Cash Game closed table cash out */}
+            {table.format === 'Cash' && table.cashOut !== undefined && (
+              <div className="flex flex-col items-center justify-center mt-4 mb-2">
+                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL CASH OUT</span>
+                <span className="font-bold text-2xl text-poker-gold">
+                  ${(table.cashOut ?? 0).toFixed(2)}
+                </span>
+              </div>
+            )}
           </div>
         )}
       </Card>

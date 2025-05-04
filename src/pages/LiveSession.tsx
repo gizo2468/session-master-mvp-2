@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -256,12 +257,85 @@ export default function LiveSession() {
                     <h4 className="text-lg font-bold mb-2">Active Tables</h4>
                     <div className="space-y-3">
                       {activeTables.map((table) => (
-                        <TableCard 
-                          key={table.id} 
-                          table={table} 
-                          onEndTable={handleEndTable}
-                          onAddRebuy={handleAddTableRebuy}
-                        />
+                        <div key={table.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h3 className="font-bold text-lg">{table.location}</h3>
+                              <p className="text-sm text-gray-600">
+                                {table.gameType} • {table.format}
+                              </p>
+                              {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
+                                <span className="inline-block mt-1 px-2 py-0.5 bg-poker-gold/10 text-poker-gold text-xs rounded-full">
+                                  {table.tournamentTypes[0]}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Redesigned Start, Duration row with better visual balance */}
+                          <div className="flex justify-center items-center my-4 text-sm border-b border-gray-100 pb-4">
+                            <div className="flex flex-1 justify-center items-center">
+                              <div className="text-center">
+                                <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
+                                <div className="font-medium">{format(new Date(table.startTime), 'MMM d, h:mm a')}</div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex-1 flex justify-center items-center border-x border-gray-100 px-4">
+                              <div className="text-center">
+                                <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
+                                <TableTimerDisplay 
+                                  startTime={table.startTime}
+                                  isActive={table.isActive}
+                                  className="flex justify-center"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Styled Buy-in and Rebuy section to match active tables in Live Session */}
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="text-right">
+                              <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
+                              <span className="font-bold text-2xl">
+                                ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+                              </span>
+                            </div>
+                            {(() => {
+                              const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
+                              const addOnTotal = table.addOns ? table.addOns : 0;
+                              const extra = rebuyTotal + addOnTotal;
+                              return extra > 0 ? (
+                                <div className="text-right">
+                                  <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
+                                  <span className="font-bold text-2xl text-amber-600">
+                                    +${extra.toFixed(2)}
+                                  </span>
+                                </div>
+                              ) : null;
+                            })()}
+                          </div>
+                          
+                          {/* Table controls */}
+                          <div className="mt-4 flex gap-2 justify-between">
+                            <Button 
+                              variant="outline" 
+                              className="flex-1"
+                              onClick={() => handleAddTableRebuy(table.id, table.format === 'Tournament' ? 
+                                (table.tournamentBuyIn || table.initialBuyIn || table.buyIn) : 
+                                0)}
+                            >
+                              <Icon name="Plus" className="mr-1 h-4 w-4" /> Rebuy
+                            </Button>
+                            <Button 
+                              variant="destructive" 
+                              className="flex-1"
+                              onClick={() => handleEndTable(table.id, 0)}
+                            >
+                              <Icon name="CircleStop" className="mr-1 h-4 w-4" /> End Table
+                            </Button>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -288,91 +362,111 @@ export default function LiveSession() {
                               </div>
                             )}
                           </div>
-                          <div className="mt-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600">Buy-in:</span>
-                              <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                  <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
-                                  <span className="font-bold text-xl">
-                                    ${(table.initialBuyIn ?? table.buyIn).toFixed(2)}
-                                  </span>
-                                </div>
-                                {(() => {
-                                  const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
-                                  const addOnTotal = table.addOns ? table.addOns : 0;
-                                  const extra = rebuyTotal + addOnTotal;
-                                  return extra > 0 ? (
-                                    <div className="text-right">
-                                      <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
-                                      <span className="font-bold text-xl text-amber-600">
-                                        +${extra.toFixed(2)}
-                                      </span>
-                                    </div>
-                                  ) : null;
-                                })()}
+                          
+                          {/* Redesigned Start, Duration, End row with better visual balance */}
+                          <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 pb-4">
+                            <div className="flex flex-1 justify-center items-center">
+                              <div className="text-center">
+                                <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
+                                <div className="font-medium">{format(new Date(table.startTime), 'MMM d, h:mm a')}</div>
                               </div>
                             </div>
+                            
+                            {table.startTime && table.endTime && (
+                              <div className="flex-1 flex justify-center items-center border-x border-gray-100 px-4">
+                                <div className="text-center">
+                                  <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
+                                  <TableTimerDisplay 
+                                    startTime={table.startTime} 
+                                    endTime={table.endTime}
+                                    isActive={false}
+                                    className="flex justify-center"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            
+                            {table.endTime && (
+                              <div className="flex-1 flex justify-center items-center">
+                                <div className="text-center">
+                                  <div className="text-gray-500 font-medium text-xs uppercase mb-1">End</div>
+                                  <div className="font-medium">{format(new Date(table.endTime), 'MMM d, h:mm a')}</div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           
-                          {table.startTime && table.endTime && (
-                            <div className="flex items-center text-sm mt-2">
-                              <span className="text-gray-600 font-medium mr-2">Duration:</span>
-                              <TableTimerDisplay 
-                                startTime={table.startTime} 
-                                endTime={table.endTime}
-                                isActive={false}
-                              />
+                          {/* Styled Buy-in and Rebuy section to match active tables in Live Session */}
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="text-right">
+                              <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
+                              <span className="font-bold text-2xl">
+                                ${(table.initialBuyIn ?? table.buyIn).toFixed(2)}
+                              </span>
                             </div>
-                          )}
+                            {(() => {
+                              const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
+                              const addOnTotal = table.addOns ? table.addOns : 0;
+                              const extra = rebuyTotal + addOnTotal;
+                              return extra > 0 ? (
+                                <div className="text-right">
+                                  <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
+                                  <span className="font-bold text-2xl text-amber-600">
+                                    +${extra.toFixed(2)}
+                                  </span>
+                                </div>
+                              ) : null;
+                            })()}
+                          </div>
                           
-                          {table.format === 'Tournament' && table.startingBB && (
-                            <div className="flex items-center text-sm mt-2">
-                              <span className="text-gray-600 font-medium mr-2">Starting BBs:</span>
-                              <span className="font-semibold">{table.startingBB}BB</span>
-                            </div>
-                          )}
+                          {/* Tournament-specific fields */}
+                          <div className="text-xs space-y-1 mb-4">
+                            {table.format === 'Tournament' && table.startingBB && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Starting BBs:</span>
+                                <span className="font-medium">{table.startingBB}BB</span>
+                              </div>
+                            )}
+                            
+                            {table.tournamentTypes && table.tournamentTypes.length > 0 && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Tournament Type:</span>
+                                <span className="inline-flex px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                                  {table.tournamentTypes[0]}
+                                </span>
+                              </div>
+                            )}
+                            
+                            {table.format === 'Tournament' && 
+                            table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
+                            table.bountyCount !== undefined && 
+                            table.bountyCount > 0 && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Players Eliminated:</span>
+                                <span className="font-medium">{table.bountyCount}</span>
+                              </div>
+                            )}
+                            
+                            {table.format === 'Tournament' && 
+                            table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
+                            table.bountyAmount !== undefined && 
+                            table.bountyAmount > 0 && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Total Bounty Collected:</span>
+                                <span className="font-medium text-poker-gold">${table.bountyAmount.toFixed(2)}</span>
+                              </div>
+                            )}
+                          </div>
                           
-                          {table.tournamentTypes && table.tournamentTypes.length > 0 && (
-                            <div className="flex items-center text-sm mt-2">
-                              <span className="text-gray-600 font-medium mr-2">Tournament Type:</span>
-                              <span className="inline-flex px-2 py-0.5 bg-gray-100 rounded-full text-xs">
-                                {table.tournamentTypes[0]}
+                          {/* Repositioned Total Cash Out to be more prominent */}
+                          {table.cashOut !== undefined && (
+                            <div className="flex flex-col items-center justify-center mt-4 mb-2">
+                              <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL CASH OUT</span>
+                              <span className="font-bold text-2xl text-poker-gold">
+                                ${(table.cashOut ?? 0).toFixed(2)}
                               </span>
                             </div>
                           )}
-                          
-                          {table.format === 'Tournament' && 
-                           table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
-                           table.bountyCount !== undefined && 
-                           table.bountyCount > 0 && (
-                            <div className="flex items-center text-sm mt-2">
-                              <span className="text-gray-600 font-medium mr-2">Players Eliminated:</span>
-                              <span className="font-semibold">{table.bountyCount}</span>
-                            </div>
-                          )}
-                          
-                          {table.format === 'Tournament' && 
-                           table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
-                           table.bountyAmount !== undefined && 
-                           table.bountyAmount > 0 && (
-                            <div className="flex items-center text-sm mt-2">
-                              <span className="text-gray-600 font-medium mr-2">Total Bounty Collected:</span>
-                              <span className="font-semibold text-poker-gold">${table.bountyAmount.toFixed(2)}</span>
-                            </div>
-                          )}
-                          
-                          <div className="flex items-center text-sm mt-2">
-                            <span className="text-gray-600 font-medium mr-2">Cash Out:</span>
-                            <span className="font-semibold text-lg text-poker-gold">
-                              ${(table.cashOut !== undefined ? table.cashOut : 0).toFixed(2)}
-                            </span>
-                          </div>
-                          
-                          <div className="text-sm text-gray-600 mt-1">
-                            {format(new Date(table.startTime), 'MMM d, h:mm a')}
-                            {table.endTime && ` - ${format(new Date(table.endTime), 'h:mm a')}`}
-                          </div>
                         </div>
                       ))}
                     </div>
