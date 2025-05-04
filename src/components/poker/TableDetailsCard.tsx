@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Separator } from '@/components/ui/separator';
+import TableTimerDisplay from './TableTimerDisplay';
 
 interface TableDetailsCardProps {
   table: TableData;
@@ -43,12 +44,25 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Aligned Start and End Times horizontally */}
+        {/* Aligned Start and End Times horizontally with Duration Timer */}
         <div className="flex justify-between items-center mb-4 text-sm">
           <div>
             <span className="text-gray-500">Start:</span>
             <div>{formattedStart}</div>
           </div>
+          
+          {/* Duration Display between Start and End */}
+          {table.startTime && table.endTime && (
+            <div className="flex items-center">
+              <TableTimerDisplay 
+                startTime={new Date(table.startTime)} 
+                endTime={new Date(table.endTime)}
+                isActive={false}
+                className="mx-2"
+              />
+            </div>
+          )}
+          
           {formattedEnd && (
             <div>
               <span className="text-gray-500">End:</span>
