@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -17,6 +16,14 @@ import AddTableForm from '@/components/poker/AddTableForm';
 import { format } from 'date-fns';
 import TableTimerDisplay from '@/components/poker/TableTimerDisplay';
 import { Badge } from '@/components/ui/badge';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
 
 export default function LiveSession() {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +44,11 @@ export default function LiveSession() {
   const [showEndSessionSheet, setShowEndSessionSheet] = useState(false);
   const [sessionNotes, setSessionNotes] = useState('');
   const [showAddTableForm, setShowAddTableForm] = useState(false);
+  
+  // Add states for rebuy confirmation dialog
+  const [showRebuyConfirmDialog, setShowRebuyConfirmDialog] = useState(false);
+  const [pendingRebuyTableId, setPendingRebuyTableId] = useState<string | null>(null);
+  const [pendingRebuyAmount, setPendingRebuyAmount] = useState(0);
   
   const session = id 
     ? sessions.find(s => s.id === id && s.isActive) 
@@ -92,6 +104,42 @@ export default function LiveSession() {
         variant: "destructive"
       });
     }
+  };
+  
+  const handleInitiateRebuy = (tableId: string, amount: number) => {
+    setPendingRebuyTableId(tableId);
+    setPendingRebuyAmount(amount);
+    setShowRebuyConfirmDialog(true);
+  };
+  
+  const handleConfirmRebuy = () => {
+    if (!session || !pendingRebuyTableId) return;
+    
+    try {
+      addTableRebuy(session.id, pendingRebuyTableId, pendingRebuyAmount);
+      toast({
+        title: "Rebuy Added",
+        description: `$${pendingRebuyAmount.toFixed(2)} rebuy has been added to the table.`
+      });
+    } catch (error) {
+      console.error("Error adding table rebuy:", error);
+      toast({
+        title: "Error Adding Rebuy",
+        description: "There was a problem adding the rebuy. Please try again.",
+        variant: "destructive"
+      });
+    }
+    
+    // Reset states
+    setShowRebuyConfirmDialog(false);
+    setPendingRebuyTableId(null);
+    setPendingRebuyAmount(0);
+  };
+  
+  const handleCancelRebuy = () => {
+    setShowRebuyConfirmDialog(false);
+    setPendingRebuyTableId(null);
+    setPendingRebuyAmount(0);
   };
   
   const handleAddRebuy = (amount: number) => {
@@ -240,7 +288,7 @@ export default function LiveSession() {
                 className="bg-poker-gold hover:bg-poker-darkGold text-white"
                 size="sm"
               >
-                <Icon name="Plus" className="h-4 w-4 mr-2" /> 
+                <Icon name="plus" className="h-4 w-4 mr-2" /> 
                 Add Table
               </Button>
             </div>
@@ -277,7 +325,7 @@ export default function LiveSession() {
                             <div className="flex flex-1 justify-center items-center">
                               <div className="text-center">
                                 <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
-                                <div className="font-medium">{format(new Date(table.startTime), 'MMM d, h:mm a')}</div>
+                                <div className="font-medium">{format(new Date(table.startTime), 'h:mm a')}</div>
                               </div>
                             </div>
                             
@@ -293,7 +341,7 @@ export default function LiveSession() {
                             </div>
                           </div>
                           
-                          {/* Styled Buy-in and Rebuy section to match active tables in Live Session */}
+                          {/* Styled Buy-in and Rebuy section */}
                           <div className="flex items-center gap-4 mb-4">
                             <div className="text-right">
                               <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
@@ -321,18 +369,18 @@ export default function LiveSession() {
                             <Button 
                               variant="outline" 
                               className="flex-1"
-                              onClick={() => handleAddTableRebuy(table.id, table.format === 'Tournament' ? 
+                              onClick={() => handleInitiateRebuy(table.id, table.format === 'Tournament' ? 
                                 (table.tournamentBuyIn || table.initialBuyIn || table.buyIn) : 
                                 0)}
                             >
-                              <Icon name="Plus" className="mr-1 h-4 w-4" /> Rebuy
+                              <Icon name="plus" className="mr-1 h-4 w-4" /> Rebuy
                             </Button>
                             <Button 
                               variant="destructive" 
                               className="flex-1"
                               onClick={() => handleEndTable(table.id, 0)}
                             >
-                              <Icon name="CircleStop" className="mr-1 h-4 w-4" /> End Table
+                              <Icon name="x" className="mr-1 h-4 w-4" /> End Table
                             </Button>
                           </div>
                         </div>
@@ -396,7 +444,7 @@ export default function LiveSession() {
                             )}
                           </div>
                           
-                          {/* Styled Buy-in and Rebuy section to match active tables in Live Session */}
+                          {/* Styled Buy-in and Rebuy section */}
                           <div className="flex items-center gap-4 mb-4">
                             <div className="text-right">
                               <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
@@ -484,6 +532,33 @@ export default function LiveSession() {
           </div>
         </div>
       </main>
+      
+      {/* Rebuy Confirmation Dialog */}
+      <Dialog open={showRebuyConfirmDialog} onOpenChange={setShowRebuyConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Rebuy</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to add a rebuy to this table?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter className="sm:justify-center gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={handleCancelRebuy}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-poker-gold hover:bg-poker-darkGold text-white"
+              onClick={handleConfirmRebuy}
+            >
+              Yes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <AddTableForm
         open={showAddTableForm}

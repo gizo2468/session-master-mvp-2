@@ -14,6 +14,14 @@ import TournamentControlsCard from '@/components/poker/TournamentControlsCard';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import TableTimerDisplay from '@/components/poker/TableTimerDisplay';
 import { Badge } from '@/components/ui/badge';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle 
+} from '@/components/ui/dialog';
 
 export default function ConfirmSession() {
   const navigate = useNavigate();
@@ -22,9 +30,12 @@ export default function ConfirmSession() {
   const { toast } = useToast();
   
   const [showEndSessionSheet, setShowEndSessionSheet] = useState(false);
-  
   const [cashOutAmount, setCashOutAmount] = useState('');
   const [sessionNotes, setSessionNotes] = useState('');
+  
+  // Add states for rebuy confirmation dialog
+  const [showRebuyConfirmDialog, setShowRebuyConfirmDialog] = useState(false);
+  const [rebuyAmount, setRebuyAmount] = useState(0);
   
   useEffect(() => {
     if (!activeSession) {
@@ -47,14 +58,20 @@ export default function ConfirmSession() {
     navigate('/');
   };
   
-  const handleAddRebuy = (amount: number) => {
+  const handleInitiateRebuy = (amount: number) => {
+    setRebuyAmount(amount);
+    setShowRebuyConfirmDialog(true);
+  };
+  
+  const handleConfirmRebuy = () => {
     if (!activeSession) return;
     
-    addRebuy(activeSession.id, amount);
+    addRebuy(activeSession.id, rebuyAmount);
     toast({
       title: "Rebuy Added",
-      description: `$${amount.toFixed(2)} rebuy has been added to your session.`
+      description: `$${rebuyAmount.toFixed(2)} rebuy has been added to your session.`
     });
+    setShowRebuyConfirmDialog(false);
   };
   
   if (!activeSession) {
@@ -84,7 +101,7 @@ export default function ConfirmSession() {
               variant="ghost"
               className="text-poker-feltGreen p-0"
             >
-              <Icon name="ArrowLeft" size={16} className="mr-1" />
+              <Icon name="arrow-left" size={16} className="mr-1" />
               <span>Home</span>
             </Button>
             <h1 className="text-xl font-bold">Live Session</h1>
@@ -111,7 +128,7 @@ export default function ConfirmSession() {
           {/* Controls for both Cash Game and Tournament */}
           <TournamentControlsCard 
             session={activeSession}
-            onAddRebuy={handleAddRebuy}
+            onAddRebuy={handleInitiateRebuy}
           />
           
           {/* Hand Management */}
@@ -129,52 +146,70 @@ export default function ConfirmSession() {
               <div className="space-y-3">
                 {activeSession.tables.map((table) => (
                   <div key={table.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-semibold">{table.location}</h4>
-                        <p className="text-sm text-gray-600">
-                          {table.gameType} • {table.format} • ${table.smallBlind}/{table.bigBlind}
-                        </p>
-                        
-                        {/* Add timer display with badge styling */}
-                        <div className="flex items-center mt-2">
+                    {/* Improved header layout */}
+                    <div className="text-center mb-2">
+                      <h4 className="font-semibold">{table.location}</h4>
+                      <div className="flex items-center justify-center gap-1 text-sm text-gray-600">
+                        <span>{table.gameType}</span>
+                        <span>•</span> 
+                        <span>{table.format}</span>
+                      </div>
+                      {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-poker-gold/10 text-poker-gold text-xs rounded-full">
+                          {table.tournamentTypes[0]}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Redesigned Start, Duration row with better visual balance */}
+                    <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 pb-4">
+                      <div className="flex flex-1 justify-center items-center">
+                        <div className="text-center">
+                          <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
+                          <div className="font-medium">{new Date(table.startTime).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex-1 flex justify-center items-center border-x border-gray-100 px-4">
+                        <div className="text-center">
+                          <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
                           <TableTimerDisplay 
                             startTime={table.startTime}
                             endTime={table.endTime} 
                             isActive={table.isActive}
+                            className="flex justify-center"
                           />
                         </div>
                       </div>
-                      
+                    </div>
+                    
+                    {/* Styled Buy-in and Rebuy section */}
+                    <div className="flex items-center gap-4 justify-center">
                       <div className="text-right">
-                        <div className="flex items-center gap-4 justify-end">
+                        <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
+                        <span className="font-bold text-xl">
+                          ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+                        </span>
+                      </div>
+                      {(() => {
+                        const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
+                        const addOnTotal = table.addOns ? table.addOns : 0;
+                        const extra = rebuyTotal + addOnTotal;
+                        return extra > 0 ? (
                           <div className="text-right">
-                            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
-                            <span className="font-bold text-xl">
-                              ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+                            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
+                            <span className="font-bold text-xl text-amber-600">
+                              +${extra.toFixed(2)}
                             </span>
                           </div>
-                          {(() => {
-                            const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
-                            const addOnTotal = table.addOns ? table.addOns : 0;
-                            const extra = rebuyTotal + addOnTotal;
-                            return extra > 0 ? (
-                              <div className="text-right">
-                                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
-                                <span className="font-bold text-xl text-amber-600">
-                                  +${extra.toFixed(2)}
-                                </span>
-                              </div>
-                            ) : null;
-                          })()}
-                        </div>
-                        {!table.isActive && table.cashOut !== undefined && (
-                          <div className={table.cashOut > table.buyIn ? "text-green-600" : "text-red-600"}>
-                            {table.cashOut > table.buyIn ? "+" : ""}${(table.cashOut - table.buyIn).toFixed(2)}
-                          </div>
-                        )}
-                      </div>
+                        ) : null;
+                      })()}
                     </div>
+                    {!table.isActive && table.cashOut !== undefined && (
+                      <div className={table.cashOut > table.buyIn ? "text-green-600" : "text-red-600"}>
+                        {table.cashOut > table.buyIn ? "+" : ""}${(table.cashOut - table.buyIn).toFixed(2)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -182,6 +217,33 @@ export default function ConfirmSession() {
           )}
         </div>
       </main>
+      
+      {/* Rebuy Confirmation Dialog */}
+      <Dialog open={showRebuyConfirmDialog} onOpenChange={setShowRebuyConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Rebuy</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to add a rebuy to this session?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter className="sm:justify-center gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowRebuyConfirmDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-poker-gold hover:bg-poker-darkGold text-white"
+              onClick={handleConfirmRebuy}
+            >
+              Yes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {/* End Session Sheet */}
       {showEndSessionSheet && (

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -85,20 +84,21 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
   return (
     <>
       <Card className="bg-white p-4 mb-4">
-        <div className="flex justify-between items-start mb-2">
-          <div>
-            <h3 className="font-bold text-lg">{table.location}</h3>
-            <p className="text-sm text-gray-600">
-              {table.gameType} • {table.format}
-            </p>
-            {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
-              <span className="inline-block mt-1 px-2 py-0.5 bg-poker-gold/10 text-poker-gold text-xs rounded-full">
-                {table.tournamentTypes[0]}
-              </span>
-            )}
+        {/* Improved header layout */}
+        <div className="text-center mb-2">
+          <h3 className="font-bold text-lg">{table.location}</h3>
+          <div className="flex items-center justify-center gap-1 text-sm text-gray-600">
+            <span>{table.gameType}</span>
+            <span>•</span> 
+            <span>{table.format}</span>
           </div>
-          <div className="text-sm text-gray-600 text-right">
-            <p>{dateFormat(new Date(table.startTime), 'MMM d, yyyy')}</p>
+          {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
+            <span className="inline-block mt-1 px-2 py-0.5 bg-poker-gold/10 text-poker-gold text-xs rounded-full">
+              {table.tournamentTypes[0]}
+            </span>
+          )}
+          <div className="text-sm text-gray-500 mt-1">
+            {dateFormat(new Date(table.startTime), 'MMM d, yyyy')}
           </div>
         </div>
 
