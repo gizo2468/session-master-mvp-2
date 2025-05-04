@@ -27,6 +27,10 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   // Card ranks in descending order (A to 2)
   const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
   
+  // Split ranks into two rows for better layout
+  const firstRowRanks = ranks.slice(0, 7); // A, K, Q, J, T, 9, 8
+  const secondRowRanks = ranks.slice(7);   // 7, 6, 5, 4, 3, 2
+  
   // Card suits with display symbols and colors
   const suits = [
     { symbol: 's', display: '♠', color: 'text-black' },
@@ -170,44 +174,83 @@ const CardSelector: React.FC<CardSelectorProps> = ({
       
       {/* Card selection keyboard layout */}
       <div className="bg-gray-100 rounded-lg p-3">
-        {/* Card ranks section - single row */}
-        <div className="grid grid-cols-13 gap-1.5 mb-5">
-          {ranks.map((rank) => (
-            <TooltipProvider key={rank}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={() => handleRankSelect(rank)}
-                    disabled={isMaxReached || suits.every(suit => isCardSelected(rank, suit.symbol))}
-                    className={cn(
-                      "py-3.5 rounded-md font-bold text-lg transition-all",
-                      currentSelection.rank === rank 
-                        ? "bg-poker-gold text-white shadow-md" 
-                        : "bg-gray-300 hover:bg-gray-200 text-gray-800",
-                      (isMaxReached || suits.every(suit => isCardSelected(rank, suit.symbol))) && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    {rank}
-                  </button>
-                </TooltipTrigger>
-                {isMaxReached && (
-                  <TooltipContent>
-                    <p>Maximum cards reached</p>
-                  </TooltipContent>
-                )}
-                {!isMaxReached && suits.every(suit => isCardSelected(rank, suit.symbol)) && (
-                  <TooltipContent>
-                    <p>All {rank} cards are already selected</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
-          ))}
+        {/* Card ranks section - two rows for better spacing */}
+        <div className="space-y-1.5 mb-3">
+          {/* First row of ranks */}
+          <div className="grid grid-cols-7 gap-1.5">
+            {firstRowRanks.map((rank) => (
+              <TooltipProvider key={rank}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => handleRankSelect(rank)}
+                      disabled={isMaxReached || suits.every(suit => isCardSelected(rank, suit.symbol))}
+                      className={cn(
+                        "py-2.5 rounded-md font-bold text-lg transition-all",
+                        currentSelection.rank === rank 
+                          ? "bg-poker-gold text-white shadow-md" 
+                          : "bg-gray-300 hover:bg-gray-200 text-gray-800",
+                        (isMaxReached || suits.every(suit => isCardSelected(rank, suit.symbol))) && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      {rank}
+                    </button>
+                  </TooltipTrigger>
+                  {isMaxReached && (
+                    <TooltipContent>
+                      <p>Maximum cards reached</p>
+                    </TooltipContent>
+                  )}
+                  {!isMaxReached && suits.every(suit => isCardSelected(rank, suit.symbol)) && (
+                    <TooltipContent>
+                      <p>All {rank} cards are already selected</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+          </div>
+          
+          {/* Second row of ranks */}
+          <div className="grid grid-cols-6 gap-1.5">
+            {secondRowRanks.map((rank) => (
+              <TooltipProvider key={rank}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => handleRankSelect(rank)}
+                      disabled={isMaxReached || suits.every(suit => isCardSelected(rank, suit.symbol))}
+                      className={cn(
+                        "py-2.5 rounded-md font-bold text-lg transition-all",
+                        currentSelection.rank === rank 
+                          ? "bg-poker-gold text-white shadow-md" 
+                          : "bg-gray-300 hover:bg-gray-200 text-gray-800",
+                        (isMaxReached || suits.every(suit => isCardSelected(rank, suit.symbol))) && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      {rank}
+                    </button>
+                  </TooltipTrigger>
+                  {isMaxReached && (
+                    <TooltipContent>
+                      <p>Maximum cards reached</p>
+                    </TooltipContent>
+                  )}
+                  {!isMaxReached && suits.every(suit => isCardSelected(rank, suit.symbol)) && (
+                    <TooltipContent>
+                      <p>All {rank} cards are already selected</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+          </div>
         </div>
         
-        {/* Card suits section - single row */}
-        <div className="grid grid-cols-4 gap-4">
+        {/* Card suits section - single row with smaller icons */}
+        <div className="grid grid-cols-4 gap-2">
           {suits.map((suit) => (
             <TooltipProvider key={suit.symbol}>
               <Tooltip>
@@ -217,7 +260,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                     onClick={() => handleSuitSelect(suit.symbol)}
                     disabled={isMaxReached || ranks.every(rank => isCardSelected(rank, suit.symbol))}
                     className={cn(
-                      "py-2.5 rounded-md text-xl transition-all flex items-center justify-center",
+                      "py-1.5 rounded-md text-lg transition-all flex items-center justify-center",
                       currentSelection.suit === suit.symbol
                         ? "bg-poker-gold text-white shadow-md" 
                         : "bg-gray-300 hover:bg-gray-200",
