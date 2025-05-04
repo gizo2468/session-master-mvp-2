@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableData } from '@/types/poker';
@@ -6,7 +7,6 @@ import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Separator } from '@/components/ui/separator';
 import TableTimerDisplay from './TableTimerDisplay';
-import SessionTimeBadge from './SessionTimeBadge';
 
 interface TableDetailsCardProps {
   table: TableData;
@@ -47,33 +47,32 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
         {/* Redesigned Start, Duration, End row with better visual balance */}
         <div className="flex justify-center items-center mb-6 text-sm border-b border-gray-100 pb-4">
           <div className="flex flex-1 justify-center items-center">
-            <SessionTimeBadge
-              title="Started"
-              value={formattedStart}
-              variant="timeStarted"
-              type="started"
-            />
+            <div className="text-center">
+              <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
+              <div className="font-medium">{formattedStart}</div>
+            </div>
           </div>
           
           {table.startTime && table.endTime && (
             <div className="flex-1 flex justify-center items-center border-x border-gray-100 px-4">
-              <SessionTimeBadge
-                title="Duration"
-                value={calculateDuration(new Date(table.startTime), new Date(table.endTime))}
-                variant="timeDuration"
-                type="duration"
-              />
+              <div className="text-center">
+                <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
+                <TableTimerDisplay 
+                  startTime={new Date(table.startTime)} 
+                  endTime={new Date(table.endTime)}
+                  isActive={false}
+                  className="flex justify-center"
+                />
+              </div>
             </div>
           )}
           
           {formattedEnd && (
             <div className="flex-1 flex justify-center items-center">
-              <SessionTimeBadge
-                title="Ended"
-                value={formattedEnd}
-                variant="timeEnded"
-                type="ended"
-              />
+              <div className="text-center">
+                <div className="text-gray-500 font-medium text-xs uppercase mb-1">End</div>
+                <div className="font-medium">{formattedEnd}</div>
+              </div>
             </div>
           )}
         </div>
@@ -161,18 +160,6 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
       </CardContent>
     </Card>
   );
-};
-
-// Helper function to calculate duration
-const calculateDuration = (start: Date, end: Date): string => {
-  const diffMs = end.getTime() - start.getTime();
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  }
-  return `${minutes}m`;
 };
 
 export default TableDetailsCard;
