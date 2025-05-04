@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { VariantProps, cva } from "class-variance-authority"
@@ -14,6 +15,10 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        // New variants for session time badges
+        timeStarted: "border-transparent bg-poker-cream text-poker-black rounded-xl",
+        timeDuration: "border-transparent bg-blue-50 text-poker-black rounded-xl",
+        timeEnded: "border-transparent bg-gray-100 text-poker-black rounded-xl",
       },
     },
     defaultVariants: {
