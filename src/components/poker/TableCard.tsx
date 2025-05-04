@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import TableTimerDisplay from './TableTimerDisplay';
 
 interface TableCardProps {
   table: TableData;
@@ -100,6 +100,19 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
             <p>{formattedDate}</p>
           </div>
         </div>
+
+        {/* Add timer display below the table info */}
+        {table.isActive && (
+          <div className="mt-1 mb-2">
+            <div className="flex items-center text-sm text-gray-600">
+              <Icon name="Clock" className="h-3.5 w-3.5 mr-1.5" />
+              <TableTimerDisplay 
+                startTime={table.startTime} 
+                className="text-sm font-semibold" 
+              />
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2">
           <div className="flex justify-between">

@@ -11,6 +11,7 @@ import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
 import TournamentControlsCard from '@/components/poker/TournamentControlsCard';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
+import TableTimerDisplay from '@/components/poker/TableTimerDisplay';
 
 export default function ConfirmSession() {
   const navigate = useNavigate();
@@ -118,6 +119,46 @@ export default function ConfirmSession() {
               hands={activeSession.hands || []}
             />
           </div>
+          
+          {/* Add TimerDisplay to tables if they exist */}
+          {activeSession.tables && activeSession.tables.length > 0 && (
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <h3 className="text-xl font-extrabold tracking-tight mb-4">Tables</h3>
+              <div className="space-y-3">
+                {activeSession.tables.map((table) => (
+                  <div key={table.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-semibold">{table.location}</h4>
+                        <p className="text-sm text-gray-600">
+                          {table.gameType} • {table.format} • ${table.smallBlind}/{table.bigBlind}
+                        </p>
+                        
+                        {/* Add timer display */}
+                        <div className="flex items-center mt-1 text-sm text-gray-600">
+                          <Icon name="Clock" className="h-3.5 w-3.5 mr-1.5" />
+                          <TableTimerDisplay 
+                            startTime={table.startTime}
+                            endTime={table.endTime} 
+                            isActive={table.isActive}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className="font-medium">${table.buyIn.toFixed(2)}</div>
+                        {!table.isActive && table.cashOut !== undefined && (
+                          <div className={table.cashOut > table.buyIn ? "text-green-600" : "text-red-600"}>
+                            {table.cashOut > table.buyIn ? "+" : ""}${(table.cashOut - table.buyIn).toFixed(2)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
       

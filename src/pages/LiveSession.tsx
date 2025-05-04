@@ -14,6 +14,7 @@ import { TableData } from '@/types/poker';
 import TableCard from '@/components/poker/TableCard';
 import AddTableForm from '@/components/poker/AddTableForm';
 import { format } from 'date-fns';
+import TableTimerDisplay from '@/components/poker/TableTimerDisplay';
 
 export default function LiveSession() {
   const { id } = useParams<{ id: string }>();
@@ -302,6 +303,19 @@ export default function LiveSession() {
                               ) : null;
                             })()}
                           </div>
+                          
+                          {table.startTime && table.endTime && (
+                            <div className="flex items-center text-sm mt-1">
+                              <span className="text-gray-600 font-medium mr-1">Duration:</span>
+                              <span className="font-semibold">
+                                <TableTimerDisplay 
+                                  startTime={table.startTime} 
+                                  endTime={table.endTime}
+                                  isActive={false}
+                                />
+                              </span>
+                            </div>
+                          )}
                           
                           {table.format === 'Tournament' && table.startingBB && (
                             <div className="flex items-center text-sm mt-1">
