@@ -83,10 +83,23 @@ export const StudentFeedback = ({ studentId }: { studentId: string }) => {
   
   // Navigation handler for comments
   const handleNavigateToSession = (sessionId: string, handId?: string) => {
-    if (handId) {
-      navigate(`/session/${sessionId}?handId=${handId}`);
-    } else {
-      navigate(`/session/${sessionId}`);
+    try {
+      // Format the session ID to ensure it's valid
+      // If it's session-X-Y format, keep it as is, otherwise use a default path
+      const isValidSessionId = /^session-\d+-\d+$/.test(sessionId);
+      
+      if (!isValidSessionId) {
+        console.error(`Invalid session ID format: ${sessionId}`);
+        return; // Don't navigate if the ID format is invalid
+      }
+      
+      if (handId) {
+        navigate(`/coach/student/${studentId}/session/${sessionId}?handId=${handId}`);
+      } else {
+        navigate(`/coach/student/${studentId}/session/${sessionId}`);
+      }
+    } catch (error) {
+      console.error("Navigation error:", error);
     }
   };
   
@@ -144,10 +157,10 @@ export const StudentFeedback = ({ studentId }: { studentId: string }) => {
                         variant="ghost" 
                         size="sm" 
                         onClick={() => handleNavigateToSession(comment.sessionId, comment.handId)}
-                        className="h-7 w-7 p-0 rounded-full"
+                        className="h-7 w-7 p-0 rounded-full flex items-center justify-center"
                         aria-label="View session"
                       >
-                        <Icon name="external-link" size={14} />
+                        <Icon name="ExternalLink" size={14} />
                       </Button>
                     </div>
                   </div>

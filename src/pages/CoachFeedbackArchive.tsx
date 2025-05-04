@@ -119,11 +119,24 @@ const CoachFeedbackArchive = () => {
   
   // Navigation handler for comments
   const handleNavigateToSession = (studentId: string, sessionId: string, handId?: string) => {
-    const navigationUrl = handId
-      ? `/coach/student/${studentId}/session/${sessionId}?handId=${handId}`
-      : `/coach/student/${studentId}/session/${sessionId}`;
-    
-    navigate(navigationUrl);
+    try {
+      // Format the session ID to ensure it's valid
+      // If it's session-X-Y format, keep it as is, otherwise don't navigate
+      const isValidSessionId = /^session-\d+-\d+$/.test(sessionId);
+      
+      if (!isValidSessionId) {
+        console.error(`Invalid session ID format: ${sessionId}`);
+        return; // Don't navigate if the ID format is invalid
+      }
+      
+      const navigationUrl = handId
+        ? `/coach/student/${studentId}/session/${sessionId}?handId=${handId}`
+        : `/coach/student/${studentId}/session/${sessionId}`;
+      
+      navigate(navigationUrl);
+    } catch (error) {
+      console.error("Navigation error:", error);
+    }
   };
   
   return (
@@ -233,7 +246,7 @@ const CoachFeedbackArchive = () => {
                         className="flex items-center gap-1"
                         aria-label="View session"
                       >
-                        <Icon name="external-link" size={14} />
+                        <Icon name="ExternalLink" size={14} />
                         <span>{comment.handId ? "View Hand" : "View Session"}</span>
                       </Button>
                     </div>
