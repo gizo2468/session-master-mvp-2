@@ -75,7 +75,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           )}
         </div>
         
-        {/* Condensed final three fields into a single row with separators */}
+        {/* Condensed fields into a single row with separators - WITHOUT Total Cash Out */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs mb-4">
           {table.format === 'Tournament' && table.startingBB && (
             <div className="flex items-center">
@@ -101,19 +101,6 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
               </span>
             </div>
           )}
-          
-          {((table.format === 'Tournament' && table.startingBB) || 
-            (table.tournamentTypes && table.tournamentTypes.length > 0)) && 
-            (table.cashOut !== undefined) && (
-            <span className="text-gray-400">•</span>
-          )}
-          
-          {table.cashOut !== undefined && (
-            <div className="flex items-center ml-auto">
-              <span className="text-gray-500 mr-1">Total Cash Out:</span>
-              <span className="font-semibold text-poker-gold">${(table.cashOut ?? 0).toFixed(2)}</span>
-            </div>
-          )}
         </div>
         
         {/* Additional tournament-specific fields */}
@@ -131,6 +118,16 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
                 <div className="text-poker-gold font-medium">${table.bountyAmount.toFixed(2)}</div>
               </div>
             )}
+          </div>
+        )}
+        
+        {/* Repositioned Total Cash Out to be more prominent */}
+        {table.cashOut !== undefined && (
+          <div className="flex flex-col items-center justify-center mt-4 mb-2">
+            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL CASH OUT</span>
+            <span className="font-bold text-2xl text-poker-gold">
+              ${(table.cashOut ?? 0).toFixed(2)}
+            </span>
           </div>
         )}
         
