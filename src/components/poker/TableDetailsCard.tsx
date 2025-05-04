@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableData } from '@/types/poker';
@@ -16,9 +15,8 @@ interface TableDetailsCardProps {
 export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => {
   const profit = (table.cashOut ?? 0) - (table.buyIn ?? 0);
   const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
-  // Format dates consistently for Started and Ended badges
-  const formattedStart = format(new Date(table.startTime), 'MMM d, yyyy\nh:mm a');
-  const formattedEnd = table.endTime ? format(new Date(table.endTime), 'MMM d, yyyy\nh:mm a') : null;
+  const formattedStart = format(new Date(table.startTime), 'MMM d, h:mm a');
+  const formattedEnd = table.endTime ? format(new Date(table.endTime), 'MMM d, h:mm a') : null;
   const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
   const isBountyTournament = table.tournamentTypes?.some(type => 
     ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
