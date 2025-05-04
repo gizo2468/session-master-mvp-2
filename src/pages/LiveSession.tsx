@@ -288,22 +288,30 @@ export default function LiveSession() {
                               </div>
                             )}
                           </div>
-                          <div className="flex items-center text-sm mt-2">
-                            <span className="text-gray-600 font-medium mr-2">Buy-In:</span>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold">
-                                ${(table.initialBuyIn ?? table.buyIn).toFixed(2)}
-                              </span>
-                              {(() => {
-                                const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
-                                const addOnTotal = table.addOns ? table.addOns : 0;
-                                const extra = rebuyTotal + addOnTotal;
-                                return extra > 0 ? (
-                                  <span className="font-bold text-amber-600">
-                                    +${extra.toFixed(2)}
+                          <div className="mt-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-600">Buy-in:</span>
+                              <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                  <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
+                                  <span className="font-bold text-xl">
+                                    ${(table.initialBuyIn ?? table.buyIn).toFixed(2)}
                                   </span>
-                                ) : null;
-                              })()}
+                                </div>
+                                {(() => {
+                                  const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
+                                  const addOnTotal = table.addOns ? table.addOns : 0;
+                                  const extra = rebuyTotal + addOnTotal;
+                                  return extra > 0 ? (
+                                    <div className="text-right">
+                                      <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
+                                      <span className="font-bold text-xl text-amber-600">
+                                        +${extra.toFixed(2)}
+                                      </span>
+                                    </div>
+                                  ) : null;
+                                })()}
+                              </div>
                             </div>
                           </div>
                           

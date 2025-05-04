@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -116,18 +115,24 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Buy-in:</span>
-            <div className="flex items-center gap-2">
-              <span className="font-bold">
-                ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
-              </span>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
+                <span className="font-bold text-xl">
+                  ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+                </span>
+              </div>
               {(() => {
                 const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
                 const addOnTotal = table.addOns ? table.addOns : 0;
                 const extra = rebuyTotal + addOnTotal;
                 return extra > 0 ? (
-                  <span className="font-bold text-amber-600">
-                    +${extra.toFixed(2)}
-                  </span>
+                  <div className="text-right">
+                    <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
+                    <span className="font-bold text-xl text-amber-600">
+                      +${extra.toFixed(2)}
+                    </span>
+                  </div>
                 ) : null;
               })()}
             </div>
@@ -225,21 +230,9 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                 )}
               </div>
             )}
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 mt-1">
               {dateFormat(new Date(table.startTime), 'MMM d, h:mm a')}
-              {table.endTime && (
-                <>
-                  {` - ${dateFormat(new Date(table.endTime), 'h:mm a')}`}
-                  <div className="mt-1 flex items-center">
-                    <span className="mr-2">Duration:</span>
-                    <TableTimerDisplay 
-                      startTime={table.startTime}
-                      endTime={table.endTime}
-                      isActive={false}
-                    />
-                  </div>
-                </>
-              )}
+              {table.endTime && ` - ${dateFormat(new Date(table.endTime), 'h:mm a')}`}
             </div>
           </div>
         )}

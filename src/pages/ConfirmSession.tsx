@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -146,18 +147,24 @@ export default function ConfirmSession() {
                       </div>
                       
                       <div className="text-right">
-                        <div className="flex items-center gap-2 justify-end">
-                          <span className="font-bold">
-                            ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
-                          </span>
+                        <div className="flex items-center gap-4 justify-end">
+                          <div className="text-right">
+                            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
+                            <span className="font-bold text-xl">
+                              ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+                            </span>
+                          </div>
                           {(() => {
                             const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
                             const addOnTotal = table.addOns ? table.addOns : 0;
                             const extra = rebuyTotal + addOnTotal;
                             return extra > 0 ? (
-                              <span className="font-bold text-amber-600">
-                                +${extra.toFixed(2)}
-                              </span>
+                              <div className="text-right">
+                                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
+                                <span className="font-bold text-xl text-amber-600">
+                                  +${extra.toFixed(2)}
+                                </span>
+                              </div>
                             ) : null;
                           })()}
                         </div>
