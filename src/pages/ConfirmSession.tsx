@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -12,6 +13,7 @@ import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
 import TournamentControlsCard from '@/components/poker/TournamentControlsCard';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import TableTimerDisplay from '@/components/poker/TableTimerDisplay';
+import { Badge } from '@/components/ui/badge';
 
 export default function ConfirmSession() {
   const navigate = useNavigate();
@@ -134,9 +136,8 @@ export default function ConfirmSession() {
                           {table.gameType} • {table.format} • ${table.smallBlind}/{table.bigBlind}
                         </p>
                         
-                        {/* Add timer display */}
-                        <div className="flex items-center mt-1 text-sm text-gray-600">
-                          <Icon name="Clock" className="h-3.5 w-3.5 mr-1.5" />
+                        {/* Add timer display with badge styling */}
+                        <div className="flex items-center mt-2">
                           <TableTimerDisplay 
                             startTime={table.startTime}
                             endTime={table.endTime} 
@@ -146,7 +147,21 @@ export default function ConfirmSession() {
                       </div>
                       
                       <div className="text-right">
-                        <div className="font-medium">${table.buyIn.toFixed(2)}</div>
+                        <div className="flex items-center gap-2 justify-end">
+                          <Badge variant="info" className="font-medium">
+                            ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+                          </Badge>
+                          {(() => {
+                            const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
+                            const addOnTotal = table.addOns ? table.addOns : 0;
+                            const extra = rebuyTotal + addOnTotal;
+                            return extra > 0 ? (
+                              <Badge variant="warning" className="font-medium">
+                                +${extra.toFixed(2)}
+                              </Badge>
+                            ) : null;
+                          })()}
+                        </div>
                         {!table.isActive && table.cashOut !== undefined && (
                           <div className={table.cashOut > table.buyIn ? "text-green-600" : "text-red-600"}>
                             {table.cashOut > table.buyIn ? "+" : ""}${(table.cashOut - table.buyIn).toFixed(2)}

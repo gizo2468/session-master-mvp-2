@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { format as dateFormat, differenceInSeconds } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import Icon from '@/components/ui/Lucide';
 
 interface TableTimerDisplayProps {
   startTime: Date;
@@ -52,9 +54,10 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
   
   return (
     <div className={`flex items-center gap-1 ${className}`}>
-      <span className="font-mono font-medium">
-        {formatTime(elapsedTime)}
-      </span>
+      <Badge variant={isActive ? "timeStarted" : "timeEnded"} className="px-2 py-1 font-mono font-medium flex items-center gap-1.5">
+        <Icon name="Clock" className="h-3 w-3" />
+        <span>{formatTime(elapsedTime)}</span>
+      </Badge>
     </div>
   );
 };

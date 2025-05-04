@@ -15,6 +15,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import TableTimerDisplay from './TableTimerDisplay';
+import { Badge } from '@/components/ui/badge';
 
 interface TableCardProps {
   table: TableData;
@@ -101,33 +102,34 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
           </div>
         </div>
 
-        {/* Add timer display below the table info */}
+        {/* Display timer with badge styling */}
         {table.isActive && (
-          <div className="mt-1 mb-2">
-            <div className="flex items-center text-sm text-gray-600">
-              <Icon name="Clock" className="h-3.5 w-3.5 mr-1.5" />
-              <TableTimerDisplay 
-                startTime={table.startTime} 
-                className="text-sm font-semibold" 
-              />
-            </div>
+          <div className="mt-2 mb-3">
+            <TableTimerDisplay 
+              startTime={table.startTime} 
+              className="text-sm font-semibold" 
+            />
           </div>
         )}
 
         <div className="space-y-2">
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center">
             <span className="text-gray-600">Buy-in:</span>
-            <span className="font-medium">
-              ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+            <div className="flex items-center gap-2">
+              <Badge variant="info" className="font-medium">
+                ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+              </Badge>
               {(() => {
                 const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
                 const addOnTotal = table.addOns ? table.addOns : 0;
                 const extra = rebuyTotal + addOnTotal;
                 return extra > 0 ? (
-                  <span className="text-gray-500"> (+${extra.toFixed(2)})</span>
+                  <Badge variant="warning" className="font-medium">
+                    +${extra.toFixed(2)}
+                  </Badge>
                 ) : null;
               })()}
-            </span>
+            </div>
           </div>
           
           {table.format === 'Cash' && (
@@ -227,8 +229,13 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
               {table.endTime && (
                 <>
                   {` - ${dateFormat(new Date(table.endTime), 'h:mm a')}`}
-                  <div className="mt-1">
-                    Duration: {differenceInMinutes(new Date(table.endTime), new Date(table.startTime))}m
+                  <div className="mt-1 flex items-center">
+                    <span className="mr-2">Duration:</span>
+                    <TableTimerDisplay 
+                      startTime={table.startTime}
+                      endTime={table.endTime}
+                      isActive={false}
+                    />
                   </div>
                 </>
               )}

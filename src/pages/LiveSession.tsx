@@ -15,6 +15,7 @@ import TableCard from '@/components/poker/TableCard';
 import AddTableForm from '@/components/poker/AddTableForm';
 import { format } from 'date-fns';
 import TableTimerDisplay from '@/components/poker/TableTimerDisplay';
+import { Badge } from '@/components/ui/badge';
 
 export default function LiveSession() {
   const { id } = useParams<{ id: string }>();
@@ -287,46 +288,46 @@ export default function LiveSession() {
                               </div>
                             )}
                           </div>
-                          <div className="flex items-center text-sm mt-1">
-                            <span className="text-gray-600 font-medium mr-1">Buy-In:</span>
-                            <span className="font-semibold">
-                              ${(table.initialBuyIn ?? table.buyIn).toFixed(2)}
-                            </span>
-                            {(() => {
-                              const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
-                              const addOnTotal = table.addOns ? table.addOns : 0;
-                              const extra = rebuyTotal + addOnTotal;
-                              return extra > 0 ? (
-                                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
-                                  (+${extra.toFixed(2)})
-                                </span>
-                              ) : null;
-                            })()}
+                          <div className="flex items-center text-sm mt-2">
+                            <span className="text-gray-600 font-medium mr-2">Buy-In:</span>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="info" className="font-medium">
+                                ${(table.initialBuyIn ?? table.buyIn).toFixed(2)}
+                              </Badge>
+                              {(() => {
+                                const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
+                                const addOnTotal = table.addOns ? table.addOns : 0;
+                                const extra = rebuyTotal + addOnTotal;
+                                return extra > 0 ? (
+                                  <Badge variant="warning" className="font-medium">
+                                    +${extra.toFixed(2)}
+                                  </Badge>
+                                ) : null;
+                              })()}
+                            </div>
                           </div>
                           
                           {table.startTime && table.endTime && (
-                            <div className="flex items-center text-sm mt-1">
-                              <span className="text-gray-600 font-medium mr-1">Duration:</span>
-                              <span className="font-semibold">
-                                <TableTimerDisplay 
-                                  startTime={table.startTime} 
-                                  endTime={table.endTime}
-                                  isActive={false}
-                                />
-                              </span>
+                            <div className="flex items-center text-sm mt-2">
+                              <span className="text-gray-600 font-medium mr-2">Duration:</span>
+                              <TableTimerDisplay 
+                                startTime={table.startTime} 
+                                endTime={table.endTime}
+                                isActive={false}
+                              />
                             </div>
                           )}
                           
                           {table.format === 'Tournament' && table.startingBB && (
-                            <div className="flex items-center text-sm mt-1">
-                              <span className="text-gray-600 font-medium mr-1">Starting BBs:</span>
+                            <div className="flex items-center text-sm mt-2">
+                              <span className="text-gray-600 font-medium mr-2">Starting BBs:</span>
                               <span className="font-semibold">{table.startingBB}BB</span>
                             </div>
                           )}
                           
                           {table.tournamentTypes && table.tournamentTypes.length > 0 && (
-                            <div className="flex items-center text-sm mt-1">
-                              <span className="text-gray-600 font-medium mr-1">Tournament Type:</span>
+                            <div className="flex items-center text-sm mt-2">
+                              <span className="text-gray-600 font-medium mr-2">Tournament Type:</span>
                               <span className="inline-flex px-2 py-0.5 bg-gray-100 rounded-full text-xs">
                                 {table.tournamentTypes[0]}
                               </span>
@@ -337,8 +338,8 @@ export default function LiveSession() {
                            table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
                            table.bountyCount !== undefined && 
                            table.bountyCount > 0 && (
-                            <div className="flex items-center text-sm mt-1">
-                              <span className="text-gray-600 font-medium mr-1">Players Eliminated:</span>
+                            <div className="flex items-center text-sm mt-2">
+                              <span className="text-gray-600 font-medium mr-2">Players Eliminated:</span>
                               <span className="font-semibold">{table.bountyCount}</span>
                             </div>
                           )}
@@ -347,14 +348,14 @@ export default function LiveSession() {
                            table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
                            table.bountyAmount !== undefined && 
                            table.bountyAmount > 0 && (
-                            <div className="flex items-center text-sm mt-1">
-                              <span className="text-gray-600 font-medium mr-1">Total Bounty Collected:</span>
+                            <div className="flex items-center text-sm mt-2">
+                              <span className="text-gray-600 font-medium mr-2">Total Bounty Collected:</span>
                               <span className="font-semibold text-poker-gold">${table.bountyAmount.toFixed(2)}</span>
                             </div>
                           )}
                           
-                          <div className="flex items-center text-sm mt-1">
-                            <span className="text-gray-600 font-medium mr-1">Cash Out:</span>
+                          <div className="flex items-center text-sm mt-2">
+                            <span className="text-gray-600 font-medium mr-2">Cash Out:</span>
                             <span className="font-semibold text-lg text-poker-gold">
                               ${(table.cashOut !== undefined ? table.cashOut : 0).toFixed(2)}
                             </span>
