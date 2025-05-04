@@ -44,29 +44,35 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Aligned Start and End Times horizontally with Duration Timer */}
-        <div className="flex justify-between items-center mb-4 text-sm">
-          <div>
-            <span className="text-gray-500">Start:</span>
-            <div>{formattedStart}</div>
+        {/* Redesigned Start, Duration, End row with better visual balance */}
+        <div className="flex justify-center items-center mb-6 text-sm border-b border-gray-100 pb-4">
+          <div className="flex flex-1 justify-center items-center">
+            <div className="text-center">
+              <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
+              <div className="font-medium">{formattedStart}</div>
+            </div>
           </div>
           
-          {/* Duration Display between Start and End */}
           {table.startTime && table.endTime && (
-            <div className="flex items-center">
-              <TableTimerDisplay 
-                startTime={new Date(table.startTime)} 
-                endTime={new Date(table.endTime)}
-                isActive={false}
-                className="mx-2"
-              />
+            <div className="flex-1 flex justify-center items-center border-x border-gray-100 px-4">
+              <div className="text-center">
+                <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
+                <TableTimerDisplay 
+                  startTime={new Date(table.startTime)} 
+                  endTime={new Date(table.endTime)}
+                  isActive={false}
+                  className="flex justify-center"
+                />
+              </div>
             </div>
           )}
           
           {formattedEnd && (
-            <div>
-              <span className="text-gray-500">End:</span>
-              <div>{formattedEnd}</div>
+            <div className="flex-1 flex justify-center items-center">
+              <div className="text-center">
+                <div className="text-gray-500 font-medium text-xs uppercase mb-1">End</div>
+                <div className="font-medium">{formattedEnd}</div>
+              </div>
             </div>
           )}
         </div>
@@ -89,7 +95,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           )}
         </div>
         
-        {/* Condensed fields into a single row with separators - WITHOUT Total Cash Out */}
+        {/* Condensed fields into a single row with separators */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs mb-4">
           {table.format === 'Tournament' && table.startingBB && (
             <div className="flex items-center">
