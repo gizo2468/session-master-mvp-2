@@ -19,7 +19,7 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
     if (type === 'duration') {
       return (
         <div className="flex items-center justify-center w-full">
-          <span className="font-bold text-base">{value}</span>
+          <span className="font-bold text-xl">{value}</span>
         </div>
       );
     }
@@ -52,7 +52,7 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
         </div>
         <div className="w-full flex items-center justify-center py-3">
           <div className="flex items-center justify-center w-full px-3">
-            <div className="font-medium text-sm w-full text-center">
+            <div className={`font-medium ${type === 'duration' ? 'w-full text-center' : 'w-full text-center text-sm'}`}>
               {formatDisplayValue()}
             </div>
           </div>
