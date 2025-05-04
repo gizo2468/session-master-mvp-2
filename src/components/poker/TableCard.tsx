@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -116,17 +117,17 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Buy-in:</span>
             <div className="flex items-center gap-2">
-              <Badge variant="info" className="font-medium">
+              <span className="font-bold">
                 ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
-              </Badge>
+              </span>
               {(() => {
                 const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
                 const addOnTotal = table.addOns ? table.addOns : 0;
                 const extra = rebuyTotal + addOnTotal;
                 return extra > 0 ? (
-                  <Badge variant="warning" className="font-medium">
+                  <span className="font-bold text-amber-600">
                     +${extra.toFixed(2)}
-                  </Badge>
+                  </span>
                 ) : null;
               })()}
             </div>

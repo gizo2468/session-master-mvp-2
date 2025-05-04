@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableData } from '@/types/poker';
@@ -56,9 +55,9 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           <div>
             <span className="text-gray-500">Buy-in:</span>
             <div>
-              ${table.initialBuyIn.toFixed(2)}
+              <span className="font-bold">${table.initialBuyIn.toFixed(2)}</span>
               {rebuyAmount > 0 && (
-                <span className="text-gray-600 ml-1">
+                <span className="text-amber-600 font-bold ml-1">
                   (+${rebuyAmount.toFixed(2)})
                 </span>
               )}

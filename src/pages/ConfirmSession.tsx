@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -148,17 +147,17 @@ export default function ConfirmSession() {
                       
                       <div className="text-right">
                         <div className="flex items-center gap-2 justify-end">
-                          <Badge variant="info" className="font-medium">
+                          <span className="font-bold">
                             ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
-                          </Badge>
+                          </span>
                           {(() => {
                             const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
                             const addOnTotal = table.addOns ? table.addOns : 0;
                             const extra = rebuyTotal + addOnTotal;
                             return extra > 0 ? (
-                              <Badge variant="warning" className="font-medium">
+                              <span className="font-bold text-amber-600">
                                 +${extra.toFixed(2)}
-                              </Badge>
+                              </span>
                             ) : null;
                           })()}
                         </div>

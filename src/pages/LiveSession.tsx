@@ -291,17 +291,17 @@ export default function LiveSession() {
                           <div className="flex items-center text-sm mt-2">
                             <span className="text-gray-600 font-medium mr-2">Buy-In:</span>
                             <div className="flex items-center gap-2">
-                              <Badge variant="info" className="font-medium">
+                              <span className="font-bold">
                                 ${(table.initialBuyIn ?? table.buyIn).toFixed(2)}
-                              </Badge>
+                              </span>
                               {(() => {
                                 const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
                                 const addOnTotal = table.addOns ? table.addOns : 0;
                                 const extra = rebuyTotal + addOnTotal;
                                 return extra > 0 ? (
-                                  <Badge variant="warning" className="font-medium">
+                                  <span className="font-bold text-amber-600">
                                     +${extra.toFixed(2)}
-                                  </Badge>
+                                  </span>
                                 ) : null;
                               })()}
                             </div>
