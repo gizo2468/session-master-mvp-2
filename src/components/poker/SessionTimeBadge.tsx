@@ -46,7 +46,7 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
         variant={variant}
         className="flex flex-col items-center justify-center w-full p-0 overflow-hidden shadow-sm h-full"
       >
-        {/* Explicit border styling to ensure consistent appearance across all badges */}
+        {/* Making sure the border styling is consistently applied to all badge types */}
         <div className="w-full py-1.5 px-3 font-bold text-center border-b border-gray-200 bg-opacity-50 text-sm">
           {title}
         </div>
