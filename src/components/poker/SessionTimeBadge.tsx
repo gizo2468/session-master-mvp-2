@@ -36,7 +36,6 @@ const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, varia
         <div className="flex flex-col items-center justify-center w-full text-center">
           <span className="block w-full text-center">{parts[0]}</span>
           <span className="block w-full text-center">
-            <span className="opacity-70 mx-1">•</span>
             {parts[1]}
           </span>
         </div>
