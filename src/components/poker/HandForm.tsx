@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -269,6 +270,7 @@ const HandForm: React.FC<HandFormProps> = ({
                   )}
                 />
                 
+                {/* Image Upload Section */}
                 <div className="space-y-2">
                   <FormLabel>Image</FormLabel>
                   <Input 
@@ -298,6 +300,24 @@ const HandForm: React.FC<HandFormProps> = ({
                     </div>
                   )}
                 </div>
+                
+                {/* Video Link - Moved directly after image upload */}
+                <FormField
+                  control={form.control}
+                  name="pokercraftLink"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Add Video Link (Optional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="https://youtube.com/watch?v=..." 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
                 <FormField
                   control={form.control}
@@ -508,23 +528,6 @@ const HandForm: React.FC<HandFormProps> = ({
                         <Textarea 
                           placeholder="Any additional details or thoughts about the hand..."
                           className="h-20"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="pokercraftLink"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Add Video Link (Optional)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="https://youtube.com/watch?v=..." 
                           {...field} 
                         />
                       </FormControl>
