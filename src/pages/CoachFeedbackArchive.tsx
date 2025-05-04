@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -118,6 +117,15 @@ const CoachFeedbackArchive = () => {
     return student ? student.displayName : `Student ${id.slice(-4)}`;
   };
   
+  // Navigation handler for comments
+  const handleNavigateToSession = (studentId: string, sessionId: string, handId?: string) => {
+    const navigationUrl = handId
+      ? `/coach/student/${studentId}/session/${sessionId}?handId=${handId}`
+      : `/coach/student/${studentId}/session/${sessionId}`;
+    
+    navigate(navigationUrl);
+  };
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -218,16 +226,16 @@ const CoachFeedbackArchive = () => {
                           {new Date(comment.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                      <div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => navigate(`/coach/student/${comment.studentId}/session/${comment.sessionId}`)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Icon name="ExternalLink" size={14} />
-                        </Button>
-                      </div>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleNavigateToSession(comment.studentId, comment.sessionId, comment.handId)}
+                        className="flex items-center gap-1"
+                        aria-label="View session"
+                      >
+                        <Icon name="external-link" size={14} />
+                        <span>{comment.handId ? "View Hand" : "View Session"}</span>
+                      </Button>
                     </div>
                     
                     <div className="text-sm mb-3">

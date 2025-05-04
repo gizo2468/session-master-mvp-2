@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,7 @@ const createMockFeedback = (studentId: string) => {
 };
 
 export const StudentFeedback = ({ studentId }: { studentId: string }) => {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState<string>('');
   
@@ -76,6 +78,15 @@ export const StudentFeedback = ({ studentId }: { studentId: string }) => {
         return <Icon name="alert-triangle" size={14} className="text-amber-500" />;
       default:
         return null;
+    }
+  };
+  
+  // Navigation handler for comments
+  const handleNavigateToSession = (sessionId: string, handId?: string) => {
+    if (handId) {
+      navigate(`/session/${sessionId}?handId=${handId}`);
+    } else {
+      navigate(`/session/${sessionId}`);
     }
   };
   
@@ -125,9 +136,20 @@ export const StudentFeedback = ({ studentId }: { studentId: string }) => {
                         {comment.handId && <span className="text-gray-500"> • Hand {comment.handId.slice(-4)}</span>}
                       </span>
                     </div>
-                    <span className="text-xs text-gray-500">
-                      {new Date(comment.createdAt).toLocaleDateString()}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500">
+                        {new Date(comment.createdAt).toLocaleDateString()}
+                      </span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleNavigateToSession(comment.sessionId, comment.handId)}
+                        className="h-7 w-7 p-0 rounded-full"
+                        aria-label="View session"
+                      >
+                        <Icon name="external-link" size={14} />
+                      </Button>
+                    </div>
                   </div>
                   
                   <p className="text-sm my-2">{comment.content}</p>
