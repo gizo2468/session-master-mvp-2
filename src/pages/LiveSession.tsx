@@ -306,18 +306,19 @@ export default function LiveSession() {
                     <div className="space-y-3">
                       {activeTables.map((table) => (
                         <div key={table.id} className="bg-white border border-gray-200 rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h3 className="font-bold text-lg">{table.location}</h3>
-                              <p className="text-sm text-gray-600">
-                                {table.gameType} • {table.format}
-                              </p>
-                              {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
-                                <span className="inline-block mt-1 px-2 py-0.5 bg-poker-gold/10 text-poker-gold text-xs rounded-full">
-                                  {table.tournamentTypes[0]}
-                                </span>
-                              )}
+                          {/* Improved header layout with larger text and balanced layout */}
+                          <div className="text-center mb-2">
+                            <h3 className="text-xl font-bold">{table.location}</h3>
+                            <div className="flex items-center justify-center gap-2 text-base text-gray-600">
+                              <span>{table.gameType}</span>
+                              <span>•</span> 
+                              <span>{table.format}</span>
                             </div>
+                            {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
+                              <span className="inline-block mt-1 px-3 py-1 bg-poker-gold/10 text-poker-gold rounded-full">
+                                {table.tournamentTypes[0]}
+                              </span>
+                            )}
                           </div>
                           
                           {/* Redesigned Start, Duration row with better visual balance */}
@@ -341,11 +342,11 @@ export default function LiveSession() {
                             </div>
                           </div>
                           
-                          {/* Styled Buy-in and Rebuy section */}
-                          <div className="flex items-center gap-4 mb-4">
+                          {/* Styled Buy-in and Rebuy section with rebuy count */}
+                          <div className="flex items-center gap-4 justify-center mb-4">
                             <div className="text-right">
                               <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
-                              <span className="font-bold text-2xl">
+                              <span className="font-bold text-xl">
                                 ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
                               </span>
                             </div>
@@ -353,12 +354,18 @@ export default function LiveSession() {
                               const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
                               const addOnTotal = table.addOns ? table.addOns : 0;
                               const extra = rebuyTotal + addOnTotal;
+                              const rebuyCount = Math.floor(rebuyTotal / (table.initialBuyIn ?? table.buyIn));
                               return extra > 0 ? (
                                 <div className="text-right">
                                   <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
-                                  <span className="font-bold text-2xl text-amber-600">
-                                    +${extra.toFixed(2)}
-                                  </span>
+                                  <div>
+                                    <span className="font-bold text-xl text-amber-600">
+                                      +${extra.toFixed(2)}
+                                    </span>
+                                    {rebuyCount > 0 && (
+                                      <span className="text-sm text-gray-500 ml-1">({rebuyCount})</span>
+                                    )}
+                                  </div>
                                 </div>
                               ) : null;
                             })()}
@@ -444,11 +451,11 @@ export default function LiveSession() {
                             )}
                           </div>
                           
-                          {/* Styled Buy-in and Rebuy section */}
-                          <div className="flex items-center gap-4 mb-4">
+                          {/* Styled Buy-in and Rebuy section with rebuy count */}
+                          <div className="flex items-center gap-4 mb-4 justify-center">
                             <div className="text-right">
                               <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
-                              <span className="font-bold text-2xl">
+                              <span className="font-bold text-xl">
                                 ${(table.initialBuyIn ?? table.buyIn).toFixed(2)}
                               </span>
                             </div>
@@ -456,12 +463,18 @@ export default function LiveSession() {
                               const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
                               const addOnTotal = table.addOns ? table.addOns : 0;
                               const extra = rebuyTotal + addOnTotal;
+                              const rebuyCount = Math.floor(rebuyTotal / (table.initialBuyIn ?? table.buyIn));
                               return extra > 0 ? (
                                 <div className="text-right">
                                   <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
-                                  <span className="font-bold text-2xl text-amber-600">
-                                    +${extra.toFixed(2)}
-                                  </span>
+                                  <div>
+                                    <span className="font-bold text-xl text-amber-600">
+                                      +${extra.toFixed(2)}
+                                    </span>
+                                    {rebuyCount > 0 && (
+                                      <span className="text-sm text-gray-500 ml-1">({rebuyCount})</span>
+                                    )}
+                                  </div>
                                 </div>
                               ) : null;
                             })()}
@@ -510,7 +523,7 @@ export default function LiveSession() {
                           {table.cashOut !== undefined && (
                             <div className="flex flex-col items-center justify-center mt-4 mb-2">
                               <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL CASH OUT</span>
-                              <span className="font-bold text-2xl text-poker-gold">
+                              <span className="font-bold text-xl text-poker-gold">
                                 ${(table.cashOut ?? 0).toFixed(2)}
                               </span>
                             </div>
@@ -546,7 +559,7 @@ export default function LiveSession() {
           <DialogFooter className="sm:justify-center gap-2 mt-4">
             <Button
               variant="outline"
-              onClick={handleCancelRebuy}
+              onClick={() => setShowRebuyConfirmDialog(false)}
             >
               Cancel
             </Button>

@@ -146,16 +146,16 @@ export default function ConfirmSession() {
               <div className="space-y-3">
                 {activeSession.tables.map((table) => (
                   <div key={table.id} className="border border-gray-200 rounded-lg p-4">
-                    {/* Improved header layout */}
+                    {/* Improved header layout with larger text and balanced layout */}
                     <div className="text-center mb-2">
-                      <h4 className="font-semibold">{table.location}</h4>
-                      <div className="flex items-center justify-center gap-1 text-sm text-gray-600">
+                      <h4 className="text-xl font-bold">{table.location}</h4>
+                      <div className="flex items-center justify-center gap-2 text-base text-gray-600">
                         <span>{table.gameType}</span>
                         <span>•</span> 
                         <span>{table.format}</span>
                       </div>
                       {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-poker-gold/10 text-poker-gold text-xs rounded-full">
+                        <span className="inline-block mt-1 px-3 py-1 bg-poker-gold/10 text-poker-gold rounded-full">
                           {table.tournamentTypes[0]}
                         </span>
                       )}
@@ -183,7 +183,7 @@ export default function ConfirmSession() {
                       </div>
                     </div>
                     
-                    {/* Styled Buy-in and Rebuy section */}
+                    {/* Styled Buy-in and Rebuy section with rebuy count */}
                     <div className="flex items-center gap-4 justify-center">
                       <div className="text-right">
                         <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
@@ -195,12 +195,18 @@ export default function ConfirmSession() {
                         const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
                         const addOnTotal = table.addOns ? table.addOns : 0;
                         const extra = rebuyTotal + addOnTotal;
+                        const rebuyCount = Math.floor(rebuyTotal / (table.initialBuyIn ?? table.buyIn));
                         return extra > 0 ? (
                           <div className="text-right">
                             <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
-                            <span className="font-bold text-xl text-amber-600">
-                              +${extra.toFixed(2)}
-                            </span>
+                            <div>
+                              <span className="font-bold text-xl text-amber-600">
+                                +${extra.toFixed(2)}
+                              </span>
+                              {rebuyCount > 0 && (
+                                <span className="text-sm text-gray-500 ml-1">({rebuyCount})</span>
+                              )}
+                            </div>
                           </div>
                         ) : null;
                       })()}
