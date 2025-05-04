@@ -35,6 +35,17 @@ const CoachProfile = () => {
     navigate('/coach-upgrade');
   };
   
+  // Helper function to get the appropriate plan badge variant
+  const getPlanBadgeVariant = (tier: string) => {
+    switch (tier) {
+      case 'free': return 'planFree';
+      case 'starter': return 'planStarter';
+      case 'pro': return 'planPro';
+      case 'elite': return 'planElite';
+      default: return 'planFree';
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-md px-4 py-8">
@@ -74,13 +85,7 @@ const CoachProfile = () => {
                       <TooltipTrigger asChild>
                         <Badge 
                           onClick={handlePlanBadgeClick}
-                          className={`
-                            cursor-pointer transition-all hover:ring-2 hover:ring-opacity-50
-                            ${coachTier === 'free' ? 'bg-gray-500 hover:bg-gray-600 hover:ring-gray-400' : 
-                            coachTier === 'starter' ? 'bg-blue-500 hover:bg-blue-600 hover:ring-blue-400' :
-                            coachTier === 'pro' ? 'bg-poker-gold hover:bg-poker-darkGold hover:ring-poker-gold' :
-                            'bg-purple-600 hover:bg-purple-700 hover:ring-purple-500'}
-                          `}
+                          variant={getPlanBadgeVariant(coachTier)}
                         >
                           {tierDetails.name}
                         </Badge>

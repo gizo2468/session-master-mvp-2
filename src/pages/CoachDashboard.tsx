@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,6 +48,17 @@ const CoachDashboard = () => {
   const handlePlanBadgeClick = () => {
     navigate('/coach-upgrade');
   };
+
+  // Helper function to get the appropriate plan badge variant
+  const getPlanBadgeVariant = (tier: string) => {
+    switch (tier) {
+      case 'free': return 'planFree';
+      case 'starter': return 'planStarter';
+      case 'pro': return 'planPro';
+      case 'elite': return 'planElite';
+      default: return 'planFree';
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,13 +81,7 @@ const CoachDashboard = () => {
                 <TooltipTrigger asChild>
                   <Badge 
                     onClick={handlePlanBadgeClick}
-                    className={`
-                      cursor-pointer transition-all hover:ring-2 hover:ring-opacity-50
-                      ${coachTier === 'free' ? 'bg-gray-500 hover:bg-gray-600 hover:ring-gray-400' : 
-                      coachTier === 'starter' ? 'bg-blue-500 hover:bg-blue-600 hover:ring-blue-400' :
-                      coachTier === 'pro' ? 'bg-poker-gold hover:bg-poker-darkGold hover:ring-poker-gold' :
-                      'bg-purple-600 hover:bg-purple-700 hover:ring-purple-500'}
-                    `}
+                    variant={getPlanBadgeVariant(coachTier)}
                   >
                     {tierDetails.name}
                   </Badge>
@@ -114,7 +120,11 @@ const CoachDashboard = () => {
                         <TooltipTrigger asChild>
                           <span 
                             onClick={handlePlanBadgeClick}
-                            className={`${coachTier === 'free' ? 'text-gray-700' : 'text-poker-gold font-medium'} cursor-pointer hover:underline`}
+                            className={`cursor-pointer hover:underline font-medium ${
+                              coachTier === 'free' ? 'text-gray-600' : 
+                              coachTier === 'starter' ? 'text-blue-600' :
+                              coachTier === 'pro' ? 'text-poker-gold' : 'text-purple-600'
+                            }`}
                           >
                             {tierDetails.name}
                           </span>
@@ -124,14 +134,6 @@ const CoachDashboard = () => {
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                    {coachTier !== 'free' && (
-                      <Badge 
-                        className="bg-poker-gold ml-2 cursor-pointer hover:bg-poker-darkGold"
-                        onClick={handlePlanBadgeClick}
-                      >
-                        Paid
-                      </Badge>
-                    )}
                   </div>
                   <div className="text-sm text-gray-600">
                     Students: {studentCount} / {maxStudents}
@@ -271,13 +273,7 @@ const CoachDashboard = () => {
                       <TooltipTrigger asChild>
                         <Badge 
                           onClick={handlePlanBadgeClick}
-                          className={`
-                            cursor-pointer transition-all hover:ring-2 hover:ring-opacity-50
-                            ${coachTier === 'free' ? 'bg-gray-500 hover:bg-gray-600 hover:ring-gray-400' : 
-                            coachTier === 'starter' ? 'bg-blue-500 hover:bg-blue-600 hover:ring-blue-400' :
-                            coachTier === 'pro' ? 'bg-poker-gold hover:bg-poker-darkGold hover:ring-poker-gold' :
-                            'bg-purple-600 hover:bg-purple-700 hover:ring-purple-500'}
-                          `}
+                          variant={getPlanBadgeVariant(coachTier)}
                         >
                           {tierDetails.name}
                         </Badge>
