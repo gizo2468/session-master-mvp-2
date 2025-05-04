@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 type BadgeVariant = 'timeStarted' | 'timeDuration' | 'timeEnded';
@@ -14,22 +13,13 @@ interface SessionTimeBadgeProps {
 }
 
 const SessionTimeBadge: React.FC<SessionTimeBadgeProps> = ({ title, value, variant, type }) => {
-  // Get badge icon for the duration badge
-  const getBadgeIcon = () => {
-    if (type === 'duration') {
-      return <Clock className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />;
-    }
-    return null;
-  };
-
   // Format the value string to display better
   const formatDisplayValue = () => {
     // Handle different types of values
     if (type === 'duration') {
       return (
         <div className="flex items-center justify-center w-full">
-          {getBadgeIcon()}
-          <span>{value}</span>
+          <span className="font-bold text-base">{value}</span>
         </div>
       );
     }
