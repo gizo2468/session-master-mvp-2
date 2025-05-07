@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
@@ -34,6 +33,11 @@ interface SessionContextType {
       bountyCount?: number, 
       bountyAmount?: number,
       finalPosition?: number 
+    },
+    multiDayInfo?: {
+      nextDayStart?: Date,
+      chipsCarryover?: number,
+      dayEndedWithoutElimination?: boolean
     }
   ) => void;
   addTableRebuy: (sessionId: string, tableId: string, amount: number) => void;
@@ -381,6 +385,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       bountyCount?: number, 
       bountyAmount?: number,
       finalPosition?: number 
+    },
+    multiDayInfo?: {
+      nextDayStart?: Date,
+      chipsCarryover?: number,
+      dayEndedWithoutElimination?: boolean
     }
   ) => {
     const session = sessions.find(s => s.id === sessionId);
@@ -391,11 +400,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             ...table,
             isActive: false,
             endTime: new Date(),
-            cashOut,
+            cashOut: multiDayInfo?.dayEndedWithoutElimination ? 0 : cashOut,
             notes: notes || table.notes,
             ...(bounty?.bountyCount !== undefined && { bountyCount: bounty.bountyCount }),
             ...(bounty?.bountyAmount !== undefined && { bountyAmount: bounty.bountyAmount }),
-            ...(bounty?.finalPosition !== undefined && { finalPosition: bounty.finalPosition })
+            ...(bounty?.finalPosition !== undefined && { finalPosition: bounty.finalPosition }),
+            ...(multiDayInfo?.nextDayStart && { nextDayStart: multiDayInfo.nextDayStart }),
+            ...(multiDayInfo?.chipsCarryover && { chipsCarryover: multiDayInfo.chipsCarryover }),
+            ...(multiDayInfo?.dayEndedWithoutElimination && { dayEndedWithoutElimination: true })
           };
         }
         return table;

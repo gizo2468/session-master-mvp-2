@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { TableData } from '@/types/poker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Switch } from '@/components/ui/switch';
 
 interface AddTableFormProps {
   open: boolean;
@@ -34,6 +35,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
   const [bigBlind, setBigBlind] = useState('');
   const [startingBB, setStartingBB] = useState('');
   const [tournamentType, setTournamentType] = useState<string>('');
+  const [isMultiDay, setIsMultiDay] = useState(false);
 
   useEffect(() => {
     if (fixedFormat) {
@@ -61,6 +63,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
       ...(format === 'Tournament' && {
         startingBB: startingBB ? parseInt(startingBB) : undefined,
         tournamentTypes: tournamentType ? [tournamentType] : undefined,
+        isMultiDay: format === 'Tournament' ? isMultiDay : undefined,
       }),
       rebuys: 0,
       addOns: 0,
@@ -80,6 +83,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
     setBigBlind('');
     setStartingBB('');
     setTournamentType('');
+    setIsMultiDay(false);
   };
 
   return (
@@ -188,17 +192,30 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
           </div>
 
           {format === 'Tournament' && (
-            <div className="space-y-2">
-              <Label htmlFor="startingBB">Starting BB Amount</Label>
-              <Input
-                id="startingBB"
-                type="number"
-                min="0"
-                placeholder="Enter starting big blinds"
-                value={startingBB}
-                onChange={(e) => setStartingBB(e.target.value)}
-              />
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="startingBB">Starting BB Amount</Label>
+                <Input
+                  id="startingBB"
+                  type="number"
+                  min="0"
+                  placeholder="Enter starting big blinds"
+                  value={startingBB}
+                  onChange={(e) => setStartingBB(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2 py-2">
+                <Switch
+                  id="multiDay"
+                  checked={isMultiDay}
+                  onCheckedChange={setIsMultiDay}
+                />
+                <Label htmlFor="multiDay" className="cursor-pointer">
+                  Is this a Multi-Day Tournament?
+                </Label>
+              </div>
+            </>
           )}
 
           {format === 'Cash' && (

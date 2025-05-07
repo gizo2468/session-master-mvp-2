@@ -39,6 +39,10 @@ export interface TableData {
   bountyCount?: number;
   bountyAmount?: number;
   tournamentTypes?: string[];
+  isMultiDay?: boolean;
+  nextDayStart?: Date;
+  chipsCarryover?: number;
+  dayEndedWithoutElimination?: boolean;
 }
 
 export interface PokerSession {
