@@ -34,10 +34,16 @@ export default function SessionCard({ session }: SessionCardProps) {
 
   // Table summary bubble logic (matching session format only)
   let tableCount = 0;
+  let multiDayCount = 0;
   if (session.tables && session.tables.length > 0) {
     // Always count ALL tables that match the original format (not just after-the-fact)
     tableCount = session.tables.filter(
       (table: TableData) => table.format === session.format
+    ).length;
+    
+    // Count multi-day tournaments
+    multiDayCount = session.tables.filter(
+      (table: TableData) => table.isMultiDay && table.dayEndedWithoutElimination
     ).length;
   }
   
@@ -61,6 +67,13 @@ export default function SessionCard({ session }: SessionCardProps) {
             )}
           </h3>
           <p className="text-gray-500 text-sm">{timeAgo}</p>
+          
+          {/* Show multi-day badge if there are continuing multi-day tournaments */}
+          {multiDayCount > 0 && (
+            <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs">
+              {multiDayCount} Continuing Multi-Day {multiDayCount === 1 ? 'Tournament' : 'Tournaments'}
+            </span>
+          )}
         </div>
         {session.isActive ? (
           <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">

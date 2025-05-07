@@ -22,6 +22,14 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
     ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
   );
   const isMobile = useIsMobile();
+  
+  // Format next day start date if available
+  const formattedNextDayStart = table.nextDayStart 
+    ? format(new Date(table.nextDayStart), 'MMM d, h:mm a') 
+    : null;
+  
+  // Check if this is a multi-day tournament that ended a day without elimination
+  const isMultiDayContinuing = table.isMultiDay && table.dayEndedWithoutElimination;
 
   return (
     <Card className="bg-white rounded-lg shadow mb-6">
@@ -76,6 +84,29 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
             </div>
           )}
         </div>
+        
+        {/* Multi-Day Tournament Continuation Info */}
+        {isMultiDayContinuing && (
+          <div className="flex justify-center items-center mb-6 text-sm border-b border-gray-100 pb-4 bg-green-50 rounded-md p-2">
+            {formattedNextDayStart && (
+              <div className="flex-1 flex justify-center items-center">
+                <div className="text-center">
+                  <div className="text-green-600 font-medium text-xs uppercase mb-1">Next Day Starts</div>
+                  <div className="font-medium text-green-800">{formattedNextDayStart}</div>
+                </div>
+              </div>
+            )}
+            
+            {table.chipsCarryover && (
+              <div className="flex-1 flex justify-center items-center border-l border-gray-100 pl-4">
+                <div className="text-center">
+                  <div className="text-green-600 font-medium text-xs uppercase mb-1">Chips Carried Over</div>
+                  <div className="font-medium text-green-800">{table.chipsCarryover.toLocaleString()}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Styled Buy-in and Rebuy section to match active tables in Live Session */}
         <div className="flex items-center gap-4 mb-4">
@@ -141,8 +172,23 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           </div>
         )}
         
+        {/* Multi-Day Tournament Status Badge */}
+        {table.isMultiDay && (
+          <div className="flex justify-center mb-4">
+            <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+              isMultiDayContinuing 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-gray-100 text-gray-800'
+            }`}>
+              {isMultiDayContinuing 
+                ? 'Continuing to Next Day' 
+                : 'Multi-Day Tournament'}
+            </div>
+          </div>
+        )}
+        
         {/* Repositioned Total Cash Out to be more prominent */}
-        {table.cashOut !== undefined && (
+        {table.cashOut !== undefined && !isMultiDayContinuing && (
           <div className="flex flex-col items-center justify-center mt-4 mb-2">
             <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL CASH OUT</span>
             <span className="font-bold text-2xl text-poker-gold">
