@@ -44,7 +44,8 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
             .padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
         );
         
-        if (activeSession?.id) {
+        // Make sure activeSession and updateSessionDuration are valid before calling
+        if (activeSession?.id && typeof updateSessionDuration === 'function') {
           updateSessionDuration(activeSession.id, seconds);
         }
       }
