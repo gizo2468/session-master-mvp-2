@@ -91,12 +91,6 @@ export default function ConfirmSession() {
     );
   }
   
-  // This is the handler that will be passed to the SessionTimerCard component
-  const handleOpenEndSessionSheet = () => {
-    console.log("End session button clicked, opening sheet"); // Debug log
-    setShowEndSessionSheet(true);
-  };
-  
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white shadow-sm px-4 py-4 sticky top-0 z-10">
@@ -125,7 +119,7 @@ export default function ConfirmSession() {
             format={activeSession.format}
             smallBlind={activeSession.smallBlind}
             bigBlind={activeSession.bigBlind}
-            onEndSession={handleOpenEndSessionSheet}
+            onEndSession={() => setShowEndSessionSheet(true)}
           />
           
           {/* Session Details */}
@@ -258,102 +252,104 @@ export default function ConfirmSession() {
       </Dialog>
       
       {/* End Session Sheet */}
-      <Sheet open={showEndSessionSheet} onOpenChange={setShowEndSessionSheet}>
-        <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>End Session</SheetTitle>
-            <SheetDescription>
-              Enter your cash out amount to complete your session.
-            </SheetDescription>
-          </SheetHeader>
-          
-          <div className="py-6">
-            <div className="mb-4">
-              <label htmlFor="cashout" className="block text-sm font-medium mb-1">
-                Cash Out Amount
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500">$</span>
+      {showEndSessionSheet && (
+        <Sheet open={showEndSessionSheet} onOpenChange={setShowEndSessionSheet}>
+          <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
+            <SheetHeader>
+              <SheetTitle>End Session</SheetTitle>
+              <SheetDescription>
+                Enter your cash out amount to complete your session.
+              </SheetDescription>
+            </SheetHeader>
+            
+            <div className="py-6">
+              <div className="mb-4">
+                <label htmlFor="cashout" className="block text-sm font-medium mb-1">
+                  Cash Out Amount
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500">$</span>
+                  </div>
+                  <input
+                    id="cashout"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    placeholder="0.00"
+                    value={cashOutAmount}
+                    onChange={(e) => setCashOutAmount(e.target.value)}
+                  />
                 </div>
-                <input
-                  id="cashout"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                  placeholder="0.00"
-                  value={cashOutAmount}
-                  onChange={(e) => setCashOutAmount(e.target.value)}
+              </div>
+              
+              <div className="mb-6">
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm">Profit/Loss:</span>
+                  <span className={`text-sm font-bold ${
+                    cashOutAmount && parseFloat(cashOutAmount) >= activeSession.buyIn 
+                      ? 'text-green-600' 
+                      : cashOutAmount 
+                        ? 'text-red-600' 
+                        : 'text-gray-500'
+                  }`}>
+                    {cashOutAmount 
+                      ? `$${(parseFloat(cashOutAmount) - activeSession.buyIn).toFixed(2)}` 
+                      : '$0.00'}
+                  </span>
+                </div>
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  {cashOutAmount && (
+                    <div 
+                      className={`h-full ${
+                        parseFloat(cashOutAmount) >= activeSession.buyIn 
+                          ? 'bg-green-500' 
+                          : 'bg-red-500'
+                      }`}
+                      style={{ 
+                        width: cashOutAmount 
+                          ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - activeSession.buyIn) / activeSession.buyIn * 100), 100)}%` 
+                          : '0%' 
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <label htmlFor="notes" className="block text-sm font-medium mb-1">
+                  Notes (Optional)
+                </label>
+                <Textarea
+                  id="notes"
+                  className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                  placeholder="Add any notes about this session..."
+                  value={sessionNotes}
+                  onChange={(e) => setSessionNotes(e.target.value)}
                 />
               </div>
-            </div>
-            
-            <div className="mb-6">
-              <div className="flex justify-between mb-1">
-                <span className="text-sm">Profit/Loss:</span>
-                <span className={`text-sm font-bold ${
-                  cashOutAmount && parseFloat(cashOutAmount) >= activeSession.buyIn 
-                    ? 'text-green-600' 
-                    : cashOutAmount 
-                      ? 'text-red-600' 
-                      : 'text-gray-500'
-                }`}>
-                  {cashOutAmount 
-                    ? `$${(parseFloat(cashOutAmount) - activeSession.buyIn).toFixed(2)}` 
-                    : '$0.00'}
-                </span>
-              </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                {cashOutAmount && (
-                  <div 
-                    className={`h-full ${
-                      parseFloat(cashOutAmount) >= activeSession.buyIn 
-                        ? 'bg-green-500' 
-                        : 'bg-red-500'
-                    }`}
-                    style={{ 
-                      width: cashOutAmount 
-                        ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - activeSession.buyIn) / activeSession.buyIn * 100), 100)}%` 
-                        : '0%' 
-                    }}
-                  />
-                )}
+              
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowEndSessionSheet(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleEndSession}
+                  disabled={!cashOutAmount}
+                  className="flex-1 bg-poker-gold hover:bg-poker-darkGold text-white"
+                >
+                  End Session
+                </Button>
               </div>
             </div>
-            
-            <div className="mb-6">
-              <label htmlFor="notes" className="block text-sm font-medium mb-1">
-                Notes (Optional)
-              </label>
-              <Textarea
-                id="notes"
-                className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                placeholder="Add any notes about this session..."
-                value={sessionNotes}
-                onChange={(e) => setSessionNotes(e.target.value)}
-              />
-            </div>
-            
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setShowEndSessionSheet(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleEndSession}
-                disabled={!cashOutAmount}
-                className="flex-1 bg-poker-gold hover:bg-poker-darkGold text-white"
-              >
-                End Session
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }

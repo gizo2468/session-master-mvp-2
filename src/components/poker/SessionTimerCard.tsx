@@ -1,18 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { PauseCircle, PlayCircle, Clock, StopCircle } from 'lucide-react';
-import { format, differenceInSeconds, parseISO } from 'date-fns';
-import { useSessionContext } from '@/context/SessionContext';
+import Icon from '@/components/ui/Lucide';
+import { format as dateFormat } from 'date-fns';
 
 interface SessionTimerCardProps {
   startTime: Date;
-  gameType?: string;
-  format?: string;
-  smallBlind?: number;
-  bigBlind?: number;
+  gameType: string;
+  format: string;
+  smallBlind: number;
+  bigBlind: number;
   onEndSession: () => void;
 }
 
@@ -22,110 +19,78 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   format,
   smallBlind,
   bigBlind,
-  onEndSession
+  onEndSession,
 }) => {
-  const [time, setTime] = useState<string>('00:00:00');
-  const { pauseSession, resumeSession, activeSession, updateSessionDuration } = useSessionContext();
-  const [isPaused, setIsPaused] = useState<boolean>(false);
-
+  const [elapsedTime, setElapsedTime] = useState(0);
+  
   useEffect(() => {
-    const updateTimer = () => {
-      if (!isPaused) {
-        const now = new Date();
-        const seconds = differenceInSeconds(now, new Date(startTime));
-        
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const remainingSeconds = seconds % 60;
-        
-        setTime(
-          `${hours.toString().padStart(2, '0')}:${minutes
-            .toString()
-            .padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
-        );
-        
-        // Make sure activeSession exists before calling updateSessionDuration
-        if (activeSession?.id) {
-          // Use proper function call syntax
-          if (typeof updateSessionDuration === 'function') {
-            updateSessionDuration(activeSession.id, seconds);
-          }
-        }
-      }
+    const initialElapsedTime = Math.floor((new Date().getTime() - new Date(startTime).getTime()) / 1000);
+    setElapsedTime(initialElapsedTime);
+    
+    let timer: number | undefined;
+    
+    // Always run the timer (no conditional on timerActive)
+    timer = window.setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000);
+    
+    return () => {
+      if (timer) clearInterval(timer);
     };
-    
-    updateTimer();
-    const timerId = setInterval(updateTimer, 1000);
-    
-    return () => clearInterval(timerId);
-  }, [startTime, isPaused, activeSession, updateSessionDuration]);
+  }, [startTime]);
 
-  const handlePauseResume = () => {
-    if (!activeSession?.id) return;
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
     
-    setIsPaused(!isPaused);
-    if (isPaused) {
-      resumeSession(activeSession.id);
-    } else {
-      pauseSession(activeSession.id);
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     }
+    
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
-
+  
+  const formattedStartTime = dateFormat(new Date(startTime), 'h:mm a');
+  const formattedDate = dateFormat(new Date(startTime), 'MMM d, yyyy');
+  
+  // IMPORTANT: Only show blinds for Cash format - strict check to ensure it's never shown for Tournament
+  const shouldShowBlinds = format === 'Cash' && smallBlind !== undefined && bigBlind !== undefined;
+  
   return (
-    <Card className="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
-      <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-poker-feltGreen to-poker-feltGreen/90 text-white">
-        <div>
-          <h2 className="text-2xl font-bold">{time}</h2>
-          <div className="flex items-center gap-2 mt-1">
-            <Clock className="h-4 w-4" />
-            <span className="text-sm opacity-90">
-              Started {format(new Date(startTime), 'MMM d, h:mm a')}
-            </span>
+    <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
+      <div className="mb-2 text-sm text-gray-500">Session Time</div>
+      <div className="text-5xl font-mono font-bold mb-3">{formatTime(elapsedTime)}</div>
+      
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="text-left">
+          <div className="text-sm text-gray-500">Started</div>
+          <div className="font-medium">{formattedStartTime}</div>
+          <div className="text-xs text-gray-400">{formattedDate}</div>
+        </div>
+        
+        <div className="text-right">
+          <div className="text-sm text-gray-500">Game</div>
+          <div className="font-medium">{gameType}</div>
+          <div className="text-xs text-gray-400">
+            {format}
+            {shouldShowBlinds && (
+              <> - ${smallBlind}/${bigBlind}</>
+            )}
           </div>
         </div>
-        <div className="flex flex-col space-y-2">
-          <Button
-            size="sm"
-            onClick={handlePauseResume}
-            className="bg-white text-poker-feltGreen hover:bg-gray-100"
-          >
-            {isPaused ? (
-              <PlayCircle className="h-4 w-4 mr-2" />
-            ) : (
-              <PauseCircle className="h-4 w-4 mr-2" />
-            )}
-            {isPaused ? 'Resume' : 'Pause'}
-          </Button>
-          <Button
-            size="sm"
-            onClick={onEndSession}
-            className="bg-red-500 hover:bg-red-600 text-white flex items-center"
-          >
-            <StopCircle className="h-4 w-4 mr-2" />
-            End Session
-          </Button>
-        </div>
       </div>
-      <CardContent className="py-3">
-        <div className="flex flex-wrap gap-2">
-          {gameType && (
-            <Badge variant="outline" className="bg-gray-100 text-gray-800">
-              {gameType}
-            </Badge>
-          )}
-          {format && (
-            <Badge variant="outline" className="bg-gray-100 text-gray-800">
-              {format}
-            </Badge>
-          )}
-          {smallBlind !== undefined && bigBlind !== undefined && format === 'Cash' && (
-            <Badge variant="outline" className="bg-gray-100 text-gray-800">
-              ${smallBlind}/${bigBlind}
-            </Badge>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      
+      <div className="flex justify-center">
+        <Button
+          onClick={onEndSession}
+          variant="destructive"
+          className="flex items-center gap-2"
+        >
+          <Icon name="CircleStop" size={16} /> End Session
+        </Button>
+      </div>
+    </div>
   );
 };
 
