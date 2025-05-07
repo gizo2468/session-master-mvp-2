@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -171,7 +172,24 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
 
         {table.isActive ? (
           <div className="mt-4 flex gap-2 justify-between">
-            {!isFreezeout && (
+            {isFreezeout ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 opacity-50 cursor-not-allowed"
+                      disabled
+                    >
+                      <Icon name="Plus" className="mr-1 h-4 w-4" /> Rebuy
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Rebuys not allowed in Freezeout tournaments</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
               <Button 
                 variant="outline" 
                 className="flex-1"
@@ -182,7 +200,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
             )}
             <Button 
               variant="destructive" 
-              className={!isFreezeout ? "flex-1" : "w-full"}
+              className="flex-1"
               onClick={() => setShowEndTableDialog(true)}
             >
               <Icon name="CircleStop" className="mr-1 h-4 w-4" /> End Table
