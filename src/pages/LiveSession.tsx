@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -843,23 +842,13 @@ export default function LiveSession() {
       </Dialog>
       
       {/* Add Table Dialog */}
-      <Dialog open={showAddTableForm} onOpenChange={setShowAddTableForm}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add Table</DialogTitle>
-            <DialogDescription>
-              Add details for a new table in your poker session.
-            </DialogDescription>
-          </DialogHeader>
-          <AddTableForm 
-            onSubmit={tableData => {
-              handleAddTable(tableData);
-              setShowAddTableForm(false);
-            }}
-            onCancel={() => setShowAddTableForm(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      <AddTableForm
+        open={showAddTableForm}
+        onOpenChange={setShowAddTableForm}
+        onAddTable={(tableData) => {
+          handleAddTable(tableData);
+        }}
+      />
     </div>
   );
 }
