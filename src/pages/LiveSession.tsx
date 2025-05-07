@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog';
 
 export default function LiveSession() {
+  
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { 
@@ -58,6 +59,11 @@ export default function LiveSession() {
   const [bountyCount, setBountyCount] = useState('');
   const [bountyAmount, setBountyAmount] = useState('');
   const [finalPosition, setFinalPosition] = useState('');
+  
+  // Add new states for multi-day tournament
+  const [endReason, setEndReason] = useState<'eliminated' | 'day-ended' | null>(null);
+  const [nextDayStart, setNextDayStart] = useState<Date | null>(null);
+  const [chipsCarryover, setChipsCarryover] = useState('');
   
   const session = id 
     ? sessions.find(s => s.id === id && s.isActive) 
@@ -197,28 +203,40 @@ export default function LiveSession() {
     setBountyCount('');
     setBountyAmount('');
     setFinalPosition('');
+    setEndReason(null);
+    setNextDayStart(null);
+    setChipsCarryover('');
     setShowEndTableDialog(true);
   };
   
-  // Modified to handle the final end table confirmation
+  // Modified to handle the final end table confirmation, now with multi-day support
   const handleConfirmEndTable = () => {
-    if (!session || !pendingEndTableId || !cashOutAmount) return;
+    if (!session || !pendingEndTableId) return;
     
     try {
+      const multiDayInfo = endReason === 'day-ended' ? {
+        nextDayStart: nextDayStart || undefined,
+        chipsCarryover: chipsCarryover ? parseInt(chipsCarryover) : undefined,
+        dayEndedWithoutElimination: true
+      } : undefined;
+
       endTable(
         session.id, 
         pendingEndTableId, 
-        parseFloat(cashOutAmount), 
+        endReason === 'day-ended' ? 0 : parseFloat(cashOutAmount), 
         tableNotes,
         {
           bountyCount: bountyCount ? parseInt(bountyCount) : undefined,
           bountyAmount: bountyAmount ? parseFloat(bountyAmount) : undefined,
           finalPosition: finalPosition ? parseInt(finalPosition) : undefined
-        }
+        },
+        multiDayInfo
       );
       toast({
-        title: "Table Ended",
-        description: "The table has been successfully ended."
+        title: endReason === 'day-ended' ? "Day Ended" : "Table Ended",
+        description: endReason === 'day-ended' 
+          ? "Your tournament progress has been saved for the next day." 
+          : "The table has been successfully ended."
       });
     } catch (error) {
       console.error("Error ending table:", error);
@@ -232,6 +250,14 @@ export default function LiveSession() {
     // Reset states
     setShowEndTableDialog(false);
     setPendingEndTableId(null);
+    setCashOutAmount('');
+    setTableNotes('');
+    setBountyCount('');
+    setBountyAmount('');
+    setFinalPosition('');
+    setEndReason(null);
+    setNextDayStart(null);
+    setChipsCarryover('');
   };
   
   const handleCancelEndTable = () => {
@@ -242,21 +268,35 @@ export default function LiveSession() {
     setBountyCount('');
     setBountyAmount('');
     setFinalPosition('');
+    setEndReason(null);
+    setNextDayStart(null);
+    setChipsCarryover('');
   };
   
   const handleEndTable = (
     tableId: string, 
     cashOut: number, 
     notes?: string,
-    bounty?: { bountyCount?: number, bountyAmount?: number, finalPosition?: number }
+    bounty?: { 
+      bountyCount?: number, 
+      bountyAmount?: number, 
+      finalPosition?: number 
+    },
+    multiDayInfo?: {
+      nextDayStart?: Date,
+      chipsCarryover?: number,
+      dayEndedWithoutElimination?: boolean
+    }
   ) => {
     if (!session) return;
     
     try {
-      endTable(session.id, tableId, cashOut, notes, bounty);
+      endTable(session.id, tableId, cashOut, notes, bounty, multiDayInfo);
       toast({
-        title: "Table Ended",
-        description: "The table has been successfully ended."
+        title: multiDayInfo?.dayEndedWithoutElimination ? "Day Ended" : "Table Ended",
+        description: multiDayInfo?.dayEndedWithoutElimination 
+          ? "Your tournament progress has been saved for the next day." 
+          : "The table has been successfully ended."
       });
     } catch (error) {
       console.error("Error ending table:", error);
@@ -287,7 +327,21 @@ export default function LiveSession() {
     }
   };
   
+  // Helper function to check if a table is a multi-day tournament
+  const isMultiDayTournament = (table: TableData) => {
+    return table.format === 'Tournament' && table.isMultiDay === true;
+  };
+
+  // Helper function to check if a table is a bounty tournament
+  const isBountyTournament = (table: TableData) => {
+    return table.format === 'Tournament' && 
+      table.tournamentTypes?.some(type => 
+        ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
+      );
+  };
+  
   if (!session) {
+    
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
@@ -306,17 +360,10 @@ export default function LiveSession() {
   
   const activeTables = session.tables?.filter(table => table.isActive) || [];
   const inactiveTables = session.tables?.filter(table => !table.isActive) || [];
-  
-  // Helper function to check if a table is a bounty tournament
-  const isBountyTournament = (table: TableData) => {
-    return table.format === 'Tournament' && 
-      table.tournamentTypes?.some(type => 
-        ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
-      );
-  };
-  
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      
       <header className="bg-white shadow-sm px-4 py-4 sticky top-0 z-10">
         <div className="container mx-auto max-w-md">
           <div className="flex justify-between items-center">
@@ -377,92 +424,14 @@ export default function LiveSession() {
                     <h4 className="text-lg font-bold mb-2">Active Tables</h4>
                     <div className="space-y-3">
                       {activeTables.map((table) => (
-                        <div key={table.id} className="bg-white border border-gray-200 rounded-lg p-4">
-                          {/* Improved header layout with larger text and balanced layout */}
-                          <div className="text-center mb-2">
-                            <h3 className="text-xl font-bold">{table.location}</h3>
-                            <div className="flex items-center justify-center gap-2 text-base text-gray-600">
-                              <span>{table.gameType}</span>
-                              <span>•</span> 
-                              <span>{table.format}</span>
-                            </div>
-                            {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
-                              <span className="inline-block mt-1 px-3 py-1 bg-poker-gold/10 text-poker-gold rounded-full">
-                                {table.tournamentTypes[0]}
-                              </span>
-                            )}
-                          </div>
-                          
-                          {/* Redesigned Start, Duration row with better visual balance */}
-                          <div className="flex justify-center items-center my-4 text-sm border-b border-gray-100 pb-4">
-                            <div className="flex flex-1 justify-center items-center">
-                              <div className="text-center">
-                                <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
-                                <div className="font-medium">{format(new Date(table.startTime), 'h:mm a')}</div>
-                              </div>
-                            </div>
-                            
-                            <div className="flex-1 flex justify-center items-center border-x border-gray-100 px-4">
-                              <div className="text-center">
-                                <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
-                                <TableTimerDisplay 
-                                  startTime={table.startTime}
-                                  isActive={table.isActive}
-                                  className="flex justify-center"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Styled Buy-in and Rebuy section with rebuy count */}
-                          <div className="flex items-center gap-4 justify-center mb-4">
-                            <div className="text-right">
-                              <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
-                              <span className="font-bold text-xl">
-                                ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
-                              </span>
-                            </div>
-                            {(() => {
-                              const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
-                              const addOnTotal = table.addOns ? table.addOns : 0;
-                              const extra = rebuyTotal + addOnTotal;
-                              const rebuyCount = Math.floor(rebuyTotal / (table.initialBuyIn ?? table.buyIn));
-                              return extra > 0 ? (
-                                <div className="text-right">
-                                  <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
-                                  <div>
-                                    <span className="font-bold text-xl text-amber-600">
-                                      +${extra.toFixed(2)}
-                                    </span>
-                                    {rebuyCount > 0 && (
-                                      <span className="text-sm text-gray-500 ml-1">({rebuyCount})</span>
-                                    )}
-                                  </div>
-                                </div>
-                              ) : null;
-                            })()}
-                          </div>
-                          
-                          {/* Table controls */}
-                          <div className="mt-4 flex gap-2 justify-between">
-                            <Button 
-                              variant="outline" 
-                              className="flex-1"
-                              onClick={() => handleInitiateRebuy(table.id, table.format === 'Tournament' ? 
-                                (table.tournamentBuyIn || table.initialBuyIn || table.buyIn) : 
-                                0)}
-                            >
-                              <Icon name="plus" className="mr-1 h-4 w-4" /> Rebuy
-                            </Button>
-                            <Button 
-                              variant="destructive" 
-                              className="flex-1"
-                              onClick={() => handleInitiateEndTable(table.id)}
-                            >
-                              <Icon name="CircleStop" className="mr-1 h-4 w-4" /> End Table
-                            </Button>
-                          </div>
-                        </div>
+                        <TableCard
+                          key={table.id}
+                          table={table}
+                          onEndTable={(tableId, cashOut, notes, bounty, multiDayInfo) => 
+                            handleEndTable(tableId, cashOut, notes, bounty, multiDayInfo)
+                          }
+                          onAddRebuy={(tableId, amount) => handleAddTableRebuy(tableId, amount)}
+                        />
                       ))}
                     </div>
                   </div>
@@ -479,8 +448,13 @@ export default function LiveSession() {
                               <h3 className="font-bold">{table.name || table.location}</h3>
                               <p className="text-xs text-gray-500 font-semibold mt-0.5">{table.location}</p>
                               <p className="text-sm text-gray-600">{table.gameType} • {table.format}</p>
+                              {table.isMultiDay && (
+                                <span className="inline-block mt-1 px-2 py-0.5 bg-poker-feltGreen/10 text-poker-feltGreen rounded-full text-xs">
+                                  Multi-Day
+                                </span>
+                              )}
                             </div>
-                            {table.cashOut !== undefined && (
+                            {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
                               <div className={`text-lg font-bold ${
                                 table.cashOut >= table.buyIn ? 'text-green-600' : 'text-red-600'
                               }`}>
@@ -645,252 +619,185 @@ export default function LiveSession() {
         </DialogContent>
       </Dialog>
       
-      {/* End Table Dialog */}
+      {/* End Table Dialog - Updated with multi-day support */}
       <Dialog open={showEndTableDialog} onOpenChange={setShowEndTableDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>End Table</DialogTitle>
             <DialogDescription>
-              Enter your cash out amount to complete this table.
+              {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.isMultiDay && 
+               session?.tables?.find(t => t.id === pendingEndTableId)?.format === 'Tournament' && !endReason
+                ? "Are you ending this multi-day tournament table because you were eliminated or because the day has ended?"
+                : "Enter your cash out amount to complete this table."}
             </DialogDescription>
           </DialogHeader>
           
           <div className="py-4">
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="tableCashout" className="block text-sm font-medium mb-1">
-                  Cash Out Amount
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500">$</span>
-                  </div>
-                  <input
-                    id="tableCashout"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                    placeholder="0.00"
-                    value={cashOutAmount}
-                    onChange={(e) => setCashOutAmount(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.format === 'Tournament' && (
-                <div>
-                  <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
-                    Final Position (Optional)
-                  </label>
-                  <input
-                    id="finalPosition"
-                    type="number"
-                    min="1"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                    placeholder="Enter your final position (e.g. 3 for 3rd)"
-                    value={finalPosition}
-                    onChange={(e) => setFinalPosition(e.target.value)}
-                  />
-                </div>
-              )}
-
-              {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId) && 
-               isBountyTournament(session.tables.find(t => t.id === pendingEndTableId)!) && (
-                <>
-                  <div>
-                    <label htmlFor="bountyCount" className="block text-sm font-medium mb-1">
-                      Players Eliminated (Optional)
-                    </label>
-                    <input
-                      id="bountyCount"
-                      type="number"
-                      min="0"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                      placeholder="Number of players eliminated"
-                      value={bountyCount}
-                      onChange={(e) => setBountyCount(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="bountyAmount" className="block text-sm font-medium mb-1">
-                      Total Bounty Collected (Optional)
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
-                      </div>
-                      <input
-                        id="bountyAmount"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                        placeholder="0.00"
-                        value={bountyAmount}
-                        onChange={(e) => setBountyAmount(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-              
-              <div className="mb-6">
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm">Profit/Loss:</span>
-                  <span className={`text-sm font-bold ${
-                    cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.buyIn && 
-                    parseFloat(cashOutAmount) >= (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)
-                      ? 'text-green-600' 
-                      : cashOutAmount 
-                        ? 'text-red-600' 
-                        : 'text-gray-500'
-                  }`}>
-                    {cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)
-                      ? `$${(parseFloat(cashOutAmount) - (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)).toFixed(2)}` 
-                      : '$0.00'}
-                  </span>
-                </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  {cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId) && (
-                    <div 
-                      className={`h-full ${
-                        parseFloat(cashOutAmount) >= (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)
-                          ? 'bg-green-500' 
-                          : 'bg-red-500'
-                      }`}
-                      style={{ 
-                        width: cashOutAmount 
-                          ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)) / 
-                              (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 1) * 100), 100)}%` 
-                          : '0%' 
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
-              
-              <div>
-                <label htmlFor="tableNotes" className="block text-sm font-medium mb-1">
-                  Notes (Optional)
-                </label>
-                <Textarea
-                  id="tableNotes"
-                  className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                  placeholder="Add any notes about this table..."
-                  value={tableNotes}
-                  onChange={(e) => setTableNotes(e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <DialogFooter className="mt-6">
-              <Button
-                variant="outline"
-                onClick={handleCancelEndTable}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleConfirmEndTable}
-                disabled={!cashOutAmount}
-                className="bg-poker-gold hover:bg-poker-darkGold text-white"
-              >
-                End Table
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      <AddTableForm
-        open={showAddTableForm}
-        onOpenChange={setShowAddTableForm}
-        onAddTable={handleAddTable}
-        fixedFormat={session.format === 'Cash' ? 'Cash' : session.format === 'Tournament' ? 'Tournament' : undefined}
-      />
-      
-      {showEndSessionSheet && (
-        <Sheet open={showEndSessionSheet} onOpenChange={setShowEndSessionSheet}>
-          <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
-            <SheetHeader>
-              <SheetTitle>End Session</SheetTitle>
-              <SheetDescription>
-                The Cash Out Amount is automatically calculated from all closed tables in this session.
-              </SheetDescription>
-            </SheetHeader>
-            
-            <div className="py-6">
-              <div className="mb-4">
-                <label htmlFor="cashout" className="block text-sm font-medium mb-1">
-                  Cash Out Amount
-                </label>
-                <div className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-900 text-lg font-semibold select-text">
-                  ${autoCashOutAmount.toFixed(2)}
-                </div>
-              </div>
-              
-              <div className="mb-6">
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm">Profit/Loss:</span>
-                  <span className={`text-sm font-bold ${
-                    autoCashOutAmount >= session.buyIn 
-                      ? 'text-green-600' 
-                      : autoCashOutAmount < session.buyIn
-                        ? 'text-red-600' 
-                        : 'text-gray-800'
-                  }`}>
-                    {`$${(autoCashOutAmount - session.buyIn).toFixed(2)}`}
-                  </span>
-                </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full ${
-                      autoCashOutAmount >= session.buyIn 
-                        ? 'bg-green-500' 
-                        : 'bg-red-500'
-                    }`}
-                    style={{ 
-                      width: `${Math.min(Math.abs((autoCashOutAmount - session.buyIn) / session.buyIn * 100), 100)}%`
-                    }}
-                  />
-                </div>
-              </div>
-              
-              <div className="mb-6">
-                <label htmlFor="notes" className="block text-sm font-medium mb-1">
-                  Notes (Optional)
-                </label>
-                <Textarea
-                  id="notes"
-                  className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                  placeholder="Add any notes about this session..."
-                  value={sessionNotes}
-                  onChange={(e) => setSessionNotes(e.target.value)}
-                />
-              </div>
-              
-              <div className="flex gap-3">
+            {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.isMultiDay &&
+             session?.tables?.find(t => t.id === pendingEndTableId)?.format === 'Tournament' && !endReason && (
+              <div className="flex flex-col gap-4 mb-6">
                 <Button
                   variant="outline"
-                  className="flex-1"
-                  onClick={() => setShowEndSessionSheet(false)}
+                  className="w-full py-6 text-red-600 border-red-200 hover:bg-red-50"
+                  onClick={() => setEndReason('eliminated')}
                 >
-                  Cancel
+                  <Icon name="X" className="mr-2 h-5 w-5" /> Eliminated (Cash Out)
                 </Button>
                 <Button
-                  onClick={handleEndSession}
-                  disabled={false}
-                  className="flex-1 bg-poker-gold hover:bg-poker-darkGold text-white"
+                  variant="outline"
+                  className="w-full py-6 text-green-600 border-green-200 hover:bg-green-50"
+                  onClick={() => setEndReason('day-ended')}
                 >
-                  End Session
+                  <Icon name="Calendar" className="mr-2 h-5 w-5" /> Day Ended (Continuing)
                 </Button>
               </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-      )}
-    </div>
-  );
-}
+            )}
+            
+            {(!pendingEndTableId || 
+              !session?.tables?.find(t => t.id === pendingEndTableId)?.isMultiDay ||
+              endReason === 'eliminated' ||
+              session?.tables?.find(t => t.id === pendingEndTableId)?.format === 'Cash') && (
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="tableCashout" className="block text-sm font-medium mb-1">
+                    Cash Out Amount
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500">$</span>
+                    </div>
+                    <input
+                      id="tableCashout"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      placeholder="0.00"
+                      value={cashOutAmount}
+                      onChange={(e) => setCashOutAmount(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.format === 'Tournament' && (
+                  <div>
+                    <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
+                      Final Position (Optional)
+                    </label>
+                    <input
+                      id="finalPosition"
+                      type="number"
+                      min="1"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      placeholder="Enter your final position (e.g. 3 for 3rd)"
+                      value={finalPosition}
+                      onChange={(e) => setFinalPosition(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId) && 
+                 isBountyTournament(session.tables.find(t => t.id === pendingEndTableId)!) && (
+                  <>
+                    <div>
+                      <label htmlFor="bountyCount" className="block text-sm font-medium mb-1">
+                        Players Eliminated (Optional)
+                      </label>
+                      <input
+                        id="bountyCount"
+                        type="number"
+                        min="0"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                        placeholder="Number of players eliminated"
+                        value={bountyCount}
+                        onChange={(e) => setBountyCount(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="bountyAmount" className="block text-sm font-medium mb-1">
+                        Total Bounty Collected (Optional)
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span className="text-gray-500">$</span>
+                        </div>
+                        <input
+                          id="bountyAmount"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                          placeholder="0.00"
+                          value={bountyAmount}
+                          onChange={(e) => setBountyAmount(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+                
+                <div className="mb-6">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm">Profit/Loss:</span>
+                    <span className={`text-sm font-bold ${
+                      cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.buyIn && 
+                      parseFloat(cashOutAmount) >= (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)
+                        ? 'text-green-600' 
+                        : cashOutAmount 
+                          ? 'text-red-600' 
+                          : 'text-gray-500'
+                    }`}>
+                      {cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)
+                        ? `$${(parseFloat(cashOutAmount) - (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)).toFixed(2)}` 
+                        : '$0.00'}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    {cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId) && (
+                      <div 
+                        className={`h-full ${
+                          parseFloat(cashOutAmount) >= (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)
+                            ? 'bg-green-500' 
+                            : 'bg-red-500'
+                        }`}
+                        style={{ 
+                          width: cashOutAmount 
+                            ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)) / 
+                                (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 1) * 100), 100)}%` 
+                            : '0%' 
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <label htmlFor="tableNotes" className="block text-sm font-medium mb-1">
+                    Notes (Optional)
+                  </label>
+                  <Textarea
+                    id="tableNotes"
+                    className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    placeholder="Add any notes about this table..."
+                    value={tableNotes}
+                    onChange={(e) => setTableNotes(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {endReason === 'day-ended' && (
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="nextDayStart" className="block text-sm font-medium mb-1">
+                    Next Day Start (Optional)
+                  </label>
+                  <input
+                    id="nextDayStart"
+                    type="datetime-local"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    value={nextDayStart ? nextDayStart.toISOString().slice(0, 16) : ''}
+                    onChange={(e) => setNextDayStart(e.target.value ? new Date(e.target.value) : null)}
+                  />
+                  <p className="text-xs text-gray-500
