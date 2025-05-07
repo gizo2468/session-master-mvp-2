@@ -25,7 +25,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   onEndSession
 }) => {
   const [time, setTime] = useState<string>('00:00:00');
-  const { pauseSession, resumeSession, activeSession } = useSessionContext();
+  const { pauseSession, resumeSession, activeSession, updateSessionDuration } = useSessionContext();
   const [isPaused, setIsPaused] = useState<boolean>(false);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     const timerId = setInterval(updateTimer, 1000);
     
     return () => clearInterval(timerId);
-  }, [startTime, isPaused, activeSession]);
+  }, [startTime, isPaused, activeSession, updateSessionDuration]);
 
   const handlePauseResume = () => {
     if (!activeSession?.id) return;
@@ -66,8 +66,6 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       pauseSession(activeSession.id);
     }
   };
-  
-  const { updateSessionDuration } = useSessionContext();
 
   return (
     <Card className="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
