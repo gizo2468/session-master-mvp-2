@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PokerSession } from '@/types/poker';
+import { PokerSession, TableData } from '@/types/poker';
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe } from "lucide-react";
+import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe, Calendar, Chips } from "lucide-react";
+import { format } from 'date-fns';
 
 interface SessionDetailsCardProps {
   session: PokerSession;
@@ -46,6 +47,10 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
 
   // IMPORTANT: Only show blinds for Cash format - strict check to ensure it's never shown for Tournament
   const shouldShowBlinds = session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined;
+
+  // Count multi-day tables that are continuing
+  const multiDayTables = tables.filter(t => t.isMultiDay && t.dayEndedWithoutElimination);
+  const hasMultiDayTables = multiDayTables.length > 0;
 
   return (
     <Card className="bg-white rounded-lg shadow-md mb-6">
@@ -97,6 +102,20 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
                 </span>
               </Badge>
             )}
+            
+            {/* Multi-day tournament badge */}
+            {hasMultiDayTables && (
+              <Badge
+                variant="outline"
+                className="flex items-center gap-1 border-green-300 bg-green-50 text-green-800 px-3 py-1 font-normal text-sm"
+              >
+                <Calendar className="w-4 h-4 text-green-600 flex-shrink-0" />
+                <span className="font-bold">{multiDayTables.length}</span>
+                <span className="ml-1 opacity-80 text-xs">
+                  Continuing multi-day {multiDayTables.length === 1 ? "tournament" : "tournaments"}
+                </span>
+              </Badge>
+            )}
           </div>
           
           {!session.isActive && (
@@ -123,7 +142,40 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             </div>
           )}
           
-          {session.notes && (
+          {/* Multi-day tournaments details section */}
+          {hasMultiDayTables && (
+            <div className="pt-3 mt-2 border-t border-gray-100">
+              <h4 className="text-sm font-medium text-green-700 mb-2">Continuing Tournaments</h4>
+              <div className="space-y-2">
+                {multiDayTables.map((table) => (
+                  <div key={table.id} className="rounded-md bg-green-50 p-2 text-sm">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-medium">{table.location}</span>
+                      {table.chipsCarryover && (
+                        <div className="flex items-center gap-1">
+                          <Chips className="h-3 w-3 text-green-600" />
+                          <span className="text-green-700">{table.chipsCarryover.toLocaleString()}</span>
+                        </div>
+                      )}
+                    </div>
+                    {table.nextDayStart && (
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-600">Next day:</span>
+                        <span className="font-medium">{format(new Date(table.nextDayStart), 'MMM d, h:mm a')}</span>
+                      </div>
+                    )}
+                    {table.notes && (
+                      <div className="text-xs text-gray-600 mt-1 pt-1 border-t border-green-100">
+                        {table.notes}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {session.notes && !hasMultiDayTables && (
             <div className="pt-2">
               <span className="text-gray-500 block mb-1">Notes:</span>
               <p className="text-sm bg-gray-50 p-3 rounded">{session.notes}</p>

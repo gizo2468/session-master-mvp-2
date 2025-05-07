@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -156,6 +157,29 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
             </div>
           )}
         </div>
+
+        {/* Multi-Day Tournament Continuation Info - Adding this section */}
+        {table.isMultiDay && table.dayEndedWithoutElimination && (
+          <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 pb-4 bg-green-50 rounded-md p-2">
+            {table.nextDayStart && (
+              <div className="flex-1 flex justify-center items-center">
+                <div className="text-center">
+                  <div className="text-green-600 font-medium text-xs uppercase mb-1">Next Day Starts</div>
+                  <div className="font-medium text-green-800">{dateFormat(new Date(table.nextDayStart), 'MMM d, h:mm a')}</div>
+                </div>
+              </div>
+            )}
+            
+            {table.chipsCarryover && (
+              <div className="flex-1 flex justify-center items-center border-l border-gray-100 pl-4">
+                <div className="text-center">
+                  <div className="text-green-600 font-medium text-xs uppercase mb-1">Chips Carried Over</div>
+                  <div className="font-medium text-green-800">{table.chipsCarryover.toLocaleString()}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="space-y-2">
           <div className="flex items-center gap-4 mb-4 justify-center">
