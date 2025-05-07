@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -86,7 +85,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
   return (
     <>
       <Card className="bg-white p-4 mb-4">
-        {/* Improved header layout with larger text and more balanced visual design */}
         <div className="text-center mb-2">
           <h3 className="text-xl font-bold">{table.location}</h3>
           <div className="flex items-center justify-center gap-2 text-base text-gray-600">
@@ -104,7 +102,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
           </div>
         </div>
 
-        {/* Redesigned Start, Duration row with better visual balance */}
         <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 pb-4">
           <div className="flex flex-1 justify-center items-center">
             <div className="text-center">
@@ -136,7 +133,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
         </div>
 
         <div className="space-y-2">
-          {/* Styled Buy-in and Rebuy section to match active tables in Live Session with rebuy count */}
           <div className="flex items-center gap-4 mb-4 justify-center">
             <div className="text-right">
               <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
@@ -175,26 +171,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
 
         {table.isActive ? (
           <div className="mt-4 flex gap-2 justify-between">
-            {isFreezeout ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex-1">
-                      <Button 
-                        variant="outline" 
-                        className="w-full opacity-50 cursor-not-allowed"
-                        disabled={true}
-                      >
-                        <Icon name="Plus" className="mr-1 h-4 w-4" /> Rebuy
-                      </Button>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Rebuys are not allowed in Freezeout tournaments</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
+            {!isFreezeout && (
               <Button 
                 variant="outline" 
                 className="flex-1"
@@ -205,7 +182,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
             )}
             <Button 
               variant="destructive" 
-              className="flex-1"
+              className={!isFreezeout ? "flex-1" : "w-full"}
               onClick={() => setShowEndTableDialog(true)}
             >
               <Icon name="CircleStop" className="mr-1 h-4 w-4" /> End Table
@@ -250,7 +227,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                   </div>
                 )}
                 
-                {/* Repositioned Total Cash Out to be more prominent */}
                 {table.cashOut !== undefined && (
                   <div className="flex flex-col items-center justify-center mt-4 mb-2">
                     <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL CASH OUT</span>
@@ -262,7 +238,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
               </div>
             )}
             
-            {/* Display Cash Game closed table cash out */}
             {table.format === 'Cash' && table.cashOut !== undefined && (
               <div className="flex flex-col items-center justify-center mt-4 mb-2">
                 <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL CASH OUT</span>

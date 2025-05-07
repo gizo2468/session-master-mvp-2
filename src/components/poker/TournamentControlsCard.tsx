@@ -68,27 +68,8 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
       <CardContent className="pt-0">
         <div className="flex flex-col gap-4">
           {session.format === 'Tournament' ? (
-            // Tournament fixed rebuy
-            isFreezeout ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <Button
-                        variant="outline"
-                        className="w-full flex justify-center items-center gap-2 opacity-50 cursor-not-allowed"
-                        disabled={true}
-                      >
-                        <Icon name="Plus" size={16} /> Add Rebuy
-                      </Button>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Rebuys are not allowed in Freezeout tournaments</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
+            // Tournament rebuy control - completely hide for Freezeout
+            !isFreezeout && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
@@ -115,7 +96,7 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
               </AlertDialog>
             )
           ) : (
-            // Cash game flexible rebuy
+            // Cash game flexible rebuy - no changes needed
             <>
               <Button
                 variant="outline"
