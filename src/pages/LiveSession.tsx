@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -341,7 +342,6 @@ export default function LiveSession() {
   };
   
   if (!session) {
-    
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
@@ -800,4 +800,66 @@ export default function LiveSession() {
                     value={nextDayStart ? nextDayStart.toISOString().slice(0, 16) : ''}
                     onChange={(e) => setNextDayStart(e.target.value ? new Date(e.target.value) : null)}
                   />
-                  <p className="text-xs text-gray-500
+                  <p className="text-xs text-gray-500 mt-1">
+                    When does the next day of this tournament begin?
+                  </p>
+                </div>
+                
+                <div>
+                  <label htmlFor="chipsCarryover" className="block text-sm font-medium mb-1">
+                    Chips Carryover
+                  </label>
+                  <input
+                    id="chipsCarryover"
+                    type="number"
+                    min="0"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    placeholder="Enter chip count"
+                    value={chipsCarryover}
+                    onChange={(e) => setChipsCarryover(e.target.value)}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    How many chips are you carrying over to the next day?
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelEndTable}>
+              Cancel
+            </Button>
+            <Button 
+              className="bg-poker-gold hover:bg-poker-darkGold text-white"
+              onClick={handleConfirmEndTable}
+              disabled={(endReason !== 'day-ended' && !cashOutAmount) || 
+                        (endReason === 'day-ended' && !chipsCarryover)}
+            >
+              {endReason === 'day-ended' ? 'End Day' : 'End Table'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add Table Dialog */}
+      <Dialog open={showAddTableForm} onOpenChange={setShowAddTableForm}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Table</DialogTitle>
+            <DialogDescription>
+              Add details for a new table in your poker session.
+            </DialogDescription>
+          </DialogHeader>
+          <AddTableForm 
+            onSubmit={tableData => {
+              handleAddTable(tableData);
+              setShowAddTableForm(false);
+            }}
+            onCancel={() => setShowAddTableForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
