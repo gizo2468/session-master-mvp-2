@@ -94,6 +94,28 @@ export default function SessionCard({ session }: SessionCardProps) {
           </span>
         )}
       </div>
+      
+      {/* Display important multi-day tournament data in SessionCard */}
+      {multiDayCount > 0 && session.tables && (
+        <div className="mt-2 pt-2 border-t border-gray-100 text-xs">
+          {session.tables.filter(table => table.isMultiDay && table.dayEndedWithoutElimination).map((table, index) => (
+            <div key={table.id} className="mb-1 last:mb-0 bg-green-50 p-1 rounded">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Next Day:</span>
+                <span className="font-medium">
+                  {table.nextDayStart ? new Date(table.nextDayStart).toLocaleDateString() : 'Not set'}
+                </span>
+              </div>
+              {table.chipsCarryover && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Chips:</span>
+                  <span className="font-medium text-green-700">{table.chipsCarryover.toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
