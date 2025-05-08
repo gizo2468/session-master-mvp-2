@@ -14,6 +14,7 @@ import TournamentControlsCard from '@/components/poker/TournamentControlsCard';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import TableTimerDisplay from '@/components/poker/TableTimerDisplay';
 import { Badge } from '@/components/ui/badge';
+import TableCard from '@/components/poker/TableCard';
 import { 
   Dialog,
   DialogContent,
@@ -25,7 +26,7 @@ import {
 
 export default function ConfirmSession() {
   const navigate = useNavigate();
-  const { activeSession, endSession, updateSessionDuration, addRebuy, updateSession } = useSessionContext();
+  const { activeSession, endSession, updateSessionDuration, addRebuy, updateSession, endTable, addTableRebuy } = useSessionContext();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   
@@ -72,6 +73,60 @@ export default function ConfirmSession() {
       description: `$${rebuyAmount.toFixed(2)} rebuy has been added to your session.`
     });
     setShowRebuyConfirmDialog(false);
+  };
+  
+  const handleEndTable = (
+    tableId: string, 
+    cashOut: number, 
+    notes?: string,
+    bounty?: { 
+      bountyCount?: number, 
+      bountyAmount?: number, 
+      finalPosition?: number 
+    },
+    multiDayInfo?: {
+      nextDayStart?: Date,
+      chipsCarryover?: number,
+      dayEndedWithoutElimination?: boolean
+    }
+  ) => {
+    if (!activeSession) return;
+    
+    try {
+      endTable(activeSession.id, tableId, cashOut, notes, bounty, multiDayInfo);
+      toast({
+        title: multiDayInfo?.dayEndedWithoutElimination ? "Day Ended" : "Table Ended",
+        description: multiDayInfo?.dayEndedWithoutElimination 
+          ? "Your tournament progress has been saved for the next day." 
+          : "The table has been successfully ended."
+      });
+    } catch (error) {
+      console.error("Error ending table:", error);
+      toast({
+        title: "Error Ending Table",
+        description: "There was a problem ending the table. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAddTableRebuy = (tableId: string, amount: number) => {
+    if (!activeSession) return;
+    
+    try {
+      addTableRebuy(activeSession.id, tableId, amount);
+      toast({
+        title: "Rebuy Added",
+        description: `$${amount.toFixed(2)} rebuy has been added to the table.`
+      });
+    } catch (error) {
+      console.error("Error adding table rebuy:", error);
+      toast({
+        title: "Error Adding Rebuy",
+        description: "There was a problem adding the rebuy. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   if (!activeSession) {
@@ -139,84 +194,18 @@ export default function ConfirmSession() {
             />
           </div>
           
-          {/* Add TimerDisplay to tables if they exist */}
+          {/* Using TableCard component for all tables */}
           {activeSession.tables && activeSession.tables.length > 0 && (
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <h3 className="text-xl font-extrabold tracking-tight mb-4">Tables</h3>
               <div className="space-y-3">
                 {activeSession.tables.map((table) => (
-                  <div key={table.id} className="border border-gray-200 rounded-lg p-4">
-                    {/* Improved header layout with larger text and balanced layout */}
-                    <div className="text-center mb-2">
-                      <h4 className="text-xl font-bold">{table.location}</h4>
-                      <div className="flex items-center justify-center gap-2 text-base text-gray-600">
-                        <span>{table.gameType}</span>
-                        <span>•</span> 
-                        <span>{table.format}</span>
-                      </div>
-                      {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
-                        <span className="inline-block mt-1 px-3 py-1 bg-poker-gold/10 text-poker-gold rounded-full">
-                          {table.tournamentTypes[0]}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Redesigned Start, Duration row with better visual balance */}
-                    <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 pb-4">
-                      <div className="flex flex-1 justify-center items-center">
-                        <div className="text-center">
-                          <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
-                          <div className="font-medium">{new Date(table.startTime).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})}</div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex-1 flex justify-center items-center border-x border-gray-100 px-4">
-                        <div className="text-center">
-                          <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
-                          <TableTimerDisplay 
-                            startTime={table.startTime}
-                            endTime={table.endTime} 
-                            isActive={table.isActive}
-                            className="flex justify-center"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Styled Buy-in and Rebuy section with rebuy count */}
-                    <div className="flex items-center gap-4 justify-center">
-                      <div className="text-right">
-                        <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
-                        <span className="font-bold text-xl">
-                          ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
-                        </span>
-                      </div>
-                      {(() => {
-                        const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
-                        const addOnTotal = table.addOns ? table.addOns : 0;
-                        const extra = rebuyTotal + addOnTotal;
-                        const rebuyCount = Math.floor(rebuyTotal / (table.initialBuyIn ?? table.buyIn));
-                        return extra > 0 ? (
-                          <div className="text-right">
-                            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
-                            <div>
-                              <span className="font-bold text-xl text-amber-600">
-                                +${extra.toFixed(2)}
-                              </span>
-                              {rebuyCount > 0 && (
-                                <span className="text-sm text-gray-500 ml-1">({rebuyCount})</span>
-                              )}
-                            </div>
-                          </div>
-                        ) : null;
-                      })()}
-                    </div>
-                    {!table.isActive && table.cashOut !== undefined && (
-                      <div className={table.cashOut > table.buyIn ? "text-green-600" : "text-red-600"}>
-                        {table.cashOut > table.buyIn ? "+" : ""}${(table.cashOut - table.buyIn).toFixed(2)}
-                      </div>
-                    )}
-                  </div>
+                  <TableCard
+                    key={table.id}
+                    table={table}
+                    onEndTable={handleEndTable}
+                    onAddRebuy={handleAddTableRebuy}
+                  />
                 ))}
               </div>
             </div>
