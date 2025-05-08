@@ -46,16 +46,18 @@ export default function LiveSession() {
   const [sessionNotes, setSessionNotes] = useState('');
   const [showAddTableForm, setShowAddTableForm] = useState(false);
   
-  // Add states for rebuy confirmation dialog
+  // States for rebuy confirmation dialog
   const [showRebuyConfirmDialog, setShowRebuyConfirmDialog] = useState(false);
   const [pendingRebuyTableId, setPendingRebuyTableId] = useState<string | null>(null);
   const [pendingRebuyAmount, setPendingRebuyAmount] = useState(0);
   
-  // Add states for end table dialog
+  // States for end table dialog
   const [showEndTableDialog, setShowEndTableDialog] = useState(false);
   const [pendingEndTableId, setPendingEndTableId] = useState<string | null>(null);
   const [cashOutAmount, setCashOutAmount] = useState('');
   const [tableNotes, setTableNotes] = useState('');
+  
+  // Add these missing states for bounty tournament fields
   const [bountyCount, setBountyCount] = useState('');
   const [bountyAmount, setBountyAmount] = useState('');
   const [finalPosition, setFinalPosition] = useState('');
@@ -247,7 +249,7 @@ export default function LiveSession() {
       });
     }
     
-    // Reset states
+    // Reset all states
     setShowEndTableDialog(false);
     setPendingEndTableId(null);
     setCashOutAmount('');
@@ -261,6 +263,7 @@ export default function LiveSession() {
   };
   
   const handleCancelEndTable = () => {
+    // Reset all states
     setShowEndTableDialog(false);
     setPendingEndTableId(null);
     setCashOutAmount('');
@@ -747,6 +750,7 @@ export default function LiveSession() {
                   </div>
                 </div>
 
+                {/* Restore the tournament fields */}
                 {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.format === 'Tournament' && (
                   <div>
                     <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
@@ -764,6 +768,7 @@ export default function LiveSession() {
                   </div>
                 )}
 
+                {/* Restore the bounty tournament specific fields */}
                 {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId) && 
                  isBountyTournament(session.tables.find(t => t.id === pendingEndTableId)!) && (
                   <>
