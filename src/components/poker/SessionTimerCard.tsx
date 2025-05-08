@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
@@ -66,6 +67,17 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   // IMPORTANT: Only show blinds for Cash format - strict check to ensure it's never shown for Tournament
   const shouldShowBlinds = format === 'Cash' && smallBlind !== undefined && bigBlind !== undefined;
   
+  const handleEndSession = (e: React.MouseEvent) => {
+    // Prevent event bubbling
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Call the provided onEndSession handler
+    if (typeof onEndSession === 'function') {
+      onEndSession();
+    }
+  };
+  
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
       <div className="mb-2 text-sm text-gray-500">Session Time</div>
@@ -92,7 +104,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       
       <div className="flex justify-center">
         <Button
-          onClick={onEndSession}
+          onClick={handleEndSession}
           variant="destructive"
           className="flex items-center gap-2"
         >
