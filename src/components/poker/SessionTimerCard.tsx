@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
@@ -23,7 +22,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   onEndSession,
 }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
-  const { updateSessionDuration } = useSessionContext();
+  const { updateSessionDuration, activeSession } = useSessionContext();
   
   useEffect(() => {
     const initialElapsedTime = Math.floor((new Date().getTime() - new Date(startTime).getTime()) / 1000);
@@ -36,8 +35,9 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       setElapsedTime(prev => {
         const newTime = prev + 1;
         // Update session duration in context if updateSessionDuration is available
-        if (typeof updateSessionDuration === 'function') {
-          updateSessionDuration(newTime);
+        // and activeSession exists
+        if (typeof updateSessionDuration === 'function' && activeSession) {
+          updateSessionDuration(activeSession.id, newTime);
         }
         return newTime;
       });
@@ -46,7 +46,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [startTime, updateSessionDuration]);
+  }, [startTime, updateSessionDuration, activeSession]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
