@@ -222,6 +222,7 @@ export default function LiveSession() {
         dayEndedWithoutElimination: true
       } : undefined;
 
+      // Make sure we're passing the bounty data
       endTable(
         session.id, 
         pendingEndTableId, 
@@ -690,7 +691,7 @@ export default function LiveSession() {
         </DialogContent>
       </Dialog>
       
-      {/* End Table Dialog - Updated with multi-day support */}
+      {/* End Table Dialog - Fixed conditional rendering for bounty tournament fields */}
       <Dialog open={showEndTableDialog} onOpenChange={setShowEndTableDialog}>
         <DialogContent>
           <DialogHeader>
@@ -750,8 +751,9 @@ export default function LiveSession() {
                   </div>
                 </div>
 
-                {/* Restore the tournament fields */}
-                {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.format === 'Tournament' && (
+                {/* Always show the final position field for Tournament format */}
+                {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.format === 'Tournament' && 
+                 endReason !== 'day-ended' && (
                   <div>
                     <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
                       Final Position (Optional)
@@ -768,9 +770,12 @@ export default function LiveSession() {
                   </div>
                 )}
 
-                {/* Restore the bounty tournament specific fields */}
+                {/* Fixed conditional rendering for bounty tournament fields */}
                 {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId) && 
-                 isBountyTournament(session.tables.find(t => t.id === pendingEndTableId)!) && (
+                 session?.tables?.find(t => t.id === pendingEndTableId)?.format === 'Tournament' &&
+                 session?.tables?.find(t => t.id === pendingEndTableId)?.tournamentTypes?.some(type => 
+                   ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) &&
+                 endReason !== 'day-ended' && (
                   <>
                     <div>
                       <label htmlFor="bountyCount" className="block text-sm font-medium mb-1">
@@ -810,40 +815,42 @@ export default function LiveSession() {
                   </>
                 )}
                 
-                <div className="mb-6">
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm">Profit/Loss:</span>
-                    <span className={`text-sm font-bold ${
-                      cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.buyIn && 
-                      parseFloat(cashOutAmount) >= (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)
-                        ? 'text-green-600' 
-                        : cashOutAmount 
-                          ? 'text-red-600' 
-                          : 'text-gray-500'
-                    }`}>
-                      {cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)
-                        ? `$${(parseFloat(cashOutAmount) - (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)).toFixed(2)}` 
-                        : '$0.00'}
-                    </span>
+                {endReason !== 'day-ended' && (
+                  <div className="mb-6">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm">Profit/Loss:</span>
+                      <span className={`text-sm font-bold ${
+                        cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.buyIn && 
+                        parseFloat(cashOutAmount) >= (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)
+                          ? 'text-green-600' 
+                          : cashOutAmount 
+                            ? 'text-red-600' 
+                            : 'text-gray-500'
+                      }`}>
+                        {cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)
+                          ? `$${(parseFloat(cashOutAmount) - (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)).toFixed(2)}` 
+                          : '$0.00'}
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      {cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId) && (
+                        <div 
+                          className={`h-full ${
+                            parseFloat(cashOutAmount) >= (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)
+                              ? 'bg-green-500' 
+                              : 'bg-red-500'
+                          }`}
+                          style={{ 
+                            width: cashOutAmount 
+                              ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)) / 
+                                  (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 1) * 100), 100)}%` 
+                              : '0%' 
+                          }}
+                        />
+                      )}
+                    </div>
                   </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    {cashOutAmount && pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId) && (
-                      <div 
-                        className={`h-full ${
-                          parseFloat(cashOutAmount) >= (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)
-                            ? 'bg-green-500' 
-                            : 'bg-red-500'
-                        }`}
-                        style={{ 
-                          width: cashOutAmount 
-                            ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 0)) / 
-                                (session.tables.find(t => t.id === pendingEndTableId)?.buyIn || 1) * 100), 100)}%` 
-                            : '0%' 
-                        }}
-                      />
-                    )}
-                  </div>
-                </div>
+                )}
                 
                 <div>
                   <label htmlFor="tableNotes" className="block text-sm font-medium mb-1">

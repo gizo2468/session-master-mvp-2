@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import { format as dateFormat } from 'date-fns';
@@ -25,21 +25,24 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   const [elapsedTime, setElapsedTime] = useState(0);
   const { updateSessionDuration, activeSession } = useSessionContext();
   
+  // Use useCallback to memoize the updateDuration function to prevent recreation on every render
+  const updateDuration = useCallback((newTime: number) => {
+    if (typeof updateSessionDuration === 'function' && activeSession) {
+      updateSessionDuration(activeSession.id, newTime);
+    }
+  }, [updateSessionDuration, activeSession]);
+  
   useEffect(() => {
     const initialElapsedTime = Math.floor((new Date().getTime() - new Date(startTime).getTime()) / 1000);
     setElapsedTime(initialElapsedTime);
     
     let timer: number | undefined;
     
-    // Always run the timer (no conditional on timerActive)
     timer = window.setInterval(() => {
       setElapsedTime(prev => {
         const newTime = prev + 1;
-        // Update session duration in context if updateSessionDuration is available
-        // and activeSession exists
-        if (typeof updateSessionDuration === 'function' && activeSession) {
-          updateSessionDuration(activeSession.id, newTime);
-        }
+        // Update session duration outside the render cycle
+        updateDuration(newTime);
         return newTime;
       });
     }, 1000);
@@ -47,7 +50,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [startTime, updateSessionDuration, activeSession]);
+  }, [startTime, updateDuration]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
