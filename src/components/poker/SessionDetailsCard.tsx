@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession, TableData } from '@/types/poker';
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe, Calendar, CreditCard } from "lucide-react";
+import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe, Calendar, Chips } from "lucide-react";
 import { format } from 'date-fns';
 
 interface SessionDetailsCardProps {
@@ -152,7 +153,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
                       <span className="font-medium">{table.location}</span>
                       {table.chipsCarryover && (
                         <div className="flex items-center gap-1">
-                          <CreditCard className="h-3 w-3 text-green-600" />
+                          <Chips className="h-3 w-3 text-green-600" />
                           <span className="text-green-700">{table.chipsCarryover.toLocaleString()}</span>
                         </div>
                       )}
