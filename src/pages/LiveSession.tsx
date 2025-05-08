@@ -383,11 +383,11 @@ export default function LiveSession() {
       <main className="flex-1 pt-4">
         <div className="container mx-auto max-w-md px-4 pb-8">
           <SessionTimerCard 
-            startTime={session.startTime}
-            gameType={session.gameType}
-            format={session.format}
-            smallBlind={session.smallBlind}
-            bigBlind={session.bigBlind}
+            startTime={session?.startTime}
+            gameType={session?.gameType}
+            format={session?.format}
+            smallBlind={session?.smallBlind}
+            bigBlind={session?.bigBlind}
             onEndSession={() => setShowEndSessionSheet(true)}
           />
           
@@ -590,6 +590,75 @@ export default function LiveSession() {
           </div>
         </div>
       </main>
+      
+      {/* End Session Sheet */}
+      <Sheet open={showEndSessionSheet} onOpenChange={setShowEndSessionSheet}>
+        <SheetContent className="sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>End Session</SheetTitle>
+            <SheetDescription>
+              Confirm to end your current poker session.
+            </SheetDescription>
+          </SheetHeader>
+          
+          <div className="py-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Session Summary</h3>
+                <div className="bg-gray-50 p-4 rounded-md">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-gray-500">Cash Out:</span>
+                    <span className="font-bold">${autoCashOutAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-gray-500">Buy In:</span>
+                    <span className="font-bold">${session?.buyIn.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Profit/Loss:</span>
+                    <span className={`font-bold ${
+                      autoCashOutAmount > (session?.buyIn || 0) 
+                        ? 'text-green-600' 
+                        : 'text-red-600'
+                    }`}>
+                      {autoCashOutAmount > (session?.buyIn || 0) ? '+' : ''}
+                      ${(autoCashOutAmount - (session?.buyIn || 0)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label htmlFor="sessionNotes" className="block text-sm font-medium text-gray-700">
+                  Session Notes (Optional)
+                </label>
+                <Textarea
+                  id="sessionNotes"
+                  placeholder="Add any notes about this session..."
+                  className="mt-1 w-full"
+                  value={sessionNotes}
+                  onChange={(e) => setSessionNotes(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          
+          <SheetFooter className="sm:justify-start gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowEndSessionSheet(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-poker-gold hover:bg-poker-darkGold text-white"
+              onClick={handleEndSession}
+            >
+              End Session
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
       
       {/* Rebuy Confirmation Dialog */}
       <Dialog open={showRebuyConfirmDialog} onOpenChange={setShowRebuyConfirmDialog}>
