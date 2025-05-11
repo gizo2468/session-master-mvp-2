@@ -3,14 +3,26 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '@/components/ui/Lucide';
 import { useTutorial } from '@/context/TutorialContext';
+import { useToast } from '@/hooks/use-toast';
 
 export default function NewSessionButton() {
   const navigate = useNavigate();
   const { completeCurrentStepAction } = useTutorial();
+  const { toast } = useToast();
   
   const handleClick = () => {
+    // Log the action for debugging
+    console.log("NewSessionButton clicked - completing tutorial step action");
+    
     // Mark the action as completed for the tutorial
     completeCurrentStepAction();
+    
+    // Show a toast to confirm action completion
+    toast({
+      title: "Action completed",
+      description: "Now navigating to start a new session",
+      duration: 3000,
+    });
     
     // Perform the actual navigation
     navigate('/new-session');

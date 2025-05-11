@@ -12,11 +12,13 @@ import ConnectionNotification from '@/components/coaching/ConnectionNotification
 import Icon from '@/components/ui/Lucide';
 import { Button } from '@/components/ui/button';
 import { useTutorial } from '@/context/TutorialContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const navigate = useNavigate();
   const { sessions, activeSession } = useSessionContext();
   const { completeCurrentStepAction } = useTutorial();
+  const { toast } = useToast();
   
   const activeSessionsCount = activeSession ? 1 : 0;
   
@@ -25,8 +27,18 @@ const Index = () => {
     .slice(0, 3);
     
   const handleViewAllClick = () => {
+    // Log the action for debugging
+    console.log("View All button clicked - completing tutorial step action");
+    
     // Mark the action as completed for the tutorial
     completeCurrentStepAction();
+    
+    // Show a toast to confirm action completion
+    toast({
+      title: "Action completed",
+      description: "Now navigating to session history",
+      duration: 3000,
+    });
     
     // Perform the navigation
     navigate('/history');

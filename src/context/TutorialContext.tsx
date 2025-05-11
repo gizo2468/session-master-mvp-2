@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -100,11 +100,14 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     // First step (welcome modal) is always considered completed
     setIsStepActionCompleted(currentStepIndex === 0);
+    
+    console.log(`Tutorial step changed to ${currentStepIndex + 1}. Action required: ${TUTORIAL_STEPS[currentStepIndex]?.actionType || 'none'}`);
   }, [currentStepIndex]);
   
   // Check if user is new on mount
   useEffect(() => {
     if (user?.isNewUser) {
+      console.log("New user detected, starting tutorial");
       setIsActive(true);
       // Start with the first step
       setCurrentStepIndex(0);
@@ -112,15 +115,6 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setIsStepActionCompleted(true);
     }
   }, [user]);
-  
-  // Debug logs to help diagnose issues
-  useEffect(() => {
-    if (isActive) {
-      console.log("Tutorial is active. Current step:", currentStepIndex + 1);
-      console.log("Current step details:", TUTORIAL_STEPS[currentStepIndex]);
-      console.log("Step action completed:", isStepActionCompleted);
-    }
-  }, [isActive, currentStepIndex, isStepActionCompleted]);
   
   // Mark the current step's action as completed
   const completeCurrentStepAction = () => {
@@ -179,10 +173,7 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     
     if (currentStepIndex < TUTORIAL_STEPS.length - 1) {
-      setCurrentStepIndex(prevIndex => {
-        console.log("Updating step index from", prevIndex, "to", prevIndex + 1);
-        return prevIndex + 1;
-      });
+      setCurrentStepIndex(prevIndex => prevIndex + 1);
     } else {
       completeTutorial();
     }

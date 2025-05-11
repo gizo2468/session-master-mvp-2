@@ -59,12 +59,12 @@ const TutorialHighlight: React.FC<{
   
   return (
     <div className="fixed inset-0 z-50">
-      {/* Semi-transparent overlay that allows clicking through on the highlighted element */}
+      {/* Semi-transparent overlay that blocks all clicks */}
       <div className="absolute inset-0 bg-black/50 pointer-events-auto" />
       
       {/* Create a "hole" in the overlay for the highlighted element */}
       <div 
-        className="absolute bg-transparent pointer-events-auto"
+        className="absolute bg-transparent pointer-events-none"
         style={{
           top: `${elementPosition.top}px`,
           left: `${elementPosition.left}px`,
@@ -73,14 +73,38 @@ const TutorialHighlight: React.FC<{
         }}
       />
       
-      {/* Highlight border */}
-      <div 
-        className="absolute border-2 border-poker-gold rounded-md shadow-lg pointer-events-none" 
+      {/* Make only the highlighted element clickable */}
+      <div
+        className="absolute"
         style={{
           top: `${elementPosition.top}px`,
           left: `${elementPosition.left}px`,
           width: `${elementPosition.width}px`,
           height: `${elementPosition.height}px`,
+          pointerEvents: 'auto',
+          cursor: 'pointer',
+          zIndex: 60,
+        }}
+        onClick={(e) => {
+          // Allow the click to pass through to the actual element
+          const element = document.getElementById(elementId || '');
+          if (element) {
+            // Simulate a click on the actual element
+            element.click();
+          }
+          e.stopPropagation();
+        }}
+      />
+      
+      {/* Highlight border */}
+      <div 
+        className="absolute border-2 border-poker-gold rounded-md shadow-lg animate-pulse pointer-events-none" 
+        style={{
+          top: `${elementPosition.top - 4}px`,
+          left: `${elementPosition.left - 4}px`,
+          width: `${elementPosition.width + 8}px`,
+          height: `${elementPosition.height + 8}px`,
+          boxShadow: '0 0 15px 5px rgba(212, 175, 55, 0.5)',
         }}
       />
       
@@ -121,7 +145,7 @@ const TutorialHighlight: React.FC<{
  */
 const StepContent: React.FC<{ step: TutorialStep }> = ({ step }) => {
   const { t } = useLanguage();
-  const { nextStep, prevStep, skipTutorial, totalSteps, isStepActionCompleted } = useTutorial();
+  const { nextStep, prevStep, skipTutorial, isStepActionCompleted } = useTutorial();
   
   return (
     <div className="space-y-4">
@@ -131,16 +155,13 @@ const StepContent: React.FC<{ step: TutorialStep }> = ({ step }) => {
       {step.actionType && !isStepActionCompleted && (
         <div className="mt-2 bg-yellow-50 p-2 rounded-md border border-yellow-200">
           <p className="text-sm text-yellow-800 flex items-center">
-            <Icon name="Info" className="mr-1 h-4 w-4" />
+            <Icon name="InfoCircle" className="mr-1 h-4 w-4" />
             {step.actionDescription || `Complete the action to continue`}
           </p>
         </div>
       )}
       
       <div className="flex justify-between items-center mt-4">
-        <div className="text-sm text-gray-500">
-          {t('step')} {step.id} {t('of')} {totalSteps}
-        </div>
         <div className="flex space-x-2">
           {step.id > 1 && (
             <Button 
@@ -158,18 +179,21 @@ const StepContent: React.FC<{ step: TutorialStep }> = ({ step }) => {
             onClick={nextStep}
             disabled={step.actionType && !isStepActionCompleted && step.id !== 1}
           >
-            {step.id === totalSteps ? t('finish') : (isStepActionCompleted ? t('next') : t('proceed'))}
-            {step.id !== totalSteps && isStepActionCompleted && <Icon name="ArrowRight" className="ml-1 h-4 w-4" />}
+            {step.id === 5 ? t('finish') : (isStepActionCompleted ? t('next') : t('proceed'))}
+            {step.id !== 5 && isStepActionCompleted && <Icon name="ArrowRight" className="ml-1 h-4 w-4" />}
           </Button>
         </div>
+        
+        {/* Skip button is now placed separately */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={skipTutorial}
+          className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          {t('skip')}
+        </Button>
       </div>
-      
-      <button 
-        onClick={() => skipTutorial()}
-        className="text-sm text-gray-400 hover:text-gray-600 transition-colors mt-2"
-      >
-        {t('skip_tutorial')}
-      </button>
     </div>
   );
 };
