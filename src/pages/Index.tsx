@@ -45,13 +45,17 @@ const Index = () => {
           <NewSessionButton />
         </div>
         
-        <StatsQuickView />
+        {/* Add tutorial target IDs to key features */}
+        <div id="live-timer-feature">
+          <StatsQuickView />
+        </div>
         
         <div className="mb-4 flex justify-between items-center">
           <h2 className="font-extrabold text-xl tracking-tight">
             Recent Sessions (Active {activeSessionsCount})
           </h2>
           <button 
+            id="add-table-feature"
             className="text-sm text-poker-feltGreen"
             onClick={() => navigate('/history')}
           >
@@ -61,7 +65,9 @@ const Index = () => {
         
         {recentSessions.length > 0 ? (
           recentSessions.map(session => (
-            <SessionCard key={session.id} session={session} />
+            <div key={session.id} id={session.id === sessions[0]?.id ? "end-session-feature" : undefined}>
+              <SessionCard key={session.id} session={session} />
+            </div>
           ))
         ) : (
           <div className="bg-white rounded-lg shadow-md p-4 text-center text-gray-500">

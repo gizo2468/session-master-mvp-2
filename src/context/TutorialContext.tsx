@@ -87,12 +87,26 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     if (user?.isNewUser) {
       setIsActive(true);
+      // Start with the first step
+      setCurrentStepIndex(0);
     }
   }, [user]);
   
+  // Debug logs to help diagnose issues
+  useEffect(() => {
+    if (isActive) {
+      console.log("Tutorial is active. Current step:", currentStepIndex + 1);
+      console.log("Current step details:", TUTORIAL_STEPS[currentStepIndex]);
+    }
+  }, [isActive, currentStepIndex]);
+  
   const nextStep = () => {
+    console.log("Next step called. Current index:", currentStepIndex);
     if (currentStepIndex < TUTORIAL_STEPS.length - 1) {
-      setCurrentStepIndex(prevIndex => prevIndex + 1);
+      setCurrentStepIndex(prevIndex => {
+        console.log("Updating step index from", prevIndex, "to", prevIndex + 1);
+        return prevIndex + 1;
+      });
     } else {
       completeTutorial();
     }

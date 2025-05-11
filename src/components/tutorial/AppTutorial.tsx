@@ -58,7 +58,22 @@ const TutorialHighlight: React.FC<{
   if (!elementPosition) return null;
   
   return (
-    <div className="fixed inset-0 z-50 pointer-events-none">
+    <div className="fixed inset-0 z-50">
+      {/* Semi-transparent overlay that allows clicking through on the highlighted element */}
+      <div className="absolute inset-0 bg-black/50 pointer-events-auto" />
+      
+      {/* Create a "hole" in the overlay for the highlighted element */}
+      <div 
+        className="absolute bg-transparent pointer-events-auto"
+        style={{
+          top: `${elementPosition.top}px`,
+          left: `${elementPosition.left}px`,
+          width: `${elementPosition.width}px`,
+          height: `${elementPosition.height}px`,
+        }}
+      />
+      
+      {/* Highlight border */}
       <div 
         className="absolute border-2 border-poker-gold rounded-md shadow-lg pointer-events-none" 
         style={{
@@ -68,6 +83,8 @@ const TutorialHighlight: React.FC<{
           height: `${elementPosition.height}px`,
         }}
       />
+      
+      {/* Tooltip content */}
       <div 
         className="absolute bg-white rounded-md shadow-lg border border-gray-200 p-4 z-50 max-w-sm pointer-events-auto"
         style={{
@@ -159,7 +176,7 @@ const AppTutorial: React.FC = () => {
   if (currentStep.isModal) {
     return (
       <Dialog open={true} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md" showClose={false}>
+        <DialogContent className="sm:max-w-md">
           <div className="space-y-4 p-2">
             <h2 className="text-xl font-bold text-poker-black text-center">
               {currentStep.title}
@@ -177,15 +194,12 @@ const AppTutorial: React.FC = () => {
   // Show tooltip highlight for other steps
   if (currentStep.hasHighlight && currentStep.targetId) {
     return (
-      <>
-        <div className="fixed inset-0 bg-black/20 z-40 pointer-events-none" />
-        <TutorialHighlight 
-          elementId={currentStep.targetId} 
-          position={currentStep.position}
-        >
-          <StepContent step={currentStep} />
-        </TutorialHighlight>
-      </>
+      <TutorialHighlight 
+        elementId={currentStep.targetId} 
+        position={currentStep.position}
+      >
+        <StepContent step={currentStep} />
+      </TutorialHighlight>
     );
   }
   
