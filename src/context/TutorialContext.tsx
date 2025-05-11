@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useLocation } from 'react-router-dom';
 
 export type TutorialStep = {
   id: number;
@@ -15,7 +14,7 @@ export type TutorialStep = {
   isModal?: boolean;
   actionType?: 'click' | 'navigation' | 'observe';
   actionDescription?: string;
-  requiredPage?: string;
+  requiredPath?: string; // Changed from requiredPage to requiredPath
 };
 
 export const TUTORIAL_STEPS: TutorialStep[] = [
@@ -34,7 +33,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     hasHighlight: true,
     actionType: "click",
     actionDescription: "Click the New Session button to continue",
-    requiredPage: "/",
+    requiredPath: "/",
   },
   {
     id: 3,
@@ -45,7 +44,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     hasHighlight: true,
     actionType: "click",
     actionDescription: "Select No Limit Hold'em to continue",
-    requiredPage: "/new-session",
+    requiredPath: "/new-session",
   },
   {
     id: 4,
@@ -56,7 +55,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     hasHighlight: true,
     actionType: "click",
     actionDescription: "Click 'View All' to continue",
-    requiredPage: "/",
+    requiredPath: "/",
   },
   {
     id: 5,
@@ -67,7 +66,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     hasHighlight: true,
     actionType: "observe",
     actionDescription: "Observe the timer feature",
-    requiredPage: "/",
+    requiredPath: "/",
   },
 ];
 
@@ -83,6 +82,7 @@ type TutorialContextType = {
   completeCurrentStepAction: () => void;
   isStepActionCompleted: boolean;
   isCurrentStepAvailable: boolean;
+  checkStepAvailability: (path: string) => void; // New function to check availability based on current path
 };
 
 const TutorialContext = createContext<TutorialContextType | undefined>(undefined);
@@ -95,10 +95,12 @@ export const useTutorial = () => {
   return context;
 };
 
-export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const TutorialProvider: React.FC<{ 
+  children: React.ReactNode;
+  currentPath?: string; // Accept currentPath as a prop instead of using useLocation
+}> = ({ children, currentPath = '/' }) => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
-  const location = useLocation();
   
   const [isActive, setIsActive] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -113,26 +115,30 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log(`Tutorial step changed to ${currentStepIndex + 1}. Action required: ${TUTORIAL_STEPS[currentStepIndex]?.actionType || 'none'}`);
   }, [currentStepIndex]);
   
-  // Check if the current step is available based on the current page
-  useEffect(() => {
+  // Check if the current step is available based on the current path
+  const checkStepAvailability = (path: string) => {
     const currentStep = TUTORIAL_STEPS[currentStepIndex];
-    const currentPath = location.pathname;
     
-    if (currentStep && currentStep.requiredPage) {
-      const isOnRequiredPage = currentPath === currentStep.requiredPage;
-      setIsCurrentStepAvailable(isOnRequiredPage);
+    if (currentStep && currentStep.requiredPath) {
+      const isOnRequiredPath = path === currentStep.requiredPath;
+      setIsCurrentStepAvailable(isOnRequiredPath);
       
-      console.log(`Current path: ${currentPath}, Required path: ${currentStep.requiredPage}, Available: ${isOnRequiredPage}`);
+      console.log(`Current path: ${path}, Required path: ${currentStep.requiredPath}, Available: ${isOnRequiredPath}`);
       
-      // If we're not on the required page and this step requires user interaction,
-      // we should wait until the user navigates to the correct page
-      if (!isOnRequiredPage && currentStep.actionType) {
-        console.log(`Waiting for user to navigate to ${currentStep.requiredPage}`);
+      // If we're not on the required path and this step requires user interaction,
+      // we should wait until the user navigates to the correct path
+      if (!isOnRequiredPath && currentStep.actionType) {
+        console.log(`Waiting for user to navigate to ${currentStep.requiredPath}`);
       }
     } else {
       setIsCurrentStepAvailable(true);
     }
-  }, [currentStepIndex, location.pathname]);
+  };
+  
+  // Use effect to check availability when currentPath changes
+  useEffect(() => {
+    checkStepAvailability(currentPath);
+  }, [currentPath, currentStepIndex]);
   
   // Check if user is new on mount
   useEffect(() => {
@@ -154,7 +160,7 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // For steps with navigation requirements, we can auto-advance to the next step
     // when the action is completed (e.g., after clicking a button that changes the page)
     const currentStep = TUTORIAL_STEPS[currentStepIndex];
-    if (currentStep && currentStep.actionType === 'click' && currentStep.requiredPage !== location.pathname) {
+    if (currentStep && currentStep.actionType === 'click' && currentStep.requiredPath !== currentPath) {
       console.log(`Auto-advancing to next step after navigation action`);
       setTimeout(() => {
         nextStep();
@@ -195,7 +201,7 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         targetElement.removeEventListener('click', handleInteraction);
       }
     };
-  }, [isActive, currentStepIndex, isStepActionCompleted, isCurrentStepAvailable, location.pathname]);
+  }, [isActive, currentStepIndex, isStepActionCompleted, isCurrentStepAvailable, currentPath]);
   
   const nextStep = () => {
     console.log("Next step called. Current index:", currentStepIndex);
@@ -302,6 +308,7 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     completeCurrentStepAction,
     isStepActionCompleted,
     isCurrentStepAvailable,
+    checkStepAvailability,
   };
   
   return (
