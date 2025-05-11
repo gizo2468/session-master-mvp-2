@@ -7,22 +7,25 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function NewSessionButton() {
   const navigate = useNavigate();
-  const { completeCurrentStepAction } = useTutorial();
+  const { completeCurrentStepAction, currentStep } = useTutorial();
   const { toast } = useToast();
   
   const handleClick = () => {
     // Log the action for debugging
-    console.log("NewSessionButton clicked - completing tutorial step action");
+    console.log("NewSessionButton clicked - completing tutorial step action if needed");
     
-    // Mark the action as completed for the tutorial
-    completeCurrentStepAction();
-    
-    // Show a toast to confirm action completion
-    toast({
-      title: "Action completed",
-      description: "Now navigating to start a new session",
-      duration: 3000,
-    });
+    // Only mark the action as completed if this is the current tutorial step target
+    if (currentStep.targetId === 'new-session-button') {
+      console.log("This is the current tutorial target - marking action as completed");
+      completeCurrentStepAction();
+      
+      // Show a toast to confirm action completion
+      toast({
+        title: "Action completed",
+        description: "Now navigating to start a new session",
+        duration: 3000,
+      });
+    }
     
     // Perform the actual navigation
     navigate('/new-session');

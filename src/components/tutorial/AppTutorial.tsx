@@ -22,6 +22,7 @@ const getElementPosition = (elementId: string | undefined) => {
     left: rect.left + window.scrollX,
     width: rect.width,
     height: rect.height,
+    isCircular: element.classList.contains('rounded-full'),
   };
 };
 
@@ -57,6 +58,8 @@ const TutorialHighlight: React.FC<{
   
   if (!elementPosition) return null;
   
+  const borderRadius = elementPosition.isCircular ? '50%' : '8px';
+  
   return (
     <div className="fixed inset-0 z-50">
       {/* Semi-transparent overlay that blocks all clicks */}
@@ -70,6 +73,7 @@ const TutorialHighlight: React.FC<{
           left: `${elementPosition.left}px`,
           width: `${elementPosition.width}px`,
           height: `${elementPosition.height}px`,
+          borderRadius: borderRadius,
         }}
       />
       
@@ -84,6 +88,7 @@ const TutorialHighlight: React.FC<{
           pointerEvents: 'auto',
           cursor: 'pointer',
           zIndex: 60,
+          borderRadius: borderRadius,
         }}
         onClick={(e) => {
           // Allow the click to pass through to the actual element
@@ -98,12 +103,13 @@ const TutorialHighlight: React.FC<{
       
       {/* Highlight border */}
       <div 
-        className="absolute border-2 border-poker-gold rounded-md shadow-lg animate-pulse pointer-events-none" 
+        className="absolute border-2 border-poker-gold shadow-lg animate-pulse pointer-events-none" 
         style={{
           top: `${elementPosition.top - 4}px`,
           left: `${elementPosition.left - 4}px`,
           width: `${elementPosition.width + 8}px`,
           height: `${elementPosition.height + 8}px`,
+          borderRadius: borderRadius,
           boxShadow: '0 0 15px 5px rgba(212, 175, 55, 0.5)',
         }}
       />
@@ -155,7 +161,7 @@ const StepContent: React.FC<{ step: TutorialStep }> = ({ step }) => {
       {step.actionType && !isStepActionCompleted && (
         <div className="mt-2 bg-yellow-50 p-2 rounded-md border border-yellow-200">
           <p className="text-sm text-yellow-800 flex items-center">
-            <Icon name="InfoCircle" className="mr-1 h-4 w-4" />
+            <Icon name="Info" className="mr-1 h-4 w-4" />
             {step.actionDescription || `Complete the action to continue`}
           </p>
         </div>
@@ -173,15 +179,17 @@ const StepContent: React.FC<{ step: TutorialStep }> = ({ step }) => {
               {t('back')}
             </Button>
           )}
-          <Button 
-            variant="poker" 
-            size="sm"
-            onClick={nextStep}
-            disabled={step.actionType && !isStepActionCompleted && step.id !== 1}
-          >
-            {step.id === 5 ? t('finish') : (isStepActionCompleted ? t('next') : t('proceed'))}
-            {step.id !== 5 && isStepActionCompleted && <Icon name="ArrowRight" className="ml-1 h-4 w-4" />}
-          </Button>
+          {/* Only show the Next button if no action is required or if the action is completed */}
+          {(!step.actionType || isStepActionCompleted) && (
+            <Button 
+              variant="poker" 
+              size="sm"
+              onClick={nextStep}
+            >
+              {step.id === 5 ? t('finish') : t('next')}
+              {step.id !== 5 && <Icon name="ArrowRight" className="ml-1 h-4 w-4" />}
+            </Button>
+          )}
         </div>
         
         {/* Skip button is now placed separately */}

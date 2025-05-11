@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useLocation } from 'react-router-dom';
 
 export type TutorialStep = {
   id: number;
@@ -14,6 +15,7 @@ export type TutorialStep = {
   isModal?: boolean;
   actionType?: 'click' | 'navigation' | 'observe';
   actionDescription?: string;
+  requiredPage?: string;
 };
 
 export const TUTORIAL_STEPS: TutorialStep[] = [
@@ -32,9 +34,21 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     hasHighlight: true,
     actionType: "click",
     actionDescription: "Click the New Session button to continue",
+    requiredPage: "/",
   },
   {
     id: 3,
+    title: "Set Up Your Game",
+    description: "Choose the game type you want to play. No Limit Hold'em is the most popular poker variant.",
+    targetId: "nlh",
+    position: "bottom",
+    hasHighlight: true,
+    actionType: "click",
+    actionDescription: "Select No Limit Hold'em to continue",
+    requiredPage: "/new-session",
+  },
+  {
+    id: 4,
     title: "Add Tables",
     description: "During a session, you can add multiple tables to track. This includes cash games, tournaments, and more.",
     targetId: "add-table-feature",
@@ -42,9 +56,10 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     hasHighlight: true,
     actionType: "click",
     actionDescription: "Click 'View All' to continue",
+    requiredPage: "/",
   },
   {
-    id: 4,
+    id: 5,
     title: "Live Timer",
     description: "The timer keeps track of your session duration automatically. This helps you monitor your playing time.",
     targetId: "live-timer-feature",
@@ -52,16 +67,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     hasHighlight: true,
     actionType: "observe",
     actionDescription: "Observe the timer feature",
-  },
-  {
-    id: 5,
-    title: "End Session",
-    description: "When you're done playing, end your session to save your results and review your performance.",
-    targetId: "end-session-feature",
-    position: "bottom",
-    hasHighlight: true,
-    actionType: "observe",
-    actionDescription: "Observe the end session feature",
+    requiredPage: "/",
   },
 ];
 
@@ -76,6 +82,7 @@ type TutorialContextType = {
   startTutorial: () => void;
   completeCurrentStepAction: () => void;
   isStepActionCompleted: boolean;
+  isCurrentStepAvailable: boolean;
 };
 
 const TutorialContext = createContext<TutorialContextType | undefined>(undefined);
@@ -91,10 +98,12 @@ export const useTutorial = () => {
 export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
   
   const [isActive, setIsActive] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isStepActionCompleted, setIsStepActionCompleted] = useState(false);
+  const [isCurrentStepAvailable, setIsCurrentStepAvailable] = useState(true);
   
   // Reset step completion when step changes
   useEffect(() => {
@@ -103,6 +112,27 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     console.log(`Tutorial step changed to ${currentStepIndex + 1}. Action required: ${TUTORIAL_STEPS[currentStepIndex]?.actionType || 'none'}`);
   }, [currentStepIndex]);
+  
+  // Check if the current step is available based on the current page
+  useEffect(() => {
+    const currentStep = TUTORIAL_STEPS[currentStepIndex];
+    const currentPath = location.pathname;
+    
+    if (currentStep && currentStep.requiredPage) {
+      const isOnRequiredPage = currentPath === currentStep.requiredPage;
+      setIsCurrentStepAvailable(isOnRequiredPage);
+      
+      console.log(`Current path: ${currentPath}, Required path: ${currentStep.requiredPage}, Available: ${isOnRequiredPage}`);
+      
+      // If we're not on the required page and this step requires user interaction,
+      // we should wait until the user navigates to the correct page
+      if (!isOnRequiredPage && currentStep.actionType) {
+        console.log(`Waiting for user to navigate to ${currentStep.requiredPage}`);
+      }
+    } else {
+      setIsCurrentStepAvailable(true);
+    }
+  }, [currentStepIndex, location.pathname]);
   
   // Check if user is new on mount
   useEffect(() => {
@@ -120,11 +150,21 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const completeCurrentStepAction = () => {
     console.log("Completing step action for step", currentStepIndex + 1);
     setIsStepActionCompleted(true);
+    
+    // For steps with navigation requirements, we can auto-advance to the next step
+    // when the action is completed (e.g., after clicking a button that changes the page)
+    const currentStep = TUTORIAL_STEPS[currentStepIndex];
+    if (currentStep && currentStep.actionType === 'click' && currentStep.requiredPage !== location.pathname) {
+      console.log(`Auto-advancing to next step after navigation action`);
+      setTimeout(() => {
+        nextStep();
+      }, 500); // Short delay to ensure navigation completes
+    }
   };
   
   // Add event listeners for target elements to detect interactions
   useEffect(() => {
-    if (!isActive || isStepActionCompleted) return;
+    if (!isActive || isStepActionCompleted || !isCurrentStepAvailable) return;
     
     const currentStep = TUTORIAL_STEPS[currentStepIndex];
     if (!currentStep?.targetId || !currentStep.actionType) return;
@@ -155,7 +195,7 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         targetElement.removeEventListener('click', handleInteraction);
       }
     };
-  }, [isActive, currentStepIndex, isStepActionCompleted]);
+  }, [isActive, currentStepIndex, isStepActionCompleted, isCurrentStepAvailable, location.pathname]);
   
   const nextStep = () => {
     console.log("Next step called. Current index:", currentStepIndex);
@@ -174,6 +214,7 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     if (currentStepIndex < TUTORIAL_STEPS.length - 1) {
       setCurrentStepIndex(prevIndex => prevIndex + 1);
+      setIsStepActionCompleted(false); // Reset completion for the new step
     } else {
       completeTutorial();
     }
@@ -182,6 +223,8 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const prevStep = () => {
     if (currentStepIndex > 0) {
       setCurrentStepIndex(prevIndex => prevIndex - 1);
+      // Previous steps are considered completed when going back
+      setIsStepActionCompleted(true);
     }
   };
   
@@ -258,6 +301,7 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     startTutorial,
     completeCurrentStepAction,
     isStepActionCompleted,
+    isCurrentStepAvailable,
   };
   
   return (
