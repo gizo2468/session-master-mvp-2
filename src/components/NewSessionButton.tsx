@@ -2,14 +2,24 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '@/components/ui/Lucide';
+import { useTutorial } from '@/context/TutorialContext';
 
 export default function NewSessionButton() {
   const navigate = useNavigate();
+  const { completeCurrentStepAction } = useTutorial();
+  
+  const handleClick = () => {
+    // Mark the action as completed for the tutorial
+    completeCurrentStepAction();
+    
+    // Perform the actual navigation
+    navigate('/new-session');
+  };
   
   return (
     <button
-      id="new-session-button" // Added ID for tutorial targeting
-      onClick={() => navigate('/new-session')}
+      id="new-session-button" // ID for tutorial targeting
+      onClick={handleClick}
       className="relative flex flex-col items-center justify-center w-40 h-40 rounded-full shadow-lg hover:shadow-xl transform transition-all hover:-translate-y-1 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-poker-gold"
       aria-label="New session"
     >

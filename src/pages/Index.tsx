@@ -11,10 +11,12 @@ import CoachingNav from '@/components/coaching/CoachingNav';
 import ConnectionNotification from '@/components/coaching/ConnectionNotification';
 import Icon from '@/components/ui/Lucide';
 import { Button } from '@/components/ui/button';
+import { useTutorial } from '@/context/TutorialContext';
 
 const Index = () => {
   const navigate = useNavigate();
   const { sessions, activeSession } = useSessionContext();
+  const { completeCurrentStepAction } = useTutorial();
   
   const activeSessionsCount = activeSession ? 1 : 0;
   
@@ -22,6 +24,14 @@ const Index = () => {
     .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
     .slice(0, 3);
     
+  const handleViewAllClick = () => {
+    // Mark the action as completed for the tutorial
+    completeCurrentStepAction();
+    
+    // Perform the navigation
+    navigate('/history');
+  };
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-md px-4 py-8">
@@ -57,7 +67,7 @@ const Index = () => {
           <button 
             id="add-table-feature"
             className="text-sm text-poker-feltGreen"
-            onClick={() => navigate('/history')}
+            onClick={handleViewAllClick}
           >
             View All
           </button>

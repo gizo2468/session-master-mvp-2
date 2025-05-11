@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTutorial, TutorialStep } from '@/context/TutorialContext';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { useLanguage } from '@/context/LanguageContext';
@@ -121,12 +121,21 @@ const TutorialHighlight: React.FC<{
  */
 const StepContent: React.FC<{ step: TutorialStep }> = ({ step }) => {
   const { t } = useLanguage();
-  const { nextStep, prevStep, skipTutorial, totalSteps } = useTutorial();
+  const { nextStep, prevStep, skipTutorial, totalSteps, isStepActionCompleted } = useTutorial();
   
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-bold text-poker-black">{step.title}</h3>
       <p className="text-gray-600">{step.description}</p>
+      
+      {step.actionType && !isStepActionCompleted && (
+        <div className="mt-2 bg-yellow-50 p-2 rounded-md border border-yellow-200">
+          <p className="text-sm text-yellow-800 flex items-center">
+            <Icon name="Info" className="mr-1 h-4 w-4" />
+            {step.actionDescription || `Complete the action to continue`}
+          </p>
+        </div>
+      )}
       
       <div className="flex justify-between items-center mt-4">
         <div className="text-sm text-gray-500">
@@ -147,9 +156,10 @@ const StepContent: React.FC<{ step: TutorialStep }> = ({ step }) => {
             variant="poker" 
             size="sm"
             onClick={nextStep}
+            disabled={step.actionType && !isStepActionCompleted && step.id !== 1}
           >
-            {step.id === totalSteps ? t('finish') : t('next')}
-            {step.id !== totalSteps && <Icon name="ArrowRight" className="ml-1 h-4 w-4" />}
+            {step.id === totalSteps ? t('finish') : (isStepActionCompleted ? t('next') : t('proceed'))}
+            {step.id !== totalSteps && isStepActionCompleted && <Icon name="ArrowRight" className="ml-1 h-4 w-4" />}
           </Button>
         </div>
       </div>
@@ -177,6 +187,7 @@ const AppTutorial: React.FC = () => {
     return (
       <Dialog open={true} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-md">
+          <DialogTitle className="sr-only">{currentStep.title}</DialogTitle>
           <div className="space-y-4 p-2">
             <h2 className="text-xl font-bold text-poker-black text-center">
               {currentStep.title}

@@ -12,6 +12,8 @@ export type TutorialStep = {
   position?: 'top' | 'bottom' | 'left' | 'right';
   hasHighlight?: boolean;
   isModal?: boolean;
+  actionType?: 'click' | 'navigation' | 'observe';
+  actionDescription?: string;
 };
 
 export const TUTORIAL_STEPS: TutorialStep[] = [
@@ -28,6 +30,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     targetId: "new-session-button",
     position: "bottom",
     hasHighlight: true,
+    actionType: "click",
+    actionDescription: "Click the New Session button to continue",
   },
   {
     id: 3,
@@ -36,6 +40,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     targetId: "add-table-feature",
     position: "bottom",
     hasHighlight: true,
+    actionType: "click",
+    actionDescription: "Click 'View All' to continue",
   },
   {
     id: 4,
@@ -44,6 +50,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     targetId: "live-timer-feature",
     position: "top",
     hasHighlight: true,
+    actionType: "observe",
+    actionDescription: "Observe the timer feature",
   },
   {
     id: 5,
@@ -52,6 +60,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     targetId: "end-session-feature",
     position: "bottom",
     hasHighlight: true,
+    actionType: "observe",
+    actionDescription: "Observe the end session feature",
   },
 ];
 
@@ -64,6 +74,8 @@ type TutorialContextType = {
   skipTutorial: () => Promise<void>;
   completeTutorial: () => Promise<void>;
   startTutorial: () => void;
+  completeCurrentStepAction: () => void;
+  isStepActionCompleted: boolean;
 };
 
 const TutorialContext = createContext<TutorialContextType | undefined>(undefined);
@@ -82,6 +94,13 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   const [isActive, setIsActive] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isStepActionCompleted, setIsStepActionCompleted] = useState(false);
+  
+  // Reset step completion when step changes
+  useEffect(() => {
+    // First step (welcome modal) is always considered completed
+    setIsStepActionCompleted(currentStepIndex === 0);
+  }, [currentStepIndex]);
   
   // Check if user is new on mount
   useEffect(() => {
@@ -89,6 +108,8 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setIsActive(true);
       // Start with the first step
       setCurrentStepIndex(0);
+      // First step (welcome modal) is always considered completed
+      setIsStepActionCompleted(true);
     }
   }, [user]);
   
@@ -97,11 +118,66 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (isActive) {
       console.log("Tutorial is active. Current step:", currentStepIndex + 1);
       console.log("Current step details:", TUTORIAL_STEPS[currentStepIndex]);
+      console.log("Step action completed:", isStepActionCompleted);
     }
-  }, [isActive, currentStepIndex]);
+  }, [isActive, currentStepIndex, isStepActionCompleted]);
+  
+  // Mark the current step's action as completed
+  const completeCurrentStepAction = () => {
+    console.log("Completing step action for step", currentStepIndex + 1);
+    setIsStepActionCompleted(true);
+  };
+  
+  // Add event listeners for target elements to detect interactions
+  useEffect(() => {
+    if (!isActive || isStepActionCompleted) return;
+    
+    const currentStep = TUTORIAL_STEPS[currentStepIndex];
+    if (!currentStep?.targetId || !currentStep.actionType) return;
+    
+    const targetElement = document.getElementById(currentStep.targetId);
+    if (!targetElement) {
+      console.log(`Target element with ID "${currentStep.targetId}" not found`);
+      return;
+    }
+    
+    console.log(`Adding "${currentStep.actionType}" listener to element with ID "${currentStep.targetId}"`);
+    
+    const handleInteraction = () => {
+      console.log(`User interacted with element ID "${currentStep.targetId}"`);
+      completeCurrentStepAction();
+    };
+    
+    if (currentStep.actionType === 'click') {
+      targetElement.addEventListener('click', handleInteraction);
+    } else if (currentStep.actionType === 'observe') {
+      // For 'observe' type, we auto-complete after a short delay
+      const timer = setTimeout(handleInteraction, 2000);
+      return () => clearTimeout(timer);
+    }
+    
+    return () => {
+      if (currentStep.actionType === 'click') {
+        targetElement.removeEventListener('click', handleInteraction);
+      }
+    };
+  }, [isActive, currentStepIndex, isStepActionCompleted]);
   
   const nextStep = () => {
     console.log("Next step called. Current index:", currentStepIndex);
+    
+    // Only allow proceeding if the current step action is completed
+    // or if it's the first step (welcome modal)
+    if (!isStepActionCompleted && currentStepIndex !== 0) {
+      console.log("Cannot proceed - current step action not completed");
+      toast({
+        title: "Complete the action first",
+        description: TUTORIAL_STEPS[currentStepIndex]?.actionDescription || "Complete the current step's action to continue",
+        variant: "default",
+      });
+      return;
+    }
+    
     if (currentStepIndex < TUTORIAL_STEPS.length - 1) {
       setCurrentStepIndex(prevIndex => {
         console.log("Updating step index from", prevIndex, "to", prevIndex + 1);
@@ -120,6 +196,7 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   const startTutorial = () => {
     setCurrentStepIndex(0);
+    setIsStepActionCompleted(true); // First step is always completed
     setIsActive(true);
   };
   
@@ -188,6 +265,8 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     skipTutorial,
     completeTutorial,
     startTutorial,
+    completeCurrentStepAction,
+    isStepActionCompleted,
   };
   
   return (
