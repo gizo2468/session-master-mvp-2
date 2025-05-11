@@ -516,8 +516,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const setFilters = (filters: SessionFilter) => {
-    setFilters(filters);
+  const updateFilterValues = (newFilters: SessionFilter) => {
+    setFilters(newFilters);
   };
 
   return (
@@ -535,7 +535,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         resumeSession,
         updateSessionDuration,
         addRebuy,
-        setFilters,
+        setFilters: updateFilterValues,
         addHand,
         updateHand,
         deleteHand,

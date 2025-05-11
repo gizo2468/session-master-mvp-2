@@ -1,3 +1,4 @@
+
 export interface HandData {
   id: string;
   cards: string;
@@ -72,6 +73,9 @@ export interface PokerSession {
   hands?: HandData[];
   tables?: TableData[];
   syncedToSupabase?: boolean;
+  isOnline?: boolean;
+  physicalLocation?: string;
+  tableName?: string;
 }
 
 export interface SessionFilter {
