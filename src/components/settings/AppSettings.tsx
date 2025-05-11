@@ -11,6 +11,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { Language } from '@/context/LanguageContext';
 import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/Lucide';
+import { useTutorial } from '@/context/TutorialContext'; // Add this import
 
 interface AppSettingsFormValues {
   language: Language;
@@ -21,6 +22,7 @@ interface AppSettingsFormValues {
 const AppSettings: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { t, language, setLanguage } = useLanguage();
+  const { startTutorial } = useTutorial(); // Add this hook
   
   const form = useForm<AppSettingsFormValues>({
     defaultValues: {
@@ -46,6 +48,11 @@ const AppSettings: React.FC = () => {
   const handleLanguageChange = (value: Language) => {
     form.setValue('language', value);
     setLanguage(value);
+  };
+
+  const handleRestartTutorial = () => {
+    updateUser({ isNewUser: true });
+    startTutorial();
   };
 
   return (
@@ -146,9 +153,34 @@ const AppSettings: React.FC = () => {
           </form>
         </Form>
         
+        {/* Tutorial Settings - Added Section */}
         <Separator className="my-6" />
         
-        {/* Support & Help Section (moved from SupportSettings) */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Tutorial</h3>
+          <Card>
+            <CardHeader>
+              <CardTitle>App Tutorial</CardTitle>
+              <CardDescription>
+                Restart the app tutorial to learn about the main features
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={handleRestartTutorial} 
+                variant="outline"
+                className="w-full"
+              >
+                <Icon name="HelpCircle" className="mr-2 h-4 w-4" />
+                Restart Tutorial
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <Separator className="my-6" />
+        
+        {/* Support & Help Section */}
         <div className="space-y-6">
           <h3 className="text-lg font-medium">{t('help')}</h3>
           

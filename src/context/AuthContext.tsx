@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +17,7 @@ export interface User {
   hasAcceptedTerms?: boolean;
   lastLoginAt?: Date;
   isActive?: boolean;
+  isNewUser?: boolean; // Added isNewUser field
   notificationPreferences: {
     liveSessionStart: boolean;
     newFeedback: boolean;
@@ -182,6 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           hasAcceptedTerms: Boolean(data.has_accepted_terms),
           lastLoginAt: data.last_login_at ? new Date(data.last_login_at) : undefined,
           isActive: Boolean(data.is_active),
+          isNewUser: Boolean(data.is_new_user), // Added isNewUser from the database
           notificationPreferences: notificationPrefs,
         });
 
@@ -336,6 +339,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           notification_preferences: optimizedUserData.notificationPreferences || user.notificationPreferences,
           has_accepted_terms: optimizedUserData.hasAcceptedTerms !== undefined ? optimizedUserData.hasAcceptedTerms : user.hasAcceptedTerms,
           is_active: optimizedUserData.isActive !== undefined ? optimizedUserData.isActive : user.isActive,
+          is_new_user: optimizedUserData.isNewUser !== undefined ? optimizedUserData.isNewUser : user.isNewUser,
         })
         .eq('id', user.id); // Explicitly match on user ID to satisfy RLS policy
 
