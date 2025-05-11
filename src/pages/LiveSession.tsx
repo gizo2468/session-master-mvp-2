@@ -443,9 +443,12 @@ export default function LiveSession() {
                 {inactiveTables.length > 0 && (
                   <div>
                     <h4 className="text-lg font-bold mb-2">Completed Tables</h4>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {inactiveTables.map((table) => (
-                        <div key={table.id} className="bg-gray-50 p-4 rounded-lg">
+                        <div 
+                          key={table.id} 
+                          className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                        >
                           <div className="flex justify-between items-start mb-2">
                             <div>
                               <h3 className="font-bold">{table.name || table.location}</h3>
@@ -568,15 +571,53 @@ export default function LiveSession() {
                             )}
                           </div>
                           
+                          {/* Multi-day tournament continuation details */}
+                          {table.dayEndedWithoutElimination && (
+                            <div className="bg-poker-feltGreen/5 p-3 rounded-lg mb-4 border border-poker-feltGreen/20">
+                              <h5 className="font-bold text-sm text-poker-feltGreen mb-2">Tournament Continuing</h5>
+                              
+                              {table.chipsCarryover && (
+                                <div className="flex justify-between text-sm mb-1.5">
+                                  <span className="text-gray-600">Continuing with:</span>
+                                  <span className="font-medium">{table.chipsCarryover.toLocaleString()} chips</span>
+                                </div>
+                              )}
+                              
+                              {table.nextDayStart && (
+                                <div className="flex justify-between text-sm mb-1.5">
+                                  <span className="text-gray-600">Next Day:</span>
+                                  <span className="font-medium">{format(new Date(table.nextDayStart), 'MMM d, h:mm a')}</span>
+                                </div>
+                              )}
+                              
+                              {/* We don't have explicit day tracking in the data model, 
+                                 so we're showing a generic continuation message */}
+                              <div className="flex justify-between text-sm mb-1.5">
+                                <span className="text-gray-600">Status:</span>
+                                <span className="font-medium">Day completed, continuing</span>
+                              </div>
+                              
+                              {table.notes && (
+                                <div className="mt-2 pt-2 border-t border-poker-feltGreen/10">
+                                  <p className="text-xs text-gray-600 italic">"{table.notes}"</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
                           {/* Repositioned Total Cash Out to be more prominent */}
-                          {table.cashOut !== undefined && (
-                            <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                              <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL CASH OUT</span>
+                          <div className="flex flex-col items-center justify-center mt-4 mb-2">
+                            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">
+                              {table.dayEndedWithoutElimination ? 'STATUS' : 'TOTAL CASH OUT'}
+                            </span>
+                            {table.dayEndedWithoutElimination ? (
+                              <span className="font-bold text-xl text-poker-feltGreen">Continuing</span>
+                            ) : (
                               <span className="font-bold text-xl text-poker-gold">
                                 ${(table.cashOut ?? 0).toFixed(2)}
                               </span>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
