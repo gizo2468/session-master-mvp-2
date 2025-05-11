@@ -38,6 +38,11 @@ export default function ConfirmSession() {
   const [showRebuyConfirmDialog, setShowRebuyConfirmDialog] = useState(false);
   const [rebuyAmount, setRebuyAmount] = useState(0);
   
+  // Add states for bounty tournament fields in the end session form
+  const [finalPosition, setFinalPosition] = useState('');
+  const [playersEliminated, setPlayersEliminated] = useState('');
+  const [bountyCollected, setBountyCollected] = useState('');
+  
   useEffect(() => {
     if (!activeSession) {
       navigate('/');
@@ -45,11 +50,48 @@ export default function ConfirmSession() {
     }
   }, [activeSession, navigate]);
   
+  // Helper function to check if a session has any bounty tournament tables
+  const hasAnyBountyTournaments = () => {
+    if (!activeSession || !activeSession.tables) return false;
+    
+    return activeSession.tables.some(table => 
+      table.format === 'Tournament' && 
+      table.tournamentTypes?.some(type => 
+        ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
+      )
+    );
+  };
+  
   const handleEndSession = () => {
     if (!activeSession || !cashOutAmount) return;
     
+    // Prepare additional notes based on bounty data if applicable
+    let completeNotes = sessionNotes || '';
+    
+    // If this is a bounty session and we have the data, append it to notes
+    if (hasAnyBountyTournaments()) {
+      const bountyInfo = [];
+      
+      if (finalPosition) {
+        bountyInfo.push(`Final Position: ${finalPosition}`);
+      }
+      
+      if (playersEliminated) {
+        bountyInfo.push(`Players Eliminated: ${playersEliminated}`);
+      }
+      
+      if (bountyCollected) {
+        bountyInfo.push(`Total Bounty Collected: $${bountyCollected}`);
+      }
+      
+      if (bountyInfo.length > 0) {
+        const bountyNotes = `\n\nBounty Tournament Info:\n${bountyInfo.join('\n')}`;
+        completeNotes += bountyNotes;
+      }
+    }
+    
     // End the session with cashout and notes
-    endSession(activeSession.id, parseFloat(cashOutAmount), sessionNotes);
+    endSession(activeSession.id, parseFloat(cashOutAmount), completeNotes);
     setShowEndSessionSheet(false);
     
     toast({
@@ -240,7 +282,7 @@ export default function ConfirmSession() {
         </DialogContent>
       </Dialog>
       
-      {/* End Session Sheet */}
+      {/* End Session Sheet - Updated to include bounty tournament fields when applicable */}
       {showEndSessionSheet && (
         <Sheet open={showEndSessionSheet} onOpenChange={setShowEndSessionSheet}>
           <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
@@ -306,9 +348,67 @@ export default function ConfirmSession() {
                 </div>
               </div>
               
+              {/* Show bounty tournament specific fields if applicable */}
+              {hasAnyBountyTournaments() && (
+                <div className="space-y-4 mb-6 border-t border-b border-gray-100 py-4">
+                  <h3 className="text-md font-medium">Bounty Tournament Details</h3>
+                  
+                  <div>
+                    <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
+                      Final Placement
+                    </label>
+                    <input
+                      id="finalPosition"
+                      type="number"
+                      min="1"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      placeholder="Enter your final position (e.g. 3 for 3rd)"
+                      value={finalPosition}
+                      onChange={(e) => setFinalPosition(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="playersEliminated" className="block text-sm font-medium mb-1">
+                      Players Eliminated
+                    </label>
+                    <input
+                      id="playersEliminated"
+                      type="number"
+                      min="0"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      placeholder="Number of players knocked out"
+                      value={playersEliminated}
+                      onChange={(e) => setPlayersEliminated(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="bountyCollected" className="block text-sm font-medium mb-1">
+                      Total Bounty Collected
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500">$</span>
+                      </div>
+                      <input
+                        id="bountyCollected"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                        placeholder="0.00"
+                        value={bountyCollected}
+                        onChange={(e) => setBountyCollected(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="mb-6">
                 <label htmlFor="notes" className="block text-sm font-medium mb-1">
-                  Notes (Optional)
+                  Session Notes (Optional)
                 </label>
                 <Textarea
                   id="notes"
