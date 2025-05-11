@@ -732,7 +732,7 @@ export default function LiveSession() {
         </DialogContent>
       </Dialog>
       
-      {/* End Table Dialog - Fixed conditional rendering for bounty tournament fields */}
+      {/* End Table Dialog */}
       <Dialog open={showEndTableDialog} onOpenChange={setShowEndTableDialog}>
         <DialogContent>
           <DialogHeader>
@@ -797,7 +797,11 @@ export default function LiveSession() {
                  endReason !== 'day-ended' && (
                   <div>
                     <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
-                      Final Position (Optional)
+                      Final Position 
+                      {pendingEndTableId && 
+                       session?.tables?.find(t => t.id === pendingEndTableId) && 
+                       isBountyTournament(session.tables.find(t => t.id === pendingEndTableId)!) && 
+                       ' (Required)'}
                     </label>
                     <input
                       id="finalPosition"
@@ -807,15 +811,17 @@ export default function LiveSession() {
                       placeholder="Enter your final position (e.g. 3 for 3rd)"
                       value={finalPosition}
                       onChange={(e) => setFinalPosition(e.target.value)}
+                      required={pendingEndTableId && 
+                        session?.tables?.find(t => t.id === pendingEndTableId) && 
+                        isBountyTournament(session.tables.find(t => t.id === pendingEndTableId)!)}
                     />
                   </div>
                 )}
 
                 {/* Fixed conditional rendering for bounty tournament fields */}
-                {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId) && 
-                 session?.tables?.find(t => t.id === pendingEndTableId)?.format === 'Tournament' &&
-                 session?.tables?.find(t => t.id === pendingEndTableId)?.tournamentTypes?.some(type => 
-                   ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) &&
+                {pendingEndTableId && 
+                 session?.tables?.find(t => t.id === pendingEndTableId) && 
+                 isBountyTournament(session.tables.find(t => t.id === pendingEndTableId)!) &&
                  endReason !== 'day-ended' && (
                   <>
                     <div>
@@ -954,8 +960,12 @@ export default function LiveSession() {
             <Button 
               className="bg-poker-gold hover:bg-poker-darkGold text-white"
               onClick={handleConfirmEndTable}
-              disabled={(endReason !== 'day-ended' && !cashOutAmount) || 
-                        (endReason === 'day-ended' && !chipsCarryover)}
+              disabled={(endReason !== 'day-ended' && (!cashOutAmount || 
+                   (pendingEndTableId && 
+                    session?.tables?.find(t => t.id === pendingEndTableId) && 
+                    isBountyTournament(session.tables.find(t => t.id === pendingEndTableId)!) && 
+                    !finalPosition))) || 
+                    (endReason === 'day-ended' && !chipsCarryover)}
             >
               {endReason === 'day-ended' ? 'End Day' : 'End Table'}
             </Button>

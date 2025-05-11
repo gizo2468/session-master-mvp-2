@@ -47,6 +47,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
   const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
   const rebuyCount = Math.floor(rebuyAmount / (table.initialBuyIn || table.buyIn || 1));
 
+  // Fixed isBountyTournament check to properly identify all bounty tournament types
   const isBountyTournament = table.format === 'Tournament' && 
     table.tournamentTypes?.some(type => 
       ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
@@ -390,10 +391,11 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                   </div>
                 </div>
 
-                {table.format === 'Tournament' && endReason === 'eliminated' && (
+                {/* Tournament-specific fields - always show final position for tournaments */}
+                {table.format === 'Tournament' && endReason !== 'day-ended' && (
                   <div>
                     <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
-                      Final Position (Optional)
+                      Final Position {isBountyTournament && '(Required)'}
                     </label>
                     <input
                       id="finalPosition"
@@ -403,11 +405,13 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                       placeholder="Enter your final position (e.g. 3 for 3rd)"
                       value={finalPosition}
                       onChange={(e) => setFinalPosition(e.target.value)}
+                      required={isBountyTournament}
                     />
                   </div>
                 )}
 
-                {isBountyTournament && endReason === 'eliminated' && (
+                {/* Bounty tournament fields - fixed the condition to always show for bounty tournaments */}
+                {isBountyTournament && endReason !== 'day-ended' && (
                   <>
                     <div>
                       <label htmlFor="bountyCount" className="block text-sm font-medium mb-1">
@@ -447,7 +451,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                   </>
                 )}
                 
-                {endReason === 'eliminated' && (
+                {endReason !== 'day-ended' && (
                   <div className="mb-6">
                     <div className="flex justify-between mb-1">
                       <span className="text-sm">Profit/Loss:</span>
@@ -554,7 +558,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                 onClick={handleEndTable}
                 disabled={
                   (endReason === 'eliminated' || !table.isMultiDay || table.format === 'Cash') 
-                    ? !cashOutAmount 
+                    ? !cashOutAmount || (isBountyTournament && !finalPosition)
                     : endReason === 'day-ended' 
                       ? !chipsCarryover 
                       : !endReason
