@@ -12,13 +12,11 @@ import ConnectionNotification from '@/components/coaching/ConnectionNotification
 import Icon from '@/components/ui/Lucide';
 import { Button } from '@/components/ui/button';
 import { useTutorial } from '@/context/TutorialContext';
-import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const navigate = useNavigate();
   const { sessions, activeSession } = useSessionContext();
   const { completeCurrentStepAction, currentStep } = useTutorial();
-  const { toast } = useToast();
   
   const activeSessionsCount = activeSession ? 1 : 0;
   
@@ -34,13 +32,6 @@ const Index = () => {
     if (currentStep.targetId === 'add-table-feature') {
       console.log("View All is the current tutorial target - marking action as completed");
       completeCurrentStepAction();
-      
-      // Show a toast to confirm action completion
-      toast({
-        title: "Action completed",
-        description: "Now navigating to session history",
-        duration: 3000,
-      });
     }
     
     // Perform the navigation
@@ -51,7 +42,6 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-md px-4 py-8">
         <header className="mb-8 relative">
-          {/* Settings button positioned absolutely in the top-right */}
           <Button 
             variant="ghost" 
             size="icon"
@@ -62,7 +52,6 @@ const Index = () => {
             <Icon name="Settings" size={20} />
           </Button>
           
-          {/* Logo centered in the container */}
           <Logo className="mb-2 mx-auto" />
         </header>
         
@@ -70,7 +59,6 @@ const Index = () => {
           <NewSessionButton />
         </div>
         
-        {/* Add tutorial target IDs to key features */}
         <div id="live-timer-feature">
           <StatsQuickView />
         </div>
@@ -100,7 +88,6 @@ const Index = () => {
           </div>
         )}
         
-        {/* Coaching Navigation */}
         <CoachingNav />
         <ConnectionNotification />
         

@@ -14,7 +14,7 @@ export type TutorialStep = {
   isModal?: boolean;
   actionType?: 'click' | 'navigation' | 'observe';
   actionDescription?: string;
-  requiredPath?: string; // Changed from requiredPage to requiredPath
+  requiredPath?: string;
 };
 
 export const TUTORIAL_STEPS: TutorialStep[] = [
@@ -82,7 +82,7 @@ type TutorialContextType = {
   completeCurrentStepAction: () => void;
   isStepActionCompleted: boolean;
   isCurrentStepAvailable: boolean;
-  checkStepAvailability: (path: string) => void; // New function to check availability based on current path
+  checkStepAvailability: (path: string) => void;
 };
 
 const TutorialContext = createContext<TutorialContextType | undefined>(undefined);
@@ -97,7 +97,7 @@ export const useTutorial = () => {
 
 export const TutorialProvider: React.FC<{ 
   children: React.ReactNode;
-  currentPath?: string; // Accept currentPath as a prop instead of using useLocation
+  currentPath?: string;
 }> = ({ children, currentPath = '/' }) => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
@@ -107,11 +107,9 @@ export const TutorialProvider: React.FC<{
   const [isStepActionCompleted, setIsStepActionCompleted] = useState(false);
   const [isCurrentStepAvailable, setIsCurrentStepAvailable] = useState(true);
   
-  // Reset step completion when step changes
   useEffect(() => {
     // First step (welcome modal) is always considered completed
     setIsStepActionCompleted(currentStepIndex === 0);
-    
     console.log(`Tutorial step changed to ${currentStepIndex + 1}. Action required: ${TUTORIAL_STEPS[currentStepIndex]?.actionType || 'none'}`);
   }, [currentStepIndex]);
   
@@ -125,8 +123,6 @@ export const TutorialProvider: React.FC<{
       
       console.log(`Current path: ${path}, Required path: ${currentStep.requiredPath}, Available: ${isOnRequiredPath}`);
       
-      // If we're not on the required path and this step requires user interaction,
-      // we should wait until the user navigates to the correct path
       if (!isOnRequiredPath && currentStep.actionType) {
         console.log(`Waiting for user to navigate to ${currentStep.requiredPath}`);
       }
@@ -145,9 +141,7 @@ export const TutorialProvider: React.FC<{
     if (user?.isNewUser) {
       console.log("New user detected, starting tutorial");
       setIsActive(true);
-      // Start with the first step
       setCurrentStepIndex(0);
-      // First step (welcome modal) is always considered completed
       setIsStepActionCompleted(true);
     }
   }, [user]);
@@ -157,14 +151,12 @@ export const TutorialProvider: React.FC<{
     console.log("Completing step action for step", currentStepIndex + 1);
     setIsStepActionCompleted(true);
     
-    // For steps with navigation requirements, we can auto-advance to the next step
-    // when the action is completed (e.g., after clicking a button that changes the page)
     const currentStep = TUTORIAL_STEPS[currentStepIndex];
     if (currentStep && currentStep.actionType === 'click' && currentStep.requiredPath !== currentPath) {
       console.log(`Auto-advancing to next step after navigation action`);
       setTimeout(() => {
         nextStep();
-      }, 500); // Short delay to ensure navigation completes
+      }, 500);
     }
   };
   
@@ -175,39 +167,54 @@ export const TutorialProvider: React.FC<{
     const currentStep = TUTORIAL_STEPS[currentStepIndex];
     if (!currentStep?.targetId || !currentStep.actionType) return;
     
+    // If the element doesn't exist yet, try again shortly
     const targetElement = document.getElementById(currentStep.targetId);
     if (!targetElement) {
       console.log(`Target element with ID "${currentStep.targetId}" not found`);
-      return;
+      
+      // Set up a retry mechanism
+      const checkInterval = setInterval(() => {
+        const element = document.getElementById(currentStep.targetId || '');
+        if (element) {
+          clearInterval(checkInterval);
+          setupEventListener(element, currentStep.actionType || 'observe');
+        }
+      }, 500); // Check every 500ms
+      
+      // Clean up interval on unmount or step change
+      return () => clearInterval(checkInterval);
     }
     
-    console.log(`Adding "${currentStep.actionType}" listener to element with ID "${currentStep.targetId}"`);
+    // If element exists, set up the listener immediately
+    return setupEventListener(targetElement, currentStep.actionType);
+  }, [isActive, currentStepIndex, isStepActionCompleted, isCurrentStepAvailable, currentPath]);
+  
+  const setupEventListener = (targetElement: HTMLElement, actionType: string) => {
+    console.log(`Adding "${actionType}" listener to element with ID "${targetElement.id}"`);
     
     const handleInteraction = () => {
-      console.log(`User interacted with element ID "${currentStep.targetId}"`);
+      console.log(`User interacted with element ID "${targetElement.id}"`);
       completeCurrentStepAction();
     };
     
-    if (currentStep.actionType === 'click') {
+    if (actionType === 'click') {
       targetElement.addEventListener('click', handleInteraction);
-    } else if (currentStep.actionType === 'observe') {
+    } else if (actionType === 'observe') {
       // For 'observe' type, we auto-complete after a short delay
       const timer = setTimeout(handleInteraction, 2000);
       return () => clearTimeout(timer);
     }
     
     return () => {
-      if (currentStep.actionType === 'click') {
+      if (actionType === 'click') {
         targetElement.removeEventListener('click', handleInteraction);
       }
     };
-  }, [isActive, currentStepIndex, isStepActionCompleted, isCurrentStepAvailable, currentPath]);
+  };
   
   const nextStep = () => {
     console.log("Next step called. Current index:", currentStepIndex);
     
-    // Only allow proceeding if the current step action is completed
-    // or if it's the first step (welcome modal)
     if (!isStepActionCompleted && currentStepIndex !== 0) {
       console.log("Cannot proceed - current step action not completed");
       toast({
@@ -220,7 +227,7 @@ export const TutorialProvider: React.FC<{
     
     if (currentStepIndex < TUTORIAL_STEPS.length - 1) {
       setCurrentStepIndex(prevIndex => prevIndex + 1);
-      setIsStepActionCompleted(false); // Reset completion for the new step
+      setIsStepActionCompleted(false);
     } else {
       completeTutorial();
     }
@@ -229,14 +236,13 @@ export const TutorialProvider: React.FC<{
   const prevStep = () => {
     if (currentStepIndex > 0) {
       setCurrentStepIndex(prevIndex => prevIndex - 1);
-      // Previous steps are considered completed when going back
       setIsStepActionCompleted(true);
     }
   };
   
   const startTutorial = () => {
     setCurrentStepIndex(0);
-    setIsStepActionCompleted(true); // First step is always completed
+    setIsStepActionCompleted(true);
     setIsActive(true);
   };
   
@@ -280,7 +286,6 @@ export const TutorialProvider: React.FC<{
     if (!user) return;
     
     try {
-      // Update in Supabase
       const { error } = await supabase
         .from('profiles')
         .update({ is_new_user: isNewUser })
@@ -288,7 +293,6 @@ export const TutorialProvider: React.FC<{
       
       if (error) throw error;
       
-      // Update local user state
       updateUser({ isNewUser });
     } catch (error) {
       console.error("Error updating tutorial status:", error);

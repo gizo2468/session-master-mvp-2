@@ -12,19 +12,12 @@ export default function NewSessionButton() {
   
   const handleClick = () => {
     // Log the action for debugging
-    console.log("NewSessionButton clicked - completing tutorial step action if needed");
+    console.log("NewSessionButton clicked");
     
     // Only mark the action as completed if this is the current tutorial step target
     if (currentStep.targetId === 'new-session-button') {
       console.log("This is the current tutorial target - marking action as completed");
       completeCurrentStepAction();
-      
-      // Show a toast to confirm action completion
-      toast({
-        title: "Action completed",
-        description: "Now navigating to start a new session",
-        duration: 3000,
-      });
     }
     
     // Perform the actual navigation
@@ -33,7 +26,7 @@ export default function NewSessionButton() {
   
   return (
     <button
-      id="new-session-button" // ID for tutorial targeting
+      id="new-session-button"
       onClick={handleClick}
       className="relative flex flex-col items-center justify-center w-40 h-40 rounded-full shadow-lg hover:shadow-xl transform transition-all hover:-translate-y-1 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-poker-gold"
       aria-label="New session"

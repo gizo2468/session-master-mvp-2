@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTutorial, TutorialStep } from '@/context/TutorialContext';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { useLanguage } from '@/context/LanguageContext';
@@ -58,7 +58,8 @@ const TutorialHighlight: React.FC<{
   
   if (!elementPosition) return null;
   
-  const borderRadius = elementPosition.isCircular ? '50%' : '8px';
+  // Use the isCircular property to determine border radius
+  const borderRadius = elementPosition.isCircular ? '9999px' : '8px';
   
   return (
     <div className="fixed inset-0 z-50">
@@ -192,7 +193,6 @@ const StepContent: React.FC<{ step: TutorialStep }> = ({ step }) => {
           )}
         </div>
         
-        {/* Skip button is now placed separately */}
         <Button
           variant="ghost"
           size="sm"
@@ -219,14 +219,9 @@ const AppTutorial: React.FC = () => {
     return (
       <Dialog open={true} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-md">
-          <DialogTitle className="sr-only">{currentStep.title}</DialogTitle>
+          <DialogTitle>{currentStep.title}</DialogTitle>
+          <DialogDescription>{currentStep.description}</DialogDescription>
           <div className="space-y-4 p-2">
-            <h2 className="text-xl font-bold text-poker-black text-center">
-              {currentStep.title}
-            </h2>
-            <p className="text-center text-gray-600">
-              {currentStep.description}
-            </p>
             <StepContent step={currentStep} />
           </div>
         </DialogContent>
