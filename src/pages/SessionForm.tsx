@@ -108,6 +108,9 @@ export default function SessionForm() {
       startTime: new Date(),
       isActive: true,
       isOnline: values.isOnline,
+      // Add the missing properties
+      currentStatus: 'running',
+      sessionDuration: 0,
       ...(values.format === 'Tournament' && {
         startingBB: values.startingBB ? parseInt(values.startingBB) : undefined,
         tournamentTypes: values.tournamentType ? [values.tournamentType] : undefined
