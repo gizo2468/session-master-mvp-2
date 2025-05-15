@@ -47,35 +47,32 @@ export interface TableData {
 
 export interface PokerSession {
   id: string;
-  gameType: string;
-  format: string;
+  gameType: 'NLH' | 'PLO';
+  format: 'Cash' | 'Tournament' | 'Live Cash' | 'Live Tournament' | 'Online Cash' | 'Online Tournament' | 'Home Game';
+  tableName?: string;
   location: string;
-  stakes?: string;
+  physicalLocation?: string;
+  initialBuyIn: number;
+  buyIn: number;
+  cashOut?: number;
+  smallBlind: number;
+  bigBlind: number;
   startTime: Date;
   endTime?: Date;
-  buyIn: number;
-  initialBuyIn?: number;
-  cashOut?: number;
-  isActive: boolean;
-  currentStatus: 'running' | 'paused' | 'ended';
-  sessionDuration: number;
   notes?: string;
+  isActive?: boolean;
+  isOnline?: boolean;
+
+  tournamentBuyIn?: number;
   rebuys?: number;
   addOns?: number;
-  tournamentId?: string;
-  tournamentBuyIn?: number;
-  tournamentEntrants?: number;
-  tournamentType?: string;
-  tournamentPrizePool?: number;
-  smallBlind?: number;
-  bigBlind?: number;
-  straddlePositions?: string[];
+  finalPosition?: number;
+
+  sessionDuration?: number;
+  currentStatus?: 'running' | 'paused' | 'ended';
+
   hands?: HandData[];
   tables?: TableData[];
-  syncedToSupabase?: boolean;
-  isOnline?: boolean;
-  physicalLocation?: string;
-  tableName?: string;
 }
 
 export interface SessionFilter {

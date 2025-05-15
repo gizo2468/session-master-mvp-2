@@ -9,42 +9,10 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Create a supabase client with specific auth configuration to prevent refresh loops
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage, // Use localStorage for token storage
+    storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false, // Disable auto URL detection to prevent refresh loops
-    flowType: 'pkce', // Use PKCE flow for more security
-    debug: false // Disable debug mode in production
   }
 });
-
-// Hard cleanup utility that completely removes all auth data
-export const clearAuthState = async () => {
-  try {
-    await supabase.auth.signOut({ scope: 'local' });
-    // Explicitly remove all storage items that might be corrupted
-    localStorage.removeItem('supabase.auth.token');
-    localStorage.removeItem('sb-wfmvvpbpuqbzidptxbqx-auth-token');
-    localStorage.removeItem('supabase.auth.refreshToken');
-    console.log("Auth state fully cleared");
-    return true;
-  } catch (e) {
-    console.error("Error clearing auth state:", e);
-    return false;
-  }
-};
-
-// Check if tokens exist but might be corrupted
-export const hasCorruptedToken = async () => {
-  try {
-    const { data } = await supabase.auth.getSession();
-    // Check if token exists but is expired
-    return data.session?.expires_at && new Date(data.session.expires_at * 1000) < new Date();
-  } catch (e) {
-    console.error("Error checking tokens:", e);
-    return true; // Assume corrupted if we can't check
-  }
-};

@@ -2,32 +2,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '@/components/ui/Lucide';
-import { useTutorial } from '@/context/TutorialContext';
-import { useToast } from '@/hooks/use-toast';
 
 export default function NewSessionButton() {
   const navigate = useNavigate();
-  const { completeCurrentStepAction, currentStep } = useTutorial();
-  const { toast } = useToast();
-  
-  const handleClick = () => {
-    // Log the action for debugging
-    console.log("NewSessionButton clicked");
-    
-    // Only mark the action as completed if this is the current tutorial step target
-    if (currentStep.targetId === 'new-session-button') {
-      console.log("This is the current tutorial target - marking action as completed");
-      completeCurrentStepAction();
-    }
-    
-    // Perform the actual navigation
-    navigate('/new-session');
-  };
   
   return (
     <button
-      id="new-session-button"
-      onClick={handleClick}
+      onClick={() => navigate('/new-session')}
       className="relative flex flex-col items-center justify-center w-40 h-40 rounded-full shadow-lg hover:shadow-xl transform transition-all hover:-translate-y-1 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-poker-gold"
       aria-label="New session"
     >
