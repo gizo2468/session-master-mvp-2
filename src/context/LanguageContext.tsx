@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
@@ -184,15 +185,16 @@ export const useLanguage = () => {
 };
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, updateUser } = useAuth();
-  const [language, setStateLanguage] = useState<Language>(user?.language || 'en');
+  const auth = useAuth();
+  // Use a safe fallback when auth is not yet available or user is not logged in
+  const [language, setStateLanguage] = useState<Language>('en');
 
-  // Update language when user changes
+  // Update language when user changes and is available
   useEffect(() => {
-    if (user?.language) {
-      setStateLanguage(user.language);
+    if (auth.user?.language) {
+      setStateLanguage(auth.user.language);
     }
-  }, [user?.language]);
+  }, [auth.user?.language]);
 
   // Set document direction based on language
   useEffect(() => {
@@ -202,8 +204,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Set language and update user preferences if logged in
   const setLanguage = (lang: Language) => {
     setStateLanguage(lang);
-    if (user) {
-      updateUser({ language: lang });
+    if (auth.user) {
+      auth.updateUser({ language: lang });
     }
   };
 
