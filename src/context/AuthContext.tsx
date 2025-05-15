@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole, CoachTier } from '@/types/poker';
-import { supabase, clearAuthState, hasCorruptedToken } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface User {
   id: string;
@@ -16,7 +17,7 @@ export interface User {
   hasAcceptedTerms?: boolean;
   lastLoginAt?: Date;
   isActive?: boolean;
-  isNewUser?: boolean;
+  isNewUser?: boolean; // Added isNewUser field
   notificationPreferences: {
     liveSessionStart: boolean;
     newFeedback: boolean;
@@ -27,8 +28,6 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  isInitialized: boolean; // Flag to track initialization status
-  forceLogin: boolean; // New flag to force login screen render
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, fullName: string, role: UserRole) => Promise<void>;
   logout: () => void;
@@ -36,7 +35,6 @@ interface AuthContextType {
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   upgradeCoachTier: (tier: CoachTier) => void;
   cancelCoachSubscription: () => Promise<void>;
-  resetAuthState: () => Promise<void>; // New method to reset auth state
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,8 +48,6 @@ export const useAuth = () => {
 };
 
 const MAX_PROFILE_IMAGE_SIZE = 50 * 1024; // 50KB limit for profile images
-const MAX_INITIAL_SESSION_EVENTS = 3; // Maximum number of INITIAL_SESSION events before forcing stabilization
-const FORCE_STABILIZE_TIMEOUT = 3000; // Force stabilize after 3 seconds
 
 // Function to optimize image data to prevent storage quota issues
 const optimizeImageData = (imageDataUrl: string | undefined): string | undefined => {
@@ -92,72 +88,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [forceLogin, setForceLogin] = useState(false); // New state to force login screen
-  const initialSessionCountRef = useRef(0);
-  const authStabilizedRef = useRef(false);
-  const lastEventTimeRef = useRef(Date.now());
-  const authTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
   const { toast } = useToast();
-  
-  // Reset auth state completely and force login screen
-  const resetAuthState = async () => {
-    console.log("Resetting auth state completely");
-    if (subscriptionRef.current) {
-      subscriptionRef.current.unsubscribe();
-    }
-    
-    await clearAuthState();
-    setUser(null);
-    setSession(null);
-    setIsInitialized(true);
-    setIsLoading(false);
-    setForceLogin(true); // Force login screen
-    
-    toast({
-      title: "Authentication reset",
-      description: "Please log in again.",
-    });
-  };
-  
-  // Function to mark auth as stabilized
-  const markAsStabilized = useCallback(() => {
-    if (!isInitialized) {
-      console.log("Auth is now stabilized");
-      setIsInitialized(true);
-      setIsLoading(false);
-      authStabilizedRef.current = true;
-    }
-  }, [isInitialized]);
 
-  // Force stabilization after timeout
+  // Initialize auth and set up session listener
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isInitialized) {
-        console.log("Forcing auth stabilization after timeout");
-        markAsStabilized();
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setSession(currentSession);
         
-        // If we had to force stabilize, check if we need a full reset
-        if (initialSessionCountRef.current > MAX_INITIAL_SESSION_EVENTS) {
-          console.log("Too many initialization attempts, forcing login screen");
-          setForceLogin(true);
+        if (currentSession?.user) {
+          // Only fetch user metadata after auth state change with timeout
+          setTimeout(() => {
+            fetchAndSetUser(currentSession.user);
+          }, 0);
+        } else {
+          setUser(null);
         }
       }
-    }, FORCE_STABILIZE_TIMEOUT);
+    );
 
-    return () => clearTimeout(timer);
-  }, [isInitialized, markAsStabilized]);
-  
-  // Debounce the fetchAndSetUser function to prevent multiple rapid calls
-  const fetchAndSetUser = useCallback(async (supabaseUser: SupabaseUser) => {
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      
+      if (currentSession?.user) {
+        fetchAndSetUser(currentSession.user);
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Fetch user data and update the state
+  const fetchAndSetUser = async (supabaseUser: SupabaseUser) => {
     try {
       // Query the profiles table we just created
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', supabaseUser.id)
-        .maybeSingle();
+        .single();
 
       if (error) {
         console.error("Error fetching user profile:", error);
@@ -209,27 +184,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           hasAcceptedTerms: Boolean(data.has_accepted_terms),
           lastLoginAt: data.last_login_at ? new Date(data.last_login_at) : undefined,
           isActive: Boolean(data.is_active),
-          isNewUser: Boolean(data.is_new_user),
+          isNewUser: Boolean(data.is_new_user), // Added isNewUser from the database
           notificationPreferences: notificationPrefs,
         });
 
-        // Only update last login time when actually logged in and initialization is complete
-        if (session && isInitialized) {
+        // Update last login time when fetching user data after login
+        if (session) {
           updateLastLogin(supabaseUser.id);
         }
       } else {
         // If no profile exists, use data from auth user
         setUser(createUserFromSupabaseUser(supabaseUser));
       }
-      
-      // Mark auth as stabilized after user data is set
-      markAsStabilized();
     } catch (error) {
       console.error("Error fetching user data:", error);
       setUser(createUserFromSupabaseUser(supabaseUser));
-      markAsStabilized();
+    } finally {
+      setIsLoading(false);
     }
-  }, [session, isInitialized, markAsStabilized]);
+  };
 
   // Helper function to update last_login_at
   const updateLastLogin = async (userId: string) => {
@@ -242,135 +215,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("Error updating last login time:", error);
     }
   };
-
-  // Function to safely handle auth state changes
-  const handleAuthStateChange = useCallback((event: string, currentSession: Session | null) => {
-    console.log("Auth state changed:", event);
-    const now = Date.now();
-    
-    // Don't process duplicate INITIAL_SESSION events that come too quickly
-    if (event === 'INITIAL_SESSION') {
-      initialSessionCountRef.current += 1;
-      
-      // If we've seen too many INITIAL_SESSION events, force stabilization
-      if (initialSessionCountRef.current > MAX_INITIAL_SESSION_EVENTS) {
-        console.log(`Received ${initialSessionCountRef.current} INITIAL_SESSION events, forcing stabilization and login`);
-        if (!authStabilizedRef.current) {
-          markAsStabilized();
-          setForceLogin(true); // Force login screen when too many initial events
-          return;
-        }
-      }
-      
-      // Check for events that are too close together (potential loop)
-      if (now - lastEventTimeRef.current < 200) {
-        console.log("Throttling frequent auth state changes");
-        return;
-      }
-    }
-    
-    lastEventTimeRef.current = now;
-    
-    // Set session state for all events
-    setSession(currentSession);
-    
-    // Handle user data based on event type
-    if (currentSession?.user) {
-      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-        // Use setTimeout to avoid blocking the auth state change event handler
-        setTimeout(() => {
-          fetchAndSetUser(currentSession.user);
-        }, 0);
-      }
-    } else {
-      // Clear user when signed out
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-      }
-      
-      // Always stabilize auth state even when no user is present
-      if (!isInitialized) {
-        markAsStabilized();
-      }
-    }
-  }, [fetchAndSetUser, isInitialized, markAsStabilized]);
-
-  // Initialize auth and set up session listener
-  useEffect(() => {
-    let isActive = true; // Flag to prevent state updates after unmount
-    
-    const initializeAuth = async () => {
-      setIsLoading(true);
-      
-      try {
-        // Check for potentially corrupted tokens first
-        const isCorrupted = await hasCorruptedToken();
-        
-        if (isCorrupted) {
-          console.log("Corrupt token detected, clearing auth state");
-          await clearAuthState();
-        }
-        
-        // Set up auth state listener FIRST
-        const { data } = supabase.auth.onAuthStateChange((event, session) => {
-          if (isActive) {
-            handleAuthStateChange(event, session);
-          }
-        });
-        
-        subscriptionRef.current = data.subscription;
-        
-        // Then get session explicitly - with a slight delay to avoid race conditions
-        setTimeout(async () => {
-          if (!isActive) return;
-          
-          try {
-            const { data: { session: currentSession } } = await supabase.auth.getSession();
-            
-            // Only process session if not already handled by onAuthStateChange
-            if (!authStabilizedRef.current) {
-              if (currentSession?.user) {
-                setSession(currentSession);
-                fetchAndSetUser(currentSession.user);
-              } else {
-                setSession(null);
-                setUser(null);
-                markAsStabilized();
-              }
-            }
-          } catch (error) {
-            console.error("Error getting session:", error);
-            markAsStabilized();
-          }
-        }, 100);
-      } catch (error) {
-        console.error("Error in auth initialization:", error);
-        markAsStabilized();
-      }
-    };
-    
-    initializeAuth();
-    
-    // Failsafe: set a maximum timeout to force auth to be ready
-    authTimeoutRef.current = setTimeout(() => {
-      if (!authStabilizedRef.current && isActive) {
-        console.log("Auth failsafe timeout reached - forcing stabilization");
-        markAsStabilized();
-      }
-    }, FORCE_STABILIZE_TIMEOUT);
-    
-    return () => {
-      isActive = false; // Prevent state updates after unmount
-      
-      if (subscriptionRef.current) {
-        subscriptionRef.current.unsubscribe();
-      }
-      
-      if (authTimeoutRef.current) {
-        clearTimeout(authTimeoutRef.current);
-      }
-    };
-  }, [handleAuthStateChange, fetchAndSetUser, markAsStabilized]);
 
   // Authentication methods
   const login = async (email: string, password: string) => {
@@ -385,9 +229,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
 
-      // Reset the force login flag when successful login occurs
-      setForceLogin(false);
-      
+      if (data.user) {
+        // Update last login time
+        updateLastLogin(data.user.id);
+      }
+
       toast({
         title: "Login successful",
         description: `Welcome back!`,
@@ -611,8 +457,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     isAuthenticated: !!user,
     isLoading,
-    isInitialized,
-    forceLogin,
     login,
     signup,
     logout,
@@ -620,7 +464,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     changePassword,
     upgradeCoachTier,
     cancelCoachSubscription,
-    resetAuthState,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
