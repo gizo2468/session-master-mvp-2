@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -35,12 +35,13 @@ type FormValues = z.infer<typeof formSchema>;
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 const Login: React.FC = () => {
-  const { login, isLoading, isAuthenticated } = useAuth();
+  const { login, isLoading, isAuthenticated, isInitialized } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const redirectedRef = useRef(false);
   
   // Get redirect path from location state or default to home
   const from = (location.state as { from?: string })?.from || '/';
@@ -60,22 +61,53 @@ const Login: React.FC = () => {
     },
   });
 
+  // Clear potentially corrupted tokens on component mount
+  useEffect(() => {
+    const checkAndClearPossiblyCorruptedTokens = async () => {
+      try {
+        // Only run once per component mount
+        const { data } = await supabase.auth.getSession();
+        
+        // If we're on the login page and there's a corrupted token, clear it
+        // We can detect this if the token is present but invalid in some way
+        if (data.session?.expires_at && new Date(data.session.expires_at * 1000) < new Date()) {
+          console.log("Expired token detected, signing out");
+          await supabase.auth.signOut({ scope: 'local' });
+        }
+      } catch (error) {
+        console.error("Error in auth check:", error);
+        // If there's an error reading the token, it might be corrupted, so sign out
+        try {
+          await supabase.auth.signOut({ scope: 'local' });
+        } catch (e) {
+          console.error("Error signing out:", e);
+        }
+      }
+    };
+    
+    checkAndClearPossiblyCorruptedTokens();
+  }, []);
+
   // Check if user is already authenticated and redirect if so
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && isInitialized && !redirectedRef.current) {
+      console.log("User authenticated, redirecting from login page");
+      redirectedRef.current = true;
       // Always redirect to home page '/' instead of using the 'from' variable
-      // which might contain '/settings' or other paths
       navigate('/', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isInitialized, navigate]);
 
   const onSubmit = async (values: FormValues) => {
+    if (redirectedRef.current) return;
+    
     try {
       await login(values.email, values.password);
       // Don't navigate here - let the useEffect handle redirection
       // when isAuthenticated changes
     } catch (error) {
       // Error is handled in the AuthContext
+      console.error("Login error:", error);
     }
   };
 

@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole, CoachTier } from '@/types/poker';
@@ -17,7 +17,7 @@ export interface User {
   hasAcceptedTerms?: boolean;
   lastLoginAt?: Date;
   isActive?: boolean;
-  isNewUser?: boolean; // Added isNewUser field
+  isNewUser?: boolean;
   notificationPreferences: {
     liveSessionStart: boolean;
     newFeedback: boolean;
@@ -28,6 +28,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean; // New flag to track initialization status
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, fullName: string, role: UserRole) => Promise<void>;
   logout: () => void;
@@ -88,51 +89,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false); // New state to track initialization
   const { toast } = useToast();
-
-  // Initialize auth and set up session listener
-  useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        setSession(currentSession);
-        
-        if (currentSession?.user) {
-          // Only fetch user metadata after auth state change with timeout
-          setTimeout(() => {
-            fetchAndSetUser(currentSession.user);
-          }, 0);
-        } else {
-          setUser(null);
-        }
-      }
-    );
-
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      
-      if (currentSession?.user) {
-        fetchAndSetUser(currentSession.user);
-      } else {
-        setIsLoading(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Fetch user data and update the state
-  const fetchAndSetUser = async (supabaseUser: SupabaseUser) => {
+  
+  // Debounce the fetchAndSetUser function to prevent multiple rapid calls
+  const fetchAndSetUser = useCallback(async (supabaseUser: SupabaseUser) => {
     try {
       // Query the profiles table we just created
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', supabaseUser.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching user profile:", error);
@@ -184,12 +152,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           hasAcceptedTerms: Boolean(data.has_accepted_terms),
           lastLoginAt: data.last_login_at ? new Date(data.last_login_at) : undefined,
           isActive: Boolean(data.is_active),
-          isNewUser: Boolean(data.is_new_user), // Added isNewUser from the database
+          isNewUser: Boolean(data.is_new_user),
           notificationPreferences: notificationPrefs,
         });
 
-        // Update last login time when fetching user data after login
-        if (session) {
+        // Only update last login time when actually logged in and initialization is complete
+        if (session && isInitialized) {
           updateLastLogin(supabaseUser.id);
         }
       } else {
@@ -200,9 +168,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("Error fetching user data:", error);
       setUser(createUserFromSupabaseUser(supabaseUser));
     } finally {
+      if (!isInitialized) {
+        setIsInitialized(true);
+      }
       setIsLoading(false);
     }
-  };
+  }, [session, isInitialized]);
 
   // Helper function to update last_login_at
   const updateLastLogin = async (userId: string) => {
@@ -215,6 +186,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("Error updating last login time:", error);
     }
   };
+
+  // Initialize auth and set up session listener
+  useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+    
+    const initializeAuth = async () => {
+      setIsLoading(true);
+      
+      // Set up auth state listener FIRST
+      const { data } = supabase.auth.onAuthStateChange((event, currentSession) => {
+        console.log("Auth state changed:", event);
+        
+        // Only update state if there's a meaningful change
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+          setSession(currentSession);
+          
+          if (currentSession?.user) {
+            // Only fetch user metadata after auth state change with timeout
+            setTimeout(() => {
+              fetchAndSetUser(currentSession.user);
+            }, 0);
+          } else {
+            setUser(null);
+            if (!isInitialized) {
+              setIsInitialized(true);
+            }
+            setIsLoading(false);
+          }
+        }
+      });
+      
+      subscription = data.subscription;
+      
+      // Then check for existing session - but with a slight delay to avoid race conditions
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        setSession(currentSession);
+        
+        if (currentSession?.user) {
+          fetchAndSetUser(currentSession.user);
+        } else {
+          if (!isInitialized) {
+            setIsInitialized(true);
+          }
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("Error getting session:", error);
+        setIsLoading(false);
+        setIsInitialized(true);
+      }
+    };
+    
+    initializeAuth();
+    
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
+  }, [fetchAndSetUser]);
 
   // Authentication methods
   const login = async (email: string, password: string) => {
@@ -229,11 +261,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
 
-      if (data.user) {
-        // Update last login time
-        updateLastLogin(data.user.id);
-      }
-
+      // Don't update last login here - let the auth state change handler take care of it
+      
       toast({
         title: "Login successful",
         description: `Welcome back!`,
@@ -457,6 +486,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     isAuthenticated: !!user,
     isLoading,
+    isInitialized, // Include the new flag in the context value
     login,
     signup,
     logout,
