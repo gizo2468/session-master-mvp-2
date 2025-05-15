@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewSessionButton from '@/components/NewSessionButton';
@@ -20,7 +19,12 @@ const Index = () => {
   // Initialize default tutorial values
   const defaultTutorialValues = {
     completeCurrentStepAction: () => {},
-    currentStep: { id: 0, title: '', description: '', targetId: '' }
+    currentStep: { 
+      id: 0, 
+      title: '', 
+      description: '', 
+      targetId: '' // Set a default empty string for targetId
+    }
   };
   
   // Try to use tutorial context
@@ -29,7 +33,16 @@ const Index = () => {
     // Only try to use the tutorial if it's available
     const tutorialContext = useTutorial();
     if (tutorialContext) {
-      tutorial = tutorialContext;
+      // Fix the type mismatch by ensuring targetId is always a string
+      tutorial = {
+        completeCurrentStepAction: tutorialContext.completeCurrentStepAction,
+        currentStep: {
+          id: tutorialContext.currentStep.id,
+          title: tutorialContext.currentStep.title,
+          description: tutorialContext.currentStep.description,
+          targetId: tutorialContext.currentStep.targetId || '' // Ensure targetId is always a string
+        }
+      };
     }
   } catch (error) {
     console.log("Tutorial context not available on this render, using defaults");
