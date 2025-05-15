@@ -19,7 +19,6 @@ export type Database = {
           has_accepted_terms: boolean | null
           id: string
           is_active: boolean | null
-          is_new_user: boolean | null
           language: string
           last_login_at: string | null
           notification_preferences: Json
@@ -37,7 +36,6 @@ export type Database = {
           has_accepted_terms?: boolean | null
           id: string
           is_active?: boolean | null
-          is_new_user?: boolean | null
           language?: string
           last_login_at?: string | null
           notification_preferences?: Json
@@ -55,7 +53,6 @@ export type Database = {
           has_accepted_terms?: boolean | null
           id?: string
           is_active?: boolean | null
-          is_new_user?: boolean | null
           language?: string
           last_login_at?: string | null
           notification_preferences?: Json

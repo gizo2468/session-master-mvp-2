@@ -1,5 +1,4 @@
 
-import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
@@ -8,21 +7,11 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading, isInitialized } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
-  
-  // For debugging
-  useEffect(() => {
-    console.log("ProtectedRoute render - Auth state:", {
-      isAuthenticated,
-      isInitialized,
-      isLoading,
-      path: location.pathname
-    });
-  }, [isAuthenticated, isInitialized, isLoading, location.pathname]);
-  
-  // If auth is still initializing or loading, show loading
-  if (!isInitialized || isLoading) {
+
+  if (isLoading) {
+    // Show a loading state while checking authentication
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-gold"></div>
@@ -30,14 +19,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // If user is not authenticated after initialization, redirect to login
   if (!isAuthenticated) {
-    console.log("User not authenticated, redirecting to login from:", location.pathname);
-    // Store the current location they were trying to access
+    // Redirect to login page if not authenticated
     return <Navigate to="/auth/login" state={{ from: location.pathname }} replace />;
   }
 
-  // User is authenticated, render the protected content
   return <>{children}</>;
 };
 
