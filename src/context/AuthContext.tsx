@@ -1,9 +1,9 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole, CoachTier } from '@/types/poker';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, clearAuthState } from '@/integrations/supabase/client';
 
 export interface User {
   id: string;
@@ -28,7 +28,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  isInitialized: boolean; // New flag to track initialization status
+  isInitialized: boolean; // Flag to track initialization status
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, fullName: string, role: UserRole) => Promise<void>;
   logout: () => void;
@@ -49,6 +49,7 @@ export const useAuth = () => {
 };
 
 const MAX_PROFILE_IMAGE_SIZE = 50 * 1024; // 50KB limit for profile images
+const MAX_INITIAL_SESSION_EVENTS = 3; // Maximum number of INITIAL_SESSION events before forcing stabilization
 
 // Function to optimize image data to prevent storage quota issues
 const optimizeImageData = (imageDataUrl: string | undefined): string | undefined => {
@@ -89,8 +90,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false); // New state to track initialization
+  const [isInitialized, setIsInitialized] = useState(false);
+  const initialSessionCountRef = useRef(0);
+  const authStabilizedRef = useRef(false);
+  const lastEventTimeRef = useRef(Date.now());
   const { toast } = useToast();
+  
+  // Function to mark auth as stabilized
+  const markAsStabilized = useCallback(() => {
+    if (!isInitialized) {
+      console.log("Auth is now stabilized");
+      setIsInitialized(true);
+      setIsLoading(false);
+      authStabilizedRef.current = true;
+    }
+  }, [isInitialized]);
+
+  // Force stabilization after timeout
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isInitialized) {
+        console.log("Forcing auth stabilization after timeout");
+        markAsStabilized();
+      }
+    }, 3000); // Force stabilize after 3 seconds if not already
+
+    return () => clearTimeout(timer);
+  }, [isInitialized, markAsStabilized]);
   
   // Debounce the fetchAndSetUser function to prevent multiple rapid calls
   const fetchAndSetUser = useCallback(async (supabaseUser: SupabaseUser) => {
@@ -164,16 +190,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // If no profile exists, use data from auth user
         setUser(createUserFromSupabaseUser(supabaseUser));
       }
+      
+      // Mark auth as stabilized after user data is set
+      markAsStabilized();
     } catch (error) {
       console.error("Error fetching user data:", error);
       setUser(createUserFromSupabaseUser(supabaseUser));
-    } finally {
-      if (!isInitialized) {
-        setIsInitialized(true);
-      }
-      setIsLoading(false);
+      markAsStabilized();
     }
-  }, [session, isInitialized]);
+  }, [session, isInitialized, markAsStabilized]);
 
   // Helper function to update last_login_at
   const updateLastLogin = async (userId: string) => {
@@ -187,6 +212,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Function to safely handle auth state changes
+  const handleAuthStateChange = useCallback((event: string, currentSession: Session | null) => {
+    console.log("Auth state changed:", event);
+    const now = Date.now();
+    
+    // Don't process duplicate INITIAL_SESSION events that come too quickly
+    if (event === 'INITIAL_SESSION') {
+      initialSessionCountRef.current += 1;
+      
+      // If we've seen too many INITIAL_SESSION events, force stabilization
+      if (initialSessionCountRef.current > MAX_INITIAL_SESSION_EVENTS) {
+        console.log(`Received ${initialSessionCountRef.current} INITIAL_SESSION events, forcing stabilization`);
+        if (!authStabilizedRef.current) {
+          markAsStabilized();
+          return;
+        }
+      }
+      
+      // Check for events that are too close together (potential loop)
+      if (now - lastEventTimeRef.current < 200) {
+        console.log("Throttling frequent auth state changes");
+        return;
+      }
+    }
+    
+    lastEventTimeRef.current = now;
+    
+    // Set session state for all events
+    setSession(currentSession);
+    
+    // Handle user data based on event type
+    if (currentSession?.user) {
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+        // Use setTimeout to avoid blocking the auth state change event handler
+        setTimeout(() => {
+          fetchAndSetUser(currentSession.user);
+        }, 0);
+      }
+    } else {
+      // Clear user when signed out
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
+      
+      // Always stabilize auth state even when no user is present
+      if (!isInitialized) {
+        markAsStabilized();
+      }
+    }
+  }, [fetchAndSetUser, isInitialized, markAsStabilized]);
+
   // Initialize auth and set up session listener
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null;
@@ -194,48 +270,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initializeAuth = async () => {
       setIsLoading(true);
       
-      // Set up auth state listener FIRST
-      const { data } = supabase.auth.onAuthStateChange((event, currentSession) => {
-        console.log("Auth state changed:", event);
-        
-        // Only update state if there's a meaningful change
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
-          setSession(currentSession);
-          
-          if (currentSession?.user) {
-            // Only fetch user metadata after auth state change with timeout
-            setTimeout(() => {
-              fetchAndSetUser(currentSession.user);
-            }, 0);
-          } else {
-            setUser(null);
-            if (!isInitialized) {
-              setIsInitialized(true);
-            }
-            setIsLoading(false);
-          }
-        }
-      });
-      
-      subscription = data.subscription;
-      
-      // Then check for existing session - but with a slight delay to avoid race conditions
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        setSession(currentSession);
+        // Check for potentially corrupted tokens first
+        const { data: sessionData } = await supabase.auth.getSession();
         
-        if (currentSession?.user) {
-          fetchAndSetUser(currentSession.user);
-        } else {
-          if (!isInitialized) {
-            setIsInitialized(true);
-          }
-          setIsLoading(false);
+        if (sessionData.session?.expires_at && new Date(sessionData.session.expires_at * 1000) < new Date()) {
+          console.log("Expired token detected, clearing auth state");
+          await clearAuthState();
         }
+        
+        // Set up auth state listener FIRST
+        const { data } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+        subscription = data.subscription;
+        
+        // Then get session explicitly - with a slight delay to avoid race conditions
+        setTimeout(async () => {
+          try {
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            
+            // Only process session if not already handled by onAuthStateChange
+            if (!authStabilizedRef.current) {
+              if (currentSession?.user) {
+                setSession(currentSession);
+                fetchAndSetUser(currentSession.user);
+              } else {
+                setSession(null);
+                setUser(null);
+                markAsStabilized();
+              }
+            }
+          } catch (error) {
+            console.error("Error getting session:", error);
+            markAsStabilized();
+          }
+        }, 100);
       } catch (error) {
-        console.error("Error getting session:", error);
-        setIsLoading(false);
-        setIsInitialized(true);
+        console.error("Error in auth initialization:", error);
+        markAsStabilized();
       }
     };
     
@@ -246,7 +317,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         subscription.unsubscribe();
       }
     };
-  }, [fetchAndSetUser]);
+  }, [handleAuthStateChange, fetchAndSetUser, markAsStabilized]);
 
   // Authentication methods
   const login = async (email: string, password: string) => {
@@ -486,7 +557,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     isAuthenticated: !!user,
     isLoading,
-    isInitialized, // Include the new flag in the context value
+    isInitialized, // Include the initialization flag in the context value
     login,
     signup,
     logout,

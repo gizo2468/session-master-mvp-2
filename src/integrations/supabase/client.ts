@@ -18,3 +18,16 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     flowType: 'pkce' // Use PKCE flow for more security
   }
 });
+
+// Utility to handle corrupted tokens or emergency sign out
+export const clearAuthState = async () => {
+  try {
+    await supabase.auth.signOut({ scope: 'local' });
+    // Clear any potentially corrupted state
+    localStorage.removeItem('supabase.auth.token');
+    localStorage.removeItem('supabase.auth.refreshToken');
+    console.log("Auth state cleared");
+  } catch (e) {
+    console.error("Error clearing auth state:", e);
+  }
+};

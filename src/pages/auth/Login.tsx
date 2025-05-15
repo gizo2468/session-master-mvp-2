@@ -12,7 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import Icon from '@/components/ui/Lucide';
 import Logo from '@/components/Logo';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, clearAuthState } from '@/integrations/supabase/client';
 import { 
   Dialog,
   DialogContent,
@@ -41,7 +41,8 @@ const Login: React.FC = () => {
   const { toast } = useToast();
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
-  const redirectedRef = useRef(false);
+  const hasAttemptedRedirectRef = useRef(false);
+  const authTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Get redirect path from location state or default to home
   const from = (location.state as { from?: string })?.from || '/';
@@ -69,37 +70,55 @@ const Login: React.FC = () => {
         const { data } = await supabase.auth.getSession();
         
         // If we're on the login page and there's a corrupted token, clear it
-        // We can detect this if the token is present but invalid in some way
         if (data.session?.expires_at && new Date(data.session.expires_at * 1000) < new Date()) {
-          console.log("Expired token detected, signing out");
-          await supabase.auth.signOut({ scope: 'local' });
+          console.log("Login page: Expired token detected, signing out");
+          await clearAuthState();
         }
       } catch (error) {
         console.error("Error in auth check:", error);
         // If there's an error reading the token, it might be corrupted, so sign out
         try {
-          await supabase.auth.signOut({ scope: 'local' });
+          await clearAuthState();
         } catch (e) {
-          console.error("Error signing out:", e);
+          console.error("Error clearing auth state:", e);
         }
       }
     };
     
     checkAndClearPossiblyCorruptedTokens();
+    
+    // Set a timeout to force the page to be interactive if auth never stabilizes
+    authTimeoutRef.current = setTimeout(() => {
+      if (!isInitialized) {
+        console.log("Auth stabilization timeout - forcing form to be interactive");
+        // Force the page to be interactive after timeout
+        if (authTimeoutRef.current) {
+          clearTimeout(authTimeoutRef.current);
+        }
+      }
+    }, 5000);
+    
+    return () => {
+      if (authTimeoutRef.current) {
+        clearTimeout(authTimeoutRef.current);
+      }
+    };
   }, []);
 
   // Check if user is already authenticated and redirect if so
   useEffect(() => {
-    if (isAuthenticated && isInitialized && !redirectedRef.current) {
-      console.log("User authenticated, redirecting from login page");
-      redirectedRef.current = true;
-      // Always redirect to home page '/' instead of using the 'from' variable
+    // Only redirect if authenticated AND auth is initialized AND we haven't redirected yet
+    if (isAuthenticated && isInitialized && !hasAttemptedRedirectRef.current) {
+      console.log("User authenticated and auth initialized, redirecting from login page");
+      hasAttemptedRedirectRef.current = true;
+      // Always redirect to home page '/' instead of using the 'from' variable for consistency
       navigate('/', { replace: true });
     }
   }, [isAuthenticated, isInitialized, navigate]);
 
   const onSubmit = async (values: FormValues) => {
-    if (redirectedRef.current) return;
+    // Don't attempt login if we've already redirected
+    if (hasAttemptedRedirectRef.current) return;
     
     try {
       await login(values.email, values.password);

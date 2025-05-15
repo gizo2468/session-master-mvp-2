@@ -35,21 +35,21 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 // Create a new query client instance
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
-// Create a wrapper component that provides the current path to TutorialProvider
-const TutorialProviderWithRouter = ({ children }) => {
+// Create a wrapper component for routes that uses the current path for TutorialProvider
+const AppRoutes = () => {
   const location = useLocation();
+  
   return (
     <TutorialProvider currentPath={location.pathname}>
-      {children}
-    </TutorialProvider>
-  );
-};
-
-const AppContent = () => {
-  return (
-    <>
       <AppTutorial />
       <Routes>
         {/* Auth Routes */}
@@ -197,7 +197,7 @@ const AppContent = () => {
         {/* Catch-all route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </>
+    </TutorialProvider>
   );
 };
 
@@ -206,19 +206,19 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <Toaster />
       <Sonner />
-      <AuthProvider>
-        <LanguageProvider>
-          <BrowserRouter>
+      <BrowserRouter>
+        {/* Important: AuthProvider must be inside BrowserRouter but outside other context providers */}
+        <AuthProvider>
+          {/* Now LanguageProvider can access the AuthContext */}
+          <LanguageProvider>
             <CoachStudentProvider>
               <SessionProvider>
-                <TutorialProviderWithRouter>
-                  <AppContent />
-                </TutorialProviderWithRouter>
+                <AppRoutes />
               </SessionProvider>
             </CoachStudentProvider>
-          </BrowserRouter>
-        </LanguageProvider>
-      </AuthProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   </TooltipPrimitive.Provider>
 );
