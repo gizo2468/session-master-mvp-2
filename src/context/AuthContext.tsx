@@ -29,7 +29,7 @@ interface AuthContextType {
   isLoading: boolean;
   isInitialized: boolean; // Flag to track initialization status
   forceLogin: boolean; // New flag to force login screen render
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<any>; // Updated return type to match implementation
   signup: (email: string, password: string, fullName: string, role: UserRole) => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
