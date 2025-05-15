@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -35,24 +34,24 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 // Create a new query client instance
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
-// Create a wrapper component that provides the current path to TutorialProvider
-const TutorialProviderWithRouter = ({ children }) => {
+// Create a wrapper component for routes that uses the current path for TutorialProvider
+const AppRoutes = () => {
   const location = useLocation();
+  
   return (
     <TutorialProvider currentPath={location.pathname}>
-      {children}
-    </TutorialProvider>
-  );
-};
-
-const AppContent = () => {
-  return (
-    <>
       <AppTutorial />
       <Routes>
-        {/* Auth Routes */}
+        {/* Auth Routes - Available without authentication */}
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/signup" element={<Signup />} />
         <Route path="/auth/reset-password" element={<ResetPassword />} />
@@ -70,6 +69,8 @@ const AppContent = () => {
             </ProtectedRoute>
           } 
         />
+        
+        {/* Other routes... */}
         <Route 
           path="/new-session" 
           element={
@@ -197,28 +198,40 @@ const AppContent = () => {
         {/* Catch-all route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </>
+    </TutorialProvider>
   );
 };
+
+// Extracted AuthWrapper to avoid circular dependencies
+const AuthWrapper = ({ children }: { children: React.ReactNode }) => (
+  <AuthProvider>
+    {children}
+  </AuthProvider>
+);
+
+// Language component that doesn't need to be inside AuthProvider
+const LanguageWrapper = ({ children }: { children: React.ReactNode }) => (
+  <LanguageProvider>
+    {children}
+  </LanguageProvider>
+);
 
 const App = () => (
   <TooltipPrimitive.Provider>
     <QueryClientProvider client={queryClient}>
       <Toaster />
       <Sonner />
-      <AuthProvider>
-        <LanguageProvider>
-          <BrowserRouter>
+      <BrowserRouter>
+        <AuthWrapper>
+          <LanguageWrapper>
             <CoachStudentProvider>
               <SessionProvider>
-                <TutorialProviderWithRouter>
-                  <AppContent />
-                </TutorialProviderWithRouter>
+                <AppRoutes />
               </SessionProvider>
             </CoachStudentProvider>
-          </BrowserRouter>
-        </LanguageProvider>
-      </AuthProvider>
+          </LanguageWrapper>
+        </AuthWrapper>
+      </BrowserRouter>
     </QueryClientProvider>
   </TooltipPrimitive.Provider>
 );

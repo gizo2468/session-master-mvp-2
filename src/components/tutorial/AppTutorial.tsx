@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTutorial, TutorialStep } from '@/context/TutorialContext';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { useLanguage } from '@/context/LanguageContext';
@@ -22,7 +22,9 @@ const getElementPosition = (elementId: string | undefined) => {
     left: rect.left + window.scrollX,
     width: rect.width,
     height: rect.height,
-    isCircular: element.classList.contains('rounded-full'),
+    isCircular: element.classList.contains('rounded-full') || 
+                getComputedStyle(element).borderRadius === '9999px' || 
+                getComputedStyle(element).borderRadius === '50%',
   };
 };
 
@@ -58,8 +60,8 @@ const TutorialHighlight: React.FC<{
   
   if (!elementPosition) return null;
   
-  // Use the isCircular property to determine border radius
-  const borderRadius = elementPosition.isCircular ? '9999px' : '8px';
+  // Determine border radius based on element shape
+  const borderRadius = elementPosition.isCircular ? '50%' : '8px';
   
   return (
     <div className="fixed inset-0 z-50">
@@ -102,7 +104,7 @@ const TutorialHighlight: React.FC<{
         }}
       />
       
-      {/* Highlight border */}
+      {/* Highlight border with improved glow effect */}
       <div 
         className="absolute border-2 border-poker-gold shadow-lg animate-pulse pointer-events-none" 
         style={{
@@ -111,7 +113,7 @@ const TutorialHighlight: React.FC<{
           width: `${elementPosition.width + 8}px`,
           height: `${elementPosition.height + 8}px`,
           borderRadius: borderRadius,
-          boxShadow: '0 0 15px 5px rgba(212, 175, 55, 0.5)',
+          boxShadow: '0 0 15px 5px rgba(212, 175, 55, 0.7)',
         }}
       />
       
@@ -199,7 +201,7 @@ const StepContent: React.FC<{ step: TutorialStep }> = ({ step }) => {
           onClick={skipTutorial}
           className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
         >
-          {t('skip')}
+          skip
         </Button>
       </div>
     </div>
@@ -220,8 +222,8 @@ const AppTutorial: React.FC = () => {
       <Dialog open={true} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-md">
           <DialogTitle>{currentStep.title}</DialogTitle>
-          <DialogDescription>{currentStep.description}</DialogDescription>
           <div className="space-y-4 p-2">
+            <p className="text-gray-600">{currentStep.description}</p>
             <StepContent step={currentStep} />
           </div>
         </DialogContent>
