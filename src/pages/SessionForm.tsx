@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -67,7 +68,7 @@ export default function SessionForm() {
     form.setValue('gameType', value);
     
     // Only mark the action as completed if this is the current tutorial step target
-    if (currentStep?.targetId === 'nlh' && value === 'NLH') {
+    if (currentStep.targetId === 'nlh' && value === 'NLH') {
       console.log("Game type selection is the current tutorial target - marking action as completed");
       completeCurrentStepAction();
     }

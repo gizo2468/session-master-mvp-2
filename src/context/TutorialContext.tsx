@@ -286,36 +286,14 @@ export const TutorialProvider: React.FC<{
     if (!user) return;
     
     try {
-      console.log(`Updating user ${user.id} is_new_user status to: ${isNewUser}`);
-      
-      const { error, data } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({ is_new_user: isNewUser })
-        .eq('id', user.id)
-        .select();
+        .eq('id', user.id);
       
-      if (error) {
-        console.error("Supabase error updating tutorial status:", error);
-        throw error;
-      }
+      if (error) throw error;
       
-      console.log("Supabase update response:", data);
-      
-      // Update local user state
       updateUser({ isNewUser });
-      
-      // Verify the update worked
-      const { data: verifyData, error: verifyError } = await supabase
-        .from('profiles')
-        .select('is_new_user')
-        .eq('id', user.id)
-        .single();
-      
-      if (verifyError) {
-        console.error("Error verifying tutorial status update:", verifyError);
-      } else {
-        console.log("Verified tutorial status in database:", verifyData);
-      }
     } catch (error) {
       console.error("Error updating tutorial status:", error);
       throw error;
