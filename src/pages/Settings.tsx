@@ -16,12 +16,14 @@ import LegalSettings from '@/components/settings/LegalSettings';
 import DonationCard from '@/components/DonationCard';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const { t, dir } = useLanguage();
+  const { toast } = useToast();
   const isCoach = user?.role === 'coach';
   const isStudent = user?.role === 'student';
   
@@ -29,11 +31,17 @@ const Settings: React.FC = () => {
   const isMainSettingsPage = location.pathname === '/settings';
 
   // Function to handle logout with error handling
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
-      logout();
+      await logout();
+      // Navigation will be handled by the auth state change in AuthProvider
     } catch (error) {
       console.error("Error during logout:", error);
+      toast({
+        title: t('error'),
+        description: t('logout_error'),
+        variant: "destructive",
+      });
     }
   };
 
@@ -120,9 +128,14 @@ const Settings: React.FC = () => {
                       variant="destructive" 
                       onClick={handleLogout}
                       className="flex items-center gap-2"
+                      disabled={isLoading}
                     >
-                      <Icon name="LogOut" className="h-4 w-4" />
-                      {t('logout')}
+                      {isLoading ? (
+                        <Icon name="Loader" className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Icon name="LogOut" className="h-4 w-4" />
+                      )}
+                      {isLoading ? t('logging_out') : t('logout')}
                     </Button>
                   </AlertDescription>
                 </Alert>
