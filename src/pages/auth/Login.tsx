@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -44,12 +43,23 @@ const Login: React.FC = () => {
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [loginStuck, setLoginStuck] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Local loading state for better control
+  const [isLoading, setIsLoading] = useState(false);
   const hasAttemptedRedirectRef = useRef(false);
   const authTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Get redirect path from location state or default to home
   const from = (location.state as { from?: string })?.from || '/';
+  
+  // For debugging
+  useEffect(() => {
+    console.log("Login component render - Auth state:", {
+      isAuthenticated,
+      isInitialized,
+      forceLogin,
+      location: location.pathname,
+      from
+    });
+  }, [isAuthenticated, isInitialized, forceLogin, location, from]);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -110,33 +120,42 @@ const Login: React.FC = () => {
         clearTimeout(authTimeoutRef.current);
       }
     };
-  }, [forceLogin]);
+  }, [forceLogin, isInitialized]);
 
-  // Check if user is already authenticated and redirect if so
+  // Redirect if already authenticated
   useEffect(() => {
-    console.log("Auth state changed - isAuthenticated:", isAuthenticated, "isInitialized:", isInitialized, "forceLogin:", forceLogin);
-    
-    // Only redirect if authenticated AND auth is initialized AND forceLogin is false
-    if (isAuthenticated && isInitialized && !forceLogin) {
-      console.log("User authenticated and auth initialized, redirecting from login page");
-      navigate('/', { replace: true });
+    // Only redirect if these conditions are met:
+    // 1. User is authenticated
+    // 2. Auth is initialized
+    // 3. Not in forceLogin mode
+    // 4. Not already attempted a redirect this render (prevents loops)
+    if (isAuthenticated && isInitialized && !forceLogin && !hasAttemptedRedirectRef.current) {
+      console.log("User authenticated and auth initialized, redirecting from login to:", from);
+      hasAttemptedRedirectRef.current = true; // Mark that we've attempted a redirect
+      
+      // Use a small timeout to ensure this happens after render cycle
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 100);
     }
-  }, [isAuthenticated, isInitialized, forceLogin, navigate]);
+    
+    // Reset the flag when any of these values change
+    return () => {
+      hasAttemptedRedirectRef.current = false;
+    };
+  }, [isAuthenticated, isInitialized, forceLogin, navigate, from]);
 
   const onSubmit = async (values: FormValues) => {
     setShowErrorAlert(false);
-    setIsLoading(true); // Use local loading state for better control
+    setIsLoading(true);
     
     try {
       const result = await login(values.email, values.password);
-      
-      // Log successful login data for debugging
       console.log("Login successful, auth data:", result);
       
       // Don't navigate here - let the useEffect handle redirection
       // when isAuthenticated changes
     } catch (error: any) {
-      // Show error toast with the specific error message
       toast({
         title: "Login failed",
         description: error.message || "Invalid email or password. Please try again.",
@@ -144,7 +163,6 @@ const Login: React.FC = () => {
       });
       console.error("Login error:", error);
     } finally {
-      // Always reset loading state regardless of outcome
       setIsLoading(false);
     }
   };
@@ -156,7 +174,6 @@ const Login: React.FC = () => {
   };
 
   const handlePasswordResetClick = () => {
-    // Get the email from the login form if it exists
     const loginEmail = form.getValues("email");
     if (loginEmail) {
       resetPasswordForm.setValue("email", loginEmail);
@@ -194,7 +211,6 @@ const Login: React.FC = () => {
     }
   };
 
-  // Determine if the button should be disabled
   const isSignInButtonDisabled = isLoading || (loginStuck && !isInitialized);
 
   return (

@@ -23,13 +23,16 @@ const Index = () => {
     currentStep: { id: 0, title: '', description: '', targetId: '' }
   };
   
-  // Try to use tutorial context, fallback to default values if not available
-  let tutorial;
+  // Try to use tutorial context
+  let tutorial = defaultTutorialValues;
   try {
-    tutorial = useTutorial();
+    // Only try to use the tutorial if it's available
+    const tutorialContext = useTutorial();
+    if (tutorialContext) {
+      tutorial = tutorialContext;
+    }
   } catch (error) {
-    console.error("Tutorial context not available:", error);
-    tutorial = defaultTutorialValues;
+    console.log("Tutorial context not available on this render, using defaults");
   }
   
   const { completeCurrentStepAction, currentStep } = tutorial;
