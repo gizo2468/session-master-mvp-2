@@ -392,15 +392,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Login successful",
         description: `Welcome back!`,
       });
+      
+      return data;
     } catch (error: any) {
       toast({
         title: "Login failed",
         description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
-      throw error;
+      throw error; // Re-throw the error so the Login component can handle it
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Always reset loading state regardless of outcome
     }
   };
 

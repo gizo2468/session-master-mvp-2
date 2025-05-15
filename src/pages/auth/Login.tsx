@@ -36,7 +36,7 @@ type FormValues = z.infer<typeof formSchema>;
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 const Login: React.FC = () => {
-  const { login, isLoading, isAuthenticated, isInitialized, forceLogin, resetAuthState } = useAuth();
+  const { login, isLoading: authContextLoading, isAuthenticated, isInitialized, forceLogin, resetAuthState } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -44,6 +44,7 @@ const Login: React.FC = () => {
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [loginStuck, setLoginStuck] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Local loading state for better control
   const hasAttemptedRedirectRef = useRef(false);
   const authTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -126,14 +127,23 @@ const Login: React.FC = () => {
     if (hasAttemptedRedirectRef.current) return;
     
     setShowErrorAlert(false);
+    setIsLoading(true); // Use local loading state for better control
     
     try {
       await login(values.email, values.password);
       // Don't navigate here - let the useEffect handle redirection
       // when isAuthenticated changes
-    } catch (error) {
-      // Error is handled in the AuthContext
+    } catch (error: any) {
+      // Show error toast with the specific error message
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid email or password. Please try again.",
+        variant: "destructive",
+      });
       console.error("Login error:", error);
+    } finally {
+      // Always reset loading state regardless of outcome
+      setIsLoading(false);
     }
   };
 
@@ -181,6 +191,9 @@ const Login: React.FC = () => {
       setIsResettingPassword(false);
     }
   };
+
+  // Determine if the button should be disabled
+  const isSignInButtonDisabled = isLoading || (loginStuck && !isInitialized);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
@@ -241,7 +254,7 @@ const Login: React.FC = () => {
                 type="submit" 
                 variant="poker" 
                 className="w-full mt-2" 
-                disabled={isLoading || loginStuck}
+                disabled={isSignInButtonDisabled}
               >
                 {isLoading ? (
                   <>
@@ -259,7 +272,7 @@ const Login: React.FC = () => {
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
             <Link to="/auth/signup" className="text-poker-gold hover:underline">
-              Sign Up with details
+              Sign Up
             </Link>
           </p>
           <Button 
@@ -267,7 +280,7 @@ const Login: React.FC = () => {
             className="text-sm text-gray-600 p-0 h-auto"
             onClick={handlePasswordResetClick}
           >
-            Forgot your password? Click here to reset
+            Forgot your password?
           </Button>
         </CardFooter>
       </Card>

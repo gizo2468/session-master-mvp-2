@@ -17,17 +17,19 @@ const Index = () => {
   const navigate = useNavigate();
   const { sessions, activeSession } = useSessionContext();
   
-  // Handle the case when tutorial context might not be available yet
+  // Initialize default tutorial values
+  const defaultTutorialValues = {
+    completeCurrentStepAction: () => {},
+    currentStep: { id: 0, title: '', description: '', targetId: '' }
+  };
+  
+  // Try to use tutorial context, fallback to default values if not available
   let tutorial;
   try {
     tutorial = useTutorial();
   } catch (error) {
     console.error("Tutorial context not available:", error);
-    // Use fallback values if tutorial context is not available
-    tutorial = {
-      completeCurrentStepAction: () => {},
-      currentStep: { id: 0, title: '', description: '' }
-    };
+    tutorial = defaultTutorialValues;
   }
   
   const { completeCurrentStepAction, currentStep } = tutorial;
