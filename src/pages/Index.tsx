@@ -16,7 +16,21 @@ import { useTutorial } from '@/context/TutorialContext';
 const Index = () => {
   const navigate = useNavigate();
   const { sessions, activeSession } = useSessionContext();
-  const { completeCurrentStepAction, currentStep } = useTutorial();
+  
+  // Handle the case when tutorial context might not be available yet
+  let tutorial;
+  try {
+    tutorial = useTutorial();
+  } catch (error) {
+    console.error("Tutorial context not available:", error);
+    // Use fallback values if tutorial context is not available
+    tutorial = {
+      completeCurrentStepAction: () => {},
+      currentStep: { id: 0, title: '', description: '' }
+    };
+  }
+  
+  const { completeCurrentStepAction, currentStep } = tutorial;
   
   const activeSessionsCount = activeSession ? 1 : 0;
   
@@ -29,7 +43,7 @@ const Index = () => {
     console.log("View All button clicked");
     
     // Only mark the action as completed if this is the current tutorial step target
-    if (currentStep.targetId === 'add-table-feature') {
+    if (currentStep?.targetId === 'add-table-feature') {
       console.log("View All is the current tutorial target - marking action as completed");
       completeCurrentStepAction();
     }
