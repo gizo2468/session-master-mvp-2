@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -52,7 +51,7 @@ const AppRoutes = () => {
     <TutorialProvider currentPath={location.pathname}>
       <AppTutorial />
       <Routes>
-        {/* Auth Routes */}
+        {/* Auth Routes - Available without authentication */}
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/signup" element={<Signup />} />
         <Route path="/auth/reset-password" element={<ResetPassword />} />
@@ -70,6 +69,8 @@ const AppRoutes = () => {
             </ProtectedRoute>
           } 
         />
+        
+        {/* Other routes... */}
         <Route 
           path="/new-session" 
           element={
@@ -201,23 +202,35 @@ const AppRoutes = () => {
   );
 };
 
+// Extracted AuthWrapper to avoid circular dependencies
+const AuthWrapper = ({ children }: { children: React.ReactNode }) => (
+  <AuthProvider>
+    {children}
+  </AuthProvider>
+);
+
+// Language component that doesn't need to be inside AuthProvider
+const LanguageWrapper = ({ children }: { children: React.ReactNode }) => (
+  <LanguageProvider>
+    {children}
+  </LanguageProvider>
+);
+
 const App = () => (
   <TooltipPrimitive.Provider>
     <QueryClientProvider client={queryClient}>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        {/* Important: AuthProvider must be inside BrowserRouter but outside other context providers */}
-        <AuthProvider>
-          {/* Now LanguageProvider can access the AuthContext */}
-          <LanguageProvider>
+        <AuthWrapper>
+          <LanguageWrapper>
             <CoachStudentProvider>
               <SessionProvider>
                 <AppRoutes />
               </SessionProvider>
             </CoachStudentProvider>
-          </LanguageProvider>
-        </AuthProvider>
+          </LanguageWrapper>
+        </AuthWrapper>
       </BrowserRouter>
     </QueryClientProvider>
   </TooltipPrimitive.Provider>
