@@ -28,6 +28,15 @@ const Settings: React.FC = () => {
   // Check if we're on the main settings page (not a subpage)
   const isMainSettingsPage = location.pathname === '/settings';
 
+  // Function to handle logout with error handling
+  const handleLogout = () => {
+    try {
+      logout();
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -101,14 +110,18 @@ const Settings: React.FC = () => {
                 <LegalSettings />
               </div>
               
-              {/* Logout Section - Moved to the bottom */}
+              {/* Logout Section - Placed at the bottom */}
               <div className="px-6 pb-6 pt-2">
                 <Separator className="my-6" />
                 <Alert className="bg-red-50 border-red-200">
                   <AlertDescription className="flex justify-between items-center">
                     <span>{t('logout')}</span>
-                    <Button variant="destructive" onClick={logout}>
-                      <Icon name="LogOut" className="mr-2 h-4 w-4" />
+                    <Button 
+                      variant="destructive" 
+                      onClick={handleLogout}
+                      className="flex items-center gap-2"
+                    >
+                      <Icon name="LogOut" className="h-4 w-4" />
                       {t('logout')}
                     </Button>
                   </AlertDescription>

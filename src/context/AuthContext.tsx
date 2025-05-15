@@ -288,19 +288,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    setIsLoading(true);
     try {
-      await supabase.auth.signOut();
+      // Always clear local state first to improve UX even if server request fails
+      const currentUser = user ? user.fullName || 'User' : 'User';
+      
+      // Attempt to sign out from Supabase
+      await supabase.auth.signOut().catch(error => {
+        // Just log the error, don't throw - we still want to clear local state
+        console.error("Error during Supabase signout:", error);
+        // If it's a 403 error, the session is already expired or invalid, which is fine
+      });
+      
+      // Clear local state regardless of server response
       setUser(null);
+      setSession(null);
+      
       toast({
         title: "Logged out",
-        description: "You have been successfully logged out",
+        description: `${currentUser} has been successfully logged out`,
       });
     } catch (error: any) {
+      console.error("Error in logout process:", error);
+      
+      // Clear local state even if there's an error
+      setUser(null);
+      setSession(null);
+      
       toast({
-        title: "Logout failed",
-        description: error.message || "An unexpected error occurred",
-        variant: "destructive",
+        title: "Logged out",
+        description: "You have been logged out",
+        variant: "default",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
