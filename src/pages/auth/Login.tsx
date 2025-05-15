@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -12,7 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import Icon from '@/components/ui/Lucide';
 import Logo from '@/components/Logo';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, clearAuthState } from '@/integrations/supabase/client';
 import { 
   Dialog,
   DialogContent,
@@ -21,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -35,15 +35,31 @@ type FormValues = z.infer<typeof formSchema>;
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 const Login: React.FC = () => {
-  const { login, isLoading, isAuthenticated } = useAuth();
+  const { login, isLoading: authContextLoading, isAuthenticated, isInitialized, forceLogin, resetAuthState } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [loginStuck, setLoginStuck] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const hasAttemptedRedirectRef = useRef(false);
+  const authTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Get redirect path from location state or default to home
   const from = (location.state as { from?: string })?.from || '/';
+  
+  // For debugging
+  useEffect(() => {
+    console.log("Login component render - Auth state:", {
+      isAuthenticated,
+      isInitialized,
+      forceLogin,
+      location: location.pathname,
+      from
+    });
+  }, [isAuthenticated, isInitialized, forceLogin, location, from]);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -60,27 +76,104 @@ const Login: React.FC = () => {
     },
   });
 
-  // Check if user is already authenticated and redirect if so
+  // Set a failsafe to detect if login is stuck
   useEffect(() => {
-    if (isAuthenticated) {
-      // Always redirect to home page '/' instead of using the 'from' variable
-      // which might contain '/settings' or other paths
-      navigate('/', { replace: true });
+    const stuckTimer = setTimeout(() => {
+      if (!isInitialized) {
+        console.log("Login appears to be stuck - showing error alert");
+        setLoginStuck(true);
+        setShowErrorAlert(true);
+      }
+    }, 5000);
+    
+    return () => clearTimeout(stuckTimer);
+  }, [isInitialized]);
+
+  // Only clear tokens on mount if forceLogin is true
+  useEffect(() => {
+    if (forceLogin) {
+      const checkAndClearPossiblyCorruptedTokens = async () => {
+        try {
+          await clearAuthState();
+          console.log("Login page: Auth state cleared due to forceLogin flag");
+        } catch (error) {
+          console.error("Error in auth check:", error);
+        }
+      };
+      
+      checkAndClearPossiblyCorruptedTokens();
     }
-  }, [isAuthenticated, navigate]);
+    
+    // Set a timeout to force the page to be interactive if auth never stabilizes
+    authTimeoutRef.current = setTimeout(() => {
+      if (!isInitialized) {
+        console.log("Auth stabilization timeout - forcing form to be interactive");
+        // Force the page to be interactive after timeout
+        if (authTimeoutRef.current) {
+          clearTimeout(authTimeoutRef.current);
+        }
+      }
+    }, 3000);
+    
+    return () => {
+      if (authTimeoutRef.current) {
+        clearTimeout(authTimeoutRef.current);
+      }
+    };
+  }, [forceLogin, isInitialized]);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    // Only redirect if these conditions are met:
+    // 1. User is authenticated
+    // 2. Auth is initialized
+    // 3. Not in forceLogin mode
+    // 4. Not already attempted a redirect this render (prevents loops)
+    if (isAuthenticated && isInitialized && !forceLogin && !hasAttemptedRedirectRef.current) {
+      console.log("User authenticated and auth initialized, redirecting from login to:", from);
+      hasAttemptedRedirectRef.current = true; // Mark that we've attempted a redirect
+      
+      // Use a small timeout to ensure this happens after render cycle
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 100);
+    }
+    
+    // Reset the flag when any of these values change
+    return () => {
+      hasAttemptedRedirectRef.current = false;
+    };
+  }, [isAuthenticated, isInitialized, forceLogin, navigate, from]);
 
   const onSubmit = async (values: FormValues) => {
+    setShowErrorAlert(false);
+    setIsLoading(true);
+    
     try {
-      await login(values.email, values.password);
+      const result = await login(values.email, values.password);
+      console.log("Login successful, auth data:", result);
+      
       // Don't navigate here - let the useEffect handle redirection
       // when isAuthenticated changes
-    } catch (error) {
-      // Error is handled in the AuthContext
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid email or password. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Login error:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const handleResetAuth = async () => {
+    await resetAuthState();
+    setShowErrorAlert(false);
+    form.reset();
+  };
+
   const handlePasswordResetClick = () => {
-    // Get the email from the login form if it exists
     const loginEmail = form.getValues("email");
     if (loginEmail) {
       resetPasswordForm.setValue("email", loginEmail);
@@ -118,8 +211,26 @@ const Login: React.FC = () => {
     }
   };
 
+  const isSignInButtonDisabled = isLoading || (loginStuck && !isInitialized);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      {showErrorAlert && (
+        <div className="fixed top-4 left-4 right-4 z-50">
+          <Alert variant="destructive">
+            <AlertTitle>Authentication Issue Detected</AlertTitle>
+            <AlertDescription>
+              We're having trouble with the authentication system. Please reset your authentication state to continue.
+              <div className="mt-2">
+                <Button onClick={handleResetAuth} variant="outline" className="mr-2">
+                  Reset Authentication
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+      
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
@@ -161,7 +272,7 @@ const Login: React.FC = () => {
                 type="submit" 
                 variant="poker" 
                 className="w-full mt-2" 
-                disabled={isLoading}
+                disabled={isSignInButtonDisabled}
               >
                 {isLoading ? (
                   <>
@@ -179,7 +290,7 @@ const Login: React.FC = () => {
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
             <Link to="/auth/signup" className="text-poker-gold hover:underline">
-              Sign Up with details
+              Sign Up
             </Link>
           </p>
           <Button 
@@ -187,7 +298,7 @@ const Login: React.FC = () => {
             className="text-sm text-gray-600 p-0 h-auto"
             onClick={handlePasswordResetClick}
           >
-            Forgot your password? Click here to reset
+            Forgot your password?
           </Button>
         </CardFooter>
       </Card>

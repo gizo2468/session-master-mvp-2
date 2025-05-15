@@ -15,11 +15,12 @@ import BillingSettings from '@/components/settings/BillingSettings';
 import LegalSettings from '@/components/settings/LegalSettings';
 import DonationCard from '@/components/DonationCard';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { t, dir } = useLanguage();
   const isCoach = user?.role === 'coach';
   const isStudent = user?.role === 'student';
@@ -98,6 +99,20 @@ const Settings: React.FC = () => {
               <div className="px-6 pb-6">
                 <Separator className="my-6" />
                 <LegalSettings />
+              </div>
+              
+              {/* Logout Section - Moved to bottom of the page */}
+              <div className="px-6 pb-6 pt-0">
+                <Separator className="my-6" />
+                <Alert className="bg-red-50 border-red-200">
+                  <AlertDescription className="flex justify-between items-center">
+                    <span>{t('logout')}</span>
+                    <Button variant="destructive" onClick={logout}>
+                      <Icon name="LogOut" className="mr-2 h-4 w-4" />
+                      {t('logout')}
+                    </Button>
+                  </AlertDescription>
+                </Alert>
               </div>
             </>
           )}

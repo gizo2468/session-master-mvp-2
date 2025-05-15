@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
 import { PokerSession } from '@/types/poker';
@@ -15,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import Icon from '@/components/ui/Lucide';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useTutorial } from '@/context/TutorialContext';
 
 const TOURNAMENT_TYPES = [
   'Freezeout',
@@ -45,6 +45,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function SessionForm() {
   const navigate = useNavigate();
   const { startSession } = useSessionContext();
+  const { completeCurrentStepAction, currentStep } = useTutorial();
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -60,6 +61,17 @@ export default function SessionForm() {
       isMultiDay: false
     }
   });
+  
+  // Handle tutorial interactions for the game type selection
+  const handleGameTypeChange = (value: 'NLH' | 'PLO') => {
+    form.setValue('gameType', value);
+    
+    // Only mark the action as completed if this is the current tutorial step target
+    if (currentStep?.targetId === 'nlh' && value === 'NLH') {
+      console.log("Game type selection is the current tutorial target - marking action as completed");
+      completeCurrentStepAction();
+    }
+  };
   
   const onSubmit = (values: FormValues) => {
     const buyInAmount = parseFloat(values.buyIn);
@@ -95,6 +107,9 @@ export default function SessionForm() {
       startTime: new Date(),
       isActive: true,
       isOnline: values.isOnline,
+      // Add the missing properties
+      currentStatus: 'running',
+      sessionDuration: 0,
       ...(values.format === 'Tournament' && {
         startingBB: values.startingBB ? parseInt(values.startingBB) : undefined,
         tournamentTypes: values.tournamentType ? [values.tournamentType] : undefined
@@ -134,7 +149,7 @@ export default function SessionForm() {
                   <FormLabel className="text-base font-medium">Game Type</FormLabel>
                   <FormControl>
                     <RadioGroup 
-                      onValueChange={field.onChange} 
+                      onValueChange={(value) => handleGameTypeChange(value as 'NLH' | 'PLO')}
                       defaultValue={field.value} 
                       className="grid grid-cols-2 gap-4"
                     >
