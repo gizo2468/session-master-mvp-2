@@ -21,7 +21,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -36,14 +35,12 @@ type FormValues = z.infer<typeof formSchema>;
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 const Login: React.FC = () => {
-  const { login, isLoading, isAuthenticated, isInitialized, forceLogin, resetAuthState } = useAuth();
+  const { login, isLoading, isAuthenticated, isInitialized } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
-  const [showErrorAlert, setShowErrorAlert] = useState(false);
-  const [loginStuck, setLoginStuck] = useState(false);
   const hasAttemptedRedirectRef = useRef(false);
   const authTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -65,27 +62,26 @@ const Login: React.FC = () => {
     },
   });
 
-  // Set a failsafe to detect if login is stuck
-  useEffect(() => {
-    const stuckTimer = setTimeout(() => {
-      if (!isInitialized) {
-        console.log("Login appears to be stuck - showing error alert");
-        setLoginStuck(true);
-        setShowErrorAlert(true);
-      }
-    }, 5000);
-    
-    return () => clearTimeout(stuckTimer);
-  }, [isInitialized]);
-
   // Clear potentially corrupted tokens on component mount
   useEffect(() => {
     const checkAndClearPossiblyCorruptedTokens = async () => {
       try {
-        await clearAuthState();
-        console.log("Login page: Auth state cleared on load");
+        // Only run once per component mount
+        const { data } = await supabase.auth.getSession();
+        
+        // If we're on the login page and there's a corrupted token, clear it
+        if (data.session?.expires_at && new Date(data.session.expires_at * 1000) < new Date()) {
+          console.log("Login page: Expired token detected, signing out");
+          await clearAuthState();
+        }
       } catch (error) {
         console.error("Error in auth check:", error);
+        // If there's an error reading the token, it might be corrupted, so sign out
+        try {
+          await clearAuthState();
+        } catch (e) {
+          console.error("Error clearing auth state:", e);
+        }
       }
     };
     
@@ -100,7 +96,7 @@ const Login: React.FC = () => {
           clearTimeout(authTimeoutRef.current);
         }
       }
-    }, 3000);
+    }, 5000);
     
     return () => {
       if (authTimeoutRef.current) {
@@ -112,20 +108,17 @@ const Login: React.FC = () => {
   // Check if user is already authenticated and redirect if so
   useEffect(() => {
     // Only redirect if authenticated AND auth is initialized AND we haven't redirected yet
-    // AND forceLogin is false
-    if (isAuthenticated && isInitialized && !hasAttemptedRedirectRef.current && !forceLogin) {
+    if (isAuthenticated && isInitialized && !hasAttemptedRedirectRef.current) {
       console.log("User authenticated and auth initialized, redirecting from login page");
       hasAttemptedRedirectRef.current = true;
       // Always redirect to home page '/' instead of using the 'from' variable for consistency
       navigate('/', { replace: true });
     }
-  }, [isAuthenticated, isInitialized, forceLogin, navigate]);
+  }, [isAuthenticated, isInitialized, navigate]);
 
   const onSubmit = async (values: FormValues) => {
     // Don't attempt login if we've already redirected
     if (hasAttemptedRedirectRef.current) return;
-    
-    setShowErrorAlert(false);
     
     try {
       await login(values.email, values.password);
@@ -135,12 +128,6 @@ const Login: React.FC = () => {
       // Error is handled in the AuthContext
       console.error("Login error:", error);
     }
-  };
-
-  const handleResetAuth = async () => {
-    await resetAuthState();
-    setShowErrorAlert(false);
-    form.reset();
   };
 
   const handlePasswordResetClick = () => {
@@ -184,22 +171,6 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-      {showErrorAlert && (
-        <div className="fixed top-4 left-4 right-4 z-50">
-          <Alert variant="destructive">
-            <AlertTitle>Authentication Issue Detected</AlertTitle>
-            <AlertDescription>
-              We're having trouble with the authentication system. Please reset your authentication state to continue.
-              <div className="mt-2">
-                <Button onClick={handleResetAuth} variant="outline" className="mr-2">
-                  Reset Authentication
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-      
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
@@ -241,7 +212,7 @@ const Login: React.FC = () => {
                 type="submit" 
                 variant="poker" 
                 className="w-full mt-2" 
-                disabled={isLoading || loginStuck}
+                disabled={isLoading}
               >
                 {isLoading ? (
                   <>
