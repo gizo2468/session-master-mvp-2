@@ -79,18 +79,20 @@ const Login: React.FC = () => {
     return () => clearTimeout(stuckTimer);
   }, [isInitialized]);
 
-  // Clear potentially corrupted tokens on component mount
+  // Only clear tokens on mount if forceLogin is true
   useEffect(() => {
-    const checkAndClearPossiblyCorruptedTokens = async () => {
-      try {
-        await clearAuthState();
-        console.log("Login page: Auth state cleared on load");
-      } catch (error) {
-        console.error("Error in auth check:", error);
-      }
-    };
-    
-    checkAndClearPossiblyCorruptedTokens();
+    if (forceLogin) {
+      const checkAndClearPossiblyCorruptedTokens = async () => {
+        try {
+          await clearAuthState();
+          console.log("Login page: Auth state cleared due to forceLogin flag");
+        } catch (error) {
+          console.error("Error in auth check:", error);
+        }
+      };
+      
+      checkAndClearPossiblyCorruptedTokens();
+    }
     
     // Set a timeout to force the page to be interactive if auth never stabilizes
     authTimeoutRef.current = setTimeout(() => {
@@ -108,29 +110,29 @@ const Login: React.FC = () => {
         clearTimeout(authTimeoutRef.current);
       }
     };
-  }, []);
+  }, [forceLogin]);
 
   // Check if user is already authenticated and redirect if so
   useEffect(() => {
-    // Only redirect if authenticated AND auth is initialized AND we haven't redirected yet
-    // AND forceLogin is false
-    if (isAuthenticated && isInitialized && !hasAttemptedRedirectRef.current && !forceLogin) {
+    console.log("Auth state changed - isAuthenticated:", isAuthenticated, "isInitialized:", isInitialized, "forceLogin:", forceLogin);
+    
+    // Only redirect if authenticated AND auth is initialized AND forceLogin is false
+    if (isAuthenticated && isInitialized && !forceLogin) {
       console.log("User authenticated and auth initialized, redirecting from login page");
-      hasAttemptedRedirectRef.current = true;
-      // Always redirect to home page '/' instead of using the 'from' variable for consistency
       navigate('/', { replace: true });
     }
   }, [isAuthenticated, isInitialized, forceLogin, navigate]);
 
   const onSubmit = async (values: FormValues) => {
-    // Don't attempt login if we've already redirected
-    if (hasAttemptedRedirectRef.current) return;
-    
     setShowErrorAlert(false);
     setIsLoading(true); // Use local loading state for better control
     
     try {
-      await login(values.email, values.password);
+      const result = await login(values.email, values.password);
+      
+      // Log successful login data for debugging
+      console.log("Login successful, auth data:", result);
+      
       // Don't navigate here - let the useEffect handle redirection
       // when isAuthenticated changes
     } catch (error: any) {
