@@ -8,21 +8,12 @@ export interface IconProps extends Omit<LucideProps, "ref"> {
 // Map of custom icon name mappings for backward compatibility
 const iconMappings: Record<string, string> = {
   "BarChart2": "BarChart3", // Map BarChart2 to BarChart3 which exists in lucide
-  "Info": "Info", // Explicit mapping for Info icon
-  "Settings": "Settings", // Explicit mapping for Settings icon
-  "ArrowLeft": "ArrowLeft", // Explicit mapping for ArrowLeft icon
-  "ArrowRight": "ArrowRight", // Explicit mapping for ArrowRight icon
 };
 
 // Keep track of warned icons to avoid console spam
 const warnedIcons = new Set<string>();
 
 const Icon = ({ name, ...props }: IconProps) => {
-  if (!name) {
-    console.warn("Icon name is undefined or empty");
-    return null;
-  }
-  
   // Check for icon name mapping first
   const mappedName = iconMappings[name] || name;
   
@@ -37,11 +28,10 @@ const Icon = ({ name, ...props }: IconProps) => {
   if (!LucideIcon) {
     // Only log warning once per icon name to reduce console spam
     if (!warnedIcons.has(name)) {
-      console.warn(`Icon '${name}' not found in lucide-react icons. Using InfoIcon as fallback.`);
+      console.warn(`Icon '${name}' not found in lucide-react icons. Using ExternalLink as fallback.`);
       warnedIcons.add(name);
     }
-    // Use InfoIcon as fallback which is guaranteed to exist
-    return icons.Info ? <icons.Info {...props} /> : null;
+    return icons.ExternalLink ? <icons.ExternalLink {...props} /> : null;
   }
   
   return <LucideIcon {...props} />;
