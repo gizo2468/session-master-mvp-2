@@ -7,16 +7,19 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Icon from '@/components/ui/Lucide';
 import { supabase } from '@/integrations/supabase/client';
+import { Switch } from '@/components/ui/switch';
 
 const profileFormSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters' }),
   onlineNickname: z.string().max(20, { message: 'Nickname must be 20 characters or less' }).optional(),
+  hasAcceptedTerms: z.boolean().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -25,7 +28,7 @@ const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
 const AccountSettings: React.FC = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,6 +50,7 @@ const AccountSettings: React.FC = () => {
     defaultValues: {
       fullName: user?.fullName || '',
       onlineNickname: user?.onlineNickname || '',
+      hasAcceptedTerms: user?.hasAcceptedTerms || false,
     },
   });
 
@@ -58,6 +62,7 @@ const AccountSettings: React.FC = () => {
       updateUser({ 
         fullName: values.fullName,
         onlineNickname: values.onlineNickname,
+        hasAcceptedTerms: values.hasAcceptedTerms
       });
       setIsSubmittingProfile(false);
     }, 500);
@@ -217,6 +222,39 @@ const AccountSettings: React.FC = () => {
                   <Input value={user?.email} disabled />
                   <p className="text-xs text-gray-500 mt-1">Last login: {lastLoginFormatted}</p>
                 </FormItem>
+
+                <FormField
+                  control={profileForm.control}
+                  name="hasAcceptedTerms"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <div className="space-y-0.5">
+                        <FormLabel>Accepted Terms</FormLabel>
+                        <p className="text-xs text-muted-foreground">
+                          {field.value 
+                            ? "You have accepted our Terms and Privacy Policy" 
+                            : "You must accept our Terms and Privacy Policy to use all features"}
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            if (checked === false) {
+                              toast({
+                                title: "Warning",
+                                description: "You cannot revoke your acceptance of Terms",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            field.onChange(checked);
+                          }}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
                 
                 <div className="flex justify-end">
                   <Button type="submit" disabled={isSubmittingProfile}>
@@ -237,30 +275,47 @@ const AccountSettings: React.FC = () => {
         
         <Separator className="my-8" />
         
-        {/* Password Reset Section - Improved layout and content */}
-        <div className="bg-white p-6 rounded-lg border border-border shadow-sm flex flex-col items-center">
-          <h3 className="text-lg font-medium mb-4 text-center">{t('reset_password')}</h3>
-          <p className="text-muted-foreground mb-6 text-center max-w-md">
-            Enter your email address and we'll send you a secure link to reset your password.
+        {/* Password Reset Section - Simplified */}
+        <div className="bg-white p-6 rounded-lg border border-border shadow-sm">
+          <h3 className="text-lg font-medium mb-4 text-left">{t('reset_password')}</h3>
+          <p className="text-muted-foreground mb-4">
+            {t('reset_password_description')}
           </p>
-          <Button 
-            onClick={handleResetPasswordViaEmail}
-            disabled={isResettingPassword}
-            variant="poker"
-            className="flex items-center gap-2"
-          >
-            {isResettingPassword ? (
-              <>
-                <Icon name="Loader" className="h-4 w-4 animate-spin" />
-                {t('sending')}
-              </>
-            ) : (
-              <>
-                <Icon name="Mail" className="h-4 w-4" />
-                {t('send_reset_link') || "Send Reset Link"}
-              </>
-            )}
-          </Button>
+          <div className="flex justify-end">
+            <Button 
+              onClick={handleResetPasswordViaEmail}
+              disabled={isResettingPassword}
+              variant="poker"
+              className="flex items-center gap-2"
+            >
+              {isResettingPassword ? (
+                <>
+                  <Icon name="Loader" className="h-4 w-4 animate-spin" />
+                  {t('sending')}
+                </>
+              ) : (
+                <>
+                  <Icon name="Mail" className="h-4 w-4" />
+                  {t('send_reset_link') || "Send Reset Link"}
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+        
+        <Separator className="my-8" />
+        
+        {/* Logout Section */}
+        <div className="pt-2">
+          <Alert className="bg-red-50 border-red-200">
+            <AlertDescription className="flex justify-between items-center">
+              <span>{t('logout')}</span>
+              <Button variant="destructive" onClick={logout}>
+                <Icon name="LogOut" className="mr-2 h-4 w-4" />
+                {t('logout')}
+              </Button>
+            </AlertDescription>
+          </Alert>
         </div>
       </div>
     </div>
