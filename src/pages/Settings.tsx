@@ -29,6 +29,9 @@ const Settings: React.FC = () => {
   
   // Check if we're on the main settings page (not a subpage)
   const isMainSettingsPage = location.pathname === '/settings';
+  
+  // New state to track the current active tab
+  const [activeTab, setActiveTab] = React.useState('account');
 
   // Function to handle logout with error handling
   const handleLogout = async () => {
@@ -61,7 +64,13 @@ const Settings: React.FC = () => {
         </header>
         
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <Tabs defaultValue="account" dir={dir as "ltr" | "rtl"} className="w-full">
+          <Tabs 
+            defaultValue="account" 
+            dir={dir as "ltr" | "rtl"} 
+            className="w-full"
+            onValueChange={setActiveTab}
+            value={activeTab}
+          >
             <div className="border-b">
               <div className="container px-4 py-2">
                 <TabsList className="flex flex-wrap gap-2 justify-start w-full">
@@ -77,6 +86,41 @@ const Settings: React.FC = () => {
             <div className="p-6">
               <TabsContent value="account" className="mt-6">
                 <AccountSettings />
+                
+                {/* Donation card placed between tabs content and legal section - only in account tab */}
+                <div className="pt-6">
+                  <Separator className="my-6" />
+                  <DonationCard />
+                </div>
+
+                {/* Legal section - only in account tab */}
+                <div className="pt-6">
+                  <Separator className="my-6" />
+                  <LegalSettings />
+                </div>
+                
+                {/* Logout Section - only in account tab */}
+                <div className="pt-6">
+                  <Separator className="my-6" />
+                  <Alert className="bg-red-50 border-red-200">
+                    <AlertDescription className="flex justify-between items-center">
+                      <span>{t('logout')}</span>
+                      <Button 
+                        variant="destructive" 
+                        onClick={handleLogout}
+                        className="flex items-center gap-2"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <Icon name="Loader" className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Icon name="LogOut" className="h-4 w-4" />
+                        )}
+                        {isLoading ? t('logging_out') : t('logout')}
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                </div>
               </TabsContent>
               
               <TabsContent value="app" className="mt-6">
@@ -102,46 +146,6 @@ const Settings: React.FC = () => {
               )}
             </div>
           </Tabs>
-
-          {/* Only show donation card and legal section on the main settings page */}
-          {isMainSettingsPage && (
-            <>
-              {/* Donation card placed between tabs content and legal section */}
-              <div className="px-6 pb-0">
-                <Separator className="my-6" />
-                <DonationCard />
-              </div>
-
-              {/* Legal section */}
-              <div className="px-6 pb-6">
-                <Separator className="my-6" />
-                <LegalSettings />
-              </div>
-              
-              {/* Logout Section - Placed at the bottom */}
-              <div className="px-6 pb-6 pt-2">
-                <Separator className="my-6" />
-                <Alert className="bg-red-50 border-red-200">
-                  <AlertDescription className="flex justify-between items-center">
-                    <span>{t('logout')}</span>
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleLogout}
-                      className="flex items-center gap-2"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <Icon name="Loader" className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Icon name="LogOut" className="h-4 w-4" />
-                      )}
-                      {isLoading ? t('logging_out') : t('logout')}
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              </div>
-            </>
-          )}
         </div>
       </div>
     </div>
