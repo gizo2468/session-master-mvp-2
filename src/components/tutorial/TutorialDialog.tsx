@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,7 +25,6 @@ const TutorialDialog = ({ open, onOpenChange, onComplete }: TutorialDialogProps)
   const [steps, setSteps] = useState<TutorialStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -50,37 +49,8 @@ const TutorialDialog = ({ open, onOpenChange, onComplete }: TutorialDialogProps)
         }
         
         if (data) {
+          console.log('Tutorial steps fetched:', data);
           setSteps(data);
-          
-          // Fetch image URLs for each step with an image_path
-          const urlPromises = data
-            .filter(step => step.image_path)
-            .map(async (step) => {
-              if (!step.image_path) return null;
-              
-              try {
-                const { data } = await supabase
-                  .storage
-                  .from('tutorial_images')
-                  .getPublicUrl(step.image_path.replace('tutorial_images/', ''));
-                
-                return { path: step.image_path, url: data.publicUrl };
-              } catch (error) {
-                console.error(`Error getting URL for ${step.image_path}:`, error);
-                return null;
-              }
-            });
-            
-          const urls = await Promise.all(urlPromises);
-          const urlMap: Record<string, string> = {};
-          
-          urls.forEach(item => {
-            if (item) {
-              urlMap[item.path] = item.url;
-            }
-          });
-          
-          setImageUrls(urlMap);
         }
       } catch (error) {
         console.error('Error in tutorial setup:', error);
@@ -155,9 +125,17 @@ const TutorialDialog = ({ open, onOpenChange, onComplete }: TutorialDialogProps)
   // Calculate progress percentage
   const progress = steps.length > 0 ? ((currentStepIndex + 1) / steps.length) * 100 : 0;
 
+  // Log current step for debugging
+  useEffect(() => {
+    if (currentStep && currentStep.image_path) {
+      console.log('Current step image path:', currentStep.image_path);
+    }
+  }, [currentStep]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-auto">
+        <DialogTitle className="sr-only">Tutorial</DialogTitle>
         {loading ? (
           <div className="flex items-center justify-center p-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-poker-gold"></div>
@@ -178,12 +156,17 @@ const TutorialDialog = ({ open, onOpenChange, onComplete }: TutorialDialogProps)
                 <p className="text-center text-gray-600">{currentStep.description}</p>
               )}
               
-              {currentStep.image_path && imageUrls[currentStep.image_path] && (
+              {currentStep.image_path && (
                 <div className="flex justify-center my-4">
                   <img 
-                    src={imageUrls[currentStep.image_path]} 
+                    src={currentStep.image_path} 
                     alt={`Tutorial step ${currentStepIndex + 1}`}
                     className="max-w-full max-h-[50vh] object-contain rounded-lg shadow-md"
+                    onError={(e) => {
+                      console.error('Error loading image:', e);
+                      // Set fallback image or hide image container
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
                   />
                 </div>
               )}

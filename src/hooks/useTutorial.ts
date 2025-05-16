@@ -29,6 +29,7 @@ export const useTutorial = () => {
           console.error('Error fetching tutorial status:', error);
           setHasCompletedTutorial(true); // Default to true on error to avoid showing tutorial repeatedly
         } else {
+          console.log('Tutorial status:', data);
           setHasCompletedTutorial(data.has_completed_tutorial);
           // Show tutorial automatically if user hasn't completed it
           if (data.has_completed_tutorial === false) {
