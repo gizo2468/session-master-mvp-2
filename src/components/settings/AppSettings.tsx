@@ -167,26 +167,6 @@ const AppSettings: React.FC = () => {
               </Button>
             </CardContent>
           </Card>
-          
-          {/* Legal Documents Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Legal Information</CardTitle>
-              <CardDescription>
-                Review our terms and policies
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button variant="outline" className="w-full">
-                <Icon name="FileText" className="mr-2 h-4 w-4" />
-                {t('terms_of_service')}
-              </Button>
-              <Button variant="outline" className="w-full">
-                <Icon name="Shield" className="mr-2 h-4 w-4" />
-                {t('privacy_policy')}
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
