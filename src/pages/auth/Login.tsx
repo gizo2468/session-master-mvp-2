@@ -35,12 +35,13 @@ type FormValues = z.infer<typeof formSchema>;
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 const Login: React.FC = () => {
-  const { login, isLoading, isAuthenticated } = useAuth();
+  const { login, isLoading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [loginAttempted, setLoginAttempted] = useState(false);
   
   // Get redirect path from location state or default to home
   const from = (location.state as { from?: string })?.from || '/';
@@ -62,20 +63,24 @@ const Login: React.FC = () => {
 
   // Check if user is already authenticated and redirect if so
   useEffect(() => {
-    if (isAuthenticated) {
-      // Always redirect to home page '/' instead of using the 'from' variable
-      // which might contain '/settings' or other paths
-      navigate('/', { replace: true });
+    console.log("Login page auth check:", isAuthenticated, loginAttempted);
+    
+    if (isAuthenticated && user) {
+      console.log("User authenticated, navigating to:", from);
+      // Navigate to the intended destination or home
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate, from, loginAttempted]);
 
   const onSubmit = async (values: FormValues) => {
     try {
+      setLoginAttempted(true);
       await login(values.email, values.password);
-      // Don't navigate here - let the useEffect handle redirection
-      // when isAuthenticated changes
+      // Redirection is handled by the useEffect hook when auth state updates
     } catch (error) {
+      console.error("Login error:", error);
       // Error is handled in the AuthContext
+      setLoginAttempted(false);
     }
   };
 
@@ -117,6 +122,11 @@ const Login: React.FC = () => {
       setIsResettingPassword(false);
     }
   };
+
+  // Early return if we're already authenticated
+  if (isAuthenticated && !isLoading) {
+    return null; // Will redirect in useEffect
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
