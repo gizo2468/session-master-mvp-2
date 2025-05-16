@@ -342,7 +342,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
           <DialogHeader>
             <DialogTitle>End Table</DialogTitle>
             <DialogDescription>
-              {table.isMultiDay && table.format === 'Tournament'
+              {table.isMultiDay && table.format === 'Tournament' && !endReason
                 ? "Are you ending this multi-day tournament table because you were eliminated or because the day has ended?"
                 : "Enter your cash out amount to complete this table."}
             </DialogDescription>
@@ -391,11 +391,11 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                   </div>
                 </div>
 
-                {/* Tournament-specific fields - always show final position for tournaments */}
+                {/* Tournament-specific fields - always show final position for tournaments, but make it optional now */}
                 {table.format === 'Tournament' && endReason !== 'day-ended' && (
                   <div>
                     <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
-                      Final Position {isBountyTournament && '(Required)'}
+                      Final Position
                     </label>
                     <input
                       id="finalPosition"
@@ -405,7 +405,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                       placeholder="Enter your final position (e.g. 3 for 3rd)"
                       value={finalPosition}
                       onChange={(e) => setFinalPosition(e.target.value)}
-                      required={isBountyTournament}
+                      required={false}
                     />
                   </div>
                 )}
@@ -558,7 +558,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
                 onClick={handleEndTable}
                 disabled={
                   (endReason === 'eliminated' || !table.isMultiDay || table.format === 'Cash') 
-                    ? !cashOutAmount || (isBountyTournament && !finalPosition)
+                    ? !cashOutAmount 
                     : endReason === 'day-ended' 
                       ? !chipsCarryover 
                       : !endReason

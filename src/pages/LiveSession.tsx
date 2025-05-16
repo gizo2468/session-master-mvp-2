@@ -222,7 +222,7 @@ export default function LiveSession() {
         dayEndedWithoutElimination: true
       } : undefined;
 
-      // Make sure we're passing the bounty data
+      // Modified: Make sure we're passing the bounty data but don't require finalPosition
       endTable(
         session.id, 
         pendingEndTableId, 
@@ -792,16 +792,12 @@ export default function LiveSession() {
                   </div>
                 </div>
 
-                {/* Always show the final position field for Tournament format */}
+                {/* Always show the final position field for Tournament format but make it optional */}
                 {pendingEndTableId && session?.tables?.find(t => t.id === pendingEndTableId)?.format === 'Tournament' && 
                  endReason !== 'day-ended' && (
                   <div>
                     <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
-                      Final Position 
-                      {pendingEndTableId && 
-                       session?.tables?.find(t => t.id === pendingEndTableId) && 
-                       isBountyTournament(session.tables.find(t => t.id === pendingEndTableId)!) && 
-                       ' (Required)'}
+                      Final Position (Optional)
                     </label>
                     <input
                       id="finalPosition"
@@ -811,9 +807,6 @@ export default function LiveSession() {
                       placeholder="Enter your final position (e.g. 3 for 3rd)"
                       value={finalPosition}
                       onChange={(e) => setFinalPosition(e.target.value)}
-                      required={pendingEndTableId && 
-                        session?.tables?.find(t => t.id === pendingEndTableId) && 
-                        isBountyTournament(session.tables.find(t => t.id === pendingEndTableId)!)}
                     />
                   </div>
                 )}
@@ -960,12 +953,8 @@ export default function LiveSession() {
             <Button 
               className="bg-poker-gold hover:bg-poker-darkGold text-white"
               onClick={handleConfirmEndTable}
-              disabled={(endReason !== 'day-ended' && (!cashOutAmount || 
-                   (pendingEndTableId && 
-                    session?.tables?.find(t => t.id === pendingEndTableId) && 
-                    isBountyTournament(session.tables.find(t => t.id === pendingEndTableId)!) && 
-                    !finalPosition))) || 
-                    (endReason === 'day-ended' && !chipsCarryover)}
+              disabled={(endReason !== 'day-ended' && !cashOutAmount) || 
+                        (endReason === 'day-ended' && !chipsCarryover)}
             >
               {endReason === 'day-ended' ? 'End Day' : 'End Table'}
             </Button>
