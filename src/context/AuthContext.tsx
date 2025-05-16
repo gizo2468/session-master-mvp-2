@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole, CoachTier } from '@/types/poker';
@@ -26,6 +27,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  sessionId: string | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, fullName: string, role: UserRole) => Promise<void>;
   logout: () => void;
@@ -85,27 +87,81 @@ const createUserFromSupabaseUser = (supabaseUser: SupabaseUser, role: UserRole =
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  
+  // Track auth state initialization
   const [authChecked, setAuthChecked] = useState(false);
+  const [initialCheckComplete, setInitialCheckComplete] = useState(false);
+  
+  // Track true login events vs. session restores
+  const isFreshLogin = useRef(false);
+  const lastToastTime = useRef<number>(0);
+  const sessionInitCount = useRef(0);
+  
+  // Prevent multiple toast notifications within a short timeframe
+  const showWelcomeToast = (userName: string) => {
+    const now = Date.now();
+    // Only show a welcome toast if:
+    // 1. It's a fresh login (not a session restore) OR
+    // 2. It's been at least 10 seconds since the last toast
+    if (isFreshLogin.current || (now - lastToastTime.current > 10000)) {
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${userName}!`,
+      });
+      lastToastTime.current = now;
+      isFreshLogin.current = false; // Reset the fresh login flag
+    }
+  };
 
   // Initialize auth and set up session listener
   useEffect(() => {
+    console.log("Auth provider initializing...");
+    let isActive = true;
+    sessionInitCount.current += 1;
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        console.log("Auth state change:", event, Boolean(currentSession));
+        if (!isActive) return;
         
-        setSession(currentSession);
+        console.log("Auth state change:", event, "Session exists:", Boolean(currentSession), 
+                   "Session ID:", currentSession?.access_token?.substring(0, 8));
         
-        if (currentSession?.user) {
-          // Only fetch user metadata after auth state change with timeout to prevent deadlocks
-          setTimeout(() => {
-            fetchAndSetUser(currentSession.user);
-          }, 0);
+        if (currentSession?.access_token !== session?.access_token) {
+          console.log("Session token changed");
+          setSession(currentSession);
+          setSessionId(currentSession?.access_token?.substring(0, 8) || null);
+        }
+        
+        if (event === 'SIGNED_IN') {
+          isFreshLogin.current = true;
+          if (currentSession?.user) {
+            // Only fetch user metadata after auth state change with timeout to prevent deadlocks
+            setTimeout(() => {
+              if (isActive) {
+                fetchAndSetUser(currentSession.user);
+              }
+            }, 0);
+          }
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log("Token refreshed - updating session only");
+          // Don't mark as fresh login for token refresh - this is just session maintenance
+          if (currentSession?.user) {
+            // Ensure we have latest user data with the refreshed token
+            setTimeout(() => {
+              if (isActive) {
+                fetchAndSetUser(currentSession.user, false);
+              }
+            }, 0);
+          }
         } else if (event === 'SIGNED_OUT') {
           // Clear user data on sign out
+          console.log("User signed out - clearing state");
           setUser(null);
+          setSessionId(null);
         }
       }
     );
@@ -113,42 +169,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Then check for existing session
     const initializeAuth = async () => {
       try {
+        console.log("Checking for existing session...");
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error("Error getting session:", error);
           setIsLoading(false);
           setAuthChecked(true);
+          setInitialCheckComplete(true);
           return;
         }
 
-        console.log("Initial session check:", Boolean(currentSession));
+        console.log("Initial session check:", 
+                    "Session exists:", Boolean(currentSession),
+                    "Session ID:", currentSession?.access_token?.substring(0, 8));
+        
         setSession(currentSession);
+        setSessionId(currentSession?.access_token?.substring(0, 8) || null);
         
         if (currentSession?.user) {
-          await fetchAndSetUser(currentSession.user);
+          await fetchAndSetUser(currentSession.user, false); // false = not a fresh login
         } else {
           setIsLoading(false);
           setAuthChecked(true);
+          setInitialCheckComplete(true);
         }
       } catch (error) {
         console.error("Error during auth initialization:", error);
         setIsLoading(false);
         setAuthChecked(true);
+        setInitialCheckComplete(true);
       }
     };
 
     initializeAuth();
 
     return () => {
+      isActive = false;
       subscription.unsubscribe();
     };
   }, []);
 
   // Fetch user data and update the state
-  const fetchAndSetUser = async (supabaseUser: SupabaseUser) => {
+  const fetchAndSetUser = async (supabaseUser: SupabaseUser, isNewLogin: boolean = true) => {
     try {
-      console.log("Fetching user data for ID:", supabaseUser.id);
+      console.log("Fetching user data for ID:", supabaseUser.id, 
+                  "Is new login:", isNewLogin);
       
       // Query the profiles table we just created
       const { data, error } = await supabase
@@ -161,6 +227,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error("Error fetching user profile:", error);
         const defaultUser = createUserFromSupabaseUser(supabaseUser);
         setUser(defaultUser);
+        
+        if (isNewLogin) {
+          showWelcomeToast(defaultUser.fullName);
+        }
       } else if (data) {
         // Safely cast the database values to the required types
         const userRole = data.role as UserRole;
@@ -217,18 +287,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session) {
           updateLastLogin(supabaseUser.id);
         }
+        
+        if (isNewLogin) {
+          showWelcomeToast(appUser.fullName);
+        }
       } else {
         // If no profile exists, use data from auth user
         const defaultUser = createUserFromSupabaseUser(supabaseUser);
         setUser(defaultUser);
+        
+        if (isNewLogin) {
+          showWelcomeToast(defaultUser.fullName);
+        }
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
       const defaultUser = createUserFromSupabaseUser(supabaseUser);
       setUser(defaultUser);
+      
+      if (isNewLogin) {
+        showWelcomeToast(defaultUser.fullName);
+      }
     } finally {
       setIsLoading(false);
       setAuthChecked(true);
+      setInitialCheckComplete(true);
     }
   };
 
@@ -260,7 +343,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
-        // Success message is now shown when user data is successfully loaded via onAuthStateChange
+        isFreshLogin.current = true;
         console.log("Login successful for user:", data.user.id);
       }
     } catch (error: any) {
@@ -500,20 +583,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Show successful login message when user data is loaded
+  // Don't show welcome toast on initial load or when just checking auth state
   useEffect(() => {
-    if (user && authChecked && !isLoading) {
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${user.fullName}!`,
-      });
+    if (user && authChecked && !isLoading && initialCheckComplete && isFreshLogin.current) {
+      console.log("Fresh login detected - showing welcome toast", user.fullName);
+      showWelcomeToast(user.fullName);
     }
-  }, [user, authChecked, isLoading]);
+  }, [user, authChecked, isLoading, initialCheckComplete]);
 
   const value = {
     user,
     isAuthenticated: !!user,
     isLoading,
+    sessionId,
     login,
     signup,
     logout,

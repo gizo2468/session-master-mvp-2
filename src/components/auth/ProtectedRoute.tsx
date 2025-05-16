@@ -8,9 +8,11 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, sessionId } = useAuth();
   const location = useLocation();
   const [isChecking, setIsChecking] = useState(true);
+  const [prevRoute, setPrevRoute] = useState<string | null>(null);
+  const [prevSessionId, setPrevSessionId] = useState<string | null>(null);
 
   // Add a brief delay to ensure authentication state is properly checked
   useEffect(() => {
@@ -19,7 +21,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [user, isAuthenticated]);
+  }, [sessionId, isAuthenticated]);
+
+  // Track route changes to avoid unnecessary rechecks
+  useEffect(() => {
+    if (location.pathname !== prevRoute) {
+      console.log(`Route changed from ${prevRoute || 'initial'} to ${location.pathname}`);
+      setPrevRoute(location.pathname);
+    }
+  }, [location.pathname, prevRoute]);
+
+  // Track session ID changes to detect actual re-authentications
+  useEffect(() => {
+    if (sessionId !== prevSessionId) {
+      console.log(`Session ID changed: ${prevSessionId || 'initial'} -> ${sessionId || 'null'}`);
+      setPrevSessionId(sessionId);
+    }
+  }, [sessionId, prevSessionId]);
 
   // Combined loading state between auth provider and local checking
   const isResolving = isLoading || isChecking;
@@ -34,12 +52,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    console.log("User not authenticated, redirecting to login");
+    console.log("User not authenticated, redirecting to login from:", location.pathname);
     // Redirect to login page if not authenticated, preserving the intended destination
     return <Navigate to="/auth/login" state={{ from: location.pathname }} replace />;
   }
 
-  console.log("User authenticated, rendering protected content");
+  console.log("User authenticated, rendering protected content for:", location.pathname);
   return <>{children}</>;
 };
 

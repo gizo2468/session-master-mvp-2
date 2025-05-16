@@ -1,3 +1,5 @@
+
+import React, { useRef } from 'react';
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,
@@ -10,10 +12,32 @@ import {
 
 export function Toaster() {
   const { toasts } = useToast()
+  const shownToastsRef = useRef<Set<string>>(new Set());
+
+  // Filter out duplicate toasts in a short time window
+  const filteredToasts = toasts.filter(toast => {
+    // For toasts without ID, we need to show them
+    if (!toast.id) return true;
+    
+    // Check if this is a duplicate toast we've seen recently
+    if (shownToastsRef.current.has(toast.id + toast.title)) {
+      return false;
+    }
+    
+    // Add this toast to our tracking set
+    shownToastsRef.current.add(toast.id + toast.title);
+    
+    // Clean up the tracking set after a short delay (2 seconds)
+    setTimeout(() => {
+      shownToastsRef.current.delete(toast.id + toast.title);
+    }, 2000);
+    
+    return true;
+  });
 
   return (
     <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
+      {filteredToasts.map(function ({ id, title, description, action, ...props }) {
         return (
           <Toast key={id} {...props}>
             <div className="grid gap-1">
