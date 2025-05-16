@@ -12,10 +12,16 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const AppSettings = () => {
-  const { language, setLanguage, availableLanguages } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { startTutorial, hasCompletedTutorial } = useTutorial();
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Define available languages directly in the component
+  const availableLanguages = [
+    { code: 'en', name: 'English' },
+    { code: 'he', name: 'Hebrew (עברית)' }
+  ];
 
   const handleResetTutorial = async () => {
     if (!user?.id) return;
@@ -60,7 +66,11 @@ const AppSettings = () => {
             <Label htmlFor="language">Language</Label>
             <Select
               value={language}
-              onValueChange={(value) => setLanguage(value)}
+              onValueChange={(value) => {
+                // Cast the string value to Language type
+                // This is safe because we control the available options
+                setLanguage(value as 'en' | 'he');
+              }}
             >
               <SelectTrigger id="language" className="w-full">
                 <SelectValue placeholder="Select Language" />
