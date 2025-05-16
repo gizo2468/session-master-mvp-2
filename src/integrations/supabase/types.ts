@@ -17,6 +17,7 @@ export type Database = {
           email: string | null
           full_name: string
           has_accepted_terms: boolean | null
+          has_completed_tutorial: boolean | null
           id: string
           is_active: boolean | null
           language: string
@@ -34,6 +35,7 @@ export type Database = {
           email?: string | null
           full_name: string
           has_accepted_terms?: boolean | null
+          has_completed_tutorial?: boolean | null
           id: string
           is_active?: boolean | null
           language?: string
@@ -51,6 +53,7 @@ export type Database = {
           email?: string | null
           full_name?: string
           has_accepted_terms?: boolean | null
+          has_completed_tutorial?: boolean | null
           id?: string
           is_active?: boolean | null
           language?: string
@@ -93,6 +96,36 @@ export type Database = {
           session_type?: string | null
           start_time?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      tutorial_steps: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          image_path: string | null
+          step_order: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          image_path?: string | null
+          step_order: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          image_path?: string | null
+          step_order?: number
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

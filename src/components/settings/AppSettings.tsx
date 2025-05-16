@@ -1,175 +1,106 @@
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/context/AuthContext';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/context/LanguageContext';
-import { Language } from '@/context/LanguageContext';
-import { Separator } from '@/components/ui/separator';
-import Icon from '@/components/ui/Lucide';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTutorial } from '@/hooks/useTutorial';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
-interface AppSettingsFormValues {
-  language: Language;
-  liveSessionNotifications: boolean;
-  newFeedbackNotifications: boolean;
-}
+const AppSettings = () => {
+  const { language, setLanguage, availableLanguages } = useLanguage();
+  const { startTutorial, hasCompletedTutorial } = useTutorial();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-const AppSettings: React.FC = () => {
-  const { user, updateUser } = useAuth();
-  const { t, language, setLanguage } = useLanguage();
-  
-  const form = useForm<AppSettingsFormValues>({
-    defaultValues: {
-      language: language,
-      liveSessionNotifications: user?.notificationPreferences?.liveSessionStart || true,
-      newFeedbackNotifications: user?.notificationPreferences?.newFeedback || true,
-    },
-  });
+  const handleResetTutorial = async () => {
+    if (!user?.id) return;
 
-  const onSubmit = (values: AppSettingsFormValues) => {
-    if (values.language !== language) {
-      setLanguage(values.language);
+    try {
+      // Reset the tutorial completion status in the database
+      const { error } = await supabase
+        .from('profiles')
+        .update({ has_completed_tutorial: false })
+        .eq('id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Tutorial Reset",
+        description: "The tutorial will be shown the next time you visit the home page",
+      });
+
+      // Show tutorial immediately
+      startTutorial();
+    } catch (error) {
+      console.error('Error resetting tutorial:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reset tutorial. Please try again.",
+        variant: "destructive",
+      });
     }
-    
-    updateUser({
-      notificationPreferences: {
-        liveSessionStart: values.liveSessionNotifications,
-        newFeedback: values.newFeedbackNotifications,
-      },
-    });
-  };
-
-  const handleLanguageChange = (value: Language) => {
-    form.setValue('language', value);
-    setLanguage(value);
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold mb-6">{t('app_settings')}</h2>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Language Settings */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">{t('language')}</h3>
-              <FormField
-                control={form.control}
-                name="language"
-                render={({ field }) => (
-                  <FormItem>
-                    <Select
-                      value={field.value}
-                      onValueChange={(value) => handleLanguageChange(value as Language)}
-                    >
-                      <SelectTrigger className="w-full md:w-[240px]">
-                        <SelectValue placeholder="Select Language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">
-                          <div className="flex items-center">
-                            <Icon name="Globe" className="mr-2 h-4 w-4" />
-                            <span>English</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="he">
-                          <div className="flex items-center">
-                            <Icon name="Globe" className="mr-2 h-4 w-4" />
-                            <span>עברית (Hebrew)</span>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <Separator />
-            
-            {/* Notification Settings */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">{t('notifications')}</h3>
-              <FormField
-                control={form.control}
-                name="liveSessionNotifications"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between">
-                    <div className="space-y-0.5">
-                      <FormLabel>{t('session_notifications')}</FormLabel>
-                      <FormDescription>
-                        Receive notifications when live sessions start
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="newFeedbackNotifications"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between">
-                    <div className="space-y-0.5">
-                      <FormLabel>{t('feedback_notifications')}</FormLabel>
-                      <FormDescription>
-                        Receive notifications when new feedback is provided
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="flex justify-end">
-              <Button type="submit">
-                {t('save')}
-              </Button>
-            </div>
-          </form>
-        </Form>
-        
-        <Separator className="my-6" />
-        
-        {/* Support & Help Section (moved from SupportSettings) */}
-        <div className="space-y-6">
-          <h3 className="text-lg font-medium">{t('help')}</h3>
+    <Card>
+      <CardHeader>
+        <CardTitle>App Settings</CardTitle>
+        <CardDescription>Customize your app experience</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="language">Language</Label>
+            <Select
+              value={language}
+              onValueChange={(value) => setLanguage(value)}
+            >
+              <SelectTrigger id="language" className="w-full">
+                <SelectValue placeholder="Select Language" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableLanguages.map((lang) => (
+                  <SelectItem key={lang.code} value={lang.code}>
+                    {lang.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           
-          {/* Support Request Section */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>{t('support_request')}</CardTitle>
-              <CardDescription>
-                Get help with any issues or questions about the app
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="poker" className="w-full">
-                <Icon name="LifeBuoy" className="mr-2 h-4 w-4" />
-                {t('support_request')}
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="dark-mode" className="block mb-1">Dark Mode</Label>
+              <p className="text-sm text-muted-foreground">Coming soon</p>
+            </div>
+            <Switch id="dark-mode" disabled />
+          </div>
+
+          <div className="pt-4 border-t">
+            <Label className="block mb-2">Tutorial</Label>
+            <Button
+              variant="outline"
+              onClick={handleResetTutorial}
+              className="w-full"
+            >
+              View Tutorial Again
+            </Button>
+            <p className="text-sm text-muted-foreground mt-2">
+              {hasCompletedTutorial 
+                ? "You've completed the tutorial. You can view it again anytime."
+                : "Complete the tutorial to learn how to use this app."}
+            </p>
+          </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

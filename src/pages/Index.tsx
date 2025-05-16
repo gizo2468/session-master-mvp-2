@@ -11,10 +11,13 @@ import CoachingNav from '@/components/coaching/CoachingNav';
 import ConnectionNotification from '@/components/coaching/ConnectionNotification';
 import Icon from '@/components/ui/Lucide';
 import { Button } from '@/components/ui/button';
+import { useTutorial } from '@/hooks/useTutorial';
+import TutorialDialog from '@/components/tutorial/TutorialDialog';
 
 const Index = () => {
   const navigate = useNavigate();
   const { sessions, activeSession } = useSessionContext();
+  const { showTutorial, setShowTutorial, completeTutorial } = useTutorial();
   
   const activeSessionsCount = activeSession ? 1 : 0;
   
@@ -75,6 +78,13 @@ const Index = () => {
         
         <FocusModeButton />
       </div>
+
+      {/* Tutorial Dialog */}
+      <TutorialDialog 
+        open={showTutorial} 
+        onOpenChange={setShowTutorial} 
+        onComplete={completeTutorial} 
+      />
     </div>
   );
 };
