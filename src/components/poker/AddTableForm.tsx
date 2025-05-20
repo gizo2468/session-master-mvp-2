@@ -8,6 +8,7 @@ import { TableData } from '@/types/poker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
 
 interface AddTableFormProps {
   open: boolean;
@@ -26,13 +27,20 @@ const TOURNAMENT_TYPES = [
   'Satellite'
 ];
 
+const BLIND_PRESETS = {
+  smallBlind: [0.25, 0.5, 1, 2, 3, 5, 10, 25, 50, 100, 200, 500],
+  bigBlind: [0.5, 1, 2, 5, 10, 25, 50, 100, 200, 500, 1000]
+};
+
 const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTable, fixedFormat }) => {
   const [format, setFormat] = useState<'Cash' | 'Tournament'>(fixedFormat || 'Cash');
   const [gameType, setGameType] = useState<'NLH' | 'PLO'>('NLH');
   const [location, setLocation] = useState('');
   const [buyIn, setBuyIn] = useState('');
-  const [smallBlind, setSmallBlind] = useState('');
-  const [bigBlind, setBigBlind] = useState('');
+  const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
+  const [bigBlindIndex, setBigBlindIndex] = useState(2); // Default to $2
+  const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[smallBlindIndex]);
+  const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.bigBlind[bigBlindIndex]); 
   const [startingBB, setStartingBB] = useState('');
   const [tournamentType, setTournamentType] = useState<string>('');
   const [isMultiDay, setIsMultiDay] = useState(false);
@@ -46,7 +54,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!location || !buyIn || (format === 'Cash' && (!smallBlind || !bigBlind))) {
+    if (!location || !buyIn || (format === 'Cash' && (smallBlind === undefined || bigBlind === undefined))) {
       return;
     }
     
@@ -57,8 +65,8 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
       buyIn: parseFloat(buyIn),
       initialBuyIn: parseFloat(buyIn),
       ...(format === 'Cash' && {
-        smallBlind: parseFloat(smallBlind),
-        bigBlind: parseFloat(bigBlind),
+        smallBlind: smallBlind,
+        bigBlind: bigBlind,
       }),
       ...(format === 'Tournament' && {
         startingBB: startingBB ? parseInt(startingBB) : undefined,
@@ -79,11 +87,35 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
     setGameType('NLH');
     setLocation('');
     setBuyIn('');
-    setSmallBlind('');
-    setBigBlind('');
+    setSmallBlindIndex(2);
+    setBigBlindIndex(2);
+    setSmallBlind(BLIND_PRESETS.smallBlind[2]);
+    setBigBlind(BLIND_PRESETS.bigBlind[2]);
     setStartingBB('');
     setTournamentType('');
     setIsMultiDay(false);
+  };
+  
+  const handleSmallBlindChange = (value: number[]) => {
+    const index = value[0];
+    setSmallBlindIndex(index);
+    const newSmallBlind = BLIND_PRESETS.smallBlind[index];
+    setSmallBlind(newSmallBlind);
+    
+    // Ensure big blind is always greater than or equal to small blind
+    if (bigBlind < newSmallBlind) {
+      const newBigBlindIndex = BLIND_PRESETS.bigBlind.findIndex(bb => bb >= newSmallBlind);
+      if (newBigBlindIndex !== -1) {
+        setBigBlindIndex(newBigBlindIndex);
+        setBigBlind(BLIND_PRESETS.bigBlind[newBigBlindIndex]);
+      }
+    }
+  };
+
+  const handleBigBlindChange = (value: number[]) => {
+    const index = value[0];
+    setBigBlindIndex(index);
+    setBigBlind(BLIND_PRESETS.bigBlind[index]);
   };
 
   return (
@@ -219,32 +251,37 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
           )}
 
           {format === 'Cash' && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="smallBlind">Small Blind</Label>
-                <Input
-                  id="smallBlind"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="1"
-                  value={smallBlind}
-                  onChange={(e) => setSmallBlind(e.target.value)}
-                  required
-                />
+            <div className="space-y-4">
+              <div className="flex justify-between mb-1">
+                <Label className="text-base font-medium">Blinds</Label>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="bigBlind">Big Blind</Label>
-                <Input
-                  id="bigBlind"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="2"
-                  value={bigBlind}
-                  onChange={(e) => setBigBlind(e.target.value)}
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label>Small Blind</Label>
+                    <span className="text-sm font-medium">${smallBlind}</span>
+                  </div>
+                  <Slider
+                    defaultValue={[smallBlindIndex]}
+                    max={BLIND_PRESETS.smallBlind.length - 1}
+                    step={1}
+                    onValueChange={handleSmallBlindChange}
+                    className="py-2"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label>Big Blind</Label>
+                    <span className="text-sm font-medium">${bigBlind}</span>
+                  </div>
+                  <Slider
+                    defaultValue={[bigBlindIndex]}
+                    max={BLIND_PRESETS.bigBlind.length - 1}
+                    step={1}
+                    onValueChange={handleBigBlindChange}
+                    className="py-2"
+                  />
+                </div>
               </div>
             </div>
           )}

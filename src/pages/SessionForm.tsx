@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -15,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import Icon from '@/components/ui/Lucide';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Slider } from '@/components/ui/slider';
 
 const TOURNAMENT_TYPES = [
   'Freezeout',
@@ -25,6 +25,11 @@ const TOURNAMENT_TYPES = [
   'Turbo / Hyper',
   'Satellite'
 ];
+
+const BLIND_PRESETS = {
+  smallBlind: [0.25, 0.5, 1, 2, 3, 5, 10, 25, 50, 100, 200, 500],
+  bigBlind: [0.5, 1, 2, 5, 10, 25, 50, 100, 200, 500, 1000]
+};
 
 const formSchema = z.object({
   gameType: z.enum(['NLH', 'PLO']),
@@ -37,7 +42,9 @@ const formSchema = z.object({
   isOnline: z.boolean().default(false),
   startingBB: z.string().optional(),
   tournamentType: z.string().optional(),
-  isMultiDay: z.boolean().default(false)
+  isMultiDay: z.boolean().default(false),
+  smallBlind: z.number().min(0).optional(),
+  bigBlind: z.number().min(0).optional()
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -45,6 +52,8 @@ type FormValues = z.infer<typeof formSchema>;
 export default function SessionForm() {
   const navigate = useNavigate();
   const { startSession } = useSessionContext();
+  const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
+  const [bigBlindIndex, setBigBlindIndex] = useState(2); // Default to $2
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -57,7 +66,9 @@ export default function SessionForm() {
       isOnline: false,
       startingBB: '',
       tournamentType: undefined,
-      isMultiDay: false
+      isMultiDay: false,
+      smallBlind: BLIND_PRESETS.smallBlind[2],
+      bigBlind: BLIND_PRESETS.bigBlind[2]
     }
   });
   
@@ -73,8 +84,8 @@ export default function SessionForm() {
       initialBuyIn: buyInAmount,
       isActive: true,
       startTime: new Date(),
-      smallBlind: 0,
-      bigBlind: 0,
+      smallBlind: values.format === 'Cash' ? (values.smallBlind || 1) : 0,
+      bigBlind: values.format === 'Cash' ? (values.bigBlind || 2) : 0,
       ...(values.format === 'Tournament' && {
         startingBB: values.startingBB ? parseInt(values.startingBB) : undefined,
         tournamentTypes: values.tournamentType ? [values.tournamentType] : undefined,
@@ -90,8 +101,8 @@ export default function SessionForm() {
       physicalLocation: values.isOnline ? values.physicalLocation : undefined,
       buyIn: buyInAmount,
       initialBuyIn: buyInAmount,
-      smallBlind: 0,
-      bigBlind: 0,
+      smallBlind: values.format === 'Cash' ? (values.smallBlind || 1) : 0,
+      bigBlind: values.format === 'Cash' ? (values.bigBlind || 2) : 0,
       startTime: new Date(),
       isActive: true,
       isOnline: values.isOnline,
@@ -108,6 +119,27 @@ export default function SessionForm() {
 
   const format = form.watch('format');
   const isOnline = form.watch('isOnline');
+
+  const handleSmallBlindChange = (value: number[]) => {
+    const index = value[0];
+    setSmallBlindIndex(index);
+    form.setValue('smallBlind', BLIND_PRESETS.smallBlind[index]);
+    
+    // Ensure big blind is always greater than or equal to small blind
+    if (BLIND_PRESETS.bigBlind[bigBlindIndex] < BLIND_PRESETS.smallBlind[index]) {
+      const newBigBlindIndex = BLIND_PRESETS.bigBlind.findIndex(bb => bb >= BLIND_PRESETS.smallBlind[index]);
+      if (newBigBlindIndex !== -1) {
+        setBigBlindIndex(newBigBlindIndex);
+        form.setValue('bigBlind', BLIND_PRESETS.bigBlind[newBigBlindIndex]);
+      }
+    }
+  };
+
+  const handleBigBlindChange = (value: number[]) => {
+    const index = value[0];
+    setBigBlindIndex(index);
+    form.setValue('bigBlind', BLIND_PRESETS.bigBlind[index]);
+  };
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -388,7 +420,51 @@ export default function SessionForm() {
                 </FormItem>
               )}
             />
-
+            
+            {format === 'Cash' && (
+              <div className="space-y-4">
+                <div className="flex justify-between mb-1">
+                  <FormLabel className="text-base font-medium">Blinds</FormLabel>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <FormItem>
+                      <div className="flex justify-between">
+                        <FormLabel>Small Blind</FormLabel>
+                        <span className="text-sm font-medium">${BLIND_PRESETS.smallBlind[smallBlindIndex]}</span>
+                      </div>
+                      <FormControl>
+                        <Slider
+                          defaultValue={[smallBlindIndex]}
+                          max={BLIND_PRESETS.smallBlind.length - 1}
+                          step={1}
+                          onValueChange={handleSmallBlindChange}
+                          className="py-2"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  </div>
+                  <div className="space-y-2">
+                    <FormItem>
+                      <div className="flex justify-between">
+                        <FormLabel>Big Blind</FormLabel>
+                        <span className="text-sm font-medium">${BLIND_PRESETS.bigBlind[bigBlindIndex]}</span>
+                      </div>
+                      <FormControl>
+                        <Slider
+                          defaultValue={[bigBlindIndex]}
+                          max={BLIND_PRESETS.bigBlind.length - 1}
+                          step={1}
+                          onValueChange={handleBigBlindChange}
+                          className="py-2"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {format === 'Tournament' && (
               <FormField
                 control={form.control}
