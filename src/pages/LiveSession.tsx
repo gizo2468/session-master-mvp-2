@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
-import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -626,13 +625,6 @@ export default function LiveSession() {
                 )}
               </div>
             )}
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <HandManagementPanel 
-              sessionId={session.id}
-              hands={session.hands || []}
-            />
           </div>
         </div>
       </main>

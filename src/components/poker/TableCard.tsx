@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -339,6 +340,18 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
             )}
           </div>
         )}
+        
+        {/* Add the HandManagementPanel specific to this table */}
+        {table.isActive && (
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <HandManagementPanel 
+              sessionId={sessionId}
+              tableId={table.id}
+              tableFormat={table.format}
+              hands={table.hands || []}
+            />
+          </div>
+        )}
       </Card>
 
       <Dialog open={showEndTableDialog} onOpenChange={setShowEndTableDialog}>
@@ -633,18 +646,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Add the HandManagementPanel specific to this table */}
-      {table.isActive && (
-        <div className="mt-6 pt-4 border-t border-gray-100">
-          <HandManagementPanel 
-            sessionId={sessionId}
-            tableId={table.id}
-            tableFormat={table.format}
-            hands={table.hands || []}
-          />
-        </div>
-      )}
     </>
   );
 };
