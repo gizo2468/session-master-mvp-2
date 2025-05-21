@@ -3,12 +3,40 @@ import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { useSessionContext } from '@/context/SessionContext';
+import { detectPlatform } from '@/utils/platformDetection';
+import { useToast } from '@/hooks/use-toast';
 
 const DonationCard = () => {
-  // This would be linked to a payment processor in a real implementation
-  const handleDonateClick = () => {
-    // In a real implementation, this would open a payment modal or redirect to payment
-    alert('Thank you for your support! This would normally open a payment option.');
+  const { user } = useAuth();
+  const { activeSession } = useSessionContext();
+  const { toast } = useToast();
+  
+  // PayPal donation link
+  const DONATION_URL = "https://paypal.me/sessionmasterapp";
+  
+  const handleDonateClick = async () => {
+    try {
+      // Identify platform
+      const platform = detectPlatform();
+      
+      // Log donation click to Supabase
+      await supabase.from('donation_logs').insert({
+        user_id: user?.id, // Will be null if user is not logged in
+        session_id: activeSession?.id, // Will be null if no active session
+        platform,
+        // We don't include IP address as it's better handled server-side
+      });
+      
+      // Open donation link in new tab
+      window.open(DONATION_URL, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('Error logging donation click:', error);
+      // Even if logging fails, still open the donation link
+      window.open(DONATION_URL, '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (

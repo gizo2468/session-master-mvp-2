@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      donation_logs: {
+        Row: {
+          clicked_at: string
+          id: string
+          ip_address: string | null
+          note: string | null
+          platform: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          clicked_at?: string
+          id?: string
+          ip_address?: string | null
+          note?: string | null
+          platform: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          clicked_at?: string
+          id?: string
+          ip_address?: string | null
+          note?: string | null
+          platform?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           coach_tier: string | null
