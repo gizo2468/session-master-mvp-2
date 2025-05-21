@@ -15,7 +15,8 @@ import { HandData } from '@/types/poker';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/Lucide';
 import { PokerChip } from '../Icons';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
+import { CircleHelp } from 'lucide-react';
 
 interface HandFormProps {
   open: boolean;
@@ -23,6 +24,8 @@ interface HandFormProps {
   onSubmit: (data: Partial<HandData>) => void;
   initialData?: Partial<HandData>;
   isEditing?: boolean;
+  tableId?: string;
+  tableFormat?: 'Cash' | 'Tournament';
 }
 
 const handFormSchema = z.object({
@@ -37,6 +40,7 @@ const handFormSchema = z.object({
   pokercraftLink: z.string().url('Invalid URL format').optional().or(z.literal('')),
   image: z.string().optional().or(z.any().optional()),
   gameType: z.enum(['NLH', 'PLO']).default('NLH'),
+  tableId: z.string().optional(),
 }).refine(data => {
   if (data.currencyType === 'chips' && (!data.smallBlind || !data.bigBlind)) {
     return false;
@@ -54,7 +58,9 @@ const HandForm: React.FC<HandFormProps> = ({
   onOpenChange,
   onSubmit,
   initialData = {},
-  isEditing = false
+  isEditing = false,
+  tableId,
+  tableFormat
 }) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(handFormSchema),
@@ -62,7 +68,10 @@ const HandForm: React.FC<HandFormProps> = ({
       cards: initialData.cards || '',
       position: initialData.position || '',
       action: initialData.action || 'Open / Flat',
-      currencyType: initialData.currencyType || 'currency',
+      // If tableFormat is provided, set currencyType accordingly, otherwise use initialData or default
+      currencyType: tableFormat 
+        ? (tableFormat === 'Cash' ? 'currency' : 'chips') 
+        : (initialData.currencyType || 'currency'),
       resultAmount: initialData.resultAmount || undefined,
       smallBlind: initialData.smallBlind || undefined,
       bigBlind: initialData.bigBlind || undefined,
@@ -70,12 +79,24 @@ const HandForm: React.FC<HandFormProps> = ({
       pokercraftLink: initialData.pokercraftLink || '',
       image: initialData.image || undefined,
       gameType: initialData.gameType || 'NLH',
+      tableId: tableId || initialData.tableId,
     }
   });
   
   // Get current form values for reactive UI updates
   const gameType = form.watch('gameType');
   const selectedCards = form.watch('cards');
+  // If tableFormat is provided, force currencyType, otherwise use form value
+  const currencyType = tableFormat 
+    ? (tableFormat === 'Cash' ? 'currency' : 'chips')
+    : form.watch('currencyType');
+  
+  // Set currencyType based on tableFormat when it changes
+  useEffect(() => {
+    if (tableFormat) {
+      form.setValue('currencyType', tableFormat === 'Cash' ? 'currency' : 'chips');
+    }
+  }, [tableFormat, form]);
   
   // Determine max cards based on game type
   const getMaxCards = (): number => {
@@ -108,11 +129,12 @@ const HandForm: React.FC<HandFormProps> = ({
   
   useEffect(() => {
     if (open && !isEditing) {
+      // Reset form with potentially new tableFormat-based currencyType
       form.reset({
         cards: '',
         position: '',
         action: 'Open / Flat',
-        currencyType: 'currency',
+        currencyType: tableFormat === 'Cash' ? 'currency' : 'chips',
         resultAmount: undefined,
         smallBlind: undefined,
         bigBlind: undefined,
@@ -120,10 +142,11 @@ const HandForm: React.FC<HandFormProps> = ({
         pokercraftLink: '',
         image: undefined,
         gameType: 'NLH',
+        tableId: tableId,
       });
       setImagePreview(null);
     }
-  }, [open, isEditing, form]);
+  }, [open, isEditing, form, tableId, tableFormat]);
   
   const handleSubmit = (values: FormValues) => {
     // Only submit if we have adequate cards for the game type
@@ -159,7 +182,16 @@ const HandForm: React.FC<HandFormProps> = ({
     }
   };
   
-  const currencyType = form.watch('currencyType');
+  // Tooltip content definitions
+  const tooltipContent = {
+    cards: "Select cards by clicking on them in the grid. Click selected cards to remove them. For Hold'em, select exactly 2 cards. For Omaha, select 4-6 cards.",
+    image: "Upload an image of your hand from the table. Common formats like JPG, PNG and WEBP are accepted. Maximum file size is 5MB.",
+    videoLink: "Paste a link to a video of your hand from YouTube, Twitch, or a hand replay from a poker site like PokerCraft.",
+    position: "Your position at the table relative to the dealer button. This affects your strategic options and expected ranges.",
+    action: "The type of betting action you took with this hand. Open/Flat means opening the pot or calling. 3Bet means raising a previous raise.",
+    resultAmount: "Enter how much you won or lost on this hand. For cash games, use currency. For tournaments, use chip value.",
+    blinds: "The stakes being played. Small blind is typically half of the big blind. These values establish the relative value of bets."
+  };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -190,50 +222,36 @@ const HandForm: React.FC<HandFormProps> = ({
                   name="gameType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Game Type</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <FormLabel>Game Type</FormLabel>
+                        <AdaptiveTooltip content={tooltipContent.cards}>
+                          <CircleHelp className="h-4 w-4 text-gray-500" />
+                        </AdaptiveTooltip>
+                      </div>
                       <FormControl>
                         <div className="flex gap-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  onClick={() => field.onChange('NLH')}
-                                  className={`flex-1 py-2 px-4 rounded-full transition-all ${
-                                    field.value === 'NLH' 
-                                      ? 'bg-poker-gold text-white' 
-                                      : 'bg-gray-100 text-gray-700'
-                                  }`}
-                                >
-                                  Texas Hold'em
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Select exactly 2 cards</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  onClick={() => field.onChange('PLO')}
-                                  className={`flex-1 py-2 px-4 rounded-full transition-all ${
-                                    field.value === 'PLO' 
-                                      ? 'bg-poker-gold text-white' 
-                                      : 'bg-gray-100 text-gray-700'
-                                  }`}
-                                >
-                                  Omaha
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Select up to 6 cards - based on your Omaha variant</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <button
+                            type="button"
+                            onClick={() => field.onChange('NLH')}
+                            className={`flex-1 py-2 px-4 rounded-full transition-all ${
+                              field.value === 'NLH' 
+                                ? 'bg-poker-gold text-white' 
+                                : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            Texas Hold'em
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => field.onChange('PLO')}
+                            className={`flex-1 py-2 px-4 rounded-full transition-all ${
+                              field.value === 'PLO' 
+                                ? 'bg-poker-gold text-white' 
+                                : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            Omaha
+                          </button>
                         </div>
                       </FormControl>
                       <FormDescription>
@@ -252,7 +270,12 @@ const HandForm: React.FC<HandFormProps> = ({
                   name="cards"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cards</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <FormLabel>Cards</FormLabel>
+                        <AdaptiveTooltip content={tooltipContent.cards}>
+                          <CircleHelp className="h-4 w-4 text-gray-500" />
+                        </AdaptiveTooltip>
+                      </div>
                       <FormControl>
                         <CardSelector 
                           selectedCards={field.value} 
@@ -272,7 +295,12 @@ const HandForm: React.FC<HandFormProps> = ({
                 
                 {/* Image Upload Section */}
                 <div className="space-y-2">
-                  <FormLabel>Image</FormLabel>
+                  <div className="flex items-center gap-2">
+                    <FormLabel>Image</FormLabel>
+                    <AdaptiveTooltip content={tooltipContent.image}>
+                      <CircleHelp className="h-4 w-4 text-gray-500" />
+                    </AdaptiveTooltip>
+                  </div>
                   <Input 
                     type="file" 
                     accept="image/*" 
@@ -307,7 +335,12 @@ const HandForm: React.FC<HandFormProps> = ({
                   name="pokercraftLink"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Add Video Link (Optional)</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <FormLabel>Add Video Link (Optional)</FormLabel>
+                        <AdaptiveTooltip content={tooltipContent.videoLink}>
+                          <CircleHelp className="h-4 w-4 text-gray-500" />
+                        </AdaptiveTooltip>
+                      </div>
                       <FormControl>
                         <Input 
                           placeholder="https://youtube.com/watch?v=..." 
@@ -324,7 +357,12 @@ const HandForm: React.FC<HandFormProps> = ({
                   name="position"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Position (Optional)</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <FormLabel>Position (Optional)</FormLabel>
+                        <AdaptiveTooltip content={tooltipContent.position}>
+                          <CircleHelp className="h-4 w-4 text-gray-500" />
+                        </AdaptiveTooltip>
+                      </div>
                       <Select 
                         onValueChange={field.onChange} 
                         defaultValue={field.value}
@@ -355,7 +393,12 @@ const HandForm: React.FC<HandFormProps> = ({
                   name="action"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Action</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <FormLabel>Action</FormLabel>
+                        <AdaptiveTooltip content={tooltipContent.action}>
+                          <CircleHelp className="h-4 w-4 text-gray-500" />
+                        </AdaptiveTooltip>
+                      </div>
                       <FormControl>
                         <ToggleGroup 
                           type="single" 
@@ -383,50 +426,58 @@ const HandForm: React.FC<HandFormProps> = ({
                 />
                 
                 <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="currencyType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Currency Type</FormLabel>
-                        <FormControl>
-                          <ToggleGroup 
-                            type="single" 
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            className="flex justify-center gap-4 my-1"
-                          >
-                            <ToggleGroupItem 
-                              value="currency" 
-                              variant="outline"
-                              className={`flex-1 py-2 ${field.value === 'currency' ? 
-                                'bg-poker-feltGreen text-white' : 
-                                'bg-white'}`}
+                  {/* Hide currency type selector if table format is provided */}
+                  {!tableFormat && (
+                    <FormField
+                      control={form.control}
+                      name="currencyType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Currency Type</FormLabel>
+                          <FormControl>
+                            <ToggleGroup 
+                              type="single" 
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              className="flex justify-center gap-4 my-1"
                             >
-                              💵 Currency
-                            </ToggleGroupItem>
-                            <ToggleGroupItem 
-                              value="chips" 
-                              variant="outline"
-                              className={`flex-1 py-2 ${field.value === 'chips' ? 
-                                'bg-poker-feltGreen text-white' : 
-                                'bg-white'}`}
-                            >
-                              <PokerChip className="h-5 w-5" /> Chips
-                            </ToggleGroupItem>
-                          </ToggleGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                              <ToggleGroupItem 
+                                value="currency" 
+                                variant="outline"
+                                className={`flex-1 py-2 ${field.value === 'currency' ? 
+                                  'bg-poker-feltGreen text-white' : 
+                                  'bg-white'}`}
+                              >
+                                💵 Currency
+                              </ToggleGroupItem>
+                              <ToggleGroupItem 
+                                value="chips" 
+                                variant="outline"
+                                className={`flex-1 py-2 ${field.value === 'chips' ? 
+                                  'bg-poker-feltGreen text-white' : 
+                                  'bg-white'}`}
+                              >
+                                <PokerChip className="h-5 w-5" /> Chips
+                              </ToggleGroupItem>
+                            </ToggleGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 
                   <FormField
                     control={form.control}
                     name="resultAmount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Result Amount</FormLabel>
+                        <div className="flex items-center gap-2">
+                          <FormLabel>Result Amount</FormLabel>
+                          <AdaptiveTooltip content={tooltipContent.resultAmount}>
+                            <CircleHelp className="h-4 w-4 text-gray-500" />
+                          </AdaptiveTooltip>
+                        </div>
                         <FormControl>
                           <div className="relative">
                             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -462,7 +513,12 @@ const HandForm: React.FC<HandFormProps> = ({
                     name="smallBlind"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Small Blind</FormLabel>
+                        <div className="flex items-center gap-2">
+                          <FormLabel>Small Blind</FormLabel>
+                          <AdaptiveTooltip content={tooltipContent.blinds}>
+                            <CircleHelp className="h-4 w-4 text-gray-500" />
+                          </AdaptiveTooltip>
+                        </div>
                         <FormControl>
                           <div className="relative">
                             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -492,7 +548,12 @@ const HandForm: React.FC<HandFormProps> = ({
                     name="bigBlind"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Big Blind</FormLabel>
+                        <div className="flex items-center gap-2">
+                          <FormLabel>Big Blind</FormLabel>
+                          <AdaptiveTooltip content={tooltipContent.blinds}>
+                            <CircleHelp className="h-4 w-4 text-gray-500" />
+                          </AdaptiveTooltip>
+                        </div>
                         <FormControl>
                           <div className="relative">
                             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">

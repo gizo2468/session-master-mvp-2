@@ -1,4 +1,3 @@
-
 export interface HandData {
   id: string;
   cards: string;
@@ -14,6 +13,7 @@ export interface HandData {
   pokercraftLink?: string;
   createdAt: Date;
   gameType?: 'NLH' | 'PLO';
+  tableId?: string; // Optional to support legacy hands
 }
 
 export interface TableData {
@@ -43,6 +43,7 @@ export interface TableData {
   nextDayStart?: Date;
   chipsCarryover?: number;
   dayEndedWithoutElimination?: boolean;
+  hands?: HandData[]; // New field to store hands for this table
 }
 
 export interface PokerSession {

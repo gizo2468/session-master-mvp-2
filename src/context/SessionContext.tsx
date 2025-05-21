@@ -22,6 +22,9 @@ interface SessionContextType {
   addHand: (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => void;
   updateHand: (sessionId: string, hand: HandData) => void;
   deleteHand: (sessionId: string, handId: string) => void;
+  addTableHand: (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => void;
+  updateTableHand: (sessionId: string, tableId: string, hand: HandData) => void;
+  deleteTableHand: (sessionId: string, tableId: string, handId: string) => void;
   addTable: (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
   updateTable: (sessionId: string, table: TableData) => void;
   endTable: (
@@ -41,6 +44,7 @@ interface SessionContextType {
     }
   ) => void;
   addTableRebuy: (sessionId: string, tableId: string, amount: number) => void;
+  getTableById: (sessionId: string, tableId: string) => TableData | undefined;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -290,6 +294,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const addHand = (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
+      // If tableId is provided, add to that table
+      if (hand.tableId) {
+        addTableHand(sessionId, hand.tableId, hand);
+        return;
+      }
+      
       const newHand: HandData = {
         ...hand,
         id: uuidv4(),
@@ -307,32 +317,145 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   
   const updateHand = (sessionId: string, hand: HandData) => {
     const session = sessions.find(s => s.id === sessionId);
-    if (session && session.hands) {
-      const updatedHands = session.hands.map(h => 
-        h.id === hand.id ? hand : h
-      );
+    if (session) {
+      // If tableId is provided, update in that table
+      if (hand.tableId) {
+        updateTableHand(sessionId, hand.tableId, hand);
+        return;
+      }
       
-      const updatedSession = {
-        ...session,
-        hands: updatedHands
-      };
-      
-      updateSession(updatedSession);
+      if (session.hands) {
+        const updatedHands = session.hands.map(h => 
+          h.id === hand.id ? hand : h
+        );
+        
+        const updatedSession = {
+          ...session,
+          hands: updatedHands
+        };
+        
+        updateSession(updatedSession);
+      }
     }
   };
   
   const deleteHand = (sessionId: string, handId: string) => {
     const session = sessions.find(s => s.id === sessionId);
-    if (session && session.hands) {
-      const updatedHands = session.hands.filter(hand => hand.id !== handId);
+    if (session) {
+      // Check if this hand belongs to a table
+      if (session.tables && session.tables.length > 0) {
+        for (const table of session.tables) {
+          if (table.hands && table.hands.some(h => h.id === handId)) {
+            deleteTableHand(sessionId, table.id, handId);
+            return;
+          }
+        }
+      }
       
-      const updatedSession = {
-        ...session,
-        hands: updatedHands
-      };
-      
-      updateSession(updatedSession);
+      if (session.hands) {
+        const updatedHands = session.hands.filter(hand => hand.id !== handId);
+        
+        const updatedSession = {
+          ...session,
+          hands: updatedHands
+        };
+        
+        updateSession(updatedSession);
+      }
     }
+  };
+  
+  const addTableHand = (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session || !session.tables) return;
+    
+    const tableIndex = session.tables.findIndex(t => t.id === tableId);
+    if (tableIndex === -1) return;
+    
+    const table = session.tables[tableIndex];
+    const tableFormat = table.format;
+    
+    const newHand: HandData = {
+      ...hand,
+      id: uuidv4(),
+      createdAt: new Date(),
+      tableId: tableId,
+      // Auto-determine currency type based on table format
+      currencyType: tableFormat === 'Cash' ? 'currency' : 'chips'
+    };
+    
+    const updatedTable = {
+      ...table,
+      hands: [...(table.hands || []), newHand]
+    };
+    
+    const updatedTables = [...session.tables];
+    updatedTables[tableIndex] = updatedTable;
+    
+    const updatedSession = {
+      ...session,
+      tables: updatedTables
+    };
+    
+    updateSession(updatedSession);
+  };
+  
+  const updateTableHand = (sessionId: string, tableId: string, hand: HandData) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session || !session.tables) return;
+    
+    const tableIndex = session.tables.findIndex(t => t.id === tableId);
+    if (tableIndex === -1) return;
+    
+    const table = session.tables[tableIndex];
+    if (!table.hands) return;
+    
+    const updatedHands = table.hands.map(h => 
+      h.id === hand.id ? hand : h
+    );
+    
+    const updatedTable = {
+      ...table,
+      hands: updatedHands
+    };
+    
+    const updatedTables = [...session.tables];
+    updatedTables[tableIndex] = updatedTable;
+    
+    const updatedSession = {
+      ...session,
+      tables: updatedTables
+    };
+    
+    updateSession(updatedSession);
+  };
+  
+  const deleteTableHand = (sessionId: string, tableId: string, handId: string) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session || !session.tables) return;
+    
+    const tableIndex = session.tables.findIndex(t => t.id === tableId);
+    if (tableIndex === -1) return;
+    
+    const table = session.tables[tableIndex];
+    if (!table.hands) return;
+    
+    const updatedHands = table.hands.filter(hand => hand.id !== handId);
+    
+    const updatedTable = {
+      ...table,
+      hands: updatedHands
+    };
+    
+    const updatedTables = [...session.tables];
+    updatedTables[tableIndex] = updatedTable;
+    
+    const updatedSession = {
+      ...session,
+      tables: updatedTables
+    };
+    
+    updateSession(updatedSession);
   };
   
   const addTable = (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
@@ -450,6 +573,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       updateSession(updatedSession);
     }
   };
+  
+  const getTableById = (sessionId: string, tableId: string): TableData | undefined => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session && session.tables) {
+      return session.tables.find(t => t.id === tableId);
+    }
+    return undefined;
+  };
 
   return (
     <SessionContext.Provider
@@ -470,10 +601,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         addHand,
         updateHand,
         deleteHand,
+        addTableHand,
+        updateTableHand,
+        deleteTableHand,
         addTable,
         updateTable,
         endTable,
         addTableRebuy,
+        getTableById,
       }}
     >
       {children}

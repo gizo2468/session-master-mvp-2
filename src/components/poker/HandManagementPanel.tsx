@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { HandData } from '@/types/poker';
+import { HandData, TableData } from '@/types/poker';
 import HandsList from './HandsList';
 import HandForm from './HandForm';
 import { useSessionContext } from '@/context/SessionContext';
@@ -17,28 +17,61 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface HandManagementPanelProps {
   sessionId: string;
   hands?: HandData[];
+  tables?: TableData[];
 }
 
 const HandManagementPanel: React.FC<HandManagementPanelProps> = ({ 
   sessionId,
-  hands = []
+  hands = [],
+  tables = []
 }) => {
   const [isAddHandOpen, setIsAddHandOpen] = useState(false);
   const [isEditHandOpen, setIsEditHandOpen] = useState(false);
   const [editingHand, setEditingHand] = useState<HandData | null>(null);
   const [handToDelete, setHandToDelete] = useState<string | null>(null);
+  const [selectedTableId, setSelectedTableId] = useState<string | 'session'>('session');
   
-  const { addHand, updateHand, deleteHand } = useSessionContext();
+  const { addHand, updateHand, deleteHand, addTableHand, updateTableHand, deleteTableHand, getTableById } = useSessionContext();
   const { toast } = useToast();
   
+  // Get hands based on the selected table
+  const getDisplayedHands = (): HandData[] => {
+    if (selectedTableId === 'session') {
+      // Filter hands that don't belong to any table
+      return hands.filter(h => !h.tableId);
+    } else if (tables) {
+      const selectedTable = tables.find(t => t.id === selectedTableId);
+      return selectedTable?.hands || [];
+    }
+    return [];
+  };
+  
+  const getTableFormat = (tableId: string): 'Cash' | 'Tournament' | undefined => {
+    if (tableId === 'session') return undefined;
+    const table = tables.find(t => t.id === tableId);
+    return table?.format;
+  };
+
   const handleAddHand = (handData: Partial<HandData>) => {
     try {
-      // Make sure we're passing all data including image
-      addHand(sessionId, handData as Omit<HandData, 'id' | 'createdAt'>);
+      if (selectedTableId === 'session') {
+        // Add to session level
+        addHand(sessionId, handData as Omit<HandData, 'id' | 'createdAt'>);
+      } else {
+        // Add to table level
+        const { tableId, ...restHandData } = handData;
+        addTableHand(
+          sessionId, 
+          selectedTableId, 
+          restHandData as Omit<HandData, 'id' | 'createdAt' | 'tableId'>
+        );
+      }
+      
       toast({
         title: 'Hand Added',
         description: 'Your hand has been successfully added.',
@@ -67,7 +100,12 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
           updatedHandData.image = editingHand.image;
         }
         
-        updateHand(sessionId, updatedHandData);
+        if (updatedHandData.tableId) {
+          updateTableHand(sessionId, updatedHandData.tableId, updatedHandData);
+        } else {
+          updateHand(sessionId, updatedHandData);
+        }
+        
         toast({
           title: 'Hand Updated',
           description: 'Your hand has been successfully updated.',
@@ -97,7 +135,16 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   const confirmDeleteHand = () => {
     if (handToDelete) {
       try {
-        deleteHand(sessionId, handToDelete);
+        // Find which table this hand belongs to (if any)
+        const handToDeleteObj = hands.find(h => h.id === handToDelete) || 
+          tables.flatMap(t => t.hands || []).find(h => h.id === handToDelete);
+        
+        if (handToDeleteObj?.tableId) {
+          deleteTableHand(sessionId, handToDeleteObj.tableId, handToDelete);
+        } else {
+          deleteHand(sessionId, handToDelete);
+        }
+        
         setHandToDelete(null);
         toast({
           title: 'Hand Deleted',
@@ -114,6 +161,9 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
     }
   };
   
+  const displayedHands = getDisplayedHands();
+  const tableFormat = getTableFormat(selectedTableId);
+  
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -128,8 +178,30 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
         </Button>
       </div>
       
+      {/* Table Selector */}
+      {tables && tables.length > 0 && (
+        <div className="mb-4">
+          <Select 
+            value={selectedTableId}
+            onValueChange={setSelectedTableId}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select table to view hands" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="session">Session Level Hands</SelectItem>
+              {tables.map(table => (
+                <SelectItem key={table.id} value={table.id}>
+                  {table.name || `${table.format} - ${table.gameType}`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      
       <HandsList 
-        hands={hands} 
+        hands={displayedHands} 
         onEditHand={onEditHand}
         onDeleteHand={onDeleteHand}
       />
@@ -138,6 +210,8 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
         open={isAddHandOpen}
         onOpenChange={setIsAddHandOpen}
         onSubmit={handleAddHand}
+        tableId={selectedTableId !== 'session' ? selectedTableId : undefined}
+        tableFormat={tableFormat}
       />
       
       {editingHand && (
@@ -146,6 +220,8 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
           onOpenChange={setIsEditHandOpen}
           onSubmit={handleEditHand}
           initialData={editingHand}
+          tableId={editingHand.tableId}
+          tableFormat={editingHand.tableId ? getTableById(sessionId, editingHand.tableId)?.format : undefined}
           isEditing
         />
       )}
