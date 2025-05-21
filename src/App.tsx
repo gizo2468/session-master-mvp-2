@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -25,6 +24,7 @@ import Signup from "./pages/auth/Signup";
 import ResetPassword from "./pages/auth/ResetPassword";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfUse from "./pages/legal/TermsOfUse";
+import CookiePolicy from "./pages/legal/CookiePolicy";
 import { SessionProvider } from "./context/SessionContext";
 import { CoachStudentProvider } from "./context/CoachStudentContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -54,6 +54,7 @@ const App = () => (
                   {/* Legal Pages - Available without authentication */}
                   <Route path="/legal/privacy" element={<PrivacyPolicy />} />
                   <Route path="/legal/terms" element={<TermsOfUse />} />
+                  <Route path="/legal/cookie" element={<CookiePolicy />} />
                   
                   {/* Protected Routes */}
                   <Route 

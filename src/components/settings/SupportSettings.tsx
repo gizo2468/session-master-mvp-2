@@ -6,9 +6,11 @@ import { useLanguage } from '@/context/LanguageContext';
 import Icon from '@/components/ui/Lucide';
 import DonationCard from '@/components/DonationCard';
 import { Separator } from '@/components/ui/separator';
+import { useNavigate } from 'react-router-dom';
 
 const SupportSettings: React.FC = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-6">
@@ -45,14 +47,36 @@ const SupportSettings: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button variant="outline" className="w-full">
-              <Icon name="FileText" className="mr-2 h-4 w-4" />
-              {t('terms_of_service')}
-            </Button>
-            <Button variant="outline" className="w-full">
-              <Icon name="Shield" className="mr-2 h-4 w-4" />
-              {t('privacy_policy')}
-            </Button>
+            <div className="flex items-center justify-between border-b pb-3" 
+                 onClick={() => navigate('/legal/privacy')}
+                 role="button"
+                 aria-label="View privacy policy">
+              <div className="flex items-center">
+                <Icon name="Shield" className="mr-3 text-gray-500 h-4 w-4" />
+                <span>Privacy Policy</span>
+              </div>
+              <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
+            </div>
+            <div className="flex items-center justify-between border-b pb-3" 
+                 onClick={() => navigate('/legal/terms')}
+                 role="button"
+                 aria-label="View terms of use">
+              <div className="flex items-center">
+                <Icon name="FileText" className="mr-3 text-gray-500 h-4 w-4" />
+                <span>Terms of Use</span>
+              </div>
+              <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
+            </div>
+            <div className="flex items-center justify-between pt-1" 
+                 onClick={() => navigate('/legal/cookie')}
+                 role="button"
+                 aria-label="View cookie policy">
+              <div className="flex items-center">
+                <Icon name="Cookie" className="mr-3 text-gray-500 h-4 w-4" />
+                <span>Cookie Policy</span>
+              </div>
+              <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
+            </div>
           </CardContent>
         </Card>
       </div>

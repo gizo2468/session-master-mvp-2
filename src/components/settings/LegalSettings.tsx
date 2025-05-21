@@ -32,13 +32,23 @@ const LegalSettings: React.FC = () => {
               </div>
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
             </div>
-            <div className="flex items-center justify-between pt-1" 
+            <div className="flex items-center justify-between border-b pb-3" 
                  onClick={() => navigate('/legal/terms')}
                  role="button"
                  aria-label="View terms of use">
               <div className="flex items-center">
                 <Icon name="FileText" className="mr-3 text-gray-500 h-4 w-4" />
                 <span>Terms of Use</span>
+              </div>
+              <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
+            </div>
+            <div className="flex items-center justify-between pt-1" 
+                 onClick={() => navigate('/legal/cookie')}
+                 role="button"
+                 aria-label="View cookie policy">
+              <div className="flex items-center">
+                <Icon name="Cookie" className="mr-3 text-gray-500 h-4 w-4" />
+                <span>Cookie Policy</span>
               </div>
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
             </div>
