@@ -430,6 +430,7 @@ export default function LiveSession() {
                         <TableCard
                           key={table.id}
                           table={table}
+                          sessionId={session.id}
                           onEndTable={(tableId, cashOut, notes, bounty, multiDayInfo) => 
                             handleEndTable(tableId, cashOut, notes, bounty, multiDayInfo)
                           }
