@@ -21,6 +21,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         poker: "bg-poker-gold text-white hover:bg-poker-darkGold",
         felt: "bg-poker-feltGreen text-white hover:bg-poker-feltGreen/90",
+        orange: "bg-poker-orange text-white hover:bg-poker-darkOrange", // Added orange variant
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -57,4 +58,3 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button"
 
 export { Button, buttonVariants }
-

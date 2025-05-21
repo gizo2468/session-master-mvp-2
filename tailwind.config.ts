@@ -39,7 +39,9 @@ export default {
 					feltGreen: '#35654D',
 					red: '#B71C1C',
 					black: '#212121',
-					cream: '#FEF7CD', // Adding cream color for "Session" text
+					cream: '#FEF7CD',
+					orange: '#F97316', // Adding orange color for the "Add Hand" button
+					darkOrange: '#EA580C', // Adding dark orange for hover state
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',

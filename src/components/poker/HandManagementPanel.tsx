@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -164,7 +163,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
         <h3 className="text-xl font-extrabold tracking-tight">Hands Played</h3>
         <Button 
           onClick={() => setIsAddHandOpen(true)}
-          className="bg-poker-gold hover:bg-poker-darkGold text-white"
+          className="bg-orange-600 hover:bg-orange-700 text-white"
           size="sm"
         >
           <Plus className="h-4 w-4 mr-2" /> 
