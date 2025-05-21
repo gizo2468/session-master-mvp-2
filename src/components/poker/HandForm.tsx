@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -295,7 +294,7 @@ const HandForm: React.FC<HandFormProps> = ({
                   )}
                 />
                 
-                {/* Position Wheel Selector - UPDATED */}
+                {/* Position Wheel Selector - UPDATED TO REMOVE GREEN BAR */}
                 <FormField
                   control={form.control}
                   name="position"
@@ -318,12 +317,10 @@ const HandForm: React.FC<HandFormProps> = ({
                           />
                         </FormControl>
                         
-                        {/* Wheel-style position display - UPDATED */}
+                        {/* Wheel-style position display - UPDATED TO REMOVE ALL BARS */}
                         <div className="flex justify-center items-center">
                           <div className="relative w-full max-w-[250px] h-[100px] overflow-hidden">
-                            {/* Current position highlight - REMOVED green bar */}
-                            
-                            {/* Position wheel items */}
+                            {/* Position wheel items - SIMPLIFIED STYLING */}
                             <div className="flex flex-col items-center justify-center h-full">
                               {positions.map((pos, idx) => {
                                 // Calculate distance from current position
@@ -338,7 +335,7 @@ const HandForm: React.FC<HandFormProps> = ({
                                 return (
                                   <div
                                     key={pos}
-                                    className={`absolute text-center transition-all duration-200 ease-out cursor-pointer px-4 py-2 rounded-md
+                                    className={`absolute text-center transition-all duration-200 ease-out cursor-pointer px-4 py-2
                                                ${isActive ? 'font-bold text-poker-gold' : 'text-gray-700'}`}
                                     style={{
                                       transform: `translateY(${yOffset}px) scale(${scale})`,
