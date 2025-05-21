@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,6 @@ import Icon from '@/components/ui/Lucide';
 import { PokerChip } from '../Icons';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { CircleHelp } from 'lucide-react';
-import { Slider } from '@/components/ui/slider';
 
 interface HandFormProps {
   open: boolean;
@@ -74,8 +74,8 @@ const HandForm: React.FC<HandFormProps> = ({
     }
   });
   
-  // Position selector state
-  const [positionIndex, setPositionIndex] = useState(0);
+  // Position selector state - simplified approach now
+  const [selectedPositionIndex, setSelectedPositionIndex] = useState(0);
   
   // Get current form values for reactive UI updates
   const gameType = form.watch('gameType');
@@ -84,14 +84,7 @@ const HandForm: React.FC<HandFormProps> = ({
     ? (tableFormat === 'Cash' ? 'currency' : 'chips')
     : form.watch('currencyType');
   
-  // Set currencyType based on tableFormat when it changes
-  useEffect(() => {
-    if (tableFormat) {
-      form.setValue('currencyType', tableFormat === 'Cash' ? 'currency' : 'chips');
-    }
-  }, [tableFormat, form]);
-  
-  // Position options for wheel selector - abbreviated only
+  // Position options - abbreviations only
   const positions = ['SB', 'BB', 'UTG', 'UTG+1', 'MP', 'HJ', 'CO', 'BTN'];
   
   // Set initial position index if editing
@@ -99,18 +92,24 @@ const HandForm: React.FC<HandFormProps> = ({
     if (initialData.position) {
       const index = positions.findIndex(pos => pos === initialData.position);
       if (index !== -1) {
-        setPositionIndex(index);
+        setSelectedPositionIndex(index);
         form.setValue('position', positions[index]);
       }
     }
   }, [initialData.position, form]);
-  
-  // Handle position change from slider
-  const handlePositionChange = (value: number[]) => {
-    const index = value[0];
-    setPositionIndex(index);
+
+  // Handle position selection
+  const handlePositionSelect = (index: number) => {
+    setSelectedPositionIndex(index);
     form.setValue('position', positions[index]);
   };
+  
+  // Set currencyType based on tableFormat when it changes
+  useEffect(() => {
+    if (tableFormat) {
+      form.setValue('currencyType', tableFormat === 'Cash' ? 'currency' : 'chips');
+    }
+  }, [tableFormat, form]);
   
   // Determine max cards based on game type
   const getMaxCards = (): number => {
@@ -147,7 +146,7 @@ const HandForm: React.FC<HandFormProps> = ({
         tableId: tableId,
       });
       setImagePreview(null);
-      setPositionIndex(0);
+      setSelectedPositionIndex(0);
     }
   }, [open, isEditing, form, tableId, tableFormat]);
   
@@ -167,7 +166,7 @@ const HandForm: React.FC<HandFormProps> = ({
       ...values,
       id: initialData.id,
       image: imagePreview,
-      position: positions[positionIndex] // Ensure we use the position from the wheel
+      position: positions[selectedPositionIndex] // Use the position from our wheel picker
     });
     onOpenChange(false);
   };
@@ -294,7 +293,7 @@ const HandForm: React.FC<HandFormProps> = ({
                   )}
                 />
                 
-                {/* Position Wheel Selector - UPDATED TO REMOVE GREEN BAR */}
+                {/* Position Wheel Selector - COMPLETELY REBUILT */}
                 <FormField
                   control={form.control}
                   name="position"
@@ -306,53 +305,38 @@ const HandForm: React.FC<HandFormProps> = ({
                           <CircleHelp className="h-4 w-4 text-gray-500" />
                         </AdaptiveTooltip>
                       </div>
-                      <div className="space-y-4">
-                        <FormControl>
-                          <Slider
-                            value={[positionIndex]}
-                            max={positions.length - 1}
-                            step={1}
-                            onValueChange={handlePositionChange}
-                            className="py-4"
-                          />
-                        </FormControl>
-                        
-                        {/* Wheel-style position display - UPDATED TO REMOVE ALL BARS */}
-                        <div className="flex justify-center items-center">
-                          <div className="relative w-full max-w-[250px] h-[100px] overflow-hidden">
-                            {/* Position wheel items - SIMPLIFIED STYLING */}
-                            <div className="flex flex-col items-center justify-center h-full">
-                              {positions.map((pos, idx) => {
-                                // Calculate distance from current position
-                                const distance = idx - positionIndex;
-                                const isActive = idx === positionIndex;
-                                
-                                // Calculate styles based on distance
-                                const opacity = isActive ? 1 : Math.max(0.3, 1 - Math.abs(distance) * 0.25);
-                                const scale = isActive ? 1 : Math.max(0.7, 1 - Math.abs(distance) * 0.1);
-                                const yOffset = distance * 30; // 30px offset per position
-                                
-                                return (
-                                  <div
-                                    key={pos}
-                                    className={`absolute text-center transition-all duration-200 ease-out cursor-pointer px-4 py-2
-                                               ${isActive ? 'font-bold text-poker-gold' : 'text-gray-700'}`}
-                                    style={{
-                                      transform: `translateY(${yOffset}px) scale(${scale})`,
-                                      opacity: opacity,
-                                      display: Math.abs(distance) > 3 ? 'none' : 'block',
-                                      zIndex: isActive ? 2 : 1
-                                    }}
-                                    onClick={() => handlePositionChange([idx])}
-                                  >
-                                    {pos}
-                                  </div>
-                                );
-                              })}
-                            </div>
+                      
+                      {/* iOS-style wheel picker */}
+                      <FormControl>
+                        <div className="relative flex justify-center w-full h-[130px] overflow-hidden">
+                          <div className="absolute inset-0 pointer-events-none z-10">
+                            <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/2 h-[30px] border-y border-transparent"></div>
+                          </div>
+                          
+                          <div className="absolute inset-0 overflow-y-auto snap-y snap-mandatory scrollbar-none">
+                            {/* Empty spaces at top and bottom to allow centering */}
+                            <div className="h-[50px]" aria-hidden="true"></div>
+                            
+                            {positions.map((position, index) => (
+                              <div
+                                key={position}
+                                className={`flex items-center justify-center h-[30px] snap-center cursor-pointer transition-all ${
+                                  selectedPositionIndex === index 
+                                    ? 'font-bold text-poker-gold' 
+                                    : 'text-gray-500'
+                                }`}
+                                onClick={() => handlePositionSelect(index)}
+                              >
+                                {position}
+                              </div>
+                            ))}
+                            
+                            {/* Empty spaces at top and bottom to allow centering */}
+                            <div className="h-[50px]" aria-hidden="true"></div>
                           </div>
                         </div>
-                      </div>
+                      </FormControl>
+                      
                       <FormDescription>
                         Your position at the table
                       </FormDescription>
