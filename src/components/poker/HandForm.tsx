@@ -295,7 +295,7 @@ const HandForm: React.FC<HandFormProps> = ({
                   )}
                 />
                 
-                {/* Position Wheel Selector */}
+                {/* Position Wheel Selector - UPDATED */}
                 <FormField
                   control={form.control}
                   name="position"
@@ -318,11 +318,10 @@ const HandForm: React.FC<HandFormProps> = ({
                           />
                         </FormControl>
                         
-                        {/* Wheel-style position display */}
+                        {/* Wheel-style position display - UPDATED */}
                         <div className="flex justify-center items-center">
                           <div className="relative w-full max-w-[250px] h-[100px] overflow-hidden">
-                            {/* Current position highlight */}
-                            <div className="absolute top-1/2 left-0 right-0 h-10 -mt-5 bg-gray-100 rounded-md z-0"></div>
+                            {/* Current position highlight - REMOVED green bar */}
                             
                             {/* Position wheel items */}
                             <div className="flex flex-col items-center justify-center h-full">
