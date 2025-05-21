@@ -638,7 +638,7 @@ export default function LiveSession() {
       
       {/* End Session Sheet */}
       <Sheet open={showEndSessionSheet} onOpenChange={setShowEndSessionSheet}>
-        <SheetContent className="sm:max-w-md">
+        <SheetContent side="center" className="max-w-md max-h-[85vh] overflow-auto">
           <SheetHeader>
             <SheetTitle>End Session</SheetTitle>
             <SheetDescription>

@@ -284,7 +284,7 @@ export default function ConfirmSession() {
       {/* End Session Sheet - Updated to include bounty tournament fields when applicable */}
       {showEndSessionSheet && (
         <Sheet open={showEndSessionSheet} onOpenChange={setShowEndSessionSheet}>
-          <SheetContent side={isMobile ? "bottom" : "right"} className="sm:max-w-md">
+          <SheetContent side="center" className="max-w-md max-h-[85vh] overflow-auto">
             <SheetHeader>
               <SheetTitle>End Session</SheetTitle>
               <SheetDescription>
