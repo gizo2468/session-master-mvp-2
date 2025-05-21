@@ -163,7 +163,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
         <h3 className="text-xl font-extrabold tracking-tight">Hands Played</h3>
         <Button 
           onClick={() => setIsAddHandOpen(true)}
-          className="bg-orange-600 hover:bg-orange-700 text-white"
+          variant="lightyellow"
           size="sm"
         >
           <Plus className="h-4 w-4 mr-2" /> 

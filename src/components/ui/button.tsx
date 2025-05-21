@@ -22,6 +22,7 @@ const buttonVariants = cva(
         poker: "bg-poker-gold text-white hover:bg-poker-darkGold",
         felt: "bg-poker-feltGreen text-white hover:bg-poker-feltGreen/90",
         orange: "bg-poker-orange text-white hover:bg-poker-darkOrange", // Added orange variant
+        lightyellow: "bg-poker-cream text-poker-black hover:bg-poker-cream/90", // New light yellow variant
       },
       size: {
         default: "h-10 px-4 py-2",
