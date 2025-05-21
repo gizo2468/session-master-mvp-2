@@ -16,14 +16,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import TableTimerDisplay from './TableTimerDisplay';
 import { Badge } from '@/components/ui/badge';
+import HandManagementPanel from './HandManagementPanel';
+import { useSessionContext } from '@/context/SessionContext';
+import { Plus } from 'lucide-react';
 
 interface TableCardProps {
   table: TableData;
   onEndTable: (tableId: string, cashOut: number, notes?: string, bounty?: { bountyCount?: number, bountyAmount?: number, finalPosition?: number }, multiDayInfo?: { nextDayStart?: Date, chipsCarryover?: number, dayEndedWithoutElimination?: boolean }) => void;
   onAddRebuy: (tableId: string, amount: number) => void;
+  sessionId: string;
 }
 
-const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) => {
+const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, sessionId }) => {
   const [showEndTableDialog, setShowEndTableDialog] = useState(false);
   const [cashOutAmount, setCashOutAmount] = useState('');
   const [tableNotes, setTableNotes] = useState(table.notes || '');
@@ -629,6 +633,18 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy }) 
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add the HandManagementPanel specific to this table */}
+      {table.isActive && (
+        <div className="mt-6 pt-4 border-t border-gray-100">
+          <HandManagementPanel 
+            sessionId={sessionId}
+            tableId={table.id}
+            tableFormat={table.format}
+            hands={table.hands || []}
+          />
+        </div>
+      )}
     </>
   );
 };

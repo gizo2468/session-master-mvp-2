@@ -17,59 +17,54 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface HandManagementPanelProps {
   sessionId: string;
   hands?: HandData[];
   tables?: TableData[];
+  tableId?: string;  // New prop to specify a table
+  tableFormat?: 'Cash' | 'Tournament';  // New prop to specify table format
 }
 
 const HandManagementPanel: React.FC<HandManagementPanelProps> = ({ 
   sessionId,
   hands = [],
-  tables = []
+  tables = [],
+  tableId,
+  tableFormat
 }) => {
   const [isAddHandOpen, setIsAddHandOpen] = useState(false);
   const [isEditHandOpen, setIsEditHandOpen] = useState(false);
   const [editingHand, setEditingHand] = useState<HandData | null>(null);
   const [handToDelete, setHandToDelete] = useState<string | null>(null);
-  const [selectedTableId, setSelectedTableId] = useState<string | 'session'>('session');
   
   const { addHand, updateHand, deleteHand, addTableHand, updateTableHand, deleteTableHand, getTableById } = useSessionContext();
   const { toast } = useToast();
   
-  // Get hands based on the selected table
+  // Get hands based on the specified table or filter session-level hands
   const getDisplayedHands = (): HandData[] => {
-    if (selectedTableId === 'session') {
-      // Filter hands that don't belong to any table
+    if (tableId) {
+      // If a tableId is provided, only show hands for that specific table
+      return hands.filter(h => h.tableId === tableId);
+    } else {
+      // If no tableId is provided, show session-level hands (ones without tableId)
       return hands.filter(h => !h.tableId);
-    } else if (tables) {
-      const selectedTable = tables.find(t => t.id === selectedTableId);
-      return selectedTable?.hands || [];
     }
-    return [];
-  };
-  
-  const getTableFormat = (tableId: string): 'Cash' | 'Tournament' | undefined => {
-    if (tableId === 'session') return undefined;
-    const table = tables.find(t => t.id === tableId);
-    return table?.format;
   };
 
   const handleAddHand = (handData: Partial<HandData>) => {
     try {
-      if (selectedTableId === 'session') {
-        // Add to session level
-        addHand(sessionId, handData as Omit<HandData, 'id' | 'createdAt'>);
-      } else {
+      if (tableId) {
         // Add to table level
-        const { tableId, ...restHandData } = handData;
+        const { tableId: _, ...restHandData } = handData;
         addTableHand(
           sessionId, 
-          selectedTableId, 
+          tableId, 
           restHandData as Omit<HandData, 'id' | 'createdAt' | 'tableId'>
         );
+      } else {
+        // Add to session level (legacy support)
+        addHand(sessionId, handData as Omit<HandData, 'id' | 'createdAt'>);
       }
       
       toast({
@@ -137,7 +132,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
       try {
         // Find which table this hand belongs to (if any)
         const handToDeleteObj = hands.find(h => h.id === handToDelete) || 
-          tables.flatMap(t => t.hands || []).find(h => h.id === handToDelete);
+          tables?.flatMap(t => t.hands || []).find(h => h.id === handToDelete);
         
         if (handToDeleteObj?.tableId) {
           deleteTableHand(sessionId, handToDeleteObj.tableId, handToDelete);
@@ -162,7 +157,6 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   };
   
   const displayedHands = getDisplayedHands();
-  const tableFormat = getTableFormat(selectedTableId);
   
   return (
     <div className="space-y-4">
@@ -178,28 +172,6 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
         </Button>
       </div>
       
-      {/* Table Selector */}
-      {tables && tables.length > 0 && (
-        <div className="mb-4">
-          <Select 
-            value={selectedTableId}
-            onValueChange={setSelectedTableId}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select table to view hands" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="session">Session Level Hands</SelectItem>
-              {tables.map(table => (
-                <SelectItem key={table.id} value={table.id}>
-                  {table.name || `${table.format} - ${table.gameType}`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-      
       <HandsList 
         hands={displayedHands} 
         onEditHand={onEditHand}
@@ -210,7 +182,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
         open={isAddHandOpen}
         onOpenChange={setIsAddHandOpen}
         onSubmit={handleAddHand}
-        tableId={selectedTableId !== 'session' ? selectedTableId : undefined}
+        tableId={tableId}
         tableFormat={tableFormat}
       />
       

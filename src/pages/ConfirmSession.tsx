@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -10,7 +11,6 @@ import Icon from '@/components/ui/Lucide';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
 import TournamentControlsCard from '@/components/poker/TournamentControlsCard';
-import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import TableTimerDisplay from '@/components/poker/TableTimerDisplay';
 import { Badge } from '@/components/ui/badge';
 import TableCard from '@/components/poker/TableCard';
@@ -227,16 +227,10 @@ export default function ConfirmSession() {
             onAddRebuy={handleInitiateRebuy}
           />
           
-          {/* Hand Management */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <HandManagementPanel 
-              sessionId={activeSession.id}
-              hands={activeSession.hands || []}
-            />
-          </div>
+          {/* Remove global HandManagementPanel */}
           
-          {/* Using TableCard component for all tables */}
-          {activeSession.tables && activeSession.tables.length > 0 && (
+          {/* Using TableCard component for all tables - pass sessionId to each table */}
+          {activeSession.tables && activeSession.tables.length > 0 ? (
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <h3 className="text-xl font-extrabold tracking-tight mb-4">Tables</h3>
               <div className="space-y-3">
@@ -246,9 +240,15 @@ export default function ConfirmSession() {
                     table={table}
                     onEndTable={handleEndTable}
                     onAddRebuy={handleAddTableRebuy}
+                    sessionId={activeSession.id}
                   />
                 ))}
               </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
+              <h3 className="text-xl font-extrabold tracking-tight mb-2">No Tables</h3>
+              <p className="text-gray-500">Add a table to track hands and results separately.</p>
             </div>
           )}
         </div>
