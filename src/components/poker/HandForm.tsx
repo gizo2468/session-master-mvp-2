@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useForm } from 'react-hook-form';
@@ -17,6 +16,7 @@ import Icon from '@/components/ui/Lucide';
 import { PokerChip } from '../Icons';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { CircleHelp } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
 
 interface HandFormProps {
   open: boolean;
@@ -28,10 +28,11 @@ interface HandFormProps {
   tableFormat?: 'Cash' | 'Tournament';
 }
 
+// Updated schema to make only Cards required
 const handFormSchema = z.object({
-  cards: z.string().min(2, 'Select at least 1 card').max(12, 'Maximum 6 cards'), // Updated for 6 card max (12 chars)
+  cards: z.string().min(2, 'Select at least 1 card').max(12, 'Maximum 6 cards'),
   position: z.string().optional(),
-  action: z.string().min(1, 'Action description is required').max(200, 'Action description is too long'),
+  action: z.string().optional(),
   currencyType: z.enum(['currency', 'chips']).default('currency'),
   resultAmount: z.number().optional(),
   smallBlind: z.number().optional(),
@@ -41,14 +42,6 @@ const handFormSchema = z.object({
   image: z.string().optional().or(z.any().optional()),
   gameType: z.enum(['NLH', 'PLO']).default('NLH'),
   tableId: z.string().optional(),
-}).refine(data => {
-  if (data.currencyType === 'chips' && (!data.smallBlind || !data.bigBlind)) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Small Blind and Big Blind are required for chip values",
-  path: ["smallBlind"]
 });
 
 type FormValues = z.infer<typeof handFormSchema>;
@@ -68,7 +61,6 @@ const HandForm: React.FC<HandFormProps> = ({
       cards: initialData.cards || '',
       position: initialData.position || '',
       action: initialData.action || 'Open / Flat',
-      // If tableFormat is provided, set currencyType accordingly, otherwise use initialData or default
       currencyType: tableFormat 
         ? (tableFormat === 'Cash' ? 'currency' : 'chips') 
         : (initialData.currencyType || 'currency'),
@@ -83,10 +75,12 @@ const HandForm: React.FC<HandFormProps> = ({
     }
   });
   
+  // Position selector state
+  const [positionIndex, setPositionIndex] = useState(0);
+  
   // Get current form values for reactive UI updates
   const gameType = form.watch('gameType');
   const selectedCards = form.watch('cards');
-  // If tableFormat is provided, force currencyType, otherwise use form value
   const currencyType = tableFormat 
     ? (tableFormat === 'Cash' ? 'currency' : 'chips')
     : form.watch('currencyType');
@@ -98,23 +92,33 @@ const HandForm: React.FC<HandFormProps> = ({
     }
   }, [tableFormat, form]);
   
+  // Position options for wheel selector - abbreviated only
+  const positions = ['SB', 'BB', 'UTG', 'UTG+1', 'MP', 'HJ', 'CO', 'BTN'];
+  
+  // Set initial position index if editing
+  useEffect(() => {
+    if (initialData.position) {
+      const index = positions.findIndex(pos => pos === initialData.position);
+      if (index !== -1) {
+        setPositionIndex(index);
+        form.setValue('position', positions[index]);
+      }
+    }
+  }, [initialData.position, form]);
+  
+  // Handle position change from slider
+  const handlePositionChange = (value: number[]) => {
+    const index = value[0];
+    setPositionIndex(index);
+    form.setValue('position', positions[index]);
+  };
+  
   // Determine max cards based on game type
   const getMaxCards = (): number => {
     if (gameType === 'NLH') return 2;
-    if (gameType === 'PLO') return 6; // Allow up to 6 cards for PLO variants
-    return 6; // Default fallback
+    if (gameType === 'PLO') return 6;
+    return 6;
   };
-  
-  const positions = [
-    { label: 'Small Blind', value: 'SB' },
-    { label: 'Big Blind', value: 'BB' },
-    { label: 'Under the Gun', value: 'UTG' },
-    { label: 'UTG+1', value: 'UTG+1' },
-    { label: 'Middle Position', value: 'MP' },
-    { label: 'Hijack', value: 'HJ' },
-    { label: 'Cutoff', value: 'CO' },
-    { label: 'Button', value: 'BTN' }
-  ];
   
   const actionTypes = [
     { label: 'Open / Flat', value: 'Open / Flat' },
@@ -129,7 +133,6 @@ const HandForm: React.FC<HandFormProps> = ({
   
   useEffect(() => {
     if (open && !isEditing) {
-      // Reset form with potentially new tableFormat-based currencyType
       form.reset({
         cards: '',
         position: '',
@@ -145,15 +148,15 @@ const HandForm: React.FC<HandFormProps> = ({
         tableId: tableId,
       });
       setImagePreview(null);
+      setPositionIndex(0);
     }
   }, [open, isEditing, form, tableId, tableFormat]);
   
   const handleSubmit = (values: FormValues) => {
-    // Only submit if we have adequate cards for the game type
-    const requiredCardCount = gameType === 'NLH' ? 2 : 4; // Minimum 4 cards for PLO
+    // Only validate card count for the game type
+    const requiredCardCount = gameType === 'NLH' ? 2 : 4;
     
     if ((values.cards.length / 2) < requiredCardCount) {
-      // Show validation error instead of submitting
       form.setError("cards", {
         type: "manual", 
         message: `Select at least ${requiredCardCount} cards for ${gameType === 'NLH' ? 'Texas Hold\'em' : 'Omaha'}`
@@ -164,7 +167,8 @@ const HandForm: React.FC<HandFormProps> = ({
     onSubmit({
       ...values,
       id: initialData.id,
-      image: imagePreview
+      image: imagePreview,
+      position: positions[positionIndex] // Ensure we use the position from the wheel
     });
     onOpenChange(false);
   };
@@ -207,13 +211,11 @@ const HandForm: React.FC<HandFormProps> = ({
           <div className="p-1">
             <Form {...form}>
               <form onSubmit={(e) => {
-                // Prevent form submission on enter key
                 if (e.nativeEvent instanceof KeyboardEvent && e.nativeEvent.key === 'Enter') {
                   e.preventDefault();
                   return false;
                 }
                 
-                // Allow normal form submission through the explicit submit button
                 form.handleSubmit(handleSubmit)(e);
               }} className="space-y-6">
                 {/* Game Type Selection */}
@@ -293,6 +295,76 @@ const HandForm: React.FC<HandFormProps> = ({
                   )}
                 />
                 
+                {/* Position Wheel Selector */}
+                <FormField
+                  control={form.control}
+                  name="position"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-2">
+                        <FormLabel>Position</FormLabel>
+                        <AdaptiveTooltip content={tooltipContent.position}>
+                          <CircleHelp className="h-4 w-4 text-gray-500" />
+                        </AdaptiveTooltip>
+                      </div>
+                      <div className="space-y-4">
+                        <FormControl>
+                          <Slider
+                            value={[positionIndex]}
+                            max={positions.length - 1}
+                            step={1}
+                            onValueChange={handlePositionChange}
+                            className="py-4"
+                          />
+                        </FormControl>
+                        
+                        {/* Wheel-style position display */}
+                        <div className="flex justify-center items-center">
+                          <div className="relative w-full max-w-[250px] h-[100px] overflow-hidden">
+                            {/* Current position highlight */}
+                            <div className="absolute top-1/2 left-0 right-0 h-10 -mt-5 bg-gray-100 rounded-md z-0"></div>
+                            
+                            {/* Position wheel items */}
+                            <div className="flex flex-col items-center justify-center h-full">
+                              {positions.map((pos, idx) => {
+                                // Calculate distance from current position
+                                const distance = idx - positionIndex;
+                                const isActive = idx === positionIndex;
+                                
+                                // Calculate styles based on distance
+                                const opacity = isActive ? 1 : Math.max(0.3, 1 - Math.abs(distance) * 0.25);
+                                const scale = isActive ? 1 : Math.max(0.7, 1 - Math.abs(distance) * 0.1);
+                                const yOffset = distance * 30; // 30px offset per position
+                                
+                                return (
+                                  <div
+                                    key={pos}
+                                    className={`absolute text-center transition-all duration-200 ease-out cursor-pointer px-4 py-2 rounded-md
+                                               ${isActive ? 'font-bold text-poker-gold' : 'text-gray-700'}`}
+                                    style={{
+                                      transform: `translateY(${yOffset}px) scale(${scale})`,
+                                      opacity: opacity,
+                                      display: Math.abs(distance) > 3 ? 'none' : 'block',
+                                      zIndex: isActive ? 2 : 1
+                                    }}
+                                    onClick={() => handlePositionChange([idx])}
+                                  >
+                                    {pos}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <FormDescription>
+                        Your position at the table
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
                 {/* Image Upload Section */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -329,14 +401,14 @@ const HandForm: React.FC<HandFormProps> = ({
                   )}
                 </div>
                 
-                {/* Video Link - Moved directly after image upload */}
+                {/* Video Link */}
                 <FormField
                   control={form.control}
                   name="pokercraftLink"
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center gap-2">
-                        <FormLabel>Add Video Link (Optional)</FormLabel>
+                        <FormLabel>Add Video Link</FormLabel>
                         <AdaptiveTooltip content={tooltipContent.videoLink}>
                           <CircleHelp className="h-4 w-4 text-gray-500" />
                         </AdaptiveTooltip>
@@ -347,42 +419,6 @@ const HandForm: React.FC<HandFormProps> = ({
                           {...field} 
                         />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="position"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center gap-2">
-                        <FormLabel>Position (Optional)</FormLabel>
-                        <AdaptiveTooltip content={tooltipContent.position}>
-                          <CircleHelp className="h-4 w-4 text-gray-500" />
-                        </AdaptiveTooltip>
-                      </div>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select your position" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {positions.map(position => (
-                            <SelectItem key={position.value} value={position.value}>
-                              {position.label} ({position.value})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Where you were seated at the table
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -608,9 +644,7 @@ const HandForm: React.FC<HandFormProps> = ({
           <Button 
             type="button"
             onClick={form.handleSubmit(handleSubmit)}
-            disabled={!selectedCards || 
-              (gameType === 'NLH' && selectedCards.length !== 4) || 
-              (gameType === 'PLO' && selectedCards.length < 8)}
+            disabled={!selectedCards || selectedCards.length === 0}
             className="bg-poker-gold hover:bg-poker-darkGold text-white"
           >
             {isEditing ? 'Save Changes' : 'Add Hand'}
