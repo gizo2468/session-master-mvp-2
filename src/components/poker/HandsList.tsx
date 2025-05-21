@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -14,9 +15,10 @@ interface HandsListProps {
   hands: HandData[];
   onEditHand: (hand: HandData) => void;
   onDeleteHand: (handId: string) => void;
+  readOnly?: boolean;  // New prop to support read-only mode
 }
 
-const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }) => {
+const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, readOnly = false }) => {
   // Sort hands by createdAt date
   const sortedHands = [...hands].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -41,7 +43,9 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
                 <TableHead className="w-[12%]">Position</TableHead>
                 <TableHead className="w-1/3">Action</TableHead>
                 <TableHead className="w-1/5">Result</TableHead>
-                <TableHead className="w-[100px] text-right">Actions</TableHead>
+                {!readOnly && (
+                  <TableHead className="w-[100px] text-right">Actions</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -146,28 +150,32 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end space-x-1">
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        onClick={() => onEditHand(hand)}
-                        className="h-8 w-8 p-0 opacity-70 group-hover:opacity-100"
-                        aria-label="Edit hand"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        onClick={() => onDeleteHand(hand.id)}
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-800 opacity-70 group-hover:opacity-100"
-                        aria-label="Delete hand"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  
+                  {/* Only show action buttons if not in read-only mode */}
+                  {!readOnly && (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-1">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => onEditHand(hand)}
+                          className="h-8 w-8 p-0 opacity-70 group-hover:opacity-100"
+                          aria-label="Edit hand"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => onDeleteHand(hand.id)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-800 opacity-70 group-hover:opacity-100"
+                          aria-label="Delete hand"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -176,7 +184,9 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand }
       ) : (
         <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-md">
           <p className="mb-2">No hands recorded yet.</p>
-          <p className="text-sm">Click "Add Hand" to start tracking your hands.</p>
+          {!readOnly && (
+            <p className="text-sm">Click "Add Hand" to start tracking your hands.</p>
+          )}
         </div>
       )}
 
