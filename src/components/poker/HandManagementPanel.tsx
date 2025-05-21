@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -21,8 +22,9 @@ interface HandManagementPanelProps {
   sessionId: string;
   hands?: HandData[];
   tables?: TableData[];
-  tableId?: string;  // New prop to specify a table
-  tableFormat?: 'Cash' | 'Tournament';  // New prop to specify table format
+  tableId?: string;
+  tableFormat?: 'Cash' | 'Tournament';
+  readOnly?: boolean; // New prop to indicate if the panel is read-only
 }
 
 const HandManagementPanel: React.FC<HandManagementPanelProps> = ({ 
@@ -30,7 +32,8 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   hands = [],
   tables = [],
   tableId,
-  tableFormat
+  tableFormat,
+  readOnly = false // Default to false for backward compatibility
 }) => {
   const [isAddHandOpen, setIsAddHandOpen] = useState(false);
   const [isEditHandOpen, setIsEditHandOpen] = useState(false);
@@ -161,61 +164,68 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-extrabold tracking-tight">Hands Played</h3>
-        <Button 
-          onClick={() => setIsAddHandOpen(true)}
-          variant="lightyellow"
-          size="sm"
-        >
-          <Plus className="h-4 w-4 mr-2" /> 
-          Add Hand
-        </Button>
+        {!readOnly && ( // Only show the Add Hand button if not read-only
+          <Button 
+            onClick={() => setIsAddHandOpen(true)}
+            variant="lightyellow"
+            size="sm"
+          >
+            <Plus className="h-4 w-4 mr-2" /> 
+            Add Hand
+          </Button>
+        )}
       </div>
       
       <HandsList 
         hands={displayedHands} 
         onEditHand={onEditHand}
         onDeleteHand={onDeleteHand}
+        readOnly={readOnly} // Pass the readOnly prop to HandsList
       />
       
-      <HandForm
-        open={isAddHandOpen}
-        onOpenChange={setIsAddHandOpen}
-        onSubmit={handleAddHand}
-        tableId={tableId}
-        tableFormat={tableFormat}
-      />
-      
-      {editingHand && (
-        <HandForm
-          open={isEditHandOpen}
-          onOpenChange={setIsEditHandOpen}
-          onSubmit={handleEditHand}
-          initialData={editingHand}
-          tableId={editingHand.tableId}
-          tableFormat={editingHand.tableId ? getTableById(sessionId, editingHand.tableId)?.format : undefined}
-          isEditing
-        />
+      {!readOnly && ( // Only render form components if not in read-only mode
+        <>
+          <HandForm
+            open={isAddHandOpen}
+            onOpenChange={setIsAddHandOpen}
+            onSubmit={handleAddHand}
+            tableId={tableId}
+            tableFormat={tableFormat}
+          />
+          
+          {editingHand && (
+            <HandForm
+              open={isEditHandOpen}
+              onOpenChange={setIsEditHandOpen}
+              onSubmit={handleEditHand}
+              initialData={editingHand}
+              tableId={editingHand.tableId}
+              tableFormat={editingHand.tableId ? getTableById(sessionId, editingHand.tableId)?.format : undefined}
+              isEditing
+            />
+          )}
+          
+          <AlertDialog open={!!handToDelete} onOpenChange={() => setHandToDelete(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the hand record.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={confirmDeleteHand}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
       )}
-      
-      <AlertDialog open={!!handToDelete} onOpenChange={() => setHandToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the hand record.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDeleteHand}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };

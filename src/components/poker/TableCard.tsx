@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -341,17 +340,16 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
           </div>
         )}
         
-        {/* Add the HandManagementPanel specific to this table */}
-        {table.isActive && (
-          <div className="mt-6 pt-4 border-t border-gray-100">
-            <HandManagementPanel 
-              sessionId={sessionId}
-              tableId={table.id}
-              tableFormat={table.format}
-              hands={table.hands || []}
-            />
-          </div>
-        )}
+        {/* Show HandManagementPanel for both active AND completed tables */}
+        <div className="mt-6 pt-4 border-t border-gray-100">
+          <HandManagementPanel 
+            sessionId={sessionId}
+            tableId={table.id}
+            tableFormat={table.format}
+            hands={table.hands || []}
+            readOnly={!table.isActive} // Pass readOnly prop when table is completed
+          />
+        </div>
       </Card>
 
       <Dialog open={showEndTableDialog} onOpenChange={setShowEndTableDialog}>
