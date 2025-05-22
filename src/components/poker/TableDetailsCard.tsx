@@ -133,7 +133,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           {rebuyAmount > 0 && (
             <div className="text-right">
               <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
-              <span className="font-bold text-2xl text-amber-600">
+              <span className="font-bold text-2xl text-red-600">
                 +${rebuyAmount.toFixed(2)}
               </span>
             </div>

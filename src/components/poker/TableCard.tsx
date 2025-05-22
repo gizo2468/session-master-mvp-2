@@ -213,7 +213,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                 <div className="text-right">
                   <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
                   <div>
-                    <span className="font-bold text-2xl text-amber-600">
+                    <span className="font-bold text-2xl text-red-600">
                       +${extra.toFixed(2)}
                     </span>
                     {rebuyCount > 0 && (
