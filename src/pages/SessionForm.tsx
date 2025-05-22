@@ -366,7 +366,7 @@ export default function SessionForm() {
                 name="physicalLocation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">PHYSICAL LOCATION</FormLabel>
+                    <FormLabel className="text-base font-medium">Physical Location</FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 
@@ -383,7 +383,7 @@ export default function SessionForm() {
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">TABLE NAME</FormLabel>
+                  <FormLabel className="text-base font-medium">Table Name</FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="Casino name or online site" 
