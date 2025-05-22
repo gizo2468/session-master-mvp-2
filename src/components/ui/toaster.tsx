@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,
@@ -13,6 +13,21 @@ import {
 export function Toaster() {
   const { toasts } = useToast()
   const shownToastsRef = useRef<Set<string>>(new Set());
+
+  // Enforce auto-dismiss for all toasts, even if their onOpenChange fails
+  useEffect(() => {
+    toasts.forEach(toast => {
+      if (toast.open) {
+        const timer = setTimeout(() => {
+          if (toast.onOpenChange) {
+            toast.onOpenChange(false);
+          }
+        }, toast.duration || 2000);
+        
+        return () => clearTimeout(timer);
+      }
+    });
+  }, [toasts]);
 
   // Filter out duplicate toasts in a short time window
   const filteredToasts = toasts.filter(toast => {

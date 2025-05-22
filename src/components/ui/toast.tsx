@@ -44,6 +44,22 @@ const Toast = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
     VariantProps<typeof toastVariants>
 >(({ className, variant, ...props }, ref) => {
+  const { duration = 2000 } = props;
+  
+  // Add an effect for auto-dismissal that forces the toast to close
+  // after the specified duration
+  React.useEffect(() => {
+    if (!props.open) return;
+    
+    const timer = setTimeout(() => {
+      if (props.onOpenChange) {
+        props.onOpenChange(false);
+      }
+    }, duration);
+    
+    return () => clearTimeout(timer);
+  }, [props.open, duration, props.onOpenChange]);
+  
   return (
     <ToastPrimitives.Root
       ref={ref}
@@ -76,13 +92,17 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-foreground/70 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
+      "absolute right-2 top-2 rounded-md p-2 text-foreground/80 transition-opacity hover:text-foreground focus:outline-none focus:ring-2 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
+      // Enhanced touch target with min-width and min-height
+      "min-w-[44px] min-h-[44px] flex items-center justify-center",
+      // Force visibility on all devices including iOS
+      "!opacity-100 !visible",
       className
     )}
     toast-close=""
     {...props}
   >
-    <X className="h-5 w-5" />
+    <X className="h-6 w-6" aria-hidden="true" />
   </ToastPrimitives.Close>
 ))
 ToastClose.displayName = ToastPrimitives.Close.displayName

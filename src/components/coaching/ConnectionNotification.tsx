@@ -13,7 +13,7 @@ const ConnectionNotification: React.FC = () => {
       toast({
         title: `${pendingRequests.length} Pending Request${pendingRequests.length > 1 ? 's' : ''}`,
         description: "You have students waiting to connect with you",
-        duration: 2000, // Updated to use the standard 2 second duration
+        duration: 2000, // Using the standard 2 second duration
       });
     }
   }, []);
