@@ -208,29 +208,15 @@ export default function ConfirmSession() {
       
       <main className="flex-1 pt-4">
         <div className="container mx-auto max-w-md px-4 pb-8">
-          {/* Modified: Session Timer with End Session button moved out */}
-          <div className="relative">
-            <SessionTimerCard 
-              startTime={activeSession.startTime}
-              gameType={activeSession.gameType}
-              format={activeSession.format}
-              smallBlind={activeSession.smallBlind}
-              bigBlind={activeSession.bigBlind}
-              hideEndButton={true}
-            />
-            
-            {/* Add End Session button below timer card */}
-            <div className="flex justify-end items-center mt-3 mb-4">
-              <Button
-                onClick={() => setShowEndSessionSheet(true)}
-                variant="destructive"
-                size="sm"
-              >
-                <Icon name="XCircle" size={16} className="mr-2" />
-                End Session
-              </Button>
-            </div>
-          </div>
+          {/* Session Timer */}
+          <SessionTimerCard 
+            startTime={activeSession.startTime}
+            gameType={activeSession.gameType}
+            format={activeSession.format}
+            smallBlind={activeSession.smallBlind}
+            bigBlind={activeSession.bigBlind}
+            onEndSession={() => setShowEndSessionSheet(true)}
+          />
           
           {/* Session Details */}
           <SessionDetailsCard session={activeSession} />
@@ -241,10 +227,12 @@ export default function ConfirmSession() {
             onAddRebuy={handleInitiateRebuy}
           />
           
-          {/* Using TableCard component for all tables */}
+          {/* Remove global HandManagementPanel */}
+          
+          {/* Using TableCard component for all tables - pass sessionId to each table */}
           {activeSession.tables && activeSession.tables.length > 0 ? (
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              {/* Removed "Tables" title */}
+              <h3 className="text-xl font-extrabold tracking-tight mb-4">Tables</h3>
               <div className="space-y-3">
                 {activeSession.tables.map((table) => (
                   <TableCard

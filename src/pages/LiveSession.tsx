@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -386,39 +385,14 @@ export default function LiveSession() {
       
       <main className="flex-1 pt-4">
         <div className="container mx-auto max-w-md px-4 pb-8">
-          {/* Modified: Add Session Timer Card with buttons row */}
-          <div className="relative">
-            <SessionTimerCard 
-              startTime={session?.startTime}
-              gameType={session?.gameType}
-              format={session?.format}
-              smallBlind={session?.smallBlind}
-              bigBlind={session?.bigBlind}
-              onEndSession={() => {}}
-              hideEndButton={true}
-            />
-            
-            {/* Add buttons row below timer card */}
-            <div className="flex justify-between items-center gap-3 mt-3 mb-4">
-              <Button 
-                onClick={() => setShowAddTableForm(true)}
-                className="bg-poker-gold hover:bg-poker-darkGold text-white flex-1"
-                size="sm"
-              >
-                <Icon name="plus" className="h-4 w-4 mr-2" /> 
-                Add Table
-              </Button>
-              <Button
-                onClick={() => setShowEndSessionSheet(true)}
-                variant="destructive"
-                size="sm"
-                className="flex-1"
-              >
-                <Icon name="XCircle" size={16} className="mr-2" />
-                End Session
-              </Button>
-            </div>
-          </div>
+          <SessionTimerCard 
+            startTime={session?.startTime}
+            gameType={session?.gameType}
+            format={session?.format}
+            smallBlind={session?.smallBlind}
+            bigBlind={session?.bigBlind}
+            onEndSession={() => setShowEndSessionSheet(true)}
+          />
           
           <SessionDetailsCard 
             session={{
@@ -428,7 +402,17 @@ export default function LiveSession() {
           />
           
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            {/* Removed "Tables" title */}
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-extrabold tracking-tight">Tables</h3>
+              <Button 
+                onClick={() => setShowAddTableForm(true)}
+                className="bg-poker-gold hover:bg-poker-darkGold text-white"
+                size="sm"
+              >
+                <Icon name="plus" className="h-4 w-4 mr-2" /> 
+                Add Table
+              </Button>
+            </div>
             
             {activeTables.length === 0 && inactiveTables.length === 0 ? (
               <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-md">
