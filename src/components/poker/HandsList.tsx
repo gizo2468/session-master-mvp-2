@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
 
   return (
     <div className="w-full overflow-hidden">
-      {sortedHands.length > 0 ? (
+      {sortedHands.length > 0 && (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -177,10 +178,6 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
               ))}
             </TableBody>
           </Table>
-        </div>
-      ) : (
-        <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-md">
-          {/* Placeholder text removed */}
         </div>
       )}
 

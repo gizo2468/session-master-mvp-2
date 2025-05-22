@@ -41,7 +41,7 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
 
   return (
     <div className="w-full overflow-hidden">
-      {sortedHands.length > 0 ? (
+      {sortedHands.length > 0 && (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -142,10 +142,6 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
               ))}
             </TableBody>
           </Table>
-        </div>
-      ) : (
-        <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-md">
-          {/* Placeholder text removed */}
         </div>
       )}
     </div>
