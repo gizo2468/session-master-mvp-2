@@ -288,14 +288,14 @@ export default function ConfirmSession() {
             <SheetHeader>
               <SheetTitle>End Session</SheetTitle>
               <SheetDescription>
-                Enter your cash out amount to complete your session.
+                Enter your payout amount to complete your session.
               </SheetDescription>
             </SheetHeader>
             
             <div className="py-6">
               <div className="mb-4">
                 <label htmlFor="cashout" className="block text-sm font-medium mb-1">
-                  Cash Out Amount
+                  Regular Payout
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -384,7 +384,7 @@ export default function ConfirmSession() {
                   
                   <div>
                     <label htmlFor="bountyCollected" className="block text-sm font-medium mb-1">
-                      Total Bounty Collected
+                      Bounty Payout
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

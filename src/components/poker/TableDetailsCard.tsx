@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableData } from '@/types/poker';
@@ -13,7 +12,21 @@ interface TableDetailsCardProps {
 }
 
 export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => {
-  const profit = (table.cashOut ?? 0) - (table.buyIn ?? 0);
+  // Calculate total payout (sum of regular payout and bounty payout for bounty tournaments)
+  const totalPayout = (() => {
+    const isBountyTournament = table.tournamentTypes?.some(type => 
+      ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
+    );
+    
+    if (isBountyTournament && table.bountyAmount !== undefined) {
+      return (table.cashOut ?? 0) + table.bountyAmount;
+    }
+    
+    return table.cashOut ?? 0;
+  })();
+  
+  // Calculate profit based on total payout
+  const profit = totalPayout - (table.buyIn ?? 0);
   const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
   const formattedStart = format(new Date(table.startTime), 'MMM d, h:mm a');
   const formattedEnd = table.endTime ? format(new Date(table.endTime), 'MMM d, h:mm a') : null;
@@ -165,7 +178,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
             )}
             {table.bountyAmount !== undefined && table.bountyAmount > 0 && (
               <div>
-                <span className="text-gray-500">Total Bounty Collected:</span>
+                <span className="text-gray-500">Bounty Payout:</span>
                 <div className="text-poker-gold font-medium">${table.bountyAmount.toFixed(2)}</div>
               </div>
             )}
@@ -187,12 +200,12 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           </div>
         )}
         
-        {/* Repositioned Total Cash Out to be more prominent */}
+        {/* Repositioned Total Payout to be more prominent */}
         {table.cashOut !== undefined && !isMultiDayContinuing && (
           <div className="flex flex-col items-center justify-center mt-4 mb-2">
-            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL CASH OUT</span>
+            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
             <span className="font-bold text-2xl text-poker-gold">
-              ${(table.cashOut ?? 0).toFixed(2)}
+              ${totalPayout.toFixed(2)}
             </span>
           </div>
         )}

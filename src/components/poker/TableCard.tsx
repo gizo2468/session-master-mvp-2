@@ -60,6 +60,17 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
   const isFreezeout = table.format === 'Tournament' && 
     table.tournamentTypes?.some(type => type === 'Freezeout');
 
+  // Calculate total payout for completed tables
+  const getTotalPayout = () => {
+    if (!table.isActive && table.cashOut !== undefined) {
+      if (isBountyTournament && table.bountyAmount) {
+        return table.cashOut + table.bountyAmount;
+      }
+      return table.cashOut;
+    }
+    return 0;
+  };
+
   const handleEndTable = () => {
     onEndTable(
       table.id, 
@@ -320,7 +331,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                 
                 {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
                   <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                    <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL CASH OUT</span>
+                    <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
                     <span className="font-bold text-2xl text-poker-gold">
                       ${(table.cashOut ?? 0).toFixed(2)}
                     </span>
@@ -331,7 +342,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
             
             {table.format === 'Cash' && table.cashOut !== undefined && (
               <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL CASH OUT</span>
+                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
                 <span className="font-bold text-2xl text-poker-gold">
                   ${(table.cashOut ?? 0).toFixed(2)}
                 </span>
@@ -359,7 +370,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
             <DialogDescription>
               {table.isMultiDay && table.format === 'Tournament' && !endReason
                 ? "Are you ending this multi-day tournament table because you were eliminated or because the day has ended?"
-                : "Enter your cash out amount to complete this table."}
+                : "Enter your payout amount to complete this table."}
             </DialogDescription>
           </DialogHeader>
           
@@ -387,7 +398,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
               <div className="space-y-4">
                 <div>
                   <label htmlFor="tableCashout" className="block text-sm font-medium mb-1">
-                    Cash Out Amount
+                    Regular Payout
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -406,7 +417,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                   </div>
                 </div>
 
-                {/* Tournament-specific fields - always show final position for tournaments, but make it optional now */}
+                {/* Tournament-specific fields - always show final position for tournaments */}
                 {table.format === 'Tournament' && endReason !== 'day-ended' && (
                   <div>
                     <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
@@ -445,7 +456,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                     
                     <div>
                       <label htmlFor="bountyAmount" className="block text-sm font-medium mb-1">
-                        Total Bounty Collected (Optional)
+                        Bounty Payout (Optional)
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -471,14 +482,19 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                     <div className="flex justify-between mb-1">
                       <span className="text-sm">Profit/Loss:</span>
                       <span className={`text-sm font-bold ${
-                        cashOutAmount && parseFloat(cashOutAmount) >= table.buyIn 
+                        cashOutAmount && 
+                        (isBountyTournament && bountyAmount 
+                          ? parseFloat(cashOutAmount) + parseFloat(bountyAmount) >= table.buyIn 
+                          : parseFloat(cashOutAmount) >= table.buyIn)
                           ? 'text-green-600' 
                           : cashOutAmount 
                             ? 'text-red-600' 
                             : 'text-gray-500'
                       }`}>
                         {cashOutAmount 
-                          ? `$${(parseFloat(cashOutAmount) - table.buyIn).toFixed(2)}` 
+                          ? `$${((isBountyTournament && bountyAmount 
+                              ? parseFloat(cashOutAmount) + parseFloat(bountyAmount) 
+                              : parseFloat(cashOutAmount)) - table.buyIn).toFixed(2)}` 
                           : '$0.00'}
                       </span>
                     </div>
@@ -486,13 +502,17 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                       {cashOutAmount && (
                         <div 
                           className={`h-full ${
-                            parseFloat(cashOutAmount) >= table.buyIn 
+                            (isBountyTournament && bountyAmount 
+                              ? parseFloat(cashOutAmount) + parseFloat(bountyAmount) >= table.buyIn 
+                              : parseFloat(cashOutAmount) >= table.buyIn)
                               ? 'bg-green-500' 
                               : 'bg-red-500'
                           }`}
                           style={{ 
                             width: cashOutAmount 
-                              ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - table.buyIn) / table.buyIn * 100), 100)}%` 
+                              ? `${Math.min(Math.abs(((isBountyTournament && bountyAmount 
+                                  ? parseFloat(cashOutAmount) + parseFloat(bountyAmount) 
+                                  : parseFloat(cashOutAmount)) - table.buyIn) / table.buyIn * 100), 100)}%` 
                               : '0%' 
                           }}
                         />
