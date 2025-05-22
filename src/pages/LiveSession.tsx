@@ -392,6 +392,7 @@ export default function LiveSession() {
             smallBlind={session?.smallBlind}
             bigBlind={session?.bigBlind}
             onEndSession={() => setShowEndSessionSheet(true)}
+            onAddTable={() => setShowAddTableForm(true)}
           />
           
           <SessionDetailsCard 
@@ -404,14 +405,6 @@ export default function LiveSession() {
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-extrabold tracking-tight">Tables</h3>
-              <Button 
-                onClick={() => setShowAddTableForm(true)}
-                className="bg-poker-gold hover:bg-poker-darkGold text-white"
-                size="sm"
-              >
-                <Icon name="plus" className="h-4 w-4 mr-2" /> 
-                Add Table
-              </Button>
             </div>
             
             {activeTables.length === 0 && inactiveTables.length === 0 ? (

@@ -12,6 +12,7 @@ interface SessionTimerCardProps {
   smallBlind: number;
   bigBlind: number;
   onEndSession: () => void;
+  onAddTable?: () => void;
 }
 
 const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
@@ -21,6 +22,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   smallBlind,
   bigBlind,
   onEndSession,
+  onAddTable,
 }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const { updateSessionDuration, activeSession } = useSessionContext();
@@ -81,6 +83,17 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     }
   };
   
+  const handleAddTable = (e: React.MouseEvent) => {
+    // Prevent event bubbling
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Call the provided onAddTable handler
+    if (typeof onAddTable === 'function') {
+      onAddTable();
+    }
+  };
+  
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
       <div className="mb-2 text-sm text-gray-500">Session Time</div>
@@ -105,7 +118,15 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         </div>
       </div>
       
-      <div className="flex justify-center">
+      <div className="flex justify-center gap-2">
+        {onAddTable && (
+          <Button
+            onClick={handleAddTable}
+            className="bg-poker-gold hover:bg-poker-darkGold text-white flex items-center gap-2"
+          >
+            <Icon name="Plus" size={16} /> Add Table
+          </Button>
+        )}
         <Button
           onClick={handleEndSession}
           variant="destructive"
