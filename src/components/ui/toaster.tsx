@@ -27,10 +27,10 @@ export function Toaster() {
     // Add this toast to our tracking set
     shownToastsRef.current.add(toast.id + toast.title);
     
-    // Clean up the tracking set after a short delay (2 seconds)
+    // Clean up the tracking set after the toast duration + a small buffer
     setTimeout(() => {
       shownToastsRef.current.delete(toast.id + toast.title);
-    }, 2000);
+    }, (toast.duration || 2000) + 500);
     
     return true;
   });
