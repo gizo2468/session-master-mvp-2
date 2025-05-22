@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { TableData } from '@/types/poker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 
 interface AddTableFormProps {
@@ -237,15 +237,20 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
                 />
               </div>
               
-              <div className="flex items-center space-x-2 py-2">
-                <Switch
+              <div className="flex items-center space-x-3 space-y-0 rounded-md border p-4">
+                <Checkbox
                   id="multiDay"
                   checked={isMultiDay}
                   onCheckedChange={setIsMultiDay}
                 />
-                <Label htmlFor="multiDay" className="cursor-pointer">
-                  Is this a Multi-Day Tournament?
-                </Label>
+                <div className="space-y-1 leading-none">
+                  <Label htmlFor="multiDay" className="cursor-pointer">
+                    Multi-Day Tournament
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Check this for tournaments that span multiple days
+                  </p>
+                </div>
               </div>
             </>
           )}
