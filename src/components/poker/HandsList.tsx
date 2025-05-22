@@ -180,13 +180,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
         </div>
       ) : (
         <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-md">
-          <p className="mb-2">No hands recorded yet.</p>
-          <p className="text-sm">
-            {readOnly ? 
-              "No hands were recorded for this table." : 
-              "Click \"Add Hand\" to start tracking your hands."
-            }
-          </p>
+          {/* Placeholder text removed */}
         </div>
       )}
 

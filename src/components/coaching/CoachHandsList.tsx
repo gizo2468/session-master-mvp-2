@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -144,7 +145,7 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
         </div>
       ) : (
         <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-md">
-          <p className="mb-2">No hands recorded yet.</p>
+          {/* Placeholder text removed */}
         </div>
       )}
     </div>
