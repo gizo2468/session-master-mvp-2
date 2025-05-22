@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -323,7 +324,7 @@ export default function SessionForm() {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
-                      <Switch
+                      <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
                       />
@@ -331,7 +332,7 @@ export default function SessionForm() {
                     <div className="space-y-1 leading-none">
                       <FormLabel>Multi-Day Tournament</FormLabel>
                       <p className="text-sm text-muted-foreground">
-                        Toggle this for tournaments that span multiple days
+                        Check this for tournaments that span multiple days
                       </p>
                     </div>
                   </FormItem>
