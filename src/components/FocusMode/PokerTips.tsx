@@ -5,36 +5,36 @@ import { PokerChip } from '@/components/Icons';
 
 const tips = [
   {
-    title: "Position is Power",
-    description: "Acting last gives you more information. Use position to play more hands and control pot sizes."
+    title: "Reset Between Hands",
+    description: "Bad beat? Cooler? Let it go before your next decision. Good players recover instantly to protect their edge."
   },
   {
-    title: "Manage Your Bankroll",
-    description: "Never play with more than 5% of your total bankroll in a single cash game session."
+    title: "No Hero Mode",
+    description: "Don't force genius plays to \"prove\" something. Stick to solid lines unless you have clear reads."
   },
   {
-    title: "Pay Attention to Patterns",
-    description: "Observe how your opponents play and adjust accordingly. Look for betting patterns and timing tells."
+    title: "Anchor to Process Not Results",
+    description: "When variance hits, fall back on logic. If the line you took was +EV the result doesn't change that."
   },
   {
-    title: "Value Bet Thin",
-    description: "Against calling stations, extract maximum value with your strong hands by betting thinly."
+    title: "Pattern Recognition Beats Memory",
+    description: "Instead of trying to recall every detail train yourself to spot behavior patterns — it's faster under pressure."
   },
   {
-    title: "3-Bet with Purpose",
-    description: "Have a balanced 3-betting range that includes premium hands and strategic bluffs."
+    title: "Know When You're Not Thinking Clearly",
+    description: "If you start hoping instead of analyzing it's time for a break even mid session."
   },
   {
-    title: "Fold More Often",
-    description: "One of the biggest leaks for novice players is playing too many hands. Be selective pre-flop."
+    title: "[ONLINE TIP] Prioritize Table Attention",
+    description: "When multi tabling some spots are autopilot but big pots and tough decisions need real focus. Spot them fast."
   },
   {
-    title: "Protect Your Mental Game",
-    description: "Take breaks, avoid tilt, and don't chase losses. Emotional control is crucial to long-term success."
+    title: "[ONLINE TIP] Build a Layout That Supports Focus",
+    description: "Use stacking tiling or priority tables based on how you think best not what looks fancy."
   },
   {
-    title: "Table Selection Matters",
-    description: "Always look for tables with weaker players. It's often more profitable than improving your strategy."
+    title: "[ONLINE TIP] Take Notes Mid Hand If Needed",
+    description: "When a weird line appears note it right away. Online play gives you tools to track patterns across sessions."
   }
 ];
 
