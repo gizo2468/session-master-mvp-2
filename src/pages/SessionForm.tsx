@@ -34,7 +34,7 @@ const BLIND_PRESETS = {
 const formSchema = z.object({
   gameType: z.enum(['NLH', 'PLO']),
   format: z.enum(['Cash', 'Tournament']),
-  location: z.string().min(1, "Location is required"),
+  location: z.string().min(1, "Table name is required"),
   physicalLocation: z.string().optional(),
   buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "Buy-in amount must be a valid number",
@@ -360,30 +360,13 @@ export default function SessionForm() {
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-medium">Location</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Casino name or online site" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
             {isOnline && (
               <FormField
                 control={form.control}
                 name="physicalLocation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Played from (location):</FormLabel>
+                    <FormLabel className="text-base font-medium">PHYSICAL LOCATION</FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 
@@ -394,6 +377,23 @@ export default function SessionForm() {
                 )}
               />
             )}
+            
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">TABLE NAME</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Casino name or online site" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <FormField
               control={form.control}
