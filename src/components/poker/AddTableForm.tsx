@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
+import { toast } from 'sonner';
 
 interface AddTableFormProps {
   open: boolean;
@@ -44,6 +45,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
   const [startingBB, setStartingBB] = useState('');
   const [tournamentType, setTournamentType] = useState<string>('');
   const [isMultiDay, setIsMultiDay] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (fixedFormat) {
@@ -51,10 +53,33 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
     }
   }, [fixedFormat]);
   
+  const validateForm = (): boolean => {
+    // Clear previous validation error
+    setValidationError(null);
+    
+    if (!location) {
+      setValidationError('Please enter a location');
+      return false;
+    }
+    
+    if (!buyIn) {
+      setValidationError('Please enter a buy-in amount');
+      return false;
+    }
+    
+    if (format === 'Tournament' && !tournamentType) {
+      setValidationError('Please select a Tournament Type before continuing');
+      return false;
+    }
+    
+    return true;
+  };
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!location || !buyIn || (format === 'Cash' && (smallBlind === undefined || bigBlind === undefined))) {
+    if (!validateForm()) {
+      toast.error(validationError || 'Please correct the errors before continuing');
       return;
     }
     
@@ -94,6 +119,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
     setStartingBB('');
     setTournamentType('');
     setIsMultiDay(false);
+    setValidationError(null);
   };
   
   const handleSmallBlindChange = (value: number[]) => {
@@ -162,7 +188,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
 
           {format === 'Tournament' && (
             <div className="space-y-2">
-              <Label>Tournament Type</Label>
+              <Label className={`${format === 'Tournament' ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ''}`}>Tournament Type</Label>
               <RadioGroup 
                 value={tournamentType}
                 onValueChange={setTournamentType}
@@ -174,6 +200,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
                       value={type}
                       id={`type-${type}`}
                       className="sr-only peer"
+                      required={format === 'Tournament'}
                     />
                     <Label
                       htmlFor={`type-${type}`}
@@ -188,6 +215,9 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
                   </div>
                 ))}
               </RadioGroup>
+              {format === 'Tournament' && validationError && validationError.includes('Tournament Type') && (
+                <p className="text-sm font-medium text-destructive">{validationError}</p>
+              )}
             </div>
           )}
 
@@ -241,7 +271,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
                 <Checkbox
                   id="multiDay"
                   checked={isMultiDay}
-                  onCheckedChange={setIsMultiDay}
+                  onCheckedChange={(checked) => setIsMultiDay(checked === true)}
                 />
                 <div className="space-y-1 leading-none">
                   <Label htmlFor="multiDay" className="cursor-pointer">
