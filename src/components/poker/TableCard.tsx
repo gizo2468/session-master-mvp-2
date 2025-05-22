@@ -71,6 +71,8 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
     return 0;
   };
 
+  const totalPayout = getTotalPayout();
+
   const handleEndTable = () => {
     onEndTable(
       table.id, 
@@ -297,7 +299,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                   ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
                 ) && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Total Bounty Collected:</span>
+                    <span className="text-gray-600">Bounty Payout:</span>
                     <span className="font-medium text-poker-gold">${table.bountyAmount.toFixed(2)}</span>
                   </div>
                 )}
@@ -331,10 +333,21 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                 
                 {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
                   <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                    <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
+                    {/* Regular Payout Line (new) */}
+                    <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REGULAR PAYOUT</span>
                     <span className="font-bold text-2xl text-poker-gold">
                       ${(table.cashOut ?? 0).toFixed(2)}
                     </span>
+                    
+                    {/* Only show Total Payout if there's a bounty amount */}
+                    {isBountyTournament && table.bountyAmount && table.bountyAmount > 0 && (
+                      <>
+                        <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider mt-2">TOTAL PAYOUT</span>
+                        <span className="font-bold text-2xl text-poker-gold">
+                          ${totalPayout.toFixed(2)}
+                        </span>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -342,7 +355,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
             
             {table.format === 'Cash' && table.cashOut !== undefined && (
               <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
+                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REGULAR PAYOUT</span>
                 <span className="font-bold text-2xl text-poker-gold">
                   ${(table.cashOut ?? 0).toFixed(2)}
                 </span>

@@ -201,13 +201,24 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           </div>
         )}
         
-        {/* Repositioned Total Payout to be more prominent - UPDATED LABEL FROM "TOTAL CASH OUT" TO "TOTAL PAYOUT" */}
+        {/* Repositioned Total Payout to be more prominent - DISPLAY REGULAR PAYOUT FIRST */}
         {table.cashOut !== undefined && !isMultiDayContinuing && (
           <div className="flex flex-col items-center justify-center mt-4 mb-2">
-            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
+            {/* Regular Payout Line (new) */}
+            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REGULAR PAYOUT</span>
             <span className="font-bold text-2xl text-poker-gold">
-              ${totalPayout.toFixed(2)}
+              ${(table.cashOut ?? 0).toFixed(2)}
             </span>
+            
+            {/* Only show Total Payout as separate line if there's a bounty amount */}
+            {isBountyTournament && table.bountyAmount && table.bountyAmount > 0 && (
+              <>
+                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider mt-2">TOTAL PAYOUT</span>
+                <span className="font-bold text-2xl text-poker-gold">
+                  ${totalPayout.toFixed(2)}
+                </span>
+              </>
+            )}
           </div>
         )}
         
