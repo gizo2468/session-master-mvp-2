@@ -201,7 +201,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           </div>
         )}
         
-        {/* Repositioned Total Payout to be more prominent */}
+        {/* Repositioned Total Payout to be more prominent - UPDATED LABEL FROM "TOTAL CASH OUT" TO "TOTAL PAYOUT" */}
         {table.cashOut !== undefined && !isMultiDayContinuing && (
           <div className="flex flex-col items-center justify-center mt-4 mb-2">
             <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>

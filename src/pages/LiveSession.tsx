@@ -608,13 +608,23 @@ export default function LiveSession() {
                           {/* Repositioned Total Cash Out to be more prominent */}
                           <div className="flex flex-col items-center justify-center mt-4 mb-2">
                             <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">
-                              {table.dayEndedWithoutElimination ? 'STATUS' : 'TOTAL CASH OUT'}
+                              {table.dayEndedWithoutElimination ? 'STATUS' : 'TOTAL PAYOUT'}
                             </span>
                             {table.dayEndedWithoutElimination ? (
                               <span className="font-bold text-xl text-poker-feltGreen">Continuing</span>
                             ) : (
                               <span className="font-bold text-xl text-poker-gold">
-                                ${(table.cashOut ?? 0).toFixed(2)}
+                                ${(() => {
+                                  const isBountyTournament = table.tournamentTypes?.some(type => 
+                                    ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
+                                  );
+                                  
+                                  if (isBountyTournament && table.bountyAmount !== undefined) {
+                                    return ((table.cashOut ?? 0) + table.bountyAmount).toFixed(2);
+                                  }
+                                  
+                                  return (table.cashOut ?? 0).toFixed(2);
+                                })()}
                               </span>
                             )}
                           </div>
