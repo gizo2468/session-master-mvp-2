@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession, TableData } from '@/types/poker';
@@ -29,6 +30,9 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
     totalRebuyAmount = session.buyIn - session.initialBuyIn;
     rebuyCount = session.rebuys || 0;
   }
+  
+  // Calculate total buy-in (initial + rebuys)
+  const totalBuyIn = totalInitialBuyin + totalRebuyAmount;
   
   // Calculate total profit/loss from all tables
   let totalProfit = 0;
@@ -101,6 +105,15 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
                 </span>
               </Badge>
             )}
+            
+            {/* New Total Buy-ins Badge */}
+            <Badge
+              variant="outline"
+              className="flex items-center gap-1 border-amber-400 bg-amber-50 text-amber-800 px-4 py-1.5 font-normal text-sm w-full mt-2 justify-center"
+            >
+              <DollarSign className="w-5 h-5 text-amber-600 flex-shrink-0" />
+              <span className="font-bold text-amber-700 text-base">Total Buy-Ins: ${totalBuyIn.toFixed(2)}</span>
+            </Badge>
             
             {/* Multi-day tournament badge */}
             {hasMultiDayTables && (
