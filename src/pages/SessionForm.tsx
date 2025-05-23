@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -124,22 +123,29 @@ export default function SessionForm() {
   const handleSmallBlindChange = (value: number[]) => {
     const index = value[0];
     setSmallBlindIndex(index);
-    form.setValue('smallBlind', BLIND_PRESETS.smallBlind[index]);
+    const newSmallBlind = BLIND_PRESETS.smallBlind[index];
+    const newBigBlind = newSmallBlind * 2;
     
-    // Ensure big blind is always greater than or equal to small blind
-    if (BLIND_PRESETS.bigBlind[bigBlindIndex] < BLIND_PRESETS.smallBlind[index]) {
-      const newBigBlindIndex = BLIND_PRESETS.bigBlind.findIndex(bb => bb >= BLIND_PRESETS.smallBlind[index]);
-      if (newBigBlindIndex !== -1) {
-        setBigBlindIndex(newBigBlindIndex);
-        form.setValue('bigBlind', BLIND_PRESETS.bigBlind[newBigBlindIndex]);
-      }
-    }
+    form.setValue('smallBlind', newSmallBlind);
+    form.setValue('bigBlind', newBigBlind);
+    
+    // Find the closest big blind index for display purposes
+    const closestBigBlindIndex = BLIND_PRESETS.bigBlind.findIndex(bb => bb >= newBigBlind) || 0;
+    setBigBlindIndex(closestBigBlindIndex);
   };
 
   const handleBigBlindChange = (value: number[]) => {
     const index = value[0];
     setBigBlindIndex(index);
-    form.setValue('bigBlind', BLIND_PRESETS.bigBlind[index]);
+    const newBigBlind = BLIND_PRESETS.bigBlind[index];
+    const newSmallBlind = newBigBlind / 2;
+    
+    form.setValue('bigBlind', newBigBlind);
+    form.setValue('smallBlind', newSmallBlind);
+    
+    // Find the closest small blind index for display purposes
+    const closestSmallBlindIndex = BLIND_PRESETS.smallBlind.findIndex(sb => sb >= newSmallBlind) || 0;
+    setSmallBlindIndex(closestSmallBlindIndex);
   };
   
   return (
@@ -432,7 +438,7 @@ export default function SessionForm() {
                     <FormItem>
                       <div className="flex justify-between">
                         <FormLabel>Small Blind</FormLabel>
-                        <span className="text-sm font-medium">${BLIND_PRESETS.smallBlind[smallBlindIndex]}</span>
+                        <span className="text-sm font-medium">${form.watch('smallBlind')}</span>
                       </div>
                       <FormControl>
                         <Slider
@@ -449,7 +455,7 @@ export default function SessionForm() {
                     <FormItem>
                       <div className="flex justify-between">
                         <FormLabel>Big Blind</FormLabel>
-                        <span className="text-sm font-medium">${BLIND_PRESETS.bigBlind[bigBlindIndex]}</span>
+                        <span className="text-sm font-medium">${form.watch('bigBlind')}</span>
                       </div>
                       <FormControl>
                         <Slider
