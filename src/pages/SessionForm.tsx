@@ -129,9 +129,10 @@ export default function SessionForm() {
     form.setValue('smallBlind', newSmallBlind);
     form.setValue('bigBlind', newBigBlind);
     
-    // Find the closest big blind index for display purposes
-    const closestBigBlindIndex = BLIND_PRESETS.bigBlind.findIndex(bb => bb >= newBigBlind) || 0;
-    setBigBlindIndex(closestBigBlindIndex);
+    // Find and set the closest big blind index for the slider position
+    const closestBigBlindIndex = BLIND_PRESETS.bigBlind.findIndex(bb => bb >= newBigBlind);
+    const finalBigBlindIndex = closestBigBlindIndex !== -1 ? closestBigBlindIndex : BLIND_PRESETS.bigBlind.length - 1;
+    setBigBlindIndex(finalBigBlindIndex);
   };
 
   const handleBigBlindChange = (value: number[]) => {
@@ -143,9 +144,10 @@ export default function SessionForm() {
     form.setValue('bigBlind', newBigBlind);
     form.setValue('smallBlind', newSmallBlind);
     
-    // Find the closest small blind index for display purposes
-    const closestSmallBlindIndex = BLIND_PRESETS.smallBlind.findIndex(sb => sb >= newSmallBlind) || 0;
-    setSmallBlindIndex(closestSmallBlindIndex);
+    // Find and set the closest small blind index for the slider position
+    const closestSmallBlindIndex = BLIND_PRESETS.smallBlind.findIndex(sb => sb >= newSmallBlind);
+    const finalSmallBlindIndex = closestSmallBlindIndex !== -1 ? closestSmallBlindIndex : BLIND_PRESETS.smallBlind.length - 1;
+    setSmallBlindIndex(finalSmallBlindIndex);
   };
   
   return (
@@ -442,7 +444,7 @@ export default function SessionForm() {
                       </div>
                       <FormControl>
                         <Slider
-                          defaultValue={[smallBlindIndex]}
+                          value={[smallBlindIndex]}
                           max={BLIND_PRESETS.smallBlind.length - 1}
                           step={1}
                           onValueChange={handleSmallBlindChange}
@@ -459,7 +461,7 @@ export default function SessionForm() {
                       </div>
                       <FormControl>
                         <Slider
-                          defaultValue={[bigBlindIndex]}
+                          value={[bigBlindIndex]}
                           max={BLIND_PRESETS.bigBlind.length - 1}
                           step={1}
                           onValueChange={handleBigBlindChange}
