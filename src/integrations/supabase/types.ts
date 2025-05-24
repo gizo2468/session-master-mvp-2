@@ -48,6 +48,7 @@ export type Database = {
           full_name: string
           has_accepted_terms: boolean | null
           has_completed_tutorial: boolean | null
+          has_seen_tutorial: boolean | null
           id: string
           is_active: boolean | null
           language: string
@@ -66,6 +67,7 @@ export type Database = {
           full_name: string
           has_accepted_terms?: boolean | null
           has_completed_tutorial?: boolean | null
+          has_seen_tutorial?: boolean | null
           id: string
           is_active?: boolean | null
           language?: string
@@ -84,6 +86,7 @@ export type Database = {
           full_name?: string
           has_accepted_terms?: boolean | null
           has_completed_tutorial?: boolean | null
+          has_seen_tutorial?: boolean | null
           id?: string
           is_active?: boolean | null
           language?: string
