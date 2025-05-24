@@ -21,8 +21,11 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
   const [showEditForm, setShowEditForm] = useState(false);
   const [showMultiDayDialog, setShowMultiDayDialog] = useState(false);
 
-  // Updated profit/loss calculation to include bounty amount
-  const profitLoss = ((table.cashOut || 0) + (table.bountyAmount || 0)) - table.buyIn;
+  const isMultiDayTable = table.isMultiDay && table.format === 'Tournament';
+  const isContinuing = table.dayEndedWithoutElimination;
+
+  // Updated profit/loss calculation to include bounty amount - only for non-continuing tables
+  const profitLoss = isContinuing ? 0 : ((table.cashOut || 0) + (table.bountyAmount || 0)) - table.buyIn;
   
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -61,9 +64,6 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
     onUpdate(updatedTable);
   };
 
-  const isMultiDayTable = table.isMultiDay && table.format === 'Tournament';
-  const isContinuing = table.dayEndedWithoutElimination;
-
   return (
     <>
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
@@ -101,9 +101,16 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0">
                   <div className="text-left sm:text-right">
                     <p className="text-sm text-gray-600 whitespace-nowrap">Buy-in: ${table.buyIn.toFixed(2)}</p>
-                    <p className={`font-semibold whitespace-nowrap ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)}
-                    </p>
+                    {!isContinuing && (
+                      <p className={`font-semibold whitespace-nowrap ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)}
+                      </p>
+                    )}
+                    {isContinuing && (
+                      <p className="text-sm text-blue-600 font-medium whitespace-nowrap">
+                        In Progress
+                      </p>
+                    )}
                   </div>
                   
                   <div className="flex items-center gap-1 shrink-0">
@@ -165,11 +172,15 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                     <span className="text-sm text-gray-600 font-medium">Rebuys</span>
                     <span className="text-sm font-semibold">${(table.rebuys || 0).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-sm text-gray-600 font-medium">Cash Out</span>
-                    <span className="text-sm font-semibold">${(table.cashOut || 0).toFixed(2)}</span>
-                  </div>
-                  {table.bountyAmount && table.bountyAmount > 0 && (
+                  {/* Only show cash out for non-continuing tournaments */}
+                  {!isContinuing && (
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-600 font-medium">Cash Out</span>
+                      <span className="text-sm font-semibold">${(table.cashOut || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {/* Only show bounties for non-continuing tournaments */}
+                  {!isContinuing && table.bountyAmount && table.bountyAmount > 0 && (
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="text-sm text-gray-600 font-medium">Bounties</span>
                       <span className="text-sm font-semibold">${table.bountyAmount.toFixed(2)}</span>
