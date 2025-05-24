@@ -30,6 +30,7 @@ export interface TableData {
   startTime: Date;
   endTime?: Date;
   isActive: boolean;
+  isOnline?: boolean; // Added this property
   rebuys?: number;
   addOns?: number;
   tournamentBuyIn?: number;
