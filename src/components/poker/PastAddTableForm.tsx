@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { DateTimePicker } from '@/components/ui/datetime-picker';
 import { TableData } from '@/types/poker';
 
 const tableSchema = z.object({
@@ -35,7 +37,7 @@ const tableSchema = z.object({
   isMultiDay: z.boolean().default(false),
   multiDayStatus: z.enum(['eliminated', 'continuing']).optional(),
   chipsCarryover: z.number().optional(),
-  nextDayStart: z.string().optional(),
+  nextDayStart: z.date().optional(),
 });
 
 type TableFormData = z.infer<typeof tableSchema>;
@@ -106,7 +108,7 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
     
     // Process multi-day tournament data inline
     const multiDayInfo = data.isMultiDay && data.format === 'Tournament' ? {
-      nextDayStart: data.nextDayStart ? new Date(data.nextDayStart) : undefined,
+      nextDayStart: data.nextDayStart,
       chipsCarryover: data.chipsCarryover,
       dayEndedWithoutElimination: data.multiDayStatus === 'continuing'
     } : undefined;
@@ -420,7 +422,7 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
                     {watchedMultiDayStatus === 'continuing' && (
                       <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
                         <h5 className="text-sm font-medium text-blue-900">Continuation Details</h5>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                           <FormField
                             control={form.control}
                             name="chipsCarryover"
@@ -443,11 +445,13 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
                             name="nextDayStart"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Next Day Start</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    type="datetime-local"
-                                    {...field}
+                                  <DateTimePicker
+                                    date={field.value}
+                                    onDateChange={field.onChange}
+                                    label="Next Day Start"
+                                    placeholder="Select next day start time"
+                                    badgeVariant="secondary"
                                   />
                                 </FormControl>
                                 <FormMessage />
