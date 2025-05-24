@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,7 +36,7 @@ interface PastAddTableFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
-  sessionLocation: string; // Add sessionLocation prop
+  sessionLocation: string;
 }
 
 const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
@@ -67,9 +68,24 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
 
   const handleSubmit = (data: TableFormData) => {
     const tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'> = {
-      ...data,
-      location: sessionLocation, // Use the session location
+      name: data.name,
+      gameType: data.gameType,
+      format: data.format,
+      location: sessionLocation,
+      buyIn: data.buyIn,
+      initialBuyIn: data.initialBuyIn,
+      cashOut: data.cashOut,
+      smallBlind: data.smallBlind,
+      bigBlind: data.bigBlind,
       endTime: new Date(),
+      rebuys: data.rebuys,
+      addOns: data.addOns,
+      notes: data.notes,
+      finalPosition: data.finalPosition,
+      startingBB: data.startingBB,
+      bountyCount: data.bountyCount,
+      bountyAmount: data.bountyAmount,
+      tournamentTypes: data.tournamentTypes,
       hands: []
     };
     
