@@ -93,15 +93,12 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
   const handleSubmit = (data: TableFormData) => {
     console.log('=== FORM SUBMISSION START ===');
     console.log('Form submitted with data:', data);
-    console.log('Total buy-in calculated:', totalBuyIn);
-    console.log('Rebuys value:', rebuysValue);
-    console.log('Format:', data.format);
     console.log('Is Multi Day:', data.isMultiDay);
-    console.log('Validation errors:', form.formState.errors);
+    console.log('Format:', data.format);
     
     // Check if this is a multi-day tournament
     if (data.format === 'Tournament' && data.isMultiDay) {
-      console.log('Multi-day tournament detected, showing end dialog');
+      console.log('✅ Multi-day tournament detected! Showing dialog...');
       setPendingTableData(data);
       setShowMultiDayDialog(true);
       return;
@@ -191,23 +188,18 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
     }
   };
 
-  const handleFormSubmit = () => {
-    console.log('=== HANDLE FORM SUBMIT CALLED ===');
-    console.log('Form state valid:', form.formState.isValid);
-    console.log('Form errors:', form.formState.errors);
-    console.log('Form values:', form.getValues());
+  const onFormSubmit = (data: TableFormData) => {
+    console.log('=== ON FORM SUBMIT CALLED ===');
+    console.log('Raw form data:', data);
+    console.log('Is multi-day:', data.isMultiDay);
+    console.log('Format:', data.format);
     
-    const isValid = form.trigger();
-    console.log('Validation result:', isValid);
-    
-    if (Object.keys(form.formState.errors).length > 0) {
-      console.log('Form has validation errors, cannot submit');
-      return;
-    }
-    
-    form.handleSubmit(handleSubmit, (errors) => {
-      console.log('Form validation failed with errors:', errors);
-    })();
+    handleSubmit(data);
+  };
+
+  const onFormError = (errors: any) => {
+    console.log('=== FORM VALIDATION ERRORS ===');
+    console.log('Errors:', errors);
   };
 
   // Create a mock table for the multi-day dialog
@@ -234,7 +226,7 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
           </DialogHeader>
 
           <Form {...form}>
-            <div className="space-y-6">
+            <form onSubmit={form.handleSubmit(onFormSubmit, onFormError)} className="space-y-6">
               {/* Game & Format Section */}
               <div className="space-y-4">
                 <h4 className="text-sm font-medium text-gray-900">Game & Format</h4>
@@ -318,8 +310,11 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
                         </FormControl>
                         <div className="space-y-1 leading-none">
                           <FormLabel>Multi-Day Tournament</FormLabel>
-                          <p className="text-xs text-gray-500">
-                            Current value: {watchedIsMultiDay ? 'true' : 'false'}
+                          <p className="text-xs text-green-600 font-medium">
+                            {watchedIsMultiDay 
+                              ? '✅ Will show elimination/continuation dialog after submission'
+                              : 'Check this for multi-day tournaments'
+                            }
                           </p>
                         </div>
                       </FormItem>
@@ -572,11 +567,14 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
                   Cancel
                 </Button>
-                <Button type="button" variant="poker" className="flex-1" onClick={handleFormSubmit}>
-                  Add Table
+                <Button type="submit" variant="poker" className="flex-1">
+                  {watchedFormat === 'Tournament' && watchedIsMultiDay 
+                    ? 'Add Multi-Day Table' 
+                    : 'Add Table'
+                  }
                 </Button>
               </div>
-            </div>
+            </form>
           </Form>
         </DialogContent>
       </Dialog>
