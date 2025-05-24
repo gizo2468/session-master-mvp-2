@@ -64,6 +64,15 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
     onUpdate(updatedTable);
   };
 
+  // Handle hand updates for this specific table
+  const handleTableUpdate = (updatedHands: any[]) => {
+    const updatedTable = {
+      ...table,
+      hands: updatedHands
+    };
+    onUpdate(updatedTable);
+  };
+
   return (
     <>
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
@@ -219,12 +228,9 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
 
                 {/* Hands Management Panel */}
                 <div className="border-t pt-4">
-                  <HandManagementPanel
-                    sessionId="temp-session"
-                    hands={table.hands || []}
-                    tableId={table.id}
-                    tableFormat={table.format}
-                    readOnly={false}
+                  <PastTableHandsPanel
+                    table={table}
+                    onTableUpdate={handleTableUpdate}
                   />
                 </div>
               </div>
