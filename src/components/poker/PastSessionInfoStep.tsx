@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -55,7 +54,16 @@ const PastSessionInfoStep: React.FC<PastSessionInfoStepProps> = ({
   });
 
   const handleSubmit = (data: SessionInfoFormData) => {
-    onSubmit(data);
+    // Ensure all required fields are present and properly typed
+    const sessionInfo: SessionInfo = {
+      startTime: data.startTime,
+      endTime: data.endTime,
+      isOnline: data.isOnline,
+      isMultiDay: data.isMultiDay,
+      location: data.location,
+      notes: data.notes
+    };
+    onSubmit(sessionInfo);
   };
 
   return (

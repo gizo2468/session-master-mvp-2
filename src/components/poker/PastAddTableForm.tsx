@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,12 +35,14 @@ interface PastAddTableFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
+  sessionLocation: string; // Add sessionLocation prop
 }
 
 const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
   open,
   onOpenChange,
-  onSubmit
+  onSubmit,
+  sessionLocation
 }) => {
   const form = useForm<TableFormData>({
     resolver: zodResolver(tableSchema),
@@ -67,6 +68,7 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
   const handleSubmit = (data: TableFormData) => {
     const tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'> = {
       ...data,
+      location: sessionLocation, // Use the session location
       endTime: new Date(),
       hands: []
     };

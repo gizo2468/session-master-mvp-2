@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -104,6 +103,7 @@ const PastSessionTablesStep: React.FC<PastSessionTablesStepProps> = ({
       <PastAddTableForm
         open={showAddTableForm}
         onOpenChange={setShowAddTableForm}
+        sessionLocation={sessionInfo.location}
         onSubmit={(tableData) => {
           onAddTable(tableData);
           setShowAddTableForm(false);
