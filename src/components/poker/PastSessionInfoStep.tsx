@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const sessionInfoSchema = z.object({
@@ -66,6 +68,10 @@ const PastSessionInfoStep: React.FC<PastSessionInfoStepProps> = ({
     onSubmit(sessionInfo);
   };
 
+  const formatDateForBadge = (date: Date) => {
+    return format(date, "MMM dd, yyyy h:mm a");
+  };
+
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
       <Card>
@@ -73,67 +79,83 @@ const PastSessionInfoStep: React.FC<PastSessionInfoStepProps> = ({
           <CardTitle>Session Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Start Time</Label>
-              <Popover open={startTimeOpen} onOpenChange={setStartTimeOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !form.watch('startTime') && "text-muted-foreground"
-                    )}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Start Time</Label>
+                <div className="flex items-center gap-3">
+                  <Badge 
+                    variant="success" 
+                    className="px-4 py-2 text-sm font-medium bg-green-100 text-green-800 hover:bg-green-200 flex-1 justify-center min-w-0"
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {form.watch('startTime') ? format(form.watch('startTime'), "PPP p") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={form.watch('startTime')}
-                    onSelect={(date) => {
-                      if (date) {
-                        form.setValue('startTime', date);
-                        setStartTimeOpen(false);
-                      }
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+                    <span className="truncate">
+                      {form.watch('startTime') ? formatDateForBadge(form.watch('startTime')) : 'Not set'}
+                    </span>
+                  </Badge>
+                  <Popover open={startTimeOpen} onOpenChange={setStartTimeOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="px-3"
+                      >
+                        <CalendarIcon className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={form.watch('startTime')}
+                        onSelect={(date) => {
+                          if (date) {
+                            form.setValue('startTime', date);
+                            setStartTimeOpen(false);
+                          }
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
 
-            <div>
-              <Label>End Time</Label>
-              <Popover open={endTimeOpen} onOpenChange={setEndTimeOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !form.watch('endTime') && "text-muted-foreground"
-                    )}
+              <div>
+                <Label className="text-sm font-medium mb-3 block">End Time</Label>
+                <div className="flex items-center gap-3">
+                  <Badge 
+                    variant="destructive" 
+                    className="px-4 py-2 text-sm font-medium bg-red-100 text-red-800 hover:bg-red-200 flex-1 justify-center min-w-0"
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {form.watch('endTime') ? format(form.watch('endTime'), "PPP p") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={form.watch('endTime')}
-                    onSelect={(date) => {
-                      if (date) {
-                        form.setValue('endTime', date);
-                        setEndTimeOpen(false);
-                      }
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+                    <span className="truncate">
+                      {form.watch('endTime') ? formatDateForBadge(form.watch('endTime')) : 'Not set'}
+                    </span>
+                  </Badge>
+                  <Popover open={endTimeOpen} onOpenChange={setEndTimeOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="px-3"
+                      >
+                        <CalendarIcon className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={form.watch('endTime')}
+                        onSelect={(date) => {
+                          if (date) {
+                            form.setValue('endTime', date);
+                            setEndTimeOpen(false);
+                          }
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
             </div>
           </div>
 
