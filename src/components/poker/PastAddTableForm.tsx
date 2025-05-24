@@ -1,0 +1,265 @@
+
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { TableData } from '@/types/poker';
+
+const tableSchema = z.object({
+  name: z.string().optional(),
+  gameType: z.enum(['NLH', 'PLO']),
+  format: z.enum(['Cash', 'Tournament']),
+  tournamentTypes: z.array(z.string()).optional(),
+  buyIn: z.number().min(0),
+  initialBuyIn: z.number().min(0),
+  rebuys: z.number().min(0).default(0),
+  addOns: z.number().min(0).default(0),
+  smallBlind: z.number().optional(),
+  bigBlind: z.number().optional(),
+  startingBB: z.number().optional(),
+  cashOut: z.number().min(0).default(0),
+  finalPosition: z.number().optional(),
+  bountyCount: z.number().min(0).default(0),
+  bountyAmount: z.number().min(0).default(0),
+  notes: z.string().optional(),
+});
+
+type TableFormData = z.infer<typeof tableSchema>;
+
+interface PastAddTableFormProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
+}
+
+const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
+  open,
+  onOpenChange,
+  onSubmit
+}) => {
+  const form = useForm<TableFormData>({
+    resolver: zodResolver(tableSchema),
+    defaultValues: {
+      gameType: 'NLH',
+      format: 'Cash',
+      buyIn: 0,
+      initialBuyIn: 0,
+      rebuys: 0,
+      addOns: 0,
+      cashOut: 0,
+      bountyCount: 0,
+      bountyAmount: 0,
+    },
+  });
+
+  const watchedFormat = form.watch('format');
+  const watchedBuyIn = form.watch('buyIn');
+  const watchedCashOut = form.watch('cashOut');
+
+  const profitLoss = watchedCashOut - watchedBuyIn;
+
+  const handleSubmit = (data: TableFormData) => {
+    const tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'> = {
+      ...data,
+      endTime: new Date(),
+      hands: []
+    };
+    
+    onSubmit(tableData);
+    form.reset();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add Table</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="gameType">Game Type</Label>
+              <Select onValueChange={(value) => form.setValue('gameType', value as 'NLH' | 'PLO')} defaultValue="NLH">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NLH">No Limit Hold'em</SelectItem>
+                  <SelectItem value="PLO">Pot Limit Omaha</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="format">Format</Label>
+              <Select onValueChange={(value) => form.setValue('format', value as 'Cash' | 'Tournament')} defaultValue="Cash">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Cash">Cash Game</SelectItem>
+                  <SelectItem value="Tournament">Tournament</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {watchedFormat === 'Tournament' && (
+            <div>
+              <Label htmlFor="tournamentType">Tournament Type</Label>
+              <Select onValueChange={(value) => form.setValue('tournamentTypes', [value])}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select tournament type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Freezeout">Freezeout</SelectItem>
+                  <SelectItem value="Re-Buy Tournament">Re-Buy Tournament</SelectItem>
+                  <SelectItem value="Bounty">Bounty</SelectItem>
+                  <SelectItem value="Progressive Bounty (PKO)">Progressive Bounty (PKO)</SelectItem>
+                  <SelectItem value="Mystery Bounty">Mystery Bounty</SelectItem>
+                  <SelectItem value="Turbo / Hyper">Turbo / Hyper</SelectItem>
+                  <SelectItem value="Satellite">Satellite</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="initialBuyIn">Initial Buy-in ($)</Label>
+              <Input
+                id="initialBuyIn"
+                type="number"
+                step="0.01"
+                {...form.register('initialBuyIn', { valueAsNumber: true })}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value) || 0;
+                  form.setValue('initialBuyIn', value);
+                  form.setValue('buyIn', value + (form.watch('rebuys') * (form.watch('addOns') || 0)));
+                }}
+              />
+            </div>
+            <div>
+              <Label htmlFor="cashOut">Cash Out ($)</Label>
+              <Input
+                id="cashOut"
+                type="number"
+                step="0.01"
+                {...form.register('cashOut', { valueAsNumber: true })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="rebuys">Rebuys</Label>
+              <Input
+                id="rebuys"
+                type="number"
+                {...form.register('rebuys', { valueAsNumber: true })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="addOns">Add-ons ($)</Label>
+              <Input
+                id="addOns"
+                type="number"
+                step="0.01"
+                {...form.register('addOns', { valueAsNumber: true })}
+              />
+            </div>
+          </div>
+
+          {watchedFormat === 'Cash' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="smallBlind">Small Blind ($)</Label>
+                <Input
+                  id="smallBlind"
+                  type="number"
+                  step="0.01"
+                  {...form.register('smallBlind', { valueAsNumber: true })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="bigBlind">Big Blind ($)</Label>
+                <Input
+                  id="bigBlind"
+                  type="number"
+                  step="0.01"
+                  {...form.register('bigBlind', { valueAsNumber: true })}
+                />
+              </div>
+            </div>
+          )}
+
+          {watchedFormat === 'Tournament' && (
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="finalPosition">Final Position</Label>
+                <Input
+                  id="finalPosition"
+                  type="number"
+                  {...form.register('finalPosition', { valueAsNumber: true })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="bountyCount">Bounties</Label>
+                <Input
+                  id="bountyCount"
+                  type="number"
+                  {...form.register('bountyCount', { valueAsNumber: true })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="bountyAmount">Bounty Amount ($)</Label>
+                <Input
+                  id="bountyAmount"
+                  type="number"
+                  step="0.01"
+                  {...form.register('bountyAmount', { valueAsNumber: true })}
+                />
+              </div>
+            </div>
+          )}
+
+          <div>
+            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Textarea
+              id="notes"
+              {...form.register('notes')}
+              placeholder="Any notes about this table..."
+            />
+          </div>
+
+          <div className="p-3 bg-gray-50 rounded-md">
+            <p className="text-sm font-medium">
+              Profit/Loss: 
+              <span className={`ml-2 ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)}
+              </span>
+            </p>
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button type="submit" variant="poker" className="flex-1">
+              Add Table
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default PastAddTableForm;
