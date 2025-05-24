@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -80,6 +79,12 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
   const watchedBountyAmount = form.watch('bountyAmount');
   const watchedIsMultiDay = form.watch('isMultiDay');
   const watchedMultiDayStatus = form.watch('multiDayStatus');
+  const watchedTournamentTypes = form.watch('tournamentTypes');
+
+  // Check if selected tournament type includes bounty-related types
+  const hasBountyType = watchedTournamentTypes && watchedTournamentTypes.some(type => 
+    ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
+  );
 
   // Calculate rebuys value based on format
   const rebuysValue = watchedFormat === 'Cash' 
@@ -211,6 +216,27 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
                 />
               </div>
 
+              {/* Tournament Type - Moved up here */}
+              {watchedFormat === 'Tournament' && (
+                <div>
+                  <Label htmlFor="tournamentType">Tournament Type</Label>
+                  <Select onValueChange={(value) => form.setValue('tournamentTypes', [value])}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select tournament type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Freezeout">Freezeout</SelectItem>
+                      <SelectItem value="Re-Buy Tournament">Re-Buy Tournament</SelectItem>
+                      <SelectItem value="Bounty">Bounty</SelectItem>
+                      <SelectItem value="Progressive Bounty (PKO)">Progressive Bounty (PKO)</SelectItem>
+                      <SelectItem value="Mystery Bounty">Mystery Bounty</SelectItem>
+                      <SelectItem value="Turbo / Hyper">Turbo / Hyper</SelectItem>
+                      <SelectItem value="Satellite">Satellite</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               {/* Online Game Toggle */}
               <FormField
                 control={form.control}
@@ -255,26 +281,6 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
                     </FormItem>
                   )}
                 />
-              )}
-
-              {watchedFormat === 'Tournament' && (
-                <div>
-                  <Label htmlFor="tournamentType">Tournament Type</Label>
-                  <Select onValueChange={(value) => form.setValue('tournamentTypes', [value])}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select tournament type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Freezeout">Freezeout</SelectItem>
-                      <SelectItem value="Re-Buy Tournament">Re-Buy Tournament</SelectItem>
-                      <SelectItem value="Bounty">Bounty</SelectItem>
-                      <SelectItem value="Progressive Bounty (PKO)">Progressive Bounty (PKO)</SelectItem>
-                      <SelectItem value="Mystery Bounty">Mystery Bounty</SelectItem>
-                      <SelectItem value="Turbo / Hyper">Turbo / Hyper</SelectItem>
-                      <SelectItem value="Satellite">Satellite</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               )}
             </div>
 
@@ -489,43 +495,46 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="bountyCount"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Players Eliminated</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                {...field}
-                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="bountyAmount"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Bounty Payout ($)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                {...field}
-                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                    {/* Bounty fields - only show for bounty tournament types */}
+                    {hasBountyType && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="bountyCount"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Players Eliminated</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  {...field}
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="bountyAmount"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Bounty Payout ($)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  {...field}
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </>
