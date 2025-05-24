@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import { TableData } from '@/types/poker';
 
 const tableSchema = z.object({
@@ -19,7 +20,8 @@ const tableSchema = z.object({
   tournamentTypes: z.array(z.string()).optional(),
   buyIn: z.number().min(0),
   initialBuyIn: z.number().min(0),
-  rebuysCount: z.number().min(0).default(0),
+  rebuysAmount: z.number().min(0).default(0), // For cash games - monetary amount
+  rebuysCount: z.number().min(0).default(0), // For tournaments - count
   smallBlind: z.number().optional(),
   bigBlind: z.number().optional(),
   startingBB: z.number().optional(),
@@ -28,6 +30,8 @@ const tableSchema = z.object({
   bountyCount: z.number().min(0).default(0),
   bountyAmount: z.number().min(0).default(0),
   notes: z.string().optional(),
+  isOnline: z.boolean().default(false),
+  isMultiDay: z.boolean().default(false),
 });
 
 type TableFormData = z.infer<typeof tableSchema>;
@@ -52,24 +56,30 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
       format: 'Cash',
       buyIn: 0,
       initialBuyIn: 0,
+      rebuysAmount: 0,
       rebuysCount: 0,
       cashOut: 0,
       bountyCount: 0,
       bountyAmount: 0,
+      isOnline: false,
+      isMultiDay: false,
     },
   });
 
   const watchedFormat = form.watch('format');
   const watchedInitialBuyIn = form.watch('initialBuyIn');
+  const watchedRebuysAmount = form.watch('rebuysAmount');
   const watchedRebuysCount = form.watch('rebuysCount');
   const watchedCashOut = form.watch('cashOut');
   const watchedBountyAmount = form.watch('bountyAmount');
 
-  // Calculate total rebuys value (count × initial buy-in)
-  const totalRebuysValue = watchedRebuysCount * watchedInitialBuyIn;
+  // Calculate rebuys value based on format
+  const rebuysValue = watchedFormat === 'Cash' 
+    ? watchedRebuysAmount 
+    : watchedRebuysCount * watchedInitialBuyIn;
   
   // Calculate total buy-in (initial + rebuys value)
-  const totalBuyIn = watchedInitialBuyIn + totalRebuysValue;
+  const totalBuyIn = watchedInitialBuyIn + rebuysValue;
 
   // Calculate profit/loss: (Cash Out + Bounty Amount) - Total Buy-in
   const profitLoss = (watchedCashOut + (watchedFormat === 'Tournament' ? watchedBountyAmount : 0)) - totalBuyIn;
@@ -86,7 +96,7 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
       smallBlind: data.smallBlind,
       bigBlind: data.bigBlind,
       endTime: new Date(),
-      rebuys: totalRebuysValue, // Store the monetary value, not count
+      rebuys: rebuysValue, // Store the monetary value
       addOns: 0,
       notes: data.notes,
       finalPosition: data.finalPosition,
@@ -94,6 +104,8 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
       bountyCount: data.bountyCount,
       bountyAmount: data.bountyAmount,
       tournamentTypes: data.tournamentTypes,
+      isOnline: data.isOnline,
+      isMultiDay: data.isMultiDay,
       hands: []
     };
     
@@ -140,6 +152,28 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
               </div>
             </div>
 
+            {/* Online Game Toggle */}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isOnline"
+                checked={form.watch('isOnline')}
+                onCheckedChange={(checked) => form.setValue('isOnline', !!checked)}
+              />
+              <Label htmlFor="isOnline">Online Game</Label>
+            </div>
+
+            {/* Multi-Day Tournament Toggle (only for tournaments) */}
+            {watchedFormat === 'Tournament' && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isMultiDay"
+                  checked={form.watch('isMultiDay')}
+                  onCheckedChange={(checked) => form.setValue('isMultiDay', !!checked)}
+                />
+                <Label htmlFor="isMultiDay">Multi-Day Tournament</Label>
+              </div>
+            )}
+
             {watchedFormat === 'Tournament' && (
               <div>
                 <Label htmlFor="tournamentType">Tournament Type</Label>
@@ -177,19 +211,22 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="rebuysCount">Rebuys (Count)</Label>
+                <Label htmlFor="rebuys">
+                  {watchedFormat === 'Cash' ? 'Rebuys ($)' : 'Rebuys (Count)'}
+                </Label>
                 <Input
-                  id="rebuysCount"
+                  id="rebuys"
                   type="number"
-                  {...form.register('rebuysCount', { valueAsNumber: true })}
+                  step={watchedFormat === 'Cash' ? "0.01" : "1"}
+                  {...form.register(watchedFormat === 'Cash' ? 'rebuysAmount' : 'rebuysCount', { valueAsNumber: true })}
                 />
               </div>
             </div>
 
-            {/* Show total rebuys value when there are rebuys */}
-            {watchedRebuysCount > 0 && (
+            {/* Show rebuys calculation for tournaments */}
+            {watchedFormat === 'Tournament' && watchedRebuysCount > 0 && (
               <div className="text-sm text-gray-600">
-                Total Rebuys Value: ${totalRebuysValue.toFixed(2)} ({watchedRebuysCount} × ${watchedInitialBuyIn.toFixed(2)})
+                Total Rebuys Value: ${rebuysValue.toFixed(2)} ({watchedRebuysCount} × ${watchedInitialBuyIn.toFixed(2)})
               </div>
             )}
 

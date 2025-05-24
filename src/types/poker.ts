@@ -30,7 +30,7 @@ export interface TableData {
   startTime: Date;
   endTime?: Date;
   isActive: boolean;
-  isOnline?: boolean; // Added this property
+  isOnline?: boolean;
   rebuys?: number;
   addOns?: number;
   tournamentBuyIn?: number;
@@ -44,7 +44,7 @@ export interface TableData {
   nextDayStart?: Date;
   chipsCarryover?: number;
   dayEndedWithoutElimination?: boolean;
-  hands?: HandData[]; // New field to store hands for this table
+  hands?: HandData[];
 }
 
 export interface PokerSession {
