@@ -190,7 +190,7 @@ const PastTableHandsPanel: React.FC<PastTableHandsPanelProps> = ({
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogFooter>
+        </AlertDialogContent>
       </AlertDialog>
     </div>
   );
