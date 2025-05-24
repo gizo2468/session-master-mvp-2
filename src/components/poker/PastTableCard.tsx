@@ -100,7 +100,6 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0">
                   <div className="text-left sm:text-right">
-                    <p className="text-sm text-gray-600 whitespace-nowrap">Buy-in: ${table.buyIn.toFixed(2)}</p>
                     {!isContinuing && (
                       <p className={`font-semibold whitespace-nowrap ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)}
@@ -221,7 +220,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                 {/* Hands Management Panel */}
                 <div className="border-t pt-4">
                   <HandManagementPanel
-                    sessionId={`past-session-${Date.now()}`}
+                    sessionId="temp-session"
                     hands={table.hands || []}
                     tableId={table.id}
                     tableFormat={table.format}

@@ -50,19 +50,19 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
 
   const form = useForm<EditTableFormData>({
     resolver: zodResolver(editTableSchema),
-    defaultValues: {
+    values: {
       name: table.name || '',
       gameType: table.gameType,
       format: table.format,
       tournamentTypes: table.tournamentTypes || [],
       buyIn: table.buyIn,
-      initialBuyIn: table.initialBuyIn,
+      initialBuyIn: table.initialBuyIn || table.buyIn,
       rebuysCount: rebuysCount,
-      smallBlind: table.smallBlind,
-      bigBlind: table.bigBlind,
-      startingBB: table.startingBB,
+      smallBlind: table.smallBlind || 0,
+      bigBlind: table.bigBlind || 0,
+      startingBB: table.startingBB || 0,
       cashOut: table.cashOut || 0,
-      finalPosition: table.finalPosition,
+      finalPosition: table.finalPosition || 0,
       bountyCount: table.bountyCount || 0,
       bountyAmount: table.bountyAmount || 0,
       notes: table.notes || '',
@@ -93,6 +93,7 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
     };
     
     onSubmit(updatedTable);
+    onOpenChange(false);
   };
 
   return (
@@ -111,7 +112,7 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
                 <Label htmlFor="gameType">Game Type</Label>
                 <Select 
                   onValueChange={(value) => form.setValue('gameType', value as 'NLH' | 'PLO')} 
-                  defaultValue={table.gameType}
+                  value={form.watch('gameType')}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -127,7 +128,7 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
                 <Label htmlFor="format">Format</Label>
                 <Select 
                   onValueChange={(value) => form.setValue('format', value as 'Cash' | 'Tournament')} 
-                  defaultValue={table.format}
+                  value={form.watch('format')}
                 >
                   <SelectTrigger>
                     <SelectValue />
