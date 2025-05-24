@@ -155,24 +155,24 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
           <CollapsibleContent>
             <div className="border-t border-gray-200">
               <div className="p-4 space-y-4">
-                {/* Table Details */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                  <div className="min-w-0">
-                    <span className="text-gray-600">Initial Buy-in:</span>
-                    <p className="font-medium truncate">${table.initialBuyIn?.toFixed(2) || '0.00'}</p>
+                {/* Financial Stats - Full Width Layout */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600 font-medium">Initial Buy-in</span>
+                    <span className="text-sm font-semibold">${table.initialBuyIn?.toFixed(2) || '0.00'}</span>
                   </div>
-                  <div className="min-w-0">
-                    <span className="text-gray-600">Rebuys:</span>
-                    <p className="font-medium truncate">${(table.rebuys || 0).toFixed(2)}</p>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600 font-medium">Rebuys</span>
+                    <span className="text-sm font-semibold">${(table.rebuys || 0).toFixed(2)}</span>
                   </div>
-                  <div className="min-w-0">
-                    <span className="text-gray-600">Cash Out:</span>
-                    <p className="font-medium truncate">${(table.cashOut || 0).toFixed(2)}</p>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600 font-medium">Cash Out</span>
+                    <span className="text-sm font-semibold">${(table.cashOut || 0).toFixed(2)}</span>
                   </div>
                   {table.bountyAmount && table.bountyAmount > 0 && (
-                    <div className="min-w-0">
-                      <span className="text-gray-600">Bounties:</span>
-                      <p className="font-medium truncate">${table.bountyAmount.toFixed(2)}</p>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-600 font-medium">Bounties</span>
+                      <span className="text-sm font-semibold">${table.bountyAmount.toFixed(2)}</span>
                     </div>
                   )}
                 </div>
@@ -181,17 +181,19 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                 {isMultiDayTable && isContinuing && (
                   <div className="p-3 bg-blue-50 rounded-lg">
                     <h5 className="font-medium text-blue-900 mb-2 break-words">Multi-Day Tournament - Continuing</h5>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-2">
                       {table.nextDayStart && (
-                        <div className="min-w-0">
-                          <span className="text-blue-700">Next Day Start:</span>
-                          <p className="font-medium break-words">{new Date(table.nextDayStart).toLocaleString()}</p>
+                        <div className="flex justify-between items-start">
+                          <span className="text-sm text-blue-700 font-medium">Next Day Start:</span>
+                          <span className="text-sm font-semibold break-words text-right max-w-[60%]">
+                            {new Date(table.nextDayStart).toLocaleString()}
+                          </span>
                         </div>
                       )}
                       {table.chipsCarryover && (
-                        <div className="min-w-0">
-                          <span className="text-blue-700">Chips Carryover:</span>
-                          <p className="font-medium break-words">{table.chipsCarryover.toLocaleString()}</p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-blue-700 font-medium">Chips Carryover:</span>
+                          <span className="text-sm font-semibold">{table.chipsCarryover.toLocaleString()}</span>
                         </div>
                       )}
                     </div>
@@ -200,7 +202,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
 
                 {table.notes && (
                   <div>
-                    <span className="text-gray-600 text-sm">Notes:</span>
+                    <span className="text-gray-600 text-sm font-medium">Notes:</span>
                     <p className="text-sm mt-1 break-words">{table.notes}</p>
                   </div>
                 )}
