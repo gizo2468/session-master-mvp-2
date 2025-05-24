@@ -7,7 +7,7 @@ import { Pencil, Trash2, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 import { TableData } from '@/types/poker';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import PastEditTableForm from './PastEditTableForm';
-import HandManagementPanel from './HandManagementPanel';
+import PastTableHandsPanel from './PastTableHandsPanel';
 import PastMultiDayEndDialog from './PastMultiDayEndDialog';
 
 interface PastTableCardProps {
