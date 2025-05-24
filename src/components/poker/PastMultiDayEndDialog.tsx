@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,11 @@ interface PastMultiDayEndDialogProps {
     isEliminated: boolean,
     cashOut?: number,
     notes?: string,
+    bountyInfo?: {
+      bountyCount?: number,
+      bountyAmount?: number,
+      finalPosition?: number
+    },
     multiDayInfo?: {
       nextDayStart?: Date,
       chipsCarryover?: number,
@@ -48,20 +52,31 @@ const PastMultiDayEndDialog: React.FC<PastMultiDayEndDialogProps> = ({
   };
 
   const handleElimination = () => {
-    onComplete(true, cashOut, notes, {
-      bountyCount,
-      bountyAmount,
-      finalPosition
-    });
+    onComplete(
+      true, 
+      cashOut, 
+      notes,
+      {
+        bountyCount,
+        bountyAmount,
+        finalPosition
+      }
+    );
     onOpenChange(false);
   };
 
   const handleContinuation = () => {
-    onComplete(false, 0, notes, {
-      nextDayStart,
-      chipsCarryover,
-      dayEndedWithoutElimination: true
-    });
+    onComplete(
+      false, 
+      0, 
+      notes, 
+      undefined,
+      {
+        nextDayStart,
+        chipsCarryover,
+        dayEndedWithoutElimination: true
+      }
+    );
     onOpenChange(false);
   };
 

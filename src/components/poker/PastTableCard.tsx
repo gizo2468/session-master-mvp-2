@@ -43,15 +43,16 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
     isEliminated: boolean,
     cashOut?: number,
     notes?: string,
-    multiDayInfo?: any
+    bountyInfo?: { bountyCount?: number, bountyAmount?: number, finalPosition?: number },
+    multiDayInfo?: { nextDayStart?: Date, chipsCarryover?: number, dayEndedWithoutElimination?: boolean }
   ) => {
     const updatedTable: TableData = {
       ...table,
       cashOut: isEliminated ? (cashOut || 0) : 0,
       notes: notes || table.notes,
-      ...(isEliminated && multiDayInfo?.bountyCount !== undefined && { bountyCount: multiDayInfo.bountyCount }),
-      ...(isEliminated && multiDayInfo?.bountyAmount !== undefined && { bountyAmount: multiDayInfo.bountyAmount }),
-      ...(isEliminated && multiDayInfo?.finalPosition !== undefined && { finalPosition: multiDayInfo.finalPosition }),
+      ...(isEliminated && bountyInfo?.bountyCount !== undefined && { bountyCount: bountyInfo.bountyCount }),
+      ...(isEliminated && bountyInfo?.bountyAmount !== undefined && { bountyAmount: bountyInfo.bountyAmount }),
+      ...(isEliminated && bountyInfo?.finalPosition !== undefined && { finalPosition: bountyInfo.finalPosition }),
       ...(multiDayInfo?.nextDayStart && { nextDayStart: multiDayInfo.nextDayStart }),
       ...(multiDayInfo?.chipsCarryover && { chipsCarryover: multiDayInfo.chipsCarryover }),
       ...(multiDayInfo?.dayEndedWithoutElimination && { dayEndedWithoutElimination: true })
@@ -87,7 +88,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                         </Badge>
                       )}
                       {isContinuing && (
-                        <Badge variant="poker">Continuing</Badge>
+                        <Badge variant="success">Continuing</Badge>
                       )}
                       {table.tournamentTypes && table.tournamentTypes.length > 0 && (
                         <Badge variant="outline">{table.tournamentTypes[0]}</Badge>
