@@ -20,8 +20,8 @@ const tableSchema = z.object({
   tournamentTypes: z.array(z.string()).optional(),
   buyIn: z.number().min(0),
   initialBuyIn: z.number().min(0),
-  rebuysAmount: z.number().min(0).default(0), // For cash games - monetary amount
-  rebuysCount: z.number().min(0).default(0), // For tournaments - count
+  rebuysAmount: z.number().min(0).default(0),
+  rebuysCount: z.number().min(0).default(0),
   smallBlind: z.number().optional(),
   bigBlind: z.number().optional(),
   startingBB: z.number().optional(),
@@ -94,13 +94,13 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
       gameType: data.gameType,
       format: data.format,
       location: sessionLocation,
-      buyIn: totalBuyIn, // Use calculated total buy-in
+      buyIn: totalBuyIn,
       initialBuyIn: data.initialBuyIn,
       cashOut: data.cashOut,
       smallBlind: data.smallBlind,
       bigBlind: data.bigBlind,
       endTime: new Date(),
-      rebuys: rebuysValue, // Store the monetary value
+      rebuys: rebuysValue,
       addOns: 0,
       notes: data.notes,
       finalPosition: data.finalPosition,
@@ -119,10 +119,12 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
     onOpenChange(false);
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Form submission triggered');
-    form.handleSubmit(handleSubmit)(e);
+  const handleAddTable = () => {
+    console.log('Add Table button clicked');
+    console.log('Form errors:', form.formState.errors);
+    form.handleSubmit(handleSubmit, (errors) => {
+      console.log('Form validation errors:', errors);
+    })();
   };
 
   return (
@@ -132,7 +134,7 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
           <DialogTitle>Add Table</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleFormSubmit} className="space-y-6">
+        <div className="space-y-6">
           {/* Game & Format Section */}
           <div className="space-y-4">
             <h4 className="text-sm font-medium text-gray-900">Game & Format</h4>
@@ -364,11 +366,11 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
               Cancel
             </Button>
-            <Button type="submit" variant="poker" className="flex-1">
+            <Button type="button" variant="poker" className="flex-1" onClick={handleAddTable}>
               Add Table
             </Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
