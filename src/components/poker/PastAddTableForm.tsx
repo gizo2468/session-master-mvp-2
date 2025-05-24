@@ -19,7 +19,7 @@ const tableSchema = z.object({
   tournamentTypes: z.array(z.string()).optional(),
   buyIn: z.number().min(0),
   initialBuyIn: z.number().min(0),
-  rebuys: z.number().min(0).default(0),
+  rebuysCount: z.number().min(0).default(0),
   smallBlind: z.number().optional(),
   bigBlind: z.number().optional(),
   startingBB: z.number().optional(),
@@ -52,7 +52,7 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
       format: 'Cash',
       buyIn: 0,
       initialBuyIn: 0,
-      rebuys: 0,
+      rebuysCount: 0,
       cashOut: 0,
       bountyCount: 0,
       bountyAmount: 0,
@@ -60,12 +60,19 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
   });
 
   const watchedFormat = form.watch('format');
-  const watchedBuyIn = form.watch('buyIn');
+  const watchedInitialBuyIn = form.watch('initialBuyIn');
+  const watchedRebuysCount = form.watch('rebuysCount');
   const watchedCashOut = form.watch('cashOut');
   const watchedBountyAmount = form.watch('bountyAmount');
 
-  // Updated profit/loss calculation to include bounty amount
-  const profitLoss = (watchedCashOut + watchedBountyAmount) - watchedBuyIn;
+  // Calculate total rebuys value (count × initial buy-in)
+  const totalRebuysValue = watchedRebuysCount * watchedInitialBuyIn;
+  
+  // Calculate total buy-in (initial + rebuys value)
+  const totalBuyIn = watchedInitialBuyIn + totalRebuysValue;
+
+  // Calculate profit/loss: (Cash Out + Bounty Amount) - Total Buy-in
+  const profitLoss = (watchedCashOut + (watchedFormat === 'Tournament' ? watchedBountyAmount : 0)) - totalBuyIn;
 
   const handleSubmit = (data: TableFormData) => {
     const tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'> = {
@@ -73,14 +80,14 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
       gameType: data.gameType,
       format: data.format,
       location: sessionLocation,
-      buyIn: data.buyIn,
+      buyIn: totalBuyIn, // Use calculated total buy-in
       initialBuyIn: data.initialBuyIn,
       cashOut: data.cashOut,
       smallBlind: data.smallBlind,
       bigBlind: data.bigBlind,
       endTime: new Date(),
-      rebuys: data.rebuys,
-      addOns: 0, // Set to 0 since we're removing this field
+      rebuys: totalRebuysValue, // Store the monetary value, not count
+      addOns: 0,
       notes: data.notes,
       finalPosition: data.finalPosition,
       startingBB: data.startingBB,
@@ -167,71 +174,58 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
                   type="number"
                   step="0.01"
                   {...form.register('initialBuyIn', { valueAsNumber: true })}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    form.setValue('initialBuyIn', value);
-                    form.setValue('buyIn', value + (form.watch('rebuys') || 0));
-                  }}
                 />
               </div>
               <div>
-                <Label htmlFor="rebuys">Rebuys ($)</Label>
+                <Label htmlFor="rebuysCount">Rebuys (Count)</Label>
                 <Input
-                  id="rebuys"
+                  id="rebuysCount"
                   type="number"
-                  step="0.01"
-                  {...form.register('rebuys', { valueAsNumber: true })}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    form.setValue('rebuys', value);
-                    form.setValue('buyIn', (form.watch('initialBuyIn') || 0) + value);
-                  }}
+                  {...form.register('rebuysCount', { valueAsNumber: true })}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="cashOut">Cash Out ($)</Label>
-                <Input
-                  id="cashOut"
-                  type="number"
-                  step="0.01"
-                  {...form.register('cashOut', { valueAsNumber: true })}
-                />
+            {/* Show total rebuys value when there are rebuys */}
+            {watchedRebuysCount > 0 && (
+              <div className="text-sm text-gray-600">
+                Total Rebuys Value: ${totalRebuysValue.toFixed(2)} ({watchedRebuysCount} × ${watchedInitialBuyIn.toFixed(2)})
               </div>
-              <div>
-                <Label htmlFor="bountyAmount">Bounty Amount ($)</Label>
-                <Input
-                  id="bountyAmount"
-                  type="number"
-                  step="0.01"
-                  {...form.register('bountyAmount', { valueAsNumber: true })}
-                />
-              </div>
-            </div>
+            )}
 
             {watchedFormat === 'Cash' && (
-              <div className="grid grid-cols-2 gap-4">
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="smallBlind">Small Blind ($)</Label>
+                    <Input
+                      id="smallBlind"
+                      type="number"
+                      step="0.01"
+                      {...form.register('smallBlind', { valueAsNumber: true })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="bigBlind">Big Blind ($)</Label>
+                    <Input
+                      id="bigBlind"
+                      type="number"
+                      step="0.01"
+                      {...form.register('bigBlind', { valueAsNumber: true })}
+                    />
+                  </div>
+                </div>
+                
                 <div>
-                  <Label htmlFor="smallBlind">Small Blind ($)</Label>
+                  <Label htmlFor="cashOut">Cash Out ($)</Label>
                   <Input
-                    id="smallBlind"
+                    id="cashOut"
                     type="number"
                     step="0.01"
-                    {...form.register('smallBlind', { valueAsNumber: true })}
+                    {...form.register('cashOut', { valueAsNumber: true })}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="bigBlind">Big Blind ($)</Label>
-                  <Input
-                    id="bigBlind"
-                    type="number"
-                    step="0.01"
-                    {...form.register('bigBlind', { valueAsNumber: true })}
-                  />
-                </div>
-              </div>
+              </>
             )}
           </div>
 
@@ -242,6 +236,27 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
               {/* Tournament Results Section */}
               <div className="space-y-4">
                 <h4 className="text-sm font-medium text-gray-900">Tournament Results</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="cashOut">Regular Payout ($)</Label>
+                    <Input
+                      id="cashOut"
+                      type="number"
+                      step="0.01"
+                      {...form.register('cashOut', { valueAsNumber: true })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="bountyAmount">Bounty Payout ($)</Label>
+                    <Input
+                      id="bountyAmount"
+                      type="number"
+                      step="0.01"
+                      {...form.register('bountyAmount', { valueAsNumber: true })}
+                    />
+                  </div>
+                </div>
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="finalPosition">Final Position</Label>
@@ -289,7 +304,10 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
               </span>
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              (Cash Out + Bounties) - (Buy-in + Rebuys)
+              {watchedFormat === 'Tournament' 
+                ? '(Regular Payout + Bounty Payout) - (Initial Buy-in + Rebuys)'
+                : 'Cash Out - (Initial Buy-in + Rebuys)'
+              }
             </p>
           </div>
 

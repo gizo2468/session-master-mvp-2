@@ -36,7 +36,8 @@ const PastSessionTablesStep: React.FC<PastSessionTablesStepProps> = ({
   const [showAddTableForm, setShowAddTableForm] = useState(false);
 
   const totalProfit = tables.reduce((sum, table) => {
-    const tableProfit = (table.cashOut || 0) - table.buyIn;
+    // Updated calculation to include bounty amount for tournaments
+    const tableProfit = ((table.cashOut || 0) + (table.format === 'Tournament' ? (table.bountyAmount || 0) : 0)) - table.buyIn;
     return sum + tableProfit;
   }, 0);
 
