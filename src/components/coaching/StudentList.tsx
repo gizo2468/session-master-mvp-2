@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { Button } from '@/components/ui/button';
@@ -20,34 +20,42 @@ import Icon from '@/components/ui/Lucide';
 const StudentList = () => {
   const navigate = useNavigate();
   const { students, removeStudent } = useCoachStudent();
+  const [showDemoStudent, setShowDemoStudent] = useState(true);
 
   if (students.length === 0) {
     return (
       <div className="space-y-3">
-        {/* Single demo entry with clear labeling */}
-        <div className="p-3 border rounded-md bg-gray-50 border-dashed">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-gray-400 rounded-full flex items-center justify-center text-white">
-                A
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-gray-600">Alex Student</h3>
-                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-                    Demo
-                  </Badge>
+        {showDemoStudent && (
+          <div className="p-3 border rounded-md bg-gray-50 border-dashed relative">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 bg-gray-400 rounded-full flex items-center justify-center text-white">
+                  A
                 </div>
-                <div className="text-xs text-gray-400">
-                  0 sessions • Example connection
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-gray-600">Alex Student</h3>
+                    <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                      Demo
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    0 sessions • Example connection
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="text-xs text-gray-400">
-              <Icon name="Eye" size={16} />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDemoStudent(false)}
+                className="h-7 w-7 p-0 text-gray-400 hover:text-gray-600"
+                aria-label="Remove demo student"
+              >
+                <Icon name="x" size={16} />
+              </Button>
             </div>
           </div>
-        </div>
+        )}
         
         <div className="text-center py-4 text-gray-500">
           <p className="text-sm">You don't have any connected students yet.</p>

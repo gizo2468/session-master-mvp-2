@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,13 @@ import { Separator } from '@/components/ui/separator';
 const PlayerDashboard = () => {
   const navigate = useNavigate();
   const { connectedCoach } = useCoachStudent();
+  const [showDemoFeedback, setShowDemoFeedback] = useState(true);
+  
+  // Mock demo feedback entry - clickable to demonstrate functionality
+  const handleDemoFeedbackClick = () => {
+    // Navigate to a demo session or show a mock session view
+    alert('This would navigate to a demo hand analysis session showing detailed feedback from your coach. In the full version, you would see the actual poker hand replay with coach comments.');
+  };
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -75,27 +82,40 @@ const PlayerDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Single demo entry with clear labeling */}
-              <div className="space-y-3">
-                <div className="p-3 border rounded-md bg-gray-50 border-dashed">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-gray-600">Hand Analysis Feedback</span>
-                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-                          Demo
-                        </Badge>
+              {showDemoFeedback ? (
+                <div className="space-y-3">
+                  <div className="p-3 border rounded-md bg-gray-50 border-dashed relative cursor-pointer hover:bg-gray-100 transition-colors">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1" onClick={handleDemoFeedbackClick}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-gray-600">Hand Analysis Feedback</span>
+                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                            Demo
+                          </Badge>
+                          <Badge className="text-xs bg-green-100 text-green-700">
+                            good decision
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-500">Your value bet sizing on the river was excellent. You extracted maximum value from villain's bluff-catchers.</p>
+                        <div className="text-xs text-gray-400 mt-1">From: Coach Example • Session demo-123 • 2 days ago</div>
                       </div>
-                      <p className="text-sm text-gray-500">Coach feedback on your AK hand from BTN position</p>
-                      <div className="text-xs text-gray-400 mt-1">From: Coach Example • 2 days ago</div>
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      <Icon name="Eye" size={16} />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDemoFeedback(false);
+                        }}
+                        className="h-7 w-7 p-0 text-gray-400 hover:text-gray-600 ml-2"
+                        aria-label="Remove demo feedback"
+                      >
+                        <Icon name="x" size={16} />
+                      </Button>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="mt-4 text-center text-gray-500">
+              ) : null}
+              <div className={`text-center text-gray-500 ${showDemoFeedback ? 'mt-4' : ''}`}>
                 <p className="text-sm">No feedback received yet.</p>
                 <p className="text-xs mt-1">
                   Connect with a coach and share your poker sessions to receive feedback.
