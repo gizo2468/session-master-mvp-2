@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewSessionButton from '@/components/NewSessionButton';
 import StatsQuickView from '@/components/StatsQuickView';
@@ -13,17 +13,23 @@ import Icon from '@/components/ui/Lucide';
 import { Button } from '@/components/ui/button';
 import { useTutorial } from '@/hooks/useTutorial';
 import TutorialDialog from '@/components/tutorial/TutorialDialog';
+import AddPastSessionForm from '@/components/poker/AddPastSessionForm';
 
 const Index = () => {
   const navigate = useNavigate();
   const { sessions, activeSession } = useSessionContext();
   const { showTutorial, setShowTutorial, completeTutorial } = useTutorial();
+  const [showAddPastSession, setShowAddPastSession] = useState(false);
   
   const activeSessionsCount = activeSession ? 1 : 0;
   
   const recentSessions = [...sessions]
     .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
     .slice(0, 3);
+
+  if (showAddPastSession) {
+    return <AddPastSessionForm onClose={() => setShowAddPastSession(false)} />;
+  }
     
   return (
     <div className="min-h-screen bg-gray-50">
@@ -60,6 +66,19 @@ const Index = () => {
           >
             View All
           </button>
+        </div>
+
+        {/* Add Past Session Button */}
+        <div className="mb-4">
+          <Button 
+            onClick={() => setShowAddPastSession(true)}
+            variant="poker"
+            size="sm"
+            className="w-full"
+          >
+            <Icon name="plus" className="h-4 w-4 mr-2" />
+            Add Past Session
+          </Button>
         </div>
         
         {recentSessions.length > 0 ? (
