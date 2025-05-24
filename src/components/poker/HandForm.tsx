@@ -83,8 +83,8 @@ const HandForm: React.FC<HandFormProps> = ({
     ? (tableFormat === 'Cash' ? 'currency' : 'chips')
     : form.watch('currencyType');
   
-  // Position options - abbreviations only
-  const positions = ['SB', 'BB', 'UTG', 'UTG+1', 'MP', 'HJ', 'CO', 'BTN'];
+  // Position options - updated to follow standard poker table order
+  const positions = ['UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
   
   // Set initial position index if editing
   useEffect(() => {
@@ -292,7 +292,7 @@ const HandForm: React.FC<HandFormProps> = ({
                   )}
                 />
                 
-                {/* Position Wheel Selector - COMPLETELY REBUILT */}
+                {/* Position Wheel Selector - with updated positions */}
                 <FormField
                   control={form.control}
                   name="position"

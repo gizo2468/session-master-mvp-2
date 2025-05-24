@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import Icon from '@/components/ui/Lucide';
 import { Separator } from '@/components/ui/separator';
@@ -74,9 +75,29 @@ const PlayerDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-6 text-gray-500">
-                <p>No feedback received yet.</p>
-                <p className="text-sm mt-2">
+              {/* Single demo entry with clear labeling */}
+              <div className="space-y-3">
+                <div className="p-3 border rounded-md bg-gray-50 border-dashed">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-gray-600">Hand Analysis Feedback</span>
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                          Demo
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-500">Coach feedback on your AK hand from BTN position</p>
+                      <div className="text-xs text-gray-400 mt-1">From: Coach Example • 2 days ago</div>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      <Icon name="Eye" size={16} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 text-center text-gray-500">
+                <p className="text-sm">No feedback received yet.</p>
+                <p className="text-xs mt-1">
                   Connect with a coach and share your poker sessions to receive feedback.
                 </p>
               </div>
