@@ -110,7 +110,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0">
                   <div className="text-left sm:text-right">
                     {!isContinuing && (
-                      <p className={`font-semibold whitespace-nowrap ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <p className={`font-bold text-xl whitespace-nowrap ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)}
                       </p>
                     )}
