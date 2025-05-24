@@ -28,7 +28,7 @@ const TutorialDialog = ({ open, onOpenChange, onComplete }: TutorialDialogProps)
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Fetch tutorial steps
+  // Fetch tutorial steps and filter out the "Log Your Hand Details" step
   useEffect(() => {
     const fetchTutorialSteps = async () => {
       try {
@@ -49,8 +49,14 @@ const TutorialDialog = ({ open, onOpenChange, onComplete }: TutorialDialogProps)
         }
         
         if (data) {
-          console.log('Tutorial steps fetched:', data);
-          setSteps(data);
+          // Filter out the "Log Your Hand Details" step
+          const filteredSteps = data.filter(step => 
+            !step.title.toLowerCase().includes('log your hand details') &&
+            !step.title.toLowerCase().includes('hand details')
+          );
+          
+          console.log('Tutorial steps fetched and filtered:', filteredSteps);
+          setSteps(filteredSteps);
         }
       } catch (error) {
         console.error('Error in tutorial setup:', error);
@@ -86,10 +92,13 @@ const TutorialDialog = ({ open, onOpenChange, onComplete }: TutorialDialogProps)
   const handleComplete = async () => {
     try {
       if (user?.id) {
-        // Update user profile to mark tutorial as completed
+        // Update user profile to mark tutorial as completed and seen
         const { error } = await supabase
           .from('profiles')
-          .update({ has_completed_tutorial: true })
+          .update({ 
+            has_completed_tutorial: true,
+            has_seen_tutorial: true 
+          })
           .eq('id', user.id);
         
         if (error) {
@@ -115,8 +124,20 @@ const TutorialDialog = ({ open, onOpenChange, onComplete }: TutorialDialogProps)
     }
   };
 
-  const handleSkip = () => {
-    handleComplete();
+  const handleSkip = async () => {
+    // Mark as seen but not completed when skipped
+    if (user?.id) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ has_seen_tutorial: true })
+          .eq('id', user.id);
+      } catch (error) {
+        console.error('Error marking tutorial as seen:', error);
+      }
+    }
+    
+    onOpenChange(false);
   };
 
   const currentStep = steps[currentStepIndex];
@@ -164,7 +185,6 @@ const TutorialDialog = ({ open, onOpenChange, onComplete }: TutorialDialogProps)
                     className="max-w-full max-h-[50vh] object-contain rounded-lg shadow-md"
                     onError={(e) => {
                       console.error('Error loading image:', e);
-                      // Set fallback image or hide image container
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />

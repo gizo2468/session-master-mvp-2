@@ -7,14 +7,11 @@ import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/context/LanguageContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTutorial } from '@/hooks/useTutorial';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 const AppSettings = () => {
   const { language, setLanguage, t } = useLanguage();
-  const { startTutorial, hasCompletedTutorial } = useTutorial();
-  const { user } = useAuth();
+  const { resetTutorial, hasCompletedTutorial, hasSeenTutorial } = useTutorial();
   const { toast } = useToast();
 
   // Define available languages directly in the component
@@ -24,26 +21,12 @@ const AppSettings = () => {
   ];
 
   const handleResetTutorial = async () => {
-    if (!user?.id) return;
-
     try {
-      // Reset the tutorial completion status in the database
-      const { error } = await supabase
-        .from('profiles')
-        .update({ has_completed_tutorial: false })
-        .eq('id', user.id);
-
-      if (error) {
-        throw error;
-      }
-
+      await resetTutorial();
       toast({
         title: "Tutorial Reset",
-        description: "The tutorial will be shown the next time you visit the home page",
+        description: "The tutorial will start now",
       });
-
-      // Show tutorial immediately
-      startTutorial();
     } catch (error) {
       console.error('Error resetting tutorial:', error);
       toast({
@@ -67,8 +50,6 @@ const AppSettings = () => {
             <Select
               value={language}
               onValueChange={(value) => {
-                // Cast the string value to Language type
-                // This is safe because we control the available options
                 setLanguage(value as 'en' | 'he');
               }}
             >
@@ -100,11 +81,13 @@ const AppSettings = () => {
               onClick={handleResetTutorial}
               className="w-full"
             >
-              View Tutorial Again
+              Replay Tutorial
             </Button>
             <p className="text-sm text-muted-foreground mt-2">
               {hasCompletedTutorial 
-                ? "You've completed the tutorial. You can view it again anytime."
+                ? "You've completed the tutorial. You can replay it anytime."
+                : hasSeenTutorial 
+                ? "You've seen the tutorial but didn't complete it. You can replay it anytime."
                 : "Complete the tutorial to learn how to use this app."}
             </p>
           </div>
