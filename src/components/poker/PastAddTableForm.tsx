@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { TableData } from '@/types/poker';
 
 const tableSchema = z.object({
@@ -19,7 +20,6 @@ const tableSchema = z.object({
   buyIn: z.number().min(0),
   initialBuyIn: z.number().min(0),
   rebuys: z.number().min(0).default(0),
-  addOns: z.number().min(0).default(0),
   smallBlind: z.number().optional(),
   bigBlind: z.number().optional(),
   startingBB: z.number().optional(),
@@ -53,7 +53,6 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
       buyIn: 0,
       initialBuyIn: 0,
       rebuys: 0,
-      addOns: 0,
       cashOut: 0,
       bountyCount: 0,
       bountyAmount: 0,
@@ -63,8 +62,10 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
   const watchedFormat = form.watch('format');
   const watchedBuyIn = form.watch('buyIn');
   const watchedCashOut = form.watch('cashOut');
+  const watchedBountyAmount = form.watch('bountyAmount');
 
-  const profitLoss = watchedCashOut - watchedBuyIn;
+  // Updated profit/loss calculation to include bounty amount
+  const profitLoss = (watchedCashOut + watchedBountyAmount) - watchedBuyIn;
 
   const handleSubmit = (data: TableFormData) => {
     const tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'> = {
@@ -79,7 +80,7 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
       bigBlind: data.bigBlind,
       endTime: new Date(),
       rebuys: data.rebuys,
-      addOns: data.addOns,
+      addOns: 0, // Set to 0 since we're removing this field
       notes: data.notes,
       finalPosition: data.finalPosition,
       startingBB: data.startingBB,
@@ -100,140 +101,103 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
           <DialogTitle>Add Table</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="gameType">Game Type</Label>
-              <Select onValueChange={(value) => form.setValue('gameType', value as 'NLH' | 'PLO')} defaultValue="NLH">
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NLH">No Limit Hold'em</SelectItem>
-                  <SelectItem value="PLO">Pot Limit Omaha</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="format">Format</Label>
-              <Select onValueChange={(value) => form.setValue('format', value as 'Cash' | 'Tournament')} defaultValue="Cash">
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cash">Cash Game</SelectItem>
-                  <SelectItem value="Tournament">Tournament</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {watchedFormat === 'Tournament' && (
-            <div>
-              <Label htmlFor="tournamentType">Tournament Type</Label>
-              <Select onValueChange={(value) => form.setValue('tournamentTypes', [value])}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select tournament type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Freezeout">Freezeout</SelectItem>
-                  <SelectItem value="Re-Buy Tournament">Re-Buy Tournament</SelectItem>
-                  <SelectItem value="Bounty">Bounty</SelectItem>
-                  <SelectItem value="Progressive Bounty (PKO)">Progressive Bounty (PKO)</SelectItem>
-                  <SelectItem value="Mystery Bounty">Mystery Bounty</SelectItem>
-                  <SelectItem value="Turbo / Hyper">Turbo / Hyper</SelectItem>
-                  <SelectItem value="Satellite">Satellite</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="initialBuyIn">Initial Buy-in ($)</Label>
-              <Input
-                id="initialBuyIn"
-                type="number"
-                step="0.01"
-                {...form.register('initialBuyIn', { valueAsNumber: true })}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value) || 0;
-                  form.setValue('initialBuyIn', value);
-                  form.setValue('buyIn', value + (form.watch('rebuys') * (form.watch('addOns') || 0)));
-                }}
-              />
-            </div>
-            <div>
-              <Label htmlFor="cashOut">Cash Out ($)</Label>
-              <Input
-                id="cashOut"
-                type="number"
-                step="0.01"
-                {...form.register('cashOut', { valueAsNumber: true })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="rebuys">Rebuys</Label>
-              <Input
-                id="rebuys"
-                type="number"
-                {...form.register('rebuys', { valueAsNumber: true })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="addOns">Add-ons ($)</Label>
-              <Input
-                id="addOns"
-                type="number"
-                step="0.01"
-                {...form.register('addOns', { valueAsNumber: true })}
-              />
-            </div>
-          </div>
-
-          {watchedFormat === 'Cash' && (
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          {/* Game & Format Section */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-gray-900">Game & Format</h4>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="smallBlind">Small Blind ($)</Label>
+                <Label htmlFor="gameType">Game Type</Label>
+                <Select onValueChange={(value) => form.setValue('gameType', value as 'NLH' | 'PLO')} defaultValue="NLH">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NLH">No Limit Hold'em</SelectItem>
+                    <SelectItem value="PLO">Pot Limit Omaha</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="format">Format</Label>
+                <Select onValueChange={(value) => form.setValue('format', value as 'Cash' | 'Tournament')} defaultValue="Cash">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Cash">Cash Game</SelectItem>
+                    <SelectItem value="Tournament">Tournament</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {watchedFormat === 'Tournament' && (
+              <div>
+                <Label htmlFor="tournamentType">Tournament Type</Label>
+                <Select onValueChange={(value) => form.setValue('tournamentTypes', [value])}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select tournament type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Freezeout">Freezeout</SelectItem>
+                    <SelectItem value="Re-Buy Tournament">Re-Buy Tournament</SelectItem>
+                    <SelectItem value="Bounty">Bounty</SelectItem>
+                    <SelectItem value="Progressive Bounty (PKO)">Progressive Bounty (PKO)</SelectItem>
+                    <SelectItem value="Mystery Bounty">Mystery Bounty</SelectItem>
+                    <SelectItem value="Turbo / Hyper">Turbo / Hyper</SelectItem>
+                    <SelectItem value="Satellite">Satellite</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Financials Section */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-gray-900">Financials</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="initialBuyIn">Initial Buy-in ($)</Label>
                 <Input
-                  id="smallBlind"
+                  id="initialBuyIn"
                   type="number"
                   step="0.01"
-                  {...form.register('smallBlind', { valueAsNumber: true })}
+                  {...form.register('initialBuyIn', { valueAsNumber: true })}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value) || 0;
+                    form.setValue('initialBuyIn', value);
+                    form.setValue('buyIn', value + (form.watch('rebuys') || 0));
+                  }}
                 />
               </div>
               <div>
-                <Label htmlFor="bigBlind">Big Blind ($)</Label>
+                <Label htmlFor="rebuys">Rebuys ($)</Label>
                 <Input
-                  id="bigBlind"
+                  id="rebuys"
                   type="number"
                   step="0.01"
-                  {...form.register('bigBlind', { valueAsNumber: true })}
+                  {...form.register('rebuys', { valueAsNumber: true })}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value) || 0;
+                    form.setValue('rebuys', value);
+                    form.setValue('buyIn', (form.watch('initialBuyIn') || 0) + value);
+                  }}
                 />
               </div>
             </div>
-          )}
 
-          {watchedFormat === 'Tournament' && (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="finalPosition">Final Position</Label>
+                <Label htmlFor="cashOut">Cash Out ($)</Label>
                 <Input
-                  id="finalPosition"
+                  id="cashOut"
                   type="number"
-                  {...form.register('finalPosition', { valueAsNumber: true })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="bountyCount">Bounties</Label>
-                <Input
-                  id="bountyCount"
-                  type="number"
-                  {...form.register('bountyCount', { valueAsNumber: true })}
+                  step="0.01"
+                  {...form.register('cashOut', { valueAsNumber: true })}
                 />
               </div>
               <div>
@@ -246,27 +210,90 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
                 />
               </div>
             </div>
-          )}
 
-          <div>
-            <Label htmlFor="notes">Notes (Optional)</Label>
-            <Textarea
-              id="notes"
-              {...form.register('notes')}
-              placeholder="Any notes about this table..."
-            />
+            {watchedFormat === 'Cash' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="smallBlind">Small Blind ($)</Label>
+                  <Input
+                    id="smallBlind"
+                    type="number"
+                    step="0.01"
+                    {...form.register('smallBlind', { valueAsNumber: true })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="bigBlind">Big Blind ($)</Label>
+                  <Input
+                    id="bigBlind"
+                    type="number"
+                    step="0.01"
+                    {...form.register('bigBlind', { valueAsNumber: true })}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="p-3 bg-gray-50 rounded-md">
+          {watchedFormat === 'Tournament' && (
+            <>
+              <Separator />
+              
+              {/* Tournament Results Section */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium text-gray-900">Tournament Results</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="finalPosition">Final Position</Label>
+                    <Input
+                      id="finalPosition"
+                      type="number"
+                      {...form.register('finalPosition', { valueAsNumber: true })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="bountyCount">Players Eliminated</Label>
+                    <Input
+                      id="bountyCount"
+                      type="number"
+                      {...form.register('bountyCount', { valueAsNumber: true })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          <Separator />
+
+          {/* Notes Section */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-gray-900">Additional Information</h4>
+            <div>
+              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Textarea
+                id="notes"
+                {...form.register('notes')}
+                placeholder="Any notes about this table..."
+                className="min-h-[60px]"
+              />
+            </div>
+          </div>
+
+          {/* Profit/Loss Display */}
+          <div className="p-4 bg-gray-50 rounded-lg">
             <p className="text-sm font-medium">
               Profit/Loss: 
-              <span className={`ml-2 ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`ml-2 text-lg ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)}
               </span>
             </p>
+            <p className="text-xs text-gray-500 mt-1">
+              (Cash Out + Bounties) - (Buy-in + Rebuys)
+            </p>
           </div>
 
-          <div className="flex gap-4 pt-4">
+          <div className="flex gap-4 pt-4 border-t">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
               Cancel
             </Button>
