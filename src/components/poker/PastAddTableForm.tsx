@@ -85,6 +85,10 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
   const profitLoss = (watchedCashOut + (watchedFormat === 'Tournament' ? watchedBountyAmount : 0)) - totalBuyIn;
 
   const handleSubmit = (data: TableFormData) => {
+    console.log('Form submitted with data:', data);
+    console.log('Total buy-in calculated:', totalBuyIn);
+    console.log('Rebuys value:', rebuysValue);
+    
     const tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'> = {
       name: data.name,
       gameType: data.gameType,
@@ -109,8 +113,16 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
       hands: []
     };
     
+    console.log('Calling onSubmit with tableData:', tableData);
     onSubmit(tableData);
     form.reset();
+    onOpenChange(false);
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Form submission triggered');
+    form.handleSubmit(handleSubmit)(e);
   };
 
   return (
@@ -120,7 +132,7 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
           <DialogTitle>Add Table</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <form onSubmit={handleFormSubmit} className="space-y-6">
           {/* Game & Format Section */}
           <div className="space-y-4">
             <h4 className="text-sm font-medium text-gray-900">Game & Format</h4>
@@ -284,18 +296,6 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="bountyAmount">Bounty Payout ($)</Label>
-                    <Input
-                      id="bountyAmount"
-                      type="number"
-                      step="0.01"
-                      {...form.register('bountyAmount', { valueAsNumber: true })}
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
                     <Label htmlFor="finalPosition">Final Position</Label>
                     <Input
                       id="finalPosition"
@@ -303,12 +303,24 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
                       {...form.register('finalPosition', { valueAsNumber: true })}
                     />
                   </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="bountyCount">Players Eliminated</Label>
                     <Input
                       id="bountyCount"
                       type="number"
                       {...form.register('bountyCount', { valueAsNumber: true })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="bountyAmount">Bounty Payout ($)</Label>
+                    <Input
+                      id="bountyAmount"
+                      type="number"
+                      step="0.01"
+                      {...form.register('bountyAmount', { valueAsNumber: true })}
                     />
                   </div>
                 </div>
