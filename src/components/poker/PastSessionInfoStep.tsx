@@ -7,15 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { DateTimePicker } from '@/components/ui/datetime-picker';
 
 const sessionInfoSchema = z.object({
   startTime: z.date(),
   endTime: z.date(),
-  isOnline: z.boolean().default(false),
-  isMultiDay: z.boolean().default(false),
   location: z.string().min(1, 'Location is required'),
   notes: z.string().optional(),
 });
@@ -25,8 +22,6 @@ type SessionInfoFormData = z.infer<typeof sessionInfoSchema>;
 interface SessionInfo {
   startTime: Date;
   endTime: Date;
-  isOnline: boolean;
-  isMultiDay: boolean;
   location: string;
   notes?: string;
 }
@@ -48,12 +43,9 @@ const PastSessionInfoStep: React.FC<PastSessionInfoStepProps> = ({
   });
 
   const handleSubmit = (data: SessionInfoFormData) => {
-    // Ensure all required fields are present and properly typed
     const sessionInfo: SessionInfo = {
       startTime: data.startTime,
       endTime: data.endTime,
-      isOnline: data.isOnline,
-      isMultiDay: data.isMultiDay,
       location: data.location,
       notes: data.notes
     };
@@ -94,33 +86,15 @@ const PastSessionInfoStep: React.FC<PastSessionInfoStepProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="location">Location / Table Name</Label>
+            <Label htmlFor="location">Physical Location</Label>
             <Input
               id="location"
               {...form.register('location')}
-              placeholder="Casino name or online site"
+              placeholder="Casino name or site name"
             />
             {form.formState.errors.location && (
               <p className="text-sm text-red-500 mt-1">{form.formState.errors.location.message}</p>
             )}
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="isOnline"
-              checked={form.watch('isOnline')}
-              onCheckedChange={(checked) => form.setValue('isOnline', !!checked)}
-            />
-            <Label htmlFor="isOnline">Online Game</Label>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="isMultiDay"
-              checked={form.watch('isMultiDay')}
-              onCheckedChange={(checked) => form.setValue('isMultiDay', !!checked)}
-            />
-            <Label htmlFor="isMultiDay">Multi-Day Tournament</Label>
           </div>
 
           <div>

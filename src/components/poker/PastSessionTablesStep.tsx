@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -8,8 +9,6 @@ import PastAddTableForm from './PastAddTableForm';
 interface SessionInfo {
   startTime: Date;
   endTime: Date;
-  isOnline: boolean;
-  isMultiDay: boolean;
   location: string;
   notes?: string;
 }
@@ -45,17 +44,10 @@ const PastSessionTablesStep: React.FC<PastSessionTablesStepProps> = ({
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold mb-4">Session Summary</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
           <div>
             <span className="text-gray-600">Location:</span>
             <p className="font-medium">{sessionInfo.location}</p>
-          </div>
-          <div>
-            <span className="text-gray-600">Type:</span>
-            <p className="font-medium">
-              {sessionInfo.isOnline ? 'Online' : 'Live'}
-              {sessionInfo.isMultiDay && ' • Multi-Day'}
-            </p>
           </div>
           <div>
             <span className="text-gray-600">Tables:</span>

@@ -15,8 +15,6 @@ interface AddPastSessionFormProps {
 interface SessionInfo {
   startTime: Date;
   endTime: Date;
-  isOnline: boolean;
-  isMultiDay: boolean;
   location: string;
   notes?: string;
 }
@@ -29,8 +27,6 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
   const [sessionInfo, setSessionInfo] = useState<SessionInfo>({
     startTime: new Date(),
     endTime: new Date(),
-    isOnline: false,
-    isMultiDay: false,
     location: '',
     notes: ''
   });
@@ -81,6 +77,9 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
       // Get the primary table's game details for session-level data
       const primaryTable = tables[0];
       
+      // Determine if session is online if any table is online
+      const isOnline = tables.some(table => table.isOnline);
+      
       const sessionDuration = Math.round((sessionInfo.endTime.getTime() - sessionInfo.startTime.getTime()) / (1000 * 60));
       
       const newSession: PokerSession = {
@@ -96,7 +95,7 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
         startTime: sessionInfo.startTime,
         endTime: sessionInfo.endTime,
         isActive: false,
-        isOnline: sessionInfo.isOnline,
+        isOnline,
         notes: sessionInfo.notes,
         sessionDuration,
         currentStatus: 'ended',
