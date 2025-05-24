@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -21,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 
 const pastSessionSchema = z.object({
-  gameType: z.string().min(1, 'Game type is required'),
+  gameType: z.enum(['NLH', 'PLO']),
   format: z.enum(['Cash', 'Tournament']),
   tournamentType: z.string().optional(),
   isMultiDay: z.boolean().default(false),
@@ -57,7 +56,7 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
   const form = useForm<PastSessionFormData>({
     resolver: zodResolver(pastSessionSchema),
     defaultValues: {
-      gameType: 'No Limit Hold\'em',
+      gameType: 'NLH',
       format: 'Cash',
       isMultiDay: false,
       isOnline: false,
@@ -99,8 +98,8 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
         initialBuyIn: data.buyIn,
         rebuys: data.rebuys,
         rebuyAmount: data.rebuyAmount,
-        smallBlind: data.smallBlind,
-        bigBlind: data.bigBlind,
+        smallBlind: data.smallBlind || 0,
+        bigBlind: data.bigBlind || 0,
         startTime: data.startTime,
         endTime: data.endTime,
         isActive: false,
@@ -154,13 +153,13 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="gameType">Game Type</Label>
-                <Select onValueChange={(value) => form.setValue('gameType', value)} defaultValue="No Limit Hold'em">
+                <Select onValueChange={(value) => form.setValue('gameType', value as 'NLH' | 'PLO')} defaultValue="NLH">
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="No Limit Hold'em">No Limit Hold'em</SelectItem>
-                    <SelectItem value="Pot Limit Omaha">Pot Limit Omaha</SelectItem>
+                    <SelectItem value="NLH">No Limit Hold'em</SelectItem>
+                    <SelectItem value="PLO">Pot Limit Omaha</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
