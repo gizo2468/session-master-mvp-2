@@ -63,7 +63,7 @@ const Index = () => {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setShowAddPastSession(true)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-poker-gold hover:text-poker-darkGold transition-colors rounded-md hover:bg-poker-gold/10"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-yellow-400 text-gray-800 hover:bg-yellow-500 transition-colors rounded-md font-medium"
             >
               <Icon name="plus" className="h-3 w-3" />
               Add Past Session
