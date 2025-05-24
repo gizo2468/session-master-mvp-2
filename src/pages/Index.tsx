@@ -61,15 +61,13 @@ const Index = () => {
             Recent Sessions (Active {activeSessionsCount})
           </h2>
           <div className="flex items-center gap-3">
-            <Button 
+            <button 
               onClick={() => setShowAddPastSession(true)}
-              variant="poker"
-              size="sm"
-              className="h-8 px-3 text-sm rounded-md"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-poker-gold hover:text-poker-darkGold transition-colors rounded-md hover:bg-poker-gold/10"
             >
-              <Icon name="plus" className="h-3 w-3 mr-1" />
+              <Icon name="plus" className="h-3 w-3" />
               Add Past Session
-            </Button>
+            </button>
             <button 
               className="text-sm text-poker-feltGreen"
               onClick={() => navigate('/history')}
