@@ -70,43 +70,43 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
         <Card className="w-full">
           <CollapsibleTrigger asChild>
             <CardContent className="p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="flex flex-col">
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="secondary">{table.gameType}</Badge>
-                      <Badge variant={table.format === 'Cash' ? 'default' : 'destructive'}>
-                        {table.format}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <Badge variant="secondary" className="shrink-0">{table.gameType}</Badge>
+                    <Badge variant={table.format === 'Cash' ? 'default' : 'destructive'} className="shrink-0">
+                      {table.format}
+                    </Badge>
+                    {table.isOnline && (
+                      <Badge variant="outline" className="shrink-0">Online</Badge>
+                    )}
+                    {isMultiDayTable && (
+                      <Badge variant="outline" className="shrink-0">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        Multi-Day
                       </Badge>
-                      {table.isOnline && (
-                        <Badge variant="outline">Online</Badge>
-                      )}
-                      {isMultiDayTable && (
-                        <Badge variant="outline">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          Multi-Day
-                        </Badge>
-                      )}
-                      {isContinuing && (
-                        <Badge variant="success">Continuing</Badge>
-                      )}
-                      {table.tournamentTypes && table.tournamentTypes.length > 0 && (
-                        <Badge variant="outline">{table.tournamentTypes[0]}</Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">{getGameDetails()}</p>
+                    )}
+                    {isContinuing && (
+                      <Badge variant="success" className="shrink-0">Continuing</Badge>
+                    )}
+                    {table.tournamentTypes && table.tournamentTypes.length > 0 && (
+                      <Badge variant="outline" className="shrink-0 max-w-[150px] truncate">
+                        {table.tournamentTypes[0]}
+                      </Badge>
+                    )}
                   </div>
+                  <p className="text-sm text-gray-600 truncate">{getGameDetails()}</p>
                 </div>
                 
-                <div className="flex items-center space-x-4">
-                  <div className="text-right">
-                    <p className="text-sm text-gray-600">Buy-in: ${table.buyIn.toFixed(2)}</p>
-                    <p className={`font-semibold ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0">
+                  <div className="text-left sm:text-right">
+                    <p className="text-sm text-gray-600 whitespace-nowrap">Buy-in: ${table.buyIn.toFixed(2)}</p>
+                    <p className={`font-semibold whitespace-nowrap ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)}
                     </p>
                   </div>
                   
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center gap-1 shrink-0">
                     {isMultiDayTable && !isContinuing && (
                       <Button
                         size="sm"
@@ -115,6 +115,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                           e.stopPropagation();
                           setShowMultiDayDialog(true);
                         }}
+                        className="whitespace-nowrap"
                       >
                         End Day
                       </Button>
@@ -155,23 +156,23 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
             <div className="border-t border-gray-200">
               <div className="p-4 space-y-4">
                 {/* Table Details */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                  <div className="min-w-0">
                     <span className="text-gray-600">Initial Buy-in:</span>
-                    <p className="font-medium">${table.initialBuyIn?.toFixed(2) || '0.00'}</p>
+                    <p className="font-medium truncate">${table.initialBuyIn?.toFixed(2) || '0.00'}</p>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-gray-600">Rebuys:</span>
-                    <p className="font-medium">${(table.rebuys || 0).toFixed(2)}</p>
+                    <p className="font-medium truncate">${(table.rebuys || 0).toFixed(2)}</p>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-gray-600">Cash Out:</span>
-                    <p className="font-medium">${(table.cashOut || 0).toFixed(2)}</p>
+                    <p className="font-medium truncate">${(table.cashOut || 0).toFixed(2)}</p>
                   </div>
                   {table.bountyAmount && table.bountyAmount > 0 && (
-                    <div>
+                    <div className="min-w-0">
                       <span className="text-gray-600">Bounties:</span>
-                      <p className="font-medium">${table.bountyAmount.toFixed(2)}</p>
+                      <p className="font-medium truncate">${table.bountyAmount.toFixed(2)}</p>
                     </div>
                   )}
                 </div>
@@ -179,18 +180,18 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                 {/* Multi-Day Information */}
                 {isMultiDayTable && isContinuing && (
                   <div className="p-3 bg-blue-50 rounded-lg">
-                    <h5 className="font-medium text-blue-900 mb-2">Multi-Day Tournament - Continuing</h5>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <h5 className="font-medium text-blue-900 mb-2 break-words">Multi-Day Tournament - Continuing</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       {table.nextDayStart && (
-                        <div>
+                        <div className="min-w-0">
                           <span className="text-blue-700">Next Day Start:</span>
-                          <p className="font-medium">{new Date(table.nextDayStart).toLocaleString()}</p>
+                          <p className="font-medium break-words">{new Date(table.nextDayStart).toLocaleString()}</p>
                         </div>
                       )}
                       {table.chipsCarryover && (
-                        <div>
+                        <div className="min-w-0">
                           <span className="text-blue-700">Chips Carryover:</span>
-                          <p className="font-medium">{table.chipsCarryover.toLocaleString()}</p>
+                          <p className="font-medium break-words">{table.chipsCarryover.toLocaleString()}</p>
                         </div>
                       )}
                     </div>
@@ -200,7 +201,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                 {table.notes && (
                   <div>
                     <span className="text-gray-600 text-sm">Notes:</span>
-                    <p className="text-sm mt-1">{table.notes}</p>
+                    <p className="text-sm mt-1 break-words">{table.notes}</p>
                   </div>
                 )}
 
