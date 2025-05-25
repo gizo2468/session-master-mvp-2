@@ -1,8 +1,7 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import Icon from '@/components/ui/Lucide';
 import {
@@ -19,7 +18,6 @@ import {
 
 const StudentsList = () => {
   const { students, removeStudent } = useCoachStudent();
-  const [showDemoStudent, setShowDemoStudent] = useState(true);
 
   if (students.length === 0) {
     return (
@@ -31,35 +29,12 @@ const StudentsList = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {showDemoStudent ? (
-            <div className="space-y-3">
-              <div className="p-3 border rounded-md bg-gray-50 border-dashed relative">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-600">Alex Student</span>
-                      <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-                        Demo
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-gray-400">Example student connection</div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowDemoStudent(false)}
-                    className="h-7 w-7 p-0 text-gray-400 hover:text-gray-600"
-                    aria-label="Remove demo student"
-                  >
-                    <Icon name="x" size={16} />
-                  </Button>
-                </div>
-              </div>
+          <div className="text-center py-6 text-gray-500">
+            <div className="mb-4">
+              <Icon name="Users" size={48} className="mx-auto text-gray-300" />
             </div>
-          ) : null}
-          <div className={`text-center text-gray-500 ${showDemoStudent ? 'mt-4' : ''}`}>
-            <p className="text-sm">You don't have any connected students yet.</p>
-            <p className="text-xs mt-1">Share your connection code to get started.</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">You don't have any connected students yet.</p>
+            <p className="text-xs">Share your connection code to get started.</p>
           </div>
         </CardContent>
       </Card>
