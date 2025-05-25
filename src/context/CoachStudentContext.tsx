@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
@@ -51,28 +52,57 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
   const [connectedCoach, setConnectedCoach] = useState<CoachProfile | null>(null);
   
-  // Load data from localStorage on component mount - no more auto-creating mock data
+  // Load data from localStorage on component mount - only load if it exists
   useEffect(() => {
     const storedCoachProfile = localStorage.getItem('coachProfile');
     if (storedCoachProfile) {
-      setCoachProfile(JSON.parse(storedCoachProfile));
-      setIsCoach(true);
+      try {
+        const parsedProfile = JSON.parse(storedCoachProfile);
+        setCoachProfile(parsedProfile);
+        setIsCoach(true);
+      } catch (error) {
+        console.error('Error parsing coach profile from localStorage:', error);
+        localStorage.removeItem('coachProfile');
+      }
     }
     
     const storedStudentProfile = localStorage.getItem('studentProfile');
     if (storedStudentProfile) {
-      setStudentProfile(JSON.parse(storedStudentProfile));
-      setIsStudent(true);
+      try {
+        const parsedProfile = JSON.parse(storedStudentProfile);
+        setStudentProfile(parsedProfile);
+        setIsStudent(true);
+      } catch (error) {
+        console.error('Error parsing student profile from localStorage:', error);
+        localStorage.removeItem('studentProfile');
+      }
     }
     
     const storedStudents = localStorage.getItem('students');
     if (storedStudents) {
-      setStudents(JSON.parse(storedStudents));
+      try {
+        const parsedStudents = JSON.parse(storedStudents);
+        // Only load real students, not demo data
+        if (Array.isArray(parsedStudents) && parsedStudents.length > 0) {
+          setStudents(parsedStudents);
+        }
+      } catch (error) {
+        console.error('Error parsing students from localStorage:', error);
+        localStorage.removeItem('students');
+      }
     }
     
     const storedRequests = localStorage.getItem('pendingRequests');
     if (storedRequests) {
-      setPendingRequests(JSON.parse(storedRequests));
+      try {
+        const parsedRequests = JSON.parse(storedRequests);
+        if (Array.isArray(parsedRequests)) {
+          setPendingRequests(parsedRequests);
+        }
+      } catch (error) {
+        console.error('Error parsing pending requests from localStorage:', error);
+        localStorage.removeItem('pendingRequests');
+      }
     }
     
     const storedCode = localStorage.getItem('connectionCode');
@@ -82,40 +112,69 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     
     const storedConnectedCoach = localStorage.getItem('connectedCoach');
     if (storedConnectedCoach) {
-      setConnectedCoach(JSON.parse(storedConnectedCoach));
+      try {
+        const parsedCoach = JSON.parse(storedConnectedCoach);
+        setConnectedCoach(parsedCoach);
+      } catch (error) {
+        console.error('Error parsing connected coach from localStorage:', error);
+        localStorage.removeItem('connectedCoach');
+      }
     }
   }, []);
 
-  // Save data to localStorage whenever it changes
+  // Save data to localStorage whenever it changes - only save if data exists
   useEffect(() => {
     if (coachProfile) {
       localStorage.setItem('coachProfile', JSON.stringify(coachProfile));
     }
+  }, [coachProfile]);
+
+  useEffect(() => {
     if (studentProfile) {
       localStorage.setItem('studentProfile', JSON.stringify(studentProfile));
     }
+  }, [studentProfile]);
+
+  useEffect(() => {
     if (students.length > 0) {
       localStorage.setItem('students', JSON.stringify(students));
+    } else {
+      // Clear localStorage if no students
+      localStorage.removeItem('students');
     }
+  }, [students]);
+
+  useEffect(() => {
     if (pendingRequests.length > 0) {
       localStorage.setItem('pendingRequests', JSON.stringify(pendingRequests));
+    } else {
+      // Clear localStorage if no pending requests
+      localStorage.removeItem('pendingRequests');
     }
+  }, [pendingRequests]);
+
+  useEffect(() => {
     if (connectionCode) {
       localStorage.setItem('connectionCode', connectionCode);
+    } else {
+      localStorage.removeItem('connectionCode');
     }
+  }, [connectionCode]);
+
+  useEffect(() => {
     if (connectedCoach) {
       localStorage.setItem('connectedCoach', JSON.stringify(connectedCoach));
     }
-  }, [coachProfile, studentProfile, students, pendingRequests, connectionCode, connectedCoach]);
+  }, [connectedCoach]);
 
   // Coach methods
   const createCoachProfile = (displayName: string, bio?: string) => {
     const newCoach: CoachProfile = {
       id: uuidv4(),
-      userId: 'user-' + uuidv4().substring(0, 8), // Simplified user ID for demo
+      userId: 'user-' + uuidv4().substring(0, 8),
       displayName,
       bio,
-      students: [],
+      students: [], // Start with empty students array
       comments: [], // Start with empty comments array
       createdAt: new Date(),
     };
@@ -124,6 +183,12 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setIsCoach(true);
     setIsStudent(false); // Can't be both coach and student
     setStudentProfile(null);
+    setConnectedCoach(null);
+    
+    // Clear any existing student data when creating new coach profile
+    setStudents([]);
+    setPendingRequests([]);
+    setConnectionCode(null);
     
     toast({
       title: "Coach Profile Created",
@@ -235,7 +300,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const createStudentProfile = (displayName: string) => {
     const newStudent: StudentProfile = {
       id: uuidv4(),
-      userId: 'user-' + uuidv4().substring(0, 8), // Simplified user ID for demo
+      userId: 'user-' + uuidv4().substring(0, 8),
       displayName,
       createdAt: new Date(),
     };
@@ -244,6 +309,12 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setIsStudent(true);
     setIsCoach(false); // Can't be both coach and student
     setCoachProfile(null);
+    
+    // Clear any existing coach data when creating student profile
+    setStudents([]);
+    setPendingRequests([]);
+    setConnectionCode(null);
+    setConnectedCoach(null);
     
     // Store in localStorage for persistence
     localStorage.setItem(`student-${newStudent.id}`, JSON.stringify(newStudent));
@@ -310,9 +381,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const updatedStudent = { ...studentProfile, coachId: undefined };
     setStudentProfile(updatedStudent);
     localStorage.setItem(`student-${studentProfile.id}`, JSON.stringify(updatedStudent));
-    
-    // Update coach's student list (if we had the coach object)
-    // In a real application, this would update the coach's data in a database
     
     // Reset coach connection
     setConnectedCoach(null);
