@@ -39,21 +39,7 @@ export const useCoachStudent = () => {
 export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { toast } = useToast();
 
-  // Mock comments for demo purposes only
-  const mockComments: CoachComment[] = [
-    {
-      id: 'c1',
-      coachId: 'coach-1',
-      studentId: 'demo-student',
-      sessionId: 'session-demo',
-      content: 'Excellent 3-bet sizing against aggressive opponents. Keep it up!',
-      tag: 'good_decision',
-      createdAt: new Date('2024-04-26'),
-      status: 'unread'
-    }
-  ];
-
-  // State for coach - start with empty students array
+  // State for coach - start with empty arrays for new users
   const [isCoach, setIsCoach] = useState<boolean>(false);
   const [coachProfile, setCoachProfile] = useState<CoachProfile | null>(null);
   const [students, setStudents] = useState<StudentProfile[]>([]);
@@ -65,23 +51,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
   const [connectedCoach, setConnectedCoach] = useState<CoachProfile | null>(null);
   
-  // Create a mock coach profile if none exists
-  useEffect(() => {
-    const mockCoach: CoachProfile = {
-      id: 'coach-1',
-      userId: 'user-coach1',
-      displayName: 'Coach Demo',
-      bio: 'Experienced poker coach specializing in tournament strategy',
-      students: [], // Start with empty array
-      comments: mockComments,
-      createdAt: new Date('2024-01-01'),
-    };
-    
-    setCoachProfile(mockCoach);
-    setIsCoach(true);
-  }, []);
-
-  // Load data from localStorage on component mount
+  // Load data from localStorage on component mount - no more auto-creating mock data
   useEffect(() => {
     const storedCoachProfile = localStorage.getItem('coachProfile');
     if (storedCoachProfile) {
@@ -146,6 +116,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       displayName,
       bio,
       students: [],
+      comments: [], // Start with empty comments array
       createdAt: new Date(),
     };
     

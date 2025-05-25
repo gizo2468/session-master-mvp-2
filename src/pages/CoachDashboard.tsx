@@ -29,7 +29,7 @@ const CoachDashboard = () => {
     return null;
   }
 
-  // Coach tier details
+  // Coach tier details - default to free for new users
   const coachTier = user.coachTier || 'free';
   const tierDetails = coachTiers[coachTier];
   const maxStudents = getMaxStudents(coachTier);
@@ -187,7 +187,7 @@ const CoachDashboard = () => {
                 </CardContent>
               </Card>
               
-              {/* Recent Feedback - Locked for free tier */}
+              {/* Recent Feedback - Show demo example for free tier when no real feedback exists */}
               <div className="relative">
                 <Card>
                   <CardHeader>
@@ -235,9 +235,33 @@ const CoachDashboard = () => {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-6 text-gray-500">
-                          <p>No feedback comments yet.</p>
-                          <p className="text-sm mt-2">Review your students' sessions to provide feedback.</p>
+                        <div className="space-y-4">
+                          {/* Demo feedback example for illustration */}
+                          <div className="border rounded-md p-3 text-sm bg-blue-50 border-dashed border-blue-200">
+                            <div className="flex justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-blue-700">Demo Only - Example Feedback</span>
+                                <Badge variant="outline" className="text-xs bg-blue-100 text-blue-600 border-blue-300">
+                                  Preview
+                                </Badge>
+                              </div>
+                              <span className="text-xs text-blue-500">Example session</span>
+                            </div>
+                            <p className="text-blue-700 text-sm">
+                              "Great value bet sizing on the river. You extracted maximum value from villain's bluff-catchers."
+                            </p>
+                            <div className="flex justify-between items-center mt-2">
+                              <span className="inline-flex text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                                good decision
+                              </span>
+                              <span className="text-xs text-blue-500">Example status</span>
+                            </div>
+                          </div>
+                          
+                          <div className="text-center py-6 text-gray-500">
+                            <p>No feedback comments yet.</p>
+                            <p className="text-sm mt-2">Connect with students and review their sessions to provide feedback.</p>
+                          </div>
                         </div>
                       )}
                       
