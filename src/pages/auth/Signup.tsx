@@ -43,13 +43,19 @@ const Signup: React.FC = () => {
       email: '',
       password: '',
       confirmPassword: '',
-      role: 'student',
-      agreeToTerms: false as unknown as true, // Using type assertion to fix the TS error
+      role: 'student', // Ensure this defaults to 'student'
+      agreeToTerms: false as unknown as true,
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     try {
+      console.log("Signup form submitted with values:", {
+        email: values.email,
+        role: values.role,
+        fullName: values.fullName
+      });
+      
       await signup(values.email, values.password, values.fullName, values.role as UserRole);
       
       // Set the terms acceptance flag in the profile
@@ -57,6 +63,7 @@ const Signup: React.FC = () => {
         // Get current user after signup
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+          console.log("Setting terms acceptance for user:", user.id);
           // Update the has_accepted_terms field using our custom function
           await supabase.rpc('update_terms_acceptance', {
             user_id: user.id,
@@ -65,8 +72,10 @@ const Signup: React.FC = () => {
         }
       }
       
+      console.log("Signup completed successfully, navigating to home");
       navigate('/');
     } catch (error) {
+      console.error("Signup failed:", error);
       // Error is handled in the AuthContext
     }
   };

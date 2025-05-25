@@ -85,11 +85,13 @@ const createUserFromSupabaseUser = (supabaseUser: SupabaseUser, role: UserRole =
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { toast } = useToast();
+
+  // State for coach - start with empty arrays for new users
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
   
   // Track auth state initialization
   const [authChecked, setAuthChecked] = useState(false);
@@ -139,6 +141,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_IN') {
           isFreshLogin.current = true;
           if (currentSession?.user) {
+            console.log("New user signed in:", currentSession.user.id, 
+                       "Metadata role:", currentSession.user.user_metadata?.role);
             // Only fetch user metadata after auth state change with timeout to prevent deadlocks
             setTimeout(() => {
               if (isActive) {
@@ -188,6 +192,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSessionId(currentSession?.access_token?.substring(0, 8) || null);
         
         if (currentSession?.user) {
+          console.log("Existing session found for user:", currentSession.user.id,
+                     "Metadata role:", currentSession.user.user_metadata?.role);
           await fetchAndSetUser(currentSession.user, false); // false = not a fresh login
         } else {
           setIsLoading(false);
@@ -214,7 +220,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchAndSetUser = async (supabaseUser: SupabaseUser, isNewLogin: boolean = true) => {
     try {
       console.log("Fetching user data for ID:", supabaseUser.id, 
-                  "Is new login:", isNewLogin);
+                  "Is new login:", isNewLogin,
+                  "User metadata role:", supabaseUser.user_metadata?.role);
       
       // Query the profiles table we just created
       const { data, error } = await supabase
@@ -226,6 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error("Error fetching user profile:", error);
         const defaultUser = createUserFromSupabaseUser(supabaseUser);
+        console.log("Created default user with role:", defaultUser.role);
         setUser(defaultUser);
         
         if (isNewLogin) {
@@ -235,6 +243,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Safely cast the database values to the required types
         const userRole = data.role as UserRole;
         const language = (data.language === 'en' || data.language === 'he') ? data.language as 'en' | 'he' : 'en';
+        
+        console.log("Fetched user profile from database - Role:", userRole, "Full data:", data);
         
         let coachTierValue: CoachTier | undefined = undefined;
         if (userRole === 'coach' && data.coach_tier) {
@@ -281,6 +291,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           notificationPreferences: notificationPrefs,
         };
         
+        console.log("Final user object created with role:", appUser.role);
         setUser(appUser);
 
         // Update last login time when fetching user data after login
@@ -294,6 +305,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         // If no profile exists, use data from auth user
         const defaultUser = createUserFromSupabaseUser(supabaseUser);
+        console.log("No profile found, created default user with role:", defaultUser.role);
         setUser(defaultUser);
         
         if (isNewLogin) {
@@ -303,6 +315,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error("Error fetching user data:", error);
       const defaultUser = createUserFromSupabaseUser(supabaseUser);
+      console.log("Error occurred, created default user with role:", defaultUser.role);
       setUser(defaultUser);
       
       if (isNewLogin) {
@@ -344,7 +357,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data.user) {
         isFreshLogin.current = true;
-        console.log("Login successful for user:", data.user.id);
+        console.log("Login successful for user:", data.user.id, 
+                   "User metadata role:", data.user.user_metadata?.role);
       }
     } catch (error: any) {
       toast({
@@ -361,7 +375,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string, fullName: string, role: UserRole) => {
     setIsLoading(true);
     try {
-      console.log("Attempting signup for:", email);
+      console.log("Attempting signup for:", email, "with role:", role);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -385,7 +399,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Success message shown when user data is successfully loaded
-      console.log("Signup successful for:", email);
+      console.log("Signup successful for:", email, "with role:", role, 
+                 "User ID:", data.user?.id);
     } catch (error: any) {
       toast({
         title: "Sign up failed",

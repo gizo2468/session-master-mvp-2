@@ -8,13 +8,24 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/context/AuthContext';
 
 const CoachingNav = () => {
-  const { pendingRequests } = useCoachStudent();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   
-  // Return null if we don't have a user yet
-  if (!user) return null;
+  // Handle cases where context might not be available
+  let pendingRequests = [];
+  try {
+    const coachStudentContext = useCoachStudent();
+    pendingRequests = coachStudentContext?.pendingRequests || [];
+  } catch (error) {
+    console.log('CoachStudent context not available, defaulting to empty state');
+  }
   
-  // Show different navigation based on user role
+  // Don't render anything if auth is still loading or user is not available
+  if (authLoading || !user) {
+    return null;
+  }
+  
+  console.log('CoachingNav: User role is', user.role, 'User data:', user);
+  
   return (
     <div className="mt-8">
       <Separator className="my-4" />
