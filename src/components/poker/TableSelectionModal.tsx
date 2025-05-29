@@ -109,10 +109,10 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex-1 text-center">
-                    <h4 className="font-medium">
+                    <h4 className="font-medium text-center">
                       Table {index + 1} - {table.location}
                     </h4>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 text-center">
                       {formatTableDetails(table)} • {formattedStart}
                     </p>
                   </div>
