@@ -26,7 +26,9 @@ const PendingRequestsList = () => {
             <li key={request.id} className="p-3 border rounded-md">
               <div className="flex justify-between items-center">
                 <div>
-                  <span className="font-medium">New Connection Request</span>
+                  <span className="font-medium">
+                    {request.studentName || 'Unknown Student'} requested to connect
+                  </span>
                   <div className="text-xs text-gray-500">
                     {new Date(request.createdAt).toLocaleDateString()}
                   </div>

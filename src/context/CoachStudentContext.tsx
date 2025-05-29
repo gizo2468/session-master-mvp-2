@@ -191,6 +191,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         studentId: item.student_id,
         status: 'pending',
         createdAt: new Date(item.created_at),
+        studentName: item.profiles?.full_name || 'Unknown Student',
       }));
 
       setPendingRequests(requests);

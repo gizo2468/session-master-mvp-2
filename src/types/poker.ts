@@ -1,3 +1,4 @@
+
 export interface HandData {
   id: string;
   cards: string;
@@ -119,6 +120,7 @@ export interface ConnectionRequest {
   studentId: string;
   status: 'pending' | 'approved' | 'declined';
   createdAt: Date;
+  studentName?: string; // Added to show student name in requests
 }
 
 // New types for coaching features
