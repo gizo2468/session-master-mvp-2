@@ -42,10 +42,22 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
 
   const formatBuyinDetails = (table: TableData) => {
     const initialBuyIn = table.initialBuyIn || 0;
-    const rebuys = table.rebuys || 0;
     
-    if (rebuys > 0) {
-      return `Buy-in: $${initialBuyIn.toFixed(2)}, Rebuy: $${rebuys.toFixed(2)}`;
+    if (table.format === 'Tournament') {
+      // For tournaments, calculate rebuy dollar amount from rebuy count
+      const rebuyCount = table.rebuys || 0;
+      const rebuyAmount = rebuyCount * initialBuyIn;
+      
+      if (rebuyAmount > 0) {
+        return `Buy-in: $${initialBuyIn.toFixed(2)}, Rebuy: $${rebuyAmount.toFixed(2)}`;
+      }
+    } else {
+      // For cash games, use the rebuy amount directly
+      const rebuys = table.rebuys || 0;
+      
+      if (rebuys > 0) {
+        return `Buy-in: $${initialBuyIn.toFixed(2)}, Rebuy: $${rebuys.toFixed(2)}`;
+      }
     }
     
     return `Buy-in: $${initialBuyIn.toFixed(2)}`;
