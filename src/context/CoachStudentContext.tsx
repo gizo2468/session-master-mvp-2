@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -176,7 +175,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .from('coach_student_connections')
         .select(`
           *,
-          student:student_id(full_name)
+          profiles!student_id(full_name)
         `)
         .eq('coach_id', user.id)
         .eq('approved', false);
@@ -208,7 +207,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .from('coach_student_connections')
         .select(`
           *,
-          student:student_id(*)
+          profiles!student_id(*)
         `)
         .eq('coach_id', user.id)
         .eq('approved', true);
@@ -219,10 +218,10 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       const studentProfiles: StudentProfile[] = data.map(item => ({
-        id: item.student.id,
-        userId: item.student.id,
-        displayName: item.student.full_name,
-        createdAt: new Date(item.student.created_at),
+        id: item.profiles.id,
+        userId: item.profiles.id,
+        displayName: item.profiles.full_name,
+        createdAt: new Date(item.profiles.created_at),
         coachId: user.id,
       }));
 
@@ -240,7 +239,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .from('coach_student_connections')
         .select(`
           *,
-          coach:coach_id(*)
+          profiles!coach_id(*)
         `)
         .eq('student_id', user.id)
         .eq('approved', true)
@@ -253,13 +252,13 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (data) {
         setConnectedCoach({
-          id: data.coach.id,
-          userId: data.coach.id,
-          displayName: data.coach.full_name,
-          bio: data.coach.online_nickname || undefined,
+          id: data.profiles.id,
+          userId: data.profiles.id,
+          displayName: data.profiles.full_name,
+          bio: data.profiles.online_nickname || undefined,
           students: [],
           comments: [],
-          createdAt: new Date(data.coach.created_at),
+          createdAt: new Date(data.profiles.created_at),
         });
       }
     } catch (error) {
