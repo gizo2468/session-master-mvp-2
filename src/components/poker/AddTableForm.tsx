@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -39,9 +38,8 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
   const [location, setLocation] = useState('');
   const [buyIn, setBuyIn] = useState('');
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
-  const [bigBlindIndex, setBigBlindIndex] = useState(2); // Default to $2
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[smallBlindIndex]);
-  const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.bigBlind[bigBlindIndex]); 
+  const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[smallBlindIndex] * 2); // Always 2x small blind for cash
   const [startingBB, setStartingBB] = useState('');
   const [tournamentType, setTournamentType] = useState<string>('');
   const [isMultiDay, setIsMultiDay] = useState(false);
@@ -52,6 +50,13 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
       setFormat(fixedFormat);
     }
   }, [fixedFormat]);
+
+  // Update big blind whenever small blind changes for cash games
+  useEffect(() => {
+    if (format === 'Cash') {
+      setBigBlind(smallBlind * 2);
+    }
+  }, [smallBlind, format]);
   
   const validateForm = (): boolean => {
     // Clear previous validation error
@@ -113,9 +118,8 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
     setLocation('');
     setBuyIn('');
     setSmallBlindIndex(2);
-    setBigBlindIndex(2);
     setSmallBlind(BLIND_PRESETS.smallBlind[2]);
-    setBigBlind(BLIND_PRESETS.bigBlind[2]);
+    setBigBlind(BLIND_PRESETS.smallBlind[2] * 2); // Reset to 2x small blind
     setStartingBB('');
     setTournamentType('');
     setIsMultiDay(false);
@@ -127,21 +131,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
     setSmallBlindIndex(index);
     const newSmallBlind = BLIND_PRESETS.smallBlind[index];
     setSmallBlind(newSmallBlind);
-    
-    // Ensure big blind is always greater than or equal to small blind
-    if (bigBlind < newSmallBlind) {
-      const newBigBlindIndex = BLIND_PRESETS.bigBlind.findIndex(bb => bb >= newSmallBlind);
-      if (newBigBlindIndex !== -1) {
-        setBigBlindIndex(newBigBlindIndex);
-        setBigBlind(BLIND_PRESETS.bigBlind[newBigBlindIndex]);
-      }
-    }
-  };
-
-  const handleBigBlindChange = (value: number[]) => {
-    const index = value[0];
-    setBigBlindIndex(index);
-    setBigBlind(BLIND_PRESETS.bigBlind[index]);
+    // Big blind will be automatically updated by useEffect
   };
 
   return (
@@ -309,13 +299,11 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
                     <Label>Big Blind</Label>
                     <span className="text-sm font-medium">${bigBlind}</span>
                   </div>
-                  <Slider
-                    defaultValue={[bigBlindIndex]}
-                    max={BLIND_PRESETS.bigBlind.length - 1}
-                    step={1}
-                    onValueChange={handleBigBlindChange}
-                    className="py-2"
-                  />
+                  <div className="py-2 px-3 bg-gray-100 rounded-md border">
+                    <div className="text-sm text-gray-600 text-center">
+                      Auto-set to 2× Small Blind
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
