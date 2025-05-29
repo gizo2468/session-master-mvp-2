@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -84,6 +85,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
           filter: `coach_id=eq.${user.id}`,
         },
         () => {
+          console.log('Real-time update for coach connections detected');
           loadPendingRequests();
           loadStudents();
         }
@@ -97,6 +99,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
           filter: `student_id=eq.${user.id}`,
         },
         () => {
+          console.log('Real-time update for student connections detected');
           loadConnectedCoach();
         }
       )
@@ -123,6 +126,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     
     setLoading(true);
     try {
+      console.log('Loading user profile for:', user.id);
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
@@ -133,6 +137,8 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.error('Error loading profile:', error);
         return;
       }
+
+      console.log('Profile loaded:', profile);
 
       if (profile.role === 'coach') {
         setIsCoach(true);
@@ -171,11 +177,12 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!user?.id) return;
 
     try {
+      console.log('Loading pending requests for coach:', user.id);
       const { data, error } = await supabase
         .from('coach_student_connections')
         .select(`
           *,
-          profiles!student_id(full_name)
+          profiles!coach_student_connections_student_id_fkey(*)
         `)
         .eq('coach_id', user.id)
         .eq('approved', false);
@@ -185,15 +192,23 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      const requests: ConnectionRequest[] = data.map(item => ({
-        id: item.id,
-        coachId: item.coach_id,
-        studentId: item.student_id,
-        status: 'pending',
-        createdAt: new Date(item.created_at),
-        studentName: item.profiles?.full_name || 'Unknown Student',
-      }));
+      console.log('Raw pending requests data:', data);
 
+      const requests: ConnectionRequest[] = data.map(item => {
+        console.log('Processing pending request item:', item);
+        console.log('Student profile data:', item.profiles);
+        
+        return {
+          id: item.id,
+          coachId: item.coach_id,
+          studentId: item.student_id,
+          status: 'pending' as const,
+          createdAt: new Date(item.created_at),
+          studentName: item.profiles?.full_name || item.profiles?.email || 'Unknown Student',
+        };
+      });
+
+      console.log('Processed pending requests:', requests);
       setPendingRequests(requests);
     } catch (error) {
       console.error('Error in loadPendingRequests:', error);
@@ -204,11 +219,12 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!user?.id) return;
 
     try {
+      console.log('Loading students for coach:', user.id);
       const { data, error } = await supabase
         .from('coach_student_connections')
         .select(`
           *,
-          profiles!student_id(*)
+          profiles!coach_student_connections_student_id_fkey(*)
         `)
         .eq('coach_id', user.id)
         .eq('approved', true);
@@ -218,14 +234,22 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      const studentProfiles: StudentProfile[] = data.map(item => ({
-        id: item.profiles.id,
-        userId: item.profiles.id,
-        displayName: item.profiles.full_name,
-        createdAt: new Date(item.profiles.created_at),
-        coachId: user.id,
-      }));
+      console.log('Raw students data:', data);
 
+      const studentProfiles: StudentProfile[] = data.map(item => {
+        console.log('Processing student item:', item);
+        console.log('Student profile data:', item.profiles);
+        
+        return {
+          id: item.profiles.id,
+          userId: item.profiles.id,
+          displayName: item.profiles.full_name || item.profiles.email || 'Unknown Student',
+          createdAt: new Date(item.profiles.created_at),
+          coachId: user.id,
+        };
+      });
+
+      console.log('Processed students:', studentProfiles);
       setStudents(studentProfiles);
     } catch (error) {
       console.error('Error in loadStudents:', error);
@@ -240,7 +264,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .from('coach_student_connections')
         .select(`
           *,
-          profiles!coach_id(*)
+          profiles!coach_student_connections_coach_id_fkey(*)
         `)
         .eq('student_id', user.id)
         .eq('approved', true)
@@ -382,6 +406,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const approveConnectionRequest = async (requestId: string) => {
     setLoading(true);
     try {
+      console.log('Approving connection request:', requestId);
       const { error } = await supabase
         .from('coach_student_connections')
         .update({ approved: true })
@@ -391,6 +416,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         throw error;
       }
 
+      console.log('Connection request approved, reloading data...');
       await loadPendingRequests();
       await loadStudents();
       

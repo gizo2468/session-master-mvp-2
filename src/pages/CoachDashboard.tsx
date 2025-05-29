@@ -98,7 +98,7 @@ const CoachDashboard = () => {
         <Tabs defaultValue="dashboard" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <Icon name="BarChart2" size={16} />
+              <Icon name="BarChart" size={16} />
               Dashboard
             </TabsTrigger>
             <TabsTrigger value="profile" className="flex items-center gap-2">

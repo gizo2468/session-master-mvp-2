@@ -19,6 +19,8 @@ import {
 const StudentsList = () => {
   const { students, removeStudent, loading } = useCoachStudent();
 
+  console.log('StudentsList render - students:', students);
+
   if (students.length === 0) {
     return (
       <Card className="mb-6">
@@ -51,52 +53,55 @@ const StudentsList = () => {
       </CardHeader>
       <CardContent>
         <ul className="space-y-3">
-          {students.map((student) => (
-            <li key={student.id} className="p-3 border rounded-md">
-              <div className="flex justify-between items-center">
-                <div>
-                  <div className="font-medium">{student.displayName}</div>
-                  <div className="text-xs text-gray-500">
-                    Connected since {new Date(student.createdAt).toLocaleDateString()}
+          {students.map((student) => {
+            console.log('Rendering student:', student);
+            return (
+              <li key={student.id} className="p-3 border rounded-md">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="font-medium">{student.displayName}</div>
+                    <div className="text-xs text-gray-500">
+                      Connected since {new Date(student.createdAt).toLocaleDateString()}
+                    </div>
                   </div>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-red-500 hover:text-red-700"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <Icon name="Loader" size={18} className="animate-spin" />
-                      ) : (
-                        <Icon name="UserMinus" size={18} />
-                      )}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Remove student</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to remove {student.displayName} from your students list? 
-                        This will revoke their connection to you.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction 
-                        className="bg-red-500 hover:bg-red-600"
-                        onClick={() => removeStudent(student.id)}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-red-500 hover:text-red-700"
+                        disabled={loading}
                       >
-                        Remove
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </li>
-          ))}
+                        {loading ? (
+                          <Icon name="Loader" size={18} className="animate-spin" />
+                        ) : (
+                          <Icon name="UserMinus" size={18} />
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Remove student</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to remove {student.displayName} from your students list? 
+                          This will revoke their connection to you.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          className="bg-red-500 hover:bg-red-600"
+                          onClick={() => removeStudent(student.id)}
+                        >
+                          Remove
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </CardContent>
     </Card>
