@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableData } from '@/types/poker';
@@ -122,16 +121,16 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           </div>
         )}
         
-        {/* Styled Buy-in and Rebuy section to match active tables in Live Session */}
-        <div className="flex items-center gap-4 mb-4">
-          <div className="text-right">
+        {/* Styled Buy-in and Rebuy section with centered alignment */}
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="text-center">
             <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
             <span className="font-bold text-2xl">
               ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
             </span>
           </div>
           {rebuyAmount > 0 && (
-            <div className="text-right">
+            <div className="text-center">
               <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
               <span className="font-bold text-2xl text-red-600">
                 +${rebuyAmount.toFixed(2)}
