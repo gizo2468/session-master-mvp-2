@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { PokerSession } from '@/types/poker';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -87,30 +88,54 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
                 </Tooltip>
               </TooltipProvider>
             ) : (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full flex justify-center items-center gap-2"
-                  >
-                    <Icon name="Plus" size={16} /> Add Rebuy
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm Rebuy</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to add a Rebuy for ${rebuyAmount.toFixed(2)}?
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleConfirmRebuy} className="bg-poker-gold hover:bg-poker-darkGold text-white">
-                      Confirm Rebuy
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              // Updated tournament rebuy dialog with badge-style display
+              <Dialog open={isRebuyDialogOpen} onOpenChange={setIsRebuyDialogOpen}>
+                <Button
+                  variant="outline"
+                  className="w-full flex justify-center items-center gap-2"
+                  onClick={() => setIsRebuyDialogOpen(true)}
+                >
+                  <Icon name="Plus" size={16} /> Add Rebuy
+                </Button>
+                
+                <DialogContent className="max-w-sm">
+                  <DialogHeader className="text-center">
+                    <DialogTitle>Tournament Rebuy</DialogTitle>
+                    <DialogDescription className="sr-only">
+                      Confirm your tournament rebuy
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="flex flex-col items-center space-y-6 py-6">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600 mb-3">Rebuy Amount</p>
+                      <Badge variant="outline" className="px-6 py-3 text-2xl font-bold border-2 border-poker-gold text-poker-gold">
+                        ${rebuyAmount.toFixed(2)}
+                      </Badge>
+                    </div>
+                    
+                    <p className="text-center text-gray-700 font-medium">
+                      Do you want to rebuy for this amount?
+                    </p>
+                  </div>
+                  
+                  <DialogFooter className="flex-col space-y-2 sm:flex-col sm:space-x-0 sm:space-y-2">
+                    <Button
+                      onClick={handleConfirmRebuy}
+                      className="w-full bg-poker-gold hover:bg-poker-darkGold text-white"
+                    >
+                      Yes, Rebuy
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsRebuyDialogOpen(false)}
+                      className="w-full"
+                    >
+                      Cancel
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             )
           ) : (
             // Cash game flexible rebuy - no changes needed
