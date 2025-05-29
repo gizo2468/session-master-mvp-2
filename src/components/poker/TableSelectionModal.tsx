@@ -108,7 +108,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                 onClick={() => onSelectTable(table)}
               >
                 <div className="flex justify-between items-start mb-2">
-                  <div>
+                  <div className="flex-1 text-center">
                     <h4 className="font-medium">
                       Table {index + 1} - {table.location}
                     </h4>
@@ -116,7 +116,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                       {formatTableDetails(table)} • {formattedStart}
                     </p>
                   </div>
-                  <span className={`font-bold ${profitClass}`}>
+                  <span className={`font-bold ${profitClass} ml-4`}>
                     {profit >= 0 ? '+' : ''}${profit.toFixed(2)}
                   </span>
                 </div>
