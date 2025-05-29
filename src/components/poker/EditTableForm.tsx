@@ -43,7 +43,9 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
     location: '',
     gameType: 'NLH' as 'NLH' | 'PLO',
     format: 'Cash' as 'Cash' | 'Tournament',
-    buyIn: '',
+    initialBuyIn: 0,
+    rebuysCount: 0,
+    rebuysAmount: 0,
     cashOut: '',
     smallBlind: 0,
     bigBlind: 0,
@@ -60,6 +62,11 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
 
   useEffect(() => {
     if (table) {
+      // Calculate rebuy count for tournaments
+      const initialBuyIn = table.initialBuyIn || table.buyIn;
+      const rebuysValue = table.rebuys || 0;
+      const rebuysCount = initialBuyIn > 0 ? Math.round(rebuysValue / initialBuyIn) : 0;
+      
       // Find the closest small blind index
       const closestIndex = BLIND_PRESETS.smallBlind.findIndex(
         blind => blind >= (table.smallBlind || 0)
@@ -70,7 +77,9 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
         location: table.location || '',
         gameType: table.gameType || 'NLH',
         format: table.format || 'Cash',
-        buyIn: table.buyIn?.toString() || '',
+        initialBuyIn: initialBuyIn,
+        rebuysCount: rebuysCount,
+        rebuysAmount: table.format === 'Cash' ? rebuysValue : 0,
         cashOut: table.cashOut?.toString() || '',
         smallBlind: table.smallBlind || 0,
         bigBlind: table.bigBlind || 0,
@@ -106,20 +115,39 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
     }));
   };
 
+  const calculateTotalInvestment = () => {
+    if (formData.format === 'Tournament') {
+      return formData.initialBuyIn + (formData.rebuysCount * formData.initialBuyIn);
+    }
+    return formData.initialBuyIn + formData.rebuysAmount;
+  };
+
+  const calculateRebuysValue = () => {
+    if (formData.format === 'Tournament') {
+      return formData.rebuysCount * formData.initialBuyIn;
+    }
+    return formData.rebuysAmount;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.location || !formData.buyIn) {
+    if (!formData.location || !formData.initialBuyIn) {
       toast.error('Please fill in all required fields');
       return;
     }
+
+    const totalBuyIn = calculateTotalInvestment();
+    const rebuysValue = calculateRebuysValue();
 
     const updatedTable: TableData = {
       ...table,
       location: formData.location,
       gameType: formData.gameType,
       format: formData.format,
-      buyIn: parseFloat(formData.buyIn),
+      buyIn: totalBuyIn,
+      initialBuyIn: formData.initialBuyIn,
+      rebuys: rebuysValue,
       cashOut: formData.cashOut ? parseFloat(formData.cashOut) : undefined,
       notes: formData.notes,
       ...(formData.format === 'Cash' && {
@@ -181,19 +209,61 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
             </RadioGroup>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          {/* Buy-in and Rebuys Section */}
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="buyIn">Buy-in ($) *</Label>
+              <Label htmlFor="initialBuyIn">Buy-in ($) *</Label>
               <Input
-                id="buyIn"
+                id="initialBuyIn"
                 type="number"
                 min="0"
                 step="0.01"
-                value={formData.buyIn}
-                onChange={(e) => setFormData(prev => ({ ...prev, buyIn: e.target.value }))}
+                value={formData.initialBuyIn}
+                onChange={(e) => setFormData(prev => ({ ...prev, initialBuyIn: parseFloat(e.target.value) || 0 }))}
                 required
               />
             </div>
+
+            {formData.format === 'Tournament' ? (
+              <div className="space-y-2">
+                <Label htmlFor="rebuysCount">Rebuys (Count)</Label>
+                <Input
+                  id="rebuysCount"
+                  type="number"
+                  min="0"
+                  value={formData.rebuysCount}
+                  onChange={(e) => setFormData(prev => ({ ...prev, rebuysCount: parseInt(e.target.value) || 0 }))}
+                />
+                {formData.rebuysCount > 0 && (
+                  <div className="text-sm text-gray-600">
+                    Rebuys Value: ${(formData.rebuysCount * formData.initialBuyIn).toFixed(2)}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="rebuysAmount">Rebuys ($)</Label>
+                <Input
+                  id="rebuysAmount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.rebuysAmount}
+                  onChange={(e) => setFormData(prev => ({ ...prev, rebuysAmount: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+            )}
+
+            {/* Total Investment Display */}
+            <div className="p-3 bg-gray-50 rounded-md">
+              <div className="text-sm font-medium">Total Invested: ${calculateTotalInvestment().toFixed(2)}</div>
+              {formData.format === 'Tournament' && (
+                <div className="text-xs text-gray-600">
+                  ${formData.initialBuyIn.toFixed(2)} + ({formData.rebuysCount} × ${formData.initialBuyIn.toFixed(2)})
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="cashOut">Cash Out ($)</Label>
               <Input
