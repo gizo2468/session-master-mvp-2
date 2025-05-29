@@ -7,7 +7,7 @@ import { useCoachStudent } from '@/context/CoachStudentContext';
 import Icon from '@/components/ui/Lucide';
 
 const ConnectWithCoach = () => {
-  const { connectWithCoach, connectedCoach } = useCoachStudent();
+  const { connectWithCoach, connectedCoach, loading } = useCoachStudent();
   const [code, setCode] = useState('');
   
   if (connectedCoach) {
@@ -18,6 +18,7 @@ const ConnectWithCoach = () => {
     e.preventDefault();
     if (code.trim().length === 6) {
       connectWithCoach(code.trim().toUpperCase());
+      setCode(''); // Clear the input after submission
     }
   };
 
@@ -41,15 +42,26 @@ const ConnectWithCoach = () => {
               placeholder="Enter 6-character code"
               maxLength={6}
               className="text-center text-lg tracking-widest font-mono uppercase"
+              disabled={loading}
             />
           </div>
           <Button 
             type="submit" 
             variant="poker" 
             className="w-full"
-            disabled={code.trim().length !== 6}
+            disabled={code.trim().length !== 6 || loading}
           >
-            Connect
+            {loading ? (
+              <>
+                <Icon name="Loader" className="mr-2 h-4 w-4 animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              <>
+                <Icon name="Link" className="mr-2 h-4 w-4" />
+                Connect
+              </>
+            )}
           </Button>
         </form>
       </CardContent>

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const StudentsList = () => {
-  const { students, removeStudent } = useCoachStudent();
+  const { students, removeStudent, loading } = useCoachStudent();
 
   if (students.length === 0) {
     return (
@@ -56,12 +56,23 @@ const StudentsList = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <div className="font-medium">{student.displayName}</div>
-                  <div className="text-xs text-gray-500">Connected since {new Date(student.createdAt).toLocaleDateString()}</div>
+                  <div className="text-xs text-gray-500">
+                    Connected since {new Date(student.createdAt).toLocaleDateString()}
+                  </div>
                 </div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
-                      <Icon name="UserMinus" size={18} />
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-red-500 hover:text-red-700"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <Icon name="Loader" size={18} className="animate-spin" />
+                      ) : (
+                        <Icon name="UserMinus" size={18} />
+                      )}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>

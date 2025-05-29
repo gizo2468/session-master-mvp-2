@@ -11,7 +11,7 @@ import Icon from '@/components/ui/Lucide';
 
 const CoachSettings: React.FC = () => {
   const navigate = useNavigate();
-  const { connectionCode, generateConnectionCode, disableConnectionCode } = useCoachStudent();
+  const { connectionCode, generateConnectionCode, disableConnectionCode, loading } = useCoachStudent();
   const { t } = useLanguage();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
@@ -57,6 +57,7 @@ const CoachSettings: React.FC = () => {
                     variant="outline" 
                     className="w-full" 
                     onClick={handleCopyCode}
+                    disabled={loading}
                   >
                     <Icon name={copied ? "Check" : "Copy"} className="mr-2 h-4 w-4" />
                     {copied ? t('success') : t('copy_code')}
@@ -66,9 +67,14 @@ const CoachSettings: React.FC = () => {
                     variant="destructive"
                     className="w-full"
                     onClick={disableConnectionCode}
+                    disabled={loading}
                   >
-                    <Icon name="X" className="mr-2 h-4 w-4" />
-                    {t('disable_code')}
+                    {loading ? (
+                      <Icon name="Loader" className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Icon name="X" className="mr-2 h-4 w-4" />
+                    )}
+                    {loading ? 'Disabling...' : t('disable_code')}
                   </Button>
                 </div>
               </CardContent>
@@ -78,9 +84,14 @@ const CoachSettings: React.FC = () => {
               variant="poker"
               className="w-full"
               onClick={generateConnectionCode}
+              disabled={loading}
             >
-              <Icon name="Plus" className="mr-2 h-4 w-4" />
-              {t('generate_code')}
+              {loading ? (
+                <Icon name="Loader" className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Icon name="Plus" className="mr-2 h-4 w-4" />
+              )}
+              {loading ? 'Generating...' : t('generate_code')}
             </Button>
           )}
         </div>

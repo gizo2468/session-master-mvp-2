@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      coach_student_connections: {
+        Row: {
+          approved: boolean
+          coach_id: string
+          created_at: string
+          id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved?: boolean
+          coach_id: string
+          created_at?: string
+          id?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved?: boolean
+          coach_id?: string
+          created_at?: string
+          id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_student_connections_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_student_connections_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       donation_logs: {
         Row: {
           clicked_at: string
@@ -42,6 +84,7 @@ export type Database = {
       profiles: {
         Row: {
           coach_tier: string | null
+          connection_code: string | null
           created_at: string
           deletion_requested: boolean | null
           email: string | null
@@ -61,6 +104,7 @@ export type Database = {
         }
         Insert: {
           coach_tier?: string | null
+          connection_code?: string | null
           created_at?: string
           deletion_requested?: boolean | null
           email?: string | null
@@ -80,6 +124,7 @@ export type Database = {
         }
         Update: {
           coach_tier?: string | null
+          connection_code?: string | null
           created_at?: string
           deletion_requested?: boolean | null
           email?: string | null
@@ -188,6 +233,10 @@ export type Database = {
       }
     }
     Functions: {
+      generate_connection_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       update_terms_acceptance: {
         Args: { user_id: string; accepted: boolean }
         Returns: boolean

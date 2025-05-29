@@ -7,7 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import Icon from '@/components/ui/Lucide';
 
 const CoachConnection = () => {
-  const { connectedCoach, disconnectFromCoach } = useCoachStudent();
+  const { connectedCoach, disconnectFromCoach, loading } = useCoachStudent();
   
   if (!connectedCoach) {
     return null; // Don't show if not connected to a coach
@@ -34,8 +34,22 @@ const CoachConnection = () => {
           <div className="mt-4 w-full">
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" className="w-full text-red-500 border-red-200">
-                  Disconnect
+                <Button 
+                  variant="outline" 
+                  className="w-full text-red-500 border-red-200"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Icon name="Loader" className="mr-2 h-4 w-4 animate-spin" />
+                      Disconnecting...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="UserMinus" className="mr-2 h-4 w-4" />
+                      Disconnect
+                    </>
+                  )}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
