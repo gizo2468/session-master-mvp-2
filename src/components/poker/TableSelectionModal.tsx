@@ -2,6 +2,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { TableData } from '@/types/poker';
 import { format } from 'date-fns';
 
@@ -40,27 +41,51 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
     return details;
   };
 
-  const formatBuyinDetails = (table: TableData) => {
+  const renderFinancialBadges = (table: TableData) => {
     const initialBuyIn = table.initialBuyIn || 0;
-    
+    const badges = [];
+
+    // Buy-in badge
+    badges.push(
+      <Badge key="buyin" variant="secondary" className="text-xs">
+        Buy-in: ${initialBuyIn.toFixed(2)}
+      </Badge>
+    );
+
+    // Rebuy badge (if applicable)
     if (table.format === 'Tournament') {
-      // For tournaments, calculate rebuy dollar amount from rebuy count
       const rebuyCount = table.rebuys || 0;
       const rebuyAmount = rebuyCount * initialBuyIn;
       
       if (rebuyAmount > 0) {
-        return `Buy-in: $${initialBuyIn.toFixed(2)}, Rebuy: $${rebuyAmount.toFixed(2)}`;
+        badges.push(
+          <Badge key="rebuy" variant="destructive" className="text-xs">
+            Rebuy: ${rebuyAmount.toFixed(2)}
+          </Badge>
+        );
       }
     } else {
-      // For cash games, use the rebuy amount directly
       const rebuys = table.rebuys || 0;
       
       if (rebuys > 0) {
-        return `Buy-in: $${initialBuyIn.toFixed(2)}, Rebuy: $${rebuys.toFixed(2)}`;
+        badges.push(
+          <Badge key="rebuy" variant="destructive" className="text-xs">
+            Rebuy: ${rebuys.toFixed(2)}
+          </Badge>
+        );
       }
     }
-    
-    return `Buy-in: $${initialBuyIn.toFixed(2)}`;
+
+    // Cash out badge (if applicable)
+    if (table.cashOut !== undefined) {
+      badges.push(
+        <Badge key="cashout" variant="success" className="text-xs">
+          Cash out: ${table.cashOut.toFixed(2)}
+        </Badge>
+      );
+    }
+
+    return badges;
   };
 
   return (
@@ -96,11 +121,8 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                   </span>
                 </div>
                 
-                <div className="flex justify-between text-xs text-gray-600">
-                  <span>{formatBuyinDetails(table)}</span>
-                  {table.cashOut !== undefined && (
-                    <span>Cash out: ${table.cashOut.toFixed(2)}</span>
-                  )}
+                <div className="flex flex-wrap gap-2">
+                  {renderFinancialBadges(table)}
                 </div>
               </div>
             );
