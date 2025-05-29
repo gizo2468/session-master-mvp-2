@@ -48,7 +48,7 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
         return;
       }
 
-      console.log('📋 Student sessions data:');
+      console.log(`📋 Loaded ${sessionsData?.length || 0} sessions for student ${studentId}:`);
       console.table(sessionsData);
       
       setSessions(sessionsData || []);

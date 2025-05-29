@@ -72,9 +72,9 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Set up real-time subscriptions for connection requests
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || !isCoach) return;
 
-    console.log('🔄 Setting up real-time subscription for user:', user.id);
+    console.log('🔄 Setting up real-time subscription for coach:', user.id);
 
     const channel = supabase
       .channel('coach_student_connections')
@@ -86,31 +86,26 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
           table: 'coach_student_connections',
           filter: `coach_id=eq.${user.id}`,
         },
-        (payload) => {
-          console.log('🔄 Real-time update for coach connections detected:', payload);
+        async (payload) => {
+          console.log('🔄 Real-time connection event detected:', payload);
           console.table(payload);
-          // Increased delay to 500ms for better database consistency
-          setTimeout(() => {
-            console.log('🔄 Triggering data reload after real-time event');
-            loadPendingRequests();
-            loadStudents();
-          }, 500);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'coach_student_connections',
-          filter: `student_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('🔄 Real-time update for student connections detected:', payload);
-          console.table(payload);
-          setTimeout(() => {
-            loadConnectedCoach();
-          }, 500);
+          
+          // Reload data immediately with improved handling
+          try {
+            await Promise.all([
+              loadPendingRequests(),
+              loadStudents()
+            ]);
+            console.log('✅ Real-time data reload completed successfully');
+          } catch (error) {
+            console.error('❌ Real-time data reload failed:', error);
+            // Show user notification that they may need to refresh
+            toast({
+              title: "Connection Updated",
+              description: "Please refresh the page if you don't see the latest changes.",
+              variant: "default"
+            });
+          }
         }
       )
       .subscribe((status) => {
@@ -121,7 +116,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.log('🔄 Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [user?.id]);
+  }, [user?.id, isCoach]);
 
   const resetState = () => {
     console.log('🔄 Resetting all state');
@@ -194,54 +189,52 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('🔍 Loading pending requests for coach:', user.id);
       
-      // Get the connection requests
-      const { data: connections, error: connectionsError } = await supabase
+      // Get pending connections with student profiles in a single query
+      const { data: pendingData, error } = await supabase
         .from('coach_student_connections')
-        .select('*')
+        .select(`
+          id,
+          coach_id,
+          student_id,
+          created_at,
+          profiles!coach_student_connections_student_id_fkey (
+            id,
+            full_name,
+            email
+          )
+        `)
         .eq('coach_id', user.id)
         .eq('approved', false)
         .order('created_at', { ascending: false });
 
-      if (connectionsError) {
-        console.error('❌ Error loading pending connections:', connectionsError);
+      if (error) {
+        console.error('❌ Error loading pending requests:', error);
         return;
       }
 
-      console.log('📋 Raw pending connections data:');
-      console.table(connections);
+      console.log('📋 Raw pending requests with profiles:');
+      console.table(pendingData);
 
-      if (!connections || connections.length === 0) {
-        console.log('📋 No pending connections found');
+      if (!pendingData || pendingData.length === 0) {
+        console.log('📋 No pending requests found');
         setPendingRequests([]);
         return;
       }
 
-      // Get student profiles separately
-      const studentIds = connections.map(conn => conn.student_id);
-      console.log('🔍 Fetching profiles for student IDs:', studentIds);
-      
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', studentIds);
-
-      if (profilesError) {
-        console.error('❌ Error loading student profiles:', profilesError);
-        return;
-      }
-
-      console.log('👥 Student profiles data:');
-      console.table(profiles);
-
-      // Map the data together
-      const requests: ConnectionRequest[] = connections.map(conn => {
-        const profile = profiles?.find(p => p.id === conn.student_id);
-        const studentName = profile?.full_name || profile?.email || 'Unknown Student';
+      // Map the data with proper student name resolution
+      const requests: ConnectionRequest[] = pendingData.map(conn => {
+        const profile = conn.profiles;
+        let studentName = 'Unknown Student';
         
-        console.log(`🔗 Mapping connection ${conn.id}:`);
+        if (profile) {
+          // Priority: full_name → email → fallback
+          studentName = profile.full_name || profile.email || `Student ${conn.student_id.slice(0, 8)}`;
+        }
+        
+        console.log(`🔗 Mapping pending request ${conn.id}:`);
         console.log(`   student_id: ${conn.student_id}`);
-        console.log(`   profile found:`, profile);
-        console.log(`   studentName: ${studentName}`);
+        console.log(`   profile:`, profile);
+        console.log(`   resolved studentName: ${studentName}`);
         
         return {
           id: conn.id,
@@ -256,13 +249,8 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.log('✅ Final processed pending requests:');
       console.table(requests);
       
-      console.log('🔄 Setting pending requests state with:', requests);
       setPendingRequests(requests);
-      
-      // Force a small delay and log to verify state update
-      setTimeout(() => {
-        console.log('🔄 Pending requests state should now be updated');
-      }, 100);
+      console.log('🔄 Pending requests state updated with:', requests.length, 'requests');
     } catch (error) {
       console.error('❌ Error in loadPendingRequests:', error);
     }
@@ -274,53 +262,50 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('🔍 Loading students for coach:', user.id);
       
-      // Get the approved connections
-      const { data: connections, error: connectionsError } = await supabase
+      // Get approved connections with student profiles in a single query
+      const { data: studentsData, error } = await supabase
         .from('coach_student_connections')
-        .select('*')
+        .select(`
+          student_id,
+          created_at,
+          profiles!coach_student_connections_student_id_fkey (
+            id,
+            full_name,
+            email,
+            created_at
+          )
+        `)
         .eq('coach_id', user.id)
         .eq('approved', true)
         .order('created_at', { ascending: false });
 
-      if (connectionsError) {
-        console.error('❌ Error loading student connections:', connectionsError);
+      if (error) {
+        console.error('❌ Error loading students:', error);
         return;
       }
 
-      console.log('📋 Raw student connections data:');
-      console.table(connections);
+      console.log('📋 Raw students data with profiles:');
+      console.table(studentsData);
 
-      if (!connections || connections.length === 0) {
-        console.log('📋 No approved student connections found');
+      if (!studentsData || studentsData.length === 0) {
+        console.log('📋 No approved students found');
         setStudents([]);
         return;
       }
 
-      // Get student profiles separately
-      const studentIds = connections.map(conn => conn.student_id);
-      console.log('🔍 Fetching profiles for student IDs:', studentIds);
-      
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', studentIds);
-
-      if (profilesError) {
-        console.error('❌ Error loading student profiles:', profilesError);
-        return;
-      }
-
-      console.log('👥 Student profiles data:');
-      console.table(profiles);
-
-      // Map the data together
-      const studentProfiles: StudentProfile[] = connections.map(conn => {
-        const profile = profiles?.find(p => p.id === conn.student_id);
-        const displayName = profile?.full_name || profile?.email || 'Unknown Student';
+      // Map the data with proper student name resolution
+      const studentProfiles: StudentProfile[] = studentsData.map(conn => {
+        const profile = conn.profiles;
+        let displayName = 'Unknown Student';
+        
+        if (profile) {
+          // Priority: full_name → email → fallback
+          displayName = profile.full_name || profile.email || `Student ${conn.student_id.slice(0, 8)}`;
+        }
         
         console.log(`🔗 Mapping student ${conn.student_id}:`);
-        console.log(`   profile found:`, profile);
-        console.log(`   displayName: ${displayName}`);
+        console.log(`   profile:`, profile);
+        console.log(`   resolved displayName: ${displayName}`);
         
         return {
           id: conn.student_id,
@@ -334,8 +319,8 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.log('✅ Final processed students:');
       console.table(studentProfiles);
       
-      console.log('🔄 Setting students state with:', studentProfiles);
       setStudents(studentProfiles);
+      console.log('🔄 Students state updated with:', studentProfiles.length, 'students');
     } catch (error) {
       console.error('❌ Error in loadStudents:', error);
     }
@@ -503,25 +488,11 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       console.log('✅ Connection request approved successfully');
       
-      // Manual fallback reload if real-time fails
-      const reloadWithFallback = async () => {
-        try {
-          await Promise.all([
-            loadPendingRequests(),
-            loadStudents()
-          ]);
-          console.log('✅ Manual reload completed successfully');
-        } catch (error) {
-          console.error('❌ Manual reload failed:', error);
-          // Force a page refresh as last resort
-          setTimeout(() => {
-            console.log('🔄 Forcing page refresh due to failed manual reload');
-            window.location.reload();
-          }, 1000);
-        }
-      };
-      
-      await reloadWithFallback();
+      // Force immediate reload of both lists
+      await Promise.all([
+        loadPendingRequests(),
+        loadStudents()
+      ]);
       
       toast({
         title: "Request Approved",

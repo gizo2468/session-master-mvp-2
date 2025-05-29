@@ -57,12 +57,9 @@ const StudentsList = () => {
           {students.map((student) => {
             console.log('🔄 Rendering student:', student);
             
-            // Ensure we have a proper display name
-            const displayName = student.displayName && student.displayName !== 'Unknown Student' 
-              ? student.displayName 
-              : `Student ${student.id.slice(0, 8)}`;
-            
-            const showUnknownWarning = student.displayName === 'Unknown Student';
+            // Student names should now be properly resolved from the context
+            const displayName = student.displayName;
+            const showUnknownWarning = student.displayName === 'Unknown Student' || student.displayName.startsWith('Student ');
             
             return (
               <li key={student.id} className="p-3 border rounded-md">

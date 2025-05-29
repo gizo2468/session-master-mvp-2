@@ -28,12 +28,12 @@ const PendingRequestsList = () => {
           {pendingRequests.map((request) => {
             console.log('🔄 Rendering pending request:', request);
             
-            // Better handling of student name display
+            // Better handling of student name display - should now be resolved properly
             const studentDisplayText = request.studentName && request.studentName !== 'Unknown Student' 
               ? `${request.studentName} requested to connect`
               : 'New connection request from a student';
             
-            const showUnknownWarning = !request.studentName || request.studentName === 'Unknown Student';
+            const showUnknownWarning = !request.studentName || request.studentName === 'Unknown Student' || request.studentName.startsWith('Student ');
             
             return (
               <li key={request.id} className="p-3 border rounded-md">
