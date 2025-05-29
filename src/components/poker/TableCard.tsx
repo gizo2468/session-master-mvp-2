@@ -620,61 +620,92 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
         </DialogContent>
       </Dialog>
 
+      {/* Updated Rebuy Dialog - Tournament vs Cash Game */}
       <Dialog open={showRebuyDialog} onOpenChange={setShowRebuyDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Rebuy</DialogTitle>
-            <DialogDescription>
+        <DialogContent className={table.format === 'Tournament' ? "max-w-sm" : ""}>
+          <DialogHeader className={table.format === 'Tournament' ? "text-center" : ""}>
+            <DialogTitle>
+              {table.format === 'Tournament' ? 'Tournament Rebuy' : 'Add Cash Game Rebuy'}
+            </DialogTitle>
+            <DialogDescription className={table.format === 'Tournament' ? "sr-only" : ""}>
               {table.format === 'Tournament' 
-                ? 'Add a tournament rebuy.' 
-                : 'Enter the amount for your cash game rebuy.'}
+                ? 'Confirm your tournament rebuy'
+                : 'Enter the amount you want to add as a rebuy.'}
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-4">
-            <div className="mb-4">
-              <label htmlFor="rebuyAmount" className="block text-sm font-medium mb-1">
-                Rebuy Amount
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500">$</span>
+          {table.format === 'Tournament' ? (
+            // Tournament rebuy - badge style confirmation
+            <>
+              <div className="flex flex-col items-center space-y-6 py-6">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-3">Rebuy Amount</p>
+                  <Badge variant="outline" className="px-6 py-3 text-2xl font-bold border-2 border-poker-gold text-poker-gold">
+                    ${parseFloat(rebuyDialogAmount).toFixed(2)}
+                  </Badge>
                 </div>
-                <input
-                  id="rebuyAmount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                  placeholder="0.00"
-                  value={rebuyDialogAmount}
-                  onChange={(e) => setRebuyDialogAmount(e.target.value)}
-                  readOnly={table.format === 'Tournament'}
-                />
-              </div>
-              {table.format === 'Tournament' && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Tournament rebuy amount is fixed.
+                
+                <p className="text-center text-gray-700 font-medium">
+                  Do you want to rebuy for this amount?
                 </p>
-              )}
-            </div>
-            
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setShowRebuyDialog(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAddRebuy}
-                disabled={!rebuyDialogAmount || parseFloat(rebuyDialogAmount) <= 0}
-                className="bg-poker-gold hover:bg-poker-darkGold text-white"
-              >
-                Add Rebuy
-              </Button>
-            </DialogFooter>
-          </div>
+              </div>
+              
+              <DialogFooter className="flex-col space-y-2 sm:flex-col sm:space-x-0 sm:space-y-2">
+                <Button
+                  onClick={handleAddRebuy}
+                  className="w-full bg-poker-gold hover:bg-poker-darkGold text-white"
+                >
+                  Yes, Rebuy
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowRebuyDialog(false)}
+                  className="w-full"
+                >
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            // Cash game rebuy - input field
+            <>
+              <div className="py-4">
+                <label htmlFor="rebuy-amount" className="text-sm font-medium mb-2 block">
+                  Rebuy Amount
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500">$</span>
+                  </div>
+                  <input
+                    id="rebuy-amount"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    value={rebuyDialogAmount}
+                    onChange={(e) => setRebuyDialogAmount(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowRebuyDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddRebuy}
+                  disabled={!rebuyDialogAmount || parseFloat(rebuyDialogAmount) <= 0}
+                  className="bg-poker-gold hover:bg-poker-darkGold text-white"
+                >
+                  Add Rebuy
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>
