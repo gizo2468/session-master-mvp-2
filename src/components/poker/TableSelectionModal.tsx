@@ -18,6 +18,28 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
   tables,
   onSelectTable
 }) => {
+  const formatTableDetails = (table: TableData) => {
+    let details = `${table.gameType} • ${table.format}`;
+    
+    if (table.format === 'Tournament') {
+      const tournamentDetails = [];
+      
+      if (table.tournamentTypes && table.tournamentTypes.length > 0) {
+        tournamentDetails.push(...table.tournamentTypes);
+      }
+      
+      if (table.isMultiDay) {
+        tournamentDetails.push('Multi-Day');
+      }
+      
+      if (tournamentDetails.length > 0) {
+        details += ` (${tournamentDetails.join(', ')})`;
+      }
+    }
+    
+    return details;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -43,7 +65,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                       Table {index + 1} - {table.location}
                     </h4>
                     <p className="text-sm text-gray-500">
-                      {table.gameType} • {table.format} • {formattedStart}
+                      {formatTableDetails(table)} • {formattedStart}
                     </p>
                   </div>
                   <span className={`font-bold ${profitClass}`}>
