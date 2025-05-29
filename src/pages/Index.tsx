@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { useTutorial } from '@/hooks/useTutorial';
 import TutorialDialog from '@/components/tutorial/TutorialDialog';
 import AddPastSessionForm from '@/components/poker/AddPastSessionForm';
+import StorageWarningAlert from '@/components/StorageWarningAlert';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -57,9 +58,12 @@ const Index = () => {
         <StatsQuickView />
         
         <div className="mb-4 flex justify-between items-center">
-          <h2 className="font-extrabold text-xl tracking-tight">
-            Recent Sessions (Active {activeSessionsCount})
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-extrabold text-xl tracking-tight">
+              Recent Sessions (Active {activeSessionsCount})
+            </h2>
+            <StorageWarningAlert />
+          </div>
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setShowAddPastSession(true)}

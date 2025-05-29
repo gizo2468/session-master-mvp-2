@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
@@ -9,6 +10,8 @@ interface SessionContextType {
   sessions: PokerSession[];
   activeSession: PokerSession | null;
   filters: SessionFilter;
+  showStorageWarning: boolean;
+  dismissStorageWarning: () => void;
   addSession: (session: PokerSession) => void;
   updateSession: (session: PokerSession) => void;
   deleteSession: (id: string) => void;
@@ -96,6 +99,7 @@ const findActiveSession = (sessions: PokerSession[]): PokerSession | null => {
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<PokerSession[]>(loadSessions);
   const [activeSession, setActiveSession] = useState<PokerSession | null>(findActiveSession(loadSessions()));
+  const [showStorageWarning, setShowStorageWarning] = useState(false);
   const [filters, setFilters] = useState<SessionFilter>({
     gameType: 'All',
     format: 'All',
@@ -103,6 +107,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   });
   const { toast } = useToast();
   const { user } = useAuth();
+
+  const dismissStorageWarning = () => {
+    setShowStorageWarning(false);
+    // Remember dismissal for this session
+    sessionStorage.setItem('storageWarningDismissed', 'true');
+  };
 
   useEffect(() => {
     try {
@@ -118,11 +128,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         sessionsToStore = [...activeSessions, ...inactiveSessions];
         
         if (sortedSessions.length !== sessionsToStore.length) {
-          toast({
-            title: "Storage limit reached",
-            description: `Some older sessions have been removed from local storage to save space.`,
-            variant: "default"
-          });
+          // Check if warning was already dismissed for this session
+          const wasDismissed = sessionStorage.getItem('storageWarningDismissed') === 'true';
+          if (!wasDismissed) {
+            setShowStorageWarning(true);
+          }
         }
       }
       
@@ -588,6 +598,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         sessions,
         activeSession,
         filters,
+        showStorageWarning,
+        dismissStorageWarning,
         addSession,
         updateSession,
         deleteSession,

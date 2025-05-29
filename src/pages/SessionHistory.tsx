@@ -9,6 +9,7 @@ import SessionCard from '@/components/SessionCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import StorageWarningAlert from '@/components/StorageWarningAlert';
 
 export default function SessionHistory() {
   const navigate = useNavigate();
@@ -82,7 +83,10 @@ export default function SessionHistory() {
           <button onClick={() => navigate(-1)} className="text-poker-feltGreen mb-4 flex items-center">
             ← Back
           </button>
-          <h1 className="text-2xl font-extrabold tracking-tight">Session History</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-extrabold tracking-tight">Session History</h1>
+            <StorageWarningAlert />
+          </div>
         </header>
         
         <FilterBar />
