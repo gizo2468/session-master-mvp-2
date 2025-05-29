@@ -19,7 +19,8 @@ import {
 const StudentsList = () => {
   const { students, removeStudent, loading } = useCoachStudent();
 
-  console.log('StudentsList render - students:', students);
+  console.log('🔄 StudentsList render - students:', students);
+  console.table(students);
 
   if (students.length === 0) {
     return (
@@ -54,12 +55,14 @@ const StudentsList = () => {
       <CardContent>
         <ul className="space-y-3">
           {students.map((student) => {
-            console.log('Rendering student:', student);
+            console.log('🔄 Rendering student:', student);
             
             // Ensure we have a proper display name
             const displayName = student.displayName && student.displayName !== 'Unknown Student' 
               ? student.displayName 
               : `Student ${student.id.slice(0, 8)}`;
+            
+            const showUnknownWarning = student.displayName === 'Unknown Student';
             
             return (
               <li key={student.id} className="p-3 border rounded-md">
@@ -69,11 +72,14 @@ const StudentsList = () => {
                     <div className="text-xs text-gray-500">
                       Connected since {new Date(student.createdAt).toLocaleDateString()}
                     </div>
-                    {student.displayName === 'Unknown Student' && (
+                    {showUnknownWarning && (
                       <div className="text-xs text-amber-600 mt-1">
-                        Student name not available
+                        ⚠️ Student name not available - this might indicate a data sync issue
                       </div>
                     )}
+                    <div className="text-xs text-gray-400 mt-1">
+                      Student ID: {student.id.slice(0, 8)}
+                    </div>
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -102,7 +108,10 @@ const StudentsList = () => {
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction 
                           className="bg-red-500 hover:bg-red-600"
-                          onClick={() => removeStudent(student.id)}
+                          onClick={() => {
+                            console.log('🗑️ Removing student:', student.id);
+                            removeStudent(student.id);
+                          }}
                         >
                           Remove
                         </AlertDialogAction>

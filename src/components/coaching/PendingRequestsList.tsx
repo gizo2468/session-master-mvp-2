@@ -8,7 +8,8 @@ import Icon from '@/components/ui/Lucide';
 const PendingRequestsList = () => {
   const { pendingRequests, approveConnectionRequest, declineConnectionRequest, loading } = useCoachStudent();
 
-  console.log('PendingRequestsList render - pendingRequests:', pendingRequests);
+  console.log('🔄 PendingRequestsList render - pendingRequests:', pendingRequests);
+  console.table(pendingRequests);
 
   if (pendingRequests.length === 0) {
     return null;
@@ -25,7 +26,7 @@ const PendingRequestsList = () => {
       <CardContent>
         <ul className="space-y-4">
           {pendingRequests.map((request) => {
-            console.log('Rendering pending request:', request);
+            console.log('🔄 Rendering pending request:', request);
             
             // Better handling of student name display
             const studentDisplayText = request.studentName && request.studentName !== 'Unknown Student' 
@@ -46,14 +47,20 @@ const PendingRequestsList = () => {
                     </div>
                     {showUnknownWarning && (
                       <div className="text-xs text-amber-600 mt-1">
-                        Student name not available
+                        ⚠️ Student name not available - this might indicate a data sync issue
                       </div>
                     )}
+                    <div className="text-xs text-gray-400 mt-1">
+                      Request ID: {request.id.slice(0, 8)} • Student ID: {request.studentId.slice(0, 8)}
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">
                   <Button
-                    onClick={() => approveConnectionRequest(request.id)}
+                    onClick={() => {
+                      console.log('✅ Approving request:', request.id);
+                      approveConnectionRequest(request.id);
+                    }}
                     variant="poker"
                     size="sm"
                     className="flex-1"
@@ -67,7 +74,10 @@ const PendingRequestsList = () => {
                     Approve
                   </Button>
                   <Button
-                    onClick={() => declineConnectionRequest(request.id)}
+                    onClick={() => {
+                      console.log('❌ Declining request:', request.id);
+                      declineConnectionRequest(request.id);
+                    }}
                     variant="outline"
                     size="sm"
                     className="flex-1"

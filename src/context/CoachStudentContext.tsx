@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -73,7 +74,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     if (!user?.id) return;
 
-    console.log('Setting up real-time subscription for user:', user.id);
+    console.log('🔄 Setting up real-time subscription for user:', user.id);
 
     const channel = supabase
       .channel('coach_student_connections')
@@ -86,12 +87,14 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
           filter: `coach_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log('Real-time update for coach connections detected:', payload);
-          // Reload both pending requests and students after any change
+          console.log('🔄 Real-time update for coach connections detected:', payload);
+          console.table(payload);
+          // Increased delay to 500ms for better database consistency
           setTimeout(() => {
+            console.log('🔄 Triggering data reload after real-time event');
             loadPendingRequests();
             loadStudents();
-          }, 100); // Small delay to ensure database consistency
+          }, 500);
         }
       )
       .on(
@@ -103,21 +106,25 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
           filter: `student_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log('Real-time update for student connections detected:', payload);
+          console.log('🔄 Real-time update for student connections detected:', payload);
+          console.table(payload);
           setTimeout(() => {
             loadConnectedCoach();
-          }, 100);
+          }, 500);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🔄 Real-time subscription status:', status);
+      });
 
     return () => {
-      console.log('Cleaning up real-time subscription');
+      console.log('🔄 Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
   }, [user?.id]);
 
   const resetState = () => {
+    console.log('🔄 Resetting all state');
     setIsCoach(false);
     setCoachProfile(null);
     setStudents([]);
@@ -133,7 +140,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     
     setLoading(true);
     try {
-      console.log('Loading user profile for:', user.id);
+      console.log('🔍 Loading user profile for:', user.id);
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
@@ -141,11 +148,12 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .single();
 
       if (error) {
-        console.error('Error loading profile:', error);
+        console.error('❌ Error loading profile:', error);
         return;
       }
 
-      console.log('Profile loaded:', profile);
+      console.log('✅ Profile loaded:', profile);
+      console.table(profile);
 
       if (profile.role === 'coach') {
         setIsCoach(true);
@@ -174,7 +182,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         await loadConnectedCoach();
       }
     } catch (error) {
-      console.error('Error in loadUserProfile:', error);
+      console.error('❌ Error in loadUserProfile:', error);
     } finally {
       setLoading(false);
     }
@@ -184,9 +192,9 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!user?.id) return;
 
     try {
-      console.log('Loading pending requests for coach:', user.id);
+      console.log('🔍 Loading pending requests for coach:', user.id);
       
-      // First get the connection requests
+      // Get the connection requests
       const { data: connections, error: connectionsError } = await supabase
         .from('coach_student_connections')
         .select('*')
@@ -195,37 +203,45 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .order('created_at', { ascending: false });
 
       if (connectionsError) {
-        console.error('Error loading pending connections:', connectionsError);
+        console.error('❌ Error loading pending connections:', connectionsError);
         return;
       }
 
-      console.log('Raw pending connections data:', connections);
+      console.log('📋 Raw pending connections data:');
+      console.table(connections);
 
       if (!connections || connections.length === 0) {
+        console.log('📋 No pending connections found');
         setPendingRequests([]);
         return;
       }
 
       // Get student profiles separately
       const studentIds = connections.map(conn => conn.student_id);
+      console.log('🔍 Fetching profiles for student IDs:', studentIds);
+      
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .in('id', studentIds);
 
       if (profilesError) {
-        console.error('Error loading student profiles:', profilesError);
+        console.error('❌ Error loading student profiles:', profilesError);
         return;
       }
 
-      console.log('Student profiles data:', profiles);
+      console.log('👥 Student profiles data:');
+      console.table(profiles);
 
       // Map the data together
       const requests: ConnectionRequest[] = connections.map(conn => {
         const profile = profiles?.find(p => p.id === conn.student_id);
         const studentName = profile?.full_name || profile?.email || 'Unknown Student';
         
-        console.log(`Mapping connection ${conn.id}: student_id=${conn.student_id}, profile=`, profile, `studentName=${studentName}`);
+        console.log(`🔗 Mapping connection ${conn.id}:`);
+        console.log(`   student_id: ${conn.student_id}`);
+        console.log(`   profile found:`, profile);
+        console.log(`   studentName: ${studentName}`);
         
         return {
           id: conn.id,
@@ -237,10 +253,18 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         };
       });
 
-      console.log('Final processed pending requests:', requests);
+      console.log('✅ Final processed pending requests:');
+      console.table(requests);
+      
+      console.log('🔄 Setting pending requests state with:', requests);
       setPendingRequests(requests);
+      
+      // Force a small delay and log to verify state update
+      setTimeout(() => {
+        console.log('🔄 Pending requests state should now be updated');
+      }, 100);
     } catch (error) {
-      console.error('Error in loadPendingRequests:', error);
+      console.error('❌ Error in loadPendingRequests:', error);
     }
   };
 
@@ -248,9 +272,9 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!user?.id) return;
 
     try {
-      console.log('Loading students for coach:', user.id);
+      console.log('🔍 Loading students for coach:', user.id);
       
-      // First get the approved connections
+      // Get the approved connections
       const { data: connections, error: connectionsError } = await supabase
         .from('coach_student_connections')
         .select('*')
@@ -259,37 +283,44 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .order('created_at', { ascending: false });
 
       if (connectionsError) {
-        console.error('Error loading student connections:', connectionsError);
+        console.error('❌ Error loading student connections:', connectionsError);
         return;
       }
 
-      console.log('Raw student connections data:', connections);
+      console.log('📋 Raw student connections data:');
+      console.table(connections);
 
       if (!connections || connections.length === 0) {
+        console.log('📋 No approved student connections found');
         setStudents([]);
         return;
       }
 
       // Get student profiles separately
       const studentIds = connections.map(conn => conn.student_id);
+      console.log('🔍 Fetching profiles for student IDs:', studentIds);
+      
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .in('id', studentIds);
 
       if (profilesError) {
-        console.error('Error loading student profiles:', profilesError);
+        console.error('❌ Error loading student profiles:', profilesError);
         return;
       }
 
-      console.log('Student profiles data:', profiles);
+      console.log('👥 Student profiles data:');
+      console.table(profiles);
 
       // Map the data together
       const studentProfiles: StudentProfile[] = connections.map(conn => {
         const profile = profiles?.find(p => p.id === conn.student_id);
         const displayName = profile?.full_name || profile?.email || 'Unknown Student';
         
-        console.log(`Mapping student ${conn.student_id}: profile=`, profile, `displayName=${displayName}`);
+        console.log(`🔗 Mapping student ${conn.student_id}:`);
+        console.log(`   profile found:`, profile);
+        console.log(`   displayName: ${displayName}`);
         
         return {
           id: conn.student_id,
@@ -300,10 +331,13 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         };
       });
 
-      console.log('Final processed students:', studentProfiles);
+      console.log('✅ Final processed students:');
+      console.table(studentProfiles);
+      
+      console.log('🔄 Setting students state with:', studentProfiles);
       setStudents(studentProfiles);
     } catch (error) {
-      console.error('Error in loadStudents:', error);
+      console.error('❌ Error in loadStudents:', error);
     }
   };
 
@@ -322,7 +356,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error loading connected coach:', error);
+        console.error('❌ Error loading connected coach:', error);
         return;
       }
 
@@ -338,7 +372,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         });
       }
     } catch (error) {
-      console.error('Error in loadConnectedCoach:', error);
+      console.error('❌ Error in loadConnectedCoach:', error);
     }
   };
 
@@ -368,7 +402,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         description: "You can now generate a connection code for students."
       });
     } catch (error) {
-      console.error('Error creating coach profile:', error);
+      console.error('❌ Error creating coach profile:', error);
       toast({
         title: "Error",
         description: "Failed to create coach profile.",
@@ -410,7 +444,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       return code;
     } catch (error) {
-      console.error('Error generating connection code:', error);
+      console.error('❌ Error generating connection code:', error);
       toast({
         title: "Error",
         description: "Failed to generate connection code.",
@@ -443,7 +477,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         description: "Your connection code has been disabled."
       });
     } catch (error) {
-      console.error('Error disabling connection code:', error);
+      console.error('❌ Error disabling connection code:', error);
       toast({
         title: "Error",
         description: "Failed to disable connection code.",
@@ -457,7 +491,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const approveConnectionRequest = async (requestId: string) => {
     setLoading(true);
     try {
-      console.log('Approving connection request:', requestId);
+      console.log('✅ Approving connection request:', requestId);
       const { error } = await supabase
         .from('coach_student_connections')
         .update({ approved: true })
@@ -467,20 +501,34 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         throw error;
       }
 
-      console.log('Connection request approved successfully');
+      console.log('✅ Connection request approved successfully');
       
-      // Force reload both lists immediately after approval
-      await Promise.all([
-        loadPendingRequests(),
-        loadStudents()
-      ]);
+      // Manual fallback reload if real-time fails
+      const reloadWithFallback = async () => {
+        try {
+          await Promise.all([
+            loadPendingRequests(),
+            loadStudents()
+          ]);
+          console.log('✅ Manual reload completed successfully');
+        } catch (error) {
+          console.error('❌ Manual reload failed:', error);
+          // Force a page refresh as last resort
+          setTimeout(() => {
+            console.log('🔄 Forcing page refresh due to failed manual reload');
+            window.location.reload();
+          }, 1000);
+        }
+      };
+      
+      await reloadWithFallback();
       
       toast({
         title: "Request Approved",
         description: "The student is now connected to you."
       });
     } catch (error) {
-      console.error('Error approving connection request:', error);
+      console.error('❌ Error approving connection request:', error);
       toast({
         title: "Error",
         description: "Failed to approve connection request.",
@@ -494,7 +542,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const declineConnectionRequest = async (requestId: string) => {
     setLoading(true);
     try {
-      console.log('Declining connection request:', requestId);
+      console.log('❌ Declining connection request:', requestId);
       const { error } = await supabase
         .from('coach_student_connections')
         .delete()
@@ -504,7 +552,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         throw error;
       }
 
-      console.log('Connection request declined successfully');
+      console.log('✅ Connection request declined successfully');
       
       // Reload pending requests after decline
       await loadPendingRequests();
@@ -514,7 +562,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         description: "The connection request has been declined."
       });
     } catch (error) {
-      console.error('Error declining connection request:', error);
+      console.error('❌ Error declining connection request:', error);
       toast({
         title: "Error",
         description: "Failed to decline connection request.",
@@ -547,7 +595,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         description: "The student has been removed from your coaching list."
       });
     } catch (error) {
-      console.error('Error removing student:', error);
+      console.error('❌ Error removing student:', error);
       toast({
         title: "Error",
         description: "Failed to remove student.",
@@ -583,7 +631,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         description: "You can now connect with a coach using their code."
       });
     } catch (error) {
-      console.error('Error creating student profile:', error);
+      console.error('❌ Error creating student profile:', error);
       toast({
         title: "Error",
         description: "Failed to create student profile.",
@@ -660,7 +708,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         description: `Your request to connect with ${coach.full_name} has been sent.`
       });
     } catch (error) {
-      console.error('Error connecting with coach:', error);
+      console.error('❌ Error connecting with coach:', error);
       toast({
         title: "Error",
         description: "Failed to connect with coach.",
@@ -693,7 +741,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         description: "You have disconnected from your coach."
       });
     } catch (error) {
-      console.error('Error disconnecting from coach:', error);
+      console.error('❌ Error disconnecting from coach:', error);
       toast({
         title: "Error",
         description: "Failed to disconnect from coach.",
