@@ -40,6 +40,17 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
     return details;
   };
 
+  const formatBuyinDetails = (table: TableData) => {
+    const initialBuyIn = table.initialBuyIn || 0;
+    const rebuys = table.rebuys || 0;
+    
+    if (rebuys > 0) {
+      return `Buy-in: $${initialBuyIn.toFixed(2)}, Rebuy: $${rebuys.toFixed(2)}`;
+    }
+    
+    return `Buy-in: $${initialBuyIn.toFixed(2)}`;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -74,7 +85,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                 </div>
                 
                 <div className="flex justify-between text-xs text-gray-600">
-                  <span>Buy-in: ${table.buyIn.toFixed(2)}</span>
+                  <span>{formatBuyinDetails(table)}</span>
                   {table.cashOut !== undefined && (
                     <span>Cash out: ${table.cashOut.toFixed(2)}</span>
                   )}
