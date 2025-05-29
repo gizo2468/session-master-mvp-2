@@ -55,14 +55,25 @@ const StudentsList = () => {
         <ul className="space-y-3">
           {students.map((student) => {
             console.log('Rendering student:', student);
+            
+            // Ensure we have a proper display name
+            const displayName = student.displayName && student.displayName !== 'Unknown Student' 
+              ? student.displayName 
+              : `Student ${student.id.slice(0, 8)}`;
+            
             return (
               <li key={student.id} className="p-3 border rounded-md">
                 <div className="flex justify-between items-center">
                   <div>
-                    <div className="font-medium">{student.displayName}</div>
+                    <div className="font-medium">{displayName}</div>
                     <div className="text-xs text-gray-500">
                       Connected since {new Date(student.createdAt).toLocaleDateString()}
                     </div>
+                    {student.displayName === 'Unknown Student' && (
+                      <div className="text-xs text-amber-600 mt-1">
+                        Student name not available
+                      </div>
+                    )}
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -83,7 +94,7 @@ const StudentsList = () => {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Remove student</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to remove {student.displayName} from your students list? 
+                          Are you sure you want to remove {displayName} from your students list? 
                           This will revoke their connection to you.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

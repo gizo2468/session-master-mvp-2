@@ -26,20 +26,25 @@ const PendingRequestsList = () => {
         <ul className="space-y-4">
           {pendingRequests.map((request) => {
             console.log('Rendering pending request:', request);
+            
+            // Better handling of student name display
+            const studentDisplayText = request.studentName && request.studentName !== 'Unknown Student' 
+              ? `${request.studentName} requested to connect`
+              : 'New connection request from a student';
+            
+            const showUnknownWarning = !request.studentName || request.studentName === 'Unknown Student';
+            
             return (
               <li key={request.id} className="p-3 border rounded-md">
                 <div className="flex justify-between items-center">
                   <div>
                     <span className="font-medium">
-                      {request.studentName && request.studentName !== 'Unknown Student' 
-                        ? `${request.studentName} requested to connect`
-                        : 'New connection request from a student'
-                      }
+                      {studentDisplayText}
                     </span>
                     <div className="text-xs text-gray-500">
                       {new Date(request.createdAt).toLocaleDateString()}
                     </div>
-                    {request.studentName === 'Unknown Student' && (
+                    {showUnknownWarning && (
                       <div className="text-xs text-amber-600 mt-1">
                         Student name not available
                       </div>
