@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -187,51 +186,53 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('Loading pending requests for coach:', user.id);
       
-      // Use a more explicit join to ensure we get the profile data
-      const { data, error } = await supabase
+      // First get the connection requests
+      const { data: connections, error: connectionsError } = await supabase
         .from('coach_student_connections')
-        .select(`
-          id,
-          coach_id,
-          student_id,
-          approved,
-          created_at,
-          profiles:student_id (
-            id,
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('coach_id', user.id)
         .eq('approved', false)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error loading pending requests:', error);
+      if (connectionsError) {
+        console.error('Error loading pending connections:', connectionsError);
         return;
       }
 
-      console.log('Raw pending requests data from Supabase:', JSON.stringify(data, null, 2));
+      console.log('Raw pending connections data:', connections);
 
-      const requests: ConnectionRequest[] = data.map(item => {
-        console.log('Processing pending request item:', JSON.stringify(item, null, 2));
+      if (!connections || connections.length === 0) {
+        setPendingRequests([]);
+        return;
+      }
+
+      // Get student profiles separately
+      const studentIds = connections.map(conn => conn.student_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', studentIds);
+
+      if (profilesError) {
+        console.error('Error loading student profiles:', profilesError);
+        return;
+      }
+
+      console.log('Student profiles data:', profiles);
+
+      // Map the data together
+      const requests: ConnectionRequest[] = connections.map(conn => {
+        const profile = profiles?.find(p => p.id === conn.student_id);
+        const studentName = profile?.full_name || profile?.email || 'Unknown Student';
         
-        // Access the joined profile data
-        const profile = item.profiles;
-        let studentName = 'Unknown Student';
-        
-        if (profile) {
-          studentName = profile.full_name || profile.email || 'Unknown Student';
-        }
-        
-        console.log('Mapped student name:', studentName);
+        console.log(`Mapping connection ${conn.id}: student_id=${conn.student_id}, profile=`, profile, `studentName=${studentName}`);
         
         return {
-          id: item.id,
-          coachId: item.coach_id,
-          studentId: item.student_id,
+          id: conn.id,
+          coachId: conn.coach_id,
+          studentId: conn.student_id,
           status: 'pending' as const,
-          createdAt: new Date(item.created_at),
+          createdAt: new Date(conn.created_at),
           studentName: studentName,
         };
       });
@@ -249,51 +250,52 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('Loading students for coach:', user.id);
       
-      // Use a more explicit join to ensure we get the profile data
-      const { data, error } = await supabase
+      // First get the approved connections
+      const { data: connections, error: connectionsError } = await supabase
         .from('coach_student_connections')
-        .select(`
-          id,
-          coach_id,
-          student_id,
-          approved,
-          created_at,
-          profiles:student_id (
-            id,
-            full_name,
-            email,
-            created_at
-          )
-        `)
+        .select('*')
         .eq('coach_id', user.id)
         .eq('approved', true)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error loading students:', error);
+      if (connectionsError) {
+        console.error('Error loading student connections:', connectionsError);
         return;
       }
 
-      console.log('Raw students data from Supabase:', JSON.stringify(data, null, 2));
+      console.log('Raw student connections data:', connections);
 
-      const studentProfiles: StudentProfile[] = data.map(item => {
-        console.log('Processing student item:', JSON.stringify(item, null, 2));
+      if (!connections || connections.length === 0) {
+        setStudents([]);
+        return;
+      }
+
+      // Get student profiles separately
+      const studentIds = connections.map(conn => conn.student_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', studentIds);
+
+      if (profilesError) {
+        console.error('Error loading student profiles:', profilesError);
+        return;
+      }
+
+      console.log('Student profiles data:', profiles);
+
+      // Map the data together
+      const studentProfiles: StudentProfile[] = connections.map(conn => {
+        const profile = profiles?.find(p => p.id === conn.student_id);
+        const displayName = profile?.full_name || profile?.email || 'Unknown Student';
         
-        // Access the joined profile data
-        const profile = item.profiles;
-        let displayName = 'Unknown Student';
-        
-        if (profile) {
-          displayName = profile.full_name || profile.email || 'Unknown Student';
-        }
-        
-        console.log('Mapped student display name:', displayName);
+        console.log(`Mapping student ${conn.student_id}: profile=`, profile, `displayName=${displayName}`);
         
         return {
-          id: profile?.id || item.student_id,
-          userId: item.student_id,
+          id: conn.student_id,
+          userId: conn.student_id,
           displayName: displayName,
-          createdAt: new Date(profile?.created_at || item.created_at),
+          createdAt: new Date(profile?.created_at || conn.created_at),
           coachId: user.id,
         };
       });
