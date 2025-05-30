@@ -90,22 +90,24 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
           console.log('🔄 Real-time connection event detected:', payload);
           console.table(payload);
           
-          // Reload data immediately with improved handling
-          try {
-            await Promise.all([
-              loadPendingRequests(),
-              loadStudents()
-            ]);
-            console.log('✅ Real-time data reload completed successfully');
-          } catch (error) {
-            console.error('❌ Real-time data reload failed:', error);
-            // Show user notification that they may need to refresh
-            toast({
-              title: "Connection Updated",
-              description: "Please refresh the page if you don't see the latest changes.",
-              variant: "default"
-            });
-          }
+          // Improved real-time handling with longer delay for database consistency
+          setTimeout(async () => {
+            try {
+              await Promise.all([
+                loadPendingRequests(),
+                loadStudents()
+              ]);
+              console.log('✅ Real-time data reload completed successfully after delay');
+            } catch (error) {
+              console.error('❌ Real-time data reload failed:', error);
+              // Show user notification that they may need to refresh
+              toast({
+                title: "Connection Updated",
+                description: "Please refresh the page if you don't see the latest changes.",
+                variant: "default"
+              });
+            }
+          }, 500); // Increased delay for better database consistency
         }
       )
       .subscribe((status) => {
@@ -159,7 +161,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
           displayName: profile.full_name,
           bio: profile.online_nickname || undefined,
           students: [],
-          comments: [],
+          comments: [], // Start with empty comments array - no auto-generated feedback
           createdAt: new Date(profile.created_at),
         });
         setConnectionCode(profile.connection_code);
@@ -189,7 +191,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('🔍 Loading pending requests for coach:', user.id);
       
-      // Get pending connections with student profiles in a single query
       const { data: pendingData, error } = await supabase
         .from('coach_student_connections')
         .select(`
@@ -221,13 +222,11 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      // Map the data with proper student name resolution
       const requests: ConnectionRequest[] = pendingData.map(conn => {
         const profile = conn.profiles;
         let studentName = 'Unknown Student';
         
         if (profile) {
-          // Priority: full_name → email → fallback
           studentName = profile.full_name || profile.email || `Student ${conn.student_id.slice(0, 8)}`;
         }
         
@@ -262,7 +261,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('🔍 Loading students for coach:', user.id);
       
-      // Get approved connections with student profiles in a single query
       const { data: studentsData, error } = await supabase
         .from('coach_student_connections')
         .select(`
@@ -293,13 +291,11 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      // Map the data with proper student name resolution
       const studentProfiles: StudentProfile[] = studentsData.map(conn => {
         const profile = conn.profiles;
         let displayName = 'Unknown Student';
         
         if (profile) {
-          // Priority: full_name → email → fallback
           displayName = profile.full_name || profile.email || `Student ${conn.student_id.slice(0, 8)}`;
         }
         
