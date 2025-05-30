@@ -85,6 +85,7 @@ export type Database = {
         Row: {
           coach_id: string
           created_at: string
+          hand_id: string | null
           id: string
           message: string
           player_id: string
@@ -95,6 +96,7 @@ export type Database = {
         Insert: {
           coach_id: string
           created_at?: string
+          hand_id?: string | null
           id?: string
           message: string
           player_id: string
@@ -105,6 +107,7 @@ export type Database = {
         Update: {
           coach_id?: string
           created_at?: string
+          hand_id?: string | null
           id?: string
           message?: string
           player_id?: string
@@ -125,6 +128,13 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_to_coach_reviews_hand_id_fkey"
+            columns: ["hand_id"]
+            isOneToOne: false
+            referencedRelation: "session_hands"
             referencedColumns: ["id"]
           },
         ]

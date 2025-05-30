@@ -23,16 +23,27 @@ interface SessionOption {
   sessionType?: string;
 }
 
+interface HandOption {
+  id: string;
+  handNumber?: number;
+  holeCards?: string;
+  position?: string;
+}
+
 const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [sessions, setSessions] = useState<SessionOption[]>([]);
+  const [hands, setHands] = useState<HandOption[]>([]);
+  const [selectedSessionId, setSelectedSessionId] = useState<string>('none');
   const [loading, setLoading] = useState(false);
+  const [loadingHands, setLoadingHands] = useState(false);
 
   const form = useForm({
     defaultValues: {
       sessionId: 'none',
+      handId: 'none',
       reviewType: '',
       message: '',
     },
@@ -44,6 +55,16 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
       loadUserSessions();
     }
   }, [open, user?.id]);
+
+  // Load hands when session changes
+  useEffect(() => {
+    if (selectedSessionId && selectedSessionId !== 'none') {
+      loadSessionHands(selectedSessionId);
+    } else {
+      setHands([]);
+      form.setValue('handId', 'none');
+    }
+  }, [selectedSessionId, form]);
 
   const loadUserSessions = async () => {
     if (!user?.id) return;
@@ -73,6 +94,51 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
     }
   };
 
+  const loadSessionHands = async (sessionId: string) => {
+    if (!user?.id) return;
+    
+    setLoadingHands(true);
+    try {
+      const { data: sessionHands, error } = await supabase
+        .from('session_hands')
+        .select('id, hand_number, hole_cards, position')
+        .eq('session_id', sessionId)
+        .order('hand_number', { ascending: true })
+        .limit(50);
+
+      if (error) {
+        console.error('Error loading hands:', error);
+        return;
+      }
+
+      const handOptions: HandOption[] = sessionHands?.map(hand => ({
+        id: hand.id,
+        handNumber: hand.hand_number,
+        holeCards: hand.hole_cards,
+        position: hand.position,
+      })) || [];
+
+      setHands(handOptions);
+    } catch (error) {
+      console.error('Error in loadSessionHands:', error);
+    } finally {
+      setLoadingHands(false);
+    }
+  };
+
+  const formatHandDisplay = (hand: HandOption) => {
+    if (hand.handNumber) {
+      if (hand.holeCards && hand.position) {
+        return `Hand #${hand.handNumber} - ${hand.holeCards} on ${hand.position}`;
+      } else if (hand.holeCards) {
+        return `Hand #${hand.handNumber} - ${hand.holeCards}`;
+      } else {
+        return `Hand #${hand.handNumber}`;
+      }
+    }
+    return `Hand ${hand.id.slice(-4)}`;
+  };
+
   const onSubmit = async (data: any) => {
     if (!user?.id) {
       toast({
@@ -91,6 +157,7 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
           player_id: user.id,
           coach_id: coachId,
           session_id: data.sessionId === 'none' ? null : data.sessionId,
+          hand_id: data.handId === 'none' ? null : data.handId,
           review_type: data.reviewType,
           message: data.message,
         });
@@ -105,6 +172,8 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
       });
 
       form.reset();
+      setSelectedSessionId('none');
+      setHands([]);
       setOpen(false);
     } catch (error) {
       console.error('Error sending review:', error);
@@ -116,6 +185,12 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSessionChange = (value: string) => {
+    setSelectedSessionId(value);
+    form.setValue('sessionId', value);
+    form.setValue('handId', 'none'); // Reset hand selection
   };
 
   return (
@@ -138,7 +213,7 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Session (Optional)</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={handleSessionChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a session (optional)" />
@@ -157,6 +232,34 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
                 </FormItem>
               )}
             />
+
+            {selectedSessionId && selectedSessionId !== 'none' && (
+              <FormField
+                control={form.control}
+                name="handId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hand (Optional)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={loadingHands ? "Loading hands..." : "Select a hand (optional)"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">No specific hand</SelectItem>
+                        {hands.map((hand) => (
+                          <SelectItem key={hand.id} value={hand.id}>
+                            {formatHandDisplay(hand)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
