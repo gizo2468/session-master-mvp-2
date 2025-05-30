@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { findSupabaseSessionId, syncHandToSupabase, syncHandUpdateToSupabase, syncHandDeleteToSupabase } from '@/utils/handSync';
 
 interface SessionContextType {
   sessions: PokerSession[];
@@ -429,7 +430,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addHand = (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => {
+  const addHand = async (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
       // If tableId is provided, add to that table
@@ -450,10 +451,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       };
       
       updateSession(updatedSession);
+
+      // Sync to Supabase if user is logged in
+      if (user) {
+        try {
+          const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
+          if (supabaseSessionId) {
+            const synced = await syncHandToSupabase(newHand, supabaseSessionId);
+            if (!synced) {
+              console.warn('Failed to sync hand to Supabase, but saved locally');
+            }
+          }
+        } catch (error) {
+          console.error('Error syncing hand to Supabase:', error);
+        }
+      }
     }
   };
   
-  const updateHand = (sessionId: string, hand: HandData) => {
+  const updateHand = async (sessionId: string, hand: HandData) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
       // If tableId is provided, update in that table
@@ -473,11 +489,26 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         };
         
         updateSession(updatedSession);
+
+        // Sync update to Supabase if user is logged in
+        if (user) {
+          try {
+            const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
+            if (supabaseSessionId) {
+              const synced = await syncHandUpdateToSupabase(hand, supabaseSessionId);
+              if (!synced) {
+                console.warn('Failed to sync hand update to Supabase, but saved locally');
+              }
+            }
+          } catch (error) {
+            console.error('Error syncing hand update to Supabase:', error);
+          }
+        }
       }
     }
   };
   
-  const deleteHand = (sessionId: string, handId: string) => {
+  const deleteHand = async (sessionId: string, handId: string) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
       // Check if this hand belongs to a table
@@ -491,6 +522,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
       
       if (session.hands) {
+        const handToDelete = session.hands.find(h => h.id === handId);
         const updatedHands = session.hands.filter(hand => hand.id !== handId);
         
         const updatedSession = {
@@ -499,11 +531,26 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         };
         
         updateSession(updatedSession);
+
+        // Sync deletion to Supabase if user is logged in
+        if (user && handToDelete) {
+          try {
+            const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
+            if (supabaseSessionId) {
+              const synced = await syncHandDeleteToSupabase(handToDelete, supabaseSessionId);
+              if (!synced) {
+                console.warn('Failed to sync hand deletion to Supabase, but deleted locally');
+              }
+            }
+          } catch (error) {
+            console.error('Error syncing hand deletion to Supabase:', error);
+          }
+        }
       }
     }
   };
   
-  const addTableHand = (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => {
+  const addTableHand = async (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => {
     const session = sessions.find(s => s.id === sessionId);
     if (!session || !session.tables) return;
     
@@ -536,9 +583,24 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
     
     updateSession(updatedSession);
+
+    // Sync to Supabase if user is logged in
+    if (user) {
+      try {
+        const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
+        if (supabaseSessionId) {
+          const synced = await syncHandToSupabase(newHand, supabaseSessionId);
+          if (!synced) {
+            console.warn('Failed to sync table hand to Supabase, but saved locally');
+          }
+        }
+      } catch (error) {
+        console.error('Error syncing table hand to Supabase:', error);
+      }
+    }
   };
   
-  const updateTableHand = (sessionId: string, tableId: string, hand: HandData) => {
+  const updateTableHand = async (sessionId: string, tableId: string, hand: HandData) => {
     const session = sessions.find(s => s.id === sessionId);
     if (!session || !session.tables) return;
     
@@ -566,9 +628,24 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
     
     updateSession(updatedSession);
+
+    // Sync update to Supabase if user is logged in
+    if (user) {
+      try {
+        const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
+        if (supabaseSessionId) {
+          const synced = await syncHandUpdateToSupabase(hand, supabaseSessionId);
+          if (!synced) {
+            console.warn('Failed to sync table hand update to Supabase, but saved locally');
+          }
+        }
+      } catch (error) {
+        console.error('Error syncing table hand update to Supabase:', error);
+      }
+    }
   };
   
-  const deleteTableHand = (sessionId: string, tableId: string, handId: string) => {
+  const deleteTableHand = async (sessionId: string, tableId: string, handId: string) => {
     const session = sessions.find(s => s.id === sessionId);
     if (!session || !session.tables) return;
     
@@ -578,6 +655,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const table = session.tables[tableIndex];
     if (!table.hands) return;
     
+    const handToDelete = table.hands.find(h => h.id === handId);
     const updatedHands = table.hands.filter(hand => hand.id !== handId);
     
     const updatedTable = {
@@ -594,6 +672,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
     
     updateSession(updatedSession);
+
+    // Sync deletion to Supabase if user is logged in
+    if (user && handToDelete) {
+      try {
+        const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
+        if (supabaseSessionId) {
+          const synced = await syncHandDeleteToSupabase(handToDelete, supabaseSessionId);
+          if (!synced) {
+            console.warn('Failed to sync table hand deletion to Supabase, but deleted locally');
+          }
+        }
+      } catch (error) {
+        console.error('Error syncing table hand deletion to Supabase:', error);
+      }
+    }
   };
   
   const addTable = (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
