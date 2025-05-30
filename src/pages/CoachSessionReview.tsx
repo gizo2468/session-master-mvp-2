@@ -1,58 +1,27 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/Lucide';
-import TableDetailsCard from '@/components/poker/TableDetailsCard';
-import CoachHandsList from '@/components/coaching/CoachHandsList';
 import { CommentForm } from '@/components/coaching/CommentForm';
 import { CommentTag } from '@/types/poker';
-import { HandData, TableData } from '@/types/poker';
 import { useAuth } from '@/context/AuthContext';
 import { hasFeatureAccess } from '@/utils/coachTiers';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
-import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
+import { supabase } from '@/integrations/supabase/client';
 
-// Mock session data for the demo
-const createMockSessionData = (sessionId: string) => {
-  const startTime = new Date();
-  startTime.setHours(startTime.getHours() - 3);
-  
-  const endTime = new Date();
-  endTime.setHours(endTime.getHours() - 1);
-  
-  const table: TableData = {
-    id: `table-${sessionId}`,
-    format: 'Cash',
-    gameType: 'NLH',
-    location: 'Online Poker Site',
-    buyIn: 200,
-    initialBuyIn: 200,
-    cashOut: 315.50,
-    smallBlind: 1,
-    bigBlind: 2,
-    startTime: startTime,
-    endTime: endTime,
-    isActive: false
-  };
-  
-  const hands: HandData[] = Array.from({ length: 5 }).map((_, i) => ({
-    id: `hand-${sessionId}-${i}`,
-    cards: i === 0 ? 'AhKh' : i === 1 ? '7s8s' : i === 2 ? 'JcJd' : i === 3 ? '9dTd' : 'Ac2d',
-    position: i === 0 ? 'BTN' : i === 1 ? 'SB' : i === 2 ? 'BB' : i === 3 ? 'MP' : 'CO',
-    action: i === 0 
-      ? 'Raised to 3BB, flop bet 6BB on A72r, turn check, river bet 12BB' 
-      : i === 1 
-      ? 'Called 3BB from SB, check-called flop on 986 two-spade, turn went check-check, river bet 8BB when flush completed'
-      : 'Standard 3bet to 10BB, got 4bet and folded',
-    resultAmount: i % 2 === 0 ? 45.5 : -22.25,
-    currencyType: 'currency',
-    createdAt: new Date()
-  }));
-  
-  return { table, hands };
-};
+interface SessionData {
+  id: string;
+  user_id: string;
+  start_time: string;
+  end_time: string;
+  game_type: string | null;
+  session_type: string | null;
+  notes: string | null;
+  created_at: string;
+}
 
 const CoachSessionReview = () => {
   const navigate = useNavigate();
@@ -61,14 +30,56 @@ const CoachSessionReview = () => {
   const { studentId, sessionId } = useParams<{ studentId: string; sessionId: string }>();
   const { user } = useAuth();
   
+  const [sessionData, setSessionData] = useState<SessionData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isCommentFormOpen, setIsCommentFormOpen] = useState(false);
   const [selectedHandId, setSelectedHandId] = useState<string | undefined>(undefined);
   
-  // In a real app, we would fetch this data from API/database
-  const { table, hands } = createMockSessionData(sessionId || '');
-  
   // Check if user has access to comment feature
   const hasCommentAccess = hasFeatureAccess(user?.role, user?.coachTier, 'Comment Tagging');
+  
+  useEffect(() => {
+    if (sessionId && studentId) {
+      loadSessionData();
+    }
+  }, [sessionId, studentId]);
+
+  const loadSessionData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('🔍 Loading session data for session:', sessionId, 'student:', studentId);
+      
+      const { data: session, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('id', sessionId)
+        .eq('user_id', studentId)
+        .single();
+
+      if (error) {
+        console.error('❌ Error loading session:', error);
+        setError('Failed to load session data');
+        return;
+      }
+
+      if (!session) {
+        setError('Session not found');
+        return;
+      }
+
+      console.log('✅ Session data loaded:', session);
+      setSessionData(session);
+      
+    } catch (error) {
+      console.error('❌ Error in loadSessionData:', error);
+      setError('Failed to load session data');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const handleAddComment = (content: string, tag: CommentTag | undefined) => {
     // In a real app, we would save this to the database
@@ -104,6 +115,71 @@ const CoachSessionReview = () => {
       localStorage.removeItem('previousLocation');
     }
   }, [location.pathname]);
+
+  const formatDuration = (startTime: string, endTime: string) => {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const durationMs = end.getTime() - start.getTime();
+    const hours = Math.floor(durationMs / (1000 * 60 * 60));
+    const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
+  const formatDateTime = (dateTimeString: string) => {
+    const date = new Date(dateTimeString);
+    return date.toLocaleString();
+  };
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto max-w-4xl px-4 py-8">
+          <div className="text-center py-12">
+            <Icon name="Loader" className="mx-auto mb-4 h-8 w-8 animate-spin text-poker-feltGreen" />
+            <p className="text-gray-600">Loading session data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !sessionData) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto max-w-4xl px-4 py-8">
+          <header className="mb-8">
+            <button 
+              onClick={() => navigate(`/coach/student/${studentId}`)} 
+              className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:underline"
+            >
+              <Icon name="arrow-left" size={16} />
+              <span>Back to Student</span>
+            </button>
+          </header>
+          
+          <div className="text-center py-12">
+            <Icon name="AlertCircle" className="mx-auto mb-4 h-12 w-12 text-red-500" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              {error || 'Session not found'}
+            </h2>
+            <p className="text-gray-600 mb-6">
+              The session data could not be loaded or does not exist.
+            </p>
+            <Button 
+              onClick={() => navigate(`/coach/student/${studentId}`)}
+              variant="poker"
+            >
+              Back to Student
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -119,13 +195,60 @@ const CoachSessionReview = () => {
           
           <h1 className="text-2xl font-bold text-poker-black">Session Review</h1>
           <p className="text-gray-500 text-sm mt-1">
-            {table.gameType} {table.format} @ {table.location}
+            {sessionData.game_type || 'Poker'} {sessionData.session_type || 'Session'}
           </p>
         </header>
         
         <div className="space-y-6">
           {/* Session details */}
-          <TableDetailsCard table={table} />
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Icon name="clock" />
+                <span>Session Details</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <h4 className="font-medium text-gray-900">Game Type</h4>
+                  <p className="text-gray-600">{sessionData.game_type || 'Not specified'}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-gray-900">Session Type</h4>
+                  <p className="text-gray-600">{sessionData.session_type || 'Not specified'}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-gray-900">Duration</h4>
+                  <p className="text-gray-600">{formatDuration(sessionData.start_time, sessionData.end_time)}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-gray-900">Start Time</h4>
+                  <p className="text-gray-600">{formatDateTime(sessionData.start_time)}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-gray-900">End Time</h4>
+                  <p className="text-gray-600">{formatDateTime(sessionData.end_time)}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-gray-900">Created</h4>
+                  <p className="text-gray-600">{formatDateTime(sessionData.created_at)}</p>
+                </div>
+              </div>
+              
+              {sessionData.notes && (
+                <div className="mt-6 pt-4 border-t">
+                  <h4 className="font-medium text-gray-900 mb-2">Notes</h4>
+                  <p className="text-gray-600 whitespace-pre-wrap">{sessionData.notes}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
           
           {/* Session comment button */}
           <div className="flex justify-end">
@@ -155,21 +278,23 @@ const CoachSessionReview = () => {
             )}
           </div>
           
-          {/* Hands section */}
+          {/* Additional data sections */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Icon name="list" />
-                <span>Hands</span>
+                <Icon name="info" />
+                <span>Additional Session Data</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px]">
-                <CoachHandsList 
-                  hands={hands} 
-                  onAddFeedback={openCommentForm}
-                  hasCommentAccess={hasCommentAccess}
-                />
+              <div className="text-center py-8 text-gray-500">
+                <Icon name="Database" className="mx-auto mb-3 h-8 w-8" />
+                <p className="text-sm">
+                  No additional session data (hands, tables, results) has been recorded yet.
+                </p>
+                <p className="text-xs mt-2 text-gray-400">
+                  When the student records detailed session information, it will appear here.
+                </p>
               </div>
             </CardContent>
           </Card>
