@@ -7,12 +7,12 @@ import { useCoachStudent } from '@/context/CoachStudentContext';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import Icon from '@/components/ui/Lucide';
-import PlayerFeedbackForm from '@/components/coaching/PlayerFeedbackForm';
+import PlayerReviewForm from '@/components/coaching/PlayerReviewForm';
 
-interface PlayerFeedback {
+interface PlayerReview {
   id: string;
   coach_id: string;
-  feedback_type: string;
+  review_type: string;
   message: string;
   created_at: string;
   read: boolean;
@@ -22,38 +22,38 @@ const PlayerDashboard = () => {
   const navigate = useNavigate();
   const { connectedCoach } = useCoachStudent();
   const { user } = useAuth();
-  const [recentFeedback, setRecentFeedback] = useState<PlayerFeedback[]>([]);
-  const [loadingFeedback, setLoadingFeedback] = useState(false);
+  const [recentReviews, setRecentReviews] = useState<PlayerReview[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
-  // Load player's recent feedback
+  // Load player's recent reviews
   useEffect(() => {
     if (user?.id) {
-      loadRecentFeedback();
+      loadRecentReviews();
     }
   }, [user?.id]);
 
-  const loadRecentFeedback = async () => {
+  const loadRecentReviews = async () => {
     if (!user?.id) return;
     
-    setLoadingFeedback(true);
+    setLoadingReviews(true);
     try {
-      const { data: feedback, error } = await supabase
-        .from('player_to_coach_feedback')
+      const { data: reviews, error } = await supabase
+        .from('player_to_coach_reviews')
         .select('*')
         .eq('player_id', user.id)
         .order('created_at', { ascending: false })
         .limit(5);
 
       if (error) {
-        console.error('Error loading feedback:', error);
+        console.error('Error loading reviews:', error);
         return;
       }
 
-      setRecentFeedback(feedback || []);
+      setRecentReviews(reviews || []);
     } catch (error) {
-      console.error('Error in loadRecentFeedback:', error);
+      console.error('Error in loadRecentReviews:', error);
     } finally {
-      setLoadingFeedback(false);
+      setLoadingReviews(false);
     }
   };
   
@@ -93,7 +93,7 @@ const PlayerDashboard = () => {
                       {connectedCoach.bio && <p className="text-sm text-gray-600">{connectedCoach.bio}</p>}
                     </div>
                     <div className="flex gap-2">
-                      <PlayerFeedbackForm 
+                      <PlayerReviewForm 
                         coachId={connectedCoach.id} 
                         coachName={connectedCoach.displayName} 
                       />
@@ -122,40 +122,40 @@ const PlayerDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon name="MessageSquare" />
-                <span>Your Recent Feedback</span>
+                <span>Your Recent Reviews</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {loadingFeedback ? (
+              {loadingReviews ? (
                 <div className="text-center py-6 text-gray-500">
-                  <p>Loading feedback...</p>
+                  <p>Loading reviews...</p>
                 </div>
-              ) : recentFeedback.length > 0 ? (
+              ) : recentReviews.length > 0 ? (
                 <div className="space-y-3">
-                  {recentFeedback.map(feedback => (
-                    <div key={feedback.id} className="border rounded-md p-3">
+                  {recentReviews.map(review => (
+                    <div key={review.id} className="border rounded-md p-3">
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <span className="text-sm font-medium">{feedback.feedback_type}</span>
+                          <span className="text-sm font-medium">{review.review_type}</span>
                           <span className="text-xs text-gray-500 ml-2">
-                            {new Date(feedback.created_at).toLocaleDateString()}
+                            {new Date(review.created_at).toLocaleDateString()}
                           </span>
                         </div>
-                        {!feedback.read && (
+                        {!review.read && (
                           <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                             Sent
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-700">{feedback.message}</p>
+                      <p className="text-sm text-gray-700">{review.message}</p>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-6 text-gray-500">
-                  <p className="text-sm">No feedback sent yet.</p>
+                  <p className="text-sm">No reviews sent yet.</p>
                   <p className="text-xs mt-1">
-                    Connect with a coach and send them feedback about your sessions.
+                    Connect with a coach and send them reviews about your sessions.
                   </p>
                 </div>
               )}
@@ -174,7 +174,7 @@ const PlayerDashboard = () => {
                 <Icon name="Info" className="mx-auto mb-2 h-8 w-8" />
                 <p className="text-sm">Your sessions are automatically synced when you complete them.</p>
                 <p className="text-xs mt-1">
-                  Your coach can view your completed sessions to provide feedback and coaching insights.
+                  Your coach can view your completed sessions to provide reviews and coaching insights.
                 </p>
               </div>
             </CardContent>

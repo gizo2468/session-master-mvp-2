@@ -81,35 +81,35 @@ export type Database = {
         }
         Relationships: []
       }
-      player_to_coach_feedback: {
+      player_to_coach_reviews: {
         Row: {
           coach_id: string
           created_at: string
-          feedback_type: string
           id: string
           message: string
           player_id: string
           read: boolean
+          review_type: string
           session_id: string | null
         }
         Insert: {
           coach_id: string
           created_at?: string
-          feedback_type: string
           id?: string
           message: string
           player_id: string
           read?: boolean
+          review_type: string
           session_id?: string | null
         }
         Update: {
           coach_id?: string
           created_at?: string
-          feedback_type?: string
           id?: string
           message?: string
           player_id?: string
           read?: boolean
+          review_type?: string
           session_id?: string | null
         }
         Relationships: [

@@ -8,7 +8,7 @@ import { useCoachStudent } from '@/context/CoachStudentContext';
 import Icon from '@/components/ui/Lucide';
 import { StudentSessions } from '@/components/coaching/StudentSessions';
 import { StudentSessionStats } from '@/components/coaching/StudentSessionStats';
-import { StudentFeedback } from '@/components/coaching/StudentFeedback';
+import { StudentReviews } from '@/components/coaching/StudentReviews';
 
 const CoachStudentDetail = () => {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ const CoachStudentDetail = () => {
   }
   
   // Determine which tab to display based on query parameter
-  const defaultTab = tabParam === 'feedback' ? 'feedback' : 'sessions';
+  const defaultTab = tabParam === 'reviews' ? 'reviews' : 'sessions';
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -59,9 +59,9 @@ const CoachStudentDetail = () => {
               <Icon name="clock" size={16} />
               <span>Sessions</span>
             </TabsTrigger>
-            <TabsTrigger value="feedback" className="flex items-center gap-1">
+            <TabsTrigger value="reviews" className="flex items-center gap-1">
               <Icon name="message-square" size={16} />
-              <span>Feedback</span>
+              <span>Reviews</span>
             </TabsTrigger>
           </TabsList>
           
@@ -70,8 +70,8 @@ const CoachStudentDetail = () => {
             <StudentSessions studentId={student.id} />
           </TabsContent>
           
-          <TabsContent value="feedback">
-            <StudentFeedback studentId={student.id} />
+          <TabsContent value="reviews">
+            <StudentReviews studentId={student.id} />
           </TabsContent>
         </Tabs>
       </div>
