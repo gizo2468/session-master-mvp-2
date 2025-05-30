@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
@@ -199,12 +198,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
                 table_name: table.name || null,
                 table_type: table.format || null,
                 game_format: table.gameType || null,
-                stakes: table.stakes || null,
+                stakes: table.stakes || `${table.smallBlind || 0}/${table.bigBlind || 0}`,
                 buy_in: table.buyIn || 0,
                 starting_stack: table.startingStack || null,
                 current_stack: table.currentStack || null,
                 rebuys: table.rebuys || 0,
-                rebuy_amount: (table.rebuys || 0) * (table.rebuyAmount || 0),
+                rebuy_amount: (table.rebuys || 0) * (table.rebuyAmount || table.tournamentBuyIn || 0),
                 bounty_amount: table.bountyAmount || 0,
                 players_eliminated: table.bountyCount || 0,
                 final_position: table.finalPosition || null,
@@ -232,21 +231,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
                 session_id: supabaseSessionId,
                 table_id: null, // Session-level hands don't belong to a specific table
                 hand_number: hand.handNumber || null,
-                hole_cards: hand.holeCards ? JSON.stringify(hand.holeCards) : null,
+                hole_cards: hand.holeCards ? JSON.stringify(hand.holeCards) : (hand.cards ? JSON.stringify([hand.cards]) : null),
                 position: hand.position || null,
-                preflop_action: hand.preflopAction || null,
+                preflop_action: hand.preflopAction || hand.action || null,
                 flop_cards: hand.flopCards ? JSON.stringify(hand.flopCards) : null,
                 flop_action: hand.flopAction || null,
                 turn_card: hand.turnCard || null,
                 turn_action: hand.turnAction || null,
                 river_card: hand.riverCard || null,
                 river_action: hand.riverAction || null,
-                showdown_result: hand.showdownResult || null,
+                showdown_result: hand.showdownResult || (typeof hand.result === 'string' ? hand.result : null),
                 pot_size: hand.potSize || 0,
-                amount_won: hand.amountWon || 0,
+                amount_won: hand.amountWon || hand.resultAmount || 0,
                 amount_invested: hand.amountInvested || 0,
                 hand_notes: hand.notes || null,
-                hand_image: hand.handImage || null,
+                hand_image: hand.handImage || hand.image || null,
                 currency_type: hand.currencyType || 'currency'
               });
 

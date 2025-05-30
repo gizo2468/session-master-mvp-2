@@ -1,4 +1,3 @@
-
 export interface HandData {
   id: string;
   cards: string;
@@ -15,6 +14,22 @@ export interface HandData {
   createdAt: Date;
   gameType?: 'NLH' | 'PLO';
   tableId?: string; // Optional to support legacy hands
+  
+  // New detailed hand tracking properties for Supabase sync
+  handNumber?: number;
+  holeCards?: string[]; // Keep existing 'cards' for backward compatibility
+  preflopAction?: string;
+  flopCards?: string[];
+  flopAction?: string;
+  turnCard?: string;
+  turnAction?: string;
+  riverCard?: string;
+  riverAction?: string;
+  showdownResult?: string; // Keep existing 'result' for backward compatibility
+  potSize?: number;
+  amountWon?: number;
+  amountInvested?: number;
+  handImage?: string; // Keep existing 'image' for backward compatibility
 }
 
 export interface TableData {
@@ -46,6 +61,12 @@ export interface TableData {
   chipsCarryover?: number;
   dayEndedWithoutElimination?: boolean;
   hands?: HandData[];
+  
+  // New properties for Supabase sync
+  stakes?: string;
+  startingStack?: number;
+  currentStack?: number;
+  rebuyAmount?: number;
 }
 
 export interface PokerSession {
