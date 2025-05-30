@@ -32,7 +32,7 @@ const PlayerFeedbackForm = ({ coachId, coachName }: PlayerFeedbackFormProps) => 
 
   const form = useForm({
     defaultValues: {
-      sessionId: '',
+      sessionId: 'none',
       feedbackType: '',
       message: '',
     },
@@ -90,7 +90,7 @@ const PlayerFeedbackForm = ({ coachId, coachName }: PlayerFeedbackFormProps) => 
         .insert({
           player_id: user.id,
           coach_id: coachId,
-          session_id: data.sessionId || null,
+          session_id: data.sessionId === 'none' ? null : data.sessionId,
           feedback_type: data.feedbackType,
           message: data.message,
         });
@@ -145,7 +145,7 @@ const PlayerFeedbackForm = ({ coachId, coachName }: PlayerFeedbackFormProps) => 
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">No specific session</SelectItem>
+                      <SelectItem value="none">No specific session</SelectItem>
                       {sessions.map((session) => (
                         <SelectItem key={session.id} value={session.id}>
                           {new Date(session.startTime).toLocaleDateString()} - {session.sessionType || 'Session'}
