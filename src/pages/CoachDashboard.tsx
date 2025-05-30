@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,10 +29,10 @@ interface SessionComment {
   created_at: string;
 }
 
-interface PlayerFeedback {
+interface PlayerReview {
   id: string;
   player_id: string;
-  feedback_type: string;
+  review_type: string;
   message: string;
   session_id?: string;
   created_at: string;
@@ -44,27 +43,27 @@ const CoachDashboard = () => {
   const navigate = useNavigate();
   const { isCoach, coachProfile, students } = useCoachStudent();
   const { user } = useAuth();
-  const [recentFeedback, setRecentFeedback] = useState<SessionComment[]>([]);
-  const [playerFeedback, setPlayerFeedback] = useState<PlayerFeedback[]>([]);
-  const [loadingFeedback, setLoadingFeedback] = useState(false);
+  const [recentReviews, setRecentReviews] = useState<SessionComment[]>([]);
+  const [playerReviews, setPlayerReviews] = useState<PlayerReview[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
   
   if (!isCoach || !coachProfile || !user) {
     navigate('/coach-profile');
     return null;
   }
 
-  // Load recent feedback from the database
+  // Load recent reviews from the database
   useEffect(() => {
-    loadRecentFeedback();
-    loadPlayerFeedback();
+    loadRecentReviews();
+    loadPlayerReviews();
   }, [user?.id]);
 
-  const loadRecentFeedback = async () => {
+  const loadRecentReviews = async () => {
     if (!user?.id) return;
     
-    setLoadingFeedback(true);
+    setLoadingReviews(true);
     try {
-      console.log('🔍 Loading recent feedback for coach:', user.id);
+      console.log('🔍 Loading recent reviews for coach:', user.id);
       
       const { data: comments, error } = await supabase
         .from('session_comments')
@@ -74,41 +73,41 @@ const CoachDashboard = () => {
         .limit(5);
 
       if (error) {
-        console.error('❌ Error loading recent feedback:', error);
+        console.error('❌ Error loading recent reviews:', error);
         return;
       }
 
-      console.log('✅ Recent feedback loaded:', comments);
-      setRecentFeedback(comments || []);
+      console.log('✅ Recent reviews loaded:', comments);
+      setRecentReviews(comments || []);
     } catch (error) {
-      console.error('❌ Error in loadRecentFeedback:', error);
+      console.error('❌ Error in loadRecentReviews:', error);
     } finally {
-      setLoadingFeedback(false);
+      setLoadingReviews(false);
     }
   };
 
-  const loadPlayerFeedback = async () => {
+  const loadPlayerReviews = async () => {
     if (!user?.id) return;
     
     try {
-      console.log('🔍 Loading player feedback for coach:', user.id);
+      console.log('🔍 Loading player reviews for coach:', user.id);
       
-      const { data: feedback, error } = await supabase
-        .from('player_to_coach_feedback')
+      const { data: reviews, error } = await supabase
+        .from('player_to_coach_reviews')
         .select('*')
         .eq('coach_id', user.id)
         .order('created_at', { ascending: false })
         .limit(5);
 
       if (error) {
-        console.error('❌ Error loading player feedback:', error);
+        console.error('❌ Error loading player reviews:', error);
         return;
       }
 
-      console.log('✅ Player feedback loaded:', feedback);
-      setPlayerFeedback(feedback || []);
+      console.log('✅ Player reviews loaded:', reviews);
+      setPlayerReviews(reviews || []);
     } catch (error) {
-      console.error('❌ Error in loadPlayerFeedback:', error);
+      console.error('❌ Error in loadPlayerReviews:', error);
     }
   };
 
@@ -122,7 +121,7 @@ const CoachDashboard = () => {
 
   // Check for feature access
   const hasStudentManagement = true; // Free tier has this
-  const hasFeedbackAccess = hasFeatureAccess(user.role, coachTier, 'Session Feedback');
+  const hasReviewAccess = hasFeatureAccess(user.role, coachTier, 'Session Feedback');
   const hasAnalyticsAccess = hasFeatureAccess(user.role, coachTier, 'Advanced Analytics');
   const hasCommentTagging = hasFeatureAccess(user.role, coachTier, 'Comment Tagging');
   const hasNotifications = hasFeatureAccess(user.role, coachTier, 'Notification System');
@@ -162,34 +161,34 @@ const CoachDashboard = () => {
     }
   };
 
-  // Mark player feedback as read
-  const markFeedbackAsRead = async (feedbackId: string) => {
+  // Mark player review as read
+  const markReviewAsRead = async (reviewId: string) => {
     try {
       const { error } = await supabase
-        .from('player_to_coach_feedback')
+        .from('player_to_coach_reviews')
         .update({ read: true })
-        .eq('id', feedbackId);
+        .eq('id', reviewId);
 
       if (error) {
-        console.error('Error marking feedback as read:', error);
+        console.error('Error marking review as read:', error);
         return;
       }
 
       // Update local state
-      setPlayerFeedback(prev => 
-        prev.map(feedback => 
-          feedback.id === feedbackId 
-            ? { ...feedback, read: true }
-            : feedback
+      setPlayerReviews(prev => 
+        prev.map(review => 
+          review.id === reviewId 
+            ? { ...review, read: true }
+            : review
         )
       );
     } catch (error) {
-      console.error('Error in markFeedbackAsRead:', error);
+      console.error('Error in markReviewAsRead:', error);
     }
   };
 
-  // Check if there's any feedback to show
-  const totalFeedback = recentFeedback.length + playerFeedback.length;
+  // Check if there's any reviews to show
+  const totalReviews = recentReviews.length + playerReviews.length;
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -205,7 +204,7 @@ const CoachDashboard = () => {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-poker-black">Coach Dashboard</h1>
-              <p className="text-gray-500 text-sm mt-1">Manage your students and provide feedback</p>
+              <p className="text-gray-500 text-sm mt-1">Manage your students and provide reviews</p>
             </div>
             <TooltipProvider>
               <Tooltip>
@@ -318,42 +317,42 @@ const CoachDashboard = () => {
                 </CardContent>
               </Card>
               
-              {/* Recent Feedback - Only show if feedback exists */}
-              {totalFeedback > 0 && (
+              {/* Recent Reviews - Only show if reviews exist */}
+              {totalReviews > 0 && (
                 <div className="relative">
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Icon name="message-square" />
-                        <span>Recent Feedback</span>
+                        <span>Recent Reviews</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        {/* Player to Coach Feedback */}
-                        {playerFeedback.length > 0 && (
+                        {/* Player to Coach Reviews */}
+                        {playerReviews.length > 0 && (
                           <div className="space-y-3">
                             <h4 className="text-sm font-medium text-gray-700">From Players</h4>
-                            {playerFeedback.map(feedback => (
-                              <div key={feedback.id} className="border rounded-md p-3 bg-blue-50">
+                            {playerReviews.map(review => (
+                              <div key={review.id} className="border rounded-md p-3 bg-blue-50">
                                 <div className="flex justify-between items-start mb-1">
                                   <div>
                                     <span className="text-sm font-medium">
-                                      {getStudentName(feedback.player_id)}
+                                      {getStudentName(review.player_id)}
                                     </span>
                                     <span className="text-xs text-gray-500 ml-2">
-                                      {feedback.feedback_type}
+                                      {review.review_type}
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <span className="text-xs text-gray-500">
-                                      {new Date(feedback.created_at).toLocaleDateString()}
+                                      {new Date(review.created_at).toLocaleDateString()}
                                     </span>
-                                    {!feedback.read && (
+                                    {!review.read && (
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => markFeedbackAsRead(feedback.id)}
+                                        onClick={() => markReviewAsRead(review.id)}
                                         className="h-6 px-2 text-xs"
                                       >
                                         Mark Read
@@ -362,13 +361,13 @@ const CoachDashboard = () => {
                                   </div>
                                 </div>
                                 
-                                <p className="text-sm my-2">{feedback.message}</p>
+                                <p className="text-sm my-2">{review.message}</p>
                                 
                                 <div className="flex justify-between items-center">
                                   <div className="text-xs text-gray-500">
-                                    Player feedback
+                                    Player review
                                   </div>
-                                  {!feedback.read && (
+                                  {!review.read && (
                                     <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                                       New
                                     </span>
@@ -380,11 +379,11 @@ const CoachDashboard = () => {
                         )}
 
                         {/* Session Comments */}
-                        {recentFeedback.length > 0 && (
+                        {recentReviews.length > 0 && (
                           <div className="space-y-3">
-                            {playerFeedback.length > 0 && <Separator />}
+                            {playerReviews.length > 0 && <Separator />}
                             <h4 className="text-sm font-medium text-gray-700">Session Comments</h4>
-                            {recentFeedback.map(comment => (
+                            {recentReviews.map(comment => (
                               <div key={comment.id} className="border rounded-md p-3">
                                 <div className="flex justify-between items-start mb-1">
                                   <div>
@@ -416,7 +415,7 @@ const CoachDashboard = () => {
                                 
                                 <div className="flex justify-between items-center">
                                   <div className="text-xs text-gray-500">
-                                    Coach feedback
+                                    Coach review
                                   </div>
                                 </div>
                               </div>
@@ -426,8 +425,8 @@ const CoachDashboard = () => {
                       </div>
                     </CardContent>
                   </Card>
-                  {!hasFeedbackAccess && (
-                    <FeatureLockOverlay featureName="Feedback System" />
+                  {!hasReviewAccess && (
+                    <FeatureLockOverlay featureName="Review System" />
                   )}
                 </div>
               )}
