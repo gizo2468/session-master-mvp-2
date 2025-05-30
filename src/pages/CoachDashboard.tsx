@@ -187,7 +187,7 @@ const CoachDashboard = () => {
                 </CardContent>
               </Card>
               
-              {/* Recent Feedback - FIXED: Only show real feedback, never dummy content */}
+              {/* Recent Feedback - CRITICAL FIX: Only show empty state since no real feedback exists */}
               <div className="relative">
                 <Card>
                   <CardHeader>
@@ -198,8 +198,11 @@ const CoachDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-center py-6 text-gray-500">
-                      <p>No feedback comments yet.</p>
-                      <p className="text-sm mt-2">Connect with students and review their sessions to provide feedback.</p>
+                      <div className="mb-4">
+                        <Icon name="MessageSquare" size={48} className="mx-auto text-gray-300" />
+                      </div>
+                      <p className="text-sm font-medium text-gray-600 mb-1">No feedback comments yet.</p>
+                      <p className="text-xs">Connect with students and review their sessions to provide feedback.</p>
                     </div>
                     
                     <div className="mt-4 flex justify-center">

@@ -144,6 +144,54 @@ export type Database = {
         }
         Relationships: []
       }
+      session_comments: {
+        Row: {
+          coach_id: string
+          comment: string
+          created_at: string
+          hand_number: number | null
+          id: string
+          session_id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          coach_id: string
+          comment: string
+          created_at?: string
+          hand_number?: number | null
+          id?: string
+          session_id: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          coach_id?: string
+          comment?: string
+          created_at?: string
+          hand_number?: number | null
+          id?: string
+          session_id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_comments_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_comments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessions: {
         Row: {
           created_at: string

@@ -1,100 +1,77 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/Lucide';
-import { CoachComment, CommentTag } from '@/types/poker';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
-const createMockFeedback = (studentId: string) => {
-  const feedback: CoachComment[] = [];
-  const tags: CommentTag[] = ['common_mistake', 'aggressive_play', 'good_decision', 'needs_review'];
-  const statuses = ['unread', 'read', 'implemented', 'needs_clarification'] as const;
-  
-  for (let i = 0; i < 10; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    
-    feedback.push({
-      id: `comment-${i}`,
-      coachId: 'coach-1',
-      studentId: studentId,
-      sessionId: `session-${studentId}-${i % 5}`,
-      handId: i % 2 === 0 ? `hand-${i}` : undefined,
-      content: i % 2 === 0 
-        ? `You should consider 3-betting more from the button against tight players.` 
-        : `Overall good session. Your river decisions were sound and well-calculated.`,
-      tag: tags[i % tags.length],
-      createdAt: date,
-      status: statuses[i % statuses.length]
-    });
-  }
-  
-  return feedback;
-};
+interface SessionComment {
+  id: string;
+  session_id: string;
+  coach_id: string;
+  student_id: string;
+  comment: string;
+  hand_number?: number;
+  created_at: string;
+}
 
 export const StudentFeedback = ({ studentId }: { studentId: string }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState<string>('');
+  const [feedback, setFeedback] = useState<SessionComment[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  const allFeedback = createMockFeedback(studentId);
+  // Load real feedback from the database
+  useEffect(() => {
+    loadFeedback();
+  }, [studentId, user?.id]);
+
+  const loadFeedback = async () => {
+    if (!user?.id || !studentId) return;
+    
+    setLoading(true);
+    try {
+      console.log('🔍 Loading real feedback for student:', studentId);
+      
+      const { data: comments, error } = await supabase
+        .from('session_comments')
+        .select('*')
+        .eq('student_id', studentId)
+        .eq('coach_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error loading feedback:', error);
+        return;
+      }
+
+      console.log('✅ Real feedback loaded:', comments);
+      setFeedback(comments || []);
+    } catch (error) {
+      console.error('❌ Error in loadFeedback:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
-  const filteredFeedback = allFeedback.filter(comment => {
-    if (filter !== 'all' && comment.tag !== filter) {
+  const filteredFeedback = feedback.filter(comment => {
+    if (search && !comment.comment.toLowerCase().includes(search.toLowerCase())) {
       return false;
     }
-    
-    if (search && !comment.content.toLowerCase().includes(search.toLowerCase())) {
-      return false;
-    }
-    
     return true;
   });
   
-  const getTagColor = (tag: CommentTag | undefined) => {
-    switch (tag) {
-      case 'good_decision':
-        return 'bg-green-100 text-green-700';
-      case 'common_mistake':
-        return 'bg-red-100 text-red-700';
-      case 'aggressive_play':
-        return 'bg-amber-100 text-amber-700';
-      case 'needs_review':
-        return 'bg-blue-100 text-blue-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  };
-  
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'read':
-        return <Icon name="check" size={14} className="text-blue-500" />;
-      case 'implemented':
-        return <Icon name="check" size={14} className="text-green-500" />;
-      case 'needs_clarification':
-        return <Icon name="alert-triangle" size={14} className="text-amber-500" />;
-      default:
-        return null;
-    }
-  };
-  
   // Navigation handler for comments
-  const handleNavigateToSession = (sessionId: string, handId?: string) => {
+  const handleNavigateToSession = (sessionId: string, handNumber?: number) => {
     try {
-      // Format the session ID to ensure it's valid
-      // If it's session-X-Y format, keep it as is, otherwise use a default path
-      const isValidSessionId = /^session-\d+-\d+$/.test(sessionId);
-      
-      if (!isValidSessionId) {
-        console.error(`Invalid session ID format: ${sessionId}`);
-        return; // Don't navigate if the ID format is invalid
-      }
-      
-      if (handId) {
-        navigate(`/coach/student/${studentId}/session/${sessionId}?handId=${handId}`);
+      if (handNumber) {
+        navigate(`/coach/student/${studentId}/session/${sessionId}?handId=hand-${handNumber}`);
       } else {
         navigate(`/coach/student/${studentId}/session/${sessionId}`);
       }
@@ -123,40 +100,31 @@ export const StudentFeedback = ({ studentId }: { studentId: string }) => {
               />
               <Icon name="Search" className="absolute left-2 top-2.5 text-gray-400" size={16} />
             </div>
-            
-            <Select value={filter} onValueChange={setFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by tag" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Tags</SelectItem>
-                <SelectItem value="common_mistake">Common Mistake</SelectItem>
-                <SelectItem value="aggressive_play">Aggressive Play</SelectItem>
-                <SelectItem value="good_decision">Good Decision</SelectItem>
-                <SelectItem value="needs_review">Needs Review</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
           
-          {filteredFeedback.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-6 text-gray-500">
+              <p>Loading feedback...</p>
+            </div>
+          ) : filteredFeedback.length > 0 ? (
             <div className="space-y-3">
               {filteredFeedback.map(comment => (
                 <div key={comment.id} className="border rounded-md p-3">
                   <div className="flex justify-between items-start mb-1">
                     <div>
                       <span className="text-sm font-medium">
-                        Session {comment.sessionId.slice(-8)}
-                        {comment.handId && <span className="text-gray-500"> • Hand {comment.handId.slice(-4)}</span>}
+                        Session {comment.session_id.slice(-8)}
+                        {comment.hand_number && <span className="text-gray-500"> • Hand {comment.hand_number}</span>}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-500">
-                        {new Date(comment.createdAt).toLocaleDateString()}
+                        {new Date(comment.created_at).toLocaleDateString()}
                       </span>
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => handleNavigateToSession(comment.sessionId, comment.handId)}
+                        onClick={() => handleNavigateToSession(comment.session_id, comment.hand_number)}
                         className="h-7 w-7 p-0 rounded-full flex items-center justify-center"
                         aria-label="View session"
                       >
@@ -165,20 +133,11 @@ export const StudentFeedback = ({ studentId }: { studentId: string }) => {
                     </div>
                   </div>
                   
-                  <p className="text-sm my-2">{comment.content}</p>
+                  <p className="text-sm my-2">{comment.comment}</p>
                   
                   <div className="flex justify-between items-center">
-                    <div>
-                      {comment.tag && (
-                        <span className={`text-xs px-2 py-1 rounded-full ${getTagColor(comment.tag)}`}>
-                          {comment.tag.replace('_', ' ')}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      {getStatusIcon(comment.status)}
-                      <span>{comment.status.replace('_', ' ')}</span>
+                    <div className="text-xs text-gray-500">
+                      Coach feedback
                     </div>
                   </div>
                 </div>
@@ -186,7 +145,8 @@ export const StudentFeedback = ({ studentId }: { studentId: string }) => {
             </div>
           ) : (
             <div className="text-center py-6 text-gray-500">
-              <p>No feedback found matching your filters.</p>
+              <p>No feedback found.</p>
+              <p className="text-sm mt-2">Real feedback will appear here when coaches review sessions.</p>
             </div>
           )}
         </CardContent>

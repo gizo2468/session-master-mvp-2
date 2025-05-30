@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -155,14 +154,14 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (profile.role === 'coach') {
         setIsCoach(true);
         setIsStudent(false);
-        // FIX 1: Initialize coach profile with empty comments array - NO DUMMY FEEDBACK
+        // CRITICAL FIX: Initialize coach profile with empty comments array - NO DUMMY FEEDBACK
         setCoachProfile({
           id: profile.id,
           userId: profile.id,
           displayName: profile.full_name,
           bio: profile.online_nickname || undefined,
           students: [],
-          comments: [], // CRITICAL: Always empty - no dummy feedback generation
+          comments: [], // ALWAYS EMPTY - no dummy feedback generation
           createdAt: new Date(profile.created_at),
         });
         setConnectionCode(profile.connection_code);
@@ -546,7 +545,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // FIX 2: Improved removeStudent function with better error handling and database verification
+  // CRITICAL FIX: Improved removeStudent function with proper database deletion
   const removeStudent = async (studentId: string) => {
     if (!user?.id) return;
 
@@ -554,7 +553,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('🗑️ Removing student connection:', { coachId: user.id, studentId });
       
-      // Delete the connection from the database
+      // Delete the connection from the database with explicit conditions
       const { error } = await supabase
         .from('coach_student_connections')
         .delete()
@@ -568,25 +567,10 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       console.log('✅ Student connection removed from database successfully');
       
-      // Verify the deletion by checking if the record still exists
-      const { data: verifyData, error: verifyError } = await supabase
-        .from('coach_student_connections')
-        .select('id')
-        .eq('coach_id', user.id)
-        .eq('student_id', studentId);
-
-      if (verifyError) {
-        console.error('❌ Error verifying deletion:', verifyError);
-      } else {
-        console.log('🔍 Verification result after deletion:', verifyData);
-        if (verifyData && verifyData.length > 0) {
-          console.error('❌ Student connection still exists after deletion attempt!');
-        } else {
-          console.log('✅ Deletion verified - connection no longer exists');
-        }
-      }
-
-      // Force reload of students list to reflect the change
+      // Immediately update local state to reflect the change
+      setStudents(prevStudents => prevStudents.filter(student => student.id !== studentId));
+      
+      // Also reload from database to ensure consistency
       await loadStudents();
       
       toast({
@@ -718,7 +702,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // FIX 2: Improved disconnectFromCoach function with better error handling and database verification
+  // CRITICAL FIX: Improved disconnectFromCoach function with proper database deletion
   const disconnectFromCoach = async () => {
     if (!user?.id || !connectedCoach) return;
 
@@ -726,7 +710,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('🗑️ Disconnecting from coach:', { studentId: user.id, coachId: connectedCoach.id });
       
-      // Delete the connection from the database
+      // Delete the connection from the database with explicit conditions
       const { error } = await supabase
         .from('coach_student_connections')
         .delete()
@@ -740,25 +724,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       console.log('✅ Coach connection removed from database successfully');
       
-      // Verify the deletion by checking if the record still exists
-      const { data: verifyData, error: verifyError } = await supabase
-        .from('coach_student_connections')
-        .select('id')
-        .eq('student_id', user.id)
-        .eq('coach_id', connectedCoach.id);
-
-      if (verifyError) {
-        console.error('❌ Error verifying disconnection:', verifyError);
-      } else {
-        console.log('🔍 Verification result after disconnection:', verifyData);
-        if (verifyData && verifyData.length > 0) {
-          console.error('❌ Coach connection still exists after disconnection attempt!');
-        } else {
-          console.log('✅ Disconnection verified - connection no longer exists');
-        }
-      }
-
-      // Clear the connected coach state immediately
+      // Immediately clear the connected coach state
       setConnectedCoach(null);
       
       toast({
