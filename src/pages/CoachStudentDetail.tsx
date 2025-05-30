@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import Icon from '@/components/ui/Lucide';
 import { StudentSessions } from '@/components/coaching/StudentSessions';
+import { StudentSessionStats } from '@/components/coaching/StudentSessionStats';
 import { StudentFeedback } from '@/components/coaching/StudentFeedback';
 
 const CoachStudentDetail = () => {
@@ -65,6 +66,7 @@ const CoachStudentDetail = () => {
           </TabsList>
           
           <TabsContent value="sessions">
+            <StudentSessionStats studentId={student.id} />
             <StudentSessions studentId={student.id} />
           </TabsContent>
           

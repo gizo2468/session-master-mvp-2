@@ -165,6 +165,24 @@ const PlayerDashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
+                <Icon name="Clock" />
+                <span>Session Sync Status</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-6 text-gray-500">
+                <Icon name="Info" className="mx-auto mb-2 h-8 w-8" />
+                <p className="text-sm">Your sessions are automatically synced when you complete them.</p>
+                <p className="text-xs mt-1">
+                  Your coach can view your completed sessions to provide feedback and coaching insights.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <Icon name="CheckSquare" />
                 <span>Connection Requests</span>
               </CardTitle>
