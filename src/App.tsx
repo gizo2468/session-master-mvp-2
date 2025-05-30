@@ -16,7 +16,6 @@ import ConnectCoach from "./pages/ConnectCoach";
 import CoachDashboard from "./pages/CoachDashboard";
 import CoachStudentDetail from "./pages/CoachStudentDetail";
 import CoachSessionReview from "./pages/CoachSessionReview";
-import CoachFeedbackArchive from "./pages/CoachFeedbackArchive";
 import CoachUpgrade from "./pages/CoachUpgrade";
 import PlayerDashboard from "./pages/PlayerDashboard";
 import Settings from "./pages/Settings";
@@ -177,14 +176,6 @@ const App = () => (
                       element={
                         <ProtectedRoute>
                           <CoachSessionReview />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/coach/feedback-archive" 
-                      element={
-                        <ProtectedRoute>
-                          <CoachFeedbackArchive />
                         </ProtectedRoute>
                       } 
                     />

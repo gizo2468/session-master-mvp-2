@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,16 +18,62 @@ import ConnectionCodeDisplay from '@/components/coaching/ConnectionCodeDisplay';
 import GenerateCodeButton from '@/components/coaching/GenerateCodeButton';
 import PendingRequestsList from '@/components/coaching/PendingRequestsList';
 import StudentsList from '@/components/coaching/StudentsList';
+import { supabase } from '@/integrations/supabase/client';
+
+interface SessionComment {
+  id: string;
+  session_id: string;
+  coach_id: string;
+  student_id: string;
+  comment: string;
+  hand_number?: number;
+  created_at: string;
+}
 
 const CoachDashboard = () => {
   const navigate = useNavigate();
   const { isCoach, coachProfile, students } = useCoachStudent();
   const { user } = useAuth();
+  const [recentFeedback, setRecentFeedback] = useState<SessionComment[]>([]);
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
   
   if (!isCoach || !coachProfile || !user) {
     navigate('/coach-profile');
     return null;
   }
+
+  // Load recent feedback from the database
+  useEffect(() => {
+    loadRecentFeedback();
+  }, [user?.id]);
+
+  const loadRecentFeedback = async () => {
+    if (!user?.id) return;
+    
+    setLoadingFeedback(true);
+    try {
+      console.log('🔍 Loading recent feedback for coach:', user.id);
+      
+      const { data: comments, error } = await supabase
+        .from('session_comments')
+        .select('*')
+        .eq('coach_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error('❌ Error loading recent feedback:', error);
+        return;
+      }
+
+      console.log('✅ Recent feedback loaded:', comments);
+      setRecentFeedback(comments || []);
+    } catch (error) {
+      console.error('❌ Error in loadRecentFeedback:', error);
+    } finally {
+      setLoadingFeedback(false);
+    }
+  };
 
   // Coach tier details - default to free for new users
   const coachTier = user.coachTier || 'free';
@@ -57,6 +103,25 @@ const CoachDashboard = () => {
       case 'pro': return 'planPro';
       case 'elite': return 'planElite';
       default: return 'planFree';
+    }
+  };
+
+  // Get student name by ID
+  const getStudentName = (studentId: string) => {
+    const student = students.find(s => s.id === studentId);
+    return student ? student.displayName : `Student ${studentId.slice(-4)}`;
+  };
+
+  // Navigation handler for comments
+  const handleNavigateToSession = (studentId: string, sessionId: string, handNumber?: number) => {
+    try {
+      if (handNumber) {
+        navigate(`/coach/student/${studentId}/session/${sessionId}?handId=hand-${handNumber}`);
+      } else {
+        navigate(`/coach/student/${studentId}/session/${sessionId}`);
+      }
+    } catch (error) {
+      console.error("Navigation error:", error);
     }
   };
   
@@ -187,40 +252,63 @@ const CoachDashboard = () => {
                 </CardContent>
               </Card>
               
-              {/* Recent Feedback - CRITICAL FIX: Only show empty state since no real feedback exists */}
-              <div className="relative">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Icon name="message-square" />
-                      <span>Recent Feedback</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-6 text-gray-500">
-                      <div className="mb-4">
-                        <Icon name="MessageSquare" size={48} className="mx-auto text-gray-300" />
+              {/* Recent Feedback - Only show if feedback exists */}
+              {recentFeedback.length > 0 && (
+                <div className="relative">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Icon name="message-square" />
+                        <span>Recent Feedback</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {recentFeedback.map(comment => (
+                          <div key={comment.id} className="border rounded-md p-3">
+                            <div className="flex justify-between items-start mb-1">
+                              <div>
+                                <span className="text-sm font-medium">
+                                  {getStudentName(comment.student_id)}
+                                </span>
+                                <span className="text-xs text-gray-500 ml-2">
+                                  Session {comment.session_id.slice(-8)}
+                                  {comment.hand_number && <span> • Hand {comment.hand_number}</span>}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500">
+                                  {new Date(comment.created_at).toLocaleDateString()}
+                                </span>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleNavigateToSession(comment.student_id, comment.session_id, comment.hand_number)}
+                                  className="h-7 w-7 p-0 rounded-full flex items-center justify-center"
+                                  aria-label="View session"
+                                >
+                                  <Icon name="ExternalLink" size={14} />
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            <p className="text-sm my-2">{comment.comment}</p>
+                            
+                            <div className="flex justify-between items-center">
+                              <div className="text-xs text-gray-500">
+                                Coach feedback
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <p className="text-sm font-medium text-gray-600 mb-1">No feedback comments yet.</p>
-                      <p className="text-xs">Connect with students and review their sessions to provide feedback.</p>
-                    </div>
-                    
-                    <div className="mt-4 flex justify-center">
-                      <Button 
-                        onClick={() => navigate('/coach/feedback-archive')} 
-                        variant="outline" 
-                        size="sm"
-                        disabled={!hasFeedbackAccess}
-                      >
-                        View All Feedback
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-                {!hasFeedbackAccess && (
-                  <FeatureLockOverlay featureName="Feedback System" />
-                )}
-              </div>
+                    </CardContent>
+                  </Card>
+                  {!hasFeedbackAccess && (
+                    <FeatureLockOverlay featureName="Feedback System" />
+                  )}
+                </div>
+              )}
             </div>
           </TabsContent>
           
