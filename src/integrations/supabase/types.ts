@@ -240,6 +240,213 @@ export type Database = {
           },
         ]
       }
+      session_hands: {
+        Row: {
+          amount_invested: number | null
+          amount_won: number | null
+          created_at: string | null
+          currency_type: string | null
+          flop_action: string | null
+          flop_cards: string | null
+          hand_image: string | null
+          hand_notes: string | null
+          hand_number: number | null
+          hole_cards: string | null
+          id: string
+          position: string | null
+          pot_size: number | null
+          preflop_action: string | null
+          river_action: string | null
+          river_card: string | null
+          session_id: string
+          showdown_result: string | null
+          table_id: string | null
+          turn_action: string | null
+          turn_card: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount_invested?: number | null
+          amount_won?: number | null
+          created_at?: string | null
+          currency_type?: string | null
+          flop_action?: string | null
+          flop_cards?: string | null
+          hand_image?: string | null
+          hand_notes?: string | null
+          hand_number?: number | null
+          hole_cards?: string | null
+          id?: string
+          position?: string | null
+          pot_size?: number | null
+          preflop_action?: string | null
+          river_action?: string | null
+          river_card?: string | null
+          session_id: string
+          showdown_result?: string | null
+          table_id?: string | null
+          turn_action?: string | null
+          turn_card?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount_invested?: number | null
+          amount_won?: number | null
+          created_at?: string | null
+          currency_type?: string | null
+          flop_action?: string | null
+          flop_cards?: string | null
+          hand_image?: string | null
+          hand_notes?: string | null
+          hand_number?: number | null
+          hole_cards?: string | null
+          id?: string
+          position?: string | null
+          pot_size?: number | null
+          preflop_action?: string | null
+          river_action?: string | null
+          river_card?: string | null
+          session_id?: string
+          showdown_result?: string | null
+          table_id?: string | null
+          turn_action?: string | null
+          turn_card?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      session_results: {
+        Row: {
+          big_blinds_won: number | null
+          created_at: string | null
+          final_position: number | null
+          hands_played: number | null
+          hours_played: number | null
+          id: string
+          net_profit: number | null
+          players_eliminated: number | null
+          roi_percentage: number | null
+          session_id: string
+          total_bounties_earned: number | null
+          total_buy_in: number | null
+          total_cashout: number | null
+          total_rebuy_amount: number | null
+          total_rebuys: number | null
+          tournament_entries: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          big_blinds_won?: number | null
+          created_at?: string | null
+          final_position?: number | null
+          hands_played?: number | null
+          hours_played?: number | null
+          id?: string
+          net_profit?: number | null
+          players_eliminated?: number | null
+          roi_percentage?: number | null
+          session_id: string
+          total_bounties_earned?: number | null
+          total_buy_in?: number | null
+          total_cashout?: number | null
+          total_rebuy_amount?: number | null
+          total_rebuys?: number | null
+          tournament_entries?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          big_blinds_won?: number | null
+          created_at?: string | null
+          final_position?: number | null
+          hands_played?: number | null
+          hours_played?: number | null
+          id?: string
+          net_profit?: number | null
+          players_eliminated?: number | null
+          roi_percentage?: number | null
+          session_id?: string
+          total_bounties_earned?: number | null
+          total_buy_in?: number | null
+          total_cashout?: number | null
+          total_rebuy_amount?: number | null
+          total_rebuys?: number | null
+          tournament_entries?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      session_tables: {
+        Row: {
+          bounty_amount: number | null
+          buy_in: number | null
+          cashout: number | null
+          created_at: string | null
+          current_stack: number | null
+          end_time: string | null
+          final_position: number | null
+          game_format: string | null
+          id: string
+          is_active: boolean | null
+          players_eliminated: number | null
+          rebuy_amount: number | null
+          rebuys: number | null
+          session_id: string
+          stakes: string | null
+          start_time: string | null
+          starting_stack: number | null
+          table_name: string | null
+          table_notes: string | null
+          table_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bounty_amount?: number | null
+          buy_in?: number | null
+          cashout?: number | null
+          created_at?: string | null
+          current_stack?: number | null
+          end_time?: string | null
+          final_position?: number | null
+          game_format?: string | null
+          id?: string
+          is_active?: boolean | null
+          players_eliminated?: number | null
+          rebuy_amount?: number | null
+          rebuys?: number | null
+          session_id: string
+          stakes?: string | null
+          start_time?: string | null
+          starting_stack?: number | null
+          table_name?: string | null
+          table_notes?: string | null
+          table_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bounty_amount?: number | null
+          buy_in?: number | null
+          cashout?: number | null
+          created_at?: string | null
+          current_stack?: number | null
+          end_time?: string | null
+          final_position?: number | null
+          game_format?: string | null
+          id?: string
+          is_active?: boolean | null
+          players_eliminated?: number | null
+          rebuy_amount?: number | null
+          rebuys?: number | null
+          session_id?: string
+          stakes?: string | null
+          start_time?: string | null
+          starting_stack?: number | null
+          table_name?: string | null
+          table_notes?: string | null
+          table_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           created_at: string

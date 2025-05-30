@@ -156,21 +156,150 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [sessions, toast]);
 
-  // Sync completed sessions to Supabase
+  // Enhanced sync function to handle detailed session data
   const syncSessionToSupabase = async (session: PokerSession) => {
     if (!user) return;
     
     try {
       // Only sync completed sessions to Supabase
       if (!session.isActive && session.endTime) {
-        await supabase.from('sessions').insert({
-          user_id: user.id,
-          start_time: new Date(session.startTime).toISOString(),
-          end_time: new Date(session.endTime).toISOString(),
-          session_type: session.format,
-          game_type: session.gameType,
-          notes: session.notes || null
-        });
+        console.log('🔄 Syncing detailed session data to Supabase:', session.id);
+        
+        // Insert basic session data
+        const { data: sessionData, error: sessionError } = await supabase
+          .from('sessions')
+          .insert({
+            user_id: user.id,
+            start_time: new Date(session.startTime).toISOString(),
+            end_time: new Date(session.endTime).toISOString(),
+            session_type: session.format,
+            game_type: session.gameType,
+            notes: session.notes || null
+          })
+          .select()
+          .single();
+
+        if (sessionError) {
+          console.error('❌ Error syncing session:', sessionError);
+          throw sessionError;
+        }
+
+        const supabaseSessionId = sessionData.id;
+        console.log('✅ Session synced with ID:', supabaseSessionId);
+
+        // Sync table data if exists
+        if (session.tables && session.tables.length > 0) {
+          console.log('🔄 Syncing table data...');
+          
+          for (const table of session.tables) {
+            const { error: tableError } = await supabase
+              .from('session_tables')
+              .insert({
+                session_id: supabaseSessionId,
+                table_name: table.name || null,
+                table_type: table.format || null,
+                game_format: table.gameType || null,
+                stakes: table.stakes || null,
+                buy_in: table.buyIn || 0,
+                starting_stack: table.startingStack || null,
+                current_stack: table.currentStack || null,
+                rebuys: table.rebuys || 0,
+                rebuy_amount: (table.rebuys || 0) * (table.rebuyAmount || 0),
+                bounty_amount: table.bountyAmount || 0,
+                players_eliminated: table.bountyCount || 0,
+                final_position: table.finalPosition || null,
+                cashout: table.cashOut || 0,
+                table_notes: table.notes || null,
+                start_time: new Date(table.startTime).toISOString(),
+                end_time: table.endTime ? new Date(table.endTime).toISOString() : null,
+                is_active: table.isActive || false
+              });
+
+            if (tableError) {
+              console.error('❌ Error syncing table:', tableError);
+            }
+          }
+        }
+
+        // Sync hand data if exists
+        if (session.hands && session.hands.length > 0) {
+          console.log('🔄 Syncing hand data...');
+          
+          for (const hand of session.hands) {
+            const { error: handError } = await supabase
+              .from('session_hands')
+              .insert({
+                session_id: supabaseSessionId,
+                table_id: null, // Session-level hands don't belong to a specific table
+                hand_number: hand.handNumber || null,
+                hole_cards: hand.holeCards ? JSON.stringify(hand.holeCards) : null,
+                position: hand.position || null,
+                preflop_action: hand.preflopAction || null,
+                flop_cards: hand.flopCards ? JSON.stringify(hand.flopCards) : null,
+                flop_action: hand.flopAction || null,
+                turn_card: hand.turnCard || null,
+                turn_action: hand.turnAction || null,
+                river_card: hand.riverCard || null,
+                river_action: hand.riverAction || null,
+                showdown_result: hand.showdownResult || null,
+                pot_size: hand.potSize || 0,
+                amount_won: hand.amountWon || 0,
+                amount_invested: hand.amountInvested || 0,
+                hand_notes: hand.notes || null,
+                hand_image: hand.handImage || null,
+                currency_type: hand.currencyType || 'currency'
+              });
+
+            if (handError) {
+              console.error('❌ Error syncing hand:', handError);
+            }
+          }
+        }
+
+        // Calculate and sync session results
+        let totalBuyIn = session.buyIn || 0;
+        let totalCashOut = session.cashOut || 0;
+        let totalRebuys = session.rebuys || 0;
+        let handsPlayed = (session.hands || []).length;
+        
+        // Add table data to totals
+        if (session.tables) {
+          for (const table of session.tables) {
+            totalBuyIn += table.buyIn || 0;
+            totalCashOut += table.cashOut || 0;
+            totalRebuys += table.rebuys || 0;
+            if (table.hands) {
+              handsPlayed += table.hands.length;
+            }
+          }
+        }
+
+        const netProfit = totalCashOut - totalBuyIn;
+        const roiPercentage = totalBuyIn > 0 ? (netProfit / totalBuyIn) * 100 : 0;
+        const sessionDurationHours = session.sessionDuration ? session.sessionDuration / (1000 * 60 * 60) : 0;
+
+        const { error: resultsError } = await supabase
+          .from('session_results')
+          .insert({
+            session_id: supabaseSessionId,
+            total_buy_in: totalBuyIn,
+            total_cashout: totalCashOut,
+            net_profit: netProfit,
+            total_rebuys: totalRebuys,
+            total_rebuy_amount: totalRebuys * (session.tournamentBuyIn || 0),
+            total_bounties_earned: 0, // Will be calculated from table bounties
+            players_eliminated: 0, // Will be calculated from table eliminations
+            final_position: null,
+            tournament_entries: session.format === 'Tournament' ? 1 : 0,
+            hours_played: sessionDurationHours,
+            hands_played: handsPlayed,
+            big_blinds_won: 0, // TODO: Calculate based on stakes
+            roi_percentage: roiPercentage
+          });
+
+        if (resultsError) {
+          console.error('❌ Error syncing session results:', resultsError);
+        }
         
         toast({
           title: "Session saved to cloud",
