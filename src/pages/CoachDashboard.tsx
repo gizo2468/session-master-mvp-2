@@ -30,11 +30,22 @@ interface SessionComment {
   created_at: string;
 }
 
+interface PlayerFeedback {
+  id: string;
+  player_id: string;
+  feedback_type: string;
+  message: string;
+  session_id?: string;
+  created_at: string;
+  read: boolean;
+}
+
 const CoachDashboard = () => {
   const navigate = useNavigate();
   const { isCoach, coachProfile, students } = useCoachStudent();
   const { user } = useAuth();
   const [recentFeedback, setRecentFeedback] = useState<SessionComment[]>([]);
+  const [playerFeedback, setPlayerFeedback] = useState<PlayerFeedback[]>([]);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
   
   if (!isCoach || !coachProfile || !user) {
@@ -45,6 +56,7 @@ const CoachDashboard = () => {
   // Load recent feedback from the database
   useEffect(() => {
     loadRecentFeedback();
+    loadPlayerFeedback();
   }, [user?.id]);
 
   const loadRecentFeedback = async () => {
@@ -72,6 +84,31 @@ const CoachDashboard = () => {
       console.error('❌ Error in loadRecentFeedback:', error);
     } finally {
       setLoadingFeedback(false);
+    }
+  };
+
+  const loadPlayerFeedback = async () => {
+    if (!user?.id) return;
+    
+    try {
+      console.log('🔍 Loading player feedback for coach:', user.id);
+      
+      const { data: feedback, error } = await supabase
+        .from('player_to_coach_feedback')
+        .select('*')
+        .eq('coach_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error('❌ Error loading player feedback:', error);
+        return;
+      }
+
+      console.log('✅ Player feedback loaded:', feedback);
+      setPlayerFeedback(feedback || []);
+    } catch (error) {
+      console.error('❌ Error in loadPlayerFeedback:', error);
     }
   };
 
@@ -124,6 +161,35 @@ const CoachDashboard = () => {
       console.error("Navigation error:", error);
     }
   };
+
+  // Mark player feedback as read
+  const markFeedbackAsRead = async (feedbackId: string) => {
+    try {
+      const { error } = await supabase
+        .from('player_to_coach_feedback')
+        .update({ read: true })
+        .eq('id', feedbackId);
+
+      if (error) {
+        console.error('Error marking feedback as read:', error);
+        return;
+      }
+
+      // Update local state
+      setPlayerFeedback(prev => 
+        prev.map(feedback => 
+          feedback.id === feedbackId 
+            ? { ...feedback, read: true }
+            : feedback
+        )
+      );
+    } catch (error) {
+      console.error('Error in markFeedbackAsRead:', error);
+    }
+  };
+
+  // Check if there's any feedback to show
+  const totalFeedback = recentFeedback.length + playerFeedback.length;
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -253,7 +319,7 @@ const CoachDashboard = () => {
               </Card>
               
               {/* Recent Feedback - Only show if feedback exists */}
-              {recentFeedback.length > 0 && (
+              {totalFeedback > 0 && (
                 <div className="relative">
                   <Card>
                     <CardHeader>
@@ -263,44 +329,100 @@ const CoachDashboard = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
-                        {recentFeedback.map(comment => (
-                          <div key={comment.id} className="border rounded-md p-3">
-                            <div className="flex justify-between items-start mb-1">
-                              <div>
-                                <span className="text-sm font-medium">
-                                  {getStudentName(comment.student_id)}
-                                </span>
-                                <span className="text-xs text-gray-500 ml-2">
-                                  Session {comment.session_id.slice(-8)}
-                                  {comment.hand_number && <span> • Hand {comment.hand_number}</span>}
-                                </span>
+                      <div className="space-y-4">
+                        {/* Player to Coach Feedback */}
+                        {playerFeedback.length > 0 && (
+                          <div className="space-y-3">
+                            <h4 className="text-sm font-medium text-gray-700">From Players</h4>
+                            {playerFeedback.map(feedback => (
+                              <div key={feedback.id} className="border rounded-md p-3 bg-blue-50">
+                                <div className="flex justify-between items-start mb-1">
+                                  <div>
+                                    <span className="text-sm font-medium">
+                                      {getStudentName(feedback.player_id)}
+                                    </span>
+                                    <span className="text-xs text-gray-500 ml-2">
+                                      {feedback.feedback_type}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">
+                                      {new Date(feedback.created_at).toLocaleDateString()}
+                                    </span>
+                                    {!feedback.read && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => markFeedbackAsRead(feedback.id)}
+                                        className="h-6 px-2 text-xs"
+                                      >
+                                        Mark Read
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                <p className="text-sm my-2">{feedback.message}</p>
+                                
+                                <div className="flex justify-between items-center">
+                                  <div className="text-xs text-gray-500">
+                                    Player feedback
+                                  </div>
+                                  {!feedback.read && (
+                                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                      New
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">
-                                  {new Date(comment.created_at).toLocaleDateString()}
-                                </span>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  onClick={() => handleNavigateToSession(comment.student_id, comment.session_id, comment.hand_number)}
-                                  className="h-7 w-7 p-0 rounded-full flex items-center justify-center"
-                                  aria-label="View session"
-                                >
-                                  <Icon name="ExternalLink" size={14} />
-                                </Button>
-                              </div>
-                            </div>
-                            
-                            <p className="text-sm my-2">{comment.comment}</p>
-                            
-                            <div className="flex justify-between items-center">
-                              <div className="text-xs text-gray-500">
-                                Coach feedback
-                              </div>
-                            </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
+
+                        {/* Session Comments */}
+                        {recentFeedback.length > 0 && (
+                          <div className="space-y-3">
+                            {playerFeedback.length > 0 && <Separator />}
+                            <h4 className="text-sm font-medium text-gray-700">Session Comments</h4>
+                            {recentFeedback.map(comment => (
+                              <div key={comment.id} className="border rounded-md p-3">
+                                <div className="flex justify-between items-start mb-1">
+                                  <div>
+                                    <span className="text-sm font-medium">
+                                      {getStudentName(comment.student_id)}
+                                    </span>
+                                    <span className="text-xs text-gray-500 ml-2">
+                                      Session {comment.session_id.slice(-8)}
+                                      {comment.hand_number && <span> • Hand {comment.hand_number}</span>}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">
+                                      {new Date(comment.created_at).toLocaleDateString()}
+                                    </span>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => handleNavigateToSession(comment.student_id, comment.session_id, comment.hand_number)}
+                                      className="h-7 w-7 p-0 rounded-full flex items-center justify-center"
+                                      aria-label="View session"
+                                    >
+                                      <Icon name="ExternalLink" size={14} />
+                                    </Button>
+                                  </div>
+                                </div>
+                                
+                                <p className="text-sm my-2">{comment.comment}</p>
+                                
+                                <div className="flex justify-between items-center">
+                                  <div className="text-xs text-gray-500">
+                                    Coach feedback
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

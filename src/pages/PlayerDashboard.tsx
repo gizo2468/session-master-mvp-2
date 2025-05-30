@@ -1,14 +1,61 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCoachStudent } from '@/context/CoachStudentContext';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import Icon from '@/components/ui/Lucide';
+import PlayerFeedbackForm from '@/components/coaching/PlayerFeedbackForm';
+
+interface PlayerFeedback {
+  id: string;
+  coach_id: string;
+  feedback_type: string;
+  message: string;
+  created_at: string;
+  read: boolean;
+}
 
 const PlayerDashboard = () => {
   const navigate = useNavigate();
   const { connectedCoach } = useCoachStudent();
+  const { user } = useAuth();
+  const [recentFeedback, setRecentFeedback] = useState<PlayerFeedback[]>([]);
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
+
+  // Load player's recent feedback
+  useEffect(() => {
+    if (user?.id) {
+      loadRecentFeedback();
+    }
+  }, [user?.id]);
+
+  const loadRecentFeedback = async () => {
+    if (!user?.id) return;
+    
+    setLoadingFeedback(true);
+    try {
+      const { data: feedback, error } = await supabase
+        .from('player_to_coach_feedback')
+        .select('*')
+        .eq('player_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error('Error loading feedback:', error);
+        return;
+      }
+
+      setRecentFeedback(feedback || []);
+    } catch (error) {
+      console.error('Error in loadRecentFeedback:', error);
+    } finally {
+      setLoadingFeedback(false);
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -45,9 +92,15 @@ const PlayerDashboard = () => {
                       <h3 className="font-medium text-lg">{connectedCoach.displayName}</h3>
                       {connectedCoach.bio && <p className="text-sm text-gray-600">{connectedCoach.bio}</p>}
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => navigate('/connect-coach')}>
-                      Manage
-                    </Button>
+                    <div className="flex gap-2">
+                      <PlayerFeedbackForm 
+                        coachId={connectedCoach.id} 
+                        coachName={connectedCoach.displayName} 
+                      />
+                      <Button variant="outline" size="sm" onClick={() => navigate('/connect-coach')}>
+                        Manage
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -69,16 +122,43 @@ const PlayerDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon name="MessageSquare" />
-                <span>Recent Feedback</span>
+                <span>Your Recent Feedback</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-6 text-gray-500">
-                <p className="text-sm">No feedback received yet.</p>
-                <p className="text-xs mt-1">
-                  Connect with a coach and share your poker sessions to receive feedback.
-                </p>
-              </div>
+              {loadingFeedback ? (
+                <div className="text-center py-6 text-gray-500">
+                  <p>Loading feedback...</p>
+                </div>
+              ) : recentFeedback.length > 0 ? (
+                <div className="space-y-3">
+                  {recentFeedback.map(feedback => (
+                    <div key={feedback.id} className="border rounded-md p-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <span className="text-sm font-medium">{feedback.feedback_type}</span>
+                          <span className="text-xs text-gray-500 ml-2">
+                            {new Date(feedback.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {!feedback.read && (
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            Sent
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-700">{feedback.message}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <p className="text-sm">No feedback sent yet.</p>
+                  <p className="text-xs mt-1">
+                    Connect with a coach and send them feedback about your sessions.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
           

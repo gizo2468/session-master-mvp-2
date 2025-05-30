@@ -81,6 +81,54 @@ export type Database = {
         }
         Relationships: []
       }
+      player_to_coach_feedback: {
+        Row: {
+          coach_id: string
+          created_at: string
+          feedback_type: string
+          id: string
+          message: string
+          player_id: string
+          read: boolean
+          session_id: string | null
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          feedback_type: string
+          id?: string
+          message: string
+          player_id: string
+          read?: boolean
+          session_id?: string | null
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          message?: string
+          player_id?: string
+          read?: boolean
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_to_coach_feedback_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_to_coach_feedback_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           coach_tier: string | null
