@@ -155,13 +155,14 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (profile.role === 'coach') {
         setIsCoach(true);
         setIsStudent(false);
+        // FIX 1: Initialize coach profile with empty comments array - NO DUMMY FEEDBACK
         setCoachProfile({
           id: profile.id,
           userId: profile.id,
           displayName: profile.full_name,
           bio: profile.online_nickname || undefined,
           students: [],
-          comments: [], // Start with empty comments array - no auto-generated feedback
+          comments: [], // CRITICAL: Always empty - no dummy feedback generation
           createdAt: new Date(profile.created_at),
         });
         setConnectionCode(profile.connection_code);
@@ -326,6 +327,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!user?.id) return;
 
     try {
+      console.log('🔍 Loading connected coach for student:', user.id);
       const { data, error } = await supabase
         .from('coach_student_connections')
         .select(`
@@ -342,6 +344,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       if (data) {
+        console.log('✅ Connected coach found:', data);
         setConnectedCoach({
           id: data.profiles.id,
           userId: data.profiles.id,
@@ -351,6 +354,9 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
           comments: [],
           createdAt: new Date(data.profiles.created_at),
         });
+      } else {
+        console.log('📋 No connected coach found');
+        setConnectedCoach(null);
       }
     } catch (error) {
       console.error('❌ Error in loadConnectedCoach:', error);
@@ -540,11 +546,15 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  // FIX 2: Improved removeStudent function with better error handling and database verification
   const removeStudent = async (studentId: string) => {
     if (!user?.id) return;
 
     setLoading(true);
     try {
+      console.log('🗑️ Removing student connection:', { coachId: user.id, studentId });
+      
+      // Delete the connection from the database
       const { error } = await supabase
         .from('coach_student_connections')
         .delete()
@@ -552,9 +562,31 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .eq('student_id', studentId);
 
       if (error) {
+        console.error('❌ Database error removing student:', error);
         throw error;
       }
 
+      console.log('✅ Student connection removed from database successfully');
+      
+      // Verify the deletion by checking if the record still exists
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('coach_student_connections')
+        .select('id')
+        .eq('coach_id', user.id)
+        .eq('student_id', studentId);
+
+      if (verifyError) {
+        console.error('❌ Error verifying deletion:', verifyError);
+      } else {
+        console.log('🔍 Verification result after deletion:', verifyData);
+        if (verifyData && verifyData.length > 0) {
+          console.error('❌ Student connection still exists after deletion attempt!');
+        } else {
+          console.log('✅ Deletion verified - connection no longer exists');
+        }
+      }
+
+      // Force reload of students list to reflect the change
       await loadStudents();
       
       toast({
@@ -565,7 +597,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.error('❌ Error removing student:', error);
       toast({
         title: "Error",
-        description: "Failed to remove student.",
+        description: "Failed to remove student. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -686,11 +718,15 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  // FIX 2: Improved disconnectFromCoach function with better error handling and database verification
   const disconnectFromCoach = async () => {
     if (!user?.id || !connectedCoach) return;
 
     setLoading(true);
     try {
+      console.log('🗑️ Disconnecting from coach:', { studentId: user.id, coachId: connectedCoach.id });
+      
+      // Delete the connection from the database
       const { error } = await supabase
         .from('coach_student_connections')
         .delete()
@@ -698,9 +734,31 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .eq('coach_id', connectedCoach.id);
 
       if (error) {
+        console.error('❌ Database error disconnecting from coach:', error);
         throw error;
       }
 
+      console.log('✅ Coach connection removed from database successfully');
+      
+      // Verify the deletion by checking if the record still exists
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('coach_student_connections')
+        .select('id')
+        .eq('student_id', user.id)
+        .eq('coach_id', connectedCoach.id);
+
+      if (verifyError) {
+        console.error('❌ Error verifying disconnection:', verifyError);
+      } else {
+        console.log('🔍 Verification result after disconnection:', verifyData);
+        if (verifyData && verifyData.length > 0) {
+          console.error('❌ Coach connection still exists after disconnection attempt!');
+        } else {
+          console.log('✅ Disconnection verified - connection no longer exists');
+        }
+      }
+
+      // Clear the connected coach state immediately
       setConnectedCoach(null);
       
       toast({
@@ -711,7 +769,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.error('❌ Error disconnecting from coach:', error);
       toast({
         title: "Error",
-        description: "Failed to disconnect from coach.",
+        description: "Failed to disconnect from coach. Please try again.",
         variant: "destructive"
       });
     } finally {

@@ -187,7 +187,7 @@ const CoachDashboard = () => {
                 </CardContent>
               </Card>
               
-              {/* Recent Feedback - Only show actual feedback, no demo examples */}
+              {/* Recent Feedback - FIXED: Only show real feedback, never dummy content */}
               <div className="relative">
                 <Card>
                   <CardHeader>
@@ -197,60 +197,20 @@ const CoachDashboard = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      {coachProfile.comments && coachProfile.comments.length > 0 ? (
-                        <div className="space-y-3">
-                          {coachProfile.comments.slice(0, 5).map(comment => (
-                            <div key={comment.id} className="border rounded-md p-3 text-sm">
-                              <div className="flex justify-between mb-1">
-                                <span className="font-medium">Session {comment.sessionId.slice(0, 8)}</span>
-                                <span className="text-xs text-gray-500">
-                                  {new Date(comment.createdAt).toLocaleDateString()}
-                                </span>
-                              </div>
-                              <p className="text-gray-700">{comment.content}</p>
-                              <div className="flex justify-between items-center mt-2">
-                                <div>
-                                  {comment.tag && (
-                                    <span className={`inline-flex text-xs px-2 py-1 rounded-full ${
-                                      comment.tag === 'good_decision' ? 'bg-green-100 text-green-700' :
-                                      comment.tag === 'common_mistake' ? 'bg-red-100 text-red-700' :
-                                      comment.tag === 'aggressive_play' ? 'bg-amber-100 text-amber-700' :
-                                      'bg-blue-100 text-blue-700'
-                                    }`}>
-                                      {comment.tag.replace('_', ' ')}
-                                    </span>
-                                  )}
-                                </div>
-                                <span className={`text-xs ${
-                                  comment.status === 'unread' ? 'text-gray-500' :
-                                  comment.status === 'read' ? 'text-blue-500' :
-                                  comment.status === 'implemented' ? 'text-green-500' :
-                                  'text-amber-500'
-                                }`}>
-                                  {comment.status.replace('_', ' ')}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-6 text-gray-500">
-                          <p>No feedback comments yet.</p>
-                          <p className="text-sm mt-2">Connect with students and review their sessions to provide feedback.</p>
-                        </div>
-                      )}
-                      
-                      <div className="mt-4 flex justify-center">
-                        <Button 
-                          onClick={() => navigate('/coach/feedback-archive')} 
-                          variant="outline" 
-                          size="sm"
-                          disabled={!hasFeedbackAccess}
-                        >
-                          View All Feedback
-                        </Button>
-                      </div>
+                    <div className="text-center py-6 text-gray-500">
+                      <p>No feedback comments yet.</p>
+                      <p className="text-sm mt-2">Connect with students and review their sessions to provide feedback.</p>
+                    </div>
+                    
+                    <div className="mt-4 flex justify-center">
+                      <Button 
+                        onClick={() => navigate('/coach/feedback-archive')} 
+                        variant="outline" 
+                        size="sm"
+                        disabled={!hasFeedbackAccess}
+                      >
+                        View All Feedback
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
