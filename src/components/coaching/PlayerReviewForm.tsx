@@ -49,10 +49,10 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
     },
   });
 
-  // Load user's sessions when dialog opens
+  // Load user's own sessions when dialog opens
   useEffect(() => {
     if (open && user?.id) {
-      loadUserSessions();
+      loadUserOwnSessions();
     }
   }, [open, user?.id]);
 
@@ -66,21 +66,31 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
     }
   }, [selectedSessionId, form]);
 
-  const loadUserSessions = async () => {
+  const loadUserOwnSessions = async () => {
     if (!user?.id) return;
     
     try {
+      console.log('Loading sessions for user:', user.id);
+      
+      // Explicitly filter by user_id to ensure only the user's own sessions are loaded
       const { data: userSessions, error } = await supabase
         .from('sessions')
         .select('id, start_time, session_type')
-        .eq('user_id', user.id)
+        .eq('user_id', user.id) // Explicit filter for user's own sessions
         .order('start_time', { ascending: false })
         .limit(10);
 
       if (error) {
-        console.error('Error loading sessions:', error);
+        console.error('Error loading user sessions:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load your sessions. Please try again.",
+          variant: "destructive"
+        });
         return;
       }
+
+      console.log('Loaded sessions:', userSessions);
 
       const sessionOptions: SessionOption[] = userSessions?.map(session => ({
         id: session.id,
@@ -90,7 +100,12 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
 
       setSessions(sessionOptions);
     } catch (error) {
-      console.error('Error in loadUserSessions:', error);
+      console.error('Error in loadUserOwnSessions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load sessions. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -99,6 +114,24 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
     
     setLoadingHands(true);
     try {
+      // Additional security check: verify the session belongs to the user
+      const { data: sessionCheck, error: sessionError } = await supabase
+        .from('sessions')
+        .select('user_id')
+        .eq('id', sessionId)
+        .eq('user_id', user.id) // Ensure session belongs to current user
+        .single();
+
+      if (sessionError || !sessionCheck) {
+        console.error('Session does not belong to user or not found:', sessionError);
+        toast({
+          title: "Error",
+          description: "Session not found or access denied.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const { data: sessionHands, error } = await supabase
         .from('session_hands')
         .select('id, hand_number, hole_cards, position')
@@ -108,6 +141,11 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
 
       if (error) {
         console.error('Error loading hands:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load hands. Please try again.",
+          variant: "destructive"
+        });
         return;
       }
 
@@ -121,6 +159,11 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
       setHands(handOptions);
     } catch (error) {
       console.error('Error in loadSessionHands:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load hands. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setLoadingHands(false);
     }
@@ -212,11 +255,11 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
               name="sessionId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Session (Optional)</FormLabel>
+                  <FormLabel>Your Session (Optional)</FormLabel>
                   <Select onValueChange={handleSessionChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a session (optional)" />
+                        <SelectValue placeholder="Select one of your sessions (optional)" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
