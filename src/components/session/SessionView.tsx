@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format, differenceInMinutes, differenceInHours } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +11,7 @@ import { TableReviewForm } from '@/components/coaching/TableReviewForm';
 import { HandReviewForm } from '@/components/coaching/HandReviewForm';
 import { ReviewsList } from '@/components/coaching/ReviewsList';
 import { supabase } from '@/integrations/supabase/client';
+import { HandData } from '@/types/poker';
 
 interface SessionData {
   id: string;
@@ -93,6 +93,36 @@ interface SessionViewProps {
   onBack: () => void;
   mode: 'student' | 'coach';
 }
+
+// Helper function to convert SessionHand to HandData
+const convertSessionHandsToHandData = (sessionHands: SessionHand[]): HandData[] => {
+  return sessionHands.map(hand => ({
+    id: hand.id,
+    cards: hand.hole_cards || '',
+    position: hand.position || '',
+    action: hand.preflop_action || '',
+    notes: hand.hand_notes,
+    result: hand.showdown_result,
+    resultAmount: hand.amount_won,
+    currencyType: hand.currency_type as 'currency' | 'chips',
+    createdAt: new Date(hand.created_at),
+    tableId: hand.table_id || undefined,
+    handNumber: hand.hand_number || undefined,
+    holeCards: hand.hole_cards ? [hand.hole_cards] : undefined,
+    preflopAction: hand.preflop_action || undefined,
+    flopCards: hand.flop_cards ? [hand.flop_cards] : undefined,
+    flopAction: hand.flop_action || undefined,
+    turnCard: hand.turn_card || undefined,
+    turnAction: hand.turn_action || undefined,
+    riverCard: hand.river_card || undefined,
+    riverAction: hand.river_action || undefined,
+    showdownResult: hand.showdown_result || undefined,
+    potSize: hand.pot_size,
+    amountWon: hand.amount_won,
+    amountInvested: hand.amount_invested,
+    handImage: undefined
+  }));
+};
 
 export const SessionView: React.FC<SessionViewProps> = ({ 
   sessionId, 
@@ -299,6 +329,9 @@ export const SessionView: React.FC<SessionViewProps> = ({
     );
   }
 
+  // Convert SessionHand[] to HandData[] for HandManagementPanel
+  const handDataForPanel = convertSessionHandsToHandData(sessionHands);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -427,7 +460,7 @@ export const SessionView: React.FC<SessionViewProps> = ({
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Icon name="Grid" />
+                  <Icon name="Layers" />
                   <span>Tables ({sessionTables.length})</span>
                 </CardTitle>
               </CardHeader>
@@ -516,7 +549,7 @@ export const SessionView: React.FC<SessionViewProps> = ({
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Icon name="Cards" />
+                  <Icon name="Spade" />
                   <span>Notable Hands ({sessionHands.length})</span>
                 </CardTitle>
               </CardHeader>
@@ -631,7 +664,7 @@ export const SessionView: React.FC<SessionViewProps> = ({
             <div className="bg-white rounded-lg shadow-md p-6">
               <HandManagementPanel 
                 sessionId={sessionId} 
-                hands={sessionHands}
+                hands={handDataForPanel}
               />
             </div>
           )}
