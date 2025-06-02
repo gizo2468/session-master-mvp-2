@@ -1,4 +1,3 @@
-
 import { PokerSession, TableData } from '@/types/poker';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -12,7 +11,12 @@ interface SessionCardProps {
 
 export default function SessionCard({ session }: SessionCardProps) {
   const navigate = useNavigate();
+  
+  console.log('SessionCard rendering for session:', session.id, session);
+  
   const { stats, loading } = useSessionStats(session.id);
+  
+  console.log('SessionCard stats from hook:', stats, 'loading:', loading);
   
   // Calculate profit/loss
   const isCompleted = !session.isActive && session.cashOut !== undefined;

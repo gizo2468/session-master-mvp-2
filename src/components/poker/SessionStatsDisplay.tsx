@@ -16,6 +16,9 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
   totalPayout,
   loading = false
 }) => {
+  // Debug logging
+  console.log('SessionStatsDisplay props:', { tables, hands, totalBuyIns, totalPayout, loading });
+
   if (loading) {
     return (
       <div className="mt-3 pt-3 border-t border-gray-100">
@@ -24,8 +27,13 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
     );
   }
 
-  // Only show if there's meaningful data
-  if (tables === 0 && hands === 0 && totalBuyIns === 0 && totalPayout === 0) {
+  // Only hide if ALL values are 0 or null/undefined
+  const hasAnyData = tables > 0 || hands > 0 || totalBuyIns > 0 || totalPayout > 0;
+  
+  console.log('SessionStatsDisplay hasAnyData:', hasAnyData);
+  
+  if (!hasAnyData) {
+    console.log('SessionStatsDisplay: No data to display, hiding component');
     return null;
   }
 
