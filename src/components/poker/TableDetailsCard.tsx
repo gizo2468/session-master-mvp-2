@@ -1,11 +1,12 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableData } from '@/types/poker';
 import { format } from 'date-fns';
-import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Separator } from '@/components/ui/separator';
 import TableTimerDisplay from './TableTimerDisplay';
+import ProfitLossBadge from './ProfitLossBadge';
 
 interface TableDetailsCardProps {
   table: TableData;
@@ -27,7 +28,6 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
   
   // Calculate profit based on total payout
   const profit = totalPayout - (table.buyIn ?? 0);
-  const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
   const formattedStart = format(new Date(table.startTime), 'MMM d, h:mm a');
   const formattedEnd = table.endTime ? format(new Date(table.endTime), 'MMM d, h:mm a') : null;
   const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
@@ -54,14 +54,10 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
               {table.gameType} • {table.format}
             </span>
           </div>
-          <span className={`${profitClass} font-bold text-right text-lg`}>
-            {profit >= 0 ? (
-              <ArrowUp className="w-4 h-4 inline mr-1" />
-            ) : (
-              <ArrowDown className="w-4 h-4 inline mr-1" />
-            )}
-            ${Math.abs(profit).toFixed(2)}
-          </span>
+          <div className="flex flex-col items-center">
+            <span className="text-gray-500 text-xs uppercase font-medium tracking-wider mb-1">Profit/Loss</span>
+            <ProfitLossBadge profit={profit} size="md" />
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
