@@ -57,7 +57,7 @@ export default function SessionCard({ session }: SessionCardProps) {
       onClick={handleClick}
     >
       <div className="flex justify-between items-start mb-2">
-        <div className="flex-1 text-center">
+        <div>
           <h3 className="font-extrabold text-lg tracking-tight">
             {session.location}
           </h3>
@@ -81,10 +81,10 @@ export default function SessionCard({ session }: SessionCardProps) {
         )}
       </div>
       
-      <div className="flex justify-center text-sm text-gray-600 mb-2">
+      <div className="flex justify-between text-sm text-gray-600">
         <span>{session.gameType} • {session.format}</span>
         {shouldShowBlinds && (
-          <span className="ml-2">
+          <span>
             {session.smallBlind}/{session.bigBlind}
           </span>
         )}
