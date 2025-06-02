@@ -31,19 +31,19 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
       <div className="bg-gray-50 px-3 py-2 rounded-md">
         <div className="grid grid-cols-4 gap-2 text-sm">
           <div className="text-center">
-            <div style={{ color: '#b8860b' }} className="font-medium text-xs">Tables</div>
+            <div className="font-medium text-xs text-black">Tables</div>
             <div className="text-gray-800 font-semibold">{tables}</div>
           </div>
           <div className="text-center">
-            <div style={{ color: '#1e90ff' }} className="font-medium text-xs">Hands</div>
+            <div className="font-medium text-xs text-black">Hands</div>
             <div className="text-gray-800 font-semibold">{hands}</div>
           </div>
           <div className="text-center">
-            <div style={{ color: '#dc143c' }} className="font-medium text-xs">Buy-ins</div>
+            <div className="font-medium text-xs text-black">Buy-ins</div>
             <div className="text-gray-800 font-semibold">${totalBuyIns.toFixed(0)}</div>
           </div>
           <div className="text-center">
-            <div style={{ color: '#228b22' }} className="font-medium text-xs">Payout</div>
+            <div className="font-medium text-xs text-black">Payout</div>
             <div className="text-gray-800 font-semibold">${totalPayout.toFixed(0)}</div>
           </div>
         </div>
