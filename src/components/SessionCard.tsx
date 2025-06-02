@@ -3,6 +3,8 @@ import { PokerSession, TableData } from '@/types/poker';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import TableCountBubble from './poker/TableCountBubble';
+import SessionStatsDisplay from './poker/SessionStatsDisplay';
+import { useSessionStats } from '@/hooks/useSessionStats';
 
 interface SessionCardProps {
   session: PokerSession;
@@ -10,6 +12,7 @@ interface SessionCardProps {
 
 export default function SessionCard({ session }: SessionCardProps) {
   const navigate = useNavigate();
+  const { stats, loading } = useSessionStats(session.id);
   
   // Calculate profit/loss
   const isCompleted = !session.isActive && session.cashOut !== undefined;
@@ -116,6 +119,15 @@ export default function SessionCard({ session }: SessionCardProps) {
           ))}
         </div>
       )}
+
+      {/* Performance insights badges */}
+      <SessionStatsDisplay
+        tables={stats.tables}
+        hands={stats.hands}
+        totalBuyIns={stats.totalBuyIns}
+        totalPayout={stats.totalPayout}
+        loading={loading}
+      />
     </div>
   );
 }
