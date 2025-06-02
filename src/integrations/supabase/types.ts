@@ -51,6 +51,72 @@ export type Database = {
           },
         ]
       }
+      coach_to_hand_reviews: {
+        Row: {
+          coach_id: string
+          created_at: string | null
+          hand_id: string
+          id: string
+          message: string
+          session_id: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string | null
+          hand_id: string
+          id?: string
+          message: string
+          session_id: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string | null
+          hand_id?: string
+          id?: string
+          message?: string
+          session_id?: string
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      coach_to_table_reviews: {
+        Row: {
+          coach_id: string
+          created_at: string | null
+          id: string
+          message: string
+          session_id: string
+          student_id: string
+          table_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string | null
+          id?: string
+          message: string
+          session_id: string
+          student_id: string
+          table_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string | null
+          id?: string
+          message?: string
+          session_id?: string
+          student_id?: string
+          table_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       donation_logs: {
         Row: {
           clicked_at: string

@@ -29,28 +29,40 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
   useEffect(() => {
     loadStudentSessions();
     
-    // Set up real-time subscription for new sessions
-    const channel = supabase
+    // Set up real-time subscription for new sessions and updates
+    const sessionsChannel = supabase
       .channel(`student-${studentId}-sessions`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'sessions',
-          filter: `user_id=eq.${studentId}`
-        },
-        (payload) => {
-          console.log('🔔 New session detected for student:', payload);
-          loadStudentSessions(); // Reload sessions when new ones are added
-        }
-      )
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'sessions',
+        filter: `user_id=eq.${studentId}`
+      }, (payload) => {
+        console.log('🔔 Session change detected for student:', payload);
+        loadStudentSessions(); // Reload sessions when changes occur
+      })
+      .subscribe();
+
+    // Also subscribe to coach-student connection changes
+    const connectionsChannel = supabase
+      .channel(`coach-${user?.id}-connections`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'coach_student_connections',
+        filter: `coach_id=eq.${user?.id}`
+      }, (payload) => {
+        console.log('🔔 Connection change detected:', payload);
+        // Reload sessions to ensure we have access to the latest data
+        loadStudentSessions();
+      })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(sessionsChannel);
+      supabase.removeChannel(connectionsChannel);
     };
-  }, [studentId]);
+  }, [studentId, user?.id]);
 
   const loadStudentSessions = async () => {
     try {
@@ -84,13 +96,12 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
 
       console.log('✅ Valid coach-student connection verified:', connection);
 
-      // Now fetch the student's sessions
+      // Now fetch the student's sessions - use consistent data fetching
       const { data: sessionsData, error: sessionsError } = await supabase
         .from('sessions')
         .select('*')
         .eq('user_id', studentId)
-        .order('start_time', { ascending: false })
-        .limit(10);
+        .order('start_time', { ascending: false });
 
       if (sessionsError) {
         console.error('❌ Error loading student sessions:', sessionsError);
@@ -146,7 +157,7 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
           <div className="text-center text-gray-500">
             <Icon name="Loader" className="mx-auto mb-2 h-8 w-8 animate-spin" />
             <p>Loading sessions...</p>
-            <p className="text-xs mt-1">Fetching real session data from database...</p>
+            <p className="text-xs mt-1">Fetching latest session data...</p>
           </div>
         </CardContent>
       </Card>
@@ -184,12 +195,6 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
             <Icon name="Clock" className="mx-auto mb-2 h-8 w-8" />
             <p>This student hasn't recorded any sessions yet.</p>
             <p className="text-sm mt-1">Sessions will appear here once the student starts tracking their poker sessions.</p>
-            <div className="text-xs mt-2 p-2 bg-gray-100 rounded">
-              <p>Debug Info:</p>
-              <p>Student ID: {studentId}</p>
-              <p>Coach ID: {user?.id}</p>
-              <p>Sessions found: {sessions.length}</p>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -198,13 +203,6 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
   
   return (
     <div className="space-y-4">
-      {/* Debug info for development */}
-      <div className="text-xs text-gray-500 p-2 bg-blue-50 rounded">
-        <p>✅ Real session data loaded: {sessions.length} sessions</p>
-        <p>Student ID: {studentId}</p>
-        <p>Coach ID: {user?.id}</p>
-      </div>
-      
       {sessions.map(session => {
         const duration = calculateDuration(session.start_time, session.end_time);
         const gameTypeDisplay = formatGameType(session.game_type, session.session_type);
@@ -224,7 +222,8 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
                       </Badge>
                     )}
                     <Badge className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                      Real Data
+                      <Icon name="Database" size={10} className="mr-1" />
+                      Live Data
                     </Badge>
                   </div>
                   <div className="text-sm text-gray-500">
