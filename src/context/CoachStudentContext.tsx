@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,7 +17,15 @@ interface CoachProfile {
   id: string;
   displayName: string;
   bio?: string;
+  email?: string;
   connectionCode?: string;
+  students: Student[];
+}
+
+interface StudentProfile {
+  id: string;
+  displayName: string;
+  email?: string;
 }
 
 interface PendingRequest {
@@ -28,16 +37,26 @@ interface PendingRequest {
 
 interface CoachStudentContextType {
   isCoach: boolean;
+  isStudent: boolean;
   students: Student[];
   connectedCoach: CoachProfile | null;
   coachProfile: CoachProfile | null;
+  studentProfile: StudentProfile | null;
   pendingRequests: PendingRequest[];
+  connectionCode: string | null;
   loading: boolean;
   connectToCoach: (connectionCode: string) => Promise<boolean>;
+  connectWithCoach: (connectionCode: string) => Promise<void>;
+  disconnectFromCoach: () => Promise<void>;
   approveRequest: (requestId: string) => Promise<void>;
   declineRequest: (requestId: string) => Promise<void>;
+  approveConnectionRequest: (requestId: string) => Promise<void>;
+  declineConnectionRequest: (requestId: string) => Promise<void>;
   removeStudent: (studentId: string) => Promise<void>;
   generateConnectionCode: () => Promise<string | null>;
+  disableConnectionCode: () => Promise<void>;
+  createCoachProfile: (displayName: string, bio?: string) => Promise<void>;
+  createStudentProfile: (displayName: string) => Promise<void>;
   loadStudents: () => Promise<void>;
   loadPendingRequests: () => Promise<void>;
 }
@@ -48,10 +67,13 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { user } = useAuth();
   const { toast } = useToast();
   const [isCoach, setIsCoach] = useState(false);
+  const [isStudent, setIsStudent] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [connectedCoach, setConnectedCoach] = useState<CoachProfile | null>(null);
   const [coachProfile, setCoachProfile] = useState<CoachProfile | null>(null);
+  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [connectionCode, setConnectionCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Initialize context when user changes
@@ -68,10 +90,13 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const resetContext = () => {
     console.log('🔄 CoachStudentContext: Resetting context');
     setIsCoach(false);
+    setIsStudent(false);
     setStudents([]);
     setConnectedCoach(null);
     setCoachProfile(null);
+    setStudentProfile(null);
     setPendingRequests([]);
+    setConnectionCode(null);
   };
 
   const initializeContext = async () => {
@@ -94,18 +119,32 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.log('✅ User profile loaded:', profile);
       
       const userIsCoach = profile?.role === 'coach';
+      const userIsStudent = profile?.role === 'student';
       setIsCoach(userIsCoach);
+      setIsStudent(userIsStudent);
 
       if (userIsCoach) {
-        setCoachProfile({
+        const coachData: CoachProfile = {
           id: profile.id,
           displayName: profile.full_name || 'Coach',
-          bio: profile.bio,
-          connectionCode: profile.connection_code
-        });
+          bio: profile.bio || undefined,
+          email: profile.email,
+          connectionCode: profile.connection_code,
+          students: []
+        };
+        setCoachProfile(coachData);
+        setConnectionCode(profile.connection_code);
         await loadStudents();
         await loadPendingRequests();
-      } else {
+      } 
+      
+      if (userIsStudent) {
+        const studentData: StudentProfile = {
+          id: profile.id,
+          displayName: profile.full_name || 'Student',
+          email: profile.email
+        };
+        setStudentProfile(studentData);
         await loadConnectedCoach();
       }
     } catch (error) {
@@ -208,6 +247,9 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.log('✅ Processed students list:', studentList);
       setStudents(studentList);
 
+      // Update coach profile with students
+      setCoachProfile(prev => prev ? { ...prev, students: studentList } : null);
+
       // Load session counts and last activity for each student
       await loadStudentSessionData(studentList);
 
@@ -259,6 +301,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     console.log('✅ Updated students with session data:', updatedStudents);
     setStudents(updatedStudents);
+    setCoachProfile(prev => prev ? { ...prev, students: updatedStudents } : null);
   };
 
   const loadPendingRequests = async () => {
@@ -326,7 +369,8 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
           coach_id,
           profiles!coach_student_connections_coach_id_fkey (
             full_name,
-            email
+            email,
+            bio
           )
         `)
         .eq('student_id', user.id)
@@ -347,7 +391,9 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const coach: CoachProfile = {
           id: connection.coach_id,
           displayName: connection.profiles.full_name || connection.profiles.email || 'Coach',
-          email: connection.profiles.email
+          bio: connection.profiles.bio,
+          email: connection.profiles.email,
+          students: []
         };
         
         console.log('✅ Connected coach set:', coach);
@@ -422,6 +468,39 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  const connectWithCoach = async (connectionCode: string): Promise<void> => {
+    await connectToCoach(connectionCode);
+  };
+
+  const disconnectFromCoach = async (): Promise<void> => {
+    if (!user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('coach_student_connections')
+        .delete()
+        .eq('student_id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Disconnected",
+        description: "You have been disconnected from your coach."
+      });
+
+      setConnectedCoach(null);
+    } catch (error) {
+      console.error('Error disconnecting from coach:', error);
+      toast({
+        title: "Error",
+        description: "Failed to disconnect from coach.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const approveRequest = async (requestId: string): Promise<void> => {
     try {
       const { error } = await supabase
@@ -480,6 +559,10 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  // Aliases for backward compatibility
+  const approveConnectionRequest = approveRequest;
+  const declineConnectionRequest = declineRequest;
+
   const removeStudent = async (studentId: string): Promise<void> => {
     if (!user?.id) return;
 
@@ -531,6 +614,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         throw updateError;
       }
 
+      setConnectionCode(newCode);
       setCoachProfile(prev => prev ? { ...prev, connectionCode: newCode } : null);
 
       toast({
@@ -550,18 +634,125 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  const disableConnectionCode = async (): Promise<void> => {
+    if (!user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ connection_code: null })
+        .eq('id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      setConnectionCode(null);
+      setCoachProfile(prev => prev ? { ...prev, connectionCode: undefined } : null);
+
+      toast({
+        title: "Code Disabled",
+        description: "Connection code has been disabled."
+      });
+    } catch (error) {
+      console.error('Error disabling connection code:', error);
+      toast({
+        title: "Error",
+        description: "Failed to disable connection code.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const createCoachProfile = async (displayName: string, bio?: string): Promise<void> => {
+    if (!user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          role: 'coach',
+          full_name: displayName,
+          bio: bio
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Profile Created",
+        description: "Your coach profile has been created successfully."
+      });
+
+      // Reinitialize context to load coach data
+      initializeContext();
+    } catch (error) {
+      console.error('Error creating coach profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create coach profile.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const createStudentProfile = async (displayName: string): Promise<void> => {
+    if (!user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          role: 'student',
+          full_name: displayName
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Profile Created",
+        description: "Your student profile has been created successfully."
+      });
+
+      // Reinitialize context to load student data
+      initializeContext();
+    } catch (error) {
+      console.error('Error creating student profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create student profile.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const contextValue: CoachStudentContextType = {
     isCoach,
+    isStudent,
     students,
     connectedCoach,
     coachProfile,
+    studentProfile,
     pendingRequests,
+    connectionCode,
     loading,
     connectToCoach,
+    connectWithCoach,
+    disconnectFromCoach,
     approveRequest,
     declineRequest,
+    approveConnectionRequest,
+    declineConnectionRequest,
     removeStudent,
     generateConnectionCode,
+    disableConnectionCode,
+    createCoachProfile,
+    createStudentProfile,
     loadStudents,
     loadPendingRequests
   };
