@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -140,11 +141,14 @@ export default function SessionDetail() {
       // Add regular cashout
       totalCashout += (table.cashOut || 0);
       
-      // Add bounty earnings for tournaments
-      if (session.format === 'Tournament' && table.bountyAmount && table.bountyCount) {
-        totalCashout += (table.bountyAmount * table.bountyCount);
+      // Add bounty earnings for tournaments - using bountyAmount directly since it should represent total bounty collected
+      if (session.format === 'Tournament' && table.bountyAmount) {
+        totalCashout += table.bountyAmount;
       }
     });
+    
+    console.log('Session tables:', session.tables);
+    console.log('Calculated total cashout:', totalCashout);
     
     return totalCashout;
   };
