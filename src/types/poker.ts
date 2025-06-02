@@ -1,3 +1,4 @@
+
 export interface HandData {
   id: string;
   cards: string;
@@ -67,6 +68,17 @@ export interface TableData {
   startingStack?: number;
   currentStack?: number;
   rebuyAmount?: number;
+}
+
+export interface SessionData {
+  id: string;
+  startTime: Date;
+  endTime?: Date;
+  gameType: 'NLH' | 'PLO';
+  sessionType: string;
+  notes?: string;
+  tables: TableData[];
+  user_id: string;
 }
 
 export interface PokerSession {

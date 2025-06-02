@@ -2,11 +2,11 @@
 import { supabase } from '@/integrations/supabase/client';
 import { SessionData, TableData, HandData } from '@/types/poker';
 
-export const loadSessionFromSupabase = async (sessionId: string): Promise<SessionData | null> => {
+export const loadSessionData = async (sessionId: string): Promise<SessionData | null> => {
   try {
-    console.log('🔍 Loading session from Supabase:', sessionId);
+    console.log('📊 Loading session data for:', sessionId);
 
-    // Load main session data
+    // Load session
     const { data: session, error: sessionError } = await supabase
       .from('sessions')
       .select('*')
@@ -14,128 +14,120 @@ export const loadSessionFromSupabase = async (sessionId: string): Promise<Sessio
       .single();
 
     if (sessionError || !session) {
-      console.error('❌ Session not found:', sessionError);
+      console.error('❌ Error loading session:', sessionError);
       return null;
     }
 
-    // Load session tables
-    const { data: sessionTables, error: tablesError } = await supabase
+    // Load tables for this session
+    const { data: tables, error: tablesError } = await supabase
       .from('session_tables')
       .select('*')
       .eq('session_id', sessionId)
-      .order('created_at', { ascending: true });
+      .order('created_at');
 
     if (tablesError) {
-      console.error('❌ Error loading session tables:', tablesError);
+      console.error('❌ Error loading tables:', tablesError);
       return null;
     }
 
-    // Load session hands
-    const { data: sessionHands, error: handsError } = await supabase
-      .from('session_hands')
-      .select('*')
-      .eq('session_id', sessionId)
-      .order('hand_number', { ascending: true });
+    // Load hands for all tables
+    const tableIds = tables?.map(t => t.id) || [];
+    let allHands: any[] = [];
+    
+    if (tableIds.length > 0) {
+      const { data: hands, error: handsError } = await supabase
+        .from('session_hands')
+        .select('*')
+        .in('table_id', tableIds)
+        .order('hand_number');
 
-    if (handsError) {
-      console.error('❌ Error loading session hands:', handsError);
+      if (handsError) {
+        console.error('❌ Error loading hands:', handsError);
+      } else {
+        allHands = hands || [];
+      }
     }
 
-    // Transform to frontend format
-    const tables: TableData[] = (sessionTables || []).map(table => {
-      const tableHands = (sessionHands || [])
-        .filter(hand => hand.table_id === table.id)
-        .map(hand => ({
-          id: hand.id,
-          tableId: hand.table_id || '',
-          handNumber: hand.hand_number || 0,
-          holeCards: hand.hole_cards || '',
-          position: hand.position || '',
-          potSize: Number(hand.pot_size) || 0,
-          amountWon: Number(hand.amount_won) || 0,
-          amountInvested: Number(hand.amount_invested) || 0,
-          notes: hand.hand_notes || '',
-          preflop: {
-            action: hand.preflop_action || '',
-          },
-          flop: {
-            cards: hand.flop_cards || '',
-            action: hand.flop_action || '',
-          },
-          turn: {
-            card: hand.turn_card || '',
-            action: hand.turn_action || '',
-          },
-          river: {
-            card: hand.river_card || '',
-            action: hand.river_action || '',
-          },
-          showdown: hand.showdown_result || '',
-          image: hand.hand_image || '',
-          currencyType: hand.currency_type || 'currency',
-        } as HandData));
+    // Transform data to match frontend types
+    const transformedTables: TableData[] = (tables || []).map(table => {
+      const tableHands = allHands.filter(hand => hand.table_id === table.id);
+      
+      const transformedHands: HandData[] = tableHands.map(hand => ({
+        id: hand.id,
+        cards: hand.hole_cards || '',
+        position: hand.position || '',
+        action: hand.preflop_action || '',
+        notes: hand.hand_notes || '',
+        result: hand.showdown_result || '',
+        resultAmount: hand.amount_won || 0,
+        currencyType: hand.currency_type as 'currency' | 'chips' || 'currency',
+        createdAt: new Date(hand.created_at),
+        tableId: hand.table_id,
+        handNumber: hand.hand_number,
+        holeCards: hand.hole_cards ? [hand.hole_cards] : undefined,
+        preflopAction: hand.preflop_action,
+        flopCards: hand.flop_cards ? [hand.flop_cards] : undefined,
+        flopAction: hand.flop_action,
+        turnCard: hand.turn_card,
+        turnAction: hand.turn_action,
+        riverCard: hand.river_card,
+        riverAction: hand.river_action,
+        showdownResult: hand.showdown_result,
+        potSize: hand.pot_size,
+        amountWon: hand.amount_won,
+        amountInvested: hand.amount_invested,
+        handImage: hand.hand_image,
+      }));
 
       return {
         id: table.id,
-        name: table.table_name || 'Unknown Table',
-        format: (table.game_format === 'Tournament' ? 'Tournament' : 'Cash') as 'Cash' | 'Tournament',
-        gameType: table.table_type || 'Hold\'em',
+        name: table.table_name || '',
+        format: table.game_format as 'Cash' | 'Tournament' || 'Cash',
+        gameType: table.table_type as 'NLH' | 'PLO' || 'NLH',
         stakes: table.stakes || '',
-        location: '', // Add required location field
-        smallBlind: 0,
-        bigBlind: 0,
-        buyIn: Number(table.buy_in) || 0,
-        startingStack: Number(table.starting_stack) || 0,
-        currentStack: Number(table.current_stack) || 0,
-        rebuys: Number(table.rebuys) || 0,
-        rebuyAmount: Number(table.rebuy_amount) || 0,
-        cashout: Number(table.cashout) || 0,
-        finalPosition: table.final_position || undefined,
-        playersEliminated: Number(table.players_eliminated) || 0,
-        bountyAmount: Number(table.bounty_amount) || 0,
-        notes: table.table_notes || '',
-        isActive: table.is_active || false,
-        startTime: new Date(table.start_time || Date.now()),
+        location: 'Online', // Default value
+        smallBlind: 0, // Default value
+        bigBlind: 0, // Default value
+        buyIn: table.buy_in || 0,
+        initialBuyIn: table.buy_in || 0, // Use buy_in as initialBuyIn
+        startingStack: table.starting_stack || 0,
+        currentStack: table.current_stack || 0,
+        cashOut: table.cashout || 0,
+        startTime: new Date(table.start_time),
         endTime: table.end_time ? new Date(table.end_time) : undefined,
-        hands: tableHands,
-      } as TableData;
+        isActive: table.is_active || false,
+        rebuys: table.rebuys || 0,
+        rebuyAmount: table.rebuy_amount || 0,
+        finalPosition: table.final_position,
+        bountyAmount: table.bounty_amount || 0,
+        notes: table.table_notes || '',
+        hands: transformedHands,
+      };
     });
 
     const sessionData: SessionData = {
       id: session.id,
-      user_id: session.user_id,
       startTime: new Date(session.start_time),
-      endTime: new Date(session.end_time),
-      gameType: session.game_type || '',
-      sessionType: session.session_type || '',
+      endTime: session.end_time ? new Date(session.end_time) : undefined,
+      gameType: session.game_type as 'NLH' | 'PLO' || 'NLH',
+      sessionType: session.session_type || 'Cash',
       notes: session.notes || '',
-      tables,
+      tables: transformedTables,
+      user_id: session.user_id,
     };
 
-    console.log('✅ Session loaded successfully:', sessionData);
+    console.log('✅ Session data loaded successfully:', sessionData);
     return sessionData;
 
   } catch (error) {
-    console.error('❌ Error loading session from Supabase:', error);
+    console.error('❌ Error in loadSessionData:', error);
     return null;
   }
 };
 
-export const validateSessionAccess = async (sessionId: string, userId: string): Promise<boolean> => {
-  try {
-    const { data: session, error } = await supabase
-      .from('sessions')
-      .select('user_id')
-      .eq('id', sessionId)
-      .single();
-
-    if (error || !session) {
-      return false;
-    }
-
-    return session.user_id === userId;
-  } catch (error) {
-    console.error('❌ Error validating session access:', error);
-    return false;
-  }
+export const validateSessionData = (sessionData: SessionData): boolean => {
+  if (!sessionData) return false;
+  if (!sessionData.id || !sessionData.user_id) return false;
+  if (!sessionData.startTime) return false;
+  return true;
 };

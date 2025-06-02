@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +19,7 @@ interface PlayerReview {
 
 const PlayerDashboard = () => {
   const navigate = useNavigate();
-  const { connectedCoach } = useCoachStudent();
+  const { connectedCoaches } = useCoachStudent();
   const { user } = useAuth();
   const [recentReviews, setRecentReviews] = useState<PlayerReview[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
@@ -81,27 +80,31 @@ const PlayerDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon name="Users" />
-                <span>Your Coaches</span>
+                <span>Your Coaches ({connectedCoaches.length})</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {connectedCoach ? (
-                <div className="border rounded-md p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-lg">{connectedCoach.displayName}</h3>
-                      {connectedCoach.bio && <p className="text-sm text-gray-600">{connectedCoach.bio}</p>}
+              {connectedCoaches.length > 0 ? (
+                <div className="space-y-4">
+                  {connectedCoaches.map(coach => (
+                    <div key={coach.id} className="border rounded-md p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-lg">{coach.displayName}</h3>
+                          {coach.bio && <p className="text-sm text-gray-600">{coach.bio}</p>}
+                        </div>
+                        <div className="flex gap-2">
+                          <PlayerReviewForm 
+                            coachId={coach.id} 
+                            coachName={coach.displayName} 
+                          />
+                          <Button variant="outline" size="sm" onClick={() => navigate('/connect-coach')}>
+                            Manage
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <PlayerReviewForm 
-                        coachId={connectedCoach.id} 
-                        coachName={connectedCoach.displayName} 
-                      />
-                      <Button variant="outline" size="sm" onClick={() => navigate('/connect-coach')}>
-                        Manage
-                      </Button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-6 text-gray-500">

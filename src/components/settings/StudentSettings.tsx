@@ -19,23 +19,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-// Mock coach data for demo
-const mockCoaches = [
-  {
-    id: 'coach-1',
-    displayName: 'Coach Demo',
-    bio: 'Experienced poker coach specializing in tournament strategy',
-  },
-  {
-    id: 'coach-2',
-    displayName: 'Sarah Johnson',
-    bio: 'Cash game specialist with 10+ years experience',
-  }
-];
-
 const StudentSettings: React.FC = () => {
   const navigate = useNavigate();
-  const { disconnectFromCoach } = useCoachStudent();
+  const { connectedCoaches, disconnectFromCoach } = useCoachStudent();
   const { t } = useLanguage();
 
   return (
@@ -47,9 +33,9 @@ const StudentSettings: React.FC = () => {
         <div className="space-y-4 mb-8">
           <h3 className="text-lg font-medium">{t('connected_coaches')}</h3>
           
-          {mockCoaches.length > 0 ? (
+          {connectedCoaches.length > 0 ? (
             <div className="space-y-4">
-              {mockCoaches.map(coach => (
+              {connectedCoaches.map(coach => (
                 <Card key={coach.id}>
                   <CardContent className="pt-6">
                     <div className="flex justify-between items-start">
@@ -75,7 +61,7 @@ const StudentSettings: React.FC = () => {
                             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                             <AlertDialogAction 
                               className="bg-red-500 hover:bg-red-600"
-                              onClick={() => disconnectFromCoach()}
+                              onClick={() => disconnectFromCoach(coach.id)}
                             >
                               {t('disconnect')}
                             </AlertDialogAction>
