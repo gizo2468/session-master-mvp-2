@@ -3,6 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { CoachProfile, StudentProfile, ConnectionRequest } from '@/types/poker';
+import { useRealtimeSubscriptions } from '@/hooks/useRealtimeSubscriptions';
 
 interface CoachStudentContextType {
   // Coach methods
@@ -18,13 +19,13 @@ interface CoachStudentContextType {
   declineConnectionRequest: (requestId: string) => Promise<void>;
   removeStudent: (studentId: string) => Promise<void>;
   
-  // Student methods
+  // Student methods (UPDATED for multi-coach support)
   isStudent: boolean;
   studentProfile: StudentProfile | null;
-  connectedCoach: CoachProfile | null;
+  connectedCoaches: CoachProfile[]; // Changed from single to array
   createStudentProfile: (displayName: string) => Promise<void>;
   connectWithCoach: (code: string) => Promise<void>;
-  disconnectFromCoach: () => Promise<void>;
+  disconnectFromCoach: (coachId: string) => Promise<void>; // Added coachId parameter
   
   // Loading states
   loading: boolean;
@@ -51,73 +52,34 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [pendingRequests, setPendingRequests] = useState<ConnectionRequest[]>([]);
   const [connectionCode, setConnectionCode] = useState<string | null>(null);
   
-  // State for student
+  // State for student (UPDATED for multi-coach support)
   const [isStudent, setIsStudent] = useState<boolean>(false);
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
-  const [connectedCoach, setConnectedCoach] = useState<CoachProfile | null>(null);
+  const [connectedCoaches, setConnectedCoaches] = useState<CoachProfile[]>([]); // Changed from single to array
   
   // Loading state
   const [loading, setLoading] = useState(false);
+
+  // Real-time subscriptions
+  const handleConnectionUpdate = async () => {
+    if (isCoach) {
+      await Promise.all([loadPendingRequests(), loadStudents()]);
+    }
+    if (isStudent) {
+      await loadConnectedCoaches(); // Updated method name
+    }
+  };
+
+  useRealtimeSubscriptions(handleConnectionUpdate, isCoach, isStudent);
 
   // Load user profile and related data when user changes
   useEffect(() => {
     if (user?.id) {
       loadUserProfile();
     } else {
-      // Reset state when user logs out
       resetState();
     }
   }, [user?.id]);
-
-  // Set up real-time subscriptions for connection requests
-  useEffect(() => {
-    if (!user?.id || !isCoach) return;
-
-    console.log('🔄 Setting up real-time subscription for coach:', user.id);
-
-    const channel = supabase
-      .channel('coach_student_connections')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'coach_student_connections',
-          filter: `coach_id=eq.${user.id}`,
-        },
-        async (payload) => {
-          console.log('🔄 Real-time connection event detected:', payload);
-          console.table(payload);
-          
-          // Improved real-time handling with longer delay for database consistency
-          setTimeout(async () => {
-            try {
-              await Promise.all([
-                loadPendingRequests(),
-                loadStudents()
-              ]);
-              console.log('✅ Real-time data reload completed successfully after delay');
-            } catch (error) {
-              console.error('❌ Real-time data reload failed:', error);
-              // Show user notification that they may need to refresh
-              toast({
-                title: "Connection Updated",
-                description: "Please refresh the page if you don't see the latest changes.",
-                variant: "default"
-              });
-            }
-          }, 500); // Increased delay for better database consistency
-        }
-      )
-      .subscribe((status) => {
-        console.log('🔄 Real-time subscription status:', status);
-      });
-
-    return () => {
-      console.log('🔄 Cleaning up real-time subscription');
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, isCoach]);
 
   const resetState = () => {
     console.log('🔄 Resetting all state');
@@ -128,7 +90,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setConnectionCode(null);
     setIsStudent(false);
     setStudentProfile(null);
-    setConnectedCoach(null);
+    setConnectedCoaches([]); // Reset to empty array
   };
 
   const loadUserProfile = async () => {
@@ -149,19 +111,17 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       console.log('✅ Profile loaded:', profile);
-      console.table(profile);
 
       if (profile.role === 'coach') {
         setIsCoach(true);
         setIsStudent(false);
-        // CRITICAL FIX: Initialize coach profile with empty comments array - NO DUMMY FEEDBACK
         setCoachProfile({
           id: profile.id,
           userId: profile.id,
           displayName: profile.full_name,
           bio: profile.online_nickname || undefined,
           students: [],
-          comments: [], // ALWAYS EMPTY - no dummy feedback generation
+          comments: [],
           createdAt: new Date(profile.created_at),
         });
         setConnectionCode(profile.connection_code);
@@ -176,7 +136,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
           displayName: profile.full_name,
           createdAt: new Date(profile.created_at),
         });
-        await loadConnectedCoach();
+        await loadConnectedCoaches(); // Updated method name
       }
     } catch (error) {
       console.error('❌ Error in loadUserProfile:', error);
@@ -322,11 +282,12 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  const loadConnectedCoach = async () => {
+  // UPDATED: Load multiple connected coaches instead of single coach
+  const loadConnectedCoaches = async () => {
     if (!user?.id) return;
 
     try {
-      console.log('🔍 Loading connected coach for student:', user.id);
+      console.log('🔍 Loading connected coaches for student:', user.id);
       const { data, error } = await supabase
         .from('coach_student_connections')
         .select(`
@@ -334,31 +295,31 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
           profiles!coach_student_connections_coach_id_fkey(*)
         `)
         .eq('student_id', user.id)
-        .eq('approved', true)
-        .single();
+        .eq('approved', true);
 
       if (error && error.code !== 'PGRST116') {
-        console.error('❌ Error loading connected coach:', error);
+        console.error('❌ Error loading connected coaches:', error);
         return;
       }
 
-      if (data) {
-        console.log('✅ Connected coach found:', data);
-        setConnectedCoach({
-          id: data.profiles.id,
-          userId: data.profiles.id,
-          displayName: data.profiles.full_name,
-          bio: data.profiles.online_nickname || undefined,
+      if (data && data.length > 0) {
+        console.log('✅ Connected coaches found:', data);
+        const coaches: CoachProfile[] = data.map(connection => ({
+          id: connection.profiles.id,
+          userId: connection.profiles.id,
+          displayName: connection.profiles.full_name,
+          bio: connection.profiles.online_nickname || undefined,
           students: [],
           comments: [],
-          createdAt: new Date(data.profiles.created_at),
-        });
+          createdAt: new Date(connection.profiles.created_at),
+        }));
+        setConnectedCoaches(coaches);
       } else {
-        console.log('📋 No connected coach found');
-        setConnectedCoach(null);
+        console.log('📋 No connected coaches found');
+        setConnectedCoaches([]);
       }
     } catch (error) {
-      console.error('❌ Error in loadConnectedCoach:', error);
+      console.error('❌ Error in loadConnectedCoaches:', error);
     }
   };
 
@@ -589,7 +550,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // Student methods
+  // UPDATED: Student methods for multi-coach support
   const createStudentProfile = async (displayName: string) => {
     if (!user?.id) return;
 
@@ -611,7 +572,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       toast({
         title: "Student Profile Created",
-        description: "You can now connect with a coach using their code."
+        description: "You can now connect with coaches using their codes."
       });
     } catch (error) {
       console.error('❌ Error creating student profile:', error);
@@ -625,6 +586,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  // UPDATED: Allow connecting to multiple coaches
   const connectWithCoach = async (code: string) => {
     if (!user?.id || !studentProfile) {
       toast({
@@ -654,7 +616,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      // Check if connection already exists
+      // Check if connection already exists with THIS specific coach
       const { data: existingConnection } = await supabase
         .from('coach_student_connections')
         .select('*')
@@ -664,7 +626,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (existingConnection) {
         toast({
-          title: "Request Already Exists",
+          title: "Already Connected",
           description: existingConnection.approved 
             ? "You are already connected to this coach."
             : "You have already sent a request to this coach.",
@@ -702,20 +664,19 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // CRITICAL FIX: Improved disconnectFromCoach function with proper database deletion
-  const disconnectFromCoach = async () => {
-    if (!user?.id || !connectedCoach) return;
+  // UPDATED: Disconnect from specific coach
+  const disconnectFromCoach = async (coachId: string) => {
+    if (!user?.id) return;
 
     setLoading(true);
     try {
-      console.log('🗑️ Disconnecting from coach:', { studentId: user.id, coachId: connectedCoach.id });
+      console.log('🗑️ Disconnecting from coach:', { studentId: user.id, coachId });
       
-      // Delete the connection from the database with explicit conditions
       const { error } = await supabase
         .from('coach_student_connections')
         .delete()
         .eq('student_id', user.id)
-        .eq('coach_id', connectedCoach.id);
+        .eq('coach_id', coachId);
 
       if (error) {
         console.error('❌ Database error disconnecting from coach:', error);
@@ -724,12 +685,12 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       console.log('✅ Coach connection removed from database successfully');
       
-      // Immediately clear the connected coach state
-      setConnectedCoach(null);
+      // Remove the coach from local state
+      setConnectedCoaches(prev => prev.filter(coach => coach.id !== coachId));
       
       toast({
         title: "Disconnected",
-        description: "You have disconnected from your coach."
+        description: "You have disconnected from the coach."
       });
     } catch (error) {
       console.error('❌ Error disconnecting from coach:', error);
@@ -757,10 +718,10 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     declineConnectionRequest,
     removeStudent,
     
-    // Student
+    // Student (UPDATED)
     isStudent,
     studentProfile,
-    connectedCoach,
+    connectedCoaches, // Changed from connectedCoach to connectedCoaches
     createStudentProfile,
     connectWithCoach,
     disconnectFromCoach,

@@ -76,15 +76,15 @@ const ConnectCoach = () => {
             <Icon name="ArrowLeft" size={16} />
             <span>Back</span>
           </button>
-          <h1 className="text-2xl font-bold text-poker-black">Connect with a Coach</h1>
-          <p className="text-gray-500 text-sm mt-1">Get personalized poker coaching</p>
+          <h1 className="text-2xl font-bold text-poker-black">Connect with Coaches</h1>
+          <p className="text-gray-500 text-sm mt-1">Get personalized poker coaching from multiple experts</p>
         </header>
         
         {!isStudent && (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Student Profile</CardTitle>
-              <CardDescription>Create your student profile to connect with a coach</CardDescription>
+              <CardDescription>Create your student profile to connect with coaches</CardDescription>
             </CardHeader>
             <CardContent>
               <CreateStudentProfileForm />

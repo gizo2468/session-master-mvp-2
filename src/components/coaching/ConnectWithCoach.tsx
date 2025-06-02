@@ -7,12 +7,8 @@ import { useCoachStudent } from '@/context/CoachStudentContext';
 import Icon from '@/components/ui/Lucide';
 
 const ConnectWithCoach = () => {
-  const { connectWithCoach, connectedCoach, loading } = useCoachStudent();
+  const { connectWithCoach, connectedCoaches, loading } = useCoachStudent();
   const [code, setCode] = useState('');
-  
-  if (connectedCoach) {
-    return null; // Don't show if already connected to a coach
-  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +26,10 @@ const ConnectWithCoach = () => {
           Connect with a Coach
         </CardTitle>
         <CardDescription>
-          Enter the connection code provided by your coach
+          {connectedCoaches.length > 0 
+            ? "You can connect with multiple coaches for different aspects of your game"
+            : "Enter the connection code provided by your coach"
+          }
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -59,7 +58,7 @@ const ConnectWithCoach = () => {
             ) : (
               <>
                 <Icon name="Link" className="mr-2 h-4 w-4" />
-                Connect
+                Connect with Coach
               </>
             )}
           </Button>
