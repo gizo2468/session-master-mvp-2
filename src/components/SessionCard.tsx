@@ -14,7 +14,8 @@ export default function SessionCard({ session }: SessionCardProps) {
   
   console.log('SessionCard rendering for session:', session.id, session);
   
-  const { stats, loading } = useSessionStats(session.id);
+  // Pass the session object to the hook so it can calculate from local data
+  const { stats, loading } = useSessionStats(session.id, session);
   
   console.log('SessionCard stats from hook:', stats, 'loading:', loading);
   
@@ -124,7 +125,7 @@ export default function SessionCard({ session }: SessionCardProps) {
         </div>
       )}
 
-      {/* Performance insights badges */}
+      {/* Performance insights badges - always shown */}
       <SessionStatsDisplay
         tables={stats.tables}
         hands={stats.hands}

@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { PokerSession } from '@/types/poker';
 
 interface SessionStats {
   tables: number;
@@ -9,7 +9,7 @@ interface SessionStats {
   totalPayout: number;
 }
 
-export const useSessionStats = (sessionId: string) => {
+export const useSessionStats = (sessionId: string, session?: PokerSession) => {
   const [stats, setStats] = useState<SessionStats>({
     tables: 0,
     hands: 0,
@@ -19,10 +19,47 @@ export const useSessionStats = (sessionId: string) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSessionStats = async () => {
+    const calculateStats = async () => {
       try {
         setLoading(true);
-        console.log('Fetching session stats for sessionId:', sessionId);
+        console.log('Calculating session stats for sessionId:', sessionId, 'session:', session);
+
+        // If we have a session object with tables, calculate from local data
+        if (session && session.tables && session.tables.length > 0) {
+          console.log('Using local session data for stats calculation');
+          
+          const tables = session.tables.length;
+          let hands = 0;
+          let totalBuyIns = 0;
+          let totalPayout = 0;
+
+          // Calculate from session tables
+          session.tables.forEach(table => {
+            totalBuyIns += (table.buyIn || 0);
+            totalPayout += (table.cashOut || 0);
+            if (table.hands) {
+              hands += table.hands.length;
+            }
+          });
+
+          // Add session-level hands if they exist
+          if (session.hands) {
+            hands += session.hands.length;
+          }
+
+          // Add session-level buy-in and cashout
+          totalBuyIns += (session.buyIn || 0);
+          totalPayout += (session.cashOut || 0);
+
+          console.log('Local stats calculated:', { tables, hands, totalBuyIns, totalPayout });
+
+          setStats({ tables, hands, totalBuyIns, totalPayout });
+          setLoading(false);
+          return;
+        }
+
+        // Otherwise, try to fetch from Supabase
+        console.log('Fetching session stats from Supabase for sessionId:', sessionId);
 
         // Fetch table stats
         const { data: tablesData, error: tablesError } = await supabase
@@ -30,12 +67,12 @@ export const useSessionStats = (sessionId: string) => {
           .select('buy_in, rebuy_amount, cashout')
           .eq('session_id', sessionId);
 
-        console.log('Tables data:', tablesData);
-        console.log('Tables error:', tablesError);
+        console.log('Supabase tables data:', tablesData);
+        console.log('Supabase tables error:', tablesError);
 
         if (tablesError) {
           console.error('Error fetching table stats:', tablesError);
-          return;
+          // Don't return, continue with 0 values
         }
 
         // Fetch hands count
@@ -44,15 +81,15 @@ export const useSessionStats = (sessionId: string) => {
           .select('*', { count: 'exact', head: true })
           .eq('session_id', sessionId);
 
-        console.log('Hands count:', handsCount);
-        console.log('Hands error:', handsError);
+        console.log('Supabase hands count:', handsCount);
+        console.log('Supabase hands error:', handsError);
 
         if (handsError) {
           console.error('Error fetching hands count:', handsError);
-          return;
+          // Don't return, continue with 0 values
         }
 
-        // Calculate totals
+        // Calculate totals from Supabase data
         const tables = tablesData?.length || 0;
         const hands = handsCount || 0;
         const totalBuyIns = tablesData?.reduce((sum, table) => 
@@ -60,7 +97,7 @@ export const useSessionStats = (sessionId: string) => {
         const totalPayout = tablesData?.reduce((sum, table) => 
           sum + (table.cashout || 0), 0) || 0;
 
-        console.log('Calculated stats:', { tables, hands, totalBuyIns, totalPayout });
+        console.log('Supabase stats calculated:', { tables, hands, totalBuyIns, totalPayout });
 
         setStats({
           tables,
@@ -69,19 +106,26 @@ export const useSessionStats = (sessionId: string) => {
           totalPayout
         });
       } catch (error) {
-        console.error('Error in fetchSessionStats:', error);
+        console.error('Error in calculateStats:', error);
+        // Set default values on error
+        setStats({
+          tables: 0,
+          hands: 0,
+          totalBuyIns: 0,
+          totalPayout: 0
+        });
       } finally {
         setLoading(false);
       }
     };
 
     if (sessionId) {
-      fetchSessionStats();
+      calculateStats();
     } else {
       console.log('No sessionId provided to useSessionStats');
       setLoading(false);
     }
-  }, [sessionId]);
+  }, [sessionId, session]);
 
   return { stats, loading };
 };

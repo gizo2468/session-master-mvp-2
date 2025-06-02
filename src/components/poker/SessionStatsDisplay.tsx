@@ -16,7 +16,6 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
   totalPayout,
   loading = false
 }) => {
-  // Debug logging
   console.log('SessionStatsDisplay props:', { tables, hands, totalBuyIns, totalPayout, loading });
 
   if (loading) {
@@ -27,16 +26,7 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
     );
   }
 
-  // Only hide if ALL values are 0 or null/undefined
-  const hasAnyData = tables > 0 || hands > 0 || totalBuyIns > 0 || totalPayout > 0;
-  
-  console.log('SessionStatsDisplay hasAnyData:', hasAnyData);
-  
-  if (!hasAnyData) {
-    console.log('SessionStatsDisplay: No data to display, hiding component');
-    return null;
-  }
-
+  // Always show the stats bar - no hiding logic
   return (
     <div className="mt-3 pt-3 border-t border-gray-100">
       <div className="bg-gray-50 text-sm px-3 py-2 rounded-md flex items-center justify-between">
