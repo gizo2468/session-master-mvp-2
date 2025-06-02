@@ -27,7 +27,7 @@ export default function SessionCard({ session }: SessionCardProps) {
   
   if (isCompleted && session.cashOut !== undefined) {
     profit = session.cashOut - session.buyIn;
-    profitClass = profit >= 0 ? 'text-green-800' : 'text-red-800';
+    profitClass = profit >= 0 ? 'text-green-700' : 'text-red-700';
   }
   
   const timeAgo = formatDistanceToNow(new Date(session.startTime), { addSuffix: true });
@@ -71,10 +71,23 @@ export default function SessionCard({ session }: SessionCardProps) {
             </span>
           )}
         </div>
-        {session.isActive && (
+        {session.isActive ? (
           <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
             ACTIVE
           </span>
+        ) : (
+          <div className="relative">
+            {/* Enhanced spotlight effect background - stronger and more centered */}
+            <div className={`absolute inset-0 rounded-full bg-gradient-radial ${profit >= 0 ? 'from-green-200/50 via-green-100/30 to-transparent shadow-lg shadow-green-300/60' : 'from-red-200/50 via-red-100/30 to-transparent shadow-lg shadow-red-300/60'} blur-sm scale-110`}></div>
+            
+            {/* Enhanced profit/loss badge */}
+            <div className={`relative inline-flex items-center gap-1.5 px-4 py-2 rounded-full shadow-md ${profit >= 0 ? 'bg-green-100/70 shadow-green-200/50' : 'bg-red-100/70 shadow-red-200/50'}`}>
+              <Icon name="dollar-sign" size={16} className={profitClass} />
+              <span className={`text-base font-bold ${profitClass}`}>
+                {profit >= 0 ? '+' : ''}{profit.toFixed(2)}
+              </span>
+            </div>
+          </div>
         )}
       </div>
       
@@ -106,26 +119,6 @@ export default function SessionCard({ session }: SessionCardProps) {
               )}
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Profit/Loss Badge - positioned directly above the gray divider */}
-      {!session.isActive && isCompleted && (
-        <div className="flex justify-end mt-3 mb-1">
-          <div className="relative">
-            {/* Enhanced spotlight effect background - stronger and more defined */}
-            <div className={`absolute inset-0 rounded-full bg-gradient-radial ${profit >= 0 ? 'from-green-300/60 via-green-200/40 to-transparent shadow-lg shadow-green-400/70' : 'from-red-300/60 via-red-200/40 to-transparent shadow-lg shadow-red-400/70'} blur-sm scale-125`}></div>
-            
-            {/* Enhanced profit/loss badge - larger and with deeper colors */}
-            <div className={`relative inline-flex items-center gap-2 px-5 py-2.5 rounded-full shadow-lg ${profit >= 0 ? 'bg-green-50/80 shadow-green-300/60' : 'bg-red-50/80 shadow-red-300/60'}`} style={{
-              backgroundColor: profit >= 0 ? '#f0fdf4' : '#fef2f2'
-            }}>
-              <Icon name="dollar-sign" size={18} className={profitClass} />
-              <span className={`text-lg font-bold ${profitClass}`}>
-                {profit >= 0 ? '+' : ''}{profit.toFixed(2)}
-              </span>
-            </div>
-          </div>
         </div>
       )}
 
