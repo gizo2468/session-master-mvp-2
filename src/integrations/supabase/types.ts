@@ -141,6 +141,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          bio: string | null
           coach_tier: string | null
           connection_code: string | null
           created_at: string
@@ -161,6 +162,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bio?: string | null
           coach_tier?: string | null
           connection_code?: string | null
           created_at?: string
@@ -181,6 +183,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bio?: string | null
           coach_tier?: string | null
           connection_code?: string | null
           created_at?: string
