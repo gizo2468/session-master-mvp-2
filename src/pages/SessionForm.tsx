@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
 import { PokerSession } from '@/types/poker';
@@ -53,7 +53,8 @@ export default function SessionForm() {
   const navigate = useNavigate();
   const { startSession } = useSessionContext();
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
-  const [bigBlindIndex, setBigBlindIndex] = useState(2); // Default to $2
+  const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[2]);
+  const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[2] * 2);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -68,9 +69,17 @@ export default function SessionForm() {
       tournamentType: undefined,
       isMultiDay: false,
       smallBlind: BLIND_PRESETS.smallBlind[2],
-      bigBlind: BLIND_PRESETS.bigBlind[2]
+      bigBlind: BLIND_PRESETS.smallBlind[2] * 2
     }
   });
+
+  // Update big blind whenever small blind changes for cash games
+  useEffect(() => {
+    if (form.watch('format') === 'Cash') {
+      setBigBlind(smallBlind * 2);
+      form.setValue('bigBlind', smallBlind * 2);
+    }
+  }, [smallBlind, form]);
   
   const onSubmit = (values: FormValues) => {
     const buyInAmount = parseFloat(values.buyIn);
@@ -124,30 +133,10 @@ export default function SessionForm() {
     const index = value[0];
     setSmallBlindIndex(index);
     const newSmallBlind = BLIND_PRESETS.smallBlind[index];
-    const newBigBlind = newSmallBlind * 2;
+    setSmallBlind(newSmallBlind);
     
     form.setValue('smallBlind', newSmallBlind);
-    form.setValue('bigBlind', newBigBlind);
-    
-    // Find and set the closest big blind index for the slider position
-    const closestBigBlindIndex = BLIND_PRESETS.bigBlind.findIndex(bb => bb >= newBigBlind);
-    const finalBigBlindIndex = closestBigBlindIndex !== -1 ? closestBigBlindIndex : BLIND_PRESETS.bigBlind.length - 1;
-    setBigBlindIndex(finalBigBlindIndex);
-  };
-
-  const handleBigBlindChange = (value: number[]) => {
-    const index = value[0];
-    setBigBlindIndex(index);
-    const newBigBlind = BLIND_PRESETS.bigBlind[index];
-    const newSmallBlind = newBigBlind / 2;
-    
-    form.setValue('bigBlind', newBigBlind);
-    form.setValue('smallBlind', newSmallBlind);
-    
-    // Find and set the closest small blind index for the slider position
-    const closestSmallBlindIndex = BLIND_PRESETS.smallBlind.findIndex(sb => sb >= newSmallBlind);
-    const finalSmallBlindIndex = closestSmallBlindIndex !== -1 ? closestSmallBlindIndex : BLIND_PRESETS.smallBlind.length - 1;
-    setSmallBlindIndex(finalSmallBlindIndex);
+    // Big blind will be automatically updated by useEffect
   };
   
   return (
@@ -162,7 +151,7 @@ export default function SessionForm() {
             <span>Back</span>
           </button>
           <h1 className="text-2xl font-bold text-poker-black">Start New Session</h1>
-          <p className="text-gray-500 text-sm mt-1">Track your poker performance</p>
+          <p className="text-gray-500 text-sm mt-1">Enter your first table below</p>
         </header>
         
         <Form {...form}>
@@ -440,7 +429,7 @@ export default function SessionForm() {
                     <FormItem>
                       <div className="flex justify-between">
                         <FormLabel>Small Blind</FormLabel>
-                        <span className="text-sm font-medium">${form.watch('smallBlind')}</span>
+                        <span className="text-sm font-medium">${smallBlind}</span>
                       </div>
                       <FormControl>
                         <Slider
@@ -457,17 +446,13 @@ export default function SessionForm() {
                     <FormItem>
                       <div className="flex justify-between">
                         <FormLabel>Big Blind</FormLabel>
-                        <span className="text-sm font-medium">${form.watch('bigBlind')}</span>
+                        <span className="text-sm font-medium">${bigBlind}</span>
                       </div>
-                      <FormControl>
-                        <Slider
-                          value={[bigBlindIndex]}
-                          max={BLIND_PRESETS.bigBlind.length - 1}
-                          step={1}
-                          onValueChange={handleBigBlindChange}
-                          className="py-2"
-                        />
-                      </FormControl>
+                      <div className="py-2 px-3 bg-gray-100 rounded-md border">
+                        <div className="text-sm text-gray-600 text-center">
+                          Auto-set to 2× Small Blind
+                        </div>
+                      </div>
                     </FormItem>
                   </div>
                 </div>
