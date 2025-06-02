@@ -372,9 +372,9 @@ export default function SessionDetail() {
                   <span className="font-medium">${totalCashout.toFixed(2)}</span>
                 </div>
                 
-                <div className="flex flex-col items-center py-2 border-b">
+                <div className="flex flex-col items-center py-2">
                   <span className="text-gray-500 mb-2">Profit/Loss</span>
-                  <ProfitLossBadge profit={profit} size="md" />
+                  <ProfitLossBadge profit={profit} size="lg" />
                 </div>
                 
                 {session.notes && (
