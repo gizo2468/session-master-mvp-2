@@ -11,7 +11,9 @@ interface TableReview {
   message: string;
   created_at: string;
   table_id: string;
-  coach_name: string;
+  coach: {
+    full_name: string;
+  };
 }
 
 interface HandReview {
@@ -19,7 +21,9 @@ interface HandReview {
   message: string;
   created_at: string;
   hand_id: string;
-  coach_name: string;
+  coach: {
+    full_name: string;
+  };
 }
 
 interface ReviewsListProps {
@@ -67,60 +71,42 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ sessionId, studentId }
     try {
       setLoading(true);
 
-      // Load table reviews with separate coach query
+      // Load table reviews with coach info
       const { data: tableReviewsData, error: tableError } = await supabase
         .from('coach_to_table_reviews')
-        .select('id, message, created_at, table_id, coach_id')
+        .select(`
+          id,
+          message,
+          created_at,
+          table_id,
+          coach:coach_id (
+            full_name
+          )
+        `)
         .eq('session_id', sessionId)
         .order('created_at', { ascending: false });
 
-      if (!tableError && tableReviewsData) {
-        // Fetch coach names separately
-        const coachIds = [...new Set(tableReviewsData.map(review => review.coach_id))];
-        const { data: coachesData, error: coachError } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .in('id', coachIds);
-
-        if (!coachError && coachesData) {
-          const coachMap = new Map(coachesData.map(coach => [coach.id, coach.full_name]));
-          const enrichedTableReviews = tableReviewsData.map(review => ({
-            id: review.id,
-            message: review.message,
-            created_at: review.created_at,
-            table_id: review.table_id,
-            coach_name: coachMap.get(review.coach_id) || 'Coach'
-          }));
-          setTableReviews(enrichedTableReviews);
-        }
+      if (!tableError) {
+        setTableReviews(tableReviewsData || []);
       }
 
-      // Load hand reviews with separate coach query
+      // Load hand reviews with coach info
       const { data: handReviewsData, error: handError } = await supabase
         .from('coach_to_hand_reviews')
-        .select('id, message, created_at, hand_id, coach_id')
+        .select(`
+          id,
+          message,
+          created_at,
+          hand_id,
+          coach:coach_id (
+            full_name
+          )
+        `)
         .eq('session_id', sessionId)
         .order('created_at', { ascending: false });
 
-      if (!handError && handReviewsData) {
-        // Fetch coach names separately
-        const coachIds = [...new Set(handReviewsData.map(review => review.coach_id))];
-        const { data: coachesData, error: coachError } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .in('id', coachIds);
-
-        if (!coachError && coachesData) {
-          const coachMap = new Map(coachesData.map(coach => [coach.id, coach.full_name]));
-          const enrichedHandReviews = handReviewsData.map(review => ({
-            id: review.id,
-            message: review.message,
-            created_at: review.created_at,
-            hand_id: review.hand_id,
-            coach_name: coachMap.get(review.coach_id) || 'Coach'
-          }));
-          setHandReviews(enrichedHandReviews);
-        }
+      if (!handError) {
+        setHandReviews(handReviewsData || []);
       }
 
     } catch (error) {
@@ -182,11 +168,11 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ sessionId, studentId }
             <div key={review.id} className="border rounded-lg p-4 bg-blue-50">
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  <Icon name="Layers" size={12} className="mr-1" />
+                  <Icon name="Grid" size={12} className="mr-1" />
                   Table Review
                 </Badge>
                 <span className="text-sm text-gray-600">
-                  by {review.coach_name}
+                  by {review.coach?.full_name || 'Coach'}
                 </span>
                 <span className="text-xs text-gray-500 ml-auto">
                   {new Date(review.created_at).toLocaleDateString()}
@@ -201,11 +187,11 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ sessionId, studentId }
             <div key={review.id} className="border rounded-lg p-4 bg-green-50">
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  <Icon name="Spade" size={12} className="mr-1" />
+                  <Icon name="Cards" size={12} className="mr-1" />
                   Hand Review
                 </Badge>
                 <span className="text-sm text-gray-600">
-                  by {review.coach_name}
+                  by {review.coach?.full_name || 'Coach'}
                 </span>
                 <span className="text-xs text-gray-500 ml-auto">
                   {new Date(review.created_at).toLocaleDateString()}
