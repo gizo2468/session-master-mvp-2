@@ -76,11 +76,17 @@ export default function SessionCard({ session }: SessionCardProps) {
             ACTIVE
           </span>
         ) : (
-          <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full ${profit >= 0 ? 'bg-green-100/60' : 'bg-red-100/60'}`}>
-            <Icon name="dollar-sign" size={14} className={profitClass} />
-            <span className={`text-sm font-bold ${profitClass}`}>
-              {profit >= 0 ? '+' : ''}{profit.toFixed(2)}
-            </span>
+          <div className="relative">
+            {/* Spotlight effect background */}
+            <div className={`absolute inset-0 rounded-full bg-gradient-radial from-white/30 to-transparent blur-sm scale-150 ${profit >= 0 ? 'shadow-lg shadow-green-200/40' : 'shadow-lg shadow-red-200/40'}`}></div>
+            
+            {/* Enhanced profit/loss badge */}
+            <div className={`relative inline-flex items-center gap-1.5 px-4 py-2 rounded-full shadow-md ${profit >= 0 ? 'bg-green-100/70 shadow-green-200/50' : 'bg-red-100/70 shadow-red-200/50'}`}>
+              <Icon name="dollar-sign" size={16} className={profitClass} />
+              <span className={`text-base font-bold ${profitClass}`}>
+                {profit >= 0 ? '+' : ''}{profit.toFixed(2)}
+              </span>
+            </div>
           </div>
         )}
       </div>
