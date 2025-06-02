@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/Lucide';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 interface Session {
   id: string;
@@ -20,12 +21,35 @@ interface Session {
 
 export const StudentSessions = ({ studentId }: { studentId: string }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     loadStudentSessions();
+    
+    // Set up real-time subscription for new sessions
+    const channel = supabase
+      .channel(`student-${studentId}-sessions`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sessions',
+          filter: `user_id=eq.${studentId}`
+        },
+        (payload) => {
+          console.log('🔔 New session detected for student:', payload);
+          loadStudentSessions(); // Reload sessions when new ones are added
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [studentId]);
 
   const loadStudentSessions = async () => {
@@ -34,7 +58,33 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
       setError(null);
       
       console.log('🔍 Loading sessions for student:', studentId);
+      console.log('🔍 Current coach user:', user?.id);
       
+      // Verify we have the necessary data
+      if (!studentId || !user?.id) {
+        console.error('❌ Missing required data:', { studentId, userId: user?.id });
+        setError('Missing required data');
+        return;
+      }
+
+      // First verify the coach-student relationship
+      const { data: connection, error: connectionError } = await supabase
+        .from('coach_student_connections')
+        .select('id')
+        .eq('coach_id', user.id)
+        .eq('student_id', studentId)
+        .eq('approved', true)
+        .single();
+
+      if (connectionError || !connection) {
+        console.error('❌ No valid coach-student connection found:', connectionError);
+        setError('No valid coaching relationship found');
+        return;
+      }
+
+      console.log('✅ Valid coach-student connection verified:', connection);
+
+      // Now fetch the student's sessions
       const { data: sessionsData, error: sessionsError } = await supabase
         .from('sessions')
         .select('*')
@@ -50,6 +100,22 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
 
       console.log(`📋 Loaded ${sessionsData?.length || 0} sessions for student ${studentId}:`);
       console.table(sessionsData);
+      
+      // Validate that we're getting real session data
+      if (sessionsData && sessionsData.length > 0) {
+        console.log('✅ Real session data loaded successfully');
+        sessionsData.forEach((session, index) => {
+          console.log(`Session ${index + 1}:`, {
+            id: session.id,
+            userId: session.user_id,
+            startTime: session.start_time,
+            gameType: session.game_type,
+            sessionType: session.session_type
+          });
+        });
+      } else {
+        console.log('ℹ️ No sessions found for this student');
+      }
       
       setSessions(sessionsData || []);
     } catch (error) {
@@ -80,6 +146,7 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
           <div className="text-center text-gray-500">
             <Icon name="Loader" className="mx-auto mb-2 h-8 w-8 animate-spin" />
             <p>Loading sessions...</p>
+            <p className="text-xs mt-1">Fetching real session data from database...</p>
           </div>
         </CardContent>
       </Card>
@@ -93,6 +160,8 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
           <div className="text-center text-red-500">
             <Icon name="AlertCircle" className="mx-auto mb-2 h-8 w-8" />
             <p>{error}</p>
+            <p className="text-xs mt-1">Student ID: {studentId}</p>
+            <p className="text-xs">Coach ID: {user?.id}</p>
             <Button 
               variant="outline" 
               size="sm" 
@@ -115,6 +184,12 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
             <Icon name="Clock" className="mx-auto mb-2 h-8 w-8" />
             <p>This student hasn't recorded any sessions yet.</p>
             <p className="text-sm mt-1">Sessions will appear here once the student starts tracking their poker sessions.</p>
+            <div className="text-xs mt-2 p-2 bg-gray-100 rounded">
+              <p>Debug Info:</p>
+              <p>Student ID: {studentId}</p>
+              <p>Coach ID: {user?.id}</p>
+              <p>Sessions found: {sessions.length}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -123,6 +198,13 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
   
   return (
     <div className="space-y-4">
+      {/* Debug info for development */}
+      <div className="text-xs text-gray-500 p-2 bg-blue-50 rounded">
+        <p>✅ Real session data loaded: {sessions.length} sessions</p>
+        <p>Student ID: {studentId}</p>
+        <p>Coach ID: {user?.id}</p>
+      </div>
+      
       {sessions.map(session => {
         const duration = calculateDuration(session.start_time, session.end_time);
         const gameTypeDisplay = formatGameType(session.game_type, session.session_type);
@@ -141,6 +223,9 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
                         Recent
                       </Badge>
                     )}
+                    <Badge className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                      Real Data
+                    </Badge>
                   </div>
                   <div className="text-sm text-gray-500">
                     {duration} minutes • {new Date(session.start_time).toLocaleDateString()}
@@ -184,7 +269,7 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
               console.log('Show all sessions for student:', studentId);
             }}
           >
-            View All Sessions
+            View All Sessions ({sessions.length} total)
           </Button>
         </div>
       )}

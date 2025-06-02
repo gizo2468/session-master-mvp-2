@@ -550,6 +550,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      is_coach_for_student: {
+        Args: { coach_user_id: string; student_user_id: string }
+        Returns: boolean
+      }
       update_terms_acceptance: {
         Args: { user_id: string; accepted: boolean }
         Returns: boolean

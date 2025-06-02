@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCoachStudent } from '@/context/CoachStudentContext';
+import { useAuth } from '@/context/AuthContext';
 import Icon from '@/components/ui/Lucide';
 import { StudentSessions } from '@/components/coaching/StudentSessions';
 import { StudentSessionStats } from '@/components/coaching/StudentSessionStats';
@@ -12,17 +13,57 @@ import { StudentReviews } from '@/components/coaching/StudentReviews';
 
 const CoachStudentDetail = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { studentId } = useParams<{ studentId: string }>();
-  const { students, isCoach } = useCoachStudent();
+  const { students, isCoach, loading } = useCoachStudent();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
   
   // Find the student
   const student = students.find(s => s.id === studentId);
   
+  console.log('🔍 CoachStudentDetail: Looking for student:', studentId);
+  console.log('🔍 Available students:', students);
+  console.log('🔍 Found student:', student);
+  console.log('🔍 Is coach:', isCoach);
+  console.log('🔍 Current user:', user?.id);
+
+  useEffect(() => {
+    // Redirect if not authorized or student not found
+    if (!loading && (!isCoach || !student)) {
+      console.log('❌ Redirecting: Not authorized or student not found');
+      navigate('/coach-dashboard');
+    }
+  }, [isCoach, student, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Icon name="Loader" className="mx-auto mb-4 h-8 w-8 animate-spin text-poker-feltGreen" />
+          <p className="text-gray-600">Loading student details...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isCoach || !student) {
-    navigate('/coach-dashboard');
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="p-6 text-center">
+            <Icon name="AlertCircle" className="mx-auto mb-4 h-8 w-8 text-red-500" />
+            <h2 className="text-lg font-semibold mb-2">Access Denied</h2>
+            <p className="text-gray-600 mb-4">
+              {!isCoach ? "You don't have coach permissions." : "Student not found in your connections."}
+            </p>
+            <Button onClick={() => navigate('/coach-dashboard')}>
+              Back to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
   
   // Determine which tab to display based on query parameter
@@ -44,11 +85,18 @@ const CoachStudentDetail = () => {
             <div className="h-16 w-16 bg-poker-feltGreen rounded-full flex items-center justify-center text-white text-xl">
               {student.displayName.substring(0, 1).toUpperCase()}
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-2xl font-bold text-poker-black">{student.displayName}</h1>
               <p className="text-gray-500 text-sm">
                 Connected since {new Date(student.createdAt).toLocaleDateString()}
               </p>
+              {student.email && (
+                <p className="text-gray-400 text-xs">{student.email}</p>
+              )}
+              {/* Debug info for development */}
+              <div className="text-xs text-blue-600 mt-1 p-1 bg-blue-50 rounded">
+                Student ID: {student.id} | Coach ID: {user?.id}
+              </div>
             </div>
           </div>
         </header>
