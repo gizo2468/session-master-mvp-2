@@ -129,23 +129,46 @@ export default function SessionDetail() {
     return totalRebuys;
   };
   
-  // Calculate total profit/loss from all tables
+  // Calculate total cashout including bounties for tournaments
+  const calculateTotalCashout = () => {
+    if (!session.tables || session.tables.length === 0) {
+      return session.cashOut || 0;
+    }
+    
+    let totalCashout = 0;
+    session.tables.forEach((table) => {
+      // Add regular cashout
+      totalCashout += (table.cashOut || 0);
+      
+      // Add bounty earnings for tournaments
+      if (session.format === 'Tournament' && table.bountyAmount && table.bountyCount) {
+        totalCashout += (table.bountyAmount * table.bountyCount);
+      }
+    });
+    
+    return totalCashout;
+  };
+  
+  // Calculate total profit/loss from all tables (using the corrected total cashout)
   const calculateTotalProfitLoss = () => {
     if (!session.tables || session.tables.length === 0) {
       return (session.cashOut || 0) - session.buyIn;
     }
     
-    let totalProfit = 0;
+    const totalCashout = calculateTotalCashout();
+    let totalBuyin = 0;
+    
     session.tables.forEach((table) => {
-      totalProfit += (table.cashOut || 0) - table.buyIn;
+      totalBuyin += table.buyIn || 0;
     });
     
-    return totalProfit;
+    return totalCashout - totalBuyin;
   };
   
   const totalInitialBuyin = calculateTotalInitialBuyin();
   const additionalBuyins = calculateAdditionalBuyins();
   const totalRebuys = calculateTotalRebuys();
+  const totalCashout = calculateTotalCashout();
   const profit = calculateTotalProfitLoss();
   const profitClass = profit >= 0 ? 'text-green-500' : 'text-poker-red';
   
@@ -338,11 +361,11 @@ export default function SessionDetail() {
               </div>
             )}
             
-            {isCompleted && session.cashOut !== undefined && (
+            {isCompleted && (
               <>
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-gray-500">Cash out:</span>
-                  <span className="font-medium">${session.cashOut.toFixed(2)}</span>
+                  <span className="font-medium">${totalCashout.toFixed(2)}</span>
                 </div>
                 
                 <div className="flex justify-between py-2 border-b">
