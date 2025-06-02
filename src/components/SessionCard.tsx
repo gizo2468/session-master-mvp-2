@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import SessionStatsDisplay from './poker/SessionStatsDisplay';
 import { useSessionStats } from '@/hooks/useSessionStats';
+import Icon from '@/components/ui/Lucide';
 
 interface SessionCardProps {
   session: PokerSession;
@@ -26,7 +27,7 @@ export default function SessionCard({ session }: SessionCardProps) {
   
   if (isCompleted && session.cashOut !== undefined) {
     profit = session.cashOut - session.buyIn;
-    profitClass = profit >= 0 ? 'text-green-500' : 'text-poker-red';
+    profitClass = profit >= 0 ? 'text-green-700' : 'text-red-700';
   }
   
   const timeAgo = formatDistanceToNow(new Date(session.startTime), { addSuffix: true });
@@ -75,9 +76,12 @@ export default function SessionCard({ session }: SessionCardProps) {
             ACTIVE
           </span>
         ) : (
-          <span className={`text-lg font-bold ${profitClass}`}>
-            {profit >= 0 ? '+' : ''}{profit.toFixed(2)}
-          </span>
+          <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full ${profit >= 0 ? 'bg-green-100/60' : 'bg-red-100/60'}`}>
+            <Icon name="dollar-sign" size={14} className={profitClass} />
+            <span className={`text-sm font-bold ${profitClass}`}>
+              {profit >= 0 ? '+' : ''}{profit.toFixed(2)}
+            </span>
+          </div>
         )}
       </div>
       
