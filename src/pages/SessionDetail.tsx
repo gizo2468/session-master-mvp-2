@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -12,6 +11,7 @@ import TableDetailsCard from '@/components/poker/TableDetailsCard';
 import SessionTimeBadge from '@/components/poker/SessionTimeBadge';
 import TableSelectionModal from '@/components/poker/TableSelectionModal';
 import EditTableForm from '@/components/poker/EditTableForm';
+import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TableData } from '@/types/poker';
 
@@ -374,9 +374,7 @@ export default function SessionDetail() {
                 
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-gray-500">Profit/Loss:</span>
-                  <span className={`font-bold ${profitClass}`}>
-                    {profit > 0 ? '+' : ''}{profit.toFixed(2)}
-                  </span>
+                  <ProfitLossBadge profit={profit} size="md" />
                 </div>
                 
                 {session.notes && (

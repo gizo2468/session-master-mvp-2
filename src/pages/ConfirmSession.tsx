@@ -316,17 +316,36 @@ export default function ConfirmSession() {
               <div className="mb-6">
                 <div className="flex justify-between mb-1">
                   <span className="text-sm">Profit/Loss:</span>
-                  <span className={`text-sm font-bold ${
-                    cashOutAmount && parseFloat(cashOutAmount) >= activeSession.buyIn 
-                      ? 'text-green-600' 
-                      : cashOutAmount 
-                        ? 'text-red-600' 
-                        : 'text-gray-500'
-                  }`}>
-                    {cashOutAmount 
-                      ? `$${(parseFloat(cashOutAmount) - activeSession.buyIn).toFixed(2)}` 
-                      : '$0.00'}
-                  </span>
+                  {cashOutAmount && (
+                    <div className="relative">
+                      {/* Enhanced spotlight effect background */}
+                      <div className={`absolute inset-0 rounded-full bg-gradient-radial ${
+                        parseFloat(cashOutAmount) >= activeSession.buyIn 
+                          ? 'from-green-200/50 via-green-100/30 to-transparent shadow-lg shadow-green-300/60' 
+                          : 'from-red-200/50 via-red-100/30 to-transparent shadow-lg shadow-red-300/60'
+                      } blur-sm scale-110`}></div>
+                      
+                      {/* Profit/loss badge */}
+                      <div className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md ${
+                        parseFloat(cashOutAmount) >= activeSession.buyIn 
+                          ? 'bg-green-100/70 shadow-green-200/50' 
+                          : 'bg-red-100/70 shadow-red-200/50'
+                      }`}>
+                        <Icon name="dollar-sign" size={14} className={
+                          parseFloat(cashOutAmount) >= activeSession.buyIn 
+                            ? 'text-green-700' 
+                            : 'text-red-700'
+                        } />
+                        <span className={`text-sm font-bold ${
+                          parseFloat(cashOutAmount) >= activeSession.buyIn 
+                            ? 'text-green-700' 
+                            : 'text-red-700'
+                        }`}>
+                          {(parseFloat(cashOutAmount) - activeSession.buyIn).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                   {cashOutAmount && (

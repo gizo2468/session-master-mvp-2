@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import SessionStatsDisplay from './poker/SessionStatsDisplay';
 import { useSessionStats } from '@/hooks/useSessionStats';
 import Icon from '@/components/ui/Lucide';
+import ProfitLossBadge from './poker/ProfitLossBadge';
 
 interface SessionCardProps {
   session: PokerSession;
@@ -23,11 +24,9 @@ export default function SessionCard({ session }: SessionCardProps) {
   // Calculate profit/loss
   const isCompleted = !session.isActive && session.cashOut !== undefined;
   let profit = 0;
-  let profitClass = '';
   
   if (isCompleted && session.cashOut !== undefined) {
     profit = session.cashOut - session.buyIn;
-    profitClass = profit >= 0 ? 'text-green-700' : 'text-red-700';
   }
   
   const timeAgo = formatDistanceToNow(new Date(session.startTime), { addSuffix: true });
@@ -76,18 +75,7 @@ export default function SessionCard({ session }: SessionCardProps) {
             ACTIVE
           </span>
         ) : (
-          <div className="relative">
-            {/* Enhanced spotlight effect background - stronger and more centered */}
-            <div className={`absolute inset-0 rounded-full bg-gradient-radial ${profit >= 0 ? 'from-green-200/50 via-green-100/30 to-transparent shadow-lg shadow-green-300/60' : 'from-red-200/50 via-red-100/30 to-transparent shadow-lg shadow-red-300/60'} blur-sm scale-110`}></div>
-            
-            {/* Enhanced profit/loss badge - increased size */}
-            <div className={`relative inline-flex items-center gap-2 px-5 py-2.5 rounded-full shadow-md ${profit >= 0 ? 'bg-green-100/70 shadow-green-200/50' : 'bg-red-100/70 shadow-red-200/50'}`}>
-              <Icon name="dollar-sign" size={18} className={profitClass} />
-              <span className={`text-lg font-bold ${profitClass}`}>
-                {profit >= 0 ? '+' : ''}{profit.toFixed(2)}
-              </span>
-            </div>
-          </div>
+          <ProfitLossBadge profit={profit} size="lg" />
         )}
       </div>
       
