@@ -77,8 +77,8 @@ export default function SessionCard({ session }: SessionCardProps) {
           </span>
         ) : (
           <div className="relative">
-            {/* Spotlight effect background */}
-            <div className={`absolute inset-0 rounded-full bg-gradient-radial from-white/30 to-transparent blur-sm scale-150 ${profit >= 0 ? 'shadow-lg shadow-green-200/40' : 'shadow-lg shadow-red-200/40'}`}></div>
+            {/* Enhanced spotlight effect background - stronger and more centered */}
+            <div className={`absolute inset-0 rounded-full bg-gradient-radial ${profit >= 0 ? 'from-green-200/50 via-green-100/30 to-transparent shadow-lg shadow-green-300/60' : 'from-red-200/50 via-red-100/30 to-transparent shadow-lg shadow-red-300/60'} blur-sm scale-110`}></div>
             
             {/* Enhanced profit/loss badge */}
             <div className={`relative inline-flex items-center gap-1.5 px-4 py-2 rounded-full shadow-md ${profit >= 0 ? 'bg-green-100/70 shadow-green-200/50' : 'bg-red-100/70 shadow-red-200/50'}`}>
@@ -92,12 +92,12 @@ export default function SessionCard({ session }: SessionCardProps) {
       </div>
       
       <div className="flex justify-between text-sm text-gray-600">
-        <span>{session.gameType} • {session.format}</span>
-        {shouldShowBlinds && (
-          <span>
-            {session.smallBlind}/{session.bigBlind}
-          </span>
-        )}
+        <span>
+          {session.gameType} • {session.format}
+          {shouldShowBlinds && (
+            <> • ${session.smallBlind}/${session.bigBlind}</>
+          )}
+        </span>
       </div>
       
       {/* Display important multi-day tournament data in SessionCard */}
