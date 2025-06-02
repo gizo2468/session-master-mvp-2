@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format, differenceInMinutes, differenceInHours } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +11,9 @@ import { TableReviewForm } from '@/components/coaching/TableReviewForm';
 import { HandReviewForm } from '@/components/coaching/HandReviewForm';
 import { ReviewsList } from '@/components/coaching/ReviewsList';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { HandData } from '@/types/poker';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface SessionData {
   id: string;
@@ -94,6 +96,44 @@ interface SessionViewProps {
   mode: 'student' | 'coach';
 }
 
+type ErrorType = 'session_not_found' | 'permission_denied' | 'network_error' | 'invalid_user' | 'unknown';
+
+interface ErrorState {
+  type: ErrorType;
+  message: string;
+  details?: string;
+}
+
+// Helper function to convert SessionHand to HandData
+const convertSessionHandsToHandData = (sessionHands: SessionHand[]): HandData[] => {
+  return sessionHands.map(hand => ({
+    id: hand.id,
+    cards: hand.hole_cards || '',
+    position: hand.position || '',
+    action: hand.preflop_action || '',
+    notes: hand.hand_notes,
+    result: hand.showdown_result,
+    resultAmount: hand.amount_won,
+    currencyType: hand.currency_type as 'currency' | 'chips',
+    createdAt: new Date(hand.created_at),
+    tableId: hand.table_id || undefined,
+    handNumber: hand.hand_number || undefined,
+    holeCards: hand.hole_cards ? [hand.hole_cards] : undefined,
+    preflopAction: hand.preflop_action || undefined,
+    flopCards: hand.flop_cards ? [hand.flop_cards] : undefined,
+    flopAction: hand.flop_action || undefined,
+    turnCard: hand.turn_card || undefined,
+    turnAction: hand.turn_action || undefined,
+    riverCard: hand.river_card || undefined,
+    riverAction: hand.river_action || undefined,
+    showdownResult: hand.showdown_result || undefined,
+    potSize: hand.pot_size,
+    amountWon: hand.amount_won,
+    amountInvested: hand.amount_invested,
+    handImage: undefined
+  }));
+};
+
 export const SessionView: React.FC<SessionViewProps> = ({ 
   sessionId, 
   studentId, 
@@ -105,11 +145,12 @@ export const SessionView: React.FC<SessionViewProps> = ({
   const [sessionHands, setSessionHands] = useState<SessionHand[]>([]);
   const [sessionResults, setSessionResults] = useState<SessionResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [errorState, setErrorState] = useState<ErrorState | null>(null);
   const [showTableReview, setShowTableReview] = useState(false);
   const [showHandReview, setShowHandReview] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [selectedHandId, setSelectedHandId] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadSessionData();
@@ -155,32 +196,122 @@ export const SessionView: React.FC<SessionViewProps> = ({
   const loadSessionData = async () => {
     try {
       setLoading(true);
-      setError(null);
+      setErrorState(null);
       
-      const targetUserId = studentId || sessionData?.user_id;
+      console.log('🔍 Starting session load process:', { sessionId, mode, studentId, userId: user?.id });
       
-      // Load basic session info
+      // Step 1: Validate we have required user context
+      if (mode === 'coach' && !studentId) {
+        console.error('❌ Coach mode requires studentId');
+        setErrorState({
+          type: 'invalid_user',
+          message: 'Invalid coach session access',
+          details: 'Student ID is required for coach mode'
+        });
+        return;
+      }
+      
+      if (mode === 'student' && !user?.id) {
+        console.error('❌ Student mode requires authenticated user');
+        setErrorState({
+          type: 'invalid_user',
+          message: 'Authentication required',
+          details: 'Please log in to view your sessions'
+        });
+        return;
+      }
+      
+      // Step 2: First check if session exists at all (regardless of user)
+      console.log('🔍 Step 1: Checking if session exists:', sessionId);
+      const { data: sessionExists, error: existsError } = await supabase
+        .from('sessions')
+        .select('id, user_id')
+        .eq('id', sessionId)
+        .single();
+
+      if (existsError) {
+        console.error('❌ Error checking session existence:', existsError);
+        if (existsError.code === 'PGRST116') {
+          // No rows returned - session doesn't exist
+          setErrorState({
+            type: 'session_not_found',
+            message: 'Session not found',
+            details: `The session with ID ${sessionId} does not exist in the database`
+          });
+          return;
+        } else {
+          // Other database error
+          setErrorState({
+            type: 'network_error',
+            message: 'Database connection error',
+            details: 'Unable to connect to the database. Please try again.'
+          });
+          return;
+        }
+      }
+
+      console.log('✅ Session exists:', sessionExists);
+      
+      // Step 3: Determine the correct user ID for permission check
+      let targetUserId: string;
+      if (mode === 'coach' && studentId) {
+        targetUserId = studentId;
+        console.log('🔍 Coach mode: Loading session for student ID:', studentId);
+      } else if (mode === 'student' && user?.id) {
+        targetUserId = user.id;
+        console.log('🔍 Student mode: Loading session for user ID:', user.id);
+      } else {
+        // This shouldn't happen due to validation above, but safety check
+        setErrorState({
+          type: 'invalid_user',
+          message: 'Invalid user context',
+          details: 'Unable to determine the correct user for session access'
+        });
+        return;
+      }
+      
+      // Step 4: Check if user has permission to access this session
+      if (sessionExists.user_id !== targetUserId) {
+        console.error('❌ Permission denied:', { 
+          sessionOwner: sessionExists.user_id, 
+          requestingUser: targetUserId,
+          mode 
+        });
+        
+        setErrorState({
+          type: 'permission_denied',
+          message: mode === 'coach' ? 'Student session not accessible' : 'Access denied',
+          details: mode === 'coach' 
+            ? 'This session does not belong to your student or you do not have permission to view it'
+            : 'You do not have permission to view this session'
+        });
+        return;
+      }
+      
+      // Step 5: Load the full session data
+      console.log('🔍 Step 2: Loading full session data');
       const { data: session, error: sessionError } = await supabase
         .from('sessions')
         .select('*')
         .eq('id', sessionId)
-        .eq('user_id', targetUserId || '')
+        .eq('user_id', targetUserId)
         .single();
 
-      if (sessionError) {
-        console.error('Error loading session:', sessionError);
-        setError('Failed to load session data');
+      if (sessionError || !session) {
+        console.error('❌ Error loading full session data:', sessionError);
+        setErrorState({
+          type: 'network_error',
+          message: 'Failed to load session details',
+          details: 'Error retrieving complete session information'
+        });
         return;
       }
 
-      if (!session) {
-        setError('Session not found');
-        return;
-      }
-
+      console.log('✅ Session loaded successfully:', session);
       setSessionData(session);
 
-      // Load session tables
+      // Step 6: Load related data (tables, hands, results)
+      console.log('🔍 Step 3: Loading session tables');
       const { data: tables, error: tablesError } = await supabase
         .from('session_tables')
         .select('*')
@@ -189,9 +320,12 @@ export const SessionView: React.FC<SessionViewProps> = ({
 
       if (!tablesError) {
         setSessionTables(tables || []);
+        console.log('✅ Tables loaded:', tables?.length || 0);
+      } else {
+        console.error('❌ Error loading tables:', tablesError);
       }
 
-      // Load session hands
+      console.log('🔍 Step 4: Loading session hands');
       const { data: hands, error: handsError } = await supabase
         .from('session_hands')
         .select('*')
@@ -200,9 +334,12 @@ export const SessionView: React.FC<SessionViewProps> = ({
 
       if (!handsError) {
         setSessionHands(hands || []);
+        console.log('✅ Hands loaded:', hands?.length || 0);
+      } else {
+        console.error('❌ Error loading hands:', handsError);
       }
 
-      // Load session results
+      console.log('🔍 Step 5: Loading session results');
       const { data: results, error: resultsError } = await supabase
         .from('session_results')
         .select('*')
@@ -211,11 +348,20 @@ export const SessionView: React.FC<SessionViewProps> = ({
 
       if (!resultsError && results) {
         setSessionResults(results);
+        console.log('✅ Results loaded:', results);
+      } else if (resultsError && resultsError.code !== 'PGRST116') {
+        console.error('❌ Error loading results:', resultsError);
+      } else {
+        console.log('ℹ️ No session results found (this is normal for some sessions)');
       }
       
     } catch (error) {
-      console.error('Error in loadSessionData:', error);
-      setError('Failed to load session data');
+      console.error('❌ Unexpected error in loadSessionData:', error);
+      setErrorState({
+        type: 'unknown',
+        message: 'Unexpected error occurred',
+        details: 'An unexpected error occurred while loading the session'
+      });
     } finally {
       setLoading(false);
     }
@@ -255,20 +401,82 @@ export const SessionView: React.FC<SessionViewProps> = ({
     setShowHandReview(true);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto max-w-4xl px-4 py-8">
-          <div className="text-center py-12">
-            <Icon name="Loader" className="mx-auto mb-4 h-8 w-8 animate-spin text-poker-feltGreen" />
-            <p className="text-gray-600">Loading session data...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const renderErrorState = (error: ErrorState) => {
+    const getErrorIcon = (type: ErrorType) => {
+      switch (type) {
+        case 'session_not_found':
+          return 'Search';
+        case 'permission_denied':
+          return 'Lock';
+        case 'network_error':
+          return 'Wifi';
+        case 'invalid_user':
+          return 'User';
+        default:
+          return 'AlertCircle';
+      }
+    };
 
-  if (error || !sessionData) {
+    const getErrorActions = (type: ErrorType) => {
+      switch (type) {
+        case 'session_not_found':
+          return (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button onClick={onBack} variant="poker">
+                Go Back to Sessions
+              </Button>
+              <Button 
+                onClick={() => window.location.href = '/history'} 
+                variant="outline"
+              >
+                View Session History
+              </Button>
+            </div>
+          );
+        case 'permission_denied':
+          return (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button onClick={onBack} variant="poker">
+                Go Back
+              </Button>
+              {mode === 'coach' && (
+                <Button 
+                  onClick={() => window.location.href = '/coach-dashboard'} 
+                  variant="outline"
+                >
+                  Coach Dashboard
+                </Button>
+              )}
+            </div>
+          );
+        case 'invalid_user':
+          return (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button 
+                onClick={() => window.location.href = '/auth/login'} 
+                variant="poker"
+              >
+                Sign In
+              </Button>
+              <Button onClick={onBack} variant="outline">
+                Go Back
+              </Button>
+            </div>
+          );
+        default:
+          return (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button onClick={() => loadSessionData()} variant="poker">
+                Try Again
+              </Button>
+              <Button onClick={onBack} variant="outline">
+                Go Back
+              </Button>
+            </div>
+          );
+      }
+    };
+
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -283,21 +491,62 @@ export const SessionView: React.FC<SessionViewProps> = ({
           </header>
           
           <div className="text-center py-12">
-            <Icon name="AlertCircle" className="mx-auto mb-4 h-12 w-12 text-red-500" />
+            <Icon name={getErrorIcon(error.type)} className="mx-auto mb-4 h-12 w-12 text-red-500" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {error || 'Session not found'}
+              {error.message}
             </h2>
-            <p className="text-gray-600 mb-6">
-              The session data could not be loaded or does not exist.
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              {error.details}
             </p>
-            <Button onClick={onBack} variant="poker">
-              Go Back
-            </Button>
+            
+            {/* Debug info for development */}
+            {process.env.NODE_ENV === 'development' && (
+              <Alert className="mb-6 max-w-md mx-auto text-left">
+                <AlertTitle>Debug Info</AlertTitle>
+                <AlertDescription className="text-xs font-mono">
+                  Session ID: {sessionId}<br />
+                  Mode: {mode}<br />
+                  Student ID: {studentId || 'N/A'}<br />
+                  User ID: {user?.id || 'N/A'}<br />
+                  Error Type: {error.type}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {getErrorActions(error.type)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto max-w-4xl px-4 py-8">
+          <div className="text-center py-12">
+            <Icon name="Loader" className="mx-auto mb-4 h-8 w-8 animate-spin text-poker-feltGreen" />
+            <p className="text-gray-600">Loading session data...</p>
           </div>
         </div>
       </div>
     );
   }
+
+  if (errorState) {
+    return renderErrorState(errorState);
+  }
+
+  if (!sessionData) {
+    return renderErrorState({
+      type: 'unknown',
+      message: 'Unexpected error',
+      details: 'Session data is not available'
+    });
+  }
+
+  // Convert SessionHand[] to HandData[] for HandManagementPanel
+  const handDataForPanel = convertSessionHandsToHandData(sessionHands);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -427,7 +676,7 @@ export const SessionView: React.FC<SessionViewProps> = ({
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Icon name="Grid" />
+                  <Icon name="Layers" />
                   <span>Tables ({sessionTables.length})</span>
                 </CardTitle>
               </CardHeader>
@@ -516,7 +765,7 @@ export const SessionView: React.FC<SessionViewProps> = ({
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Icon name="Cards" />
+                  <Icon name="Spade" />
                   <span>Notable Hands ({sessionHands.length})</span>
                 </CardTitle>
               </CardHeader>
@@ -631,7 +880,7 @@ export const SessionView: React.FC<SessionViewProps> = ({
             <div className="bg-white rounded-lg shadow-md p-6">
               <HandManagementPanel 
                 sessionId={sessionId} 
-                hands={sessionHands}
+                hands={handDataForPanel}
               />
             </div>
           )}
