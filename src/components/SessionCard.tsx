@@ -112,7 +112,7 @@ export default function SessionCard({ session }: SessionCardProps) {
         </div>
       )}
 
-      {/* Performance insights badges - always shown */}
+      {/* Performance insights badges - always shown with fixed calculation */}
       <SessionStatsDisplay
         tables={stats.tables}
         hands={stats.hands}

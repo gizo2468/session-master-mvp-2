@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { PokerSession } from '@/types/poker';
@@ -33,25 +34,32 @@ export const useSessionStats = (sessionId: string, session?: PokerSession) => {
           let totalBuyIns = 0;
           let totalPayout = 0;
 
-          // Calculate from session tables
+          // Calculate from session tables - fix double counting
           session.tables.forEach(table => {
+            // Buy-ins: sum of buy_in + rebuys per table (counted once only)
             totalBuyIns += (table.buyIn || 0);
+            if (table.rebuys && table.rebuys > 0) {
+              // Assuming rebuyAmount is the total rebuy amount, not per rebuy
+              totalBuyIns += (table.rebuyAmount || 0);
+            }
+            
+            // Payout: sum of regular cashout + bounty collected for tournaments
             totalPayout += (table.cashOut || 0);
+            if (session.format === 'Tournament' && table.bountyAmount && table.bountyCount) {
+              totalPayout += (table.bountyAmount * table.bountyCount);
+            }
+            
             if (table.hands) {
               hands += table.hands.length;
             }
           });
 
-          // Add session-level hands if they exist
+          // Add session-level hands if they exist (but don't double count buy-ins/payouts)
           if (session.hands) {
             hands += session.hands.length;
           }
 
-          // Add session-level buy-in and cashout
-          totalBuyIns += (session.buyIn || 0);
-          totalPayout += (session.cashOut || 0);
-
-          console.log('Local stats calculated:', { tables, hands, totalBuyIns, totalPayout });
+          console.log('Local stats calculated (fixed):', { tables, hands, totalBuyIns, totalPayout });
 
           setStats({ tables, hands, totalBuyIns, totalPayout });
           setLoading(false);
@@ -61,10 +69,10 @@ export const useSessionStats = (sessionId: string, session?: PokerSession) => {
         // Otherwise, try to fetch from Supabase
         console.log('Fetching session stats from Supabase for sessionId:', sessionId);
 
-        // Fetch table stats
+        // Fetch table stats from Supabase
         const { data: tablesData, error: tablesError } = await supabase
           .from('session_tables')
-          .select('buy_in, rebuy_amount, cashout')
+          .select('buy_in, rebuy_amount, cashout, bounty_amount, players_eliminated, game_format')
           .eq('session_id', sessionId);
 
         console.log('Supabase tables data:', tablesData);
@@ -72,7 +80,6 @@ export const useSessionStats = (sessionId: string, session?: PokerSession) => {
 
         if (tablesError) {
           console.error('Error fetching table stats:', tablesError);
-          // Don't return, continue with 0 values
         }
 
         // Fetch hands count
@@ -86,18 +93,29 @@ export const useSessionStats = (sessionId: string, session?: PokerSession) => {
 
         if (handsError) {
           console.error('Error fetching hands count:', handsError);
-          // Don't return, continue with 0 values
         }
 
-        // Calculate totals from Supabase data
+        // Calculate totals from Supabase data (with fixed logic)
         const tables = tablesData?.length || 0;
         const hands = handsCount || 0;
-        const totalBuyIns = tablesData?.reduce((sum, table) => 
-          sum + (table.buy_in || 0) + (table.rebuy_amount || 0), 0) || 0;
-        const totalPayout = tablesData?.reduce((sum, table) => 
-          sum + (table.cashout || 0), 0) || 0;
+        
+        let totalBuyIns = 0;
+        let totalPayout = 0;
+        
+        if (tablesData) {
+          tablesData.forEach(table => {
+            // Buy-ins: sum of buy_in + rebuy_amount per table
+            totalBuyIns += (table.buy_in || 0) + (table.rebuy_amount || 0);
+            
+            // Payout: sum of cashout + bounty earnings for tournaments
+            totalPayout += (table.cashout || 0);
+            if (table.game_format === 'Tournament' && table.bounty_amount && table.players_eliminated) {
+              totalPayout += (table.bounty_amount * table.players_eliminated);
+            }
+          });
+        }
 
-        console.log('Supabase stats calculated:', { tables, hands, totalBuyIns, totalPayout });
+        console.log('Supabase stats calculated (fixed):', { tables, hands, totalBuyIns, totalPayout });
 
         setStats({
           tables,
