@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/Lucide';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/AuthContext';
 
 interface SessionStats {
   totalSessions: number;
@@ -15,10 +14,8 @@ interface SessionStats {
 }
 
 export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
-  const { user } = useAuth();
   const [stats, setStats] = useState<SessionStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadSessionStats();
@@ -27,34 +24,8 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
   const loadSessionStats = async () => {
     try {
       setLoading(true);
-      setError(null);
       
       console.log('📊 Loading session stats for student:', studentId);
-      console.log('📊 Current coach user:', user?.id);
-      
-      // Verify we have the necessary data
-      if (!studentId || !user?.id) {
-        console.error('❌ Missing required data for stats:', { studentId, userId: user?.id });
-        setError('Missing required data');
-        return;
-      }
-
-      // Verify the coach-student relationship
-      const { data: connection, error: connectionError } = await supabase
-        .from('coach_student_connections')
-        .select('id')
-        .eq('coach_id', user.id)
-        .eq('student_id', studentId)
-        .eq('approved', true)
-        .single();
-
-      if (connectionError || !connection) {
-        console.error('❌ No valid coach-student connection found for stats:', connectionError);
-        setError('No valid coaching relationship found');
-        return;
-      }
-
-      console.log('✅ Valid coach-student connection verified for stats:', connection);
       
       const { data: sessions, error } = await supabase
         .from('sessions')
@@ -63,14 +34,10 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
 
       if (error) {
         console.error('❌ Error loading session stats:', error);
-        setError('Failed to load session statistics');
         return;
       }
 
-      console.log('📊 Raw sessions data for stats:', sessions);
-
       if (!sessions || sessions.length === 0) {
-        console.log('ℹ️ No sessions found for stats calculation');
         setStats({
           totalSessions: 0,
           totalHours: 0,
@@ -109,20 +76,16 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
         ? Object.entries(gameTypeCounts).sort(([,a], [,b]) => b - a)[0][0]
         : null;
 
-      const calculatedStats = {
+      setStats({
         totalSessions,
         totalHours,
         lastSessionDate: lastSession ? lastSession.start_time : null,
         averageSessionLength,
         mostPlayedGameType
-      };
-
-      console.log('📊 Calculated stats:', calculatedStats);
-      setStats(calculatedStats);
+      });
       
     } catch (error) {
       console.error('❌ Error in loadSessionStats:', error);
-      setError('Failed to calculate session statistics');
     } finally {
       setLoading(false);
     }
@@ -135,25 +98,6 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
           <div className="text-center text-gray-500">
             <Icon name="Loader" className="mx-auto mb-2 h-6 w-6 animate-spin" />
             <p className="text-sm">Loading stats...</p>
-            <p className="text-xs mt-1">Calculating real session statistics...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="py-6">
-          <div className="text-center text-red-500">
-            <Icon name="AlertCircle" className="mx-auto mb-2 h-6 w-6" />
-            <p className="text-sm">{error}</p>
-            <div className="text-xs mt-2 p-2 bg-red-50 rounded">
-              <p>Debug Info:</p>
-              <p>Student ID: {studentId}</p>
-              <p>Coach ID: {user?.id}</p>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -170,9 +114,6 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
         <CardTitle className="text-lg flex items-center gap-2">
           <Icon name="BarChart3" size={18} />
           <span>Session Overview</span>
-          <Badge className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
-            Real Data
-          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -208,13 +149,6 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
             </div>
           </div>
         )}
-
-        {/* Debug info for development */}
-        <div className="text-xs text-gray-500 mt-2 p-2 bg-blue-50 rounded">
-          <p>✅ Real statistics calculated from {stats.totalSessions} sessions</p>
-          <p>Student ID: {studentId}</p>
-          <p>Coach ID: {user?.id}</p>
-        </div>
       </CardContent>
     </Card>
   );

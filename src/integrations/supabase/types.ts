@@ -51,72 +51,6 @@ export type Database = {
           },
         ]
       }
-      coach_to_hand_reviews: {
-        Row: {
-          coach_id: string
-          created_at: string | null
-          hand_id: string
-          id: string
-          message: string
-          session_id: string
-          student_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          coach_id: string
-          created_at?: string | null
-          hand_id: string
-          id?: string
-          message: string
-          session_id: string
-          student_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          coach_id?: string
-          created_at?: string | null
-          hand_id?: string
-          id?: string
-          message?: string
-          session_id?: string
-          student_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      coach_to_table_reviews: {
-        Row: {
-          coach_id: string
-          created_at: string | null
-          id: string
-          message: string
-          session_id: string
-          student_id: string
-          table_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          coach_id: string
-          created_at?: string | null
-          id?: string
-          message: string
-          session_id: string
-          student_id: string
-          table_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          coach_id?: string
-          created_at?: string | null
-          id?: string
-          message?: string
-          session_id?: string
-          student_id?: string
-          table_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       donation_logs: {
         Row: {
           clicked_at: string
@@ -207,7 +141,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          bio: string | null
           coach_tier: string | null
           connection_code: string | null
           created_at: string
@@ -228,7 +161,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          bio?: string | null
           coach_tier?: string | null
           connection_code?: string | null
           created_at?: string
@@ -249,7 +181,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          bio?: string | null
           coach_tier?: string | null
           connection_code?: string | null
           created_at?: string
@@ -618,10 +549,6 @@ export type Database = {
       generate_connection_code: {
         Args: Record<PropertyKey, never>
         Returns: string
-      }
-      is_coach_for_student: {
-        Args: { coach_user_id: string; student_user_id: string }
-        Returns: boolean
       }
       update_terms_acceptance: {
         Args: { user_id: string; accepted: boolean }
