@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format, differenceInMinutes, differenceInHours } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import { TableReviewForm } from '@/components/coaching/TableReviewForm';
 import { HandReviewForm } from '@/components/coaching/HandReviewForm';
 import { ReviewsList } from '@/components/coaching/ReviewsList';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 import { HandData } from '@/types/poker';
 
 interface SessionData {
@@ -140,6 +142,7 @@ export const SessionView: React.FC<SessionViewProps> = ({
   const [showHandReview, setShowHandReview] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [selectedHandId, setSelectedHandId] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadSessionData();
@@ -187,27 +190,43 @@ export const SessionView: React.FC<SessionViewProps> = ({
       setLoading(true);
       setError(null);
       
-      const targetUserId = studentId || sessionData?.user_id;
+      // Determine the correct user ID based on mode
+      let targetUserId: string;
+      if (mode === 'coach' && studentId) {
+        targetUserId = studentId;
+        console.log('🔍 Coach mode: Loading session for student ID:', studentId);
+      } else if (mode === 'student' && user?.id) {
+        targetUserId = user.id;
+        console.log('🔍 Student mode: Loading session for user ID:', user.id);
+      } else {
+        console.error('❌ No valid user ID available:', { mode, studentId, userId: user?.id });
+        setError('No valid user ID available');
+        return;
+      }
+      
+      console.log('🔍 Loading session data:', { sessionId, targetUserId, mode });
       
       // Load basic session info
       const { data: session, error: sessionError } = await supabase
         .from('sessions')
         .select('*')
         .eq('id', sessionId)
-        .eq('user_id', targetUserId || '')
+        .eq('user_id', targetUserId)
         .single();
 
       if (sessionError) {
-        console.error('Error loading session:', sessionError);
+        console.error('❌ Error loading session:', sessionError);
         setError('Failed to load session data');
         return;
       }
 
       if (!session) {
+        console.error('❌ Session not found for:', { sessionId, targetUserId });
         setError('Session not found');
         return;
       }
 
+      console.log('✅ Session loaded successfully:', session);
       setSessionData(session);
 
       // Load session tables
@@ -219,6 +238,9 @@ export const SessionView: React.FC<SessionViewProps> = ({
 
       if (!tablesError) {
         setSessionTables(tables || []);
+        console.log('✅ Tables loaded:', tables?.length || 0);
+      } else {
+        console.error('❌ Error loading tables:', tablesError);
       }
 
       // Load session hands
@@ -230,6 +252,9 @@ export const SessionView: React.FC<SessionViewProps> = ({
 
       if (!handsError) {
         setSessionHands(hands || []);
+        console.log('✅ Hands loaded:', hands?.length || 0);
+      } else {
+        console.error('❌ Error loading hands:', handsError);
       }
 
       // Load session results
@@ -241,10 +266,13 @@ export const SessionView: React.FC<SessionViewProps> = ({
 
       if (!resultsError && results) {
         setSessionResults(results);
+        console.log('✅ Results loaded:', results);
+      } else if (resultsError && resultsError.code !== 'PGRST116') {
+        console.error('❌ Error loading results:', resultsError);
       }
       
     } catch (error) {
-      console.error('Error in loadSessionData:', error);
+      console.error('❌ Error in loadSessionData:', error);
       setError('Failed to load session data');
     } finally {
       setLoading(false);
