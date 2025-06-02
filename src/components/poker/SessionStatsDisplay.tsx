@@ -26,17 +26,27 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
     );
   }
 
-  // Always show the stats bar - no hiding logic
   return (
     <div className="mt-3 pt-3 border-t border-gray-100">
-      <div className="bg-gray-50 text-sm px-3 py-2 rounded-md flex items-center justify-between">
-        <span className="text-yellow-600 font-medium">Tables: {tables}</span>
-        <span className="text-gray-400">|</span>
-        <span className="text-blue-600 font-medium">Hands: {hands}</span>
-        <span className="text-gray-400">|</span>
-        <span className="text-red-600 font-medium">Buy-ins: ${totalBuyIns.toFixed(0)}</span>
-        <span className="text-gray-400">|</span>
-        <span className="text-green-600 font-medium">Payout: ${totalPayout.toFixed(0)}</span>
+      <div className="bg-gray-50 px-3 py-2 rounded-md">
+        <div className="grid grid-cols-4 gap-2 text-sm">
+          <div className="text-center">
+            <span className="text-yellow-700 font-medium">Tables</span>
+            <div className="text-gray-800 font-semibold">{tables}</div>
+          </div>
+          <div className="text-center">
+            <span className="text-blue-700 font-medium">Hands</span>
+            <div className="text-gray-800 font-semibold">{hands}</div>
+          </div>
+          <div className="text-center">
+            <span className="text-red-700 font-medium">Buy-ins</span>
+            <div className="text-gray-800 font-semibold">${totalBuyIns.toFixed(0)}</div>
+          </div>
+          <div className="text-center">
+            <span className="text-green-700 font-medium">Payout</span>
+            <div className="text-gray-800 font-semibold">${totalPayout.toFixed(0)}</div>
+          </div>
+        </div>
       </div>
     </div>
   );

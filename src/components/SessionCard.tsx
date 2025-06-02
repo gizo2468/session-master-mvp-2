@@ -1,7 +1,7 @@
+
 import { PokerSession, TableData } from '@/types/poker';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import TableCountBubble from './poker/TableCountBubble';
 import SessionStatsDisplay from './poker/SessionStatsDisplay';
 import { useSessionStats } from '@/hooks/useSessionStats';
 
@@ -40,16 +40,9 @@ export default function SessionCard({ session }: SessionCardProps) {
     }
   };
 
-  // Table summary bubble logic (matching session format only)
-  let tableCount = 0;
+  // Count multi-day tournaments for display
   let multiDayCount = 0;
   if (session.tables && session.tables.length > 0) {
-    // Always count ALL tables that match the original format (not just after-the-fact)
-    tableCount = session.tables.filter(
-      (table: TableData) => table.format === session.format
-    ).length;
-    
-    // Count multi-day tournaments
     multiDayCount = session.tables.filter(
       (table: TableData) => table.isMultiDay && table.dayEndedWithoutElimination
     ).length;
@@ -65,14 +58,8 @@ export default function SessionCard({ session }: SessionCardProps) {
     >
       <div className="flex justify-between items-start mb-2">
         <div>
-          <h3 className="font-extrabold text-lg tracking-tight flex items-center">
+          <h3 className="font-extrabold text-lg tracking-tight">
             {session.location}
-            {tableCount > 0 && (session.format === "Cash" || session.format === "Tournament") && (
-              <TableCountBubble
-                format={session.format === "Cash" ? "Cash" : "Tournament"}
-                count={tableCount}
-              />
-            )}
           </h3>
           <p className="text-gray-500 text-sm">{timeAgo}</p>
           
