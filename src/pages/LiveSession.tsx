@@ -408,7 +408,7 @@ export default function LiveSession() {
                   </div>
                 )}
                 
-                <CompletedTablesDisplay tables={inactiveTables} />
+                <CompletedTablesDisplay tables={inactiveTables} sessionId={session.id} />
               </div>
             )}
           </div>

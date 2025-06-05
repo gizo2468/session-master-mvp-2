@@ -48,6 +48,7 @@ interface SessionContextType {
   ) => void;
   addTableRebuy: (sessionId: string, tableId: string, amount: number) => void;
   getTableById: (sessionId: string, tableId: string) => TableData | undefined;
+  deleteTable: (sessionId: string, tableId: string) => void;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -822,6 +823,24 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return undefined;
   };
 
+  const deleteTable = (sessionId: string, tableId: string) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session && session.tables) {
+      const tableToDelete = session.tables.find(t => t.id === tableId);
+      if (tableToDelete) {
+        const updatedTables = session.tables.filter(table => table.id !== tableId);
+        
+        const updatedSession = {
+          ...session,
+          tables: updatedTables,
+          buyIn: session.buyIn - tableToDelete.buyIn
+        };
+        
+        updateSession(updatedSession);
+      }
+    }
+  };
+
   // Only render children after initialization to prevent context usage before setup
   if (!isInitialized) {
     return null;
@@ -856,6 +875,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         endTable,
         addTableRebuy,
         getTableById,
+        deleteTable,
       }}
     >
       {children}

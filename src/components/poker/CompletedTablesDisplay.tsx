@@ -1,38 +1,92 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import TableTimerDisplay from '@/components/poker/TableTimerDisplay';
 import { TableData } from '@/types/poker';
+import { Button } from '@/components/ui/button';
+import { Pencil, Trash2 } from 'lucide-react';
+import EditTableForm from './EditTableForm';
+import { useSessionContext } from '@/context/SessionContext';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
 
 interface CompletedTablesDisplayProps {
   tables: TableData[];
+  sessionId: string;
 }
 
-export default function CompletedTablesDisplay({ tables }: CompletedTablesDisplayProps) {
+export default function CompletedTablesDisplay({ tables, sessionId }: CompletedTablesDisplayProps) {
+  const { updateTable, deleteTable } = useSessionContext();
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [tableToDelete, setTableToDelete] = useState<TableData | null>(null);
+
   if (tables.length === 0) return null;
+
+  const handleEditTable = (table: TableData) => {
+    setSelectedTable(table);
+    setShowEditForm(true);
+  };
+
+  const handleSaveTable = (updatedTable: TableData) => {
+    updateTable(sessionId, updatedTable);
+    setShowEditForm(false);
+    setSelectedTable(null);
+  };
+
+  const handleDeleteTable = (table: TableData) => {
+    setTableToDelete(table);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (tableToDelete && deleteTable) {
+      deleteTable(sessionId, tableToDelete.id);
+      setShowDeleteConfirm(false);
+      setTableToDelete(null);
+    }
+  };
 
   return (
     <div>
       <h4 className="text-lg font-bold mb-2">Completed Tables</h4>
       <div className="space-y-4">
         {tables.map((table) => {
-          // COMPLETELY REBUILT: New Total Payout Logic
-          // Calculate as Buy-in + Profit/Loss, ensuring never negative
           const profitLoss = (table.cashOut ?? 0) - table.buyIn;
           const newTotalPayout = Math.max(table.buyIn + profitLoss, table.buyIn);
-          
-          console.log('CompletedTablesDisplay - REBUILT Total Payout Logic for table:', table.id);
-          console.log('CompletedTablesDisplay - buyIn:', table.buyIn);
-          console.log('CompletedTablesDisplay - cashOut:', table.cashOut);
-          console.log('CompletedTablesDisplay - profitLoss:', profitLoss);
-          console.log('CompletedTablesDisplay - newTotalPayout (buyIn + profitLoss, min buyIn):', newTotalPayout);
           
           return (
             <div 
               key={table.id} 
-              className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+              className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative"
             >
-              <div className="flex justify-between items-start mb-2">
+              {/* Edit and Delete Buttons */}
+              <div className="absolute top-2 right-2 flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 hover:bg-white"
+                  onClick={() => handleEditTable(table)}
+                >
+                  <Pencil className="h-4 w-4 text-gray-600" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                  onClick={() => handleDeleteTable(table)}
+                >
+                  <Trash2 className="h-4 w-4 text-gray-600" />
+                </Button>
+              </div>
+
+              <div className="flex justify-between items-start mb-2 pr-16">
                 <div>
                   <h3 className="font-bold">{table.name || table.location}</h3>
                   <p className="text-xs text-gray-500 font-semibold mt-0.5">{table.location}</p>
@@ -205,6 +259,38 @@ export default function CompletedTablesDisplay({ tables }: CompletedTablesDispla
           );
         })}
       </div>
+
+      {/* Edit Table Form */}
+      {selectedTable && (
+        <EditTableForm
+          open={showEditForm}
+          onOpenChange={setShowEditForm}
+          table={selectedTable}
+          onSave={handleSaveTable}
+          onDelete={() => handleDeleteTable(selectedTable)}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Table</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{tableToDelete?.name || tableToDelete?.location}"? 
+              This action cannot be undone and will remove all associated hand data.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

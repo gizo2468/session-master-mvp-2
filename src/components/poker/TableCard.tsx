@@ -18,7 +18,8 @@ import TableTimerDisplay from './TableTimerDisplay';
 import { Badge } from '@/components/ui/badge';
 import HandManagementPanel from './HandManagementPanel';
 import { useSessionContext } from '@/context/SessionContext';
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
+import EditTableForm from './EditTableForm';
 
 interface TableCardProps {
   table: TableData;
@@ -28,7 +29,9 @@ interface TableCardProps {
 }
 
 const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, sessionId }) => {
+  const { updateTable, deleteTable } = useSessionContext();
   const [showEndTableDialog, setShowEndTableDialog] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [cashOutAmount, setCashOutAmount] = useState('');
   const [tableNotes, setTableNotes] = useState(table.notes || '');
   const [showRebuyDialog, setShowRebuyDialog] = useState(false);
@@ -51,7 +54,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
   const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
   const rebuyCount = Math.floor(rebuyAmount / (table.initialBuyIn || table.buyIn || 1));
 
-  // Fixed isBountyTournament check to properly identify all bounty tournament types
   const isBountyTournament = table.format === 'Tournament' && 
     table.tournamentTypes?.some(type => 
       ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
@@ -60,8 +62,17 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
   const isFreezeout = table.format === 'Tournament' && 
     table.tournamentTypes?.some(type => type === 'Freezeout');
 
+  const handleEditTable = (updatedTable: TableData) => {
+    updateTable(sessionId, updatedTable);
+  };
+
+  const handleDeleteTable = (tableId: string) => {
+    if (deleteTable) {
+      deleteTable(sessionId, tableId);
+    }
+  };
+
   const handleEndTable = () => {
-    // FIXED: Ensure cashOut is ONLY the manually entered amount, no bounty addition
     const finalCashOut = endReason === 'day-ended' ? 0 : parseFloat(cashOutAmount);
     
     console.log('TableCard handleEndTable - cashOutAmount entered:', cashOutAmount);
@@ -70,11 +81,11 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
     
     onEndTable(
       table.id, 
-      finalCashOut, // This should be ONLY the user-entered total payout amount
+      finalCashOut,
       tableNotes,
       {
         bountyCount: bountyCount ? parseInt(bountyCount) : undefined,
-        bountyAmount: bountyAmount ? parseFloat(bountyAmount) : undefined, // Store separately for display
+        bountyAmount: bountyAmount ? parseFloat(bountyAmount) : undefined,
         finalPosition: finalPosition ? parseInt(finalPosition) : undefined
       },
       endReason === 'day-ended' ? {
@@ -116,8 +127,18 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
 
   return (
     <>
-      <Card className="bg-white p-4 mb-4">
-        <div className="text-center mb-2">
+      <Card className="bg-white p-4 mb-4 relative">
+        {/* Edit Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-gray-100"
+          onClick={() => setShowEditForm(true)}
+        >
+          <Pencil className="h-4 w-4 text-gray-600" />
+        </Button>
+
+        <div className="text-center mb-2 pr-8">
           <h3 className="text-xl font-bold">{table.location}</h3>
           <div className="flex items-center justify-center gap-2 text-base text-gray-600">
             <span>{table.gameType}</span>
@@ -169,7 +190,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
           )}
         </div>
 
-        {/* Multi-Day Tournament Continuation Info - Adding this section */}
         {table.isMultiDay && table.dayEndedWithoutElimination && (
           <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 pb-4 bg-green-50 rounded-md p-2">
             {table.nextDayStart && (
@@ -228,7 +248,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
             </div>
           )}
           
-          {/* Display Starting BBs for tournament tables (both active and completed) */}
           {table.format === 'Tournament' && table.startingBB && (
             <div className="flex justify-between">
               <span className="text-gray-600">Starting BBs:</span>
@@ -329,7 +348,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                 
                 {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
                   <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                    {/* FIXED: Total Payout uses ONLY cashOut, never adding bountyAmount */}
                     <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
                     <span className="font-bold text-2xl text-poker-gold">
                       ${(table.cashOut ?? 0).toFixed(2)}
@@ -350,17 +368,25 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
           </div>
         )}
         
-        {/* Show HandManagementPanel for both active AND completed tables */}
         <div className="mt-6 pt-4 border-t border-gray-100">
           <HandManagementPanel 
             sessionId={sessionId}
             tableId={table.id}
             tableFormat={table.format}
             hands={table.hands || []}
-            readOnly={!table.isActive} // Pass readOnly prop when table is completed
+            readOnly={!table.isActive}
           />
         </div>
       </Card>
+
+      {/* Edit Table Form */}
+      <EditTableForm
+        open={showEditForm}
+        onOpenChange={setShowEditForm}
+        table={table}
+        onSave={handleEditTable}
+        onDelete={table.isActive ? undefined : handleDeleteTable}
+      />
 
       <Dialog open={showEndTableDialog} onOpenChange={setShowEndTableDialog}>
         <DialogContent>
@@ -417,7 +443,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                   <p className="text-xs text-gray-500 mt-1">Enter the total amount you received (including all earnings)</p>
                 </div>
 
-                {/* Tournament-specific fields - always show final position for tournaments */}
                 {table.format === 'Tournament' && endReason !== 'day-ended' && (
                   <div>
                     <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
@@ -436,7 +461,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                   </div>
                 )}
 
-                {/* Bounty tournament fields - fixed the condition to always show for bounty tournaments */}
                 {isBountyTournament && endReason !== 'day-ended' && (
                   <>
                     <div>
@@ -599,7 +623,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
         </DialogContent>
       </Dialog>
 
-      {/* Updated Rebuy Dialog - Tournament vs Cash Game */}
       <Dialog open={showRebuyDialog} onOpenChange={setShowRebuyDialog}>
         <DialogContent className={table.format === 'Tournament' ? "max-w-sm" : ""}>
           <DialogHeader className={table.format === 'Tournament' ? "text-center" : ""}>
@@ -614,42 +637,28 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
           </DialogHeader>
           
           {table.format === 'Tournament' ? (
-            // Tournament rebuy - badge style confirmation
             <>
               <div className="flex flex-col items-center space-y-6 py-6">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-3">Rebuy Amount</p>
-                  <Badge variant="outline" className="px-6 py-3 text-2xl font-bold border-2 border-poker-gold text-poker-gold">
-                    ${parseFloat(rebuyDialogAmount).toFixed(2)}
-                  </Badge>
+                  <div className="text-4xl font-bold text-poker-gold mb-2">
+                    ${(table.tournamentBuyIn || table.initialBuyIn || table.buyIn).toFixed(2)}
+                  </div>
+                  <div className="text-sm text-gray-600">Tournament Rebuy Amount</div>
                 </div>
-                
-                <p className="text-center text-gray-700 font-medium">
-                  Do you want to rebuy for this amount?
-                </p>
               </div>
-              
-              <DialogFooter className="flex-col space-y-2 sm:flex-col sm:space-x-0 sm:space-y-2">
-                <Button
-                  onClick={handleAddRebuy}
-                  className="w-full bg-poker-gold hover:bg-poker-darkGold text-white"
-                >
-                  Yes, Rebuy
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowRebuyDialog(false)}
-                  className="w-full"
-                >
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setShowRebuyDialog(false)} className="flex-1">
                   Cancel
+                </Button>
+                <Button onClick={handleAddRebuy} className="flex-1 bg-poker-gold hover:bg-poker-darkGold text-white">
+                  Confirm Rebuy
                 </Button>
               </DialogFooter>
             </>
           ) : (
-            // Cash game rebuy - input field
             <>
               <div className="py-4">
-                <label htmlFor="rebuy-amount" className="text-sm font-medium mb-2 block">
+                <label htmlFor="rebuyAmount" className="block text-sm font-medium mb-2">
                   Rebuy Amount
                 </label>
                 <div className="relative">
@@ -657,27 +666,24 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                     <span className="text-gray-500">$</span>
                   </div>
                   <input
-                    id="rebuy-amount"
+                    id="rebuyAmount"
                     type="number"
-                    min="0.01"
+                    min="0"
                     step="0.01"
-                    placeholder="0.00"
                     className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    placeholder="0.00"
                     value={rebuyDialogAmount}
                     onChange={(e) => setRebuyDialogAmount(e.target.value)}
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowRebuyDialog(false)}
-                >
+                <Button variant="outline" onClick={() => setShowRebuyDialog(false)}>
                   Cancel
                 </Button>
-                <Button
+                <Button 
                   onClick={handleAddRebuy}
-                  disabled={!rebuyDialogAmount || parseFloat(rebuyDialogAmount) <= 0}
+                  disabled={!rebuyDialogAmount}
                   className="bg-poker-gold hover:bg-poker-darkGold text-white"
                 >
                   Add Rebuy
