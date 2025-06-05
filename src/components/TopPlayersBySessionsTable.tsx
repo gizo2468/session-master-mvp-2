@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 interface PlayerSessionSummary {
   full_name: string;
@@ -16,20 +17,32 @@ export default function TopPlayersBySessionsTable() {
   const [playerStats, setPlayerStats] = useState<PlayerSessionSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchTopPlayers = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
+        // Only fetch data if user is authenticated
+        if (!user) {
+          setPlayerStats([]);
+          setError('Please log in to view player statistics');
+          return;
+        }
+        
         const { data, error } = await supabase
           .from('session_summary_by_user')
           .select('*')
           .order('total_hours_played', { ascending: false });
         
         if (error) {
+          console.error('Supabase error:', error);
           throw error;
         }
         
+        console.log('Fetched player stats:', data);
         setPlayerStats(data || []);
       } catch (err) {
         console.error('Error fetching top players:', err);
@@ -40,7 +53,7 @@ export default function TopPlayersBySessionsTable() {
     };
 
     fetchTopPlayers();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (
@@ -66,6 +79,11 @@ export default function TopPlayersBySessionsTable() {
         <CardContent>
           <div className="p-4 text-center">
             <p className="text-red-500">{error}</p>
+            {!user && (
+              <p className="text-sm text-gray-500 mt-2">
+                Log in to view your session statistics
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -81,6 +99,9 @@ export default function TopPlayersBySessionsTable() {
         {playerStats.length === 0 ? (
           <div className="text-center p-4">
             <p>No session activity recorded yet</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Complete some sessions to see your statistics here
+            </p>
           </div>
         ) : (
           <Table>
