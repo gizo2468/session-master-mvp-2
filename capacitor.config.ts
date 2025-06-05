@@ -22,17 +22,11 @@ const config: CapacitorConfig = {
   plugins: {
     CapacitorHttp: {
       enabled: true
-    },
-    Keyboard: {
-      resize: 'ionic',
-      style: 'dark',
-      resizeOnFullScreen: true
     }
   },
+  // Add Supabase specific configuration
   ios: {
-    contentInset: 'automatic',
-    scrollEnabled: true,
-    allowsLinkPreview: false
+    contentInset: 'automatic'
   }
 };
 
