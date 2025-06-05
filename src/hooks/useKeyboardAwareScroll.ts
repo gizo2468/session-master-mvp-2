@@ -1,6 +1,5 @@
 
 import { useEffect, useCallback, useRef } from 'react';
-import { Keyboard, KeyboardInfo } from '@capacitor/keyboard';
 import { detectPlatform } from '@/utils/platformDetection';
 
 interface KeyboardAwareScrollOptions {
@@ -20,6 +19,7 @@ export const useKeyboardAwareScroll = (options: KeyboardAwareScrollOptions = {})
   const isMobile = platform === 'ios' || platform === 'android';
   const originalScrollPositions = useRef<Map<Element, number>>(new Map());
   const keyboardHeight = useRef(0);
+  const keyboardListeners = useRef<any[]>([]);
 
   const scrollElementIntoView = useCallback((element: HTMLElement) => {
     if (!enabled || !isMobile) return;
@@ -88,30 +88,34 @@ export const useKeyboardAwareScroll = (options: KeyboardAwareScrollOptions = {})
     }
   }, [restoreScrollPosition, animationDuration]);
 
-  useEffect(() => {
+  const setupKeyboardListeners = useCallback(async () => {
     if (!enabled || !isMobile) return;
 
-    let keyboardShowListener: any;
-    let keyboardHideListener: any;
+    try {
+      // Dynamically import Capacitor Keyboard plugin
+      const { Keyboard } = await import('@capacitor/keyboard');
+      
+      // Listen for keyboard show/hide events
+      const keyboardShowListener = await Keyboard.addListener('keyboardWillShow', (info: any) => {
+        keyboardHeight.current = info.keyboardHeight;
+        document.body.style.setProperty('--keyboard-height', `${info.keyboardHeight}px`);
+      });
 
-    const setupKeyboardListeners = async () => {
-      try {
-        // Listen for keyboard show/hide events
-        keyboardShowListener = await Keyboard.addListener('keyboardWillShow', (info: KeyboardInfo) => {
-          keyboardHeight.current = info.keyboardHeight;
-          document.body.style.setProperty('--keyboard-height', `${info.keyboardHeight}px`);
-        });
+      const keyboardHideListener = await Keyboard.addListener('keyboardWillHide', () => {
+        keyboardHeight.current = 0;
+        document.body.style.setProperty('--keyboard-height', '0px');
+      });
 
-        keyboardHideListener = await Keyboard.addListener('keyboardWillHide', () => {
-          keyboardHeight.current = 0;
-          document.body.style.setProperty('--keyboard-height', '0px');
-        });
-      } catch (error) {
-        console.log('Keyboard plugin not available, using fallback behavior');
-        // Fallback for web
-        keyboardHeight.current = window.innerHeight * 0.3; // Estimate 30% of screen height
-      }
-    };
+      keyboardListeners.current = [keyboardShowListener, keyboardHideListener];
+    } catch (error) {
+      console.log('Capacitor Keyboard plugin not available, using fallback behavior');
+      // Fallback for web or when Capacitor is not available
+      keyboardHeight.current = window.innerHeight * 0.3; // Estimate 30% of screen height
+    }
+  }, [enabled, isMobile]);
+
+  useEffect(() => {
+    if (!enabled || !isMobile) return;
 
     setupKeyboardListeners();
 
@@ -123,14 +127,15 @@ export const useKeyboardAwareScroll = (options: KeyboardAwareScrollOptions = {})
       document.removeEventListener('focusin', handleFocus, true);
       document.removeEventListener('focusout', handleBlur, true);
       
-      if (keyboardShowListener) {
-        keyboardShowListener.remove();
-      }
-      if (keyboardHideListener) {
-        keyboardHideListener.remove();
-      }
+      // Clean up keyboard listeners
+      keyboardListeners.current.forEach(listener => {
+        if (listener && typeof listener.remove === 'function') {
+          listener.remove();
+        }
+      });
+      keyboardListeners.current = [];
     };
-  }, [enabled, isMobile, handleFocus, handleBlur]);
+  }, [enabled, isMobile, handleFocus, handleBlur, setupKeyboardListeners]);
 
   return {
     scrollElementIntoView,
