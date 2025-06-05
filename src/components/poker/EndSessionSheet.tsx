@@ -33,8 +33,7 @@ export default function EndSessionSheet({
     if (!session?.tables) {
       return {
         tablesPlayed: 0,
-        tablesWon: 0,
-        tablesLost: 0,
+        itmRatio: { inMoney: 0, total: 0 },
         roi: 0
       };
     }
@@ -42,8 +41,7 @@ export default function EndSessionSheet({
     const completedTables = session.tables.filter(table => !table.isActive);
     const tablesPlayed = completedTables.length;
     
-    let tablesWon = 0;
-    let tablesLost = 0;
+    let tablesInMoney = 0;
     let totalTableBuyIn = 0;
     let totalTableCashOut = 0;
 
@@ -54,10 +52,8 @@ export default function EndSessionSheet({
       totalTableBuyIn += tableBuyIn;
       totalTableCashOut += tableCashOut;
       
-      if (tableCashOut > tableBuyIn) {
-        tablesWon++;
-      } else if (tableCashOut < tableBuyIn) {
-        tablesLost++;
+      if (tableCashOut > 0) {
+        tablesInMoney++;
       }
     });
 
@@ -70,8 +66,7 @@ export default function EndSessionSheet({
 
     return {
       tablesPlayed,
-      tablesWon,
-      tablesLost,
+      itmRatio: { inMoney: tablesInMoney, total: tablesPlayed },
       roi
     };
   }, [session, autoCashOutAmount]);
@@ -99,32 +94,24 @@ export default function EndSessionSheet({
         
         <div className="py-6">
           <div className="space-y-4">
-            {/* New Performance Summary Section */}
+            {/* New Badge-Based Performance Summary Section */}
             <div className="space-y-2">
               <h3 className="text-lg font-medium">Session Performance Summary</h3>
               <div className="bg-gray-50 p-4 rounded-md">
-                <Table>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="py-2 px-0 text-gray-500 font-medium">Tables Played</TableCell>
-                      <TableCell className="py-2 px-0 text-right font-bold">{performanceMetrics.tablesPlayed}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="py-2 px-0 text-gray-500 font-medium">Tables Won</TableCell>
-                      <TableCell className="py-2 px-0 text-right font-bold">{performanceMetrics.tablesWon}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="py-2 px-0 text-gray-500 font-medium">Tables Lost</TableCell>
-                      <TableCell className="py-2 px-0 text-right font-bold">{performanceMetrics.tablesLost}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="py-2 px-0 text-gray-500 font-medium">ROI</TableCell>
-                      <TableCell className={`py-2 px-0 text-right font-bold ${getRoiColor(performanceMetrics.roi)}`}>
-                        {formatRoi(performanceMetrics.roi)}
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary" className="text-sm font-medium px-3 py-1">
+                    Tables: {performanceMetrics.tablesPlayed}
+                  </Badge>
+                  <Badge variant="secondary" className="text-sm font-medium px-3 py-1">
+                    ITM Ratio: {performanceMetrics.itmRatio.inMoney}/{performanceMetrics.itmRatio.total}
+                  </Badge>
+                  <Badge 
+                    variant="secondary" 
+                    className={`text-sm font-medium px-3 py-1 ${getRoiColor(performanceMetrics.roi)}`}
+                  >
+                    ROI: {formatRoi(performanceMetrics.roi)}
+                  </Badge>
+                </div>
               </div>
             </div>
 
