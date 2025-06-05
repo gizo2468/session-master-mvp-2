@@ -38,6 +38,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   let totalPayouts = 0;
   const completedTables = tables.filter(table => !table.isActive && table.cashOut !== undefined);
   completedTables.forEach((table) => {
+    // Use only cashOut - do NOT add bountyAmount
     totalPayouts += table.cashOut || 0;
   });
   

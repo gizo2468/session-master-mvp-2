@@ -130,7 +130,7 @@ export default function SessionDetail() {
     return totalRebuys;
   };
   
-  // Calculate total cashout including bounties for tournaments
+  // Calculate total cashout - using ONLY cashOut, do NOT include bounties
   const calculateTotalCashout = () => {
     if (!session.tables || session.tables.length === 0) {
       return session.cashOut || 0;
@@ -138,13 +138,8 @@ export default function SessionDetail() {
     
     let totalCashout = 0;
     session.tables.forEach((table) => {
-      // Add regular cashout
+      // Add only regular cashout - do NOT add bounty earnings
       totalCashout += (table.cashOut || 0);
-      
-      // Add bounty earnings for tournaments - using bountyAmount directly since it should represent total bounty collected
-      if (session.format === 'Tournament' && table.bountyAmount) {
-        totalCashout += table.bountyAmount;
-      }
     });
     
     console.log('Session tables:', session.tables);
@@ -368,7 +363,7 @@ export default function SessionDetail() {
             {isCompleted && (
               <>
                 <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Cash out:</span>
+                  <span className="text-gray-500">Total Payout:</span>
                   <span className="font-medium">${totalCashout.toFixed(2)}</span>
                 </div>
                 

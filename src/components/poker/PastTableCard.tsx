@@ -24,8 +24,8 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
   const isMultiDayTable = table.isMultiDay && table.format === 'Tournament';
   const isContinuing = table.dayEndedWithoutElimination;
 
-  // Updated profit/loss calculation to include bounty amount - only for non-continuing tables
-  const profitLoss = isContinuing ? 0 : ((table.cashOut || 0) + (table.bountyAmount || 0)) - table.buyIn;
+  // Updated profit/loss calculation - use ONLY cashOut, do NOT add bountyAmount
+  const profitLoss = isContinuing ? 0 : (table.cashOut || 0) - table.buyIn;
   
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -183,15 +183,15 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                   {/* Only show cash out for non-continuing tournaments */}
                   {!isContinuing && (
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600 font-medium">Cash Out</span>
+                      <span className="text-sm text-gray-600 font-medium">Total Payout</span>
                       <span className="text-sm font-semibold">${(table.cashOut || 0).toFixed(2)}</span>
                     </div>
                   )}
-                  {/* Only show bounties for non-continuing tournaments */}
+                  {/* Only show bounties for non-continuing tournaments - display only, not included in totals */}
                   {!isContinuing && table.bountyAmount && table.bountyAmount > 0 && (
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600 font-medium">Bounties</span>
-                      <span className="text-sm font-semibold">${table.bountyAmount.toFixed(2)}</span>
+                      <span className="text-sm text-gray-600 font-medium">Bounty Payout (info only)</span>
+                      <span className="text-sm font-semibold text-gray-500">${table.bountyAmount.toFixed(2)}</span>
                     </div>
                   )}
                 </div>
