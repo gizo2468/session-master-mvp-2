@@ -3,12 +3,12 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
-import { SessionData } from '@/types/poker';
+import { PokerSession } from '@/types/poker';
 
 interface EndSessionSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  session: SessionData | null;
+  session: PokerSession | null;
   autoCashOutAmount: number;
   sessionNotes: string;
   onSessionNotesChange: (notes: string) => void;
@@ -24,6 +24,9 @@ export default function EndSessionSheet({
   onSessionNotesChange,
   onEndSession
 }: EndSessionSheetProps) {
+  // Calculate total buy-in from session and tables
+  const totalBuyIn = session ? session.buyIn : 0;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="center" className="max-w-md max-h-[85vh] overflow-auto">
@@ -45,17 +48,17 @@ export default function EndSessionSheet({
                 </div>
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-500">Buy In:</span>
-                  <span className="font-bold">${session?.buyIn.toFixed(2)}</span>
+                  <span className="font-bold">${totalBuyIn.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Profit/Loss:</span>
                   <span className={`font-bold ${
-                    autoCashOutAmount > (session?.buyIn || 0) 
+                    autoCashOutAmount > totalBuyIn 
                       ? 'text-green-600' 
                       : 'text-red-600'
                   }`}>
-                    {autoCashOutAmount > (session?.buyIn || 0) ? '+' : ''}
-                    ${(autoCashOutAmount - (session?.buyIn || 0)).toFixed(2)}
+                    {autoCashOutAmount > totalBuyIn ? '+' : ''}
+                    ${(autoCashOutAmount - totalBuyIn).toFixed(2)}
                   </span>
                 </div>
               </div>
