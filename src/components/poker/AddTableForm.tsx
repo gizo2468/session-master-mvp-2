@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ interface AddTableFormProps {
   onOpenChange: (open: boolean) => void;
   onAddTable: (tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
   fixedFormat?: 'Cash' | 'Tournament';
+  sessionFormat?: 'Cash' | 'Tournament'; // New prop to auto-select format
 }
 
 const TOURNAMENT_TYPES = [
@@ -32,10 +34,19 @@ const BLIND_PRESETS = {
   bigBlind: [0.5, 1, 2, 5, 10, 25, 50, 100, 200, 500, 1000]
 };
 
-const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTable, fixedFormat }) => {
-  const [format, setFormat] = useState<'Cash' | 'Tournament'>(fixedFormat || 'Cash');
+const AddTableForm: React.FC<AddTableFormProps> = ({ 
+  open, 
+  onOpenChange, 
+  onAddTable, 
+  fixedFormat,
+  sessionFormat 
+}) => {
+  // Auto-select format based on session format or use fixedFormat
+  const [format, setFormat] = useState<'Cash' | 'Tournament'>(
+    fixedFormat || sessionFormat || 'Cash'
+  );
   const [gameType, setGameType] = useState<'NLH' | 'PLO'>('NLH');
-  const [location, setLocation] = useState('');
+  const [tableName, setTableName] = useState(''); // Renamed from location
   const [buyIn, setBuyIn] = useState('');
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[smallBlindIndex]);
@@ -44,6 +55,13 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
   const [tournamentType, setTournamentType] = useState<string>('');
   const [isMultiDay, setIsMultiDay] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Auto-select format when sessionFormat changes
+  useEffect(() => {
+    if (!fixedFormat && sessionFormat) {
+      setFormat(sessionFormat);
+    }
+  }, [fixedFormat, sessionFormat]);
 
   useEffect(() => {
     if (fixedFormat) {
@@ -61,11 +79,6 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
   const validateForm = (): boolean => {
     // Clear previous validation error
     setValidationError(null);
-    
-    if (!location) {
-      setValidationError('Please enter a location');
-      return false;
-    }
     
     if (!buyIn) {
       setValidationError('Please enter a buy-in amount');
@@ -91,7 +104,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
     const tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'> = {
       format,
       gameType,
-      location,
+      location: tableName || `${format} Game`, // Use tableName or default to format
       buyIn: parseFloat(buyIn),
       initialBuyIn: parseFloat(buyIn),
       ...(format === 'Cash' && {
@@ -113,9 +126,9 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
   };
   
   const resetForm = () => {
-    setFormat(fixedFormat || 'Cash');
+    setFormat(fixedFormat || sessionFormat || 'Cash');
     setGameType('NLH');
-    setLocation('');
+    setTableName(''); // Reset tableName instead of location
     setBuyIn('');
     setSmallBlindIndex(2);
     setSmallBlind(BLIND_PRESETS.smallBlind[2]);
@@ -146,13 +159,12 @@ const AddTableForm: React.FC<AddTableFormProps> = ({ open, onOpenChange, onAddTa
         
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
+            <Label htmlFor="tableName">Table Name (Optional)</Label>
             <Input
-              id="location"
-              placeholder="Casino name or online site"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              required
+              id="tableName"
+              placeholder="Enter a custom table name (optional)"
+              value={tableName}
+              onChange={(e) => setTableName(e.target.value)}
             />
           </div>
 

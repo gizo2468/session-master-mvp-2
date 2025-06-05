@@ -454,6 +454,7 @@ export default function LiveSession() {
       <AddTableForm
         open={showAddTableForm}
         onOpenChange={setShowAddTableForm}
+        sessionFormat={session.format} // Pass session format to auto-select
         onAddTable={(tableData) => {
           handleAddTable(tableData);
         }}
