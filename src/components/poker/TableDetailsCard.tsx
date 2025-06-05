@@ -13,11 +13,12 @@ interface TableDetailsCardProps {
 }
 
 export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => {
-  // FIXED: Use ONLY cashOut for total payout - do NOT add bountyAmount
-  const totalPayout = table.cashOut ?? 0;
+  // COMPLETELY REWRITTEN: Use ONLY the raw cashOut value as manually entered
+  // No calculations, no additions, no derivations - just the pure entered value
+  const manuallyEnteredPayout = table.cashOut ?? 0;
   
-  // FIXED: Calculate profit based on total payout (cashOut only, not including bounty)
-  const profit = totalPayout - (table.buyIn ?? 0);
+  // Calculate profit based ONLY on the manually entered payout value
+  const profit = manuallyEnteredPayout - (table.buyIn ?? 0);
   const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
   const formattedStart = format(new Date(table.startTime), 'MMM d, h:mm a');
   const formattedEnd = table.endTime ? format(new Date(table.endTime), 'MMM d, h:mm a') : null;
@@ -35,9 +36,10 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
   // Check if this is a multi-day tournament that ended a day without elimination
   const isMultiDayContinuing = table.isMultiDay && table.dayEndedWithoutElimination;
 
-  console.log('TableDetailsCard - table.cashOut:', table.cashOut);
-  console.log('TableDetailsCard - table.bountyAmount:', table.bountyAmount);
-  console.log('TableDetailsCard - totalPayout (should be cashOut only):', totalPayout);
+  console.log('TableDetailsCard - REWRITTEN LOGIC');
+  console.log('TableDetailsCard - table.cashOut (raw manually entered value):', table.cashOut);
+  console.log('TableDetailsCard - table.bountyAmount (separate info only):', table.bountyAmount);
+  console.log('TableDetailsCard - manuallyEnteredPayout (what will be displayed):', manuallyEnteredPayout);
 
   return (
     <Card className="bg-white rounded-lg shadow mb-6">
@@ -195,12 +197,12 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           </div>
         )}
         
-        {/* FIXED: Total Payout display - using ONLY cashOut, not adding bountyAmount */}
+        {/* COMPLETELY REWRITTEN: Total Payout display - shows ONLY the raw manually entered value */}
         {table.cashOut !== undefined && !isMultiDayContinuing && (
           <div className="flex flex-col items-center justify-center mt-4 mb-2">
             <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
             <span className="font-bold text-2xl text-poker-gold">
-              ${totalPayout.toFixed(2)}
+              ${manuallyEnteredPayout.toFixed(2)}
             </span>
           </div>
         )}
