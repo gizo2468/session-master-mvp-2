@@ -64,6 +64,10 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
     // FIXED: Ensure cashOut is ONLY the manually entered amount, no bounty addition
     const finalCashOut = endReason === 'day-ended' ? 0 : parseFloat(cashOutAmount);
     
+    console.log('TableCard handleEndTable - cashOutAmount entered:', cashOutAmount);
+    console.log('TableCard handleEndTable - finalCashOut to be saved:', finalCashOut);
+    console.log('TableCard handleEndTable - bountyAmount entered (separate):', bountyAmount);
+    
     onEndTable(
       table.id, 
       finalCashOut, // This should be ONLY the user-entered total payout amount
@@ -325,7 +329,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                 
                 {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
                   <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                    {/* Total Payout (renamed from Regular Payout) */}
+                    {/* FIXED: Total Payout uses ONLY cashOut, never adding bountyAmount */}
                     <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
                     <span className="font-bold text-2xl text-poker-gold">
                       ${(table.cashOut ?? 0).toFixed(2)}
