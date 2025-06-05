@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -89,16 +88,14 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
               <Label>Game Type</Label>
               <Select 
                 value={formData.gameType} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, gameType: value }))}
+                onValueChange={(value: 'NLH' | 'PLO') => setFormData(prev => ({ ...prev, gameType: value }))}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="No Limit Hold'em">No Limit Hold'em</SelectItem>
-                  <SelectItem value="Pot Limit Omaha">Pot Limit Omaha</SelectItem>
-                  <SelectItem value="Limit Hold'em">Limit Hold'em</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="NLH">No Limit Hold'em</SelectItem>
+                  <SelectItem value="PLO">Pot Limit Omaha</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -424,7 +424,7 @@ export default function SessionDetail() {
             open={showEditTable}
             onOpenChange={setShowEditTable}
             table={selectedTable}
-            onUpdateTable={handleTableUpdate}
+            onSave={handleTableUpdate}
           />
         )}
 
