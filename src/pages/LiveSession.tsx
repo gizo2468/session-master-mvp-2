@@ -333,6 +333,12 @@ export default function LiveSession() {
     ? session.tables?.find(t => t.id === pendingEndTableId) 
     : null;
 
+  // Map session format to AddTableForm format
+  const getTableFormat = (sessionFormat: string): 'Cash' | 'Tournament' => {
+    if (sessionFormat.includes('Tournament')) return 'Tournament';
+    return 'Cash';
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white shadow-sm px-4 py-4 sticky top-0 z-10">
@@ -454,7 +460,7 @@ export default function LiveSession() {
       <AddTableForm
         open={showAddTableForm}
         onOpenChange={setShowAddTableForm}
-        sessionFormat={session.format} // Pass session format to auto-select
+        sessionFormat={getTableFormat(session.format)} // Convert session format to table format
         onAddTable={(tableData) => {
           handleAddTable(tableData);
         }}
