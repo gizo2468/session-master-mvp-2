@@ -29,7 +29,6 @@ const config: CapacitorConfig = {
       resizeOnFullScreen: true
     }
   },
-  // Add Supabase specific configuration
   ios: {
     contentInset: 'automatic'
   }

@@ -1,6 +1,5 @@
 
 import { useEffect, useRef, useCallback } from 'react';
-import { Keyboard } from '@capacitor/keyboard';
 import { detectPlatform } from '@/utils/platformDetection';
 
 interface KeyboardInfo {
@@ -66,13 +65,8 @@ export function useKeyboardAwareScroll() {
         // For web, assume standard mobile keyboard height
         scrollToElement(250);
       } else {
-        // For mobile platforms, try to get actual keyboard height
-        Keyboard.getResizeMode().then(() => {
-          // Use a reasonable default height for mobile keyboards
-          scrollToElement(300);
-        }).catch(() => {
-          scrollToElement(300);
-        });
+        // For mobile platforms, use a reasonable default height
+        scrollToElement(300);
       }
     }, 100);
   }, [scrollToElement, platform]);
@@ -89,9 +83,11 @@ export function useKeyboardAwareScroll() {
       let keyboardWillShowListener: any = null;
       let keyboardWillHideListener: any = null;
 
-      // Listen for keyboard events on mobile
-      const setupListeners = async () => {
+      // Dynamically import and setup Capacitor keyboard listeners
+      const setupCapacitorListeners = async () => {
         try {
+          const { Keyboard } = await import('@capacitor/keyboard');
+          
           keyboardWillShowListener = await Keyboard.addListener('keyboardWillShow', (info: any) => {
             setTimeout(() => {
               scrollToElement(info.keyboardHeight || 300);
@@ -102,11 +98,12 @@ export function useKeyboardAwareScroll() {
             restoreScroll();
           });
         } catch (error) {
-          console.log('Keyboard listeners not available:', error);
+          console.log('Capacitor Keyboard not available:', error);
+          // Fallback to basic behavior for non-Capacitor environments
         }
       };
 
-      setupListeners();
+      setupCapacitorListeners();
 
       return () => {
         if (keyboardWillShowListener) {
