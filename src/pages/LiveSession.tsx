@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
+import SessionStatsDisplay from '@/components/poker/SessionStatsDisplay';
+import { useSessionStats } from '@/hooks/useSessionStats';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TableData } from '@/types/poker';
 import TableCard from '@/components/poker/TableCard';
@@ -59,6 +61,9 @@ export default function LiveSession() {
   const session = id 
     ? sessions.find(s => s.id === id && s.isActive) 
     : activeSession;
+
+  // Add session stats calculation
+  const { stats, loading: statsLoading } = useSessionStats(session?.id || '', session);
   
   useEffect(() => {
     if (!session) {
@@ -376,6 +381,20 @@ export default function LiveSession() {
               location: session.tableName || session.location
             }}
           />
+          
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-extrabold tracking-tight">Session Summary</h3>
+            </div>
+            
+            <SessionStatsDisplay
+              tables={stats.tables}
+              hands={stats.hands}
+              totalBuyIns={stats.totalBuyIns}
+              totalPayout={stats.totalPayout}
+              loading={statsLoading}
+            />
+          </div>
           
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex justify-between items-center mb-4">
