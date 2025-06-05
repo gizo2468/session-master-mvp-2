@@ -7,12 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import { Badge } from "@/components/ui/badge"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
 interface DateTimePickerProps {
   date: Date | undefined
@@ -89,49 +85,58 @@ export function DateTimePicker({
             {date ? formatDateForBadge(date) : 'Not set'}
           </span>
         </Badge>
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="px-3"
-              disabled={disabled}
-            >
-              <CalendarIcon className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <div className="p-3 space-y-3">
+        <Button
+          variant="outline"
+          size="sm"
+          className="px-3"
+          disabled={disabled}
+          onClick={() => setIsOpen(true)}
+        >
+          <CalendarIcon className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetContent side="center" className="w-full max-w-md mx-auto">
+          <SheetHeader>
+            <SheetTitle>Select Date & Time</SheetTitle>
+          </SheetHeader>
+          
+          <div className="mt-6 space-y-6">
+            <div>
+              <Label className="text-sm font-medium mb-3 block">Date</Label>
               <Calendar
                 mode="single"
                 selected={date}
                 onSelect={handleDateSelect}
                 initialFocus
-                className="pointer-events-auto"
+                className="rounded-md border"
               />
-              <div className="border-t pt-3">
-                <Label htmlFor="time" className="text-sm font-medium">
-                  Time
-                </Label>
-                <Input
-                  id="time"
-                  type="time"
-                  value={timeValue}
-                  onChange={(e) => handleTimeChange(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <Button
-                size="sm"
-                className="w-full"
-                onClick={() => setIsOpen(false)}
-              >
-                Done
-              </Button>
             </div>
-          </PopoverContent>
-        </Popover>
-      </div>
+            
+            <div>
+              <Label htmlFor="time" className="text-sm font-medium mb-2 block">
+                Time
+              </Label>
+              <Input
+                id="time"
+                type="time"
+                value={timeValue}
+                onChange={(e) => handleTimeChange(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            
+            <Button
+              size="lg"
+              className="w-full"
+              onClick={() => setIsOpen(false)}
+            >
+              Done
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
