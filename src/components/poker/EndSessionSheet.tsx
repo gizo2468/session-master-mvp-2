@@ -72,9 +72,9 @@ export default function EndSessionSheet({
   }, [session, autoCashOutAmount]);
 
   const getRoiColor = (roi: number) => {
-    if (roi > 0) return 'text-green-600';
-    if (roi < 0) return 'text-red-600';
-    return 'text-gray-600';
+    if (roi > 0) return 'bg-green-100 text-green-900';
+    if (roi < 0) return 'bg-red-100 text-red-800';
+    return 'bg-gray-100 text-gray-800';
   };
 
   const formatRoi = (roi: number) => {
@@ -98,17 +98,14 @@ export default function EndSessionSheet({
             <div className="space-y-2">
               <h3 className="text-lg font-medium">Session Performance Summary</h3>
               <div className="bg-gray-50 p-4 rounded-md">
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary" className="text-sm font-medium px-3 py-1">
+                <div className="flex flex-wrap justify-center gap-3">
+                  <Badge className="text-base font-semibold px-4 py-2 bg-gray-100 text-gray-800 hover:bg-gray-200">
                     Tables: {performanceMetrics.tablesPlayed}
                   </Badge>
-                  <Badge variant="secondary" className="text-sm font-medium px-3 py-1">
+                  <Badge className="text-base font-semibold px-4 py-2 bg-gray-100 text-gray-800 hover:bg-gray-200">
                     ITM Ratio: {performanceMetrics.itmRatio.inMoney}/{performanceMetrics.itmRatio.total}
                   </Badge>
-                  <Badge 
-                    variant="secondary" 
-                    className={`text-sm font-medium px-3 py-1 ${getRoiColor(performanceMetrics.roi)}`}
-                  >
+                  <Badge className={`text-base font-semibold px-4 py-2 ${getRoiColor(performanceMetrics.roi)}`}>
                     ROI: {formatRoi(performanceMetrics.roi)}
                   </Badge>
                 </div>
