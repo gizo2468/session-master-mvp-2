@@ -16,7 +16,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
   // FIXED: Use ONLY cashOut for total payout - do NOT add bountyAmount
   const totalPayout = table.cashOut ?? 0;
   
-  // Calculate profit based on total payout (cashOut only, not including bounty)
+  // FIXED: Calculate profit based on total payout (cashOut only, not including bounty)
   const profit = totalPayout - (table.buyIn ?? 0);
   const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
   const formattedStart = format(new Date(table.startTime), 'MMM d, h:mm a');
@@ -34,6 +34,10 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
   
   // Check if this is a multi-day tournament that ended a day without elimination
   const isMultiDayContinuing = table.isMultiDay && table.dayEndedWithoutElimination;
+
+  console.log('TableDetailsCard - table.cashOut:', table.cashOut);
+  console.log('TableDetailsCard - table.bountyAmount:', table.bountyAmount);
+  console.log('TableDetailsCard - totalPayout (should be cashOut only):', totalPayout);
 
   return (
     <Card className="bg-white rounded-lg shadow mb-6">
@@ -169,7 +173,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
             )}
             {table.bountyAmount !== undefined && table.bountyAmount > 0 && (
               <div>
-                <span className="text-gray-500">Bounty Payout (info only):</span>
+                <span className="text-gray-500">Bounty Collected (info only):</span>
                 <div className="text-gray-600 font-medium">${table.bountyAmount.toFixed(2)}</div>
               </div>
             )}
