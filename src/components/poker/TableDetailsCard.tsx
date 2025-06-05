@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableData } from '@/types/poker';
@@ -12,20 +13,10 @@ interface TableDetailsCardProps {
 }
 
 export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => {
-  // Calculate total payout (sum of regular payout and bounty payout for bounty tournaments)
-  const totalPayout = (() => {
-    const isBountyTournament = table.tournamentTypes?.some(type => 
-      ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
-    );
-    
-    if (isBountyTournament && table.bountyAmount !== undefined) {
-      return (table.cashOut ?? 0) + table.bountyAmount;
-    }
-    
-    return table.cashOut ?? 0;
-  })();
+  // FIXED: Use ONLY cashOut for total payout - do NOT add bountyAmount
+  const totalPayout = table.cashOut ?? 0;
   
-  // Calculate profit based on total payout
+  // Calculate profit based on total payout (cashOut only, not including bounty)
   const profit = totalPayout - (table.buyIn ?? 0);
   const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
   const formattedStart = format(new Date(table.startTime), 'MMM d, h:mm a');
@@ -178,8 +169,8 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
             )}
             {table.bountyAmount !== undefined && table.bountyAmount > 0 && (
               <div>
-                <span className="text-gray-500">Bounty Payout:</span>
-                <div className="text-poker-gold font-medium">${table.bountyAmount.toFixed(2)}</div>
+                <span className="text-gray-500">Bounty Payout (info only):</span>
+                <div className="text-gray-600 font-medium">${table.bountyAmount.toFixed(2)}</div>
               </div>
             )}
           </div>
@@ -200,24 +191,13 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           </div>
         )}
         
-        {/* Repositioned Total Payout to be more prominent - DISPLAY REGULAR PAYOUT FIRST */}
+        {/* FIXED: Total Payout display - using ONLY cashOut, not adding bountyAmount */}
         {table.cashOut !== undefined && !isMultiDayContinuing && (
           <div className="flex flex-col items-center justify-center mt-4 mb-2">
-            {/* Regular Payout Line (new) */}
-            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REGULAR PAYOUT</span>
+            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
             <span className="font-bold text-2xl text-poker-gold">
-              ${(table.cashOut ?? 0).toFixed(2)}
+              ${totalPayout.toFixed(2)}
             </span>
-            
-            {/* Only show Total Payout as separate line if there's a bounty amount */}
-            {isBountyTournament && table.bountyAmount && table.bountyAmount > 0 && (
-              <>
-                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider mt-2">TOTAL PAYOUT</span>
-                <span className="font-bold text-2xl text-poker-gold">
-                  ${totalPayout.toFixed(2)}
-                </span>
-              </>
-            )}
           </div>
         )}
         
