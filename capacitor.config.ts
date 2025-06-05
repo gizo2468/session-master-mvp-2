@@ -17,14 +17,18 @@ const config: CapacitorConfig = {
       keystoreAliasPassword: undefined,
       releaseType: 'AAB'
     },
-    iconPath: 'public/lovable-uploads/f2365416-2998-43f2-a84a-393da76f67d4.png' 
+    iconPath: 'public/lovable-uploads/f2365416-2998-43f2-a84a-393da76f67d4.png'
   },
   plugins: {
     CapacitorHttp: {
       enabled: true
+    },
+    Keyboard: {
+      resize: 'ionic',
+      style: 'dark',
+      resizeOnFullScreen: true
     }
   },
-  // Add Supabase specific configuration
   ios: {
     contentInset: 'automatic'
   }
