@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>lucky-cards-tracker</title>
     <meta name="description" content="Lovable Generated Project" />
     <meta name="author" content="Lovable" />
@@ -21,6 +21,29 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+      /* CSS for keyboard-aware viewport handling */
+      html {
+        height: 100%;
+        height: -webkit-fill-available;
+      }
+      
+      body {
+        min-height: 100%;
+        min-height: -webkit-fill-available;
+      }
+      
+      /* Ensure smooth scrolling for keyboard adjustments */
+      html, body {
+        scroll-behavior: smooth;
+      }
+      
+      /* Prevent zoom on focus for better UX */
+      input, textarea, select {
+        font-size: 16px;
+      }
+    </style>
   </head>
 
   <body>
