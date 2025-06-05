@@ -233,6 +233,14 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
               <span className="font-medium">${table.smallBlind}/{table.bigBlind}</span>
             </div>
           )}
+          
+          {/* Display Starting BBs for active tournament tables */}
+          {table.format === 'Tournament' && table.startingBB && table.isActive && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Starting BBs:</span>
+              <span className="font-medium">{table.startingBB}BB</span>
+            </div>
+          )}
         </div>
 
         {table.isActive ? (
