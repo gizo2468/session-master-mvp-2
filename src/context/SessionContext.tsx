@@ -97,8 +97,9 @@ const findActiveSession = (sessions: PokerSession[]): PokerSession | null => {
 };
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [sessions, setSessions] = useState<PokerSession[]>(loadSessions);
-  const [activeSession, setActiveSession] = useState<PokerSession | null>(findActiveSession(loadSessions()));
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [sessions, setSessions] = useState<PokerSession[]>([]);
+  const [activeSession, setActiveSession] = useState<PokerSession | null>(null);
   const [showStorageWarning, setShowStorageWarning] = useState(false);
   const [filters, setFilters] = useState<SessionFilter>({
     gameType: 'All',
@@ -107,6 +108,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   });
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Initialize sessions on mount
+  useEffect(() => {
+    const loadedSessions = loadSessions();
+    setSessions(loadedSessions);
+    setActiveSession(findActiveSession(loadedSessions));
+    setIsInitialized(true);
+  }, []);
 
   const dismissStorageWarning = () => {
     setShowStorageWarning(false);
@@ -812,6 +821,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
     return undefined;
   };
+
+  // Only render children after initialization to prevent context usage before setup
+  if (!isInitialized) {
+    return null;
+  }
 
   return (
     <SessionContext.Provider
