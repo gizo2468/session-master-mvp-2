@@ -86,20 +86,35 @@ export function useKeyboardAwareScroll() {
 
   useEffect(() => {
     if (platform !== 'web') {
-      // Listen for keyboard events on mobile
-      const keyboardWillShow = Keyboard.addListener('keyboardWillShow', (info: any) => {
-        setTimeout(() => {
-          scrollToElement(info.keyboardHeight || 300);
-        }, 50);
-      });
+      let keyboardWillShowListener: any = null;
+      let keyboardWillHideListener: any = null;
 
-      const keyboardWillHide = Keyboard.addListener('keyboardWillHide', () => {
-        restoreScroll();
-      });
+      // Listen for keyboard events on mobile
+      const setupListeners = async () => {
+        try {
+          keyboardWillShowListener = await Keyboard.addListener('keyboardWillShow', (info: any) => {
+            setTimeout(() => {
+              scrollToElement(info.keyboardHeight || 300);
+            }, 50);
+          });
+
+          keyboardWillHideListener = await Keyboard.addListener('keyboardWillHide', () => {
+            restoreScroll();
+          });
+        } catch (error) {
+          console.log('Keyboard listeners not available:', error);
+        }
+      };
+
+      setupListeners();
 
       return () => {
-        keyboardWillShow.remove();
-        keyboardWillHide.remove();
+        if (keyboardWillShowListener) {
+          keyboardWillShowListener.remove();
+        }
+        if (keyboardWillHideListener) {
+          keyboardWillHideListener.remove();
+        }
       };
     }
   }, [scrollToElement, restoreScroll, platform]);
