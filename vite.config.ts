@@ -20,19 +20,4 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  build: {
-    rollupOptions: {
-      external: (id) => {
-        // Externalize Capacitor modules for web builds
-        if (id.includes('@capacitor/')) {
-          return false; // Don't externalize, include in bundle
-        }
-        return false;
-      }
-    }
-  },
-  define: {
-    // Define global constants for conditional compilation
-    __CAPACITOR__: JSON.stringify(process.env.CAPACITOR_PLATFORM || 'web')
-  }
 }));
