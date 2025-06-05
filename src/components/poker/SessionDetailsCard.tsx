@@ -34,28 +34,19 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   // Calculate total buy-in (initial + rebuys)
   const totalBuyIn = totalInitialBuyin + totalRebuyAmount;
   
-  // Calculate total payouts from all completed tables
+  // Calculate total payouts from all completed tables (regular cashOut only, no bounty)
   let totalPayouts = 0;
   const completedTables = tables.filter(table => !table.isActive && table.cashOut !== undefined);
   completedTables.forEach((table) => {
-    let tablePayout = table.cashOut || 0;
-    // Add bounty amount if it exists
-    if (table.bountyAmount) {
-      tablePayout += table.bountyAmount;
-    }
-    totalPayouts += tablePayout;
+    totalPayouts += table.cashOut || 0;
   });
   
-  // Calculate total profit/loss from all tables
+  // Calculate total profit/loss from all tables (excluding bounty amounts)
   let totalProfit = 0;
   if (tables.length > 0) {
     tables.forEach((table) => {
-      let tableProfit = (table.cashOut || 0) - table.buyIn;
-      // Add bounty amount to profit calculation if it exists
-      if (table.bountyAmount) {
-        tableProfit += table.bountyAmount;
-      }
-      totalProfit += tableProfit;
+      // Only use cashOut for profit calculation, not bounty amount
+      totalProfit += (table.cashOut || 0) - table.buyIn;
     });
   } else {
     // If there are no tables, use session's own profit calculation
@@ -123,7 +114,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               </Badge>
             )}
             
-            {/* New Total Buy-ins Badge */}
+            {/* Total Buy-ins Badge */}
             <Badge
               variant="outline"
               className="flex items-center gap-1 border-amber-400 bg-amber-50 text-amber-800 px-4 py-1.5 font-normal text-sm w-full mt-2 justify-center"
@@ -132,7 +123,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               <span className="font-bold text-amber-700 text-base">Total Buy-Ins: ${totalBuyIn.toFixed(2)}</span>
             </Badge>
             
-            {/* New Total Payouts Badge - only show if there are completed tables with payouts */}
+            {/* Total Payouts Badge - only show if there are completed tables with payouts */}
             {totalPayouts > 0 && (
               <Badge
                 variant="outline"

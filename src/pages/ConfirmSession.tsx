@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -294,7 +295,7 @@ export default function ConfirmSession() {
             <div className="py-6">
               <div className="mb-4">
                 <label htmlFor="cashout" className="block text-sm font-medium mb-1">
-                  Regular Payout
+                  Total Payout
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

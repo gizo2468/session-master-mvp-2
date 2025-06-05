@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,19 +60,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
     
   const isFreezeout = table.format === 'Tournament' && 
     table.tournamentTypes?.some(type => type === 'Freezeout');
-
-  // Calculate total payout for completed tables
-  const getTotalPayout = () => {
-    if (!table.isActive && table.cashOut !== undefined) {
-      if (isBountyTournament && table.bountyAmount) {
-        return table.cashOut + table.bountyAmount;
-      }
-      return table.cashOut;
-    }
-    return 0;
-  };
-
-  const totalPayout = getTotalPayout();
 
   const handleEndTable = () => {
     onEndTable(
@@ -234,8 +222,8 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
             </div>
           )}
           
-          {/* Display Starting BBs for active tournament tables */}
-          {table.format === 'Tournament' && table.startingBB && table.isActive && (
+          {/* Display Starting BBs for tournament tables (both active and completed) */}
+          {table.format === 'Tournament' && table.startingBB && (
             <div className="flex justify-between">
               <span className="text-gray-600">Starting BBs:</span>
               <span className="font-medium">{table.startingBB}BB</span>
@@ -283,12 +271,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
           <div className="mt-2 space-y-2">
             {table.format === 'Tournament' && (
               <div className="space-y-1 mt-2 text-xs">
-                {table.format === 'Tournament' && table.startingBB && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Starting BBs:</span>
-                    <span className="font-medium">{table.startingBB}BB</span>
-                  </div>
-                )}
                 {table.tournamentTypes?.[0] && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Tournament Type:</span>
@@ -341,21 +323,11 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                 
                 {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
                   <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                    {/* Regular Payout Line (new) */}
-                    <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REGULAR PAYOUT</span>
+                    {/* Total Payout (renamed from Regular Payout) */}
+                    <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
                     <span className="font-bold text-2xl text-poker-gold">
                       ${(table.cashOut ?? 0).toFixed(2)}
                     </span>
-                    
-                    {/* Only show Total Payout if there's a bounty amount */}
-                    {isBountyTournament && table.bountyAmount && table.bountyAmount > 0 && (
-                      <>
-                        <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider mt-2">TOTAL PAYOUT</span>
-                        <span className="font-bold text-2xl text-poker-gold">
-                          ${totalPayout.toFixed(2)}
-                        </span>
-                      </>
-                    )}
                   </div>
                 )}
               </div>
@@ -363,7 +335,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
             
             {table.format === 'Cash' && table.cashOut !== undefined && (
               <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REGULAR PAYOUT</span>
+                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
                 <span className="font-bold text-2xl text-poker-gold">
                   ${(table.cashOut ?? 0).toFixed(2)}
                 </span>
@@ -419,7 +391,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
               <div className="space-y-4">
                 <div>
                   <label htmlFor="tableCashout" className="block text-sm font-medium mb-1">
-                    Regular Payout
+                    Total Payout
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -503,19 +475,14 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                     <div className="flex justify-between mb-1">
                       <span className="text-sm">Profit/Loss:</span>
                       <span className={`text-sm font-bold ${
-                        cashOutAmount && 
-                        (isBountyTournament && bountyAmount 
-                          ? parseFloat(cashOutAmount) + parseFloat(bountyAmount) >= table.buyIn 
-                          : parseFloat(cashOutAmount) >= table.buyIn)
+                        cashOutAmount && parseFloat(cashOutAmount) >= table.buyIn
                           ? 'text-green-600' 
                           : cashOutAmount 
                             ? 'text-red-600' 
                             : 'text-gray-500'
                       }`}>
                         {cashOutAmount 
-                          ? `$${((isBountyTournament && bountyAmount 
-                              ? parseFloat(cashOutAmount) + parseFloat(bountyAmount) 
-                              : parseFloat(cashOutAmount)) - table.buyIn).toFixed(2)}` 
+                          ? `$${(parseFloat(cashOutAmount) - table.buyIn).toFixed(2)}` 
                           : '$0.00'}
                       </span>
                     </div>
@@ -523,17 +490,13 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                       {cashOutAmount && (
                         <div 
                           className={`h-full ${
-                            (isBountyTournament && bountyAmount 
-                              ? parseFloat(cashOutAmount) + parseFloat(bountyAmount) >= table.buyIn 
-                              : parseFloat(cashOutAmount) >= table.buyIn)
+                            parseFloat(cashOutAmount) >= table.buyIn
                               ? 'bg-green-500' 
                               : 'bg-red-500'
                           }`}
                           style={{ 
                             width: cashOutAmount 
-                              ? `${Math.min(Math.abs(((isBountyTournament && bountyAmount 
-                                  ? parseFloat(cashOutAmount) + parseFloat(bountyAmount) 
-                                  : parseFloat(cashOutAmount)) - table.buyIn) / table.buyIn * 100), 100)}%` 
+                              ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - table.buyIn) / table.buyIn * 100), 100)}%` 
                               : '0%' 
                           }}
                         />
