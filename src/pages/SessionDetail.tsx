@@ -365,6 +365,14 @@ export default function SessionDetail() {
               </div>
             )}
             
+            {/* Show Total Payouts for active sessions with completed tables */}
+            {session.isActive && session.tables && session.tables.some(table => !table.isActive) && (
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-gray-500">Total Payouts:</span>
+                <span className="font-medium text-green-600">${totalCashout.toFixed(2)}</span>
+              </div>
+            )}
+            
             {isCompleted && (
               <>
                 <div className="flex justify-between py-2 border-b">
