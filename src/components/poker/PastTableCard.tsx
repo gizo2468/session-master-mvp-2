@@ -182,23 +182,17 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                   </div>
                   {/* Only show cash out for non-continuing tournaments */}
                   {!isContinuing && (
-                    <>
-                      <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span className="text-sm text-gray-600 font-medium">Regular Payout</span>
-                        <span className="text-sm font-semibold">${(table.cashOut || 0).toFixed(2)}</span>
-                      </div>
-                      {/* Only show bounties for non-continuing tournaments */}
-                      {table.bountyAmount && table.bountyAmount > 0 && (
-                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-sm text-gray-600 font-medium">Bounty Payout</span>
-                          <span className="text-sm font-semibold">${table.bountyAmount.toFixed(2)}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span className="text-sm text-gray-600 font-medium">Total Payout</span>
-                        <span className="text-sm font-semibold">${((table.cashOut || 0) + (table.bountyAmount || 0)).toFixed(2)}</span>
-                      </div>
-                    </>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-600 font-medium">Cash Out</span>
+                      <span className="text-sm font-semibold">${(table.cashOut || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {/* Only show bounties for non-continuing tournaments */}
+                  {!isContinuing && table.bountyAmount && table.bountyAmount > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-600 font-medium">Bounties</span>
+                      <span className="text-sm font-semibold">${table.bountyAmount.toFixed(2)}</span>
+                    </div>
                   )}
                 </div>
 
