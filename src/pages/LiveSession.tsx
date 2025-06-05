@@ -408,7 +408,10 @@ export default function LiveSession() {
                   </div>
                 )}
                 
-                <CompletedTablesDisplay tables={inactiveTables} />
+                <CompletedTablesDisplay 
+                  tables={inactiveTables} 
+                  sessionId={session.id}
+                />
               </div>
             )}
           </div>
@@ -460,7 +463,7 @@ export default function LiveSession() {
       <AddTableForm
         open={showAddTableForm}
         onOpenChange={setShowAddTableForm}
-        sessionFormat={getTableFormat(session.format)} // Convert session format to table format
+        sessionFormat={getTableFormat(session.format)}
         onAddTable={(tableData) => {
           handleAddTable(tableData);
         }}

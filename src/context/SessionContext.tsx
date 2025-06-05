@@ -47,6 +47,7 @@ interface SessionContextType {
     }
   ) => void;
   addTableRebuy: (sessionId: string, tableId: string, amount: number) => void;
+  deleteTable: (sessionId: string, tableId: string) => void;
   getTableById: (sessionId: string, tableId: string) => TableData | undefined;
 }
 
@@ -804,6 +805,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       updateSession(updatedSession);
     }
   };
+
+  const deleteTable = (sessionId: string, tableId: string) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session || !session.tables) return;
+    
+    const tableToDelete = session.tables.find(t => t.id === tableId);
+    if (!tableToDelete) return;
+    
+    // Prevent deletion of active tables
+    if (tableToDelete.isActive) {
+      throw new Error("Cannot delete an active table. Please end the table first.");
+    }
+    
+    const updatedTables = session.tables.filter(t => t.id !== tableId);
+    
+    const updatedSession = {
+      ...session,
+      tables: updatedTables
+    };
+    
+    updateSession(updatedSession);
+  };
   
   const getTableById = (sessionId: string, tableId: string): TableData | undefined => {
     const session = sessions.find(s => s.id === sessionId);
@@ -841,6 +864,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         updateTable,
         endTable,
         addTableRebuy,
+        deleteTable,
         getTableById,
       }}
     >
