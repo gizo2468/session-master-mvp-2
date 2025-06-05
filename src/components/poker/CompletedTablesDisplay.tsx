@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -113,7 +112,7 @@ export default function CompletedTablesDisplay({ tables, sessionId }: CompletedT
                             onClick={() => setDeletingTableId(table.id)}
                             className="h-8 w-8 p-0 text-gray-500 hover:text-red-600"
                           >
-                            <Icon name="trash" size={14} />
+                            <Icon name="trash-2" size={14} />
                           </Button>
                         </div>
                       )}
