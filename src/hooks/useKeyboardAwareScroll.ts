@@ -1,6 +1,5 @@
 
 import { useEffect, useRef, useCallback } from 'react';
-import { Keyboard } from '@capacitor/keyboard';
 import { detectPlatform } from '@/utils/platformDetection';
 
 interface UseKeyboardAwareScrollOptions {
@@ -8,10 +7,16 @@ interface UseKeyboardAwareScrollOptions {
   enabled?: boolean; // Allow disabling the behavior
 }
 
+interface KeyboardInfo {
+  keyboardHeight: number;
+  isVisible: boolean;
+}
+
 export const useKeyboardAwareScroll = (options: UseKeyboardAwareScrollOptions = {}) => {
   const { offset = 20, enabled = true } = options;
   const originalScrollPositionRef = useRef<number>(0);
   const isScrolledToInputRef = useRef<boolean>(false);
+  const keyboardHeightRef = useRef<number>(0);
   const platform = detectPlatform();
 
   const scrollToElement = useCallback((element: HTMLElement, keyboardHeight: number) => {
@@ -58,16 +63,17 @@ export const useKeyboardAwareScroll = (options: UseKeyboardAwareScrollOptions = 
     if (!enabled || platform === 'web') return;
 
     try {
+      // Use dynamic import to avoid build errors when Capacitor is not available
+      const { Keyboard } = await import('@capacitor/keyboard');
+      
       // Small delay to ensure keyboard is showing
       setTimeout(async () => {
         try {
-          const info = await Keyboard.getInfo();
-          if (info.isVisible) {
-            scrollToElement(element, info.keyboardHeight);
-          }
+          // Use the keyboard height from the last keyboard show event
+          const keyboardHeight = keyboardHeightRef.current || (platform === 'ios' ? 291 : 280);
+          scrollToElement(element, keyboardHeight);
         } catch (error) {
-          // Fallback for older Capacitor versions or when info is not available
-          // Assume standard keyboard height based on platform
+          // Fallback for when keyboard info is not available
           const fallbackHeight = platform === 'ios' ? 291 : 280;
           scrollToElement(element, fallbackHeight);
         }
@@ -82,38 +88,46 @@ export const useKeyboardAwareScroll = (options: UseKeyboardAwareScrollOptions = 
 
     // Small delay to check if keyboard is actually dismissed
     setTimeout(() => {
-      Keyboard.getInfo().then(info => {
-        if (!info.isVisible) {
-          restoreScrollPosition();
-        }
-      }).catch(() => {
-        // Fallback: restore position after a delay
-        setTimeout(restoreScrollPosition, 300);
-      });
+      // If keyboard height is 0, it means keyboard is dismissed
+      if (keyboardHeightRef.current === 0) {
+        restoreScrollPosition();
+      }
     }, 100);
   }, [enabled, platform, restoreScrollPosition]);
 
   useEffect(() => {
     if (!enabled || platform === 'web') return;
 
-    const handleKeyboardHide = () => {
-      restoreScrollPosition();
+    const setupKeyboardListeners = async () => {
+      try {
+        const { Keyboard } = await import('@capacitor/keyboard');
+
+        const handleKeyboardShow = (info: KeyboardInfo) => {
+          keyboardHeightRef.current = info.keyboardHeight;
+        };
+
+        const handleKeyboardHide = () => {
+          keyboardHeightRef.current = 0;
+          restoreScrollPosition();
+        };
+
+        const showListener = await Keyboard.addListener('keyboardDidShow', handleKeyboardShow);
+        const hideListener = await Keyboard.addListener('keyboardDidHide', handleKeyboardHide);
+
+        return () => {
+          showListener.remove();
+          hideListener.remove();
+        };
+      } catch (error) {
+        console.warn('Keyboard listeners not available:', error);
+      }
     };
 
-    const handleKeyboardShow = () => {
-      // Keyboard show is handled in focus event with element-specific logic
+    const cleanup = setupKeyboardListeners();
+    
+    return () => {
+      cleanup.then(cleanupFn => cleanupFn?.());
     };
-
-    try {
-      Keyboard.addListener('keyboardDidShow', handleKeyboardShow);
-      Keyboard.addListener('keyboardDidHide', handleKeyboardHide);
-
-      return () => {
-        Keyboard.removeAllListeners();
-      };
-    } catch (error) {
-      console.warn('Keyboard listeners not available:', error);
-    }
   }, [enabled, platform, restoreScrollPosition]);
 
   return {
