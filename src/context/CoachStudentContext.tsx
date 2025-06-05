@@ -326,36 +326,117 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // Coach methods
+  // ENHANCED: Coach profile creation with better error handling and validation
   const createCoachProfile = async (displayName: string, bio?: string) => {
-    if (!user?.id) return;
+    console.log('🔄 Starting coach profile creation process');
+    
+    // Phase 3: Authentication validation
+    if (!user?.id) {
+      console.error('❌ No authenticated user found');
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create a coach profile.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    console.log('✅ User authenticated:', user.id);
+    console.log('📝 Profile data to update:', { displayName, bio, role: 'coach' });
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      // Phase 3: Verify profile exists first
+      console.log('🔍 Checking if user profile exists...');
+      const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
-        .update({
-          role: 'coach',
-          full_name: displayName,
-          online_nickname: bio,
-        })
-        .eq('id', user.id);
+        .select('id, role, full_name')
+        .eq('id', user.id)
+        .single();
 
-      if (error) {
-        throw error;
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('❌ Error checking existing profile:', checkError);
+        throw new Error(`Profile check failed: ${checkError.message}`);
       }
 
+      if (!existingProfile) {
+        console.log('⚠️ Profile not found, creating new profile...');
+        // Phase 3: Fallback - create profile if it doesn't exist
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            role: 'coach',
+            full_name: displayName,
+            online_nickname: bio,
+            email: user.email,
+            language: 'en',
+            notification_preferences: { newFeedback: true, liveSessionStart: true },
+            is_active: true,
+            has_accepted_terms: false
+          });
+
+        if (insertError) {
+          console.error('❌ Error inserting new profile:', insertError);
+          throw new Error(`Failed to create profile: ${insertError.message}`);
+        }
+        console.log('✅ New profile created successfully');
+      } else {
+        console.log('✅ Existing profile found:', existingProfile);
+        console.log('🔄 Updating existing profile to coach role...');
+        
+        // Phase 2: Enhanced error logging for update operation
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            role: 'coach',
+            full_name: displayName,
+            online_nickname: bio,
+          })
+          .eq('id', user.id);
+
+        if (updateError) {
+          console.error('❌ Error updating profile:', updateError);
+          console.error('❌ Update error details:', {
+            code: updateError.code,
+            message: updateError.message,
+            details: updateError.details,
+            hint: updateError.hint
+          });
+          throw new Error(`Failed to update profile: ${updateError.message}`);
+        }
+        console.log('✅ Profile updated successfully');
+      }
+
+      // Reload user profile to reflect changes
+      console.log('🔄 Reloading user profile...');
       await loadUserProfile();
       
+      console.log('🎉 Coach profile creation completed successfully');
       toast({
         title: "Coach Profile Created",
         description: "You can now generate a connection code for students."
       });
     } catch (error) {
-      console.error('❌ Error creating coach profile:', error);
+      console.error('❌ Error in createCoachProfile:', error);
+      
+      // Phase 4: More specific error messages
+      let errorMessage = "Failed to create coach profile.";
+      if (error instanceof Error) {
+        if (error.message.includes('RLS')) {
+          errorMessage = "Permission denied. Please try logging out and back in.";
+        } else if (error.message.includes('auth')) {
+          errorMessage = "Authentication issue. Please refresh the page and try again.";
+        } else if (error.message.includes('network')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to create coach profile.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
