@@ -1,694 +1,165 @@
+
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TableData } from '@/types/poker';
-import { format as dateFormat, differenceInMinutes } from 'date-fns';
 import Icon from '@/components/ui/Lucide';
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle 
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import TableTimerDisplay from './TableTimerDisplay';
 import { Badge } from '@/components/ui/badge';
-import HandManagementPanel from './HandManagementPanel';
+import { TableData } from '@/types/poker';
 import { useSessionContext } from '@/context/SessionContext';
-import { Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import EditTableForm from '@/components/poker/EditTableForm';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface TableCardProps {
   table: TableData;
-  onEndTable: (tableId: string, cashOut: number, notes?: string, bounty?: { bountyCount?: number, bountyAmount?: number, finalPosition?: number }, multiDayInfo?: { nextDayStart?: Date, chipsCarryover?: number, dayEndedWithoutElimination?: boolean }) => void;
-  onAddRebuy: (tableId: string, amount: number) => void;
   sessionId: string;
+  onEndTable: (
+    tableId: string, 
+    cashOut: number, 
+    notes?: string,
+    bounty?: { 
+      bountyCount?: number, 
+      bountyAmount?: number, 
+      finalPosition?: number 
+    },
+    multiDayInfo?: {
+      nextDayStart?: Date,
+      chipsCarryover?: number,
+      dayEndedWithoutElimination?: boolean
+    }
+  ) => void;
+  onAddRebuy: (tableId: string, amount: number) => void;
 }
 
-const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, sessionId }) => {
-  const [showEndTableDialog, setShowEndTableDialog] = useState(false);
-  const [cashOutAmount, setCashOutAmount] = useState('');
-  const [tableNotes, setTableNotes] = useState(table.notes || '');
-  const [showRebuyDialog, setShowRebuyDialog] = useState(false);
-  const [bountyCount, setBountyCount] = useState('');
-  const [bountyAmount, setBountyAmount] = useState('');
-  const [finalPosition, setFinalPosition] = useState('');
-  const [endReason, setEndReason] = useState<'eliminated' | 'day-ended' | null>(null);
-  const [nextDayStart, setNextDayStart] = useState<Date | null>(null);
-  const [chipsCarryover, setChipsCarryover] = useState('');
+export default function TableCard({ table, sessionId, onEndTable, onAddRebuy }: TableCardProps) {
+  const { updateTable, deleteTable } = useSessionContext();
+  const { toast } = useToast();
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const initialRebuyAmount = table.format === 'Tournament' 
-    ? (table.tournamentBuyIn || table.initialBuyIn || table.buyIn).toString()
-    : '';
-  
-  const [rebuyDialogAmount, setRebuyDialogAmount] = useState(initialRebuyAmount);
-
-  const formattedStartTime = dateFormat(new Date(table.startTime), 'h:mm a');
-  const formattedDate = dateFormat(new Date(table.startTime), 'MMM d, yyyy');
-
-  const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
-  const rebuyCount = Math.floor(rebuyAmount / (table.initialBuyIn || table.buyIn || 1));
-
-  // Fixed isBountyTournament check to properly identify all bounty tournament types
-  const isBountyTournament = table.format === 'Tournament' && 
-    table.tournamentTypes?.some(type => 
-      ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
-    );
-    
-  const isFreezeout = table.format === 'Tournament' && 
-    table.tournamentTypes?.some(type => type === 'Freezeout');
-
-  const handleEndTable = () => {
-    // FIXED: Ensure cashOut is ONLY the manually entered amount, no bounty addition
-    const finalCashOut = endReason === 'day-ended' ? 0 : parseFloat(cashOutAmount);
-    
-    console.log('TableCard handleEndTable - cashOutAmount entered:', cashOutAmount);
-    console.log('TableCard handleEndTable - finalCashOut to be saved:', finalCashOut);
-    console.log('TableCard handleEndTable - bountyAmount entered (separate):', bountyAmount);
-    
-    onEndTable(
-      table.id, 
-      finalCashOut, // This should be ONLY the user-entered total payout amount
-      tableNotes,
-      {
-        bountyCount: bountyCount ? parseInt(bountyCount) : undefined,
-        bountyAmount: bountyAmount ? parseFloat(bountyAmount) : undefined, // Store separately for display
-        finalPosition: finalPosition ? parseInt(finalPosition) : undefined
-      },
-      endReason === 'day-ended' ? {
-        nextDayStart: nextDayStart || undefined,
-        chipsCarryover: chipsCarryover ? parseInt(chipsCarryover) : undefined,
-        dayEndedWithoutElimination: true
-      } : undefined
-    );
-    setShowEndTableDialog(false);
-    resetEndTableForm();
-  };
-
-  const resetEndTableForm = () => {
-    setCashOutAmount('');
-    setTableNotes(table.notes || '');
-    setBountyCount('');
-    setBountyAmount('');
-    setFinalPosition('');
-    setEndReason(null);
-    setNextDayStart(null);
-    setChipsCarryover('');
-  };
-
-  const handleAddRebuy = () => {
-    if (rebuyDialogAmount) {
-      onAddRebuy(table.id, parseFloat(rebuyDialogAmount));
-      setShowRebuyDialog(false);
+  const handleUpdateTable = (updatedTable: TableData) => {
+    try {
+      updateTable(sessionId, updatedTable);
+      toast({
+        title: "Table Updated",
+        description: "Table information has been successfully updated."
+      });
+    } catch (error) {
+      console.error("Error updating table:", error);
+      toast({
+        title: "Error Updating Table",
+        description: "There was a problem updating the table. Please try again.",
+        variant: "destructive"
+      });
     }
   };
-  
-  const openRebuyDialog = () => {
-    if (table.format === 'Tournament') {
-      setRebuyDialogAmount((table.tournamentBuyIn || table.initialBuyIn || table.buyIn).toString());
-    } else {
-      setRebuyDialogAmount('');
+
+  const handleDeleteTable = () => {
+    try {
+      deleteTable(sessionId, table.id);
+      toast({
+        title: "Table Deleted",
+        description: "The table has been successfully removed from the session."
+      });
+    } catch (error) {
+      console.error("Error deleting table:", error);
+      toast({
+        title: "Error Deleting Table",
+        description: error instanceof Error ? error.message : "There was a problem deleting the table.",
+        variant: "destructive"
+      });
     }
-    setShowRebuyDialog(true);
+    setShowDeleteDialog(false);
   };
 
   return (
     <>
-      <Card className="bg-white p-4 mb-4">
-        <div className="text-center mb-2">
-          <h3 className="text-xl font-bold">{table.location}</h3>
-          <div className="flex items-center justify-center gap-2 text-base text-gray-600">
-            <span>{table.gameType}</span>
-            <span>•</span> 
-            <span>{table.format}</span>
-          </div>
-          {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
-            <span className="inline-block mt-1 px-3 py-1 bg-poker-gold/10 text-poker-gold rounded-full">
-              {table.tournamentTypes[0]}
-            </span>
-          )}
-          {table.isMultiDay && (
-            <span className="inline-block mt-1 px-3 py-1 bg-poker-feltGreen/10 text-poker-feltGreen rounded-full ml-2">
-              Multi-Day
-            </span>
-          )}
-          <div className="text-sm text-gray-500 mt-1">
-            {dateFormat(new Date(table.startTime), 'MMM d, yyyy')}
-          </div>
-        </div>
-
-        <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 pb-4">
-          <div className="flex flex-1 justify-center items-center">
-            <div className="text-center">
-              <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
-              <div className="font-medium">{dateFormat(new Date(table.startTime), 'h:mm a')}</div>
-            </div>
-          </div>
-          
-          <div className="flex-1 flex justify-center items-center border-x border-gray-100 px-4">
-            <div className="text-center">
-              <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
-              <TableTimerDisplay 
-                startTime={table.startTime}
-                endTime={table.endTime}
-                isActive={table.isActive}
-                className="flex justify-center"
-              />
-            </div>
-          </div>
-          
-          {!table.isActive && table.endTime && (
-            <div className="flex-1 flex justify-center items-center">
-              <div className="text-center">
-                <div className="text-gray-500 font-medium text-xs uppercase mb-1">End</div>
-                <div className="font-medium">{dateFormat(new Date(table.endTime), 'h:mm a')}</div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Multi-Day Tournament Continuation Info - Adding this section */}
-        {table.isMultiDay && table.dayEndedWithoutElimination && (
-          <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 pb-4 bg-green-50 rounded-md p-2">
-            {table.nextDayStart && (
-              <div className="flex-1 flex justify-center items-center">
-                <div className="text-center">
-                  <div className="text-green-600 font-medium text-xs uppercase mb-1">Next Day Starts</div>
-                  <div className="font-medium text-green-800">{dateFormat(new Date(table.nextDayStart), 'MMM d, h:mm a')}</div>
-                </div>
-              </div>
-            )}
-            
-            {table.chipsCarryover && (
-              <div className="flex-1 flex justify-center items-center border-l border-gray-100 pl-4">
-                <div className="text-center">
-                  <div className="text-green-600 font-medium text-xs uppercase mb-1">Chips Carried Over</div>
-                  <div className="font-medium text-green-800">{table.chipsCarryover.toLocaleString()}</div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-4 mb-4 justify-center">
-            <div className="text-right">
-              <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
-              <span className="font-bold text-2xl">
-                ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
-              </span>
-            </div>
-            {(() => {
-              const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
-              const addOnTotal = table.addOns ? table.addOns : 0;
-              const extra = rebuyTotal + addOnTotal;
-              const rebuyCount = Math.floor(rebuyTotal / (table.initialBuyIn ?? table.buyIn));
-              return extra > 0 ? (
-                <div className="text-right">
-                  <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
-                  <div>
-                    <span className="font-bold text-2xl text-red-600">
-                      +${extra.toFixed(2)}
-                    </span>
-                    {rebuyCount > 0 && (
-                      <span className="text-sm text-gray-500 ml-1">({rebuyCount})</span>
-                    )}
-                  </div>
-                </div>
-              ) : null;
-            })()}
-          </div>
-          
-          {table.format === 'Cash' && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Blinds:</span>
-              <span className="font-medium">${table.smallBlind}/{table.bigBlind}</span>
-            </div>
-          )}
-          
-          {/* Display Starting BBs for tournament tables (both active and completed) */}
-          {table.format === 'Tournament' && table.startingBB && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Starting BBs:</span>
-              <span className="font-medium">{table.startingBB}BB</span>
-            </div>
-          )}
-        </div>
-
-        {table.isActive ? (
-          <div className="mt-4 flex gap-2 justify-between">
-            {isFreezeout ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="flex-1 opacity-50 cursor-not-allowed"
-                      disabled
-                    >
-                      <Icon name="Plus" className="mr-1 h-4 w-4" /> Rebuy
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Rebuys not allowed in Freezeout tournaments</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={openRebuyDialog}
+      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg">{table.name || table.location}</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowEditForm(true)}
+                className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
               >
-                <Icon name="Plus" className="mr-1 h-4 w-4" /> Rebuy
+                <Icon name="pencil" size={16} />
               </Button>
+            </div>
+            <p className="text-sm text-gray-600">{table.gameType} • {table.format}</p>
+            {table.format === 'Cash' && table.smallBlind && table.bigBlind && (
+              <p className="text-sm text-gray-500">${table.smallBlind}/${table.bigBlind}</p>
             )}
-            <Button 
-              variant="destructive" 
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Buy-in:</span>
+            <span className="font-medium">${table.buyIn.toFixed(2)}</span>
+          </div>
+
+          {table.currentStack && (
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Current Stack:</span>
+              <span className="font-medium">{table.currentStack.toLocaleString()}</span>
+            </div>
+          )}
+
+          <div className="flex gap-2 pt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onAddRebuy(table.id, table.initialBuyIn || table.buyIn)}
               className="flex-1"
-              onClick={() => setShowEndTableDialog(true)}
             >
-              <Icon name="CircleStop" className="mr-1 h-4 w-4" /> End Table
+              <Icon name="plus" size={14} className="mr-1" />
+              Rebuy
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => onEndTable(table.id, 0)}
+              className="flex-1 bg-poker-gold hover:bg-poker-darkGold text-white"
+            >
+              End Table
             </Button>
           </div>
-        ) : (
-          <div className="mt-2 space-y-2">
-            {table.format === 'Tournament' && (
-              <div className="space-y-1 mt-2 text-xs">
-                {table.tournamentTypes?.[0] && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tournament Type:</span>
-                    <span className="font-medium">{table.tournamentTypes[0]}</span>
-                  </div>
-                )}
-                {table.bountyCount > 0 && table.tournamentTypes?.some(type => 
-                  ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
-                ) && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Players Eliminated:</span>
-                    <span className="font-medium">{table.bountyCount}</span>
-                  </div>
-                )}
-                {table.bountyAmount > 0 && table.tournamentTypes?.some(type => 
-                  ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
-                ) && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total Bounty Collected:</span>
-                    <span className="font-medium text-gray-500">${table.bountyAmount.toFixed(2)}</span>
-                  </div>
-                )}
-                {table.finalPosition && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Final Position:</span>
-                    <span className="font-medium">{table.finalPosition}th</span>
-                  </div>
-                )}
-                
-                {table.dayEndedWithoutElimination && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <span className="font-medium text-poker-feltGreen">Day Ended (Continuing)</span>
-                    </div>
-                    {table.chipsCarryover && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Chips Carried Over:</span>
-                        <span className="font-medium">{table.chipsCarryover.toLocaleString()}</span>
-                      </div>
-                    )}
-                    {table.nextDayStart && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Next Day Starts:</span>
-                        <span className="font-medium">{dateFormat(new Date(table.nextDayStart), 'MMM d, yyyy h:mm a')}</span>
-                      </div>
-                    )}
-                  </>
-                )}
-                
-                {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
-                  <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                    {/* FIXED: Total Payout uses ONLY cashOut, never adding bountyAmount */}
-                    <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
-                    <span className="font-bold text-2xl text-poker-gold">
-                      ${(table.cashOut ?? 0).toFixed(2)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {table.format === 'Cash' && table.cashOut !== undefined && (
-              <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
-                <span className="font-bold text-2xl text-poker-gold">
-                  ${(table.cashOut ?? 0).toFixed(2)}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* Show HandManagementPanel for both active AND completed tables */}
-        <div className="mt-6 pt-4 border-t border-gray-100">
-          <HandManagementPanel 
-            sessionId={sessionId}
-            tableId={table.id}
-            tableFormat={table.format}
-            hands={table.hands || []}
-            readOnly={!table.isActive} // Pass readOnly prop when table is completed
-          />
         </div>
-      </Card>
+      </div>
 
-      <Dialog open={showEndTableDialog} onOpenChange={setShowEndTableDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>End Table</DialogTitle>
-            <DialogDescription>
-              {table.isMultiDay && table.format === 'Tournament' && !endReason
-                ? "Are you ending this multi-day tournament table because you were eliminated or because the day has ended?"
-                : "Enter your payout amount to complete this table."}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            {table.isMultiDay && table.format === 'Tournament' && !endReason && (
-              <div className="flex flex-col gap-4 mb-6">
-                <Button
-                  variant="outline"
-                  className="w-full py-6 text-red-600 border-red-200 hover:bg-red-50"
-                  onClick={() => setEndReason('eliminated')}
-                >
-                  <Icon name="X" className="mr-2 h-5 w-5" /> Eliminated (Cash Out)
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full py-6 text-green-600 border-green-200 hover:bg-green-50"
-                  onClick={() => setEndReason('day-ended')}
-                >
-                  <Icon name="Calendar" className="mr-2 h-5 w-5" /> Day Ended (Continuing)
-                </Button>
-              </div>
-            )}
-            
-            {(!table.isMultiDay || endReason === 'eliminated' || (table.format === 'Cash')) && (
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="tableCashout" className="block text-sm font-medium mb-1">
-                    Total Payout
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500">$</span>
-                    </div>
-                    <input
-                      id="tableCashout"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                      placeholder="0.00"
-                      value={cashOutAmount}
-                      onChange={(e) => setCashOutAmount(e.target.value)}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Enter the total amount you received (including all earnings)</p>
-                </div>
+      <EditTableForm
+        open={showEditForm}
+        onOpenChange={setShowEditForm}
+        table={table}
+        onUpdateTable={handleUpdateTable}
+      />
 
-                {/* Tournament-specific fields - always show final position for tournaments */}
-                {table.format === 'Tournament' && endReason !== 'day-ended' && (
-                  <div>
-                    <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
-                      Final Position
-                    </label>
-                    <input
-                      id="finalPosition"
-                      type="number"
-                      min="1"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                      placeholder="Enter your final position (e.g. 3 for 3rd)"
-                      value={finalPosition}
-                      onChange={(e) => setFinalPosition(e.target.value)}
-                      required={false}
-                    />
-                  </div>
-                )}
-
-                {/* Bounty tournament fields - fixed the condition to always show for bounty tournaments */}
-                {isBountyTournament && endReason !== 'day-ended' && (
-                  <>
-                    <div>
-                      <label htmlFor="bountyCount" className="block text-sm font-medium mb-1">
-                        Players Eliminated (Optional)
-                      </label>
-                      <input
-                        id="bountyCount"
-                        type="number"
-                        min="0"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                        placeholder="Number of players eliminated"
-                        value={bountyCount}
-                        onChange={(e) => setBountyCount(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="bountyAmount" className="block text-sm font-medium mb-1">
-                        Total Bounty Collected (Optional)
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <span className="text-gray-500">$</span>
-                        </div>
-                        <input
-                          id="bountyAmount"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                          placeholder="0.00"
-                          value={bountyAmount}
-                          onChange={(e) => setBountyAmount(e.target.value)}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">For tracking only - should already be included in Total Payout above</p>
-                      </div>
-                    </div>
-                  </>
-                )}
-                
-                {endReason !== 'day-ended' && (
-                  <div className="mb-6">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm">Profit/Loss:</span>
-                      <span className={`text-sm font-bold ${
-                        cashOutAmount && parseFloat(cashOutAmount) >= table.buyIn
-                          ? 'text-green-600' 
-                          : cashOutAmount 
-                            ? 'text-red-600' 
-                            : 'text-gray-500'
-                      }`}>
-                        {cashOutAmount 
-                          ? `$${(parseFloat(cashOutAmount) - table.buyIn).toFixed(2)}` 
-                          : '$0.00'}
-                      </span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      {cashOutAmount && (
-                        <div 
-                          className={`h-full ${
-                            parseFloat(cashOutAmount) >= table.buyIn
-                              ? 'bg-green-500' 
-                              : 'bg-red-500'
-                          }`}
-                          style={{ 
-                            width: cashOutAmount 
-                              ? `${Math.min(Math.abs((parseFloat(cashOutAmount) - table.buyIn) / table.buyIn * 100), 100)}%` 
-                              : '0%' 
-                          }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {endReason === 'day-ended' && (
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="nextDayStart" className="block text-sm font-medium mb-1">
-                    Next Day Start (Optional)
-                  </label>
-                  <input
-                    id="nextDayStart"
-                    type="datetime-local"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                    value={nextDayStart ? nextDayStart.toISOString().slice(0, 16) : ''}
-                    onChange={(e) => setNextDayStart(e.target.value ? new Date(e.target.value) : null)}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">When does the next day begin?</p>
-                </div>
-                
-                <div>
-                  <label htmlFor="chipsCarryover" className="block text-sm font-medium mb-1">
-                    Chips Carryover
-                  </label>
-                  <input
-                    id="chipsCarryover"
-                    type="number"
-                    min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                    placeholder="Number of chips"
-                    value={chipsCarryover}
-                    onChange={(e) => setChipsCarryover(e.target.value)}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">How many chips are you carrying over to the next day?</p>
-                </div>
-              </div>
-            )}
-            
-            <div className="mt-4">
-              <label htmlFor="tableNotes" className="block text-sm font-medium mb-1">
-                Notes (Optional)
-              </label>
-              <Textarea
-                id="tableNotes"
-                className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                placeholder="Add any notes about this table..."
-                value={tableNotes}
-                onChange={(e) => setTableNotes(e.target.value)}
-              />
-            </div>
-            
-            <DialogFooter className="mt-6">
-              {endReason !== null && table.isMultiDay && (
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setEndReason(null)}
-                  className="mr-auto"
-                >
-                  Back
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowEndTableDialog(false);
-                  resetEndTableForm();
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleEndTable}
-                disabled={
-                  (endReason === 'eliminated' || !table.isMultiDay || table.format === 'Cash') 
-                    ? !cashOutAmount 
-                    : endReason === 'day-ended' 
-                      ? !chipsCarryover 
-                      : !endReason
-                }
-                className="bg-poker-gold hover:bg-poker-darkGold text-white"
-              >
-                End Table
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Updated Rebuy Dialog - Tournament vs Cash Game */}
-      <Dialog open={showRebuyDialog} onOpenChange={setShowRebuyDialog}>
-        <DialogContent className={table.format === 'Tournament' ? "max-w-sm" : ""}>
-          <DialogHeader className={table.format === 'Tournament' ? "text-center" : ""}>
-            <DialogTitle>
-              {table.format === 'Tournament' ? 'Tournament Rebuy' : 'Add Cash Game Rebuy'}
-            </DialogTitle>
-            <DialogDescription className={table.format === 'Tournament' ? "sr-only" : ""}>
-              {table.format === 'Tournament' 
-                ? 'Confirm your tournament rebuy'
-                : 'Enter the amount you want to add as a rebuy.'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {table.format === 'Tournament' ? (
-            // Tournament rebuy - badge style confirmation
-            <>
-              <div className="flex flex-col items-center space-y-6 py-6">
-                <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-3">Rebuy Amount</p>
-                  <Badge variant="outline" className="px-6 py-3 text-2xl font-bold border-2 border-poker-gold text-poker-gold">
-                    ${parseFloat(rebuyDialogAmount).toFixed(2)}
-                  </Badge>
-                </div>
-                
-                <p className="text-center text-gray-700 font-medium">
-                  Do you want to rebuy for this amount?
-                </p>
-              </div>
-              
-              <DialogFooter className="flex-col space-y-2 sm:flex-col sm:space-x-0 sm:space-y-2">
-                <Button
-                  onClick={handleAddRebuy}
-                  className="w-full bg-poker-gold hover:bg-poker-darkGold text-white"
-                >
-                  Yes, Rebuy
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowRebuyDialog(false)}
-                  className="w-full"
-                >
-                  Cancel
-                </Button>
-              </DialogFooter>
-            </>
-          ) : (
-            // Cash game rebuy - input field
-            <>
-              <div className="py-4">
-                <label htmlFor="rebuy-amount" className="text-sm font-medium mb-2 block">
-                  Rebuy Amount
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500">$</span>
-                  </div>
-                  <input
-                    id="rebuy-amount"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    placeholder="0.00"
-                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                    value={rebuyDialogAmount}
-                    onChange={(e) => setRebuyDialogAmount(e.target.value)}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowRebuyDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleAddRebuy}
-                  disabled={!rebuyDialogAmount || parseFloat(rebuyDialogAmount) <= 0}
-                  className="bg-poker-gold hover:bg-poker-darkGold text-white"
-                >
-                  Add Rebuy
-                </Button>
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Table</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{table.name || table.location}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteTable} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
-};
-
-export default TableCard;
+}
