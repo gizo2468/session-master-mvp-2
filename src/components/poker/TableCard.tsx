@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -62,13 +61,16 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
     table.tournamentTypes?.some(type => type === 'Freezeout');
 
   const handleEndTable = () => {
+    // FIXED: Ensure cashOut is ONLY the manually entered amount, no bounty addition
+    const finalCashOut = endReason === 'day-ended' ? 0 : parseFloat(cashOutAmount);
+    
     onEndTable(
       table.id, 
-      endReason === 'day-ended' ? 0 : parseFloat(cashOutAmount), 
+      finalCashOut, // This should be ONLY the user-entered total payout amount
       tableNotes,
       {
         bountyCount: bountyCount ? parseInt(bountyCount) : undefined,
-        bountyAmount: bountyAmount ? parseFloat(bountyAmount) : undefined,
+        bountyAmount: bountyAmount ? parseFloat(bountyAmount) : undefined, // Store separately for display
         finalPosition: finalPosition ? parseInt(finalPosition) : undefined
       },
       endReason === 'day-ended' ? {
@@ -289,8 +291,8 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                   ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
                 ) && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Bounty Payout:</span>
-                    <span className="font-medium text-poker-gold">${table.bountyAmount.toFixed(2)}</span>
+                    <span className="text-gray-600">Total Bounty Collected:</span>
+                    <span className="font-medium text-gray-500">${table.bountyAmount.toFixed(2)}</span>
                   </div>
                 )}
                 {table.finalPosition && (
@@ -408,6 +410,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                       onChange={(e) => setCashOutAmount(e.target.value)}
                     />
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">Enter the total amount you received (including all earnings)</p>
                 </div>
 
                 {/* Tournament-specific fields - always show final position for tournaments */}
@@ -449,7 +452,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                     
                     <div>
                       <label htmlFor="bountyAmount" className="block text-sm font-medium mb-1">
-                        Bounty Payout (Optional)
+                        Total Bounty Collected (Optional)
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -465,6 +468,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                           value={bountyAmount}
                           onChange={(e) => setBountyAmount(e.target.value)}
                         />
+                        <p className="text-xs text-gray-500 mt-1">For tracking only - should already be included in Total Payout above</p>
                       </div>
                     </div>
                   </>
