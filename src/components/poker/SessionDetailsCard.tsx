@@ -34,11 +34,28 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   // Calculate total buy-in (initial + rebuys)
   const totalBuyIn = totalInitialBuyin + totalRebuyAmount;
   
+  // Calculate total payouts from all completed tables
+  let totalPayouts = 0;
+  const completedTables = tables.filter(table => !table.isActive && table.cashOut !== undefined);
+  completedTables.forEach((table) => {
+    let tablePayout = table.cashOut || 0;
+    // Add bounty amount if it exists
+    if (table.bountyAmount) {
+      tablePayout += table.bountyAmount;
+    }
+    totalPayouts += tablePayout;
+  });
+  
   // Calculate total profit/loss from all tables
   let totalProfit = 0;
   if (tables.length > 0) {
     tables.forEach((table) => {
-      totalProfit += (table.cashOut || 0) - table.buyIn;
+      let tableProfit = (table.cashOut || 0) - table.buyIn;
+      // Add bounty amount to profit calculation if it exists
+      if (table.bountyAmount) {
+        tableProfit += table.bountyAmount;
+      }
+      totalProfit += tableProfit;
     });
   } else {
     // If there are no tables, use session's own profit calculation
@@ -114,6 +131,17 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               <DollarSign className="w-5 h-5 text-amber-600 flex-shrink-0" />
               <span className="font-bold text-amber-700 text-base">Total Buy-Ins: ${totalBuyIn.toFixed(2)}</span>
             </Badge>
+            
+            {/* New Total Payouts Badge - only show if there are completed tables with payouts */}
+            {totalPayouts > 0 && (
+              <Badge
+                variant="outline"
+                className="flex items-center gap-1 border-green-400 bg-green-50 text-green-800 px-4 py-1.5 font-normal text-sm w-full justify-center"
+              >
+                <DollarSign className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <span className="font-bold text-green-700 text-base">Total Payouts: ${totalPayouts.toFixed(2)}</span>
+              </Badge>
+            )}
             
             {/* Multi-day tournament badge */}
             {hasMultiDayTables && (
