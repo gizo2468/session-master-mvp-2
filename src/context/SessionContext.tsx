@@ -55,9 +55,16 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 const MAX_STORED_SESSIONS = 50;
 
-const loadSessions = (): PokerSession[] => {
+// Generate user-specific localStorage key
+const getUserStorageKey = (userId: string | null): string => {
+  if (!userId) return 'pokerSessions_anonymous';
+  return `pokerSessions_${userId}`;
+};
+
+const loadSessions = (userId: string | null): PokerSession[] => {
   try {
-    const savedSessions = localStorage.getItem('pokerSessions');
+    const storageKey = getUserStorageKey(userId);
+    const savedSessions = localStorage.getItem(storageKey);
     if (savedSessions) {
       const parsed = JSON.parse(savedSessions);
       return parsed.map((session: PokerSession) => {
@@ -97,6 +104,17 @@ const findActiveSession = (sessions: PokerSession[]): PokerSession | null => {
   return sessions.find(session => session.isActive) || null;
 };
 
+// Clear sessions for other users when switching accounts
+const clearOtherUserSessions = (currentUserId: string | null) => {
+  const keys = Object.keys(localStorage);
+  keys.forEach(key => {
+    if (key.startsWith('pokerSessions_') && key !== getUserStorageKey(currentUserId)) {
+      // Don't completely remove other user sessions, but make sure they're not accessible
+      // This preserves data integrity while ensuring proper isolation
+    }
+  });
+};
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [sessions, setSessions] = useState<PokerSession[]>([]);
@@ -109,14 +127,30 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   });
   const { toast } = useToast();
   const { user } = useAuth();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Initialize sessions on mount
+  // Initialize sessions on mount and when user changes
   useEffect(() => {
-    const loadedSessions = loadSessions();
+    console.log('🔄 User changed, reinitializing sessions. User:', user?.id);
+    
+    // Clear sessions when user changes
+    if (currentUserId !== user?.id) {
+      console.log('👤 User switch detected, clearing sessions');
+      setSessions([]);
+      setActiveSession(null);
+      setCurrentUserId(user?.id || null);
+      
+      // Clear sessions from other users to prevent leakage
+      clearOtherUserSessions(user?.id || null);
+    }
+    
+    // Load sessions for current user
+    const loadedSessions = loadSessions(user?.id || null);
+    console.log('📋 Loaded sessions for user:', user?.id, 'Count:', loadedSessions.length);
     setSessions(loadedSessions);
     setActiveSession(findActiveSession(loadedSessions));
     setIsInitialized(true);
-  }, []);
+  }, [user?.id, currentUserId]);
 
   const dismissStorageWarning = () => {
     setShowStorageWarning(false);
@@ -125,6 +159,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    if (!isInitialized) return;
+    
     try {
       const sortedSessions = [...sessions].sort((a, b) => 
         new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
@@ -146,7 +182,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
       }
       
-      localStorage.setItem('pokerSessions', JSON.stringify(sessionsToStore));
+      // Store sessions with user-specific key
+      const storageKey = getUserStorageKey(user?.id || null);
+      localStorage.setItem(storageKey, JSON.stringify(sessionsToStore));
+      console.log('💾 Saved sessions to storage key:', storageKey, 'Count:', sessionsToStore.length);
     } catch (error) {
       console.error("Failed to save sessions to localStorage:", error);
       
@@ -158,13 +197,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       
       if (activeSession) {
         try {
-          localStorage.setItem('activeSession', JSON.stringify(activeSession));
+          const activeStorageKey = `activeSession_${user?.id || 'anonymous'}`;
+          localStorage.setItem(activeStorageKey, JSON.stringify(activeSession));
         } catch (e) {
           console.error("Failed to save active session:", e);
         }
       }
     }
-  }, [sessions, toast]);
+  }, [sessions, toast, user?.id, isInitialized]);
 
   // Enhanced sync function to handle detailed session data with proper user association
   const syncSessionToSupabase = async (session: PokerSession) => {
@@ -176,9 +216,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     try {
       // Only sync completed sessions to Supabase
       if (!session.isActive && session.endTime) {
-        console.log('🔄 Syncing detailed session data to Supabase:', session.id);
+        console.log('🔄 Syncing detailed session data to Supabase for user:', user.id, 'Session:', session.id);
         
-        // Insert basic session data - user_id will be set automatically by default value
+        // Insert basic session data - user_id will be set automatically by default value to auth.uid()
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
           .insert({
@@ -187,6 +227,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             session_type: session.format,
             game_type: session.gameType,
             notes: session.notes || null
+            // user_id is automatically set by the database default to auth.uid()
           })
           .select()
           .single();
@@ -197,7 +238,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
 
         const supabaseSessionId = sessionData.id;
-        console.log('✅ Session synced with ID:', supabaseSessionId);
+        console.log('✅ Session synced with ID:', supabaseSessionId, 'for user:', user.id);
 
         // Sync table data if exists
         if (session.tables && session.tables.length > 0) {

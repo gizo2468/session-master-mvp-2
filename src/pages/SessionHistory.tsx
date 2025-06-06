@@ -21,16 +21,22 @@ export default function SessionHistory() {
   
   useEffect(() => {
     const fetchSupabaseSessions = async () => {
-      if (!user) return;
+      if (!user) {
+        console.log('📋 No authenticated user, skipping Supabase sessions fetch');
+        setSupabaseSessions([]);
+        return;
+      }
 
       setIsLoading(true);
       try {
         console.log('🔍 Fetching sessions for user:', user.id);
         
-        // With RLS enabled, this will automatically only return sessions for the authenticated user
+        // Query sessions for the authenticated user only - RLS will automatically filter
+        // but we also explicitly filter by user_id to be extra safe
         const { data, error } = await supabase
           .from('sessions')
           .select('*')
+          .eq('user_id', user.id)  // Explicit user filter for security
           .order('start_time', { ascending: false });
           
         if (error) {
@@ -38,7 +44,7 @@ export default function SessionHistory() {
           throw error;
         }
         
-        console.log('✅ Fetched sessions from Supabase:', data?.length || 0);
+        console.log('✅ Fetched sessions from Supabase for user:', user.id, 'Count:', data?.length || 0);
         
         if (data) {
           setSupabaseSessions(data);
