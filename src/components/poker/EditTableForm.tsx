@@ -32,7 +32,29 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
   }, [table]);
 
   const handleSave = () => {
-    onSave(formData);
+    // Ensure we're directly updating the buy-in without any rebuy calculations
+    const updatedTable: TableData = {
+      ...formData,
+      // Keep the original rebuy amount unchanged - only update buy-in
+      rebuys: table.rebuys, // Preserve original rebuy value
+      // Update only the fields that should actually change
+      buyIn: formData.buyIn,
+      name: formData.name,
+      location: formData.location,
+      gameType: formData.gameType,
+      format: formData.format,
+      tournamentTypes: formData.tournamentTypes,
+      smallBlind: formData.smallBlind,
+      bigBlind: formData.bigBlind,
+      startingBB: formData.startingBB,
+      cashOut: formData.cashOut,
+      finalPosition: formData.finalPosition,
+      bountyCount: formData.bountyCount,
+      bountyAmount: formData.bountyAmount,
+      notes: formData.notes
+    };
+    
+    onSave(updatedTable);
     onOpenChange(false);
   };
 
