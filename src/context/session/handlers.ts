@@ -2,7 +2,7 @@
 import { PokerSession, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { findSupabaseSessionId, syncHandToSupabase, syncHandUpdateToSupabase, syncHandDeleteToSupabase } from '@/utils/handSync';
-import { User } from '@supabase/supabase-js';
+import { User } from '@/context/AuthContext';
 
 export const createTableHandHandlers = (
   sessions: PokerSession[],

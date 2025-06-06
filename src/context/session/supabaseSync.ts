@@ -1,7 +1,7 @@
 
 import { PokerSession } from '@/types/poker';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { User } from '@/context/AuthContext';
 
 export const syncSessionToSupabase = async (session: PokerSession, user: User, toast: any) => {
   if (!user) {
