@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,16 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
   }, [table]);
 
   const handleSave = () => {
-    onSave(formData);
+    // When saving, ensure we maintain the original rebuy logic
+    // The buyIn field in the form represents the base buy-in amount
+    // Any existing rebuys should be preserved separately
+    const updatedTable = {
+      ...formData,
+      // Ensure initialBuyIn is set if it wasn't already
+      initialBuyIn: formData.initialBuyIn || table.initialBuyIn || formData.buyIn
+    };
+    
+    onSave(updatedTable);
     onOpenChange(false);
   };
 
@@ -48,6 +58,11 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
     'Regular', 'Turbo', 'Hyper Turbo', 'Deepstack', 'Freezeout',
     'Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'
   ];
+
+  // Calculate the base buy-in amount (excluding rebuys)
+  const baseBuyIn = table.initialBuyIn || table.buyIn;
+  const currentRebuys = table.rebuys || 0;
+  const rebuyAmount = table.buyIn - baseBuyIn;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -101,15 +116,28 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="buyIn">Buy-in ($)</Label>
+              <Label htmlFor="buyIn">Initial Buy-in ($)</Label>
               <Input
                 id="buyIn"
                 type="number"
                 min="0"
                 step="0.01"
-                value={formData.buyIn}
-                onChange={(e) => setFormData(prev => ({ ...prev, buyIn: parseFloat(e.target.value) || 0 }))}
+                value={baseBuyIn}
+                onChange={(e) => {
+                  const newBaseBuyIn = parseFloat(e.target.value) || 0;
+                  // Update both the displayed buyIn and maintain rebuy amount
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    buyIn: newBaseBuyIn + rebuyAmount,
+                    initialBuyIn: newBaseBuyIn
+                  }));
+                }}
               />
+              {currentRebuys > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Rebuys: {currentRebuys} × ${(rebuyAmount / currentRebuys).toFixed(2)} = +${rebuyAmount.toFixed(2)}
+                </p>
+              )}
             </div>
 
             {formData.format === 'Cash' && (
