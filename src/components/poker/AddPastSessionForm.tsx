@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { useSessionContext } from '@/context/SessionContext';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { v4 as uuidv4 } from 'uuid';
@@ -21,6 +23,7 @@ interface SessionInfo {
 
 const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
   const { addSession } = useSessionContext();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   const [currentStep, setCurrentStep] = useState<'info' | 'tables'>('info');
@@ -59,7 +62,7 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
     setTables(prev => prev.filter(table => table.id !== tableId));
   };
 
-  const handleSaveSession = () => {
+  const handleSaveSession = async () => {
     if (tables.length === 0) {
       toast({
         title: 'No Tables Added',
@@ -103,15 +106,50 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
         tables: tables
       };
 
+      // Add to local state first
       addSession(newSession);
       
-      toast({
-        title: 'Past Session Added',
-        description: 'Your past session has been successfully recorded.',
-      });
+      // Then sync to Supabase if user is logged in
+      if (user) {
+        console.log('🔄 Syncing past session to Supabase for user:', user.id);
+        
+        const { data: sessionData, error: sessionError } = await supabase
+          .from('sessions')
+          .insert({
+            start_time: sessionInfo.startTime.toISOString(),
+            end_time: sessionInfo.endTime.toISOString(),
+            session_type: primaryTable.format,
+            game_type: primaryTable.gameType,
+            notes: sessionInfo.notes || null
+            // Don't include user_id - it will be set automatically by DEFAULT auth.uid()
+          })
+          .select()
+          .single();
+
+        if (sessionError) {
+          console.error('❌ Error syncing past session:', sessionError);
+          toast({
+            title: 'Cloud Sync Warning',
+            description: 'Session saved locally but failed to sync to cloud. You can try again later.',
+            variant: 'destructive'
+          });
+        } else {
+          console.log('✅ Past session synced with ID:', sessionData.id, 'for user:', user.id);
+          toast({
+            title: 'Past Session Added',
+            description: 'Your past session has been successfully recorded and synced to the cloud.',
+          });
+        }
+      } else {
+        toast({
+          title: 'Past Session Added',
+          description: 'Your past session has been successfully recorded locally.',
+        });
+      }
       
       onClose();
     } catch (error) {
+      console.error('Error saving past session:', error);
       toast({
         title: 'Error',
         description: 'There was a problem saving your session.',

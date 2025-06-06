@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
@@ -251,7 +250,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [sessions, toast, user?.id, isInitialized]);
 
-  // Simplified sync function - RLS now handles user isolation automatically
+  // Updated sync function to save sessions immediately when they're completed
   const syncSessionToSupabase = async (session: PokerSession) => {
     if (!user) {
       console.warn('No authenticated user - skipping Supabase sync');
@@ -259,19 +258,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
     
     try {
-      // Only sync completed sessions to Supabase
+      // Sync completed sessions to Supabase - user_id will be set automatically by DEFAULT auth.uid()
       if (!session.isActive && session.endTime) {
-        console.log('🔄 Syncing session to Supabase for user:', user.id, 'Session:', session.id);
+        console.log('🔄 Syncing completed session to Supabase for user:', user.id, 'Session:', session.id);
         
-        // Insert basic session data - user_id will be set automatically by RLS
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
           .insert({
-            start_time: new Date(session.startTime).toISOString(),
-            end_time: new Date(session.endTime).toISOString(),
+            start_time: session.startTime.toISOString(),
+            end_time: session.endTime.toISOString(),
             session_type: session.format,
             game_type: session.gameType,
             notes: session.notes || null
+            // Don't include user_id - it will be set automatically by DEFAULT auth.uid()
           })
           .select()
           .single();
@@ -287,6 +286,29 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           title: "Session saved to cloud",
           description: "Your session has been backed up to your account.",
         });
+      } else if (session.isActive) {
+        // For active sessions, save immediately to ensure they persist
+        console.log('🔄 Syncing active session to Supabase for user:', user.id, 'Session:', session.id);
+        
+        const { data: sessionData, error: sessionError } = await supabase
+          .from('sessions')
+          .insert({
+            start_time: session.startTime.toISOString(),
+            end_time: new Date().toISOString(), // Temporary end time for active sessions
+            session_type: session.format,
+            game_type: session.gameType,
+            notes: session.notes || null
+            // Don't include user_id - it will be set automatically by DEFAULT auth.uid()
+          })
+          .select()
+          .single();
+
+        if (sessionError) {
+          console.error('❌ Error syncing active session:', sessionError);
+          throw sessionError;
+        }
+
+        console.log('✅ Active session synced with ID:', sessionData.id, 'for user:', user.id);
       }
     } catch (error) {
       console.error("Error syncing session to Supabase:", error);
@@ -327,7 +349,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const startSession = (session: PokerSession) => {
+  const startSession = async (session: PokerSession) => {
     const sessionWithActive = {
       ...session,
       initialBuyIn: session.buyIn,
@@ -339,9 +361,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
     setActiveSession(sessionWithActive);
     addSession(sessionWithActive);
+    
+    // Immediately sync active session to Supabase to ensure persistence
+    if (user) {
+      await syncSessionToSupabase(sessionWithActive);
+    }
   };
 
-  const endSession = (id: string, cashOut: number, notes?: string) => {
+  const endSession = async (id: string, cashOut: number, notes?: string) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
       const hasActiveTables = session.tables && session.tables.some(table => table.isActive);
@@ -361,8 +388,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       updateSession(updatedSession);
       setActiveSession(null);
       
-      // Sync to Supabase if user is logged in
-      syncSessionToSupabase(updatedSession);
+      // Sync completed session to Supabase
+      if (user) {
+        await syncSessionToSupabase(updatedSession);
+      }
     }
   };
 
