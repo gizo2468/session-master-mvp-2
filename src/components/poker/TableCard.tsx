@@ -92,7 +92,15 @@ const TableCard: React.FC<TableCardProps> = ({
                 ))}
               </div>
             </div>
-            <SessionTimeBadge startTime={table.startTime} />
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span>
+                {new Date().getTime() - table.startTime.getTime() > 0 
+                  ? Math.floor((new Date().getTime() - table.startTime.getTime()) / (1000 * 60)) + 'm'
+                  : '0m'
+                }
+              </span>
+            </div>
           </div>
         </CardHeader>
 
