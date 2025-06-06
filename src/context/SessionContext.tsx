@@ -4,132 +4,13 @@ import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker'
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { findSupabaseSessionId, syncHandToSupabase, syncHandUpdateToSupabase, syncHandDeleteToSupabase } from '@/utils/handSync';
-
-interface SessionContextType {
-  sessions: PokerSession[];
-  activeSession: PokerSession | null;
-  filters: SessionFilter;
-  showStorageWarning: boolean;
-  dismissStorageWarning: () => void;
-  addSession: (session: PokerSession) => void;
-  updateSession: (session: PokerSession) => void;
-  deleteSession: (id: string) => void;
-  startSession: (session: PokerSession) => void;
-  endSession: (id: string, cashOut: number, notes?: string) => void;
-  pauseSession: (id: string) => void;
-  resumeSession: (id: string) => void;
-  updateSessionDuration: (id: string, duration: number) => void;
-  addRebuy: (id: string, amount: number) => void;
-  setFilters: (filters: SessionFilter) => void;
-  addHand: (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => void;
-  updateHand: (sessionId: string, hand: HandData) => void;
-  deleteHand: (sessionId: string, handId: string) => void;
-  addTableHand: (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => void;
-  updateTableHand: (sessionId: string, tableId: string, hand: HandData) => void;
-  deleteTableHand: (sessionId: string, tableId: string, handId: string) => void;
-  addTable: (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
-  updateTable: (sessionId: string, table: TableData) => void;
-  endTable: (
-    sessionId: string, 
-    tableId: string, 
-    cashOut: number, 
-    notes?: string,
-    bounty?: { 
-      bountyCount?: number, 
-      bountyAmount?: number,
-      finalPosition?: number 
-    },
-    multiDayInfo?: {
-      nextDayStart?: Date,
-      chipsCarryover?: number,
-      dayEndedWithoutElimination?: boolean
-    }
-  ) => void;
-  addTableRebuy: (sessionId: string, tableId: string, amount: number) => void;
-  getTableById: (sessionId: string, tableId: string) => TableData | undefined;
-  deleteTable: (sessionId: string, tableId: string) => void;
-  clearAllUserData: () => void;
-}
+import { SessionContextType, MAX_STORED_SESSIONS } from './session/types';
+import { loadSessions, findActiveSession, clearUserData, clearOtherUserSessions, getUserStorageKey } from './session/storage';
+import { syncSessionToSupabase } from './session/supabaseSync';
+import { createTableHandHandlers } from './session/handlers';
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
-
-const MAX_STORED_SESSIONS = 50;
-
-// Generate user-specific localStorage key
-const getUserStorageKey = (userId: string | null): string => {
-  if (!userId) return 'pokerSessions_anonymous';
-  return `pokerSessions_${userId}`;
-};
-
-// Load sessions from localStorage
-const loadSessions = (userId: string | null): PokerSession[] => {
-  try {
-    const storageKey = getUserStorageKey(userId);
-    const savedSessions = localStorage.getItem(storageKey);
-    if (savedSessions) {
-      const parsed = JSON.parse(savedSessions);
-      return parsed.map((session: PokerSession) => {
-        if (!session.initialBuyIn) {
-          session.initialBuyIn = session.buyIn - ((session.rebuys || 0) * (session.tournamentBuyIn || 0)) - 
-                                ((session.addOns || 0) * (session.tournamentBuyIn || 0));
-        }
-        
-        const processedSession = {
-          ...session,
-          startTime: new Date(session.startTime),
-          endTime: session.endTime ? new Date(session.endTime) : undefined,
-          hands: session.hands ? session.hands.map((hand: HandData) => ({
-            ...hand,
-            createdAt: new Date(hand.createdAt)
-          })) : []
-        };
-        
-        if (session.tables) {
-          processedSession.tables = session.tables.map((table: TableData) => ({
-            ...table,
-            startTime: new Date(table.startTime),
-            endTime: table.endTime ? new Date(table.endTime) : undefined
-          }));
-        }
-        
-        return processedSession;
-      });
-    }
-  } catch (error) {
-    console.error("Error loading sessions from localStorage:", error);
-  }
-  return [];
-};
-
-// Find the active session
-const findActiveSession = (sessions: PokerSession[]): PokerSession | null => {
-  return sessions.find(session => session.isActive) || null;
-};
-
-// Clear all user-specific data from localStorage
-const clearUserData = (userId: string | null) => {
-  if (userId) {
-    const storageKey = getUserStorageKey(userId);
-    localStorage.removeItem(storageKey);
-    localStorage.removeItem(`activeSession_${userId}`);
-  }
-  // Also clear anonymous sessions
-  localStorage.removeItem('pokerSessions_anonymous');
-  localStorage.removeItem('activeSession_anonymous');
-};
-
-// Clear sessions for other users when switching accounts
-const clearOtherUserSessions = (currentUserId: string | null) => {
-  const keys = Object.keys(localStorage);
-  keys.forEach(key => {
-    if (key.startsWith('pokerSessions_') && key !== getUserStorageKey(currentUserId)) {
-      // Don't completely remove other user sessions, but make sure they're not accessible
-      // This preserves data integrity while ensuring proper isolation
-    }
-  });
-};
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -253,78 +134,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [sessions, toast, user?.id, isInitialized]);
 
-  // Updated sync function to include user email
-  const syncSessionToSupabase = async (session: PokerSession) => {
-    if (!user) {
-      console.warn('No authenticated user - skipping Supabase sync');
-      return;
-    }
-    
-    try {
-      // Sync completed sessions to Supabase - user_id and email will be set
-      if (!session.isActive && session.endTime) {
-        console.log('🔄 Syncing completed session to Supabase for user:', user.id, 'Email:', user.email, 'Session:', session.id);
-        
-        const { data: sessionData, error: sessionError } = await supabase
-          .from('sessions')
-          .insert({
-            start_time: session.startTime.toISOString(),
-            end_time: session.endTime.toISOString(),
-            session_type: session.format,
-            game_type: session.gameType,
-            notes: session.notes || null,
-            email: user.email // NEW: Include user email for permanent identification
-            // user_id will be set automatically by DEFAULT auth.uid()
-          })
-          .select()
-          .single();
-
-        if (sessionError) {
-          console.error('❌ Error syncing session:', sessionError);
-          throw sessionError;
-        }
-
-        console.log('✅ Session synced with ID:', sessionData.id, 'for user:', user.id, 'email:', user.email);
-        
-        toast({
-          title: "Session saved to cloud",
-          description: "Your session has been backed up to your account.",
-        });
-      } else if (session.isActive) {
-        // For active sessions, save immediately to ensure they persist
-        console.log('🔄 Syncing active session to Supabase for user:', user.id, 'Email:', user.email, 'Session:', session.id);
-        
-        const { data: sessionData, error: sessionError } = await supabase
-          .from('sessions')
-          .insert({
-            start_time: session.startTime.toISOString(),
-            end_time: new Date().toISOString(), // Temporary end time for active sessions
-            session_type: session.format,
-            game_type: session.gameType,
-            notes: session.notes || null,
-            email: user.email // NEW: Include user email for permanent identification
-            // user_id will be set automatically by DEFAULT auth.uid()
-          })
-          .select()
-          .single();
-
-        if (sessionError) {
-          console.error('❌ Error syncing active session:', sessionError);
-          throw sessionError;
-        }
-
-        console.log('✅ Active session synced with ID:', sessionData.id, 'for user:', user.id, 'email:', user.email);
-      }
-    } catch (error) {
-      console.error("Error syncing session to Supabase:", error);
-      toast({
-        title: "Cloud sync failed",
-        description: "Unable to save session to cloud. Your data is still saved locally.",
-        variant: "destructive"
-      });
-    }
-  };
-
   const addSession = (session: PokerSession) => {
     const sessionWithInitialBuyIn = {
       ...session,
@@ -369,7 +178,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     
     // Immediately sync active session to Supabase to ensure persistence
     if (user) {
-      await syncSessionToSupabase(sessionWithActive);
+      await syncSessionToSupabase(sessionWithActive, user, toast);
     }
   };
 
@@ -395,150 +204,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       
       // Sync completed session to Supabase
       if (user) {
-        await syncSessionToSupabase(updatedSession);
+        await syncSessionToSupabase(updatedSession, user, toast);
       }
     }
   };
 
-  // Define the table hand management functions
-  const addTableHand = async (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session || !session.tables) return;
-    
-    const tableIndex = session.tables.findIndex(t => t.id === tableId);
-    if (tableIndex === -1) return;
-    
-    const table = session.tables[tableIndex];
-    const tableFormat = table.format;
-    
-    const newHand: HandData = {
-      ...hand,
-      id: uuidv4(),
-      createdAt: new Date(),
-      tableId: tableId,
-      // Auto-determine currency type based on table format
-      currencyType: tableFormat === 'Cash' ? 'currency' : 'chips'
-    };
-    
-    const updatedTable = {
-      ...table,
-      hands: [...(table.hands || []), newHand]
-    };
-    
-    const updatedTables = [...session.tables];
-    updatedTables[tableIndex] = updatedTable;
-    
-    const updatedSession = {
-      ...session,
-      tables: updatedTables
-    };
-    
-    updateSession(updatedSession);
-
-    // Sync to Supabase if user is logged in
-    if (user) {
-      try {
-        const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
-        if (supabaseSessionId) {
-          const synced = await syncHandToSupabase(newHand, supabaseSessionId);
-          if (!synced) {
-            console.warn('Failed to sync table hand to Supabase, but saved locally');
-          }
-        }
-      } catch (error) {
-        console.error('Error syncing table hand to Supabase:', error);
-      }
-    }
-  };
-
-  const updateTableHand = async (sessionId: string, tableId: string, hand: HandData) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session || !session.tables) return;
-    
-    const tableIndex = session.tables.findIndex(t => t.id === tableId);
-    if (tableIndex === -1) return;
-    
-    const table = session.tables[tableIndex];
-    if (!table.hands) return;
-    
-    const updatedHands = table.hands.map(h => 
-      h.id === hand.id ? hand : h
-    );
-    
-    const updatedTable = {
-      ...table,
-      hands: updatedHands
-    };
-    
-    const updatedTables = [...session.tables];
-    updatedTables[tableIndex] = updatedTable;
-    
-    const updatedSession = {
-      ...session,
-      tables: updatedTables
-    };
-    
-    updateSession(updatedSession);
-
-    // Sync update to Supabase if user is logged in
-    if (user) {
-      try {
-        const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
-        if (supabaseSessionId) {
-          const synced = await syncHandUpdateToSupabase(hand, supabaseSessionId);
-          if (!synced) {
-            console.warn('Failed to sync table hand update to Supabase, but saved locally');
-          }
-        }
-      } catch (error) {
-        console.error('Error syncing table hand update to Supabase:', error);
-      }
-    }
-  };
-
-  const deleteTableHand = async (sessionId: string, tableId: string, handId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session || !session.tables) return;
-    
-    const tableIndex = session.tables.findIndex(t => t.id === tableId);
-    if (tableIndex === -1) return;
-    
-    const table = session.tables[tableIndex];
-    if (!table.hands) return;
-    
-    const handToDelete = table.hands.find(h => h.id === handId);
-    const updatedHands = table.hands.filter(hand => hand.id !== handId);
-    
-    const updatedTable = {
-      ...table,
-      hands: updatedHands
-    };
-    
-    const updatedTables = [...session.tables];
-    updatedTables[tableIndex] = updatedTable;
-    
-    const updatedSession = {
-      ...session,
-      tables: updatedTables
-    };
-    
-    updateSession(updatedSession);
-
-    // Sync deletion to Supabase if user is logged in
-    if (user && handToDelete) {
-      try {
-        const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
-        if (supabaseSessionId) {
-          const synced = await syncHandDeleteToSupabase(handToDelete, supabaseSessionId);
-          if (!synced) {
-            console.warn('Failed to sync table hand deletion to Supabase, but deleted locally');
-          }
-        }
-      } catch (error) {
-        console.error('Error syncing hand deletion to Supabase:', error);
-      }
-    }
-  };
+  // Create table hand handlers
+  const tableHandHandlers = createTableHandHandlers(sessions, updateSession, user);
 
   // Only render children after initialization to prevent context usage before setup
   if (!isInitialized) {
@@ -606,7 +278,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           if (session) {
             // If tableId is provided, add to that table
             if (hand.tableId) {
-              addTableHand(sessionId, hand.tableId, hand);
+              tableHandHandlers.addTableHand(sessionId, hand.tableId, hand);
               return;
             }
             
@@ -644,7 +316,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           if (session) {
             // If tableId is provided, update in that table
             if (hand.tableId) {
-              updateTableHand(sessionId, hand.tableId, hand);
+              tableHandHandlers.updateTableHand(sessionId, hand.tableId, hand);
               return;
             }
             
@@ -684,7 +356,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             if (session.tables && session.tables.length > 0) {
               for (const table of session.tables) {
                 if (table.hands && table.hands.some(h => h.id === handId)) {
-                  deleteTableHand(sessionId, table.id, handId);
+                  tableHandHandlers.deleteTableHand(sessionId, table.id, handId);
                   return;
                 }
               }
@@ -718,9 +390,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             }
           }
         },
-        addTableHand,
-        updateTableHand,
-        deleteTableHand,
+        addTableHand: tableHandHandlers.addTableHand,
+        updateTableHand: tableHandHandlers.updateTableHand,
+        deleteTableHand: tableHandHandlers.deleteTableHand,
         addTable: (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
           const session = sessions.find(s => s.id === sessionId);
           if (session) {
