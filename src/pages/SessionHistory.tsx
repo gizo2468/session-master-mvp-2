@@ -31,12 +31,20 @@ export default function SessionHistory() {
       try {
         console.log('🔍 Fetching sessions for user:', user.id);
         
-        // Query sessions for the authenticated user only - RLS will automatically filter
-        // but we also explicitly filter by user_id to be extra safe
+        // Verify current user authentication before fetching
+        const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+        if (authError || !currentUser || currentUser.id !== user.id) {
+          console.error('❌ Authentication verification failed:', authError);
+          setSupabaseSessions([]);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Query sessions with explicit user filter AND rely on RLS
         const { data, error } = await supabase
           .from('sessions')
           .select('*')
-          .eq('user_id', user.id)  // Explicit user filter for security
+          .eq('user_id', currentUser.id)  // Explicit user filter for extra security
           .order('start_time', { ascending: false });
           
         if (error) {
@@ -44,11 +52,15 @@ export default function SessionHistory() {
           throw error;
         }
         
-        console.log('✅ Fetched sessions from Supabase for user:', user.id, 'Count:', data?.length || 0);
+        console.log('✅ Fetched sessions from Supabase for user:', currentUser.id, 'Count:', data?.length || 0);
         
-        if (data) {
-          setSupabaseSessions(data);
+        // Double-check that all returned sessions belong to the current user
+        const validSessions = data?.filter(session => session.user_id === currentUser.id) || [];
+        if (data && validSessions.length !== data.length) {
+          console.warn('⚠️ Some sessions did not belong to current user - filtered out');
         }
+        
+        setSupabaseSessions(validSessions);
       } catch (error) {
         console.error('Error fetching sessions from Supabase:', error);
         toast({
@@ -157,6 +169,9 @@ export default function SessionHistory() {
                         </p>
                         <p className="text-sm text-gray-600">
                           {session.game_type} • {session.session_type}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          User: {session.user_id}
                         </p>
                       </div>
                       <Button 

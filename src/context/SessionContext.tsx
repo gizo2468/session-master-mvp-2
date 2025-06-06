@@ -206,7 +206,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [sessions, toast, user?.id, isInitialized]);
 
-  // Enhanced sync function to handle detailed session data with proper user association
+  // Enhanced sync function with explicit user validation
   const syncSessionToSupabase = async (session: PokerSession) => {
     if (!user) {
       console.warn('No authenticated user - skipping Supabase sync');
@@ -218,7 +218,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (!session.isActive && session.endTime) {
         console.log('🔄 Syncing detailed session data to Supabase for user:', user.id, 'Session:', session.id);
         
-        // Insert basic session data - user_id will be set automatically by default value to auth.uid()
+        // Verify user is still authenticated before proceeding
+        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+        if (userError || !currentUser || currentUser.id !== user.id) {
+          console.error('❌ User authentication failed during sync:', userError);
+          return;
+        }
+        
+        // Insert basic session data with explicit user_id verification
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
           .insert({
@@ -226,8 +233,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             end_time: new Date(session.endTime).toISOString(),
             session_type: session.format,
             game_type: session.gameType,
-            notes: session.notes || null
-            // user_id is automatically set by the database default to auth.uid()
+            notes: session.notes || null,
+            user_id: currentUser.id // Explicitly set user_id for security
           })
           .select()
           .single();
@@ -436,7 +443,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       syncSessionToSupabase(updatedSession);
     }
   };
-  
+
   const pauseSession = (id: string) => {
     const session = sessions.find((s) => s.id === id);
     if (session && session.isActive) {
@@ -447,7 +454,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       updateSession(updatedSession);
     }
   };
-  
+
   const resumeSession = (id: string) => {
     const session = sessions.find((s) => s.id === id);
     if (session && session.isActive) {
@@ -458,7 +465,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       updateSession(updatedSession);
     }
   };
-  
+
   const updateSessionDuration = (id: string, duration: number) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
@@ -521,7 +528,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
     }
   };
-  
+
   const updateHand = async (sessionId: string, hand: HandData) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
@@ -560,7 +567,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
     }
   };
-  
+
   const deleteHand = async (sessionId: string, handId: string) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
@@ -602,7 +609,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
     }
   };
-  
+
   const addTableHand = async (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => {
     const session = sessions.find(s => s.id === sessionId);
     if (!session || !session.tables) return;
@@ -652,7 +659,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
     }
   };
-  
+
   const updateTableHand = async (sessionId: string, tableId: string, hand: HandData) => {
     const session = sessions.find(s => s.id === sessionId);
     if (!session || !session.tables) return;
@@ -697,7 +704,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
     }
   };
-  
+
   const deleteTableHand = async (sessionId: string, tableId: string, handId: string) => {
     const session = sessions.find(s => s.id === sessionId);
     if (!session || !session.tables) return;
@@ -741,7 +748,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
     }
   };
-  
+
   const addTable = (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session) {
@@ -762,7 +769,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       updateSession(updatedSession);
     }
   };
-  
+
   const updateTable = (sessionId: string, updatedTable: TableData) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session && session.tables) {
@@ -778,7 +785,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       updateSession(updatedSession);
     }
   };
-  
+
   const endTable = (
     sessionId: string, 
     tableId: string, 
@@ -824,7 +831,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       updateSession(updatedSession);
     }
   };
-  
+
   const addTableRebuy = (sessionId: string, tableId: string, amount: number) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session && session.tables) {
@@ -853,7 +860,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       updateSession(updatedSession);
     }
   };
-  
+
   const getTableById = (sessionId: string, tableId: string): TableData | undefined => {
     const session = sessions.find(s => s.id === sessionId);
     if (session && session.tables) {
@@ -898,23 +905,264 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         deleteSession,
         startSession,
         endSession,
-        pauseSession,
-        resumeSession,
-        updateSessionDuration,
-        addRebuy,
+        pauseSession: (id: string) => {
+          const session = sessions.find((s) => s.id === id);
+          if (session && session.isActive) {
+            const updatedSession = {
+              ...session,
+              currentStatus: 'paused' as const,
+            };
+            updateSession(updatedSession);
+          }
+        },
+        resumeSession: (id: string) => {
+          const session = sessions.find((s) => s.id === id);
+          if (session && session.isActive) {
+            const updatedSession = {
+              ...session,
+              currentStatus: 'running' as const,
+            };
+            updateSession(updatedSession);
+          }
+        },
+        updateSessionDuration: (id: string, duration: number) => {
+          const session = sessions.find((s) => s.id === id);
+          if (session) {
+            const updatedSession = {
+              ...session,
+              sessionDuration: duration,
+            };
+            updateSession(updatedSession);
+          }
+        },
+        addRebuy: (id: string, amount: number) => {
+          const session = sessions.find((s) => s.id === id);
+          if (session) {
+            const currentRebuys = session.rebuys || 0;
+            const updatedSession = {
+              ...session,
+              rebuys: currentRebuys + 1,
+              buyIn: session.buyIn + amount
+            };
+            updateSession(updatedSession);
+          }
+        },
         setFilters,
         addHand,
-        updateHand,
-        deleteHand,
+        updateHand: async (sessionId: string, hand: HandData) => {
+          const session = sessions.find(s => s.id === sessionId);
+          if (session) {
+            // If tableId is provided, update in that table
+            if (hand.tableId) {
+              updateTableHand(sessionId, hand.tableId, hand);
+              return;
+            }
+            
+            if (session.hands) {
+              const updatedHands = session.hands.map(h => 
+                h.id === hand.id ? hand : h
+              );
+              
+              const updatedSession = {
+                ...session,
+                hands: updatedHands
+              };
+              
+              updateSession(updatedSession);
+
+              // Sync update to Supabase if user is logged in
+              if (user) {
+                try {
+                  const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
+                  if (supabaseSessionId) {
+                    const synced = await syncHandUpdateToSupabase(hand, supabaseSessionId);
+                    if (!synced) {
+                      console.warn('Failed to sync hand update to Supabase, but saved locally');
+                    }
+                  }
+                } catch (error) {
+                  console.error('Error syncing hand update to Supabase:', error);
+                }
+              }
+            }
+          }
+        },
+        deleteHand: async (sessionId: string, handId: string) => {
+          const session = sessions.find(s => s.id === sessionId);
+          if (session) {
+            // Check if this hand belongs to a table
+            if (session.tables && session.tables.length > 0) {
+              for (const table of session.tables) {
+                if (table.hands && table.hands.some(h => h.id === handId)) {
+                  deleteTableHand(sessionId, table.id, handId);
+                  return;
+                }
+              }
+            }
+            
+            if (session.hands) {
+              const handToDelete = session.hands.find(h => h.id === handId);
+              const updatedHands = session.hands.filter(hand => hand.id !== handId);
+              
+              const updatedSession = {
+                ...session,
+                hands: updatedHands
+              };
+              
+              updateSession(updatedSession);
+
+              // Sync deletion to Supabase if user is logged in
+              if (user && handToDelete) {
+                try {
+                  const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
+                  if (supabaseSessionId) {
+                    const synced = await syncHandDeleteToSupabase(handToDelete, supabaseSessionId);
+                    if (!synced) {
+                      console.warn('Failed to sync hand deletion to Supabase, but deleted locally');
+                    }
+                  }
+                } catch (error) {
+                  console.error('Error syncing hand deletion to Supabase:', error);
+                }
+              }
+            }
+          }
+        },
         addTableHand,
         updateTableHand,
         deleteTableHand,
-        addTable,
-        updateTable,
-        endTable,
-        addTableRebuy,
-        getTableById,
-        deleteTable,
+        addTable: (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
+          const session = sessions.find(s => s.id === sessionId);
+          if (session) {
+            const newTable: TableData = {
+              ...table,
+              id: uuidv4(),
+              startTime: new Date(),
+              isActive: true,
+              initialBuyIn: table.buyIn,
+            };
+            
+            const updatedSession = {
+              ...session,
+              tables: [...(session.tables || []), newTable],
+              buyIn: session.buyIn + table.buyIn
+            };
+            
+            updateSession(updatedSession);
+          }
+        },
+        updateTable: (sessionId: string, updatedTable: TableData) => {
+          const session = sessions.find(s => s.id === sessionId);
+          if (session && session.tables) {
+            const updatedTables = session.tables.map(table => 
+              table.id === updatedTable.id ? updatedTable : table
+            );
+            
+            const updatedSession = {
+              ...session,
+              tables: updatedTables
+            };
+            
+            updateSession(updatedSession);
+          }
+        },
+        endTable: (
+          sessionId: string, 
+          tableId: string, 
+          cashOut: number, 
+          notes?: string,
+          bounty?: { 
+            bountyCount?: number, 
+            bountyAmount?: number,
+            finalPosition?: number 
+          },
+          multiDayInfo?: {
+            nextDayStart?: Date,
+            chipsCarryover?: number,
+            dayEndedWithoutElimination?: boolean
+          }
+        ) => {
+          const session = sessions.find(s => s.id === sessionId);
+          if (session && session.tables) {
+            const updatedTables = session.tables.map(table => {
+              if (table.id === tableId) {
+                return {
+                  ...table,
+                  isActive: false,
+                  endTime: new Date(),
+                  cashOut: multiDayInfo?.dayEndedWithoutElimination ? 0 : cashOut,
+                  notes: notes || table.notes,
+                  ...(bounty?.bountyCount !== undefined && { bountyCount: bounty.bountyCount }),
+                  ...(bounty?.bountyAmount !== undefined && { bountyAmount: bounty.bountyAmount }),
+                  ...(bounty?.finalPosition !== undefined && { finalPosition: bounty.finalPosition }),
+                  ...(multiDayInfo?.nextDayStart && { nextDayStart: multiDayInfo.nextDayStart }),
+                  ...(multiDayInfo?.chipsCarryover && { chipsCarryover: multiDayInfo.chipsCarryover }),
+                  ...(multiDayInfo?.dayEndedWithoutElimination && { dayEndedWithoutElimination: true })
+                };
+              }
+              return table;
+            });
+            
+            const updatedSession = {
+              ...session,
+              tables: updatedTables
+            };
+            
+            updateSession(updatedSession);
+          }
+        },
+        addTableRebuy: (sessionId: string, tableId: string, amount: number) => {
+          const session = sessions.find(s => s.id === sessionId);
+          if (session && session.tables) {
+            const updatedTables = session.tables.map(table => {
+              if (table.id === tableId) {
+                const currentRebuys = table.rebuys || 0;
+                return {
+                  ...table,
+                  rebuys: currentRebuys + 1,
+                  buyIn: table.buyIn + amount
+                };
+              }
+              return table;
+            });
+            
+            const updatedTable = updatedTables.find(t => t.id === tableId);
+            const originalTable = session.tables.find(t => t.id === tableId);
+            const buyInDifference = (updatedTable && originalTable) ? updatedTable.buyIn - originalTable.buyIn : 0;
+            
+            const updatedSession = {
+              ...session,
+              tables: updatedTables,
+              buyIn: session.buyIn + buyInDifference
+            };
+            
+            updateSession(updatedSession);
+          }
+        },
+        getTableById: (sessionId: string, tableId: string): TableData | undefined => {
+          const session = sessions.find(s => s.id === sessionId);
+          if (session && session.tables) {
+            return session.tables.find(t => t.id === tableId);
+          }
+          return undefined;
+        },
+        deleteTable: (sessionId: string, tableId: string) => {
+          const session = sessions.find(s => s.id === sessionId);
+          if (session && session.tables) {
+            const tableToDelete = session.tables.find(t => t.id === tableId);
+            if (tableToDelete) {
+              const updatedTables = session.tables.filter(table => table.id !== tableId);
+              
+              const updatedSession = {
+                ...session,
+                tables: updatedTables,
+                buyIn: session.buyIn - tableToDelete.buyIn
+              };
+              
+              updateSession(updatedSession);
+            }
+          }
+        },
       }}
     >
       {children}
