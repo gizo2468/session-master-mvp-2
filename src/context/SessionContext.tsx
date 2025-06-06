@@ -723,17 +723,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const updateTable = (sessionId: string, updatedTable: TableData) => {
     const session = sessions.find(s => s.id === sessionId);
     if (session && session.tables) {
-      const originalTable = session.tables.find(t => t.id === updatedTable.id);
-      const buyInDifference = originalTable ? updatedTable.buyIn - originalTable.buyIn : 0;
-      
       const updatedTables = session.tables.map(table => 
         table.id === updatedTable.id ? updatedTable : table
       );
       
       const updatedSession = {
         ...session,
-        tables: updatedTables,
-        buyIn: session.buyIn + buyInDifference
+        tables: updatedTables
       };
       
       updateSession(updatedSession);

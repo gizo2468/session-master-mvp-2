@@ -59,7 +59,8 @@ export default function CompletedTablesDisplay({ tables, sessionId }: CompletedT
       <div className="space-y-4">
         {tables.map((table) => {
           const profitLoss = (table.cashOut ?? 0) - table.buyIn;
-          const newTotalPayout = Math.max(table.buyIn + profitLoss, table.buyIn);
+          // Fixed: Use actual cashOut amount, not calculated minimum
+          const actualPayout = table.cashOut ?? 0;
           
           return (
             <div 
@@ -242,7 +243,7 @@ export default function CompletedTablesDisplay({ tables, sessionId }: CompletedT
                 </div>
               )}
               
-              {/* COMPLETELY REBUILT: Total Payout display using new logic */}
+              {/* Fixed: Total Payout display using actual cashOut amount */}
               <div className="flex flex-col items-center justify-center mt-4 mb-2">
                 <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">
                   {table.dayEndedWithoutElimination ? 'STATUS' : 'TOTAL PAYOUT'}
@@ -251,7 +252,7 @@ export default function CompletedTablesDisplay({ tables, sessionId }: CompletedT
                   <span className="font-bold text-xl text-poker-feltGreen">Continuing</span>
                 ) : (
                   <span className="font-bold text-xl text-poker-gold">
-                    ${newTotalPayout.toFixed(2)}
+                    ${actualPayout.toFixed(2)}
                   </span>
                 )}
               </div>
