@@ -529,6 +529,7 @@ export type Database = {
       sessions: {
         Row: {
           created_at: string
+          email: string | null
           end_time: string
           game_type: string | null
           id: string
@@ -539,6 +540,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email?: string | null
           end_time: string
           game_type?: string | null
           id?: string
@@ -549,6 +551,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email?: string | null
           end_time?: string
           game_type?: string | null
           id?: string

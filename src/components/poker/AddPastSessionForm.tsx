@@ -111,7 +111,7 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
       
       // Then sync to Supabase if user is logged in
       if (user) {
-        console.log('🔄 Syncing past session to Supabase for user:', user.id);
+        console.log('🔄 Syncing past session to Supabase for user:', user.id, 'Email:', user.email);
         
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
@@ -120,8 +120,9 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
             end_time: sessionInfo.endTime.toISOString(),
             session_type: primaryTable.format,
             game_type: primaryTable.gameType,
-            notes: sessionInfo.notes || null
-            // Don't include user_id - it will be set automatically by DEFAULT auth.uid()
+            notes: sessionInfo.notes || null,
+            email: user.email // NEW: Include user email for permanent identification
+            // user_id will be set automatically by DEFAULT auth.uid()
           })
           .select()
           .single();
@@ -134,7 +135,7 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
             variant: 'destructive'
           });
         } else {
-          console.log('✅ Past session synced with ID:', sessionData.id, 'for user:', user.id);
+          console.log('✅ Past session synced with ID:', sessionData.id, 'for user:', user.id, 'email:', user.email);
           toast({
             title: 'Past Session Added',
             description: 'Your past session has been successfully recorded and synced to the cloud.',

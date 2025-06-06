@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
@@ -252,7 +253,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [sessions, toast, user?.id, isInitialized]);
 
-  // Updated sync function to not pass user_id - it will be set automatically by DEFAULT auth.uid()
+  // Updated sync function to include user email
   const syncSessionToSupabase = async (session: PokerSession) => {
     if (!user) {
       console.warn('No authenticated user - skipping Supabase sync');
@@ -260,9 +261,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
     
     try {
-      // Sync completed sessions to Supabase - user_id will be set automatically by DEFAULT auth.uid()
+      // Sync completed sessions to Supabase - user_id and email will be set
       if (!session.isActive && session.endTime) {
-        console.log('🔄 Syncing completed session to Supabase for user:', user.id, 'Session:', session.id);
+        console.log('🔄 Syncing completed session to Supabase for user:', user.id, 'Email:', user.email, 'Session:', session.id);
         
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
@@ -271,8 +272,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             end_time: session.endTime.toISOString(),
             session_type: session.format,
             game_type: session.gameType,
-            notes: session.notes || null
-            // Don't include user_id - it will be set automatically by DEFAULT auth.uid()
+            notes: session.notes || null,
+            email: user.email // NEW: Include user email for permanent identification
+            // user_id will be set automatically by DEFAULT auth.uid()
           })
           .select()
           .single();
@@ -282,7 +284,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           throw sessionError;
         }
 
-        console.log('✅ Session synced with ID:', sessionData.id, 'for user:', user.id);
+        console.log('✅ Session synced with ID:', sessionData.id, 'for user:', user.id, 'email:', user.email);
         
         toast({
           title: "Session saved to cloud",
@@ -290,7 +292,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         });
       } else if (session.isActive) {
         // For active sessions, save immediately to ensure they persist
-        console.log('🔄 Syncing active session to Supabase for user:', user.id, 'Session:', session.id);
+        console.log('🔄 Syncing active session to Supabase for user:', user.id, 'Email:', user.email, 'Session:', session.id);
         
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
@@ -299,8 +301,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             end_time: new Date().toISOString(), // Temporary end time for active sessions
             session_type: session.format,
             game_type: session.gameType,
-            notes: session.notes || null
-            // Don't include user_id - it will be set automatically by DEFAULT auth.uid()
+            notes: session.notes || null,
+            email: user.email // NEW: Include user email for permanent identification
+            // user_id will be set automatically by DEFAULT auth.uid()
           })
           .select()
           .single();
@@ -310,7 +313,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           throw sessionError;
         }
 
-        console.log('✅ Active session synced with ID:', sessionData.id, 'for user:', user.id);
+        console.log('✅ Active session synced with ID:', sessionData.id, 'for user:', user.id, 'email:', user.email);
       }
     } catch (error) {
       console.error("Error syncing session to Supabase:", error);
