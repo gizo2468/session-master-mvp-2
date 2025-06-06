@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewSessionButton from '@/components/NewSessionButton';
@@ -23,16 +24,8 @@ const Index = () => {
   
   const activeSessionsCount = activeSession ? 1 : 0;
   
-  // Fixed sorting: Active sessions first, then completed sessions, both in reverse chronological order
   const recentSessions = [...sessions]
-    .sort((a, b) => {
-      // First, sort by active status (active sessions first)
-      if (a.isActive && !b.isActive) return -1;
-      if (!a.isActive && b.isActive) return 1;
-      
-      // Within each group (active or completed), sort by start time (most recent first)
-      return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
-    })
+    .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
     .slice(0, 3);
 
   if (showAddPastSession) {
