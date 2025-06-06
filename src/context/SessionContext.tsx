@@ -206,7 +206,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [sessions, toast, user?.id, isInitialized]);
 
-  // Enhanced sync function with explicit user validation
+  // Simplified sync function - RLS now handles user isolation automatically
   const syncSessionToSupabase = async (session: PokerSession) => {
     if (!user) {
       console.warn('No authenticated user - skipping Supabase sync');
@@ -216,16 +216,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     try {
       // Only sync completed sessions to Supabase
       if (!session.isActive && session.endTime) {
-        console.log('🔄 Syncing detailed session data to Supabase for user:', user.id, 'Session:', session.id);
+        console.log('🔄 Syncing session to Supabase for user:', user.id, 'Session:', session.id);
         
-        // Verify user is still authenticated before proceeding
-        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-        if (userError || !currentUser || currentUser.id !== user.id) {
-          console.error('❌ User authentication failed during sync:', userError);
-          return;
-        }
-        
-        // Insert basic session data with explicit user_id verification
+        // Insert basic session data - user_id will be set automatically by RLS
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
           .insert({
@@ -233,8 +226,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             end_time: new Date(session.endTime).toISOString(),
             session_type: session.format,
             game_type: session.gameType,
-            notes: session.notes || null,
-            user_id: currentUser.id // Explicitly set user_id for security
+            notes: session.notes || null
           })
           .select()
           .single();
@@ -244,122 +236,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           throw sessionError;
         }
 
-        const supabaseSessionId = sessionData.id;
-        console.log('✅ Session synced with ID:', supabaseSessionId, 'for user:', user.id);
-
-        // Sync table data if exists
-        if (session.tables && session.tables.length > 0) {
-          console.log('🔄 Syncing table data...');
-          
-          for (const table of session.tables) {
-            const { error: tableError } = await supabase
-              .from('session_tables')
-              .insert({
-                session_id: supabaseSessionId,
-                table_name: table.name || null,
-                table_type: table.format || null,
-                game_format: table.gameType || null,
-                stakes: table.stakes || `${table.smallBlind || 0}/${table.bigBlind || 0}`,
-                buy_in: table.buyIn || 0,
-                starting_stack: table.startingStack || null,
-                current_stack: table.currentStack || null,
-                rebuys: table.rebuys || 0,
-                rebuy_amount: (table.rebuys || 0) * (table.rebuyAmount || table.tournamentBuyIn || 0),
-                bounty_amount: table.bountyAmount || 0,
-                players_eliminated: table.bountyCount || 0,
-                final_position: table.finalPosition || null,
-                cashout: table.cashOut || 0,
-                table_notes: table.notes || null,
-                start_time: new Date(table.startTime).toISOString(),
-                end_time: table.endTime ? new Date(table.endTime).toISOString() : null,
-                is_active: table.isActive || false
-              });
-
-            if (tableError) {
-              console.error('❌ Error syncing table:', tableError);
-            }
-          }
-        }
-
-        // Sync hand data if exists
-        if (session.hands && session.hands.length > 0) {
-          console.log('🔄 Syncing hand data...');
-          
-          for (const hand of session.hands) {
-            const { error: handError } = await supabase
-              .from('session_hands')
-              .insert({
-                session_id: supabaseSessionId,
-                table_id: null, // Session-level hands don't belong to a specific table
-                hand_number: hand.handNumber || null,
-                hole_cards: hand.holeCards ? JSON.stringify(hand.holeCards) : (hand.cards ? JSON.stringify([hand.cards]) : null),
-                position: hand.position || null,
-                preflop_action: hand.preflopAction || hand.action || null,
-                flop_cards: hand.flopCards ? JSON.stringify(hand.flopCards) : null,
-                flop_action: hand.flopAction || null,
-                turn_card: hand.turnCard || null,
-                turn_action: hand.turnAction || null,
-                river_card: hand.riverCard || null,
-                river_action: hand.riverAction || null,
-                showdown_result: hand.showdownResult || (typeof hand.result === 'string' ? hand.result : null),
-                pot_size: hand.potSize || 0,
-                amount_won: hand.amountWon || hand.resultAmount || 0,
-                amount_invested: hand.amountInvested || 0,
-                hand_notes: hand.notes || null,
-                hand_image: hand.handImage || hand.image || null,
-                currency_type: hand.currencyType || 'currency'
-              });
-
-            if (handError) {
-              console.error('❌ Error syncing hand:', handError);
-            }
-          }
-        }
-
-        // Calculate and sync session results
-        let totalBuyIn = session.buyIn || 0;
-        let totalCashOut = session.cashOut || 0;
-        let totalRebuys = session.rebuys || 0;
-        let handsPlayed = (session.hands || []).length;
-        
-        // Add table data to totals
-        if (session.tables) {
-          for (const table of session.tables) {
-            totalBuyIn += table.buyIn || 0;
-            totalCashOut += table.cashOut || 0;
-            totalRebuys += table.rebuys || 0;
-            if (table.hands) {
-              handsPlayed += table.hands.length;
-            }
-          }
-        }
-
-        const netProfit = totalCashOut - totalBuyIn;
-        const roiPercentage = totalBuyIn > 0 ? (netProfit / totalBuyIn) * 100 : 0;
-        const sessionDurationHours = session.sessionDuration ? session.sessionDuration / (1000 * 60 * 60) : 0;
-
-        const { error: resultsError } = await supabase
-          .from('session_results')
-          .insert({
-            session_id: supabaseSessionId,
-            total_buy_in: totalBuyIn,
-            total_cashout: totalCashOut,
-            net_profit: netProfit,
-            total_rebuys: totalRebuys,
-            total_rebuy_amount: totalRebuys * (session.tournamentBuyIn || 0),
-            total_bounties_earned: 0, // Will be calculated from table bounties
-            players_eliminated: 0, // Will be calculated from table eliminations
-            final_position: null,
-            tournament_entries: session.format === 'Tournament' ? 1 : 0,
-            hours_played: sessionDurationHours,
-            hands_played: handsPlayed,
-            big_blinds_won: 0, // TODO: Calculate based on stakes
-            roi_percentage: roiPercentage
-          });
-
-        if (resultsError) {
-          console.error('❌ Error syncing session results:', resultsError);
-        }
+        console.log('✅ Session synced with ID:', sessionData.id, 'for user:', user.id);
         
         toast({
           title: "Session saved to cloud",
@@ -490,403 +367,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addHand = async (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session) {
-      // If tableId is provided, add to that table
-      if (hand.tableId) {
-        addTableHand(sessionId, hand.tableId, hand);
-        return;
-      }
-      
-      const newHand: HandData = {
-        ...hand,
-        id: uuidv4(),
-        createdAt: new Date()
-      };
-      
-      const updatedSession = {
-        ...session,
-        hands: [...(session.hands || []), newHand]
-      };
-      
-      updateSession(updatedSession);
-
-      // Sync to Supabase if user is logged in
-      if (user) {
-        try {
-          const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
-          if (supabaseSessionId) {
-            const synced = await syncHandToSupabase(newHand, supabaseSessionId);
-            if (!synced) {
-              console.warn('Failed to sync hand to Supabase, but saved locally');
-            }
-          }
-        } catch (error) {
-          console.error('Error syncing hand to Supabase:', error);
-        }
-      }
-    }
-  };
-
-  const updateHand = async (sessionId: string, hand: HandData) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session) {
-      // If tableId is provided, update in that table
-      if (hand.tableId) {
-        updateTableHand(sessionId, hand.tableId, hand);
-        return;
-      }
-      
-      if (session.hands) {
-        const updatedHands = session.hands.map(h => 
-          h.id === hand.id ? hand : h
-        );
-        
-        const updatedSession = {
-          ...session,
-          hands: updatedHands
-        };
-        
-        updateSession(updatedSession);
-
-        // Sync update to Supabase if user is logged in
-        if (user) {
-          try {
-            const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
-            if (supabaseSessionId) {
-              const synced = await syncHandUpdateToSupabase(hand, supabaseSessionId);
-              if (!synced) {
-                console.warn('Failed to sync hand update to Supabase, but saved locally');
-              }
-            }
-          } catch (error) {
-            console.error('Error syncing hand update to Supabase:', error);
-          }
-        }
-      }
-    }
-  };
-
-  const deleteHand = async (sessionId: string, handId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session) {
-      // Check if this hand belongs to a table
-      if (session.tables && session.tables.length > 0) {
-        for (const table of session.tables) {
-          if (table.hands && table.hands.some(h => h.id === handId)) {
-            deleteTableHand(sessionId, table.id, handId);
-            return;
-          }
-        }
-      }
-      
-      if (session.hands) {
-        const handToDelete = session.hands.find(h => h.id === handId);
-        const updatedHands = session.hands.filter(hand => hand.id !== handId);
-        
-        const updatedSession = {
-          ...session,
-          hands: updatedHands
-        };
-        
-        updateSession(updatedSession);
-
-        // Sync deletion to Supabase if user is logged in
-        if (user && handToDelete) {
-          try {
-            const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
-            if (supabaseSessionId) {
-              const synced = await syncHandDeleteToSupabase(handToDelete, supabaseSessionId);
-              if (!synced) {
-                console.warn('Failed to sync hand deletion to Supabase, but deleted locally');
-              }
-            }
-          } catch (error) {
-            console.error('Error syncing hand deletion to Supabase:', error);
-          }
-        }
-      }
-    }
-  };
-
-  const addTableHand = async (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session || !session.tables) return;
-    
-    const tableIndex = session.tables.findIndex(t => t.id === tableId);
-    if (tableIndex === -1) return;
-    
-    const table = session.tables[tableIndex];
-    const tableFormat = table.format;
-    
-    const newHand: HandData = {
-      ...hand,
-      id: uuidv4(),
-      createdAt: new Date(),
-      tableId: tableId,
-      // Auto-determine currency type based on table format
-      currencyType: tableFormat === 'Cash' ? 'currency' : 'chips'
-    };
-    
-    const updatedTable = {
-      ...table,
-      hands: [...(table.hands || []), newHand]
-    };
-    
-    const updatedTables = [...session.tables];
-    updatedTables[tableIndex] = updatedTable;
-    
-    const updatedSession = {
-      ...session,
-      tables: updatedTables
-    };
-    
-    updateSession(updatedSession);
-
-    // Sync to Supabase if user is logged in
-    if (user) {
-      try {
-        const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
-        if (supabaseSessionId) {
-          const synced = await syncHandToSupabase(newHand, supabaseSessionId);
-          if (!synced) {
-            console.warn('Failed to sync table hand to Supabase, but saved locally');
-          }
-        }
-      } catch (error) {
-        console.error('Error syncing table hand to Supabase:', error);
-      }
-    }
-  };
-
-  const updateTableHand = async (sessionId: string, tableId: string, hand: HandData) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session || !session.tables) return;
-    
-    const tableIndex = session.tables.findIndex(t => t.id === tableId);
-    if (tableIndex === -1) return;
-    
-    const table = session.tables[tableIndex];
-    if (!table.hands) return;
-    
-    const updatedHands = table.hands.map(h => 
-      h.id === hand.id ? hand : h
-    );
-    
-    const updatedTable = {
-      ...table,
-      hands: updatedHands
-    };
-    
-    const updatedTables = [...session.tables];
-    updatedTables[tableIndex] = updatedTable;
-    
-    const updatedSession = {
-      ...session,
-      tables: updatedTables
-    };
-    
-    updateSession(updatedSession);
-
-    // Sync update to Supabase if user is logged in
-    if (user) {
-      try {
-        const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
-        if (supabaseSessionId) {
-          const synced = await syncHandUpdateToSupabase(hand, supabaseSessionId);
-          if (!synced) {
-            console.warn('Failed to sync table hand update to Supabase, but saved locally');
-          }
-        }
-      } catch (error) {
-        console.error('Error syncing table hand update to Supabase:', error);
-      }
-    }
-  };
-
-  const deleteTableHand = async (sessionId: string, tableId: string, handId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session || !session.tables) return;
-    
-    const tableIndex = session.tables.findIndex(t => t.id === tableId);
-    if (tableIndex === -1) return;
-    
-    const table = session.tables[tableIndex];
-    if (!table.hands) return;
-    
-    const handToDelete = table.hands.find(h => h.id === handId);
-    const updatedHands = table.hands.filter(hand => hand.id !== handId);
-    
-    const updatedTable = {
-      ...table,
-      hands: updatedHands
-    };
-    
-    const updatedTables = [...session.tables];
-    updatedTables[tableIndex] = updatedTable;
-    
-    const updatedSession = {
-      ...session,
-      tables: updatedTables
-    };
-    
-    updateSession(updatedSession);
-
-    // Sync deletion to Supabase if user is logged in
-    if (user && handToDelete) {
-      try {
-        const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
-        if (supabaseSessionId) {
-          const synced = await syncHandDeleteToSupabase(handToDelete, supabaseSessionId);
-          if (!synced) {
-            console.warn('Failed to sync table hand deletion to Supabase, but deleted locally');
-          }
-        }
-      } catch (error) {
-        console.error('Error syncing table hand deletion to Supabase:', error);
-      }
-    }
-  };
-
-  const addTable = (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session) {
-      const newTable: TableData = {
-        ...table,
-        id: uuidv4(),
-        startTime: new Date(),
-        isActive: true,
-        initialBuyIn: table.buyIn,
-      };
-      
-      const updatedSession = {
-        ...session,
-        tables: [...(session.tables || []), newTable],
-        buyIn: session.buyIn + table.buyIn
-      };
-      
-      updateSession(updatedSession);
-    }
-  };
-
-  const updateTable = (sessionId: string, updatedTable: TableData) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session && session.tables) {
-      const updatedTables = session.tables.map(table => 
-        table.id === updatedTable.id ? updatedTable : table
-      );
-      
-      const updatedSession = {
-        ...session,
-        tables: updatedTables
-      };
-      
-      updateSession(updatedSession);
-    }
-  };
-
-  const endTable = (
-    sessionId: string, 
-    tableId: string, 
-    cashOut: number, 
-    notes?: string,
-    bounty?: { 
-      bountyCount?: number, 
-      bountyAmount?: number,
-      finalPosition?: number 
-    },
-    multiDayInfo?: {
-      nextDayStart?: Date,
-      chipsCarryover?: number,
-      dayEndedWithoutElimination?: boolean
-    }
-  ) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session && session.tables) {
-      const updatedTables = session.tables.map(table => {
-        if (table.id === tableId) {
-          return {
-            ...table,
-            isActive: false,
-            endTime: new Date(),
-            cashOut: multiDayInfo?.dayEndedWithoutElimination ? 0 : cashOut,
-            notes: notes || table.notes,
-            ...(bounty?.bountyCount !== undefined && { bountyCount: bounty.bountyCount }),
-            ...(bounty?.bountyAmount !== undefined && { bountyAmount: bounty.bountyAmount }),
-            ...(bounty?.finalPosition !== undefined && { finalPosition: bounty.finalPosition }),
-            ...(multiDayInfo?.nextDayStart && { nextDayStart: multiDayInfo.nextDayStart }),
-            ...(multiDayInfo?.chipsCarryover && { chipsCarryover: multiDayInfo.chipsCarryover }),
-            ...(multiDayInfo?.dayEndedWithoutElimination && { dayEndedWithoutElimination: true })
-          };
-        }
-        return table;
-      });
-      
-      const updatedSession = {
-        ...session,
-        tables: updatedTables
-      };
-      
-      updateSession(updatedSession);
-    }
-  };
-
-  const addTableRebuy = (sessionId: string, tableId: string, amount: number) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session && session.tables) {
-      const updatedTables = session.tables.map(table => {
-        if (table.id === tableId) {
-          const currentRebuys = table.rebuys || 0;
-          return {
-            ...table,
-            rebuys: currentRebuys + 1,
-            buyIn: table.buyIn + amount
-          };
-        }
-        return table;
-      });
-      
-      const updatedTable = updatedTables.find(t => t.id === tableId);
-      const originalTable = session.tables.find(t => t.id === tableId);
-      const buyInDifference = (updatedTable && originalTable) ? updatedTable.buyIn - originalTable.buyIn : 0;
-      
-      const updatedSession = {
-        ...session,
-        tables: updatedTables,
-        buyIn: session.buyIn + buyInDifference
-      };
-      
-      updateSession(updatedSession);
-    }
-  };
-
-  const getTableById = (sessionId: string, tableId: string): TableData | undefined => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session && session.tables) {
-      return session.tables.find(t => t.id === tableId);
-    }
-    return undefined;
-  };
-
-  const deleteTable = (sessionId: string, tableId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session && session.tables) {
-      const tableToDelete = session.tables.find(t => t.id === tableId);
-      if (tableToDelete) {
-        const updatedTables = session.tables.filter(table => table.id !== tableId);
-        
-        const updatedSession = {
-          ...session,
-          tables: updatedTables,
-          buyIn: session.buyIn - tableToDelete.buyIn
-        };
-        
-        updateSession(updatedSession);
-      }
-    }
-  };
-
   // Only render children after initialization to prevent context usage before setup
   if (!isInitialized) {
     return null;
@@ -948,7 +428,44 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           }
         },
         setFilters,
-        addHand,
+        addHand: async (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => {
+          const session = sessions.find(s => s.id === sessionId);
+          if (session) {
+            // If tableId is provided, add to that table
+            if (hand.tableId) {
+              addTableHand(sessionId, hand.tableId, hand);
+              return;
+            }
+            
+            const newHand: HandData = {
+              ...hand,
+              id: uuidv4(),
+              createdAt: new Date()
+            };
+            
+            const updatedSession = {
+              ...session,
+              hands: [...(session.hands || []), newHand]
+            };
+            
+            updateSession(updatedSession);
+
+            // Sync to Supabase if user is logged in
+            if (user) {
+              try {
+                const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
+                if (supabaseSessionId) {
+                  const synced = await syncHandToSupabase(newHand, supabaseSessionId);
+                  if (!synced) {
+                    console.warn('Failed to sync hand to Supabase, but saved locally');
+                  }
+                }
+              } catch (error) {
+                console.error('Error syncing hand to Supabase:', error);
+              }
+            }
+          }
+        },
         updateHand: async (sessionId: string, hand: HandData) => {
           const session = sessions.find(s => s.id === sessionId);
           if (session) {
@@ -1028,9 +545,142 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             }
           }
         },
-        addTableHand,
-        updateTableHand,
-        deleteTableHand,
+        addTableHand: async (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => {
+          const session = sessions.find(s => s.id === sessionId);
+          if (!session || !session.tables) return;
+          
+          const tableIndex = session.tables.findIndex(t => t.id === tableId);
+          if (tableIndex === -1) return;
+          
+          const table = session.tables[tableIndex];
+          const tableFormat = table.format;
+          
+          const newHand: HandData = {
+            ...hand,
+            id: uuidv4(),
+            createdAt: new Date(),
+            tableId: tableId,
+            // Auto-determine currency type based on table format
+            currencyType: tableFormat === 'Cash' ? 'currency' : 'chips'
+          };
+          
+          const updatedTable = {
+            ...table,
+            hands: [...(table.hands || []), newHand]
+          };
+          
+          const updatedTables = [...session.tables];
+          updatedTables[tableIndex] = updatedTable;
+          
+          const updatedSession = {
+            ...session,
+            tables: updatedTables
+          };
+          
+          updateSession(updatedSession);
+
+          // Sync to Supabase if user is logged in
+          if (user) {
+            try {
+              const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
+              if (supabaseSessionId) {
+                const synced = await syncHandToSupabase(newHand, supabaseSessionId);
+                if (!synced) {
+                  console.warn('Failed to sync table hand to Supabase, but saved locally');
+                }
+              }
+            } catch (error) {
+              console.error('Error syncing table hand to Supabase:', error);
+            }
+          }
+        },
+        updateTableHand: async (sessionId: string, tableId: string, hand: HandData) => {
+          const session = sessions.find(s => s.id === sessionId);
+          if (!session || !session.tables) return;
+          
+          const tableIndex = session.tables.findIndex(t => t.id === tableId);
+          if (tableIndex === -1) return;
+          
+          const table = session.tables[tableIndex];
+          if (!table.hands) return;
+          
+          const updatedHands = table.hands.map(h => 
+            h.id === hand.id ? hand : h
+          );
+          
+          const updatedTable = {
+            ...table,
+            hands: updatedHands
+          };
+          
+          const updatedTables = [...session.tables];
+          updatedTables[tableIndex] = updatedTable;
+          
+          const updatedSession = {
+            ...session,
+            tables: updatedTables
+          };
+          
+          updateSession(updatedSession);
+
+          // Sync update to Supabase if user is logged in
+          if (user) {
+            try {
+              const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
+              if (supabaseSessionId) {
+                const synced = await syncHandUpdateToSupabase(hand, supabaseSessionId);
+                if (!synced) {
+                  console.warn('Failed to sync table hand update to Supabase, but saved locally');
+                }
+              }
+            } catch (error) {
+              console.error('Error syncing table hand update to Supabase:', error);
+            }
+          }
+        },
+        deleteTableHand: async (sessionId: string, tableId: string, handId: string) => {
+          const session = sessions.find(s => s.id === sessionId);
+          if (!session || !session.tables) return;
+          
+          const tableIndex = session.tables.findIndex(t => t.id === tableId);
+          if (tableIndex === -1) return;
+          
+          const table = session.tables[tableIndex];
+          if (!table.hands) return;
+          
+          const handToDelete = table.hands.find(h => h.id === handId);
+          const updatedHands = table.hands.filter(hand => hand.id !== handId);
+          
+          const updatedTable = {
+            ...table,
+            hands: updatedHands
+          };
+          
+          const updatedTables = [...session.tables];
+          updatedTables[tableIndex] = updatedTable;
+          
+          const updatedSession = {
+            ...session,
+            tables: updatedTables
+          };
+          
+          updateSession(updatedSession);
+
+          // Sync deletion to Supabase if user is logged in
+          if (user && handToDelete) {
+            try {
+              const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
+              if (supabaseSessionId) {
+                const synced = await syncHandDeleteToSupabase(handToDelete, supabaseSessionId);
+                if (!synced) {
+                  console.warn('Failed to sync table hand deletion to Supabase, but deleted locally');
+                }
+              }
+            } catch (error) {
+              console.error('Error syncing hand deletion to Supabase:', error);
+            }
+          }
+        },
         addTable: (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
           const session = sessions.find(s => s.id === sessionId);
           if (session) {

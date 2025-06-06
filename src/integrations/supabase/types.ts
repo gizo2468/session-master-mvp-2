@@ -591,28 +591,7 @@ export type Database = {
       }
     }
     Views: {
-      session_summary_by_user: {
-        Row: {
-          full_name: string | null
-          session_count: number | null
-          total_hours_played: number | null
-          total_minutes_played: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
-      sessions_readable: {
-        Row: {
-          "Duration (minutes)": number | null
-          "Player Name": string | null
-          "Session End": string | null
-          "Session ID": string | null
-          "Session Start": string | null
-          "Session Type": string | null
-          "User ID": string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       generate_connection_code: {

@@ -31,20 +31,10 @@ export default function SessionHistory() {
       try {
         console.log('🔍 Fetching sessions for user:', user.id);
         
-        // Verify current user authentication before fetching
-        const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
-        if (authError || !currentUser || currentUser.id !== user.id) {
-          console.error('❌ Authentication verification failed:', authError);
-          setSupabaseSessions([]);
-          setIsLoading(false);
-          return;
-        }
-        
-        // Query sessions with explicit user filter AND rely on RLS
+        // Query sessions - the RLS policies will automatically ensure we only get this user's sessions
         const { data, error } = await supabase
           .from('sessions')
           .select('*')
-          .eq('user_id', currentUser.id)  // Explicit user filter for extra security
           .order('start_time', { ascending: false });
           
         if (error) {
@@ -52,15 +42,8 @@ export default function SessionHistory() {
           throw error;
         }
         
-        console.log('✅ Fetched sessions from Supabase for user:', currentUser.id, 'Count:', data?.length || 0);
-        
-        // Double-check that all returned sessions belong to the current user
-        const validSessions = data?.filter(session => session.user_id === currentUser.id) || [];
-        if (data && validSessions.length !== data.length) {
-          console.warn('⚠️ Some sessions did not belong to current user - filtered out');
-        }
-        
-        setSupabaseSessions(validSessions);
+        console.log('✅ Fetched sessions from Supabase for user:', user.id, 'Count:', data?.length || 0);
+        setSupabaseSessions(data || []);
       } catch (error) {
         console.error('Error fetching sessions from Supabase:', error);
         toast({
@@ -96,10 +79,6 @@ export default function SessionHistory() {
     return true;
   });
   
-  // Sort sessions by start time (newest first)
-  const sortedSessions = [...filteredSessions]
-    .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
-  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-md px-4 py-8">
@@ -130,25 +109,7 @@ export default function SessionHistory() {
             {sessions.length > 0 && (
               <div className="mb-6">
                 <h2 className="text-lg font-semibold mb-2">Local Sessions</h2>
-                {sessions
-                  .filter(session => {
-                    // Filter by game type
-                    if (filters.gameType && filters.gameType !== 'All' && session.gameType !== filters.gameType) {
-                      return false;
-                    }
-                    
-                    // Filter by format
-                    if (filters.format && filters.format !== 'All' && session.format !== filters.format) {
-                      return false;
-                    }
-                    
-                    // Filter by location
-                    if (filters.location && !session.location.toLowerCase().includes(filters.location.toLowerCase())) {
-                      return false;
-                    }
-                    
-                    return true;
-                  })
+                {filteredSessions
                   .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
                   .map(session => (
                     <SessionCard key={session.id} session={session} />
@@ -169,9 +130,6 @@ export default function SessionHistory() {
                         </p>
                         <p className="text-sm text-gray-600">
                           {session.game_type} • {session.session_type}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          User: {session.user_id}
                         </p>
                       </div>
                       <Button 
