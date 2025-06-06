@@ -62,6 +62,7 @@ const getUserStorageKey = (userId: string | null): string => {
   return `pokerSessions_${userId}`;
 };
 
+// Load sessions from localStorage
 const loadSessions = (userId: string | null): PokerSession[] => {
   try {
     const storageKey = getUserStorageKey(userId);
@@ -101,6 +102,7 @@ const loadSessions = (userId: string | null): PokerSession[] => {
   return [];
 };
 
+// Find the active session
 const findActiveSession = (sessions: PokerSession[]): PokerSession | null => {
   return sessions.find(session => session.isActive) || null;
 };
@@ -250,7 +252,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [sessions, toast, user?.id, isInitialized]);
 
-  // Updated sync function to save sessions immediately when they're completed
+  // Updated sync function to not pass user_id - it will be set automatically by DEFAULT auth.uid()
   const syncSessionToSupabase = async (session: PokerSession) => {
     if (!user) {
       console.warn('No authenticated user - skipping Supabase sync');
