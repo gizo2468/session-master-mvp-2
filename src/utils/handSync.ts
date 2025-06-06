@@ -27,7 +27,7 @@ export const findSupabaseSessionId = async (localSessionId: string, userId: stri
 export const syncHandToSupabase = async (hand: HandData, supabaseSessionId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('session_hands')
+      .from('session_hands_new')
       .insert({
         session_id: supabaseSessionId,
         table_id: hand.tableId || null,
@@ -67,7 +67,7 @@ export const syncHandUpdateToSupabase = async (hand: HandData, supabaseSessionId
   try {
     // Find the hand in Supabase by matching hand details
     const { data: existingHands, error: findError } = await supabase
-      .from('session_hands')
+      .from('session_hands_new')
       .select('id')
       .eq('session_id', supabaseSessionId)
       .eq('hand_number', hand.handNumber || null)
@@ -85,7 +85,7 @@ export const syncHandUpdateToSupabase = async (hand: HandData, supabaseSessionId
     }
 
     const { error } = await supabase
-      .from('session_hands')
+      .from('session_hands_new')
       .update({
         hole_cards: hand.holeCards ? JSON.stringify(hand.holeCards) : (hand.cards ? JSON.stringify([hand.cards]) : null),
         position: hand.position || null,
@@ -122,7 +122,7 @@ export const syncHandUpdateToSupabase = async (hand: HandData, supabaseSessionId
 export const syncHandDeleteToSupabase = async (hand: HandData, supabaseSessionId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('session_hands')
+      .from('session_hands_new')
       .delete()
       .eq('session_id', supabaseSessionId)
       .eq('hand_number', hand.handNumber || null)

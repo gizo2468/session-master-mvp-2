@@ -394,6 +394,96 @@ export type Database = {
         }
         Relationships: []
       }
+      session_hands_new: {
+        Row: {
+          amount_invested: number | null
+          amount_won: number | null
+          created_at: string | null
+          currency_type: string | null
+          flop_action: string | null
+          flop_cards: string | null
+          hand_image: string | null
+          hand_notes: string | null
+          hand_number: number | null
+          hole_cards: string | null
+          id: string
+          position: string | null
+          pot_size: number | null
+          preflop_action: string | null
+          river_action: string | null
+          river_card: string | null
+          session_id: string
+          showdown_result: string | null
+          table_id: string | null
+          turn_action: string | null
+          turn_card: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount_invested?: number | null
+          amount_won?: number | null
+          created_at?: string | null
+          currency_type?: string | null
+          flop_action?: string | null
+          flop_cards?: string | null
+          hand_image?: string | null
+          hand_notes?: string | null
+          hand_number?: number | null
+          hole_cards?: string | null
+          id?: string
+          position?: string | null
+          pot_size?: number | null
+          preflop_action?: string | null
+          river_action?: string | null
+          river_card?: string | null
+          session_id: string
+          showdown_result?: string | null
+          table_id?: string | null
+          turn_action?: string | null
+          turn_card?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount_invested?: number | null
+          amount_won?: number | null
+          created_at?: string | null
+          currency_type?: string | null
+          flop_action?: string | null
+          flop_cards?: string | null
+          hand_image?: string | null
+          hand_notes?: string | null
+          hand_number?: number | null
+          hole_cards?: string | null
+          id?: string
+          position?: string | null
+          pot_size?: number | null
+          preflop_action?: string | null
+          river_action?: string | null
+          river_card?: string | null
+          session_id?: string
+          showdown_result?: string | null
+          table_id?: string | null
+          turn_action?: string | null
+          turn_card?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_hands_new_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_hands_new_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "session_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_results: {
         Row: {
           big_blinds_won: number | null

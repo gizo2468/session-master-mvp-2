@@ -6,7 +6,7 @@ import { User } from '@/context/AuthContext';
 
 export const createTableHandHandlers = (
   sessions: PokerSession[],
-  updateSession: (session: PokerSession) => void,
+  updateSession: (session: PokerSession) => Promise<void>,
   user: User | null
 ) => {
   const addTableHand = async (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => {
@@ -41,7 +41,7 @@ export const createTableHandHandlers = (
       tables: updatedTables
     };
     
-    updateSession(updatedSession);
+    await updateSession(updatedSession);
 
     // Sync to Supabase if user is logged in
     if (user) {
@@ -86,7 +86,7 @@ export const createTableHandHandlers = (
       tables: updatedTables
     };
     
-    updateSession(updatedSession);
+    await updateSession(updatedSession);
 
     // Sync update to Supabase if user is logged in
     if (user) {
@@ -130,7 +130,7 @@ export const createTableHandHandlers = (
       tables: updatedTables
     };
     
-    updateSession(updatedSession);
+    await updateSession(updatedSession);
 
     // Sync deletion to Supabase if user is logged in
     if (user && handToDelete) {

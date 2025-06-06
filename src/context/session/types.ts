@@ -7,24 +7,24 @@ export interface SessionContextType {
   filters: SessionFilter;
   showStorageWarning: boolean;
   dismissStorageWarning: () => void;
-  addSession: (session: PokerSession) => void;
-  updateSession: (session: PokerSession) => void;
-  deleteSession: (id: string) => void;
-  startSession: (session: PokerSession) => void;
-  endSession: (id: string, cashOut: number, notes?: string) => void;
-  pauseSession: (id: string) => void;
-  resumeSession: (id: string) => void;
-  updateSessionDuration: (id: string, duration: number) => void;
-  addRebuy: (id: string, amount: number) => void;
+  addSession: (session: PokerSession) => Promise<void>;
+  updateSession: (session: PokerSession) => Promise<void>;
+  deleteSession: (id: string) => Promise<void>;
+  startSession: (session: PokerSession) => Promise<void>;
+  endSession: (id: string, cashOut: number, notes?: string) => Promise<void>;
+  pauseSession: (id: string) => Promise<void>;
+  resumeSession: (id: string) => Promise<void>;
+  updateSessionDuration: (id: string, duration: number) => Promise<void>;
+  addRebuy: (id: string, amount: number) => Promise<void>;
   setFilters: (filters: SessionFilter) => void;
-  addHand: (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => void;
-  updateHand: (sessionId: string, hand: HandData) => void;
-  deleteHand: (sessionId: string, handId: string) => void;
-  addTableHand: (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => void;
-  updateTableHand: (sessionId: string, tableId: string, hand: HandData) => void;
-  deleteTableHand: (sessionId: string, tableId: string, handId: string) => void;
-  addTable: (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
-  updateTable: (sessionId: string, table: TableData) => void;
+  addHand: (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => Promise<void>;
+  updateHand: (sessionId: string, hand: HandData) => Promise<void>;
+  deleteHand: (sessionId: string, handId: string) => Promise<void>;
+  addTableHand: (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => Promise<void>;
+  updateTableHand: (sessionId: string, tableId: string, hand: HandData) => Promise<void>;
+  deleteTableHand: (sessionId: string, tableId: string, handId: string) => Promise<void>;
+  addTable: (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => Promise<void>;
+  updateTable: (sessionId: string, table: TableData) => Promise<void>;
   endTable: (
     sessionId: string, 
     tableId: string, 
@@ -40,10 +40,10 @@ export interface SessionContextType {
       chipsCarryover?: number,
       dayEndedWithoutElimination?: boolean
     }
-  ) => void;
-  addTableRebuy: (sessionId: string, tableId: string, amount: number) => void;
+  ) => Promise<void>;
+  addTableRebuy: (sessionId: string, tableId: string, amount: number) => Promise<void>;
   getTableById: (sessionId: string, tableId: string) => TableData | undefined;
-  deleteTable: (sessionId: string, tableId: string) => void;
+  deleteTable: (sessionId: string, tableId: string) => Promise<void>;
   clearAllUserData: () => void;
 }
 
