@@ -14,7 +14,6 @@ import EndSessionSheet from '@/components/poker/EndSessionSheet';
 import RebuyConfirmationDialog from '@/components/poker/RebuyConfirmationDialog';
 import EndTableDialog from '@/components/poker/EndTableDialog';
 import CompletedTablesDisplay from '@/components/poker/CompletedTablesDisplay';
-import EditTableForm from '@/components/poker/EditTableForm';
 
 export default function LiveSession() {
   const { id } = useParams<{ id: string }>();
@@ -27,9 +26,7 @@ export default function LiveSession() {
     addRebuy,
     addTable,
     endTable,
-    addTableRebuy,
-    updateTable,
-    deleteTable
+    addTableRebuy
   } = useSessionContext();
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -58,10 +55,6 @@ export default function LiveSession() {
   const [endReason, setEndReason] = useState<'eliminated' | 'day-ended' | null>(null);
   const [nextDayStart, setNextDayStart] = useState<Date | null>(null);
   const [chipsCarryover, setChipsCarryover] = useState('');
-  
-  // Add missing state for edit table functionality
-  const [showEditTableDialog, setShowEditTableDialog] = useState(false);
-  const [pendingEditTableId, setPendingEditTableId] = useState<string | null>(null);
   
   const session = id 
     ? sessions.find(s => s.id === id && s.isActive) 
@@ -316,38 +309,6 @@ export default function LiveSession() {
     }
   };
   
-  const handleEditTable = (tableId: string) => {
-    setPendingEditTableId(tableId);
-    setShowEditTableDialog(true);
-  };
-  
-  const handleSaveEditedTable = (updatedTable: TableData) => {
-    if (!session) return;
-    
-    try {
-      updateTable(session.id, updatedTable);
-      toast({
-        title: "Table Updated",
-        description: "The table has been successfully updated."
-      });
-    } catch (error) {
-      console.error("Error updating table:", error);
-      toast({
-        title: "Error Updating Table",
-        description: "There was a problem updating the table. Please try again.",
-        variant: "destructive"
-      });
-    }
-    
-    setShowEditTableDialog(false);
-    setPendingEditTableId(null);
-  };
-  
-  const handleCancelEditTable = () => {
-    setShowEditTableDialog(false);
-    setPendingEditTableId(null);
-  };
-  
   if (!session) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -370,10 +331,6 @@ export default function LiveSession() {
 
   const pendingTable = pendingEndTableId 
     ? session.tables?.find(t => t.id === pendingEndTableId) 
-    : null;
-
-  const pendingEditTable = pendingEditTableId 
-    ? session?.tables?.find(t => t.id === pendingEditTableId) 
     : null;
 
   // Map session format to AddTableForm format
@@ -508,24 +465,6 @@ export default function LiveSession() {
           handleAddTable(tableData);
         }}
       />
-      
-      {pendingEditTable && (
-        <EditTableForm
-          open={showEditTableDialog}
-          onOpenChange={setShowEditTableDialog}
-          table={pendingEditTable}
-          onSave={handleSaveEditedTable}
-          onDelete={(tableId) => {
-            deleteTable(session!.id, tableId);
-            toast({
-              title: "Table Deleted",
-              description: "The table has been successfully deleted."
-            });
-            setShowEditTableDialog(false);
-            setPendingEditTableId(null);
-          }}
-        />
-      )}
     </div>
   );
 }

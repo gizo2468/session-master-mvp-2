@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -33,17 +32,7 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
   }, [table]);
 
   const handleSave = () => {
-    // When saving, preserve the rebuy data as-is and only update the buy-in directly
-    // Don't treat buy-in changes as rebuys
-    const updatedTable = {
-      ...formData,
-      // Ensure we preserve the original rebuy count and amount
-      rebuys: table.rebuys,
-      // Update the buy-in to the new value without affecting rebuys
-      buyIn: formData.buyIn
-    };
-    
-    onSave(updatedTable);
+    onSave(formData);
     onOpenChange(false);
   };
 

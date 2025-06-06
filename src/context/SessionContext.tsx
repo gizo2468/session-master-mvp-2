@@ -724,9 +724,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const session = sessions.find(s => s.id === sessionId);
     if (session && session.tables) {
       const originalTable = session.tables.find(t => t.id === updatedTable.id);
-      
-      // Calculate the actual buy-in difference for session totals
-      // This should only affect the session's total buy-in, not create rebuys
       const buyInDifference = originalTable ? updatedTable.buyIn - originalTable.buyIn : 0;
       
       const updatedTables = session.tables.map(table => 
@@ -736,7 +733,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const updatedSession = {
         ...session,
         tables: updatedTables,
-        // Update session buy-in total to reflect the table buy-in change
         buyIn: session.buyIn + buyInDifference
       };
       
