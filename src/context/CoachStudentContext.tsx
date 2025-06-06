@@ -285,7 +285,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // UPDATED: Load multiple connected coaches instead of single coach
   const loadConnectedCoaches = async () => {
     if (!user?.id) return;
 
@@ -326,11 +325,9 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // ENHANCED: Coach profile creation with better error handling and validation
   const createCoachProfile = async (displayName: string, bio?: string) => {
     console.log('🔄 Starting coach profile creation process');
     
-    // Phase 3: Authentication validation
     if (!user?.id) {
       console.error('❌ No authenticated user found');
       toast({
@@ -346,67 +343,24 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setLoading(true);
     try {
-      // Phase 3: Verify profile exists first
-      console.log('🔍 Checking if user profile exists...');
-      const { data: existingProfile, error: checkError } = await supabase
+      // Simplified approach: Direct update without complex checking
+      console.log('🔄 Updating profile to coach role...');
+      
+      const { error: updateError } = await supabase
         .from('profiles')
-        .select('id, role, full_name')
-        .eq('id', user.id)
-        .single();
+        .update({
+          role: 'coach',
+          full_name: displayName,
+          online_nickname: bio,
+        })
+        .eq('id', user.id);
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('❌ Error checking existing profile:', checkError);
-        throw new Error(`Profile check failed: ${checkError.message}`);
+      if (updateError) {
+        console.error('❌ Error updating profile:', updateError);
+        throw new Error(`Failed to update profile: ${updateError.message}`);
       }
-
-      if (!existingProfile) {
-        console.log('⚠️ Profile not found, creating new profile...');
-        // Phase 3: Fallback - create profile if it doesn't exist
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            role: 'coach',
-            full_name: displayName,
-            online_nickname: bio,
-            email: user.email,
-            language: 'en',
-            notification_preferences: { newFeedback: true, liveSessionStart: true },
-            is_active: true,
-            has_accepted_terms: false
-          });
-
-        if (insertError) {
-          console.error('❌ Error inserting new profile:', insertError);
-          throw new Error(`Failed to create profile: ${insertError.message}`);
-        }
-        console.log('✅ New profile created successfully');
-      } else {
-        console.log('✅ Existing profile found:', existingProfile);
-        console.log('🔄 Updating existing profile to coach role...');
-        
-        // Phase 2: Enhanced error logging for update operation
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            role: 'coach',
-            full_name: displayName,
-            online_nickname: bio,
-          })
-          .eq('id', user.id);
-
-        if (updateError) {
-          console.error('❌ Error updating profile:', updateError);
-          console.error('❌ Update error details:', {
-            code: updateError.code,
-            message: updateError.message,
-            details: updateError.details,
-            hint: updateError.hint
-          });
-          throw new Error(`Failed to update profile: ${updateError.message}`);
-        }
-        console.log('✅ Profile updated successfully');
-      }
+      
+      console.log('✅ Profile updated successfully');
 
       // Reload user profile to reflect changes
       console.log('🔄 Reloading user profile...');
@@ -420,7 +374,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } catch (error) {
       console.error('❌ Error in createCoachProfile:', error);
       
-      // Phase 4: More specific error messages
       let errorMessage = "Failed to create coach profile.";
       if (error instanceof Error) {
         if (error.message.includes('RLS')) {
@@ -590,7 +543,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // CRITICAL FIX: Improved removeStudent function with proper database deletion
   const removeStudent = async (studentId: string) => {
     if (!user?.id) return;
 
@@ -634,7 +586,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // UPDATED: Student methods for multi-coach support
   const createStudentProfile = async (displayName: string) => {
     if (!user?.id) return;
 
@@ -670,7 +621,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // UPDATED: Allow connecting to multiple coaches
   const connectWithCoach = async (code: string) => {
     if (!user?.id || !studentProfile) {
       toast({
@@ -748,7 +698,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // UPDATED: Disconnect from specific coach
   const disconnectFromCoach = async (coachId: string) => {
     if (!user?.id) return;
 
