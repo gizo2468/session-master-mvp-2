@@ -1,9 +1,9 @@
-
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole, CoachTier } from '@/types/poker';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 export interface User {
   id: string;
@@ -118,6 +118,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Function to clear all user-related state
+  const clearUserState = () => {
+    console.log('🧹 Clearing all user state');
+    setUser(null);
+    setSession(null);
+    setSessionId(null);
+    
+    // Clear any user-specific localStorage data
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith('pokerSessions_') || 
+          key.startsWith('activeSession_') ||
+          key.includes('user_')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // Clear session storage
+    sessionStorage.clear();
+  };
+
   // Initialize auth and set up session listener
   useEffect(() => {
     console.log("Auth provider initializing...");
@@ -162,10 +183,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }, 0);
           }
         } else if (event === 'SIGNED_OUT') {
-          // Clear user data on sign out
-          console.log("User signed out - clearing state");
-          setUser(null);
-          setSessionId(null);
+          // Complete state clearing on sign out
+          console.log("User signed out - clearing all state");
+          clearUserState();
         }
       }
     );
@@ -416,38 +436,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setIsLoading(true);
     try {
-      // Always clear local state first to improve UX even if server request fails
       const currentUser = user ? user.fullName || 'User' : 'User';
       
       console.log("Logging out user:", currentUser);
       
-      // Attempt to sign out from Supabase
-      await supabase.auth.signOut().catch(error => {
-        // Just log the error, don't throw - we still want to clear local state
-        console.error("Error during Supabase signout:", error);
-        // If it's a 403 error, the session is already expired or invalid, which is fine
-      });
+      // Clear all user state IMMEDIATELY to prevent UI from showing old data
+      clearUserState();
       
-      // Clear local state regardless of server response
-      setUser(null);
-      setSession(null);
+      // Attempt to sign out from Supabase (this may fail if session is already expired)
+      await supabase.auth.signOut().catch(error => {
+        // Just log the error, don't throw - we still want to complete the logout
+        console.error("Error during Supabase signout:", error);
+      });
       
       toast({
         title: "Logged out",
         description: `${currentUser} has been successfully logged out`,
       });
+      
+      // Force redirect to login page
+      setTimeout(() => {
+        window.location.href = '/auth/login';
+      }, 100);
+      
     } catch (error: any) {
       console.error("Error in logout process:", error);
       
       // Clear local state even if there's an error
-      setUser(null);
-      setSession(null);
+      clearUserState();
       
       toast({
         title: "Logged out",
         description: "You have been logged out",
         variant: "default",
       });
+      
+      // Force redirect even on error
+      setTimeout(() => {
+        window.location.href = '/auth/login';
+      }, 100);
     } finally {
       setIsLoading(false);
     }

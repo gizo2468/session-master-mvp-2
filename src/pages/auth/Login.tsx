@@ -1,259 +1,148 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/context/AuthContext';
-import Icon from '@/components/ui/Lucide';
-import Logo from '@/components/Logo';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-
-const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters long' }),
-});
-
-const resetPasswordSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address' }),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
+import Logo from '@/components/Logo';
 
 const Login: React.FC = () => {
-  const { login, isLoading, isAuthenticated, user } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const [showResetDialog, setShowResetDialog] = useState(false);
-  const [loginAttempted, setLoginAttempted] = useState(false);
-  
-  // Get redirect path from location state or default to home
-  const from = (location.state as { from?: string })?.from || '/';
-  
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
 
-  const resetPasswordForm = useForm<ResetPasswordFormValues>({
-    resolver: zodResolver(resetPasswordSchema),
-    defaultValues: {
-      email: '',
-    },
-  });
+  // Get the location the user was trying to access, or default to home
+  const from = (location.state as any)?.from?.pathname || '/';
 
-  // Check if user is already authenticated and redirect if so
+  // Redirect if already authenticated
   useEffect(() => {
-    console.log("Login page auth check:", isAuthenticated, loginAttempted);
-    
-    if (isAuthenticated && user) {
-      console.log("User authenticated, navigating to:", from);
-      // Navigate to the intended destination or home
+    if (isAuthenticated) {
+      console.log('User already authenticated, redirecting to:', from);
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, user, navigate, from, loginAttempted]);
+  }, [isAuthenticated, navigate, from]);
 
-  const onSubmit = async (values: FormValues) => {
-    try {
-      setLoginAttempted(true);
-      await login(values.email, values.password);
-      // Redirection is handled by the useEffect hook when auth state updates
-    } catch (error) {
-      console.error("Login error:", error);
-      // Error is handled in the AuthContext
-      setLoginAttempted(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      return;
     }
-  };
 
-  const handlePasswordResetClick = () => {
-    // Get the email from the login form if it exists
-    const loginEmail = form.getValues("email");
-    if (loginEmail) {
-      resetPasswordForm.setValue("email", loginEmail);
-    }
-    setShowResetDialog(true);
-  };
+    setIsLoading(true);
+    setError('');
 
-  const handlePasswordReset = async (values: ResetPasswordFormValues) => {
-    setIsResettingPassword(true);
-    
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: "https://session-master-mvp.lovable.app/auth/reset-password",
-      });
+      await login(email, password);
       
-      if (error) {
-        throw error;
-      }
+      // Clear the form
+      setEmail('');
+      setPassword('');
       
-      toast({
-        title: "Password reset email sent",
-        description: "If an account exists with this email, you'll receive instructions to reset your password.",
-      });
-
-      setShowResetDialog(false);
-      resetPasswordForm.reset();
+      console.log('Login successful, redirecting to:', from);
+      
+      // Redirect to the page they were trying to access, or home
+      navigate(from, { replace: true });
+      
     } catch (error: any) {
+      console.error('Login error:', error);
+      setError(error.message || 'Login failed. Please try again.');
       toast({
-        title: "Error",
-        description: error.message || "Could not send reset email. Please try again.",
+        title: "Login failed",
+        description: error.message || "Please check your credentials and try again.",
         variant: "destructive",
       });
     } finally {
-      setIsResettingPassword(false);
+      setIsLoading(false);
     }
   };
 
-  // Early return if we're already authenticated
-  if (isAuthenticated && !isLoading) {
-    return null; // Will redirect in useEffect
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4">
+          <div className="flex justify-center mb-4">
             <Logo />
           </div>
-          <CardTitle className="text-2xl font-serif">Welcome Back</CardTitle>
-          <CardDescription>Sign in to access your account</CardDescription>
+          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+          <CardDescription>
+            Sign in to your poker session tracker
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="your.email@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button 
-                type="submit" 
-                variant="poker" 
-                className="w-full mt-2" 
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
                 disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Icon name="Loader" className="mr-2 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-2 items-center">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/auth/signup" className="text-poker-gold hover:underline">
-              Sign Up with details
-            </Link>
-          </p>
-          <Button 
-            variant="link" 
-            className="text-sm text-gray-600 p-0 h-auto"
-            onClick={handlePasswordResetClick}
-          >
-            Forgot your password? Click here to reset
-          </Button>
-        </CardFooter>
-      </Card>
-
-      {/* Password Reset Dialog */}
-      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Reset your password</DialogTitle>
-            <DialogDescription>
-              Enter your email address and we'll send you instructions to reset your password.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...resetPasswordForm}>
-            <form onSubmit={resetPasswordForm.handleSubmit(handlePasswordReset)} className="space-y-4">
-              <FormField
-                control={resetPasswordForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email address</FormLabel>
-                    <FormControl>
-                      <Input placeholder="your.email@example.com" {...field} autoFocus />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
               />
-              
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowResetDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit"
-                  disabled={isResettingPassword}
-                >
-                  {isResettingPassword ? (
-                    <>
-                      <Icon name="Loader" className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    'Send Reset Link'
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+                disabled={isLoading}
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </form>
+          
+          <div className="mt-6 text-center text-sm">
+            <p className="text-gray-600">
+              Don't have an account?{' '}
+              <Link 
+                to="/auth/signup" 
+                className="text-poker-feltGreen hover:underline font-medium"
+              >
+                Sign up
+              </Link>
+            </p>
+            <p className="mt-2">
+              <Link 
+                to="/auth/reset-password" 
+                className="text-poker-feltGreen hover:underline"
+              >
+                Forgot your password?
+              </Link>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
