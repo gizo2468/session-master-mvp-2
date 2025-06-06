@@ -166,20 +166,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [sessions, toast]);
 
-  // Enhanced sync function to handle detailed session data
+  // Enhanced sync function to handle detailed session data with proper user association
   const syncSessionToSupabase = async (session: PokerSession) => {
-    if (!user) return;
+    if (!user) {
+      console.warn('No authenticated user - skipping Supabase sync');
+      return;
+    }
     
     try {
       // Only sync completed sessions to Supabase
       if (!session.isActive && session.endTime) {
         console.log('🔄 Syncing detailed session data to Supabase:', session.id);
         
-        // Insert basic session data
+        // Insert basic session data - user_id will be set automatically by default value
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
           .insert({
-            user_id: user.id,
             start_time: new Date(session.startTime).toISOString(),
             end_time: new Date(session.endTime).toISOString(),
             session_type: session.format,

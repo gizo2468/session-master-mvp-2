@@ -25,14 +25,20 @@ export default function SessionHistory() {
 
       setIsLoading(true);
       try {
+        console.log('🔍 Fetching sessions for user:', user.id);
+        
+        // With RLS enabled, this will automatically only return sessions for the authenticated user
         const { data, error } = await supabase
           .from('sessions')
           .select('*')
-          .eq('user_id', user.id);
+          .order('start_time', { ascending: false });
           
         if (error) {
+          console.error('❌ Error fetching sessions:', error);
           throw error;
         }
+        
+        console.log('✅ Fetched sessions from Supabase:', data?.length || 0);
         
         if (data) {
           setSupabaseSessions(data);
@@ -40,8 +46,8 @@ export default function SessionHistory() {
       } catch (error) {
         console.error('Error fetching sessions from Supabase:', error);
         toast({
-          title: "Failed to load sessions",
-          description: "There was a problem loading your sessions from the server.",
+          title: "Failed to load cloud sessions",
+          description: "There was a problem loading your sessions from the server. Local sessions are still available.",
           variant: "destructive"
         });
       } finally {
@@ -101,14 +107,36 @@ export default function SessionHistory() {
               </div>
             ))}
           </div>
-        ) : sortedSessions.length > 0 ? (
+        ) : (
           <div>
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-2">Local Sessions</h2>
-              {sortedSessions.map(session => (
-                <SessionCard key={session.id} session={session} />
-              ))}
-            </div>
+            {sessions.length > 0 && (
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold mb-2">Local Sessions</h2>
+                {sessions
+                  .filter(session => {
+                    // Filter by game type
+                    if (filters.gameType && filters.gameType !== 'All' && session.gameType !== filters.gameType) {
+                      return false;
+                    }
+                    
+                    // Filter by format
+                    if (filters.format && filters.format !== 'All' && session.format !== filters.format) {
+                      return false;
+                    }
+                    
+                    // Filter by location
+                    if (filters.location && !session.location.toLowerCase().includes(filters.location.toLowerCase())) {
+                      return false;
+                    }
+                    
+                    return true;
+                  })
+                  .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+                  .map(session => (
+                    <SessionCard key={session.id} session={session} />
+                  ))}
+              </div>
+            )}
             
             {user && supabaseSessions.length > 0 && (
               <div>
@@ -120,6 +148,9 @@ export default function SessionHistory() {
                         <h3 className="font-bold">Cloud Session</h3>
                         <p className="text-gray-500 text-sm">
                           {new Date(session.start_time).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {session.game_type} • {session.session_type}
                         </p>
                       </div>
                       <Button 
@@ -134,10 +165,16 @@ export default function SessionHistory() {
                 ))}
               </div>
             )}
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-md p-4 text-center text-gray-500">
-            No sessions found. Adjust your filters or start a new session.
+            
+            {sessions.length === 0 && supabaseSessions.length === 0 && !isLoading && (
+              <div className="bg-white rounded-lg shadow-md p-4 text-center text-gray-500">
+                {user ? (
+                  "No sessions found. Start a new session to begin tracking your poker games."
+                ) : (
+                  "Sign in to view your session history and sync across devices."
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
