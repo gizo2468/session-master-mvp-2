@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,6 +8,8 @@ import Icon from '@/components/ui/Lucide';
 import { StudentSessions } from '@/components/coaching/StudentSessions';
 import { StudentSessionStats } from '@/components/coaching/StudentSessionStats';
 import { StudentReviews } from '@/components/coaching/StudentReviews';
+import { EnhancedStudentSessions } from '@/components/coaching/EnhancedStudentSessions';
+import { EnhancedStudentReviews } from '@/components/coaching/EnhancedStudentReviews';
 
 const CoachStudentDetail = () => {
   const navigate = useNavigate();
@@ -67,11 +68,11 @@ const CoachStudentDetail = () => {
           
           <TabsContent value="sessions">
             <StudentSessionStats studentId={student.id} />
-            <StudentSessions studentId={student.id} />
+            <EnhancedStudentSessions studentId={student.id} />
           </TabsContent>
           
           <TabsContent value="reviews">
-            <StudentReviews studentId={student.id} />
+            <EnhancedStudentReviews studentId={student.id} />
           </TabsContent>
         </Tabs>
       </div>

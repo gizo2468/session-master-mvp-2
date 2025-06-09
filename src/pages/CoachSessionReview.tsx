@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { hasFeatureAccess } from '@/utils/coachTiers';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { supabase } from '@/integrations/supabase/client';
+import { EnhancedReviewForm } from '@/components/coaching/EnhancedReviewForm';
 
 interface SessionData {
   id: string;
@@ -190,17 +190,84 @@ const CoachSessionReview = () => {
     }
   };
   
-  const handleAddComment = (content: string, tag: CommentTag | undefined) => {
-    // In a real app, we would save this to the database
-    toast({
-      title: "Comment added",
-      description: selectedHandId 
-        ? "Your comment on this hand has been saved" 
-        : "Your comment on this session has been saved"
-    });
-    
-    setIsCommentFormOpen(false);
-    setSelectedHandId(undefined);
+  const handleAddComment = async (reviewData: {
+    content: string;
+    tag?: CommentTag;
+    starRating?: number;
+    reviewType: string;
+    reviewCategory: string;
+    selectedHandIds: string[];
+  }) => {
+    if (!user?.id || !studentId || !sessionId) return;
+
+    try {
+      console.log('💾 Saving enhanced review:', reviewData);
+
+      // Insert the review
+      const { data: reviewResult, error: reviewError } = await supabase
+        .from('session_comments')
+        .insert({
+          session_id: sessionId,
+          coach_id: user.id,
+          student_id: studentId,
+          comment: reviewData.content,
+          hand_number: selectedHandId ? parseInt(selectedHandId.replace('hand-', '')) : null,
+          review_type: reviewData.reviewType,
+          review_category: reviewData.reviewCategory,
+          star_rating: reviewData.starRating,
+          is_read: false
+        })
+        .select()
+        .single();
+
+      if (reviewError) {
+        console.error('❌ Error saving review:', reviewError);
+        toast({
+          title: "Error",
+          description: "Failed to save review. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('✅ Review saved:', reviewResult);
+
+      // If hands are selected, create associations
+      if (reviewData.selectedHandIds.length > 0) {
+        const associations = reviewData.selectedHandIds.map(handId => ({
+          review_id: reviewResult.id,
+          hand_id: handId
+        }));
+
+        const { error: associationsError } = await supabase
+          .from('review_hand_associations')
+          .insert(associations);
+
+        if (associationsError) {
+          console.error('❌ Error saving hand associations:', associationsError);
+          // Don't fail the whole operation, just log the error
+        } else {
+          console.log('✅ Hand associations saved:', associations.length);
+        }
+      }
+
+      toast({
+        title: "Review added",
+        description: selectedHandId 
+          ? `Your review on hand ${selectedHandId.replace('hand-', '')} has been saved` 
+          : "Your session review has been saved"
+      });
+      
+      setIsCommentFormOpen(false);
+      setSelectedHandId(undefined);
+    } catch (error) {
+      console.error('❌ Error in handleAddComment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save review. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   const openCommentForm = (handId?: string) => {
@@ -398,7 +465,7 @@ const CoachSessionReview = () => {
                 </div>
                 
                 {sessionResults.roi_percentage !== 0 && (
-                  <div className="mt-4 pt-3 border-t text-center">
+                  <div className="mt-4 pt-3 border-t border-gray-200">
                     <div className={`text-lg font-medium ${sessionResults.roi_percentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       ROI: {sessionResults.roi_percentage.toFixed(1)}%
                     </div>
@@ -658,10 +725,11 @@ const CoachSessionReview = () => {
           )}
         </div>
         
-        <CommentForm 
+        <EnhancedReviewForm
           open={isCommentFormOpen} 
           onOpenChange={setIsCommentFormOpen} 
           onSubmit={handleAddComment}
+          sessionId={sessionId!}
           context={selectedHandId ? 'hand' : 'session'}
         />
       </div>

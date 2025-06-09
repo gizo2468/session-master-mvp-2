@@ -271,6 +271,42 @@ export type Database = {
         }
         Relationships: []
       }
+      review_hand_associations: {
+        Row: {
+          created_at: string
+          hand_id: string
+          id: string
+          review_id: string
+        }
+        Insert: {
+          created_at?: string
+          hand_id: string
+          id?: string
+          review_id: string
+        }
+        Update: {
+          created_at?: string
+          hand_id?: string
+          id?: string
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_hand_associations_hand_id_fkey"
+            columns: ["hand_id"]
+            isOneToOne: false
+            referencedRelation: "session_hands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_hand_associations_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "session_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_comments: {
         Row: {
           coach_id: string
@@ -278,7 +314,11 @@ export type Database = {
           created_at: string
           hand_number: number | null
           id: string
+          is_read: boolean | null
+          review_category: string | null
+          review_type: string | null
           session_id: string
+          star_rating: number | null
           student_id: string
           updated_at: string
         }
@@ -288,7 +328,11 @@ export type Database = {
           created_at?: string
           hand_number?: number | null
           id?: string
+          is_read?: boolean | null
+          review_category?: string | null
+          review_type?: string | null
           session_id: string
+          star_rating?: number | null
           student_id: string
           updated_at?: string
         }
@@ -298,7 +342,11 @@ export type Database = {
           created_at?: string
           hand_number?: number | null
           id?: string
+          is_read?: boolean | null
+          review_category?: string | null
+          review_type?: string | null
           session_id?: string
+          star_rating?: number | null
           student_id?: string
           updated_at?: string
         }
