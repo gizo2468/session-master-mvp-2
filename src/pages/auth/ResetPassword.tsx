@@ -27,8 +27,9 @@ const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [hasValidSession, setHasValidSession] = useState(false);
+  const [hasValidRecoverySession, setHasValidRecoverySession] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
+  const [recoverySessionDetected, setRecoverySessionDetected] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -39,49 +40,70 @@ const ResetPassword: React.FC = () => {
   });
 
   useEffect(() => {
-    // Check for existing session first
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        console.log("Found active session for password reset");
-        setHasValidSession(true);
-      } else {
-        console.log("No active session found");
-        toast({
-          title: "Error",
-          description: "Invalid or expired reset link. Please request a new password reset.",
-          variant: "destructive",
-        });
-      }
-      setIsCheckingSession(false);
-    };
+    let sessionChecked = false;
 
     // Set up auth state listener to handle the recovery session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state change:", event, session?.user?.email);
         
-        if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        if (event === 'PASSWORD_RECOVERY') {
+          console.log("Password recovery event detected");
+          setRecoverySessionDetected(true);
+          
           if (session?.user) {
-            console.log("Valid recovery session detected");
-            setHasValidSession(true);
-            setIsCheckingSession(false);
+            console.log("Valid recovery session confirmed");
+            setHasValidRecoverySession(true);
           }
-        } else if (event === 'SIGNED_OUT') {
-          setHasValidSession(false);
           setIsCheckingSession(false);
+          sessionChecked = true;
+        } else if (event === 'SIGNED_IN' && session?.user && recoverySessionDetected) {
+          // Handle case where recovery event already happened
+          console.log("Signed in with recovery session");
+          setHasValidRecoverySession(true);
+          setIsCheckingSession(false);
+          sessionChecked = true;
+        } else if (event === 'SIGNED_OUT') {
+          setHasValidRecoverySession(false);
+          setRecoverySessionDetected(false);
+          setIsCheckingSession(false);
+          sessionChecked = true;
         }
       }
     );
 
-    checkSession();
+    // Check for existing session after a short delay to let auth state change fire first
+    const checkExistingSession = async () => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      if (!sessionChecked) {
+        console.log("Checking for existing session");
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          console.log("Found existing session, checking if it's a recovery session");
+          // If we have a session but haven't detected a recovery event,
+          // it might be a recovery session that was already established
+          setHasValidRecoverySession(true);
+        } else {
+          console.log("No existing session found");
+          toast({
+            title: "Error",
+            description: "Invalid or expired reset link. Please request a new password reset.",
+            variant: "destructive",
+          });
+        }
+        setIsCheckingSession(false);
+      }
+    };
+
+    checkExistingSession();
 
     return () => subscription.unsubscribe();
-  }, [toast]);
+  }, [toast, recoverySessionDetected]);
 
   const onSubmit = async (values: FormValues) => {
-    if (!hasValidSession) {
+    if (!hasValidRecoverySession) {
       toast({
         title: "Error",
         description: "Invalid session. Please request a new password reset link.",
@@ -137,7 +159,7 @@ const ResetPassword: React.FC = () => {
     );
   }
 
-  if (!hasValidSession) {
+  if (!hasValidRecoverySession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
         <Card className="w-full max-w-md">
@@ -216,7 +238,7 @@ const ResetPassword: React.FC = () => {
                 type="submit" 
                 variant="poker" 
                 className="w-full mt-2" 
-                disabled={isLoading}
+                disabled={isLoading || !hasValidRecoverySession}
               >
                 {isLoading ? (
                   <>
