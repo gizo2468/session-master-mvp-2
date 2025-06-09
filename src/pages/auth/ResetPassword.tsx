@@ -25,10 +25,10 @@ type FormValues = z.infer<typeof formSchema>;
 
 const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
+  const [hasValidSession, setHasValidSession] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -39,46 +39,52 @@ const ResetPassword: React.FC = () => {
   });
 
   useEffect(() => {
-    // Parse the token from the URL hash fragment
-    const hashFragment = window.location.hash;
-    let accessToken = null;
-
-    // Check for the token in the hash (SPA format: #access_token=xxx&type=recovery)
-    if (hashFragment) {
-      const params = new URLSearchParams(hashFragment.substring(1));
-      accessToken = params.get('access_token');
+    // Check for existing session first
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (accessToken) {
-        console.log("Found access token in hash fragment");
-        setToken(accessToken);
+      if (session?.user) {
+        console.log("Found active session for password reset");
+        setHasValidSession(true);
+      } else {
+        console.log("No active session found");
+        toast({
+          title: "Error",
+          description: "Invalid or expired reset link. Please request a new password reset.",
+          variant: "destructive",
+        });
       }
-    }
+      setIsCheckingSession(false);
+    };
 
-    // If not in the hash, check URL parameters (typically for server-side redirects)
-    if (!accessToken) {
-      const urlParams = new URLSearchParams(window.location.search);
-      accessToken = urlParams.get('token');
-      
-      if (accessToken) {
-        console.log("Found token in URL parameters");
-        setToken(accessToken);
+    // Set up auth state listener to handle the recovery session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state change:", event, session?.user?.email);
+        
+        if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+          if (session?.user) {
+            console.log("Valid recovery session detected");
+            setHasValidSession(true);
+            setIsCheckingSession(false);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setHasValidSession(false);
+          setIsCheckingSession(false);
+        }
       }
-    }
+    );
 
-    if (!accessToken) {
-      toast({
-        title: "Error",
-        description: "No reset token found. Please request a new password reset link.",
-        variant: "destructive",
-      });
-    }
+    checkSession();
+
+    return () => subscription.unsubscribe();
   }, [toast]);
 
   const onSubmit = async (values: FormValues) => {
-    if (!token) {
+    if (!hasValidSession) {
       toast({
         title: "Error",
-        description: "Invalid or expired token. Please request a new password reset link.",
+        description: "Invalid session. Please request a new password reset link.",
         variant: "destructive",
       });
       return;
@@ -87,7 +93,6 @@ const ResetPassword: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // Update the user's password using the token
       const { error } = await supabase.auth.updateUser({ 
         password: values.password 
       });
@@ -106,15 +111,67 @@ const ResetPassword: React.FC = () => {
         navigate('/auth/login');
       }, 2000);
     } catch (error: any) {
+      console.error('Password reset error:', error);
       toast({
         title: "Password reset failed",
-        description: error.message || "Could not reset password. The link may have expired.",
+        description: error.message || "Could not reset password. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center">
+              <Icon name="Loader" className="animate-spin mr-2" />
+              <span>Verifying reset link...</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!hasValidSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4">
+              <Logo />
+            </div>
+            <CardTitle className="text-2xl font-serif">Invalid Reset Link</CardTitle>
+            <CardDescription>
+              This password reset link is invalid or has expired.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="poker" 
+              className="w-full" 
+              onClick={() => navigate('/auth/forgot-password')}
+            >
+              Request New Reset Link
+            </Button>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <Button 
+              variant="link" 
+              className="text-sm text-gray-600 p-0 h-auto"
+              onClick={() => navigate('/auth/login')}
+            >
+              Back to login
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
@@ -159,7 +216,7 @@ const ResetPassword: React.FC = () => {
                 type="submit" 
                 variant="poker" 
                 className="w-full mt-2" 
-                disabled={isLoading || !token}
+                disabled={isLoading}
               >
                 {isLoading ? (
                   <>
