@@ -30,6 +30,7 @@ export const syncHandToSupabase = async (hand: HandData, supabaseSessionId: stri
       .from('session_hands_new')
       .insert({
         session_id: supabaseSessionId,
+        user_id: undefined, // Will use DEFAULT auth.uid()
         table_id: hand.tableId || null,
         hand_number: hand.handNumber || null,
         hole_cards: hand.holeCards ? JSON.stringify(hand.holeCards) : (hand.cards ? JSON.stringify([hand.cards]) : null),

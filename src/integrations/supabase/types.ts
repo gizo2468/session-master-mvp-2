@@ -418,6 +418,7 @@ export type Database = {
           turn_action: string | null
           turn_card: string | null
           updated_at: string | null
+          user_id: string
         }
         Insert: {
           amount_invested?: number | null
@@ -442,6 +443,7 @@ export type Database = {
           turn_action?: string | null
           turn_card?: string | null
           updated_at?: string | null
+          user_id?: string
         }
         Update: {
           amount_invested?: number | null
@@ -466,6 +468,7 @@ export type Database = {
           turn_action?: string | null
           turn_card?: string | null
           updated_at?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -567,6 +570,7 @@ export type Database = {
           table_notes: string | null
           table_type: string | null
           updated_at: string | null
+          user_id: string
         }
         Insert: {
           bounty_amount?: number | null
@@ -590,6 +594,7 @@ export type Database = {
           table_notes?: string | null
           table_type?: string | null
           updated_at?: string | null
+          user_id?: string
         }
         Update: {
           bounty_amount?: number | null
@@ -613,6 +618,7 @@ export type Database = {
           table_notes?: string | null
           table_type?: string | null
           updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { PokerSession, HandData, TableData } from '@/types/poker';
 
@@ -34,6 +33,7 @@ export interface DatabaseSession {
 export interface DatabaseTable {
   id: string;
   session_id: string;
+  user_id: string;
   table_name: string;
   game_format: string;
   table_type: string;
@@ -58,6 +58,7 @@ export interface DatabaseTable {
 export interface DatabaseHand {
   id: string;
   session_id: string;
+  user_id: string;
   table_id: string | null;
   hand_number: number | null;
   position: string | null;
@@ -317,6 +318,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
       const dbTables = session.tables.map(table => ({
         id: table.id,
         session_id: session.id,
+        user_id: undefined, // Will use DEFAULT auth.uid()
         table_name: table.name || '',
         game_format: table.format,
         table_type: table.gameType,
@@ -350,6 +352,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
       const sessionHands = session.hands.map(hand => ({
         id: hand.id,
         session_id: session.id,
+        user_id: undefined, // Will use DEFAULT auth.uid()
         table_id: null,
         hand_number: hand.handNumber || null,
         position: hand.position || null,
@@ -387,6 +390,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           const tableHands = table.hands.map(hand => ({
             id: hand.id,
             session_id: session.id,
+            user_id: undefined, // Will use DEFAULT auth.uid()
             table_id: table.id,
             hand_number: hand.handNumber || null,
             position: hand.position || null,
