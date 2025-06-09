@@ -46,7 +46,7 @@ export const useCoachStudent = () => {
 
 export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   // State for coach
   const [isCoach, setIsCoach] = useState<boolean>(false);
@@ -66,29 +66,37 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [requestsLoading, setRequestsLoading] = useState(false);
 
+  // Track initialization to prevent duplicate loads
+  const [initialized, setInitialized] = useState(false);
+
   // Real-time subscriptions
   const handleConnectionUpdate = async () => {
+    console.log('🔄 Real-time connection update detected');
     if (isCoach) {
       await Promise.all([loadPendingRequests(), loadStudents()]);
     }
     if (isStudent) {
-      await loadConnectedCoaches(); // Updated method name
+      await loadConnectedCoaches();
     }
   };
 
   useRealtimeSubscriptions(handleConnectionUpdate, isCoach, isStudent);
 
-  // Load user profile and related data when user changes
+  // Load user profile and related data when user changes or becomes authenticated
   useEffect(() => {
-    if (user?.id) {
+    if (isAuthenticated && user?.id && !initialized) {
+      console.log('🔄 Initializing coach-student context for authenticated user:', user.id);
       loadUserProfile();
-    } else {
+      setInitialized(true);
+    } else if (!isAuthenticated) {
+      console.log('🔄 User not authenticated, resetting coach-student state');
       resetState();
+      setInitialized(false);
     }
-  }, [user?.id]);
+  }, [isAuthenticated, user?.id, initialized]);
 
   const resetState = () => {
-    console.log('🔄 Resetting all state');
+    console.log('🔄 Resetting all coach-student state');
     setIsCoach(false);
     setCoachProfile(null);
     setStudents([]);
@@ -96,7 +104,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setConnectionCode(null);
     setIsStudent(false);
     setStudentProfile(null);
-    setConnectedCoaches([]); // Reset to empty array
+    setConnectedCoaches([]);
     setLoading(false);
     setProfileLoading(false);
     setStudentsLoading(false);
@@ -108,49 +116,61 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     
     setProfileLoading(true);
     try {
-      console.log('🔍 Loading user profile for:', user.id);
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      console.log('🔍 Loading coach-student profile for:', user.id);
+      
+      // Use the user data from AuthContext which already has comprehensive profile data
+      console.log('✅ User role from AuthContext:', user.role);
 
-      if (error) {
-        console.error('❌ Error loading profile:', error);
-        return;
-      }
-
-      console.log('✅ Profile loaded:', profile);
-
-      if (profile.role === 'coach') {
+      if (user.role === 'coach') {
+        console.log('🎯 Setting up coach profile and loading coach data');
         setIsCoach(true);
         setIsStudent(false);
         setCoachProfile({
-          id: profile.id,
-          userId: profile.id,
-          displayName: profile.full_name,
-          bio: profile.online_nickname || undefined,
+          id: user.id,
+          userId: user.id,
+          displayName: user.fullName,
+          bio: user.onlineNickname || undefined,
           students: [],
           comments: [],
-          createdAt: new Date(profile.created_at),
+          createdAt: new Date(),
         });
-        setConnectionCode(profile.connection_code);
+        
+        // Load connection code from profiles table
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('connection_code')
+          .eq('id', user.id)
+          .single();
+        
+        if (profileData?.connection_code) {
+          setConnectionCode(profileData.connection_code);
+          console.log('✅ Found existing connection code');
+        }
         
         // Load coach-specific data in parallel for better performance
-        Promise.all([loadPendingRequests(), loadStudents()]);
-      } else if (profile.role === 'student') {
+        await Promise.all([loadPendingRequests(), loadStudents()]);
+      } else if (user.role === 'student') {
+        console.log('🎯 Setting up student profile and loading student data');
         setIsStudent(true);
         setIsCoach(false);
         setStudentProfile({
-          id: profile.id,
-          userId: profile.id,
-          displayName: profile.full_name,
-          createdAt: new Date(profile.created_at),
+          id: user.id,
+          userId: user.id,
+          displayName: user.fullName,
+          createdAt: new Date(),
         });
-        await loadConnectedCoaches(); // Updated method name
+        
+        await loadConnectedCoaches();
+      } else {
+        console.log('🔄 User has no coach/student role, keeping neutral state');
       }
     } catch (error) {
       console.error('❌ Error in loadUserProfile:', error);
+      toast({
+        title: "Connection Error",
+        description: "Failed to load coaching profile. Please refresh the page.",
+        variant: "destructive"
+      });
     } finally {
       setProfileLoading(false);
     }
@@ -163,7 +183,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('🔍 Loading pending requests for coach:', user.id);
       
-      // Simplified query - get basic connection data first
       const { data: connections, error: connectionsError } = await supabase
         .from('coach_student_connections')
         .select('id, coach_id, student_id, created_at')
@@ -212,7 +231,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         };
       });
 
-      console.log('✅ Final processed pending requests:', requests.length, 'requests');
+      console.log('✅ Loaded pending requests:', requests.length);
       setPendingRequests(requests);
     } catch (error) {
       console.error('❌ Error in loadPendingRequests:', error);
@@ -228,7 +247,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('🔍 Loading students for coach:', user.id);
       
-      // Simplified query - get basic connection data first  
       const { data: connections, error: connectionsError } = await supabase
         .from('coach_student_connections')
         .select('student_id, created_at')
@@ -276,7 +294,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         };
       });
 
-      console.log('✅ Final processed students:', studentProfiles.length, 'students');
+      console.log('✅ Loaded students:', studentProfiles.length);
       setStudents(studentProfiles);
     } catch (error) {
       console.error('❌ Error in loadStudents:', error);
@@ -305,7 +323,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       if (data && data.length > 0) {
-        console.log('✅ Connected coaches found:', data);
+        console.log('✅ Connected coaches found:', data.length);
         const coaches: CoachProfile[] = data.map(connection => ({
           id: connection.profiles.id,
           userId: connection.profiles.id,
@@ -343,7 +361,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setLoading(true);
     try {
-      // Simplified approach: Direct update without complex checking
       console.log('🔄 Updating profile to coach role...');
       
       const { error: updateError } = await supabase
@@ -362,8 +379,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       console.log('✅ Profile updated successfully');
 
-      // Reload user profile to reflect changes
-      console.log('🔄 Reloading user profile...');
       await loadUserProfile();
       
       console.log('🎉 Coach profile creation completed successfully');
@@ -487,7 +502,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       console.log('✅ Connection request approved successfully');
       
-      // Force immediate reload of both lists
       await Promise.all([
         loadPendingRequests(),
         loadStudents()
@@ -524,7 +538,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       console.log('✅ Connection request declined successfully');
       
-      // Reload pending requests after decline
       await loadPendingRequests();
       
       toast({
@@ -550,7 +563,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log('🗑️ Removing student connection:', { coachId: user.id, studentId });
       
-      // Delete the connection from the database with explicit conditions
       const { error } = await supabase
         .from('coach_student_connections')
         .delete()
@@ -564,10 +576,8 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       console.log('✅ Student connection removed from database successfully');
       
-      // Immediately update local state to reflect the change
       setStudents(prevStudents => prevStudents.filter(student => student.id !== studentId));
       
-      // Also reload from database to ensure consistency
       await loadStudents();
       
       toast({
@@ -633,7 +643,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setLoading(true);
     try {
-      // Find coach by connection code
       const { data: coach, error: coachError } = await supabase
         .from('profiles')
         .select('*')
@@ -650,7 +659,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      // Check if connection already exists with THIS specific coach
       const { data: existingConnection } = await supabase
         .from('coach_student_connections')
         .select('*')
@@ -669,7 +677,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      // Create connection request
       const { error: insertError } = await supabase
         .from('coach_student_connections')
         .insert({
@@ -718,7 +725,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       console.log('✅ Coach connection removed from database successfully');
       
-      // Remove the coach from local state
       setConnectedCoaches(prev => prev.filter(coach => coach.id !== coachId));
       
       toast({
@@ -754,7 +760,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Student (UPDATED)
     isStudent,
     studentProfile,
-    connectedCoaches, // Changed from connectedCoach to connectedCoaches
+    connectedCoaches,
     createStudentProfile,
     connectWithCoach,
     disconnectFromCoach,
