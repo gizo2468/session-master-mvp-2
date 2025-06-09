@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { UserRole } from '@/types/poker';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters long' }),
@@ -35,6 +36,9 @@ type FormValues = z.infer<typeof formSchema>;
 const Signup: React.FC = () => {
   const { signup, isLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -43,7 +47,7 @@ const Signup: React.FC = () => {
       email: '',
       password: '',
       confirmPassword: '',
-      role: 'student', // Ensure this defaults to 'student'
+      role: 'student',
       agreeToTerms: false as unknown as true,
     },
   });
@@ -56,27 +60,55 @@ const Signup: React.FC = () => {
         fullName: values.fullName
       });
       
-      await signup(values.email, values.password, values.fullName, values.role as UserRole);
-      
-      // Set the terms acceptance flag in the profile
-      if (values.agreeToTerms) {
-        // Get current user after signup
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          console.log("Setting terms acceptance for user:", user.id);
-          // Update the has_accepted_terms field using our custom function
-          await supabase.rpc('update_terms_acceptance', {
-            user_id: user.id,
-            accepted: true
-          });
+      // Check if email confirmation is enabled
+      const { data: { user }, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            fullName: values.fullName,
+            role: values.role,
+            hasAcceptedTerms: values.agreeToTerms
+          },
+          emailRedirectTo: `${window.location.origin}/`
         }
+      });
+
+      if (error) {
+        console.error("Signup error:", error);
+        toast({
+          title: "Signup Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
       }
-      
-      console.log("Signup completed successfully, navigating to home");
-      navigate('/');
+
+      // Check if user needs email confirmation
+      if (user && !user.email_confirmed_at) {
+        console.log("Email confirmation required for user:", user.id);
+        setUserEmail(values.email);
+        setShowEmailConfirmation(true);
+        toast({
+          title: "Account Created!",
+          description: "Please check your email to confirm your account before signing in.",
+        });
+      } else {
+        // User is immediately confirmed (auto-confirm is enabled)
+        console.log("User immediately confirmed, redirecting to home");
+        toast({
+          title: "Account Created!",
+          description: "Welcome to Session Master! You can now start tracking your poker sessions.",
+        });
+        navigate('/');
+      }
     } catch (error) {
       console.error("Signup failed:", error);
-      // Error is handled in the AuthContext
+      toast({
+        title: "Signup Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -92,6 +124,52 @@ const Signup: React.FC = () => {
       description: 'Help students improve their poker game with insights and feedback',
     },
   ];
+
+  // Show email confirmation screen
+  if (showEmailConfirmation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4">
+              <Logo />
+            </div>
+            <CardTitle className="text-2xl font-serif">Check Your Email</CardTitle>
+            <CardDescription>We've sent you a confirmation link</CardDescription>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <Icon name="Mail" className="w-8 h-8 text-green-600" />
+            </div>
+            <p className="text-gray-600">
+              We've sent a confirmation link to <strong>{userEmail}</strong>
+            </p>
+            <p className="text-sm text-gray-500">
+              Please check your email and click the confirmation link to activate your account. 
+              You won't be able to sign in until you confirm your email address.
+            </p>
+            <div className="pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowEmailConfirmation(false)}
+                className="w-full"
+              >
+                Back to Signup
+              </Button>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <p className="text-sm text-gray-600">
+              Already confirmed?{' '}
+              <Link to="/auth/login" className="text-poker-gold hover:underline">
+                Sign In
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
