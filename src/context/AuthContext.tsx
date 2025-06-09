@@ -17,6 +17,8 @@ export interface User {
   hasAcceptedTerms?: boolean;
   lastLoginAt?: Date;
   isActive?: boolean;
+  hasSeenTutorial?: boolean;
+  hasCompletedTutorial?: boolean;
   notificationPreferences: {
     liveSessionStart: boolean;
     newFeedback: boolean;
@@ -62,25 +64,93 @@ const optimizeImageData = (imageDataUrl: string | undefined): string | undefined
   return 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNlMmUyZTIiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiPnVzZXI8L3RleHQ+PC9zdmc+';
 };
 
-// Helper function to convert Supabase User to our App User
+// Helper function to create comprehensive user object with all required defaults
 const createUserFromSupabaseUser = (supabaseUser: SupabaseUser, role: UserRole = 'student'): User => {
+  const userRole = supabaseUser.user_metadata?.role || role;
+  
   return {
     id: supabaseUser.id,
     email: supabaseUser.email || '',
     fullName: supabaseUser.user_metadata?.fullName || 'New User',
     onlineNickname: supabaseUser.user_metadata?.onlineNickname,
-    profilePicture: supabaseUser.user_metadata?.profilePicture,
-    role: supabaseUser.user_metadata?.role || role,
-    coachTier: supabaseUser.user_metadata?.role === 'coach' 
-      ? supabaseUser.user_metadata?.coachTier || 'free' 
+    profilePicture: optimizeImageData(supabaseUser.user_metadata?.profilePicture),
+    role: userRole,
+    coachTier: userRole === 'coach' 
+      ? (supabaseUser.user_metadata?.coachTier || 'free') 
       : undefined,
-    language: supabaseUser.user_metadata?.language || 'en',
-    hasAcceptedTerms: false,
+    language: (supabaseUser.user_metadata?.language === 'en' || supabaseUser.user_metadata?.language === 'he') 
+      ? supabaseUser.user_metadata.language 
+      : 'en',
+    hasAcceptedTerms: Boolean(supabaseUser.user_metadata?.hasAcceptedTerms),
     isActive: true,
+    hasSeenTutorial: false,
+    hasCompletedTutorial: false,
     notificationPreferences: supabaseUser.user_metadata?.notificationPreferences || {
       liveSessionStart: true,
       newFeedback: true,
     }
+  };
+};
+
+// Helper function to safely parse notification preferences from database
+const parseNotificationPreferences = (preferences: any) => {
+  const defaults = {
+    liveSessionStart: true,
+    newFeedback: true,
+  };
+
+  if (!preferences || typeof preferences !== 'object') {
+    return defaults;
+  }
+
+  return {
+    liveSessionStart: typeof preferences.liveSessionStart === 'boolean' 
+      ? preferences.liveSessionStart 
+      : defaults.liveSessionStart,
+    newFeedback: typeof preferences.newFeedback === 'boolean' 
+      ? preferences.newFeedback 
+      : defaults.newFeedback,
+  };
+};
+
+// Helper function to create user from database profile with comprehensive fallbacks
+const createUserFromProfile = (supabaseUser: SupabaseUser, profileData: any): User => {
+  // Safe role parsing with fallback
+  const roleFromProfile = profileData.role;
+  const userRole: UserRole = (roleFromProfile === 'student' || roleFromProfile === 'coach') 
+    ? roleFromProfile 
+    : 'student';
+
+  // Safe language parsing with fallback
+  const languageFromProfile = profileData.language;
+  const language: 'en' | 'he' = (languageFromProfile === 'en' || languageFromProfile === 'he') 
+    ? languageFromProfile 
+    : 'en';
+
+  // Safe coach tier parsing with fallback
+  let coachTierValue: CoachTier | undefined = undefined;
+  if (userRole === 'coach' && profileData.coach_tier) {
+    const validCoachTiers: CoachTier[] = ['free', 'starter', 'pro', 'elite'];
+    coachTierValue = validCoachTiers.includes(profileData.coach_tier as CoachTier) 
+      ? profileData.coach_tier as CoachTier 
+      : 'free';
+  }
+
+  return {
+    id: supabaseUser.id,
+    email: profileData.email || supabaseUser.email || '',
+    fullName: profileData.full_name || supabaseUser.user_metadata?.fullName || 'New User',
+    onlineNickname: profileData.online_nickname || supabaseUser.user_metadata?.onlineNickname,
+    profilePicture: optimizeImageData(profileData.profile_picture || supabaseUser.user_metadata?.profilePicture),
+    role: userRole,
+    coachTier: coachTierValue,
+    language: language,
+    hasAcceptedTerms: Boolean(profileData.has_accepted_terms),
+    lastLoginAt: profileData.last_login_at ? new Date(profileData.last_login_at) : undefined,
+    isActive: Boolean(profileData.is_active ?? true),
+    hasSeenTutorial: Boolean(profileData.has_seen_tutorial ?? false),
+    hasCompletedTutorial: Boolean(profileData.has_completed_tutorial ?? false),
+    notificationPreferences: parseNotificationPreferences(profileData.notification_preferences),
   };
 };
 
@@ -236,14 +306,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Fetch user data and update the state
+  // Enhanced fetch user data with comprehensive fallbacks and validation
   const fetchAndSetUser = async (supabaseUser: SupabaseUser, isNewLogin: boolean = true) => {
     try {
       console.log("Fetching user data for ID:", supabaseUser.id, 
                   "Is new login:", isNewLogin,
                   "User metadata role:", supabaseUser.user_metadata?.role);
       
-      // Query the profiles table we just created
+      // Query the profiles table for complete user data
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -252,70 +322,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error("Error fetching user profile:", error);
-        const defaultUser = createUserFromSupabaseUser(supabaseUser);
-        console.log("Created default user with role:", defaultUser.role);
-        setUser(defaultUser);
+        // Create fallback user from Supabase user metadata
+        const fallbackUser = createUserFromSupabaseUser(supabaseUser);
+        console.log("Created fallback user with role:", fallbackUser.role);
+        setUser(fallbackUser);
         
         if (isNewLogin) {
-          showWelcomeToast(defaultUser.fullName);
+          showWelcomeToast(fallbackUser.fullName);
         }
       } else if (data) {
-        // Safely cast the database values to the required types
-        const userRole = data.role as UserRole;
-        const language = (data.language === 'en' || data.language === 'he') ? data.language as 'en' | 'he' : 'en';
+        // Successfully fetched profile data - create user with comprehensive validation
+        console.log("Fetched user profile from database - Role:", data.role, "Full data:", data);
         
-        console.log("Fetched user profile from database - Role:", userRole, "Full data:", data);
-        
-        let coachTierValue: CoachTier | undefined = undefined;
-        if (userRole === 'coach' && data.coach_tier) {
-          // Cast coach_tier to CoachTier if it's a valid value
-          const validCoachTiers: CoachTier[] = ['free', 'starter', 'pro', 'elite'];
-          coachTierValue = validCoachTiers.includes(data.coach_tier as CoachTier) 
-            ? data.coach_tier as CoachTier 
-            : 'free';
-        }
-
-        // Parse notification preferences or provide defaults
-        let notificationPrefs = {
-          liveSessionStart: true,
-          newFeedback: true,
-        };
-
-        // Properly handle the JSON type from the database
-        if (data.notification_preferences && typeof data.notification_preferences === 'object') {
-          const preferences = data.notification_preferences as Record<string, any>;
-          
-          // Check if specific properties exist and are boolean
-          if ('liveSessionStart' in preferences) {
-            notificationPrefs.liveSessionStart = Boolean(preferences.liveSessionStart);
-          }
-          
-          if ('newFeedback' in preferences) {
-            notificationPrefs.newFeedback = Boolean(preferences.newFeedback);
-          }
-        }
-
-        // If profile exists, use it to set user data
-        const appUser: User = {
-          id: supabaseUser.id,
-          email: data.email || supabaseUser.email || '',
-          fullName: data.full_name || supabaseUser.user_metadata?.fullName || 'New User',
-          onlineNickname: data.online_nickname,
-          profilePicture: optimizeImageData(data.profile_picture),
-          role: userRole,
-          coachTier: coachTierValue,
-          language: language,
-          hasAcceptedTerms: Boolean(data.has_accepted_terms),
-          lastLoginAt: data.last_login_at ? new Date(data.last_login_at) : undefined,
-          isActive: Boolean(data.is_active),
-          notificationPreferences: notificationPrefs,
-        };
-        
-        console.log("Final user object created with role:", appUser.role);
+        const appUser = createUserFromProfile(supabaseUser, data);
+        console.log("Final user object created with role:", appUser.role, "Tutorial seen:", appUser.hasSeenTutorial);
         setUser(appUser);
 
         // Update last login time when fetching user data after login
-        if (session) {
+        if (session && isNewLogin) {
           updateLastLogin(supabaseUser.id);
         }
         
@@ -323,23 +347,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           showWelcomeToast(appUser.fullName);
         }
       } else {
-        // If no profile exists, use data from auth user
-        const defaultUser = createUserFromSupabaseUser(supabaseUser);
-        console.log("No profile found, created default user with role:", defaultUser.role);
-        setUser(defaultUser);
+        // No profile exists - create fallback user
+        const fallbackUser = createUserFromSupabaseUser(supabaseUser);
+        console.log("No profile found, created fallback user with role:", fallbackUser.role);
+        setUser(fallbackUser);
         
         if (isNewLogin) {
-          showWelcomeToast(defaultUser.fullName);
+          showWelcomeToast(fallbackUser.fullName);
         }
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
-      const defaultUser = createUserFromSupabaseUser(supabaseUser);
-      console.log("Error occurred, created default user with role:", defaultUser.role);
-      setUser(defaultUser);
+      // Final fallback in case of any unexpected errors
+      const fallbackUser = createUserFromSupabaseUser(supabaseUser);
+      console.log("Error occurred, created fallback user with role:", fallbackUser.role);
+      setUser(fallbackUser);
       
       if (isNewLogin) {
-        showWelcomeToast(defaultUser.fullName);
+        showWelcomeToast(fallbackUser.fullName);
       }
     } finally {
       setIsLoading(false);
@@ -409,6 +434,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               liveSessionStart: true,
               newFeedback: true,
             },
+            hasAcceptedTerms: true,
           },
         },
       });
@@ -512,6 +538,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           notification_preferences: optimizedUserData.notificationPreferences || user.notificationPreferences,
           has_accepted_terms: optimizedUserData.hasAcceptedTerms !== undefined ? optimizedUserData.hasAcceptedTerms : user.hasAcceptedTerms,
           is_active: optimizedUserData.isActive !== undefined ? optimizedUserData.isActive : user.isActive,
+          has_seen_tutorial: optimizedUserData.hasSeenTutorial !== undefined ? optimizedUserData.hasSeenTutorial : user.hasSeenTutorial,
+          has_completed_tutorial: optimizedUserData.hasCompletedTutorial !== undefined ? optimizedUserData.hasCompletedTutorial : user.hasCompletedTutorial,
         })
         .eq('id', user.id); // Explicitly match on user ID to satisfy RLS policy
 
