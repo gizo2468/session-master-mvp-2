@@ -35,25 +35,22 @@ export interface DatabaseTable {
   id: string;
   session_id: string;
   table_name: string;
-  game_type: string;
-  format: string;
+  game_format: string;
+  table_type: string;
   buy_in: number;
-  initial_buy_in: number;
-  cash_out: number;
-  small_blind: number;
-  big_blind: number;
+  cashout: number;
+  stakes: string;
   start_time: string;
   end_time: string | null;
   is_active: boolean;
-  is_online: boolean;
   rebuys: number;
-  bounty_count: number;
   bounty_amount: number;
   final_position: number | null;
-  notes: string | null;
-  next_day_start: string | null;
-  chips_carryover: number | null;
-  day_ended_without_elimination: boolean;
+  table_notes: string | null;
+  starting_stack: number | null;
+  current_stack: number | null;
+  rebuy_amount: number | null;
+  players_eliminated: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -93,32 +90,35 @@ export const convertDatabaseSessionToPokerSession = (
   const convertedTables: TableData[] = tables.map(table => ({
     id: table.id,
     name: table.table_name,
-    gameType: table.game_type as any,
-    format: table.format as any,
+    gameType: table.table_type as any,
+    format: table.game_format as any,
+    location: '', // Default location for tables
     buyIn: Number(table.buy_in),
-    initialBuyIn: Number(table.initial_buy_in),
-    cashOut: table.cash_out ? Number(table.cash_out) : undefined,
-    smallBlind: Number(table.small_blind),
-    bigBlind: Number(table.big_blind),
+    initialBuyIn: Number(table.buy_in),
+    cashOut: table.cashout ? Number(table.cashout) : undefined,
+    smallBlind: 0, // Will be derived from stakes
+    bigBlind: 0, // Will be derived from stakes
     startTime: new Date(table.start_time),
     endTime: table.end_time ? new Date(table.end_time) : undefined,
     isActive: table.is_active,
-    isOnline: table.is_online,
+    isOnline: false,
     rebuys: table.rebuys,
-    bountyCount: table.bounty_count,
     bountyAmount: Number(table.bounty_amount),
     finalPosition: table.final_position,
-    notes: table.notes || undefined,
-    nextDayStart: table.next_day_start ? new Date(table.next_day_start) : undefined,
-    chipsCarryover: table.chips_carryover || undefined,
-    dayEndedWithoutElimination: table.day_ended_without_elimination,
+    notes: table.table_notes || undefined,
+    stakes: table.stakes,
+    startingStack: table.starting_stack || undefined,
+    currentStack: table.current_stack || undefined,
+    rebuyAmount: table.rebuy_amount || undefined,
     hands: hands
       .filter(hand => hand.table_id === table.id)
       .map(hand => ({
         id: hand.id,
+        cards: hand.hole_cards ? JSON.parse(hand.hole_cards)[0] || '' : '',
+        action: hand.preflop_action || '',
+        position: hand.position || '',
         tableId: hand.table_id || undefined,
         handNumber: hand.hand_number || undefined,
-        position: hand.position || undefined,
         holeCards: hand.hole_cards ? JSON.parse(hand.hole_cards) : undefined,
         preflopAction: hand.preflop_action || undefined,
         flopCards: hand.flop_cards ? JSON.parse(hand.flop_cards) : undefined,
@@ -128,12 +128,15 @@ export const convertDatabaseSessionToPokerSession = (
         riverCard: hand.river_card || undefined,
         riverAction: hand.river_action || undefined,
         showdownResult: hand.showdown_result || undefined,
+        result: hand.showdown_result || undefined,
         potSize: Number(hand.pot_size),
         amountInvested: Number(hand.amount_invested),
         amountWon: Number(hand.amount_won),
+        resultAmount: Number(hand.amount_won),
         currencyType: hand.currency_type as any,
         notes: hand.hand_notes || undefined,
         handImage: hand.hand_image || undefined,
+        image: hand.hand_image || undefined,
         createdAt: new Date(hand.created_at)
       }))
   }));
@@ -143,8 +146,10 @@ export const convertDatabaseSessionToPokerSession = (
     .filter(hand => !hand.table_id)
     .map(hand => ({
       id: hand.id,
+      cards: hand.hole_cards ? JSON.parse(hand.hole_cards)[0] || '' : '',
+      action: hand.preflop_action || '',
+      position: hand.position || '',
       handNumber: hand.hand_number || undefined,
-      position: hand.position || undefined,
       holeCards: hand.hole_cards ? JSON.parse(hand.hole_cards) : undefined,
       preflopAction: hand.preflop_action || undefined,
       flopCards: hand.flop_cards ? JSON.parse(hand.flop_cards) : undefined,
@@ -154,12 +159,15 @@ export const convertDatabaseSessionToPokerSession = (
       riverCard: hand.river_card || undefined,
       riverAction: hand.river_action || undefined,
       showdownResult: hand.showdown_result || undefined,
+      result: hand.showdown_result || undefined,
       potSize: Number(hand.pot_size),
       amountInvested: Number(hand.amount_invested),
       amountWon: Number(hand.amount_won),
+      resultAmount: Number(hand.amount_won),
       currencyType: hand.currency_type as any,
       notes: hand.hand_notes || undefined,
       handImage: hand.hand_image || undefined,
+      image: hand.hand_image || undefined,
       createdAt: new Date(hand.created_at)
     }));
 
@@ -167,12 +175,12 @@ export const convertDatabaseSessionToPokerSession = (
     id: dbSession.id,
     gameType: dbSession.game_type as any,
     format: dbSession.session_type as any,
+    location: dbSession.location,
     buyIn: Number(dbSession.buy_in),
     initialBuyIn: Number(dbSession.initial_buy_in),
     cashOut: dbSession.cash_out ? Number(dbSession.cash_out) : undefined,
     smallBlind: Number(dbSession.small_blind),
     bigBlind: Number(dbSession.big_blind),
-    location: dbSession.location,
     tableName: dbSession.table_name,
     isActive: dbSession.is_active,
     isOnline: dbSession.is_online,
@@ -270,13 +278,13 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
 
     // Convert to PokerSession format
     const convertedSessions = sessions.map(session => {
-      const sessionTables = (tables || []).filter(table => table.session_id === session.id);
-      const sessionHands = (hands || []).filter(hand => hand.session_id === session.id);
+      const sessionTables = (tables || []).filter(table => table.session_id === session.id) as DatabaseTable[];
+      const sessionHands = (hands || []).filter(hand => hand.session_id === session.id) as DatabaseHand[];
       
       return convertDatabaseSessionToPokerSession(
         session as DatabaseSession,
-        sessionTables as DatabaseTable[],
-        sessionHands as DatabaseHand[]
+        sessionTables,
+        sessionHands
       );
     });
 
@@ -309,26 +317,23 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
       const dbTables = session.tables.map(table => ({
         id: table.id,
         session_id: session.id,
-        table_name: table.name,
-        game_type: table.gameType,
-        format: table.format,
+        table_name: table.name || '',
+        game_format: table.format,
+        table_type: table.gameType,
         buy_in: table.buyIn,
-        initial_buy_in: table.initialBuyIn || table.buyIn,
-        cash_out: table.cashOut || 0,
-        small_blind: table.smallBlind || 0,
-        big_blind: table.bigBlind || 0,
+        cashout: table.cashOut || 0,
+        stakes: table.stakes || '',
         start_time: table.startTime.toISOString(),
         end_time: table.endTime?.toISOString() || null,
         is_active: table.isActive,
-        is_online: table.isOnline || false,
         rebuys: table.rebuys || 0,
-        bounty_count: table.bountyCount || 0,
         bounty_amount: table.bountyAmount || 0,
         final_position: table.finalPosition || null,
-        notes: table.notes || null,
-        next_day_start: table.nextDayStart?.toISOString() || null,
-        chips_carryover: table.chipsCarryover || null,
-        day_ended_without_elimination: table.dayEndedWithoutElimination || false
+        table_notes: table.notes || null,
+        starting_stack: table.startingStack || null,
+        current_stack: table.currentStack || null,
+        rebuy_amount: table.rebuyAmount || null,
+        players_eliminated: 0
       }));
 
       const { error: tablesError } = await supabase

@@ -1,4 +1,3 @@
-
 export interface HandData {
   id: string;
   cards: string;
@@ -103,6 +102,8 @@ export interface PokerSession {
   rebuys?: number;
   addOns?: number;
   finalPosition?: number;
+  bountyCount?: number;
+  bountyAmount?: number;
 
   sessionDuration?: number;
   currentStatus?: 'running' | 'paused' | 'ended';
