@@ -1,5 +1,24 @@
-
 import { PokerSession } from '@/types/poker';
+
+// Helper function to safely parse UTC timestamps
+const parseUTCTimestamp = (timestamp: string | null | undefined): Date | undefined => {
+  if (!timestamp) return undefined;
+  
+  try {
+    // If timestamp already has timezone info (ends with Z or has offset), use as-is
+    if (timestamp.endsWith('Z') || timestamp.includes('+') || timestamp.includes('-')) {
+      const date = new Date(timestamp);
+      return isNaN(date.getTime()) ? undefined : date;
+    }
+    
+    // Otherwise, treat as UTC by appending Z
+    const date = new Date(timestamp + 'Z');
+    return isNaN(date.getTime()) ? undefined : date;
+  } catch (error) {
+    console.error('Error parsing timestamp:', timestamp, error);
+    return undefined;
+  }
+};
 
 export const convertDatabaseSessionToPokerSession = (
   sessionData: any,
@@ -21,10 +40,9 @@ export const convertDatabaseSessionToPokerSession = (
     startingBB: sessionData.starting_bb,
     tournamentTypes: sessionData.tournament_types,
     isMultiDay: sessionData.is_multi_day,
-    // CRITICAL: Store the original UTC timestamp string to prevent timezone corruption
-    // Create Date object from UTC timestamp, but also preserve the raw UTC string for calculations
-    startTime: new Date(sessionData.start_time + 'Z'), // Ensure UTC interpretation
-    endTime: sessionData.end_time ? new Date(sessionData.end_time + 'Z') : undefined,
+    // CRITICAL: Safely parse UTC timestamps to prevent invalid Date objects
+    startTime: parseUTCTimestamp(sessionData.start_time) || new Date(),
+    endTime: parseUTCTimestamp(sessionData.end_time),
     cashOut: sessionData.cash_out,
     notes: sessionData.notes,
     isActive: sessionData.is_active,
@@ -49,9 +67,9 @@ export const convertDatabaseSessionToPokerSession = (
       startingBB: table.starting_stack,
       currentStack: table.current_stack,
       isActive: table.is_active,
-      // CRITICAL: Ensure UTC interpretation for table times
-      startTime: new Date(table.start_time + 'Z'),
-      endTime: table.end_time ? new Date(table.end_time + 'Z') : undefined,
+      // CRITICAL: Safely parse table timestamps
+      startTime: parseUTCTimestamp(table.start_time) || new Date(),
+      endTime: parseUTCTimestamp(table.end_time),
       cashOut: table.cashout,
       rebuys: table.rebuys,
       rebuyAmount: table.rebuy_amount,

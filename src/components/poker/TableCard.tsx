@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TableData } from '@/types/poker';
-import { format as dateFormat, differenceInMinutes } from 'date-fns';
+import { format as dateFormat, differenceInMinutes, isValid } from 'date-fns';
 import Icon from '@/components/ui/Lucide';
 import { 
   Dialog,
@@ -48,8 +48,12 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
   
   const [rebuyDialogAmount, setRebuyDialogAmount] = useState(initialRebuyAmount);
 
-  const formattedStartTime = dateFormat(new Date(table.startTime), 'h:mm a');
-  const formattedDate = dateFormat(new Date(table.startTime), 'MMM d, yyyy');
+  // CRITICAL: Validate dates before formatting to prevent crashes
+  const safeStartTime = table.startTime && isValid(table.startTime) ? table.startTime : new Date();
+  const safeEndTime = table.endTime && isValid(table.endTime) ? table.endTime : undefined;
+  
+  const formattedStartTime = dateFormat(safeStartTime, 'h:mm a');
+  const formattedDate = dateFormat(safeStartTime, 'MMM d, yyyy');
 
   const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
   const rebuyCount = Math.floor(rebuyAmount / (table.initialBuyIn || table.buyIn || 1));
@@ -156,7 +160,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
             </span>
           )}
           <div className="text-sm text-gray-500 mt-1">
-            {dateFormat(new Date(table.startTime), 'MMM d, yyyy')}
+            {formattedDate}
           </div>
         </div>
 
@@ -164,7 +168,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
           <div className="flex flex-1 justify-center items-center">
             <div className="text-center">
               <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
-              <div className="font-medium">{dateFormat(new Date(table.startTime), 'h:mm a')}</div>
+              <div className="font-medium">{formattedStartTime}</div>
             </div>
           </div>
           
@@ -172,19 +176,19 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
             <div className="text-center">
               <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
               <TableTimerDisplay 
-                startTime={table.startTime}
-                endTime={table.endTime}
+                startTime={safeStartTime}
+                endTime={safeEndTime}
                 isActive={table.isActive}
                 className="flex justify-center"
               />
             </div>
           </div>
           
-          {!table.isActive && table.endTime && (
+          {!table.isActive && safeEndTime && (
             <div className="flex-1 flex justify-center items-center">
               <div className="text-center">
                 <div className="text-gray-500 font-medium text-xs uppercase mb-1">End</div>
-                <div className="font-medium">{dateFormat(new Date(table.endTime), 'h:mm a')}</div>
+                <div className="font-medium">{dateFormat(safeEndTime, 'h:mm a')}</div>
               </div>
             </div>
           )}
