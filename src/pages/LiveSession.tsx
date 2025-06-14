@@ -1,409 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useSessionContext } from '@/context/SessionContext';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import Icon from '@/components/ui/Lucide';
+
+import React from 'react';
+import { useParams } from 'react-router-dom';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { TableData, PokerSession } from '@/types/poker';
-import TableCard from '@/components/poker/TableCard';
 import AddTableForm from '@/components/poker/AddTableForm';
 import EndSessionSheet from '@/components/poker/EndSessionSheet';
 import RebuyConfirmationDialog from '@/components/poker/RebuyConfirmationDialog';
 import EndTableDialog from '@/components/poker/EndTableDialog';
-import CompletedTablesDisplay from '@/components/poker/CompletedTablesDisplay';
-import { supabase } from '@/integrations/supabase/client';
-import { convertDatabaseSessionToPokerSession } from '@/utils/database';
+import LiveSessionHeader from '@/components/poker/LiveSessionHeader';
+import LiveSessionTables from '@/components/poker/LiveSessionTables';
+import { useSessionLoader } from '@/hooks/useSessionLoader';
+import { useSessionActions } from '@/hooks/useSessionActions';
+import { useRebuyActions } from '@/hooks/useRebuyActions';
+import { useEndTableActions } from '@/hooks/useEndTableActions';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export default function LiveSession() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { 
-    sessions, 
-    activeSession, 
-    endSession, 
-    updateSessionDuration, 
-    addRebuy,
-    addTable,
-    endTable,
-    addTableRebuy,
-    updateSession,
-    refreshSessionsFromDatabase
-  } = useSessionContext();
-  const isMobile = useIsMobile();
-  const { toast } = useToast();
   
-  const [currentSession, setCurrentSession] = useState<PokerSession | null>(null);
-  const [isLoadingSession, setIsLoadingSession] = useState(true);
-  const [showEndSessionSheet, setShowEndSessionSheet] = useState(false);
-  const [sessionNotes, setSessionNotes] = useState('');
-  const [showAddTableForm, setShowAddTableForm] = useState(false);
-  
-  // States for rebuy confirmation dialog
-  const [showRebuyConfirmDialog, setShowRebuyConfirmDialog] = useState(false);
-  const [pendingRebuyTableId, setPendingRebuyTableId] = useState<string | null>(null);
-  const [pendingRebuyAmount, setPendingRebuyAmount] = useState(0);
-  
-  // States for end table dialog
-  const [showEndTableDialog, setShowEndTableDialog] = useState(false);
-  const [pendingEndTableId, setPendingEndTableId] = useState<string | null>(null);
-  const [cashOutAmount, setCashOutAmount] = useState('');
-  const [tableNotes, setTableNotes] = useState('');
-  
-  // Add these missing states for bounty tournament fields
-  const [bountyCount, setBountyCount] = useState('');
-  const [bountyAmount, setBountyAmount] = useState('');
-  const [finalPosition, setFinalPosition] = useState('');
-  
-  // Add new states for multi-day tournament
-  const [endReason, setEndReason] = useState<'eliminated' | 'day-ended' | null>(null);
-  const [nextDayStart, setNextDayStart] = useState<Date | null>(null);
-  const [chipsCarryover, setChipsCarryover] = useState('');
-  
-  // Load session from database if not found in context
-  useEffect(() => {
-    const loadSession = async () => {
-      if (!id) {
-        console.log('No session ID provided');
-        navigate('/');
-        return;
-      }
-
-      // First try to find session in context
-      let foundSession = activeSession?.id === id ? activeSession : sessions.find(s => s.id === id && s.isActive);
-      
-      if (foundSession) {
-        // Double-check that the session is actually active
-        if (!foundSession.isActive) {
-          console.warn('Session found but not active:', foundSession.id);
-          toast({
-            title: "Session Ended",
-            description: "This session has already been completed.",
-            variant: "destructive"
-          });
-          navigate('/');
-          return;
-        }
-        
-        console.log('✅ Found active session in context:', foundSession.id);
-        setCurrentSession(foundSession);
-        setIsLoadingSession(false);
-        return;
-      }
-
-      // If not found in context, try to load from database
-      console.log('🔍 Loading session from database:', id);
-      try {
-        const { data: sessionData, error: sessionError } = await supabase
-          .from('sessions')
-          .select('*')
-          .eq('id', id)
-          .eq('is_active', true)
-          .single();
-
-        if (sessionError || !sessionData) {
-          console.error('❌ Session not found or not active:', sessionError);
-          toast({
-            title: "Session Not Found",
-            description: "The session you're looking for doesn't exist or has ended.",
-            variant: "destructive"
-          });
-          navigate('/');
-          return;
-        }
-
-        // Fetch tables for this session
-        const { data: tables, error: tablesError } = await supabase
-          .from('session_tables')
-          .select('*')
-          .eq('session_id', id);
-
-        if (tablesError) {
-          console.error('❌ Error fetching tables:', tablesError);
-        }
-
-        // Fetch hands for this session
-        const { data: hands, error: handsError } = await supabase
-          .from('session_hands_new')
-          .select('*')
-          .eq('session_id', id);
-
-        if (handsError) {
-          console.error('❌ Error fetching hands:', handsError);
-        }
-
-        // Convert to PokerSession format
-        const convertedSession = convertDatabaseSessionToPokerSession(
-          sessionData as any,
-          (tables || []) as any[],
-          (hands || []) as any[]
-        );
-
-        console.log('✅ Session loaded from database successfully');
-        setCurrentSession(convertedSession);
-        
-        // Update the session context with the loaded session
-        await updateSession(convertedSession);
-      } catch (error) {
-        console.error('❌ Failed to load session from database:', error);
-        toast({
-          title: "Error Loading Session",
-          description: "There was a problem loading your session. Please try again.",
-          variant: "destructive"
-        });
-        navigate('/');
-      } finally {
-        setIsLoadingSession(false);
-      }
-    };
-
-    loadSession();
-  }, [id, activeSession, sessions, navigate, toast, updateSession]);
-
-  const autoCashOutAmount = currentSession?.tables?.reduce((acc, table) => {
-    if (table.isActive === false && typeof table.cashOut === 'number') {
-      return acc + table.cashOut;
-    }
-    return acc;
-  }, 0) ?? 0;
-
-  const handleEndSession = async () => {
-    if (!currentSession) return;
-
-    const hasActiveTables = currentSession.tables && currentSession.tables.some(table => table.isActive);
-    
-    if (hasActiveTables) {
-      toast({
-        title: "Cannot End Session",
-        description: "You must end all active tables before ending the session.",
-        variant: "destructive"
-      });
-      setShowEndSessionSheet(false);
-      return;
-    }
-    
-    try {
-      await endSession(currentSession.id, autoCashOutAmount, sessionNotes);
-      setShowEndSessionSheet(false);
-      
-      toast({
-        title: "Session Ended",
-        description: "Your poker session has been successfully recorded."
-      });
-      
-      // Force refresh sessions before navigating
-      if (refreshSessionsFromDatabase) {
-        await refreshSessionsFromDatabase();
-      }
-      
-      navigate('/');
-    } catch (error) {
-      console.error("Error ending session:", error);
-      toast({
-        title: "Error Ending Session",
-        description: "There was a problem saving your session. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  const handleInitiateRebuy = (tableId: string, amount: number) => {
-    setPendingRebuyTableId(tableId);
-    setPendingRebuyAmount(amount);
-    setShowRebuyConfirmDialog(true);
-  };
-  
-  const handleConfirmRebuy = () => {
-    if (!currentSession || !pendingRebuyTableId) return;
-    
-    try {
-      addTableRebuy(currentSession.id, pendingRebuyTableId, pendingRebuyAmount);
-      toast({
-        title: "Rebuy Added",
-        description: `$${pendingRebuyAmount.toFixed(2)} rebuy has been added to the table.`
-      });
-    } catch (error) {
-      console.error("Error adding table rebuy:", error);
-      toast({
-        title: "Error Adding Rebuy",
-        description: "There was a problem adding the rebuy. Please try again.",
-        variant: "destructive"
-      });
-    }
-    
-    setShowRebuyConfirmDialog(false);
-    setPendingRebuyTableId(null);
-    setPendingRebuyAmount(0);
-  };
-  
-  const handleCancelRebuy = () => {
-    setShowRebuyConfirmDialog(false);
-    setPendingRebuyTableId(null);
-    setPendingRebuyAmount(0);
-  };
-  
-  const handleAddRebuy = (amount: number) => {
-    if (!currentSession) return;
-    
-    try {
-      addRebuy(currentSession.id, amount);
-      toast({
-        title: "Rebuy Added",
-        description: `$${amount.toFixed(2)} rebuy has been added to your session.`
-      });
-    } catch (error) {
-      console.error("Error adding rebuy:", error);
-      toast({
-        title: "Error Adding Rebuy",
-        description: "There was a problem adding the rebuy. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  const handleAddTable = (tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
-    if (!currentSession) return;
-    
-    try {
-      addTable(currentSession.id, tableData);
-      toast({
-        title: "Table Added",
-        description: `${tableData.name} has been added to your session.`
-      });
-    } catch (error) {
-      console.error("Error adding table:", error);
-      toast({
-        title: "Error Adding Table",
-        description: "There was a problem adding the table. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  // Modified to initiate the end table process with dialog
-  const handleInitiateEndTable = (tableId: string) => {
-    setPendingEndTableId(tableId);
-    setCashOutAmount('');
-    setTableNotes('');
-    setBountyCount('');
-    setBountyAmount('');
-    setFinalPosition('');
-    setEndReason(null);
-    setNextDayStart(null);
-    setChipsCarryover('');
-    setShowEndTableDialog(true);
-  };
-  
-  // Modified to handle the final end table confirmation, now with multi-day support
-  const handleConfirmEndTable = () => {
-    if (!currentSession || !pendingEndTableId) return;
-    
-    try {
-      const multiDayInfo = endReason === 'day-ended' ? {
-        nextDayStart: nextDayStart || undefined,
-        chipsCarryover: chipsCarryover ? parseInt(chipsCarryover) : undefined,
-        dayEndedWithoutElimination: true
-      } : undefined;
-
-      endTable(
-        currentSession.id, 
-        pendingEndTableId, 
-        endReason === 'day-ended' ? 0 : parseFloat(cashOutAmount), 
-        tableNotes,
-        {
-          bountyCount: bountyCount ? parseInt(bountyCount) : undefined,
-          bountyAmount: bountyAmount ? parseFloat(bountyAmount) : undefined,
-          finalPosition: finalPosition ? parseInt(finalPosition) : undefined
-        },
-        multiDayInfo
-      );
-      toast({
-        title: endReason === 'day-ended' ? "Day Ended" : "Table Ended",
-        description: endReason === 'day-ended' 
-          ? "Your tournament progress has been saved for the next day." 
-          : "The table has been successfully ended."
-      });
-    } catch (error) {
-      console.error("Error ending table:", error);
-      toast({
-        title: "Error Ending Table",
-        description: "There was a problem ending the table. Please try again.",
-        variant: "destructive"
-      });
-    }
-    
-    // Reset all states
-    resetEndTableStates();
-  };
-  
-  const resetEndTableStates = () => {
-    setShowEndTableDialog(false);
-    setPendingEndTableId(null);
-    setCashOutAmount('');
-    setTableNotes('');
-    setBountyCount('');
-    setBountyAmount('');
-    setFinalPosition('');
-    setEndReason(null);
-    setNextDayStart(null);
-    setChipsCarryover('');
-  };
-  
-  const handleEndTable = (
-    tableId: string, 
-    cashOut: number, 
-    notes?: string,
-    bounty?: { 
-      bountyCount?: number, 
-      bountyAmount?: number, 
-      finalPosition?: number 
-    },
-    multiDayInfo?: {
-      nextDayStart?: Date,
-      chipsCarryover?: number,
-      dayEndedWithoutElimination?: boolean
-    }
-  ) => {
-    if (!currentSession) return;
-    
-    try {
-      endTable(currentSession.id, tableId, cashOut, notes, bounty, multiDayInfo);
-      toast({
-        title: multiDayInfo?.dayEndedWithoutElimination ? "Day Ended" : "Table Ended",
-        description: multiDayInfo?.dayEndedWithoutElimination 
-          ? "Your tournament progress has been saved for the next day." 
-          : "The table has been successfully ended."
-      });
-    } catch (error) {
-      console.error("Error ending table:", error);
-      toast({
-        title: "Error Ending Table",
-        description: "There was a problem ending the table. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  const handleAddTableRebuy = (tableId: string, amount: number) => {
-    if (!currentSession) return;
-    
-    try {
-      addTableRebuy(currentSession.id, tableId, amount);
-      toast({
-        title: "Rebuy Added",
-        description: `$${amount.toFixed(2)} rebuy has been added to the table.`
-      });
-    } catch (error) {
-      console.error("Error adding table rebuy:", error);
-      toast({
-        title: "Error Adding Rebuy",
-        description: "There was a problem adding the rebuy. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
+  const { currentSession, isLoadingSession } = useSessionLoader(id);
+  const sessionActions = useSessionActions(currentSession);
+  const rebuyActions = useRebuyActions(currentSession?.id);
+  const endTableActions = useEndTableActions(currentSession);
   
   if (isLoadingSession) {
     return (
@@ -432,13 +52,6 @@ export default function LiveSession() {
       </div>
     );
   }
-  
-  const activeTables = currentSession.tables?.filter(table => table.isActive) || [];
-  const inactiveTables = currentSession.tables?.filter(table => !table.isActive) || [];
-
-  const pendingTable = pendingEndTableId 
-    ? currentSession.tables?.find(t => t.id === pendingEndTableId) 
-    : null;
 
   // Map session format to AddTableForm format
   const getTableFormat = (sessionFormat: string): 'Cash' | 'Tournament' => {
@@ -448,33 +61,18 @@ export default function LiveSession() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white shadow-sm px-4 py-4 sticky top-0 z-10">
-        <div className="container mx-auto max-w-md">
-          <div className="flex justify-between items-center">
-            <Button 
-              onClick={() => navigate('/')}
-              variant="ghost"
-              className="text-poker-feltGreen p-0"
-            >
-              <Icon name="ArrowLeft" size={16} className="mr-1" />
-              <span>Home</span>
-            </Button>
-            <h1 className="text-xl font-bold">Live Session</h1>
-            <div className="w-10"></div>
-          </div>
-        </div>
-      </header>
+      <LiveSessionHeader />
       
       <main className="flex-1 pt-4">
         <div className="container mx-auto max-w-md px-4 pb-8">
           <SessionTimerCard 
-            startTime={currentSession?.startTime}
-            gameType={currentSession?.gameType}
-            format={currentSession?.format}
-            smallBlind={currentSession?.smallBlind}
-            bigBlind={currentSession?.bigBlind}
-            onEndSession={() => setShowEndSessionSheet(true)}
-            onAddTable={() => setShowAddTableForm(true)}
+            startTime={currentSession.startTime}
+            gameType={currentSession.gameType}
+            format={currentSession.format}
+            smallBlind={currentSession.smallBlind}
+            bigBlind={currentSession.bigBlind}
+            onEndSession={() => sessionActions.setShowEndSessionSheet(true)}
+            onAddTable={() => sessionActions.setShowAddTableForm(true)}
           />
           
           <SessionDetailsCard 
@@ -484,93 +82,61 @@ export default function LiveSession() {
             }}
           />
           
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-extrabold tracking-tight">Tables</h3>
-            </div>
-            
-            {activeTables.length === 0 && inactiveTables.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-md">
-                <p className="mb-2">No tables added yet.</p>
-                <p className="text-sm">Click "Add Table" to start tracking multiple tables.</p>
-              </div>
-            ) : (
-              <div>
-                {activeTables.length > 0 && (
-                  <div className="mb-4">
-                    <h4 className="text-lg font-bold mb-2">Active Tables</h4>
-                    <div className="space-y-3">
-                      {activeTables.map((table) => (
-                        <TableCard
-                          key={table.id}
-                          table={table}
-                          sessionId={currentSession.id}
-                          onEndTable={(tableId, cashOut, notes, bounty, multiDayInfo) => 
-                            handleEndTable(tableId, cashOut, notes, bounty, multiDayInfo)
-                          }
-                          onAddRebuy={(tableId, amount) => handleAddTableRebuy(tableId, amount)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                <CompletedTablesDisplay tables={inactiveTables} sessionId={currentSession.id} />
-              </div>
-            )}
-          </div>
+          <LiveSessionTables
+            currentSession={currentSession}
+            onEndTable={sessionActions.handleEndTable}
+            onAddTableRebuy={sessionActions.handleAddTableRebuy}
+          />
         </div>
       </main>
       
       <EndSessionSheet
-        open={showEndSessionSheet}
-        onOpenChange={setShowEndSessionSheet}
+        open={sessionActions.showEndSessionSheet}
+        onOpenChange={sessionActions.setShowEndSessionSheet}
         session={currentSession}
-        autoCashOutAmount={autoCashOutAmount}
-        sessionNotes={sessionNotes}
-        onSessionNotesChange={setSessionNotes}
-        onEndSession={handleEndSession}
+        autoCashOutAmount={sessionActions.autoCashOutAmount}
+        sessionNotes={sessionActions.sessionNotes}
+        onSessionNotesChange={sessionActions.setSessionNotes}
+        onEndSession={sessionActions.handleEndSession}
       />
       
       <RebuyConfirmationDialog
-        open={showRebuyConfirmDialog}
-        onOpenChange={setShowRebuyConfirmDialog}
-        amount={pendingRebuyAmount}
-        onConfirm={handleConfirmRebuy}
-        onCancel={handleCancelRebuy}
+        open={rebuyActions.showRebuyConfirmDialog}
+        onOpenChange={rebuyActions.setShowRebuyConfirmDialog}
+        amount={rebuyActions.pendingRebuyAmount}
+        onConfirm={rebuyActions.handleConfirmRebuy}
+        onCancel={rebuyActions.handleCancelRebuy}
       />
       
       <EndTableDialog
-        open={showEndTableDialog}
-        onOpenChange={setShowEndTableDialog}
-        table={pendingTable}
-        cashOutAmount={cashOutAmount}
-        onCashOutAmountChange={setCashOutAmount}
-        tableNotes={tableNotes}
-        onTableNotesChange={setTableNotes}
-        bountyCount={bountyCount}
-        onBountyCountChange={setBountyCount}
-        bountyAmount={bountyAmount}
-        onBountyAmountChange={setBountyAmount}
-        finalPosition={finalPosition}
-        onFinalPositionChange={setFinalPosition}
-        endReason={endReason}
-        onEndReasonChange={setEndReason}
-        nextDayStart={nextDayStart}
-        onNextDayStartChange={setNextDayStart}
-        chipsCarryover={chipsCarryover}
-        onChipsCarryoverChange={setChipsCarryover}
-        onConfirm={handleConfirmEndTable}
-        onCancel={resetEndTableStates}
+        open={endTableActions.showEndTableDialog}
+        onOpenChange={endTableActions.setShowEndTableDialog}
+        table={endTableActions.pendingTable}
+        cashOutAmount={endTableActions.cashOutAmount}
+        onCashOutAmountChange={endTableActions.setCashOutAmount}
+        tableNotes={endTableActions.tableNotes}
+        onTableNotesChange={endTableActions.setTableNotes}
+        bountyCount={endTableActions.bountyCount}
+        onBountyCountChange={endTableActions.setBountyCount}
+        bountyAmount={endTableActions.bountyAmount}
+        onBountyAmountChange={endTableActions.setBountyAmount}
+        finalPosition={endTableActions.finalPosition}
+        onFinalPositionChange={endTableActions.setFinalPosition}
+        endReason={endTableActions.endReason}
+        onEndReasonChange={endTableActions.setEndReason}
+        nextDayStart={endTableActions.nextDayStart}
+        onNextDayStartChange={endTableActions.setNextDayStart}
+        chipsCarryover={endTableActions.chipsCarryover}
+        onChipsCarryoverChange={endTableActions.setChipsCarryover}
+        onConfirm={endTableActions.handleConfirmEndTable}
+        onCancel={endTableActions.resetEndTableStates}
       />
       
       <AddTableForm
-        open={showAddTableForm}
-        onOpenChange={setShowAddTableForm}
+        open={sessionActions.showAddTableForm}
+        onOpenChange={sessionActions.setShowAddTableForm}
         sessionFormat={getTableFormat(currentSession.format)}
-        onAddTable={(tableData) => {
-          handleAddTable(tableData);
-        }}
+        onAddTable={sessionActions.handleAddTable}
       />
     </div>
   );
