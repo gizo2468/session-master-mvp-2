@@ -1,507 +1,295 @@
 import { supabase } from '@/integrations/supabase/client';
-import { PokerSession, HandData, TableData } from '@/types/poker';
+import { PokerSession } from '@/types/poker';
 
-export interface DatabaseSession {
-  id: string;
-  user_id: string;
-  start_time: string;
-  end_time: string | null;
-  game_type: string;
-  format: string; // Changed from session_type to format
-  buy_in: number;
-  initial_buy_in: number;
-  cash_out: number;
-  small_blind: number;
-  big_blind: number;
-  location: string;
-  table_name: string;
-  is_active: boolean;
-  is_online: boolean;
-  current_status: string;
-  session_duration: number;
-  rebuys: number;
-  rebuy_amount: number; // Add missing property
-  starting_bb: number | null; // Add missing property
-  tournament_types: string[] | null; // Add missing property
-  is_multi_day: boolean; // Add missing property
-  roi: number; // Add missing property
-  itm_ratio_numerator: number; // Add missing property
-  itm_ratio_denominator: number; // Add missing property
-  tables_played: number; // Add missing property
-  notes: string | null;
-  status: string; // Add missing property
-  email: string | null;
-  created_at: string;
-}
+export const fetchUserSessions = async (): Promise<PokerSession[]> => {
+  try {
+    const { user } = await supabase.auth.getUser();
+    if (!user.user) {
+      console.error('❌ No authenticated user found');
+      return [];
+    }
 
-export interface DatabaseTable {
-  id: string;
-  session_id: string;
-  user_id: string;
-  table_name: string;
-  game_format: string;
-  table_type: string;
-  buy_in: number;
-  cashout: number;
-  stakes: string;
-  start_time: string;
-  end_time: string | null;
-  is_active: boolean;
-  rebuys: number;
-  bounty_amount: number;
-  final_position: number | null;
-  table_notes: string | null;
-  starting_stack: number | null;
-  current_stack: number | null;
-  rebuy_amount: number | null;
-  players_eliminated: number | null;
-  created_at: string;
-  updated_at: string;
-}
+    const { data: sessions, error: sessionError } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('user_id', user.user.id)
+      .order('start_time', { ascending: false });
 
-export interface DatabaseHand {
-  id: string;
-  session_id: string;
-  user_id: string;
-  table_id: string | null;
-  hand_number: number | null;
-  position: string | null;
-  hole_cards: string | null;
-  preflop_action: string | null;
-  flop_cards: string | null;
-  flop_action: string | null;
-  turn_card: string | null;
-  turn_action: string | null;
-  river_card: string | null;
-  river_action: string | null;
-  showdown_result: string | null;
-  pot_size: number;
-  amount_invested: number;
-  amount_won: number;
-  currency_type: string;
-  hand_notes: string | null;
-  hand_image: string | null;
-  created_at: string;
-  updated_at: string;
-}
+    if (sessionError) {
+      console.error('❌ Error fetching sessions:', sessionError);
+      return [];
+    }
 
-// Convert database session to PokerSession
-export const convertDatabaseSessionToPokerSession = (
-  dbSession: DatabaseSession,
-  tables: DatabaseTable[] = [],
-  hands: DatabaseHand[] = []
-): PokerSession => {
-  // Convert database tables to TableData
-  const convertedTables: TableData[] = tables.map(table => ({
-    id: table.id,
-    name: table.table_name,
-    gameType: table.table_type as any,
-    format: table.game_format as any,
-    location: '', // Default location for tables
-    buyIn: Number(table.buy_in),
-    initialBuyIn: Number(table.buy_in),
-    cashOut: table.cashout ? Number(table.cashout) : undefined,
-    smallBlind: 0, // Will be derived from stakes
-    bigBlind: 0, // Will be derived from stakes
-    startTime: new Date(table.start_time),
-    endTime: table.end_time ? new Date(table.end_time) : undefined,
-    isActive: table.is_active,
-    isOnline: false,
-    rebuys: table.rebuys,
-    bountyAmount: Number(table.bounty_amount),
-    finalPosition: table.final_position,
-    notes: table.table_notes || undefined,
-    stakes: table.stakes,
-    startingStack: table.starting_stack || undefined,
-    currentStack: table.current_stack || undefined,
-    rebuyAmount: table.rebuy_amount || undefined,
-    hands: hands
-      .filter(hand => hand.table_id === table.id)
-      .map(hand => ({
-        id: hand.id,
-        cards: hand.hole_cards ? JSON.parse(hand.hole_cards)[0] || '' : '',
-        action: hand.preflop_action || '',
-        position: hand.position || '',
-        tableId: hand.table_id || undefined,
-        handNumber: hand.hand_number || undefined,
-        holeCards: hand.hole_cards ? JSON.parse(hand.hole_cards) : undefined,
-        preflopAction: hand.preflop_action || undefined,
-        flopCards: hand.flop_cards ? JSON.parse(hand.flop_cards) : undefined,
-        flopAction: hand.flop_action || undefined,
-        turnCard: hand.turn_card || undefined,
-        turnAction: hand.turn_action || undefined,
-        riverCard: hand.river_card || undefined,
-        riverAction: hand.river_action || undefined,
-        showdownResult: hand.showdown_result || undefined,
-        result: hand.showdown_result || undefined,
-        potSize: Number(hand.pot_size),
-        amountInvested: Number(hand.amount_invested),
-        amountWon: Number(hand.amount_won),
-        resultAmount: Number(hand.amount_won),
-        currencyType: hand.currency_type as any,
-        notes: hand.hand_notes || undefined,
-        handImage: hand.hand_image || undefined,
-        image: hand.hand_image || undefined,
-        createdAt: new Date(hand.created_at)
-      }))
-  }));
+    const pokerSessions: PokerSession[] = [];
 
-  // Convert session-level hands (not associated with a table)
-  const sessionHands: HandData[] = hands
-    .filter(hand => !hand.table_id)
-    .map(hand => ({
-      id: hand.id,
-      cards: hand.hole_cards ? JSON.parse(hand.hole_cards)[0] || '' : '',
-      action: hand.preflop_action || '',
-      position: hand.position || '',
-      handNumber: hand.hand_number || undefined,
-      holeCards: hand.hole_cards ? JSON.parse(hand.hole_cards) : undefined,
-      preflopAction: hand.preflop_action || undefined,
-      flopCards: hand.flop_cards ? JSON.parse(hand.flop_cards) : undefined,
-      flopAction: hand.flop_action || undefined,
-      turnCard: hand.turn_card || undefined,
-      turnAction: hand.turn_action || undefined,
-      riverCard: hand.river_card || undefined,
-      riverAction: hand.river_action || undefined,
-      showdownResult: hand.showdown_result || undefined,
-      result: hand.showdown_result || undefined,
-      potSize: Number(hand.pot_size),
-      amountInvested: Number(hand.amount_invested),
-      amountWon: Number(hand.amount_won),
-      resultAmount: Number(hand.amount_won),
-      currencyType: hand.currency_type as any,
-      notes: hand.hand_notes || undefined,
-      handImage: hand.hand_image || undefined,
-      image: hand.hand_image || undefined,
-      createdAt: new Date(hand.created_at)
-    }));
+    for (const session of sessions) {
+      // Fetch tables for this session
+      const { data: tables, error: tablesError } = await supabase
+        .from('session_tables')
+        .select('*')
+        .eq('session_id', session.id);
 
-  return {
-    id: dbSession.id,
-    gameType: dbSession.game_type as any,
-    format: dbSession.format as any, // Use format instead of session_type
-    location: dbSession.location,
-    buyIn: Number(dbSession.buy_in),
-    initialBuyIn: Number(dbSession.initial_buy_in),
-    cashOut: dbSession.cash_out ? Number(dbSession.cash_out) : undefined,
-    smallBlind: Number(dbSession.small_blind),
-    bigBlind: Number(dbSession.big_blind),
-    tableName: dbSession.table_name,
-    isActive: dbSession.is_active,
-    isOnline: dbSession.is_online,
-    currentStatus: dbSession.current_status as any,
-    sessionDuration: dbSession.session_duration,
-    rebuys: dbSession.rebuys,
-    rebuyAmount: Number(dbSession.rebuy_amount),
-    startingBB: dbSession.starting_bb,
-    tournamentTypes: dbSession.tournament_types,
-    isMultiDay: dbSession.is_multi_day,
-    roi: Number(dbSession.roi),
-    itmRatioNumerator: dbSession.itm_ratio_numerator,
-    itmRatioDenominator: dbSession.itm_ratio_denominator,
-    tablesPlayed: dbSession.tables_played,
-    startTime: new Date(dbSession.start_time),
-    endTime: dbSession.end_time ? new Date(dbSession.end_time) : undefined,
-    notes: dbSession.notes || undefined,
-    status: dbSession.status as any,
-    hands: sessionHands,
-    tables: convertedTables
-  };
+      if (tablesError) {
+        console.error('❌ Error fetching tables:', tablesError);
+      }
+
+      // Fetch hands for this session
+      const { data: hands, error: handsError } = await supabase
+        .from('session_hands_new')
+        .select('*')
+        .eq('session_id', session.id);
+
+      if (handsError) {
+        console.error('❌ Error fetching hands:', handsError);
+      }
+
+      // Convert to PokerSession format
+      const pokerSession = {
+        ...session,
+        startTime: new Date(session.start_time),
+        endTime: session.end_time ? new Date(session.end_time) : undefined,
+        tables: tables || [],
+        hands: hands || []
+      } as PokerSession;
+
+      pokerSessions.push(pokerSession);
+    }
+
+    return pokerSessions;
+  } catch (error) {
+    console.error('❌ Failed to fetch user sessions:', error);
+    return [];
+  }
 };
 
-// Convert PokerSession to database format
-export const convertPokerSessionToDatabase = (session: PokerSession) => {
-  return {
-    id: session.id,
-    start_time: session.startTime.toISOString(),
-    end_time: session.endTime?.toISOString() || null,
-    game_type: session.gameType,
-    format: session.format, // Use format instead of session_type
-    buy_in: session.buyIn,
-    initial_buy_in: session.initialBuyIn || session.buyIn,
-    cash_out: session.cashOut || 0,
-    small_blind: session.smallBlind || 0,
-    big_blind: session.bigBlind || 0,
-    location: session.location || '',
-    table_name: session.tableName || '',
-    is_active: session.isActive,
-    is_online: session.isOnline || false,
-    current_status: session.currentStatus || 'ended',
-    session_duration: session.sessionDuration || 0,
-    rebuys: session.rebuys || 0,
-    rebuy_amount: session.rebuyAmount || 0,
-    starting_bb: session.startingBB,
-    tournament_types: session.tournamentTypes,
-    is_multi_day: session.isMultiDay,
-    roi: session.roi || 0,
-    itm_ratio_numerator: session.itmRatioNumerator || 0,
-    itm_ratio_denominator: session.itmRatioDenominator || 0,
-    tables_played: session.tablesPlayed || 0,
-    notes: session.notes || null,
-    status: session.status || 'active',
-    email: null // Will be set by RLS
-  };
-};
-
-// NEW: Fetch active session specifically
 export const fetchActiveSession = async (): Promise<PokerSession | null> => {
   try {
-    console.log('🔍 Fetching active session from database...');
-    
-    // Fetch active session
-    const { data: session, error: sessionError } = await supabase
+    const { user } = await supabase.auth.getUser();
+    if (!user.user) {
+      console.error('❌ No authenticated user found');
+      return null;
+    }
+
+    const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
       .select('*')
       .eq('is_active', true)
+      .eq('user_id', user.user.id)
       .order('start_time', { ascending: false })
       .limit(1)
       .single();
 
-    if (sessionError) {
-      if (sessionError.code === 'PGRST116') {
-        // No active session found
-        console.log('📋 No active session found in database');
-        return null;
-      }
+    if (sessionError && sessionError.code !== 'PGRST116') {
       console.error('❌ Error fetching active session:', sessionError);
-      throw sessionError;
-    }
-
-    if (!session) {
-      console.log('📋 No active session found in database');
       return null;
     }
 
-    console.log('✅ Found active session in database:', session.id);
+    if (!sessionData) {
+      console.log('📋 No active session found');
+      return null;
+    }
 
     // Fetch tables for this session
     const { data: tables, error: tablesError } = await supabase
       .from('session_tables')
       .select('*')
-      .eq('session_id', session.id);
+      .eq('session_id', sessionData.id);
 
     if (tablesError) {
-      console.error('❌ Error fetching tables for active session:', tablesError);
+      console.error('❌ Error fetching tables:', tablesError);
     }
 
     // Fetch hands for this session
     const { data: hands, error: handsError } = await supabase
       .from('session_hands_new')
       .select('*')
-      .eq('session_id', session.id);
+      .eq('session_id', sessionData.id);
 
     if (handsError) {
-      console.error('❌ Error fetching hands for active session:', handsError);
+      console.error('❌ Error fetching hands:', handsError);
     }
 
     // Convert to PokerSession format
-    const convertedSession = convertDatabaseSessionToPokerSession(
-      session as any,
-      (tables || []) as DatabaseTable[],
-      (hands || []) as DatabaseHand[]
-    );
+    const pokerSession = {
+      ...sessionData,
+      startTime: new Date(sessionData.start_time),
+      endTime: sessionData.end_time ? new Date(sessionData.end_time) : undefined,
+      tables: tables || [],
+      hands: hands || []
+    } as PokerSession;
 
-    console.log('✅ Successfully converted active session');
-    return convertedSession;
+    return pokerSession;
   } catch (error) {
-    console.error('❌ Failed to fetch active session from database:', error);
+    console.error('❌ Failed to fetch active session:', error);
     return null;
   }
 };
 
-// Fetch all sessions for the current user
-export const fetchUserSessions = async (): Promise<PokerSession[]> => {
+export const deleteSessionFromDatabase = async (sessionId: string): Promise<boolean> => {
   try {
-    console.log('🔍 Fetching sessions from database...');
-    
-    // Fetch sessions
-    const { data: sessions, error: sessionsError } = await supabase
+    console.log('🗑️ Deleting session from database:', sessionId);
+
+    const { error: sessionError } = await supabase
       .from('sessions')
-      .select('*')
-      .order('start_time', { ascending: false });
+      .delete()
+      .eq('id', sessionId);
 
-    if (sessionsError) {
-      console.error('❌ Error fetching sessions:', sessionsError);
-      throw sessionsError;
+    if (sessionError) {
+      console.error('❌ Error deleting session:', sessionError);
+      return false;
     }
 
-    if (!sessions || sessions.length === 0) {
-      console.log('📋 No sessions found in database');
-      return [];
-    }
-
-    console.log(`✅ Found ${sessions.length} sessions in database`);
-
-    // Fetch all tables for these sessions
-    const sessionIds = sessions.map(s => s.id);
-    const { data: tables, error: tablesError } = await supabase
-      .from('session_tables')
-      .select('*')
-      .in('session_id', sessionIds);
-
-    if (tablesError) {
-      console.error('❌ Error fetching tables:', tablesError);
-      // Continue without tables if they fail to load
-    }
-
-    // Fetch all hands for these sessions
-    const { data: hands, error: handsError } = await supabase
-      .from('session_hands_new')
-      .select('*')
-      .in('session_id', sessionIds);
-
-    if (handsError) {
-      console.error('❌ Error fetching hands:', handsError);
-      // Continue without hands if they fail to load
-    }
-
-    // Convert to PokerSession format
-    const convertedSessions = sessions.map(session => {
-      const sessionTables = (tables || []).filter(table => table.session_id === session.id) as DatabaseTable[];
-      const sessionHands = (hands || []).filter(hand => hand.session_id === session.id) as DatabaseHand[];
-      
-      return convertDatabaseSessionToPokerSession(
-        session as any, // Type assertion to handle the conversion
-        sessionTables,
-        sessionHands
-      );
-    });
-
-    console.log(`✅ Successfully converted ${convertedSessions.length} sessions`);
-    return convertedSessions;
+    console.log('✅ Session deleted successfully from database');
+    return true;
   } catch (error) {
-    console.error('❌ Failed to fetch sessions from database:', error);
-    throw error;
+    console.error('❌ Failed to delete session from database:', error);
+    return false;
   }
 };
 
-// Save session to database
 export const saveSessionToDatabase = async (session: PokerSession): Promise<boolean> => {
   try {
     console.log('💾 Saving session to database:', session.id);
     
-    const dbSession = convertPokerSessionToDatabase(session);
-    
-    const { error } = await supabase
-      .from('sessions')
-      .upsert(dbSession, { onConflict: 'id' });
-
-    if (error) {
-      console.error('❌ Error saving session:', error);
+    const { user } = await supabase.auth.getUser();
+    if (!user.user) {
+      console.error('❌ No authenticated user found');
       return false;
     }
 
-    // Save tables if they exist
+    // Prepare session data for database
+    const sessionData = {
+      id: session.id,
+      user_id: user.user.id,
+      game_type: session.gameType,
+      format: session.format,
+      location: session.location,
+      physical_location: session.physicalLocation,
+      table_name: session.tableName,
+      buy_in: session.buyIn,
+      initial_buy_in: session.initialBuyIn,
+      small_blind: session.smallBlind,
+      big_blind: session.bigBlind,
+      is_online: session.isOnline,
+      starting_bb: session.startingBB,
+      tournament_types: session.tournamentTypes,
+      is_multi_day: session.isMultiDay,
+      start_time: session.startTime.toISOString(),
+      end_time: session.endTime?.toISOString(),
+      cash_out: session.cashOut,
+      notes: session.notes,
+      status: session.isActive ? 'active' : 'completed',
+      is_active: session.isActive,
+      current_status: session.currentStatus,
+      session_duration: session.sessionDuration,
+      rebuys: session.rebuys,
+      rebuy_amount: session.rebuyAmount || 0,
+      roi: session.roi || 0,
+      itm_ratio_numerator: session.itmRatioNumerator || 0,
+      itm_ratio_denominator: session.itmRatioDenominator || 0,
+      tables_played: session.tablesPlayed || 0
+    };
+
+    // Upsert session
+    const { error: sessionError } = await supabase
+      .from('sessions')
+      .upsert(sessionData, { 
+        onConflict: 'id',
+        ignoreDuplicates: false 
+      });
+
+    if (sessionError) {
+      console.error('❌ Error saving session:', sessionError);
+      return false;
+    }
+
+    // Save tables to session_tables
     if (session.tables && session.tables.length > 0) {
-      const dbTables = session.tables.map(table => ({
-        id: table.id,
-        session_id: session.id,
-        user_id: undefined, // Will use DEFAULT auth.uid()
-        table_name: table.name || '',
-        game_format: table.format,
-        table_type: table.gameType,
-        buy_in: table.buyIn,
-        cashout: table.cashOut || 0,
-        stakes: table.stakes || '',
-        start_time: table.startTime.toISOString(),
-        end_time: table.endTime?.toISOString() || null,
-        is_active: table.isActive,
-        rebuys: table.rebuys || 0,
-        bounty_amount: table.bountyAmount || 0,
-        final_position: table.finalPosition || null,
-        table_notes: table.notes || null,
-        starting_stack: table.startingStack || null,
-        current_stack: table.currentStack || null,
-        rebuy_amount: table.rebuyAmount || null,
-        players_eliminated: 0
-      }));
-
-      const { error: tablesError } = await supabase
-        .from('session_tables')
-        .upsert(dbTables, { onConflict: 'id' });
-
-      if (tablesError) {
-        console.error('❌ Error saving tables:', tablesError);
-      }
-    }
-
-    // Save session-level hands
-    if (session.hands && session.hands.length > 0) {
-      const sessionHands = session.hands.map(hand => ({
-        id: hand.id,
-        session_id: session.id,
-        user_id: undefined, // Will use DEFAULT auth.uid()
-        table_id: null,
-        hand_number: hand.handNumber || null,
-        position: hand.position || null,
-        hole_cards: hand.holeCards ? JSON.stringify(hand.holeCards) : null,
-        preflop_action: hand.preflopAction || null,
-        flop_cards: hand.flopCards ? JSON.stringify(hand.flopCards) : null,
-        flop_action: hand.flopAction || null,
-        turn_card: hand.turnCard || null,
-        turn_action: hand.turnAction || null,
-        river_card: hand.riverCard || null,
-        river_action: hand.riverAction || null,
-        showdown_result: hand.showdownResult || null,
-        pot_size: hand.potSize || 0,
-        amount_invested: hand.amountInvested || 0,
-        amount_won: hand.amountWon || 0,
-        currency_type: hand.currencyType || 'currency',
-        hand_notes: hand.notes || null,
-        hand_image: hand.handImage || null,
-        created_at: hand.createdAt.toISOString()
-      }));
-
-      const { error: handsError } = await supabase
-        .from('session_hands_new')
-        .upsert(sessionHands, { onConflict: 'id' });
-
-      if (handsError) {
-        console.error('❌ Error saving session hands:', handsError);
-      }
-    }
-
-    // Save table-level hands
-    if (session.tables) {
+      console.log('💾 Saving tables to database:', session.tables.length);
+      
       for (const table of session.tables) {
-        if (table.hands && table.hands.length > 0) {
-          const tableHands = table.hands.map(hand => ({
-            id: hand.id,
-            session_id: session.id,
-            user_id: undefined, // Will use DEFAULT auth.uid()
-            table_id: table.id,
-            hand_number: hand.handNumber || null,
-            position: hand.position || null,
-            hole_cards: hand.holeCards ? JSON.stringify(hand.holeCards) : null,
-            preflop_action: hand.preflopAction || null,
-            flop_cards: hand.flopCards ? JSON.stringify(hand.flopCards) : null,
-            flop_action: hand.flopAction || null,
-            turn_card: hand.turnCard || null,
-            turn_action: hand.turnAction || null,
-            river_card: hand.riverCard || null,
-            river_action: hand.riverAction || null,
-            showdown_result: hand.showdownResult || null,
-            pot_size: hand.potSize || 0,
-            amount_invested: hand.amountInvested || 0,
-            amount_won: hand.amountWon || 0,
-            currency_type: hand.currencyType || 'currency',
-            hand_notes: hand.notes || null,
-            hand_image: hand.handImage || null,
-            created_at: hand.createdAt.toISOString()
-          }));
+        const tableData = {
+          id: table.id,
+          session_id: session.id,
+          user_id: user.user.id,
+          table_name: table.name,
+          table_type: table.format,
+          game_format: table.gameType,
+          buy_in: table.buyIn,
+          stakes: table.smallBlind && table.bigBlind ? `${table.smallBlind}/${table.bigBlind}` : undefined,
+          starting_stack: table.startingBB,
+          current_stack: table.currentStack,
+          is_active: table.isActive,
+          start_time: table.startTime.toISOString(),
+          end_time: table.endTime?.toISOString(),
+          cashout: table.cashOut,
+          rebuys: table.rebuys || 0,
+          rebuy_amount: table.rebuyAmount || 0,
+          players_eliminated: table.playersEliminated || 0,
+          bounty_amount: table.bountyAmount || 0,
+          final_position: table.finalPosition,
+          table_notes: table.notes
+        };
 
-          const { error: tableHandsError } = await supabase
-            .from('session_hands_new')
-            .upsert(tableHands, { onConflict: 'id' });
+        const { error: tableError } = await supabase
+          .from('session_tables')
+          .upsert(tableData, { 
+            onConflict: 'id',
+            ignoreDuplicates: false 
+          });
 
-          if (tableHandsError) {
-            console.error('❌ Error saving table hands:', tableHandsError);
-          }
+        if (tableError) {
+          console.error('❌ Error saving table:', tableError);
+          // Continue with other tables even if one fails
         }
       }
     }
 
-    console.log('✅ Session saved to database successfully');
+    // Save hands to session_hands_new
+    if (session.hands && session.hands.length > 0) {
+      console.log('💾 Saving hands to database:', session.hands.length);
+      
+      for (const hand of session.hands) {
+        const handData = {
+          id: hand.id,
+          session_id: session.id,
+          user_id: user.user.id,
+          table_id: hand.tableId,
+          hand_number: hand.handNumber,
+          position: hand.position,
+          hole_cards: hand.holeCards,
+          preflop_action: hand.preflopAction,
+          flop_cards: hand.flopCards,
+          flop_action: hand.flopAction,
+          turn_card: hand.turnCard,
+          turn_action: hand.turnAction,
+          river_card: hand.riverCard,
+          river_action: hand.riverAction,
+          showdown_result: hand.showdownResult,
+          pot_size: hand.potSize || 0,
+          amount_invested: hand.amountInvested || 0,
+          amount_won: hand.amountWon || 0,
+          hand_notes: hand.notes,
+          hand_image: hand.image,
+          currency_type: hand.currencyType || 'currency',
+          created_at: hand.createdAt.toISOString()
+        };
+
+        const { error: handError } = await supabase
+          .from('session_hands_new')
+          .upsert(handData, { 
+            onConflict: 'id',
+            ignoreDuplicates: false 
+          });
+
+        if (handError) {
+          console.error('❌ Error saving hand:', handError);
+          // Continue with other hands even if one fails
+        }
+      }
+    }
+
+    console.log('✅ Session saved successfully to database');
     return true;
   } catch (error) {
     console.error('❌ Failed to save session to database:', error);
@@ -509,25 +297,84 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
   }
 };
 
-// Delete session from database
-export const deleteSessionFromDatabase = async (sessionId: string): Promise<boolean> => {
-  try {
-    console.log('🗑️ Deleting session from database:', sessionId);
-    
-    const { error } = await supabase
-      .from('sessions')
-      .delete()
-      .eq('id', sessionId);
-
-    if (error) {
-      console.error('❌ Error deleting session:', error);
-      return false;
-    }
-
-    console.log('✅ Session deleted from database successfully');
-    return true;
-  } catch (error) {
-    console.error('❌ Failed to delete session from database:', error);
-    return false;
-  }
+export const convertDatabaseSessionToPokerSession = (
+  sessionData: any,
+  tables: any[],
+  hands: any[]
+): PokerSession => {
+  return {
+    id: sessionData.id,
+    gameType: sessionData.game_type,
+    format: sessionData.format,
+    location: sessionData.location,
+    physicalLocation: sessionData.physical_location,
+    tableName: sessionData.table_name,
+    buyIn: sessionData.buy_in,
+    initialBuyIn: sessionData.initial_buy_in,
+    smallBlind: sessionData.small_blind,
+    bigBlind: sessionData.big_blind,
+    isOnline: sessionData.is_online,
+    startingBB: sessionData.starting_bb,
+    tournamentTypes: sessionData.tournament_types,
+    isMultiDay: sessionData.is_multi_day,
+    startTime: new Date(sessionData.start_time),
+    endTime: sessionData.end_time ? new Date(sessionData.end_time) : undefined,
+    cashOut: sessionData.cash_out,
+    notes: sessionData.notes,
+    isActive: sessionData.is_active,
+    currentStatus: sessionData.current_status,
+    sessionDuration: sessionData.session_duration,
+    rebuys: sessionData.rebuys,
+    rebuyAmount: sessionData.rebuy_amount,
+    roi: sessionData.roi,
+    itmRatioNumerator: sessionData.itm_ratio_numerator,
+    itmRatioDenominator: sessionData.itm_ratio_denominator,
+    tablesPlayed: sessionData.tables_played,
+    tables: tables.map(table => ({
+      id: table.id,
+      name: table.table_name,
+      format: table.table_type,
+      gameType: table.game_format,
+      buyIn: table.buy_in,
+      initialBuyIn: table.buy_in,
+      smallBlind: table.stakes ? parseFloat(table.stakes.split('/')[0]) : undefined,
+      bigBlind: table.stakes ? parseFloat(table.stakes.split('/')[1]) : undefined,
+      startingBB: table.starting_stack,
+      currentStack: table.current_stack,
+      isActive: table.is_active,
+      startTime: new Date(table.start_time),
+      endTime: table.end_time ? new Date(table.end_time) : undefined,
+      cashOut: table.cashout,
+      rebuys: table.rebuys,
+      rebuyAmount: table.rebuy_amount,
+      playersEliminated: table.players_eliminated,
+      bountyAmount: table.bounty_amount,
+      finalPosition: table.final_position,
+      notes: table.table_notes,
+      session_id: table.session_id,
+      hands: []
+    })),
+    hands: hands.map(hand => ({
+      id: hand.id,
+      tableId: hand.table_id,
+      handNumber: hand.hand_number,
+      position: hand.position,
+      holeCards: hand.hole_cards,
+      preflopAction: hand.preflop_action,
+      flopCards: hand.flop_cards,
+      flopAction: hand.flop_action,
+      turnCard: hand.turn_card,
+      turnAction: hand.turn_action,
+      riverCard: hand.river_card,
+      riverAction: hand.river_action,
+      showdownResult: hand.showdown_result,
+      potSize: hand.pot_size,
+      amountInvested: hand.amount_invested,
+      amountWon: hand.amount_won,
+      notes: hand.hand_notes,
+      image: hand.hand_image,
+      currencyType: hand.currency_type,
+      createdAt: new Date(hand.created_at)
+    }))
+  };
 };

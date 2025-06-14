@@ -299,8 +299,27 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       hands: [],
       tables: session.tables !== undefined ? session.tables : []
     };
+    
+    console.log('🎯 Starting session with tables:', sessionWithActive.tables?.length || 0);
+    
     setActiveSession(sessionWithActive);
     await addSession(sessionWithActive);
+    
+    // Ensure the session and its tables are immediately saved to database
+    if (user?.id) {
+      try {
+        console.log('💾 Immediately saving new session to database...');
+        await saveSessionToDatabase(sessionWithActive);
+        console.log('✅ Session and tables saved to database successfully');
+      } catch (error) {
+        console.error('❌ Failed to save new session to database:', error);
+        toast({
+          title: "Warning",
+          description: "Session created but may not sync to cloud immediately. It will sync when connection is restored.",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const endSession = async (id: string, cashOut: number, notes?: string) => {
