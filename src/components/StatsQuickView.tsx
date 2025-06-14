@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { fetchUserSessions } from '@/utils/sessionDatabase';
+import { fetchUserSessions } from '@/utils/database';
 import { PokerSession } from '@/types/poker';
 
 export default function StatsQuickView() {

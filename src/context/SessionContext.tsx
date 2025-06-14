@@ -13,7 +13,7 @@ import {
   fetchActiveSession,
   saveSessionToDatabase, 
   deleteSessionFromDatabase 
-} from '@/utils/sessionDatabase';
+} from '@/utils/database';
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 

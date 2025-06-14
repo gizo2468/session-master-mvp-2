@@ -15,7 +15,7 @@ import RebuyConfirmationDialog from '@/components/poker/RebuyConfirmationDialog'
 import EndTableDialog from '@/components/poker/EndTableDialog';
 import CompletedTablesDisplay from '@/components/poker/CompletedTablesDisplay';
 import { supabase } from '@/integrations/supabase/client';
-import { convertDatabaseSessionToPokerSession } from '@/utils/sessionDatabase';
+import { convertDatabaseSessionToPokerSession } from '@/utils/database';
 
 export default function LiveSession() {
   const { id } = useParams<{ id: string }>();

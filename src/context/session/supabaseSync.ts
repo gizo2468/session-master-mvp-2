@@ -1,7 +1,6 @@
-
 import { PokerSession } from '@/types/poker';
 import { User } from '@/context/AuthContext';
-import { saveSessionToDatabase } from '@/utils/sessionDatabase';
+import { saveSessionToDatabase } from '@/utils/database';
 
 export const syncSessionToSupabase = async (session: PokerSession, user: User, toast: any) => {
   if (!user) {
