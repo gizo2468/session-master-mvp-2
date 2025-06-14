@@ -76,7 +76,7 @@ export class SessionPersistenceService {
 
   static async updateSessionDuration(sessionId: string, duration: number): Promise<boolean> {
     try {
-      // Only update session_duration field, never start_time
+      // CRITICAL: Only update session_duration field, NEVER start_time to prevent corruption
       const { error } = await supabase
         .from('sessions')
         .update({ 
@@ -89,6 +89,7 @@ export class SessionPersistenceService {
         return false;
       }
 
+      console.log('✅ Session duration updated successfully');
       return true;
     } catch (error) {
       console.error('❌ Failed to update session duration:', error);

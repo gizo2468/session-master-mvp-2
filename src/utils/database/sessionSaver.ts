@@ -15,7 +15,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
     // Check if session already exists to determine if this is an insert or update
     const { data: existingSession } = await supabase
       .from('sessions')
-      .select('id')
+      .select('id, start_time')
       .eq('id', session.id)
       .single();
 
@@ -51,12 +51,12 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
       tables_played: session.tablesPlayed || 0
     };
 
-    // Only include start_time for new sessions (inserts)
+    // Only include start_time for new sessions (inserts) - NEVER for updates
     if (!existingSession) {
       sessionData.start_time = session.startTime.toISOString();
       console.log('🆕 New session - including start_time:', sessionData.start_time);
     } else {
-      console.log('🔄 Existing session - NOT updating start_time');
+      console.log('🔄 Existing session - NEVER updating start_time to preserve integrity');
     }
 
     // Use insert for new sessions, update for existing ones
@@ -87,7 +87,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
         // Check if table already exists
         const { data: existingTable } = await supabase
           .from('session_tables')
-          .select('id')
+          .select('id, start_time')
           .eq('id', table.id)
           .single();
 
@@ -112,12 +112,12 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           table_notes: table.notes
         };
 
-        // Only include start_time for new tables
+        // Only include start_time for new tables - NEVER for updates
         if (!existingTable) {
           tableData.start_time = table.startTime.toISOString();
           console.log('🆕 New table - including start_time:', tableData.start_time);
         } else {
-          console.log('🔄 Existing table - NOT updating start_time');
+          console.log('🔄 Existing table - NEVER updating start_time to preserve integrity');
         }
 
         // Use insert for new tables, update for existing ones
