@@ -23,33 +23,18 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
     if (!startTime) return;
     
     const calculateElapsedTime = () => {
-      // Convert startTime to timestamp (handle both Date objects and ISO strings)
-      let startTimeUTC: number;
-      if (startTime instanceof Date) {
-        startTimeUTC = startTime.getTime();
-      } else {
-        // Handle string from database - ensure it's treated as UTC
-        const timeString = String(startTime);
-        const utcTimeString = timeString.includes('Z') ? timeString : timeString + 'Z';
-        startTimeUTC = Date.parse(utcTimeString);
-      }
+      // Convert startTime to timestamp - let JavaScript handle timezone conversion naturally
+      const startTimeMs = new Date(startTime).getTime();
       
       // If table ended, use endTime; otherwise use current time
       let endTimestamp: number;
       if (endTime) {
-        if (endTime instanceof Date) {
-          endTimestamp = endTime.getTime();
-        } else {
-          // Handle string from database
-          const endTimeString = String(endTime);
-          const utcEndTimeString = endTimeString.includes('Z') ? endTimeString : endTimeString + 'Z';
-          endTimestamp = Date.parse(utcEndTimeString);
-        }
+        endTimestamp = new Date(endTime).getTime();
       } else {
-        endTimestamp = Date.now(); // Current time is always UTC
+        endTimestamp = Date.now(); // Current time in local timezone
       }
       
-      const elapsed = Math.floor((endTimestamp - startTimeUTC) / 1000);
+      const elapsed = Math.floor((endTimestamp - startTimeMs) / 1000);
       return Math.max(0, elapsed); // Ensure non-negative time
     };
     

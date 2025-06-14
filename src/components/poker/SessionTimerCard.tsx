@@ -46,18 +46,9 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     const calculateInitialElapsedTime = () => {
       const storedDuration = activeSession?.sessionDuration || 0;
       
-      // Convert startTime to timestamp (handle both Date objects and ISO strings)
-      let startTimeUTC: number;
-      if (startTime instanceof Date) {
-        startTimeUTC = startTime.getTime();
-      } else {
-        // Handle string from database - ensure it's treated as UTC
-        const timeString = String(startTime);
-        const utcTimeString = timeString.includes('Z') ? timeString : timeString + 'Z';
-        startTimeUTC = Date.parse(utcTimeString);
-      }
-      
-      const timeSinceStart = Math.floor((Date.now() - startTimeUTC) / 1000);
+      // Convert startTime to timestamp - let JavaScript handle timezone conversion naturally
+      const startTimeMs = new Date(startTime).getTime();
+      const timeSinceStart = Math.floor((Date.now() - startTimeMs) / 1000);
       
       // Use the greater of stored duration or calculated time to handle refreshes properly
       // This ensures we don't go backwards in time
@@ -93,16 +84,8 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
   
-  // Convert startTime for display (handle both Date objects and strings)
-  let startTimeForDisplay: Date;
-  if (startTime instanceof Date) {
-    startTimeForDisplay = startTime;
-  } else {
-    const timeString = String(startTime);
-    const utcTimeString = timeString.includes('Z') ? timeString : timeString + 'Z';
-    startTimeForDisplay = new Date(utcTimeString);
-  }
-  
+  // Convert startTime for display - let JavaScript handle timezone conversion naturally
+  const startTimeForDisplay = new Date(startTime);
   const formattedStartTime = dateFormat(startTimeForDisplay, 'h:mm a');
   const formattedDate = dateFormat(startTimeForDisplay, 'MMM d, yyyy');
   
