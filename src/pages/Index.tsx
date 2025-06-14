@@ -20,6 +20,7 @@ export default function Index() {
   const { user, logout } = useAuth();
   const { 
     sessions, 
+    activeSession,
     filters, 
     setFilters, 
     showStorageWarning, 
@@ -36,6 +37,13 @@ export default function Index() {
       setShowDonation(shouldShow);
     }
   }, [user]);
+
+  // Auto-redirect to live session if there's an active session
+  useEffect(() => {
+    if (activeSession && activeSession.isActive) {
+      console.log('Active session found, redirecting to live session:', activeSession.id);
+    }
+  }, [activeSession]);
 
   const filteredSessions = sessions.filter(session => {
     if (filters.gameType && filters.gameType !== 'All' && session.gameType !== filters.gameType) {
@@ -57,6 +65,12 @@ export default function Index() {
 
   const handleSessionClick = (sessionId: string) => {
     navigate(`/session/${sessionId}`);
+  };
+
+  const handleResumeSession = () => {
+    if (activeSession) {
+      navigate(`/live-session/${activeSession.id}`);
+    }
   };
 
   if (isLoading) {
@@ -117,6 +131,43 @@ export default function Index() {
             <NewSessionButton />
           </div>
 
+          {/* Active Session Card - show if there's an active session */}
+          {activeSession && activeSession.isActive && (
+            <div className="w-full">
+              <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-poker-feltGreen">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-bold text-poker-feltGreen">Active Session</h3>
+                  <div className="flex items-center text-sm text-green-600">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                    Live
+                  </div>
+                </div>
+                
+                <div className="text-sm text-gray-600 mb-3">
+                  <div className="flex justify-between">
+                    <span>Game:</span>
+                    <span>{activeSession.gameType} {activeSession.format}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Location:</span>
+                    <span>{activeSession.location}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Buy-in:</span>
+                    <span>${activeSession.buyIn.toFixed(2)}</span>
+                  </div>
+                </div>
+                
+                <Button 
+                  onClick={handleResumeSession}
+                  className="w-full bg-poker-feltGreen hover:bg-poker-darkGreen text-white"
+                >
+                  Resume Session
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Stats section appears after the button */}
           {user && <StatsQuickView />}
           
@@ -125,7 +176,7 @@ export default function Index() {
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-extrabold tracking-tight">Recent Sessions</h2>
                 <Button 
-                  onClick={() => navigate('/sessions')}
+                  onClick={() => navigate('/history')}
                   variant="outline" 
                   size="sm"
                   className="text-poker-feltGreen"
