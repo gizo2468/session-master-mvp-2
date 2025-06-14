@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { PokerSession } from '@/types/poker';
 
@@ -222,7 +221,6 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           cashout: table.cashOut,
           rebuys: table.rebuys || 0,
           rebuy_amount: table.rebuyAmount || 0,
-          players_eliminated: table.playersEliminated || 0,
           bounty_amount: table.bountyAmount || 0,
           final_position: table.finalPosition,
           table_notes: table.notes
