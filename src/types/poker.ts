@@ -45,6 +45,7 @@ export interface TableData {
   startingBB?: number;
   currentStack?: number;
   isActive: boolean;
+  isOnline?: boolean; // Added missing property
   startTime: Date;
   startTimeUTC?: number; // Raw UTC timestamp for accurate calculations
   endTime?: Date;
@@ -101,9 +102,12 @@ export interface PokerSession {
   notes?: string;
   isActive: boolean;
   currentStatus: 'running' | 'paused' | 'ended';
+  status?: string; // Added missing property
   sessionDuration?: number;
   rebuys?: number;
   rebuyAmount?: number;
+  addOns?: number; // Added missing property
+  tournamentBuyIn?: number; // Added missing property
   roi?: number;
   itmRatioNumerator?: number;
   itmRatioDenominator?: number;

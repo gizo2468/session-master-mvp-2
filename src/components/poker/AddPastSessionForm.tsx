@@ -81,7 +81,7 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
       const primaryTable = tables[0];
       
       // Determine if session is online if any table is online
-      const isOnline = tables.some(table => table.isOnline);
+      const isOnline = tables.some(table => table.isOnline || false);
       
       const sessionDuration = Math.round((sessionInfo.endTime.getTime() - sessionInfo.startTime.getTime()) / (1000 * 60));
       
