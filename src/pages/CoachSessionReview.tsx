@@ -14,13 +14,13 @@ import { EnhancedReviewForm } from '@/components/coaching/EnhancedReviewForm';
 
 interface SessionData {
   id: string;
-  startTime: Date;
-  endTime: Date | undefined;
-  gameType: 'NLH' | 'PLO' | 'NLH';
-  sessionType: string;
-  notes: string;
-  tables: SessionTable[];
   user_id: string;
+  start_time: string;
+  end_time: string;
+  game_type: string | null;
+  session_type: string | null;
+  notes: string | null;
+  created_at: string;
 }
 
 interface SessionTable {
@@ -138,20 +138,7 @@ const CoachSessionReview = () => {
       }
 
       console.log('✅ Session data loaded:', session);
-      
-      // Transform the session data to match SessionData interface
-      const transformedSessionData: SessionData = {
-        id: session.id,
-        startTime: new Date(session.start_time),
-        endTime: session.end_time ? new Date(session.end_time) : undefined,
-        gameType: session.game_type as 'NLH' | 'PLO' || 'NLH',
-        sessionType: session.format || 'Cash', // Map format to sessionType
-        notes: session.notes || '',
-        tables: [], // Will be populated with actual table data
-        user_id: session.user_id,
-      };
-      
-      setSessionData(transformedSessionData);
+      setSessionData(session);
 
       // Load session tables
       const { data: tables, error: tablesError } = await supabase
@@ -391,7 +378,7 @@ const CoachSessionReview = () => {
           
           <h1 className="text-2xl font-bold text-poker-black">Session Review</h1>
           <p className="text-gray-500 text-sm mt-1">
-            {sessionData.gameType || 'Poker'} {sessionData.sessionType || 'Session'}
+            {sessionData.game_type || 'Poker'} {sessionData.session_type || 'Session'}
           </p>
         </header>
         
@@ -408,27 +395,32 @@ const CoachSessionReview = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <h4 className="font-medium text-gray-900">Game Type</h4>
-                  <p className="text-gray-600">{sessionData.gameType || 'Not specified'}</p>
+                  <p className="text-gray-600">{sessionData.game_type || 'Not specified'}</p>
                 </div>
                 
                 <div>
                   <h4 className="font-medium text-gray-900">Session Type</h4>
-                  <p className="text-gray-600">{sessionData.sessionType || 'Not specified'}</p>
+                  <p className="text-gray-600">{sessionData.session_type || 'Not specified'}</p>
                 </div>
                 
                 <div>
                   <h4 className="font-medium text-gray-900">Duration</h4>
-                  <p className="text-gray-600">{formatDuration(sessionData.startTime.toISOString(), sessionData.endTime?.toISOString() || new Date().toISOString())}</p>
+                  <p className="text-gray-600">{formatDuration(sessionData.start_time, sessionData.end_time)}</p>
                 </div>
                 
                 <div>
                   <h4 className="font-medium text-gray-900">Start Time</h4>
-                  <p className="text-gray-600">{formatDateTime(sessionData.startTime.toISOString())}</p>
+                  <p className="text-gray-600">{formatDateTime(sessionData.start_time)}</p>
                 </div>
                 
                 <div>
                   <h4 className="font-medium text-gray-900">End Time</h4>
-                  <p className="text-gray-600">{sessionData.endTime ? formatDateTime(sessionData.endTime.toISOString()) : 'Active'}</p>
+                  <p className="text-gray-600">{formatDateTime(sessionData.end_time)}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-gray-900">Created</h4>
+                  <p className="text-gray-600">{formatDateTime(sessionData.created_at)}</p>
                 </div>
               </div>
               

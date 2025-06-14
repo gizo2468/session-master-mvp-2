@@ -7,7 +7,7 @@ export interface DatabaseSession {
   start_time: string;
   end_time: string | null;
   game_type: string;
-  format: string; // Changed from session_type to format
+  session_type: string;
   buy_in: number;
   initial_buy_in: number;
   cash_out: number;
@@ -20,16 +20,12 @@ export interface DatabaseSession {
   current_status: string;
   session_duration: number;
   rebuys: number;
-  rebuy_amount: number; // Add missing property
-  starting_bb: number | null; // Add missing property
-  tournament_types: string[] | null; // Add missing property
-  is_multi_day: boolean; // Add missing property
-  roi: number; // Add missing property
-  itm_ratio_numerator: number; // Add missing property
-  itm_ratio_denominator: number; // Add missing property
-  tables_played: number; // Add missing property
+  add_ons: number;
+  tournament_buy_in: number;
+  bounty_count: number;
+  bounty_amount: number;
+  final_position: number | null;
   notes: string | null;
-  status: string; // Add missing property
   email: string | null;
   created_at: string;
 }
@@ -179,7 +175,7 @@ export const convertDatabaseSessionToPokerSession = (
   return {
     id: dbSession.id,
     gameType: dbSession.game_type as any,
-    format: dbSession.format as any, // Use format instead of session_type
+    format: dbSession.session_type as any,
     location: dbSession.location,
     buyIn: Number(dbSession.buy_in),
     initialBuyIn: Number(dbSession.initial_buy_in),
@@ -192,18 +188,14 @@ export const convertDatabaseSessionToPokerSession = (
     currentStatus: dbSession.current_status as any,
     sessionDuration: dbSession.session_duration,
     rebuys: dbSession.rebuys,
-    rebuyAmount: Number(dbSession.rebuy_amount),
-    startingBB: dbSession.starting_bb,
-    tournamentTypes: dbSession.tournament_types,
-    isMultiDay: dbSession.is_multi_day,
-    roi: Number(dbSession.roi),
-    itmRatioNumerator: dbSession.itm_ratio_numerator,
-    itmRatioDenominator: dbSession.itm_ratio_denominator,
-    tablesPlayed: dbSession.tables_played,
+    addOns: dbSession.add_ons,
+    tournamentBuyIn: Number(dbSession.tournament_buy_in),
+    bountyCount: dbSession.bounty_count,
+    bountyAmount: Number(dbSession.bounty_amount),
+    finalPosition: dbSession.final_position || undefined,
     startTime: new Date(dbSession.start_time),
     endTime: dbSession.end_time ? new Date(dbSession.end_time) : undefined,
     notes: dbSession.notes || undefined,
-    status: dbSession.status as any,
     hands: sessionHands,
     tables: convertedTables
   };
@@ -216,7 +208,7 @@ export const convertPokerSessionToDatabase = (session: PokerSession) => {
     start_time: session.startTime.toISOString(),
     end_time: session.endTime?.toISOString() || null,
     game_type: session.gameType,
-    format: session.format, // Use format instead of session_type
+    session_type: session.format,
     buy_in: session.buyIn,
     initial_buy_in: session.initialBuyIn || session.buyIn,
     cash_out: session.cashOut || 0,
@@ -229,16 +221,12 @@ export const convertPokerSessionToDatabase = (session: PokerSession) => {
     current_status: session.currentStatus || 'ended',
     session_duration: session.sessionDuration || 0,
     rebuys: session.rebuys || 0,
-    rebuy_amount: session.rebuyAmount || 0,
-    starting_bb: session.startingBB,
-    tournament_types: session.tournamentTypes,
-    is_multi_day: session.isMultiDay,
-    roi: session.roi || 0,
-    itm_ratio_numerator: session.itmRatioNumerator || 0,
-    itm_ratio_denominator: session.itmRatioDenominator || 0,
-    tables_played: session.tablesPlayed || 0,
+    add_ons: session.addOns || 0,
+    tournament_buy_in: session.tournamentBuyIn || 0,
+    bounty_count: session.bountyCount || 0,
+    bounty_amount: session.bountyAmount || 0,
+    final_position: session.finalPosition || null,
     notes: session.notes || null,
-    status: session.status || 'active',
     email: null // Will be set by RLS
   };
 };
@@ -295,7 +283,7 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
       const sessionHands = (hands || []).filter(hand => hand.session_id === session.id) as DatabaseHand[];
       
       return convertDatabaseSessionToPokerSession(
-        session as any, // Type assertion to handle the conversion
+        session as DatabaseSession,
         sessionTables,
         sessionHands
       );

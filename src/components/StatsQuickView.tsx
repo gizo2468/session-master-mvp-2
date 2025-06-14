@@ -1,66 +1,39 @@
 
-import React, { useState, useEffect } from 'react';
-import { fetchUserSessions } from '@/utils/sessionDatabase';
-import { PokerSession } from '@/types/poker';
+import { useSessionContext } from '@/context/SessionContext';
 
 export default function StatsQuickView() {
-  const [sessions, setSessions] = useState<PokerSession[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadSessions();
-  }, []);
-
-  const loadSessions = async () => {
-    try {
-      const userSessions = await fetchUserSessions();
-      setSessions(userSessions);
-    } catch (error) {
-      console.error('Error loading sessions:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { sessions } = useSessionContext();
   
-  if (isLoading) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="h-12 bg-gray-200 rounded"></div>
-            <div className="h-12 bg-gray-200 rounded"></div>
-            <div className="h-12 bg-gray-200 rounded"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Calculate stats from database sessions
-  const completedSessions = sessions.filter(s => !s.isActive && (s.status === 'completed' || !s.status));
-  const totalSessions = completedSessions.length;
+  // Calculate stats
+  const totalSessions = sessions.filter(s => !s.isActive).length;
   
-  const wins = completedSessions.filter(
-    s => s.cashOut !== undefined && s.cashOut > s.buyIn
+  const wins = sessions.filter(
+    s => !s.isActive && s.cashOut !== undefined && s.cashOut > s.buyIn
   ).length;
   
-  const losses = completedSessions.filter(
-    s => s.cashOut !== undefined && s.cashOut < s.buyIn
+  const losses = sessions.filter(
+    s => !s.isActive && s.cashOut !== undefined && s.cashOut < s.buyIn
   ).length;
   
-  // Calculate net profit from completed sessions
-  const netProfit = completedSessions.reduce(
+  // Properly calculate net profit by adding up profits and losses from all completed sessions
+  const netProfit = sessions.reduce(
     (total, session) => {
-      if (session.cashOut !== undefined && !isNaN(session.cashOut) && 
-          !isNaN(session.buyIn)) {
-        return total + (session.cashOut - session.buyIn);
+      // Only calculate for completed sessions with valid cashOut values
+      if (!session.isActive && session.cashOut !== undefined && !isNaN(session.cashOut) && 
+          session.buyIn !== undefined && !isNaN(session.buyIn)) {
+        // Ensure we're working with numbers
+        const cashOutValue = Number(session.cashOut);
+        const buyInValue = Number(session.buyIn);
+        
+        // Calculate profit/loss for this session
+        return total + (cashOutValue - buyInValue);
       }
       return total;
     }, 0
   );
   
-  const formattedProfit = netProfit.toFixed(2);
+  // Format the profit amount with 2 decimal places and include dollar sign
+  const formattedProfit = (netProfit !== undefined && !isNaN(netProfit)) ? netProfit.toFixed(2) : "0.00";
   const profitClass = netProfit >= 0 ? 'text-green-500' : 'text-poker-red';
 
   return (

@@ -1,4 +1,3 @@
-
 export interface HandData {
   id: string;
   cards: string;
@@ -111,17 +110,6 @@ export interface PokerSession {
 
   hands?: HandData[];
   tables?: TableData[];
-
-  // Additional properties for persistence
-  rebuyAmount?: number;
-  startingBB?: number;
-  tournamentTypes?: string[];
-  isMultiDay?: boolean;
-  roi?: number;
-  itmRatioNumerator?: number;
-  itmRatioDenominator?: number;
-  tablesPlayed?: number;
-  status?: 'active' | 'completed' | 'paused';
 }
 
 export interface SessionFilter {

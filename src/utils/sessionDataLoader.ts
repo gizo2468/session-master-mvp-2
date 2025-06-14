@@ -110,7 +110,7 @@ export const loadSessionData = async (sessionId: string): Promise<SessionData | 
       startTime: new Date(session.start_time),
       endTime: session.end_time ? new Date(session.end_time) : undefined,
       gameType: session.game_type as 'NLH' | 'PLO' || 'NLH',
-      sessionType: session.format || 'Cash', // Map format to sessionType for compatibility
+      sessionType: session.session_type || 'Cash',
       notes: session.notes || '',
       tables: transformedTables,
       user_id: session.user_id,
