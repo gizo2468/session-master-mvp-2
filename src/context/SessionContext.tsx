@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
@@ -315,6 +314,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         activeSession,
         filters,
         showStorageWarning,
+        isLoading: isLoadingFromDatabase,
         dismissStorageWarning,
         addSession: async (session) => await addSession(session),
         updateSession: async (session) => await updateSession(session),

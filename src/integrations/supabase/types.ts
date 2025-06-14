@@ -535,6 +535,35 @@ export type Database = {
           },
         ]
       }
+      session_live_state: {
+        Row: {
+          session_id: string
+          state: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          session_id: string
+          state?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          session_id?: string
+          state?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_live_state_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_results: {
         Row: {
           big_blinds_won: number | null
@@ -672,36 +701,102 @@ export type Database = {
       }
       sessions: {
         Row: {
+          big_blind: number | null
+          buy_in: number | null
+          cash_out: number | null
           created_at: string
+          current_status: string | null
           email: string | null
-          end_time: string
-          game_type: string | null
+          end_time: string | null
+          format: string
+          game_type: string
           id: string
+          initial_buy_in: number | null
+          is_active: boolean | null
+          is_multi_day: boolean | null
+          is_online: boolean | null
+          itm_ratio_denominator: number | null
+          itm_ratio_numerator: number | null
+          location: string | null
           notes: string | null
-          session_type: string | null
+          physical_location: string | null
+          rebuy_amount: number | null
+          rebuys: number | null
+          roi: number | null
+          session_duration: number | null
+          small_blind: number | null
           start_time: string
+          starting_bb: number | null
+          status: string | null
+          table_name: string | null
+          tables_played: number | null
+          tournament_types: string[] | null
           user_id: string
         }
         Insert: {
+          big_blind?: number | null
+          buy_in?: number | null
+          cash_out?: number | null
           created_at?: string
+          current_status?: string | null
           email?: string | null
-          end_time: string
-          game_type?: string | null
+          end_time?: string | null
+          format?: string
+          game_type?: string
           id?: string
+          initial_buy_in?: number | null
+          is_active?: boolean | null
+          is_multi_day?: boolean | null
+          is_online?: boolean | null
+          itm_ratio_denominator?: number | null
+          itm_ratio_numerator?: number | null
+          location?: string | null
           notes?: string | null
-          session_type?: string | null
+          physical_location?: string | null
+          rebuy_amount?: number | null
+          rebuys?: number | null
+          roi?: number | null
+          session_duration?: number | null
+          small_blind?: number | null
           start_time: string
+          starting_bb?: number | null
+          status?: string | null
+          table_name?: string | null
+          tables_played?: number | null
+          tournament_types?: string[] | null
           user_id?: string
         }
         Update: {
+          big_blind?: number | null
+          buy_in?: number | null
+          cash_out?: number | null
           created_at?: string
+          current_status?: string | null
           email?: string | null
-          end_time?: string
-          game_type?: string | null
+          end_time?: string | null
+          format?: string
+          game_type?: string
           id?: string
+          initial_buy_in?: number | null
+          is_active?: boolean | null
+          is_multi_day?: boolean | null
+          is_online?: boolean | null
+          itm_ratio_denominator?: number | null
+          itm_ratio_numerator?: number | null
+          location?: string | null
           notes?: string | null
-          session_type?: string | null
+          physical_location?: string | null
+          rebuy_amount?: number | null
+          rebuys?: number | null
+          roi?: number | null
+          session_duration?: number | null
+          small_blind?: number | null
           start_time?: string
+          starting_bb?: number | null
+          status?: string | null
+          table_name?: string | null
+          tables_played?: number | null
+          tournament_types?: string[] | null
           user_id?: string
         }
         Relationships: []
@@ -736,11 +831,53 @@ export type Database = {
         }
         Relationships: []
       }
+      ui_state: {
+        Row: {
+          created_at: string
+          id: string
+          screen_name: string
+          session_id: string | null
+          state_data: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          screen_name: string
+          session_id?: string | null
+          state_data?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          screen_name?: string
+          session_id?: string | null
+          state_data?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      end_session: {
+        Args: {
+          p_session_id: string
+          p_cash_out: number
+          p_notes?: string
+          p_roi?: number
+          p_itm_ratio_numerator?: number
+          p_itm_ratio_denominator?: number
+          p_tables_played?: number
+        }
+        Returns: boolean
+      }
       generate_connection_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -752,6 +889,23 @@ export type Database = {
       is_coach_for_student: {
         Args: { coach_user_id: string; student_user_id: string }
         Returns: boolean
+      }
+      start_session: {
+        Args: {
+          p_game_type: string
+          p_format: string
+          p_location: string
+          p_physical_location?: string
+          p_table_name?: string
+          p_buy_in?: number
+          p_small_blind?: number
+          p_big_blind?: number
+          p_is_online?: boolean
+          p_starting_bb?: number
+          p_tournament_types?: string[]
+          p_is_multi_day?: boolean
+        }
+        Returns: string
       }
       update_terms_acceptance: {
         Args: { user_id: string; accepted: boolean }

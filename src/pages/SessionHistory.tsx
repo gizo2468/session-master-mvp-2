@@ -1,162 +1,146 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
-import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import FilterBar from '@/components/ui/FilterBar';
 import SessionCard from '@/components/SessionCard';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
-import StorageWarningAlert from '@/components/StorageWarningAlert';
+import FilterBar from '@/components/ui/FilterBar';
+import Icon from '@/components/ui/Lucide';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SessionHistory() {
   const navigate = useNavigate();
-  const { sessions, filters } = useSessionContext();
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [supabaseSessions, setSupabaseSessions] = useState<any[]>([]);
-  
-  useEffect(() => {
-    const fetchSupabaseSessions = async () => {
-      if (!user) {
-        console.log('📋 No authenticated user, skipping Supabase sessions fetch');
-        setSupabaseSessions([]);
-        return;
-      }
+  const { sessions, filters, setFilters, isLoading } = useSessionContext();
+  const [sortBy, setSortBy] = useState<'date' | 'profit'>('date');
 
-      setIsLoading(true);
-      try {
-        console.log('🔍 Fetching sessions for user:', user.id);
-        
-        // Query sessions - the RLS policies will automatically ensure we only get this user's sessions
-        const { data, error } = await supabase
-          .from('sessions')
-          .select('*')
-          .order('start_time', { ascending: false });
-          
-        if (error) {
-          console.error('❌ Error fetching sessions:', error);
-          throw error;
-        }
-        
-        console.log('✅ Fetched sessions from Supabase for user:', user.id, 'Count:', data?.length || 0);
-        setSupabaseSessions(data || []);
-      } catch (error) {
-        console.error('Error fetching sessions from Supabase:', error);
-        toast({
-          title: "Failed to load cloud sessions",
-          description: "There was a problem loading your sessions from the server. Local sessions are still available.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchSupabaseSessions();
-  }, [user, toast]);
-  
-  // Filter sessions based on selected filters
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth/login');
+    }
+  }, [user, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your sessions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Filter sessions
   const filteredSessions = sessions.filter(session => {
-    // Filter by game type
     if (filters.gameType && filters.gameType !== 'All' && session.gameType !== filters.gameType) {
       return false;
     }
-    
-    // Filter by format
     if (filters.format && filters.format !== 'All' && session.format !== filters.format) {
       return false;
     }
-    
-    // Filter by location
     if (filters.location && !session.location.toLowerCase().includes(filters.location.toLowerCase())) {
       return false;
     }
-    
     return true;
   });
-  
+
+  // Sort sessions
+  const sortedSessions = [...filteredSessions].sort((a, b) => {
+    if (sortBy === 'date') {
+      return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+    } else {
+      const profitA = (a.cashOut || 0) - a.buyIn;
+      const profitB = (b.cashOut || 0) - b.buyIn;
+      return profitB - profitA;
+    }
+  });
+
+  const completedSessions = sortedSessions.filter(s => !s.isActive);
+
+  const handleSessionClick = (sessionId: string) => {
+    navigate(`/session/${sessionId}`);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto max-w-md px-4 py-8">
-        <header className="mb-8">
-          <button onClick={() => navigate(-1)} className="text-poker-feltGreen mb-4 flex items-center">
-            ← Back
-          </button>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight">Session History</h1>
-            <StorageWarningAlert />
+      <header className="bg-white shadow-sm px-4 py-4 sticky top-0 z-10">
+        <div className="container mx-auto max-w-md">
+          <div className="flex justify-between items-center">
+            <Button 
+              onClick={() => navigate('/')}
+              variant="ghost"
+              className="text-poker-feltGreen p-0"
+            >
+              <Icon name="ArrowLeft" size={16} className="mr-1" />
+              <span>Home</span>
+            </Button>
+            <h1 className="text-xl font-bold">Session History</h1>
+            <div className="w-10"></div>
           </div>
-        </header>
-        
-        <FilterBar />
-        
-        {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-lg shadow-md p-4">
-                <Skeleton className="h-6 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/4 mb-4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-            ))}
+        </div>
+      </header>
+
+      <main className="container mx-auto max-w-md px-4 py-6">
+        <div className="space-y-4">
+          <FilterBar filters={filters} onFiltersChange={setFilters} />
+          
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-600">
+              {completedSessions.length} session{completedSessions.length !== 1 ? 's' : ''}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setSortBy('date')}
+                variant={sortBy === 'date' ? 'default' : 'outline'}
+                size="sm"
+                className={sortBy === 'date' ? 'bg-poker-feltGreen' : ''}
+              >
+                Date
+              </Button>
+              <Button
+                onClick={() => setSortBy('profit')}
+                variant={sortBy === 'profit' ? 'default' : 'outline'}
+                size="sm"
+                className={sortBy === 'profit' ? 'bg-poker-feltGreen' : ''}
+              >
+                Profit
+              </Button>
+            </div>
           </div>
-        ) : (
-          <div>
-            {sessions.length > 0 && (
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-2">Local Sessions</h2>
-                {filteredSessions
-                  .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
-                  .map(session => (
-                    <SessionCard key={session.id} session={session} />
-                  ))}
+
+          {completedSessions.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4">
+                <Icon name="FileText" size={48} className="mx-auto" />
               </div>
-            )}
-            
-            {user && supabaseSessions.length > 0 && (
-              <div>
-                <h2 className="text-lg font-semibold mb-2">Cloud Sessions</h2>
-                {supabaseSessions.map(session => (
-                  <div key={session.id} className="bg-white rounded-lg shadow-md p-4 mb-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-bold">Cloud Session</h3>
-                        <p className="text-gray-500 text-sm">
-                          {new Date(session.start_time).toLocaleDateString()}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {session.game_type} • {session.session_type}
-                        </p>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => navigate(`/cloud-session/${session.id}`)}
-                      >
-                        View
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            {sessions.length === 0 && supabaseSessions.length === 0 && !isLoading && (
-              <div className="bg-white rounded-lg shadow-md p-4 text-center text-gray-500">
-                {user ? (
-                  "No sessions found. Start a new session to begin tracking your poker games."
-                ) : (
-                  "Sign in to view your session history and sync across devices."
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No sessions found</h3>
+              <p className="text-gray-500 mb-6">
+                {sessions.length === 0 
+                  ? "You haven't completed any poker sessions yet."
+                  : "No sessions match your current filters."
+                }
+              </p>
+              <Button 
+                onClick={() => navigate('/new-session')}
+                className="bg-poker-gold hover:bg-poker-darkGold text-white"
+              >
+                Start New Session
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {completedSessions.map((session) => (
+                <SessionCard 
+                  key={session.id} 
+                  session={session} 
+                  onClick={() => handleSessionClick(session.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
