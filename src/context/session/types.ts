@@ -46,7 +46,7 @@ export interface SessionContextType {
   getTableById: (sessionId: string, tableId: string) => TableData | undefined;
   deleteTable: (sessionId: string, tableId: string) => Promise<void>;
   clearAllUserData: () => void;
-  refreshSessionsFromDatabase?: () => Promise<void>; // Add this new function
+  refreshSessionsFromDatabase?: () => Promise<void>;
 }
 
 export const MAX_STORED_SESSIONS = 50;
