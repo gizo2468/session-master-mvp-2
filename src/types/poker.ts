@@ -1,3 +1,4 @@
+
 export interface HandData {
   id: string;
   cards: string;
@@ -35,8 +36,8 @@ export interface HandData {
 export interface TableData {
   id: string;
   name?: string;
-  format: string;
-  gameType: string;
+  format: 'Cash' | 'Tournament'; // More specific typing
+  gameType: 'NLH' | 'PLO'; // More specific typing
   location: string;
   buyIn: number;
   initialBuyIn?: number;
@@ -81,8 +82,8 @@ export interface SessionData {
 
 export interface PokerSession {
   id: string;
-  gameType: string;
-  format: string;
+  gameType: 'NLH' | 'PLO'; // More specific typing
+  format: 'Cash' | 'Tournament' | 'Live Cash' | 'Live Tournament' | 'Online Cash' | 'Online Tournament' | 'Home Game'; // More specific typing
   location: string;
   physicalLocation?: string;
   tableName?: string;

@@ -44,12 +44,10 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   useEffect(() => {
     if (!startTime) return;
     
-    // Calculate elapsed time from start time and stored session duration
-    const calculateInitialElapsedTime = () => {
-      const storedDuration = activeSession?.sessionDuration || 0;
-      
-      // CRITICAL: Use raw UTC timestamp if available, otherwise fallback to Date object
-      // This ensures the timer calculation is accurate regardless of user timezone
+    // CRITICAL FIX: Always calculate elapsed time directly from start timestamp
+    // This eliminates the 3-hour offset issue caused by using stored duration
+    const calculateElapsedTime = () => {
+      // Use raw UTC timestamp if available for accurate calculation
       let timeSinceStart: number;
       if (startTimeUTC) {
         // Use raw UTC timestamp for accurate calculation
@@ -59,13 +57,13 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         timeSinceStart = Math.floor((Date.now() - startTime.getTime()) / 1000);
       }
       
-      // Use the greater of stored duration or calculated time to handle refreshes properly
-      // This ensures we don't go backwards in time
-      return Math.max(storedDuration, timeSinceStart, 0);
+      // Ensure non-negative time and return the actual elapsed time
+      return Math.max(0, timeSinceStart);
     };
     
-    // Set initial elapsed time using database as source of truth
-    const initialElapsedTime = calculateInitialElapsedTime();
+    // Set initial elapsed time using ONLY the calculated time from start timestamp
+    // This fixes the bug where Math.max(storedDuration, timeSinceStart) caused 3-hour offsets
+    const initialElapsedTime = calculateElapsedTime();
     setElapsedTime(initialElapsedTime);
     
     // Set up interval to increment locally every second
@@ -79,7 +77,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [startTime, startTimeUTC, updateDuration, activeSession?.sessionDuration]);
+  }, [startTime, startTimeUTC, updateDuration]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
