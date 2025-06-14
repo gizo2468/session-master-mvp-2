@@ -6,6 +6,7 @@ export interface SessionContextType {
   activeSession: PokerSession | null;
   filters: SessionFilter;
   showStorageWarning: boolean;
+  isLoading: boolean; // Add missing isLoading property
   dismissStorageWarning: () => void;
   addSession: (session: PokerSession) => Promise<void>;
   updateSession: (session: PokerSession) => Promise<void>;

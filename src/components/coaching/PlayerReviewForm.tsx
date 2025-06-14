@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,7 @@ interface PlayerReviewFormProps {
 interface SessionOption {
   id: string;
   startTime: string;
-  sessionType?: string;
+  format?: string; // Changed from sessionType to format
 }
 
 interface HandOption {
@@ -62,7 +61,7 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
       loadSessionHands(selectedSessionId);
     } else {
       setHands([]);
-      form.setValue('handId', 'none');
+      form.setValue('handId', 'none'); // Reset hand selection
     }
   }, [selectedSessionId, form]);
 
@@ -72,10 +71,10 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
     try {
       console.log('Loading sessions for user:', user.id);
       
-      // Explicitly filter by user_id to ensure only the user's own sessions are loaded
+      // Updated to use 'format' instead of 'session_type'
       const { data: userSessions, error } = await supabase
         .from('sessions')
-        .select('id, start_time, session_type')
+        .select('id, start_time, format')
         .eq('user_id', user.id) // Explicit filter for user's own sessions
         .order('start_time', { ascending: false })
         .limit(10);
@@ -95,7 +94,7 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
       const sessionOptions: SessionOption[] = userSessions?.map(session => ({
         id: session.id,
         startTime: session.start_time,
-        sessionType: session.session_type,
+        format: session.format, // Changed from session_type to format
       })) || [];
 
       setSessions(sessionOptions);
@@ -266,7 +265,7 @@ const PlayerReviewForm = ({ coachId, coachName }: PlayerReviewFormProps) => {
                       <SelectItem value="none">No specific session</SelectItem>
                       {sessions.map((session) => (
                         <SelectItem key={session.id} value={session.id}>
-                          {new Date(session.startTime).toLocaleDateString()} - {session.sessionType || 'Session'}
+                          {new Date(session.startTime).toLocaleDateString()} - {session.format || 'Session'}
                         </SelectItem>
                       ))}
                     </SelectContent>
