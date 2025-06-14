@@ -38,7 +38,7 @@ export default function StatsQuickView() {
   }
 
   // Calculate stats from database sessions
-  const completedSessions = sessions.filter(s => !s.isActive && s.status === 'completed');
+  const completedSessions = sessions.filter(s => !s.isActive && (s.status === 'completed' || !s.status));
   const totalSessions = completedSessions.length;
   
   const wins = completedSessions.filter(

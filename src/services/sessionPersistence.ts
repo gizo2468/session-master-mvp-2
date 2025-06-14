@@ -148,7 +148,7 @@ export class SessionPersistenceService {
           small_blind: session.smallBlind,
           big_blind: session.bigBlind,
           rebuys: session.rebuys,
-          rebuy_amount: session.rebuyAmount,
+          rebuy_amount: session.rebuyAmount || 0,
           session_duration: session.sessionDuration,
           is_active: session.isActive,
           is_online: session.isOnline,
@@ -156,10 +156,10 @@ export class SessionPersistenceService {
           starting_bb: session.startingBB,
           tournament_types: session.tournamentTypes,
           is_multi_day: session.isMultiDay,
-          roi: session.roi,
-          itm_ratio_numerator: session.itmRatioNumerator,
-          itm_ratio_denominator: session.itmRatioDenominator,
-          tables_played: session.tablesPlayed,
+          roi: session.roi || 0,
+          itm_ratio_numerator: session.itmRatioNumerator || 0,
+          itm_ratio_denominator: session.itmRatioDenominator || 0,
+          tables_played: session.tablesPlayed || 0,
           notes: session.notes,
           status: session.status || 'active'
         })
