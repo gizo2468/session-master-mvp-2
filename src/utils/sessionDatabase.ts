@@ -222,7 +222,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           cashout: table.cashOut,
           rebuys: table.rebuys || 0,
           rebuy_amount: table.rebuyAmount || 0,
-          players_eliminated: table.playersEliminated || 0,
+          players_eliminated: table.players_eliminated || 0,
           bounty_amount: table.bountyAmount || 0,
           final_position: table.finalPosition,
           table_notes: table.notes
@@ -345,7 +345,7 @@ export const convertDatabaseSessionToPokerSession = (
       cashOut: table.cashout,
       rebuys: table.rebuys,
       rebuyAmount: table.rebuy_amount,
-      playersEliminated: table.players_eliminated,
+      players_eliminated: table.players_eliminated,
       bountyAmount: table.bounty_amount,
       finalPosition: table.final_position,
       notes: table.table_notes,

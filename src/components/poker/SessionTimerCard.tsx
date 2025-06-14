@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
-import { format as dateFormat, differenceInSeconds } from 'date-fns';
+import { format as dateFormat } from 'date-fns';
 import { useSessionContext } from '@/context/SessionContext';
 
 interface SessionTimerCardProps {
@@ -37,29 +37,26 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   useEffect(() => {
     if (!startTime) return;
     
-    // Calculate elapsed time properly using date-fns
-    const now = new Date();
-    const sessionStart = new Date(startTime);
-    const initialElapsedTime = differenceInSeconds(now, sessionStart);
+    // Simple, stable calculation: get milliseconds since start time and convert to seconds
+    const calculateElapsedTime = () => {
+      const now = Date.now();
+      const start = new Date(startTime).getTime();
+      return Math.floor((now - start) / 1000);
+    };
     
-    // Ensure we don't have negative time
-    const correctedElapsedTime = Math.max(0, initialElapsedTime);
-    setElapsedTime(correctedElapsedTime);
+    // Set initial elapsed time
+    const initialElapsedTime = Math.max(0, calculateElapsedTime());
+    setElapsedTime(initialElapsedTime);
     
-    let timer: number | undefined;
-    
-    timer = window.setInterval(() => {
-      setElapsedTime(prev => {
-        const newTime = prev + 1;
-        // Update session duration outside the render cycle
-        updateDuration(newTime);
-        return newTime;
-      });
+    // Set up interval to update every second
+    const timer = setInterval(() => {
+      const newElapsedTime = Math.max(0, calculateElapsedTime());
+      setElapsedTime(newElapsedTime);
+      // Update session duration in database
+      updateDuration(newElapsedTime);
     }, 1000);
     
-    return () => {
-      if (timer) clearInterval(timer);
-    };
+    return () => clearInterval(timer);
   }, [startTime, updateDuration]);
 
   const formatTime = (seconds: number) => {

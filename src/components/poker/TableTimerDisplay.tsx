@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { format as dateFormat, differenceInSeconds } from 'date-fns';
+import { format as dateFormat } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/Lucide';
 
@@ -22,16 +22,23 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
   useEffect(() => {
     if (!startTime) return;
     
-    const now = new Date();
-    const end = endTime || now;
-    const initialElapsedTime = differenceInSeconds(end, new Date(startTime));
+    const calculateElapsedTime = () => {
+      // If table ended, use endTime; otherwise use current time
+      const endTimestamp = endTime ? new Date(endTime).getTime() : Date.now();
+      const startTimestamp = new Date(startTime).getTime();
+      return Math.floor((endTimestamp - startTimestamp) / 1000);
+    };
+    
+    // Set initial elapsed time
+    const initialElapsedTime = Math.max(0, calculateElapsedTime());
     setElapsedTime(initialElapsedTime);
     
     // Only run the interval if the timer is active (table not ended)
     let timer: number | undefined;
-    if (isActive) {
+    if (isActive && !endTime) {
       timer = window.setInterval(() => {
-        setElapsedTime(prev => prev + 1);
+        const newElapsedTime = Math.max(0, calculateElapsedTime());
+        setElapsedTime(newElapsedTime);
       }, 1000);
     }
     
