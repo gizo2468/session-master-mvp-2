@@ -1,15 +1,18 @@
 
 import React, { useState } from 'react';
 import { Filter } from 'lucide-react';
-import { useSessionContext } from '@/context/SessionContext';
 import { SessionFilter } from '@/types/poker';
 
-export default function FilterBar() {
-  const { filters, setFilters } = useSessionContext();
+interface FilterBarProps {
+  filters: SessionFilter;
+  onFiltersChange: (filters: SessionFilter) => void;
+}
+
+export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
   const [isOpen, setIsOpen] = useState(false);
   
   const handleFilterChange = (key: keyof SessionFilter, value: string) => {
-    setFilters({
+    onFiltersChange({
       ...filters,
       [key]: value,
     });
