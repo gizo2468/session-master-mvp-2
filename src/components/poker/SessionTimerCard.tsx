@@ -52,7 +52,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         startTimeUTC = startTime.getTime();
       } else {
         // Handle string from database - ensure it's treated as UTC
-        const timeString = startTime.toString();
+        const timeString = String(startTime);
         const utcTimeString = timeString.includes('Z') ? timeString : timeString + 'Z';
         startTimeUTC = Date.parse(utcTimeString);
       }
@@ -98,7 +98,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   if (startTime instanceof Date) {
     startTimeForDisplay = startTime;
   } else {
-    const timeString = startTime.toString();
+    const timeString = String(startTime);
     const utcTimeString = timeString.includes('Z') ? timeString : timeString + 'Z';
     startTimeForDisplay = new Date(utcTimeString);
   }
