@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
@@ -45,9 +46,9 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     const calculateInitialElapsedTime = () => {
       const storedDuration = activeSession?.sessionDuration || 0;
       
-      // CRITICAL: Use Date.parse() to properly handle UTC timestamps from Supabase
-      // This prevents timezone offset issues that cause timer to show incorrect values
-      const startTimeUTC = Date.parse(startTime.toISOString());
+      // CRITICAL: Use UTC timestamp parsing to prevent timezone offset corruption
+      // This ensures the timer calculation matches the actual session start time
+      const startTimeUTC = startTime.getTime(); // Get raw milliseconds (already UTC)
       const timeSinceStart = Math.floor((Date.now() - startTimeUTC) / 1000);
       
       // Use the greater of stored duration or calculated time to handle refreshes properly
@@ -84,11 +85,10 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
   
-  // CRITICAL: Use proper UTC-aware time parsing for display
-  // Convert startTime for display - use original Date object for proper timezone handling
-  const startTimeForDisplay = startTime;
-  const formattedStartTime = dateFormat(startTimeForDisplay, 'h:mm a');
-  const formattedDate = dateFormat(startTimeForDisplay, 'MMM d, yyyy');
+  // CRITICAL: Use UTC-aware formatting that matches the timer calculation
+  // Format the display time using the Date object directly (which is already properly timezone-handled)
+  const formattedStartTime = dateFormat(startTime, 'h:mm a');
+  const formattedDate = dateFormat(startTime, 'MMM d, yyyy');
   
   // IMPORTANT: Only show blinds for Cash format - strict check to ensure it's never shown for Tournament
   const shouldShowBlinds = format === 'Cash' && smallBlind !== undefined && bigBlind !== undefined;

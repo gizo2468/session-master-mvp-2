@@ -23,14 +23,14 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
     if (!startTime) return;
     
     const calculateElapsedTime = () => {
-      // CRITICAL: Use Date.parse() to properly handle UTC timestamps from Supabase
-      // This prevents timezone offset issues that cause timer to show incorrect values
-      const startTimeUTC = Date.parse(startTime.toISOString());
+      // CRITICAL: Use UTC timestamp parsing to prevent timezone offset corruption
+      // This ensures consistent time calculation matching the session timer
+      const startTimeUTC = startTime.getTime(); // Get raw milliseconds (already UTC)
       
       // If table ended, use endTime; otherwise use current time
       let endTimestamp: number;
       if (endTime) {
-        endTimestamp = Date.parse(endTime.toISOString());
+        endTimestamp = endTime.getTime(); // Get raw milliseconds (already UTC)
       } else {
         endTimestamp = Date.now(); // Current time in UTC
       }

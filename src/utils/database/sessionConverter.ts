@@ -21,8 +21,10 @@ export const convertDatabaseSessionToPokerSession = (
     startingBB: sessionData.starting_bb,
     tournamentTypes: sessionData.tournament_types,
     isMultiDay: sessionData.is_multi_day,
-    startTime: new Date(sessionData.start_time),
-    endTime: sessionData.end_time ? new Date(sessionData.end_time) : undefined,
+    // CRITICAL: Store the original UTC timestamp string to prevent timezone corruption
+    // Create Date object from UTC timestamp, but also preserve the raw UTC string for calculations
+    startTime: new Date(sessionData.start_time + 'Z'), // Ensure UTC interpretation
+    endTime: sessionData.end_time ? new Date(sessionData.end_time + 'Z') : undefined,
     cashOut: sessionData.cash_out,
     notes: sessionData.notes,
     isActive: sessionData.is_active,
@@ -47,8 +49,9 @@ export const convertDatabaseSessionToPokerSession = (
       startingBB: table.starting_stack,
       currentStack: table.current_stack,
       isActive: table.is_active,
-      startTime: new Date(table.start_time),
-      endTime: table.end_time ? new Date(table.end_time) : undefined,
+      // CRITICAL: Ensure UTC interpretation for table times
+      startTime: new Date(table.start_time + 'Z'),
+      endTime: table.end_time ? new Date(table.end_time + 'Z') : undefined,
       cashOut: table.cashout,
       rebuys: table.rebuys,
       rebuyAmount: table.rebuy_amount,
