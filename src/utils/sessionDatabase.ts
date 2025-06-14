@@ -1,10 +1,11 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { PokerSession } from '@/types/poker';
 
 export const fetchUserSessions = async (): Promise<PokerSession[]> => {
   try {
-    const { user } = await supabase.auth.getUser();
-    if (!user.user) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       console.error('❌ No authenticated user found');
       return [];
     }
@@ -12,7 +13,7 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
     const { data: sessions, error: sessionError } = await supabase
       .from('sessions')
       .select('*')
-      .eq('user_id', user.user.id)
+      .eq('user_id', user.id)
       .order('start_time', { ascending: false });
 
     if (sessionError) {
@@ -44,13 +45,11 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
       }
 
       // Convert to PokerSession format
-      const pokerSession = {
-        ...session,
-        startTime: new Date(session.start_time),
-        endTime: session.end_time ? new Date(session.end_time) : undefined,
-        tables: tables || [],
-        hands: hands || []
-      } as PokerSession;
+      const pokerSession = convertDatabaseSessionToPokerSession(
+        session,
+        tables || [],
+        hands || []
+      );
 
       pokerSessions.push(pokerSession);
     }
@@ -64,8 +63,8 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
 
 export const fetchActiveSession = async (): Promise<PokerSession | null> => {
   try {
-    const { user } = await supabase.auth.getUser();
-    if (!user.user) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       console.error('❌ No authenticated user found');
       return null;
     }
@@ -74,7 +73,7 @@ export const fetchActiveSession = async (): Promise<PokerSession | null> => {
       .from('sessions')
       .select('*')
       .eq('is_active', true)
-      .eq('user_id', user.user.id)
+      .eq('user_id', user.id)
       .order('start_time', { ascending: false })
       .limit(1)
       .single();
@@ -110,13 +109,11 @@ export const fetchActiveSession = async (): Promise<PokerSession | null> => {
     }
 
     // Convert to PokerSession format
-    const pokerSession = {
-      ...sessionData,
-      startTime: new Date(sessionData.start_time),
-      endTime: sessionData.end_time ? new Date(sessionData.end_time) : undefined,
-      tables: tables || [],
-      hands: hands || []
-    } as PokerSession;
+    const pokerSession = convertDatabaseSessionToPokerSession(
+      sessionData,
+      tables || [],
+      hands || []
+    );
 
     return pokerSession;
   } catch (error) {
@@ -151,8 +148,8 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
   try {
     console.log('💾 Saving session to database:', session.id);
     
-    const { user } = await supabase.auth.getUser();
-    if (!user.user) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       console.error('❌ No authenticated user found');
       return false;
     }
@@ -160,7 +157,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
     // Prepare session data for database
     const sessionData = {
       id: session.id,
-      user_id: user.user.id,
+      user_id: user.id,
       game_type: session.gameType,
       format: session.format,
       location: session.location,
@@ -211,7 +208,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
         const tableData = {
           id: table.id,
           session_id: session.id,
-          user_id: user.user.id,
+          user_id: user.id,
           table_name: table.name,
           table_type: table.format,
           game_format: table.gameType,
@@ -253,13 +250,13 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
         const handData = {
           id: hand.id,
           session_id: session.id,
-          user_id: user.user.id,
+          user_id: user.id,
           table_id: hand.tableId,
           hand_number: hand.handNumber,
           position: hand.position,
-          hole_cards: hand.holeCards,
+          hole_cards: Array.isArray(hand.holeCards) ? hand.holeCards.join(',') : hand.holeCards,
           preflop_action: hand.preflopAction,
-          flop_cards: hand.flopCards,
+          flop_cards: Array.isArray(hand.flopCards) ? hand.flopCards.join(',') : hand.flopCards,
           flop_action: hand.flopAction,
           turn_card: hand.turnCard,
           turn_action: hand.turnAction,
@@ -304,15 +301,15 @@ export const convertDatabaseSessionToPokerSession = (
 ): PokerSession => {
   return {
     id: sessionData.id,
-    gameType: sessionData.game_type,
-    format: sessionData.format,
-    location: sessionData.location,
+    gameType: sessionData.game_type || 'NLH',
+    format: sessionData.format || 'Cash',
+    location: sessionData.location || '',
     physicalLocation: sessionData.physical_location,
     tableName: sessionData.table_name,
-    buyIn: sessionData.buy_in,
-    initialBuyIn: sessionData.initial_buy_in,
-    smallBlind: sessionData.small_blind,
-    bigBlind: sessionData.big_blind,
+    buyIn: sessionData.buy_in || 0,
+    initialBuyIn: sessionData.initial_buy_in || sessionData.buy_in || 0,
+    smallBlind: sessionData.small_blind || 0,
+    bigBlind: sessionData.big_blind || 0,
     isOnline: sessionData.is_online,
     startingBB: sessionData.starting_bb,
     tournamentTypes: sessionData.tournament_types,
@@ -332,11 +329,12 @@ export const convertDatabaseSessionToPokerSession = (
     tablesPlayed: sessionData.tables_played,
     tables: tables.map(table => ({
       id: table.id,
-      name: table.table_name,
-      format: table.table_type,
-      gameType: table.game_format,
-      buyIn: table.buy_in,
-      initialBuyIn: table.buy_in,
+      name: table.table_name || '',
+      format: table.table_type || 'Cash',
+      gameType: table.game_format || 'NLH',
+      location: table.location || sessionData.location || '',
+      buyIn: table.buy_in || 0,
+      initialBuyIn: table.buy_in || 0,
       smallBlind: table.stakes ? parseFloat(table.stakes.split('/')[0]) : undefined,
       bigBlind: table.stakes ? parseFloat(table.stakes.split('/')[1]) : undefined,
       startingBB: table.starting_stack,
@@ -359,9 +357,11 @@ export const convertDatabaseSessionToPokerSession = (
       tableId: hand.table_id,
       handNumber: hand.hand_number,
       position: hand.position,
-      holeCards: hand.hole_cards,
+      cards: hand.hole_cards || '',
+      action: hand.preflop_action || '',
+      holeCards: hand.hole_cards ? hand.hole_cards.split(',') : [],
       preflopAction: hand.preflop_action,
-      flopCards: hand.flop_cards,
+      flopCards: hand.flop_cards ? hand.flop_cards.split(',') : [],
       flopAction: hand.flop_action,
       turnCard: hand.turn_card,
       turnAction: hand.turn_action,
