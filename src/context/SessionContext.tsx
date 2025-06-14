@@ -10,6 +10,7 @@ import { syncSessionToSupabase } from './session/supabaseSync';
 import { createTableHandHandlers } from './session/handlers';
 import { 
   fetchUserSessions, 
+  fetchActiveSession,
   saveSessionToDatabase, 
   deleteSessionFromDatabase 
 } from '@/utils/sessionDatabase';
@@ -47,17 +48,50 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     clearUserData(currentUserId);
   };
 
+  // Load active session from database
+  const loadActiveSessionFromDatabase = async (userId: string | null) => {
+    if (!userId) return null;
+    
+    try {
+      console.log('🔄 Loading active session from database for user:', userId);
+      const activeSession = await fetchActiveSession();
+      if (activeSession) {
+        console.log('✅ Found active session:', activeSession.id);
+        return activeSession;
+      }
+      return null;
+    } catch (error) {
+      console.error('❌ Failed to load active session from database:', error);
+      return null;
+    }
+  };
+
   // Load sessions from database with fallback to localStorage
   const loadSessionsFromSources = async (userId: string | null) => {
     setIsLoadingFromDatabase(true);
     let loadedSessions: PokerSession[] = [];
+    let loadedActiveSession: PokerSession | null = null;
 
     if (userId) {
       try {
         console.log('🔄 Loading sessions from database for user:', userId);
+        
+        // First, load the active session specifically
+        loadedActiveSession = await loadActiveSessionFromDatabase(userId);
+        
+        // Then load all sessions
         const databaseSessions = await fetchUserSessions();
         loadedSessions = databaseSessions;
         console.log(`✅ Loaded ${loadedSessions.length} sessions from database`);
+        
+        // Set active session from database if found
+        if (loadedActiveSession) {
+          setActiveSession(loadedActiveSession);
+        } else {
+          // Fallback to finding active session in loaded sessions
+          const foundActiveSession = findActiveSession(loadedSessions);
+          setActiveSession(foundActiveSession);
+        }
       } catch (error) {
         console.error('❌ Failed to load from database, falling back to localStorage:', error);
         toast({
@@ -67,10 +101,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         });
         // Fallback to localStorage
         loadedSessions = loadSessions(userId);
+        setActiveSession(findActiveSession(loadedSessions));
       }
     } else {
       // User not logged in, load from localStorage
       loadedSessions = loadSessions(userId);
+      setActiveSession(findActiveSession(loadedSessions));
     }
 
     setIsLoadingFromDatabase(false);
@@ -110,7 +146,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       console.log('📋 Loaded sessions for user:', user?.id, 'Count:', loadedSessions.length);
       
       setSessions(loadedSessions);
-      setActiveSession(findActiveSession(loadedSessions));
       
       setIsInitialized(true);
     };

@@ -243,6 +243,72 @@ export const convertPokerSessionToDatabase = (session: PokerSession) => {
   };
 };
 
+// NEW: Fetch active session specifically
+export const fetchActiveSession = async (): Promise<PokerSession | null> => {
+  try {
+    console.log('🔍 Fetching active session from database...');
+    
+    // Fetch active session
+    const { data: session, error: sessionError } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('is_active', true)
+      .order('start_time', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (sessionError) {
+      if (sessionError.code === 'PGRST116') {
+        // No active session found
+        console.log('📋 No active session found in database');
+        return null;
+      }
+      console.error('❌ Error fetching active session:', sessionError);
+      throw sessionError;
+    }
+
+    if (!session) {
+      console.log('📋 No active session found in database');
+      return null;
+    }
+
+    console.log('✅ Found active session in database:', session.id);
+
+    // Fetch tables for this session
+    const { data: tables, error: tablesError } = await supabase
+      .from('session_tables')
+      .select('*')
+      .eq('session_id', session.id);
+
+    if (tablesError) {
+      console.error('❌ Error fetching tables for active session:', tablesError);
+    }
+
+    // Fetch hands for this session
+    const { data: hands, error: handsError } = await supabase
+      .from('session_hands_new')
+      .select('*')
+      .eq('session_id', session.id);
+
+    if (handsError) {
+      console.error('❌ Error fetching hands for active session:', handsError);
+    }
+
+    // Convert to PokerSession format
+    const convertedSession = convertDatabaseSessionToPokerSession(
+      session as any,
+      (tables || []) as DatabaseTable[],
+      (hands || []) as DatabaseHand[]
+    );
+
+    console.log('✅ Successfully converted active session');
+    return convertedSession;
+  } catch (error) {
+    console.error('❌ Failed to fetch active session from database:', error);
+    return null;
+  }
+};
+
 // Fetch all sessions for the current user
 export const fetchUserSessions = async (): Promise<PokerSession[]> => {
   try {

@@ -56,7 +56,7 @@ export default function LiveSession() {
   const [nextDayStart, setNextDayStart] = useState<Date | null>(null);
   const [chipsCarryover, setChipsCarryover] = useState('');
   
-  // Find the session - prioritize activeSession if it matches the ID, otherwise find by ID
+  // Find the session - PRIORITIZE activeSession from context (loaded from DB) over sessions array
   const session = id 
     ? (activeSession?.id === id ? activeSession : sessions.find(s => s.id === id && s.isActive))
     : activeSession;
