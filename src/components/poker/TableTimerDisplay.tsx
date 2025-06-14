@@ -24,16 +24,25 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
     
     const calculateElapsedTime = () => {
       // Fix: Properly handle UTC timestamps
-      const startTimeUTC = typeof startTime === 'string' 
-        ? Date.parse(startTime + (startTime.includes('Z') ? '' : 'Z')) // Ensure UTC if string
-        : startTime.getTime(); // Already a Date object
+      let startTimeUTC: number;
+      if (typeof startTime === 'string') {
+        // Ensure UTC if string
+        const timeString = startTime.includes('Z') ? startTime : startTime + 'Z';
+        startTimeUTC = Date.parse(timeString);
+      } else {
+        // Already a Date object
+        startTimeUTC = startTime.getTime();
+      }
       
       // If table ended, use endTime; otherwise use current time
       let endTimestamp: number;
       if (endTime) {
-        endTimestamp = typeof endTime === 'string'
-          ? Date.parse(endTime + (endTime.includes('Z') ? '' : 'Z')) // Ensure UTC if string
-          : endTime.getTime(); // Already a Date object
+        if (typeof endTime === 'string') {
+          const endTimeString = endTime.includes('Z') ? endTime : endTime + 'Z';
+          endTimestamp = Date.parse(endTimeString);
+        } else {
+          endTimestamp = endTime.getTime();
+        }
       } else {
         endTimestamp = Date.now(); // Current time is always UTC
       }
