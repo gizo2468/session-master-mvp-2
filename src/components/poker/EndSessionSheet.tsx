@@ -1,173 +1,138 @@
+
 import React from 'react';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { PokerSession } from '@/types/poker';
+import { AlertTriangle, DollarSign } from 'lucide-react';
 
 interface EndSessionSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  session: PokerSession | null;
+  session: PokerSession;
   autoCashOutAmount: number;
   sessionNotes: string;
   onSessionNotesChange: (notes: string) => void;
   onEndSession: () => void;
 }
 
-export default function EndSessionSheet({
+const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
   open,
   onOpenChange,
   session,
   autoCashOutAmount,
   sessionNotes,
   onSessionNotesChange,
-  onEndSession
-}: EndSessionSheetProps) {
-  // Calculate total buy-in from session and tables
-  const totalBuyIn = session ? session.buyIn : 0;
+  onEndSession,
+}) => {
+  const activeTables = session.tables?.filter(table => table.isActive) || [];
+  const hasActiveTables = activeTables.length > 0;
+  
+  // Check if any tables are missing results
+  const tablesWithoutResults = session.tables?.filter(table => 
+    table.isActive && (table.cashOut === undefined || table.cashOut === null)
+  ) || [];
 
-  // Calculate performance metrics
-  const performanceMetrics = React.useMemo(() => {
-    if (!session?.tables) {
-      return {
-        tablesPlayed: 0,
-        itmRatio: { inMoney: 0, total: 0 },
-        roi: 0
-      };
-    }
-
-    const completedTables = session.tables.filter(table => !table.isActive);
-    const tablesPlayed = completedTables.length;
-    
-    let tablesInMoney = 0;
-    let totalTableBuyIn = 0;
-    let totalTableCashOut = 0;
-
-    completedTables.forEach(table => {
-      const tableBuyIn = (table.buyIn || 0) + (table.rebuyAmount || 0);
-      const tableCashOut = table.cashOut || 0;
-      
-      totalTableBuyIn += tableBuyIn;
-      totalTableCashOut += tableCashOut;
-      
-      if (tableCashOut > 0) {
-        tablesInMoney++;
-      }
-    });
-
-    // Add session-level buy-in to total
-    const sessionBuyIn = session.buyIn || 0;
-    const totalInvestment = totalTableBuyIn + sessionBuyIn;
-    const totalReturn = totalTableCashOut + autoCashOutAmount;
-    
-    const roi = totalInvestment > 0 ? ((totalReturn - totalInvestment) / totalInvestment) * 100 : 0;
-
-    return {
-      tablesPlayed,
-      itmRatio: { inMoney: tablesInMoney, total: tablesPlayed },
-      roi
-    };
-  }, [session, autoCashOutAmount]);
-
-  const getRoiColor = (roi: number) => {
-    if (roi > 0) return 'bg-green-100 text-green-900';
-    if (roi < 0) return 'bg-red-100 text-red-800';
-    return 'bg-gray-100 text-gray-800';
-  };
-
-  const formatRoi = (roi: number) => {
-    const sign = roi > 0 ? '+' : '';
-    return `${sign}${roi.toFixed(1)}%`;
-  };
+  const profit = autoCashOutAmount - session.buyIn;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="center" className="max-w-md max-h-[85vh] overflow-auto">
-        <SheetHeader>
+      <SheetContent side="bottom" className="h-[80vh]">
+        <SheetHeader className="text-center">
           <SheetTitle>End Session</SheetTitle>
           <SheetDescription>
-            Confirm to end your current poker session.
+            Review your session details before ending
           </SheetDescription>
         </SheetHeader>
         
-        <div className="py-6">
-          <div className="space-y-4">
-            {/* New Badge-Based Performance Summary Section */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium">Session Performance Summary</h3>
-              <div className="bg-gray-50 p-4 rounded-md">
-                <div className="flex flex-wrap justify-center gap-3">
-                  <Badge className="text-base font-semibold px-4 py-2 bg-gray-100 text-gray-800 hover:bg-gray-200">
-                    Tables: {performanceMetrics.tablesPlayed}
-                  </Badge>
-                  <Badge className="text-base font-semibold px-4 py-2 bg-gray-100 text-gray-800 hover:bg-gray-200">
-                    ITM Ratio: {performanceMetrics.itmRatio.inMoney}/{performanceMetrics.itmRatio.total}
-                  </Badge>
-                  <Badge className={`text-base font-semibold px-4 py-2 ${getRoiColor(performanceMetrics.roi)}`}>
-                    ROI: {formatRoi(performanceMetrics.roi)}
-                  </Badge>
-                </div>
+        <div className="py-6 space-y-6">
+          {hasActiveTables && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-yellow-800 mb-2">
+                <AlertTriangle size={20} />
+                <span className="font-medium">Active Tables Detected</span>
               </div>
+              <p className="text-yellow-700 text-sm">
+                You have {activeTables.length} active table(s) that need to be ended before you can close this session.
+              </p>
+              <ul className="mt-2 text-sm text-yellow-700">
+                {activeTables.map((table, index) => (
+                  <li key={table.id} className="ml-4">
+                    • {table.name || table.location || `Table ${index + 1}`}
+                  </li>
+                ))}
+              </ul>
             </div>
-
-            {/* Existing Session Summary Section */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium">Session Summary</h3>
-              <div className="bg-gray-50 p-4 rounded-md">
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-500">Cash Out:</span>
-                  <span className="font-bold">${autoCashOutAmount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-500">Buy In:</span>
-                  <span className="font-bold">${totalBuyIn.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Profit/Loss:</span>
-                  <span className={`font-bold ${
-                    autoCashOutAmount > totalBuyIn 
-                      ? 'text-green-600' 
-                      : 'text-red-600'
-                  }`}>
-                    {autoCashOutAmount > totalBuyIn ? '+' : ''}
-                    ${(autoCashOutAmount - totalBuyIn).toFixed(2)}
-                  </span>
-                </div>
+          )}
+          
+          {tablesWithoutResults.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-red-800 mb-2">
+                <AlertTriangle size={20} />
+                <span className="font-medium">Missing Table Results</span>
               </div>
+              <p className="text-red-700 text-sm">
+                Some tables don't have results entered. Please end these tables properly first.
+              </p>
+            </div>
+          )}
+          
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <DollarSign size={20} className="text-gray-600" />
+              <span className="font-medium text-gray-900">Session Summary</span>
             </div>
             
-            <div>
-              <label htmlFor="sessionNotes" className="block text-sm font-medium text-gray-700">
-                Session Notes (Optional)
-              </label>
-              <Textarea
-                id="sessionNotes"
-                placeholder="Add any notes about this session..."
-                className="mt-1 w-full"
-                value={sessionNotes}
-                onChange={(e) => onSessionNotesChange(e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="text-gray-500">Total Buy-in</div>
+                <div className="font-medium">${session.buyIn.toFixed(2)}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Total Cash-out</div>
+                <div className="font-medium">${autoCashOutAmount.toFixed(2)}</div>
+              </div>
+              <div className="col-span-2 pt-2 border-t border-gray-200">
+                <div className="text-gray-500">Net Result</div>
+                <div className={`font-bold text-lg ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {profit >= 0 ? '+' : ''}${profit.toFixed(2)}
+                </div>
+              </div>
             </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="sessionNotes">Session Notes (Optional)</Label>
+            <Textarea
+              id="sessionNotes"
+              placeholder="Add any notes about this session..."
+              value={sessionNotes}
+              onChange={(e) => onSessionNotesChange(e.target.value)}
+              className="min-h-[100px]"
+            />
           </div>
         </div>
         
-        <SheetFooter className="sm:justify-start gap-2">
+        <div className="flex gap-3">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
+            className="flex-1"
           >
             Cancel
           </Button>
           <Button
-            className="bg-poker-gold hover:bg-poker-darkGold text-white"
             onClick={onEndSession}
+            disabled={hasActiveTables || tablesWithoutResults.length > 0}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white"
           >
             End Session
           </Button>
-        </SheetFooter>
+        </div>
       </SheetContent>
     </Sheet>
   );
-}
+};
+
+export default EndSessionSheet;

@@ -274,7 +274,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const hasActiveTables = session.tables && session.tables.some(table => table.isActive);
       
       if (hasActiveTables) {
-        throw new Error("Cannot end session while tables are still active");
+        // Check if all active tables have been properly ended
+        const activeTablesWithoutResults = session.tables.filter(table => 
+          table.isActive && (table.cashOut === undefined || table.cashOut === null)
+        );
+        
+        if (activeTablesWithoutResults.length > 0) {
+          throw new Error("Cannot end session while tables are still active. Please end all active tables first.");
+        }
       }
       
       const updatedSession = {

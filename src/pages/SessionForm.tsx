@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -13,7 +12,7 @@ import Icon from '@/components/ui/Lucide';
 import { Slider } from '@/components/ui/slider';
 import { useSessionContext } from '@/context/SessionContext';
 import { useToast } from '@/hooks/use-toast';
-import { PokerSession } from '@/types/poker';
+import { PokerSession, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 
 const TOURNAMENT_TYPES = [
@@ -95,7 +94,31 @@ export default function SessionForm() {
         throw new Error('Invalid buy-in amount');
       }
 
-      // Create the session object to pass to SessionContext
+      // Create the initial table object from form data
+      const initialTable: TableData = {
+        id: uuidv4(),
+        name: values.location,
+        format: values.format as 'Cash' | 'Tournament',
+        gameType: values.gameType,
+        location: values.location,
+        buyIn: buyInAmount,
+        initialBuyIn: buyInAmount,
+        startTime: new Date(),
+        isActive: true,
+        rebuys: 0,
+        addOns: 0,
+        ...(values.format === 'Cash' && {
+          smallBlind: values.smallBlind || smallBlind,
+          bigBlind: values.bigBlind || bigBlind,
+        }),
+        ...(values.format === 'Tournament' && {
+          startingBB: values.startingBB ? parseInt(values.startingBB) : undefined,
+          tournamentTypes: values.tournamentType ? [values.tournamentType] : undefined,
+          isMultiDay: values.isMultiDay,
+        }),
+      };
+
+      // Create the session object with the initial table
       const newSession: PokerSession = {
         id: uuidv4(),
         gameType: values.gameType,
@@ -105,8 +128,8 @@ export default function SessionForm() {
         tableName: values.location,
         buyIn: buyInAmount,
         initialBuyIn: buyInAmount,
-        smallBlind: values.format === 'Cash' ? (values.smallBlind || 1) : 0,
-        bigBlind: values.format === 'Cash' ? (values.bigBlind || 2) : 0,
+        smallBlind: values.format === 'Cash' ? (values.smallBlind || smallBlind) : 0,
+        bigBlind: values.format === 'Cash' ? (values.bigBlind || bigBlind) : 0,
         isOnline: values.isOnline,
         startingBB: values.format === 'Tournament' && values.startingBB ? parseInt(values.startingBB) : undefined,
         tournamentTypes: values.format === 'Tournament' && values.tournamentType ? [values.tournamentType] : undefined,
@@ -116,19 +139,19 @@ export default function SessionForm() {
         currentStatus: 'running',
         sessionDuration: 0,
         hands: [],
-        tables: []
+        tables: [initialTable] // Add the initial table to the session
       };
 
-      console.log('🎯 Starting session with SessionContext:', newSession);
+      console.log('🎯 Starting session with initial table:', newSession);
 
       // Use SessionContext to start the session - this handles both DB and state
       await startSession(newSession);
 
-      console.log('✅ Session started successfully');
+      console.log('✅ Session started successfully with initial table');
 
       toast({
         title: "Session Started",
-        description: "Your poker session has been successfully created."
+        description: "Your poker session has been successfully created with the initial table."
       });
 
       // Navigate directly to the live session page
