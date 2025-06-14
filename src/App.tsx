@@ -58,10 +58,15 @@ const App = () => (
                   <Route path="/legal/terms" element={<TermsOfUse />} />
                   <Route path="/legal/cookie" element={<CookiePolicy />} />
                   
-                  {/* Public Routes */}
-                  <Route path="/" element={<Index />} />
-                  
                   {/* Protected Routes */}
+                  <Route 
+                    path="/" 
+                    element={
+                      <ProtectedRoute>
+                        <Index />
+                      </ProtectedRoute>
+                    } 
+                  />
                   <Route 
                     path="/new-session" 
                     element={
@@ -77,11 +82,6 @@ const App = () => (
                         <SessionHistory />
                       </ProtectedRoute>
                     } 
-                  />
-                  {/* Redirect /sessions to /history for backward compatibility */}
-                  <Route 
-                    path="/sessions" 
-                    element={<Navigate to="/history" replace />} 
                   />
                   <Route 
                     path="/session/:id" 

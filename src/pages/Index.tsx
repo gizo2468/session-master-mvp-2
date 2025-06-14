@@ -20,7 +20,6 @@ export default function Index() {
   const { user, logout } = useAuth();
   const { 
     sessions, 
-    activeSession,
     filters, 
     setFilters, 
     showStorageWarning, 
@@ -51,29 +50,13 @@ export default function Index() {
     return true;
   });
 
-  // Create a combined list with active session first, then recent completed sessions
-  const getDisplaySessions = () => {
-    const completedSessions = filteredSessions
-      .filter(session => !session.isActive)
-      .slice(0, 5);
-    
-    // If there's an active session, put it first in the list
-    if (activeSession && activeSession.isActive) {
-      return [activeSession, ...completedSessions];
-    }
-    
-    return completedSessions;
-  };
-
-  const displaySessions = getDisplaySessions();
+  // Only show completed sessions (not active ones) in recent sessions
+  const recentSessions = filteredSessions
+    .filter(session => !session.isActive)
+    .slice(0, 5);
 
   const handleSessionClick = (sessionId: string) => {
-    // If it's the active session, navigate to live session view
-    if (activeSession && activeSession.id === sessionId && activeSession.isActive) {
-      navigate(`/live-session/${sessionId}`);
-    } else {
-      navigate(`/session/${sessionId}`);
-    }
+    navigate(`/session/${sessionId}`);
   };
 
   if (isLoading) {
@@ -134,17 +117,15 @@ export default function Index() {
             <NewSessionButton />
           </div>
 
-          {/* Stats section appears after the button - ALWAYS shown first */}
+          {/* Stats section appears after the button */}
           {user && <StatsQuickView />}
           
           {user && sessions.length > 0 && (
             <div className="w-full space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-extrabold tracking-tight">
-                  {activeSession && activeSession.isActive ? 'Current & Recent Sessions' : 'Recent Sessions'}
-                </h2>
+                <h2 className="text-xl font-extrabold tracking-tight">Recent Sessions</h2>
                 <Button 
-                  onClick={() => navigate('/history')}
+                  onClick={() => navigate('/sessions')}
                   variant="outline" 
                   size="sm"
                   className="text-poker-feltGreen"
@@ -156,7 +137,7 @@ export default function Index() {
               <FilterBar filters={filters} onFiltersChange={setFilters} />
               
               <div className="space-y-4">
-                {displaySessions.map((session) => (
+                {recentSessions.map((session) => (
                   <SessionCard 
                     key={session.id} 
                     session={session} 

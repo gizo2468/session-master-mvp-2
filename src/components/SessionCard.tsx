@@ -32,9 +32,7 @@ export default function SessionCard({ session, onClick }: SessionCardProps) {
   return (
     <div 
       onClick={onClick}
-      className={`bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer hover:shadow-lg transition-shadow border-l-4 ${
-        session.isActive ? 'border-green-500' : 'border-poker-feltGreen'
-      }`}
+      className="bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-poker-feltGreen"
     >
       <div className="flex justify-between items-start mb-3">
         <div>
@@ -42,8 +40,7 @@ export default function SessionCard({ session, onClick }: SessionCardProps) {
           <p className="text-sm text-gray-500">{formattedDate} at {formattedTime}</p>
         </div>
         {session.isActive ? (
-          <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
             Live
           </span>
         ) : (

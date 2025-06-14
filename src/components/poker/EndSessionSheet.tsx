@@ -29,22 +29,11 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
   const activeTables = session.tables?.filter(table => table.isActive) || [];
   const hasActiveTables = activeTables.length > 0;
   
-  // Check if any tables are missing results - including the initial table
-  const allTables = session.tables || [];
-  const tablesWithoutResults = allTables.filter(table => {
-    // For active tables, they need to be ended first
-    if (table.isActive) return true;
-    
-    // For inactive tables, check if they have proper results
-    // Cash games need cashOut, tournaments might need position/bounty info
-    if (table.cashOut === undefined || table.cashOut === null) {
-      return true;
-    }
-    
-    return false;
-  });
+  // Check if any tables are missing results
+  const tablesWithoutResults = session.tables?.filter(table => 
+    table.isActive && (table.cashOut === undefined || table.cashOut === null)
+  ) || [];
 
-  const hasIncompleteResults = tablesWithoutResults.length > 0;
   const profit = autoCashOutAmount - session.buyIn;
 
   return (
@@ -77,22 +66,15 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
             </div>
           )}
           
-          {!hasActiveTables && hasIncompleteResults && (
+          {tablesWithoutResults.length > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-red-800 mb-2">
                 <AlertTriangle size={20} />
                 <span className="font-medium">Missing Table Results</span>
               </div>
               <p className="text-red-700 text-sm">
-                Some tables don't have complete results entered. Please ensure all tables have proper cash-out amounts and other required information.
+                Some tables don't have results entered. Please end these tables properly first.
               </p>
-              <ul className="mt-2 text-sm text-red-700">
-                {tablesWithoutResults.map((table, index) => (
-                  <li key={table.id} className="ml-4">
-                    • {table.name || table.location || `Table ${index + 1}`} - Missing result data
-                  </li>
-                ))}
-              </ul>
             </div>
           )}
           
@@ -142,7 +124,7 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
           </Button>
           <Button
             onClick={onEndSession}
-            disabled={hasActiveTables || hasIncompleteResults}
+            disabled={hasActiveTables || tablesWithoutResults.length > 0}
             className="flex-1 bg-red-600 hover:bg-red-700 text-white"
           >
             End Session
