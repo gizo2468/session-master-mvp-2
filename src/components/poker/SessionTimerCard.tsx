@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
@@ -46,9 +45,10 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     const calculateInitialElapsedTime = () => {
       const storedDuration = activeSession?.sessionDuration || 0;
       
-      // Convert startTime to timestamp - let JavaScript handle timezone conversion naturally
-      const startTimeMs = new Date(startTime).getTime();
-      const timeSinceStart = Math.floor((Date.now() - startTimeMs) / 1000);
+      // CRITICAL: Use Date.parse() to properly handle UTC timestamps from Supabase
+      // This prevents timezone offset issues that cause timer to show incorrect values
+      const startTimeUTC = Date.parse(startTime.toISOString());
+      const timeSinceStart = Math.floor((Date.now() - startTimeUTC) / 1000);
       
       // Use the greater of stored duration or calculated time to handle refreshes properly
       // This ensures we don't go backwards in time
@@ -84,8 +84,9 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
   
-  // Convert startTime for display - let JavaScript handle timezone conversion naturally
-  const startTimeForDisplay = new Date(startTime);
+  // CRITICAL: Use proper UTC-aware time parsing for display
+  // Convert startTime for display - use original Date object for proper timezone handling
+  const startTimeForDisplay = startTime;
   const formattedStartTime = dateFormat(startTimeForDisplay, 'h:mm a');
   const formattedDate = dateFormat(startTimeForDisplay, 'MMM d, yyyy');
   

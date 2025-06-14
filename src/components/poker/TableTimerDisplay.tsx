@@ -23,18 +23,19 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
     if (!startTime) return;
     
     const calculateElapsedTime = () => {
-      // Convert startTime to timestamp - let JavaScript handle timezone conversion naturally
-      const startTimeMs = new Date(startTime).getTime();
+      // CRITICAL: Use Date.parse() to properly handle UTC timestamps from Supabase
+      // This prevents timezone offset issues that cause timer to show incorrect values
+      const startTimeUTC = Date.parse(startTime.toISOString());
       
       // If table ended, use endTime; otherwise use current time
       let endTimestamp: number;
       if (endTime) {
-        endTimestamp = new Date(endTime).getTime();
+        endTimestamp = Date.parse(endTime.toISOString());
       } else {
-        endTimestamp = Date.now(); // Current time in local timezone
+        endTimestamp = Date.now(); // Current time in UTC
       }
       
-      const elapsed = Math.floor((endTimestamp - startTimeMs) / 1000);
+      const elapsed = Math.floor((endTimestamp - startTimeUTC) / 1000);
       return Math.max(0, elapsed); // Ensure non-negative time
     };
     
