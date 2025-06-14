@@ -1,19 +1,19 @@
 import { PokerSession } from '@/types/poker';
 
-// Helper function to safely parse UTC timestamps
+// Helper function to safely parse UTC timestamps without timezone shifts
 const parseUTCTimestamp = (timestamp: string | null | undefined): Date | undefined => {
   if (!timestamp) return undefined;
   
   try {
-    // If timestamp already has timezone info (ends with Z or has offset), use as-is
-    if (timestamp.endsWith('Z') || timestamp.includes('+') || timestamp.includes('-')) {
-      const date = new Date(timestamp);
-      return isNaN(date.getTime()) ? undefined : date;
-    }
+    // Parse the timestamp and get the raw milliseconds (UTC)
+    const parsedTime = Date.parse(timestamp);
     
-    // Otherwise, treat as UTC by appending Z
-    const date = new Date(timestamp + 'Z');
-    return isNaN(date.getTime()) ? undefined : date;
+    // If parsing failed, return undefined
+    if (isNaN(parsedTime)) return undefined;
+    
+    // Create Date object directly from UTC milliseconds
+    // This preserves the exact moment in time without timezone interpretation
+    return new Date(parsedTime);
   } catch (error) {
     console.error('Error parsing timestamp:', timestamp, error);
     return undefined;
