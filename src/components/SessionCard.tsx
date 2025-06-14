@@ -1,123 +1,91 @@
 
-import { PokerSession, TableData } from '@/types/poker';
-import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
-import SessionStatsDisplay from './poker/SessionStatsDisplay';
-import { useSessionStats } from '@/hooks/useSessionStats';
-import Icon from '@/components/ui/Lucide';
+import React from 'react';
+import { format, differenceInMinutes, differenceInHours } from 'date-fns';
 import ProfitLossBadge from './poker/ProfitLossBadge';
+import { PokerSession } from '@/types/poker';
 
 interface SessionCardProps {
   session: PokerSession;
+  onClick: () => void;
 }
 
-export default function SessionCard({ session }: SessionCardProps) {
-  const navigate = useNavigate();
+export default function SessionCard({ session, onClick }: SessionCardProps) {
+  // Calculate derived values from database data
+  const profit = session.cashOut !== undefined ? session.cashOut - session.buyIn : 0;
   
-  console.log('SessionCard rendering for session:', session.id, session);
-  
-  // Pass the session object to the hook so it can calculate from local data
-  const { stats, loading } = useSessionStats(session.id, session);
-  
-  console.log('SessionCard stats from hook:', stats, 'loading:', loading);
-  
-  // Calculate profit/loss
-  const isCompleted = !session.isActive && session.cashOut !== undefined;
-  let profit = 0;
-  
-  if (isCompleted && session.cashOut !== undefined) {
-    profit = session.cashOut - session.buyIn;
-  }
-  
-  const timeAgo = formatDistanceToNow(new Date(session.startTime), { addSuffix: true });
-  
-  const handleClick = () => {
-    // Route to LiveSession for active sessions, or SessionDetail for completed ones
-    if (session.isActive) {
-      navigate(`/live-session/${session.id}`);
-    } else {
-      navigate(`/session/${session.id}`);
+  const calculateDuration = () => {
+    const start = new Date(session.startTime);
+    const end = session.endTime ? new Date(session.endTime) : new Date();
+    const hours = differenceInHours(end, start);
+    const minutes = differenceInMinutes(end, start) % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
     }
+    return `${minutes}m`;
   };
 
-  // Count multi-day tournaments for display
-  let multiDayCount = 0;
-  if (session.tables && session.tables.length > 0) {
-    multiDayCount = session.tables.filter(
-      (table: TableData) => table.isMultiDay && table.dayEndedWithoutElimination
-    ).length;
-  }
-  
-  // IMPORTANT: Only show blinds for Cash format - strict check to ensure it's never shown for Tournament
-  const shouldShowBlinds = session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined;
-  
+  const duration = calculateDuration();
+  const formattedDate = format(new Date(session.startTime), 'MMM d, yyyy');
+  const formattedTime = format(new Date(session.startTime), 'h:mm a');
+
   return (
     <div 
-      className="bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer"
-      onClick={handleClick}
+      onClick={onClick}
+      className="bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-poker-feltGreen"
     >
-      <div className="flex justify-between items-start mb-2">
+      <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="font-extrabold text-lg tracking-tight">
-            {session.location}
-          </h3>
-          <p className="text-gray-500 text-sm">{timeAgo}</p>
-          
-          {/* Show multi-day badge if there are continuing multi-day tournaments */}
-          {multiDayCount > 0 && (
-            <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs">
-              {multiDayCount} Continuing Multi-Day {multiDayCount === 1 ? 'Tournament' : 'Tournaments'}
-            </span>
-          )}
+          <h3 className="text-lg font-bold text-poker-black">{session.location}</h3>
+          <p className="text-sm text-gray-500">{formattedDate} at {formattedTime}</p>
         </div>
         {session.isActive ? (
-          <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
-            ACTIVE
+          <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+            Live
           </span>
         ) : (
-          <ProfitLossBadge profit={profit} size="lg" />
+          <ProfitLossBadge profit={profit} />
         )}
       </div>
       
-      <div className="flex justify-between text-sm text-gray-600">
-        <span>
-          {session.gameType} • {session.format}
-          {shouldShowBlinds && (
-            <> • ${session.smallBlind}/${session.bigBlind}</>
-          )}
-        </span>
+      <div className="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <span className="text-gray-500">Game:</span>
+          <span className="ml-1 font-medium">{session.gameType}</span>
+        </div>
+        <div>
+          <span className="text-gray-500">Format:</span>
+          <span className="ml-1 font-medium">{session.format}</span>
+        </div>
+        <div>
+          <span className="text-gray-500">Buy-in:</span>
+          <span className="ml-1 font-medium">${session.buyIn.toFixed(2)}</span>
+        </div>
+        <div>
+          <span className="text-gray-500">Duration:</span>
+          <span className="ml-1 font-medium">{duration}</span>
+        </div>
+        {session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined && (
+          <>
+            <div className="col-span-2">
+              <span className="text-gray-500">Blinds:</span>
+              <span className="ml-1 font-medium">${session.smallBlind}/${session.bigBlind}</span>
+            </div>
+          </>
+        )}
+        {!session.isActive && session.cashOut !== undefined && (
+          <div>
+            <span className="text-gray-500">Cash Out:</span>
+            <span className="ml-1 font-medium">${session.cashOut.toFixed(2)}</span>
+          </div>
+        )}
       </div>
       
-      {/* Display important multi-day tournament data in SessionCard */}
-      {multiDayCount > 0 && session.tables && (
-        <div className="mt-2 pt-2 border-t border-gray-100 text-xs">
-          {session.tables.filter(table => table.isMultiDay && table.dayEndedWithoutElimination).map((table, index) => (
-            <div key={table.id} className="mb-1 last:mb-0 bg-green-50 p-1 rounded">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Next Day:</span>
-                <span className="font-medium">
-                  {table.nextDayStart ? new Date(table.nextDayStart).toLocaleDateString() : 'Not set'}
-                </span>
-              </div>
-              {table.chipsCarryover && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Chips:</span>
-                  <span className="font-medium text-green-700">{table.chipsCarryover.toLocaleString()}</span>
-                </div>
-              )}
-            </div>
-          ))}
+      {session.notes && (
+        <div className="mt-3 pt-3 border-t border-gray-200">
+          <p className="text-sm text-gray-600 line-clamp-2">{session.notes}</p>
         </div>
       )}
-
-      {/* Performance insights badges - always shown with fixed calculation */}
-      <SessionStatsDisplay
-        tables={stats.tables}
-        hands={stats.hands}
-        totalBuyIns={stats.totalBuyIns}
-        totalPayout={stats.totalPayout}
-        loading={loading}
-      />
     </div>
   );
 }

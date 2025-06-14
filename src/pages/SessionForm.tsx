@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSessionContext } from '@/context/SessionContext';
-import { PokerSession } from '@/types/poker';
-import { v4 as uuidv4 } from 'uuid';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,10 +8,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Switch } from '@/components/ui/switch';
 import Icon from '@/components/ui/Lucide';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Slider } from '@/components/ui/slider';
+import { SessionPersistenceService } from '@/services/sessionPersistence';
+import { useToast } from '@/hooks/use-toast';
 
 const TOURNAMENT_TYPES = [
   'Freezeout',
@@ -51,7 +48,8 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function SessionForm() {
   const navigate = useNavigate();
-  const { startSession } = useSessionContext();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[2]);
   const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[2] * 2);
@@ -81,49 +79,47 @@ export default function SessionForm() {
     }
   }, [smallBlind, form]);
   
-  const onSubmit = (values: FormValues) => {
-    const buyInAmount = parseFloat(values.buyIn);
-
-    const initialTable = {
-      id: uuidv4(),
-      gameType: values.gameType,
-      format: values.format,
-      location: values.location,
-      buyIn: buyInAmount,
-      initialBuyIn: buyInAmount,
-      isActive: true,
-      startTime: new Date(),
-      smallBlind: values.format === 'Cash' ? (values.smallBlind || 1) : 0,
-      bigBlind: values.format === 'Cash' ? (values.bigBlind || 2) : 0,
-      ...(values.format === 'Tournament' && {
-        startingBB: values.startingBB ? parseInt(values.startingBB) : undefined,
-        tournamentTypes: values.tournamentType ? [values.tournamentType] : undefined,
-        isMultiDay: values.isMultiDay
-      })
-    };
-
-    const newSession: PokerSession = {
-      id: uuidv4(),
-      gameType: values.gameType,
-      format: values.format,
-      location: values.location,
-      physicalLocation: values.isOnline ? values.physicalLocation : undefined,
-      buyIn: buyInAmount,
-      initialBuyIn: buyInAmount,
-      smallBlind: values.format === 'Cash' ? (values.smallBlind || 1) : 0,
-      bigBlind: values.format === 'Cash' ? (values.bigBlind || 2) : 0,
-      startTime: new Date(),
-      isActive: true,
-      isOnline: values.isOnline,
-      ...(values.format === 'Tournament' && {
-        startingBB: values.startingBB ? parseInt(values.startingBB) : undefined,
-        tournamentTypes: values.tournamentType ? [values.tournamentType] : undefined
-      }),
-      tables: [initialTable],
-    };
+  const onSubmit = async (values: FormValues) => {
+    setIsSubmitting(true);
     
-    startSession(newSession);
-    navigate(`/live-session/${newSession.id}`);
+    try {
+      const buyInAmount = parseFloat(values.buyIn);
+
+      const sessionId = await SessionPersistenceService.startSession({
+        gameType: values.gameType,
+        format: values.format,
+        location: values.location,
+        physicalLocation: values.isOnline ? values.physicalLocation : undefined,
+        tableName: values.location,
+        buyIn: buyInAmount,
+        smallBlind: values.format === 'Cash' ? (values.smallBlind || 1) : 0,
+        bigBlind: values.format === 'Cash' ? (values.bigBlind || 2) : 0,
+        isOnline: values.isOnline,
+        startingBB: values.format === 'Tournament' && values.startingBB ? parseInt(values.startingBB) : undefined,
+        tournamentTypes: values.format === 'Tournament' && values.tournamentType ? [values.tournamentType] : undefined,
+        isMultiDay: values.isMultiDay
+      });
+
+      if (!sessionId) {
+        throw new Error('Failed to create session');
+      }
+
+      toast({
+        title: "Session Started",
+        description: "Your poker session has been successfully created."
+      });
+
+      navigate(`/live-session/${sessionId}`);
+    } catch (error) {
+      console.error('Error starting session:', error);
+      toast({
+        title: "Error Starting Session",
+        description: "There was a problem starting your session. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const format = form.watch('format');
@@ -151,7 +147,7 @@ export default function SessionForm() {
             <span>Back</span>
           </button>
           <h1 className="text-2xl font-bold text-poker-black">Start New Session</h1>
-          <p className="text-gray-500 text-sm mt-1">Enter your first table below</p>
+          <p className="text-gray-500 text-sm mt-1">Enter your session details below</p>
         </header>
         
         <Form {...form}>
@@ -213,6 +209,8 @@ export default function SessionForm() {
                 </FormItem>
               )}
             />
+            
+            
             
             <FormField
               control={form.control}
@@ -367,6 +365,7 @@ export default function SessionForm() {
                     <FormLabel className="text-base font-medium">Physical Location</FormLabel>
                     <FormControl>
                       <Input 
+                        placeholder="Where are you playing from?"
                         {...field} 
                       />
                     </FormControl>
@@ -482,9 +481,10 @@ export default function SessionForm() {
             
             <Button
               type="submit"
+              disabled={isSubmitting}
               className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md shadow-md transition-all"
             >
-              Start Session
+              {isSubmitting ? 'Starting Session...' : 'Start Session'}
             </Button>
           </form>
         </Form>
