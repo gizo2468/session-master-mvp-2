@@ -52,9 +52,20 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       if (startTimeUTC) {
         // Use raw UTC timestamp for accurate calculation
         timeSinceStart = Math.floor((Date.now() - startTimeUTC) / 1000);
+        console.log('🐛 DEBUG: Using UTC timestamp path:', {
+          startTimeUTC,
+          currentTimeUTC: Date.now(),
+          calculatedSeconds: timeSinceStart
+        });
       } else {
         // Fallback to Date object method (less reliable across timezones)
         timeSinceStart = Math.floor((Date.now() - startTime.getTime()) / 1000);
+        console.log('🐛 DEBUG: Using Date object fallback path:', {
+          startTimeGetTime: startTime.getTime(),
+          currentTimeUTC: Date.now(),
+          calculatedSeconds: timeSinceStart,
+          WARNING: 'This path may be affected by timezone issues'
+        });
       }
       
       // Ensure non-negative time and return the actual elapsed time
@@ -65,6 +76,13 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     // This fixes the bug where Math.max(storedDuration, timeSinceStart) caused 3-hour offsets
     const initialElapsedTime = calculateElapsedTime();
     setElapsedTime(initialElapsedTime);
+    
+    console.log('🐛 DEBUG: SessionTimerCard initialized with:', {
+      startTime,
+      startTimeUTC,
+      initialElapsedTime,
+      formattedTime: formatTime(initialElapsedTime)
+    });
     
     // Set up interval to increment locally every second
     const timer = setInterval(() => {

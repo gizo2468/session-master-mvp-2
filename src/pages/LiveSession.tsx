@@ -59,6 +59,20 @@ export default function LiveSession() {
     return 'Cash';
   };
 
+  // DEBUG: Log session timing data to identify the 3-hour offset bug
+  console.log('🐛 DEBUG: Session timing data:', {
+    sessionId: currentSession.id,
+    startTime: currentSession.startTime,
+    startTimeUTC: currentSession.startTimeUTC,
+    currentTime: new Date(),
+    currentTimeUTC: Date.now(),
+    startTimeGetTime: currentSession.startTime.getTime(),
+    timezoneOffset: new Date().getTimezoneOffset(),
+    calculatedElapsedSeconds: currentSession.startTimeUTC 
+      ? Math.floor((Date.now() - currentSession.startTimeUTC) / 1000)
+      : Math.floor((Date.now() - currentSession.startTime.getTime()) / 1000)
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <LiveSessionHeader />
@@ -67,6 +81,7 @@ export default function LiveSession() {
         <div className="container mx-auto max-w-md px-4 pb-8">
           <SessionTimerCard 
             startTime={currentSession.startTime}
+            startTimeUTC={currentSession.startTimeUTC}
             gameType={currentSession.gameType}
             format={currentSession.format}
             smallBlind={currentSession.smallBlind}
