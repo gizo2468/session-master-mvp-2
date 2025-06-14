@@ -48,9 +48,11 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       
       // Fix: Properly handle UTC timestamp - treat startTime as UTC
       let startTimeUTC: number;
-      if (typeof startTime === 'string') {
+      // Cast to any to handle the potential string case from database
+      const startTimeValue = startTime as any;
+      if (typeof startTimeValue === 'string') {
         // Ensure UTC if string
-        const timeString = startTime.includes('Z') ? startTime : startTime + 'Z';
+        const timeString = (startTimeValue as string).includes('Z') ? startTimeValue : startTimeValue + 'Z';
         startTimeUTC = Date.parse(timeString);
       } else {
         // Already a Date object
@@ -95,8 +97,10 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   
   // Fix: Ensure date formatting also handles UTC properly
   let startTimeForDisplay: Date;
-  if (typeof startTime === 'string') {
-    const timeString = startTime.includes('Z') ? startTime : startTime + 'Z';
+  // Cast to any to handle the potential string case from database
+  const startTimeValue = startTime as any;
+  if (typeof startTimeValue === 'string') {
+    const timeString = (startTimeValue as string).includes('Z') ? startTimeValue : startTimeValue + 'Z';
     startTimeForDisplay = new Date(timeString);
   } else {
     startTimeForDisplay = startTime;
