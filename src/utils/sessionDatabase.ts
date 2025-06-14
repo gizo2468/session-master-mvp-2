@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { PokerSession } from '@/types/poker';
 
@@ -345,7 +344,7 @@ export const convertDatabaseSessionToPokerSession = (
       cashOut: table.cashout,
       rebuys: table.rebuys,
       rebuyAmount: table.rebuy_amount,
-      players_eliminated: table.players_eliminated,
+      playersEliminated: table.players_eliminated,
       bountyAmount: table.bounty_amount,
       finalPosition: table.final_position,
       notes: table.table_notes,

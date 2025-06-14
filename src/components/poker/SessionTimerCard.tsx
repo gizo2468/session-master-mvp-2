@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import { format as dateFormat } from 'date-fns';
@@ -26,38 +26,48 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
 }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const { updateSessionDuration, activeSession } = useSessionContext();
+  const updateCounterRef = useRef(0);
   
-  // Use useCallback to memoize the updateDuration function to prevent recreation on every render
+  // Use useCallback to memoize the updateDuration function
   const updateDuration = useCallback((newTime: number) => {
     if (typeof updateSessionDuration === 'function' && activeSession) {
-      updateSessionDuration(activeSession.id, newTime);
+      // Only update database every 30 seconds to reduce writes
+      updateCounterRef.current++;
+      if (updateCounterRef.current % 30 === 0) {
+        updateSessionDuration(activeSession.id, newTime);
+      }
     }
   }, [updateSessionDuration, activeSession]);
   
   useEffect(() => {
     if (!startTime) return;
     
-    // Simple, stable calculation: get milliseconds since start time and convert to seconds
-    const calculateElapsedTime = () => {
-      const now = Date.now();
-      const start = new Date(startTime).getTime();
-      return Math.floor((now - start) / 1000);
+    // Calculate elapsed time from start time and stored session duration
+    const calculateInitialElapsedTime = () => {
+      const storedDuration = activeSession?.sessionDuration || 0;
+      const timeSinceStart = Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
+      
+      // Use the greater of stored duration or calculated time to handle refreshes properly
+      // This ensures we don't go backwards in time
+      return Math.max(storedDuration, timeSinceStart, 0);
     };
     
-    // Set initial elapsed time
-    const initialElapsedTime = Math.max(0, calculateElapsedTime());
+    // Set initial elapsed time using database as source of truth
+    const initialElapsedTime = calculateInitialElapsedTime();
     setElapsedTime(initialElapsedTime);
     
-    // Set up interval to update every second
+    // Set up interval to increment locally every second
     const timer = setInterval(() => {
-      const newElapsedTime = Math.max(0, calculateElapsedTime());
-      setElapsedTime(newElapsedTime);
-      // Update session duration in database
-      updateDuration(newElapsedTime);
+      setElapsedTime(prev => {
+        const newTime = prev + 1;
+        // Update session duration in database periodically
+        updateDuration(newTime);
+        return newTime;
+      });
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [startTime, updateDuration]);
+  }, [startTime, updateDuration, activeSession?.sessionDuration]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);

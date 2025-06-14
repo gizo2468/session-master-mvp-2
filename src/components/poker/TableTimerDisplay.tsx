@@ -26,19 +26,19 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
       // If table ended, use endTime; otherwise use current time
       const endTimestamp = endTime ? new Date(endTime).getTime() : Date.now();
       const startTimestamp = new Date(startTime).getTime();
-      return Math.floor((endTimestamp - startTimestamp) / 1000);
+      const elapsed = Math.floor((endTimestamp - startTimestamp) / 1000);
+      return Math.max(0, elapsed); // Ensure non-negative time
     };
     
     // Set initial elapsed time
-    const initialElapsedTime = Math.max(0, calculateElapsedTime());
+    const initialElapsedTime = calculateElapsedTime();
     setElapsedTime(initialElapsedTime);
     
     // Only run the interval if the timer is active (table not ended)
     let timer: number | undefined;
     if (isActive && !endTime) {
       timer = window.setInterval(() => {
-        const newElapsedTime = Math.max(0, calculateElapsedTime());
-        setElapsedTime(newElapsedTime);
+        setElapsedTime(prev => prev + 1); // Increment locally for smooth display
       }, 1000);
     }
     
