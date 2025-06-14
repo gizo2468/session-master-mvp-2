@@ -45,7 +45,13 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     // Calculate elapsed time from start time and stored session duration
     const calculateInitialElapsedTime = () => {
       const storedDuration = activeSession?.sessionDuration || 0;
-      const timeSinceStart = Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
+      
+      // Fix: Properly handle UTC timestamp - treat startTime as UTC
+      const startTimeUTC = typeof startTime === 'string' 
+        ? Date.parse(startTime + (startTime.includes('Z') ? '' : 'Z')) // Ensure UTC if string
+        : startTime.getTime(); // Already a Date object
+      
+      const timeSinceStart = Math.floor((Date.now() - startTimeUTC) / 1000);
       
       // Use the greater of stored duration or calculated time to handle refreshes properly
       // This ensures we don't go backwards in time
@@ -81,8 +87,13 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
   
-  const formattedStartTime = dateFormat(new Date(startTime), 'h:mm a');
-  const formattedDate = dateFormat(new Date(startTime), 'MMM d, yyyy');
+  // Fix: Ensure date formatting also handles UTC properly
+  const startTimeForDisplay = typeof startTime === 'string' 
+    ? new Date(startTime + (startTime.includes('Z') ? '' : 'Z'))
+    : startTime;
+  
+  const formattedStartTime = dateFormat(startTimeForDisplay, 'h:mm a');
+  const formattedDate = dateFormat(startTimeForDisplay, 'MMM d, yyyy');
   
   // IMPORTANT: Only show blinds for Cash format - strict check to ensure it's never shown for Tournament
   const shouldShowBlinds = format === 'Cash' && smallBlind !== undefined && bigBlind !== undefined;
