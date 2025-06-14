@@ -17,7 +17,7 @@ import { SessionFilter } from '@/types/poker';
 
 export default function Index() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth(); // Use 'logout' instead of 'signOut'
+  const { user, logout } = useAuth();
   const { 
     sessions, 
     activeSession, 
@@ -113,9 +113,9 @@ export default function Index() {
         
         {user && <StatsQuickView />}
         
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col items-center gap-6">
           {activeSession && (
-            <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-green-500">
+            <div className="w-full bg-white rounded-lg shadow-md p-4 border-l-4 border-green-500">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-lg font-bold text-poker-black">Active Session</h3>
                 <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
@@ -130,10 +130,12 @@ export default function Index() {
             </div>
           )}
 
-          <NewSessionButton />
+          <div className="flex justify-center">
+            <NewSessionButton />
+          </div>
           
           {user && sessions.length > 0 && (
-            <div className="space-y-4">
+            <div className="w-full space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-extrabold tracking-tight">Recent Sessions</h2>
                 <Button 

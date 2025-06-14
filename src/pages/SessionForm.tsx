@@ -10,8 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/Lucide';
 import { Slider } from '@/components/ui/slider';
-import { SessionPersistenceService } from '@/services/sessionPersistence';
+import { useSessionContext } from '@/context/SessionContext';
 import { useToast } from '@/hooks/use-toast';
+import { PokerSession } from '@/types/poker';
+import { v4 as uuidv4 } from 'uuid';
 
 const TOURNAMENT_TYPES = [
   'Freezeout',
@@ -49,6 +51,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function SessionForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { startSession } = useSessionContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[2]);
@@ -91,34 +94,44 @@ export default function SessionForm() {
         throw new Error('Invalid buy-in amount');
       }
 
-      const sessionId = await SessionPersistenceService.startSession({
+      // Create the session object to pass to SessionContext
+      const newSession: PokerSession = {
+        id: uuidv4(),
         gameType: values.gameType,
         format: values.format,
         location: values.location,
         physicalLocation: values.isOnline ? values.physicalLocation : undefined,
         tableName: values.location,
         buyIn: buyInAmount,
+        initialBuyIn: buyInAmount,
         smallBlind: values.format === 'Cash' ? (values.smallBlind || 1) : 0,
         bigBlind: values.format === 'Cash' ? (values.bigBlind || 2) : 0,
         isOnline: values.isOnline,
         startingBB: values.format === 'Tournament' && values.startingBB ? parseInt(values.startingBB) : undefined,
         tournamentTypes: values.format === 'Tournament' && values.tournamentType ? [values.tournamentType] : undefined,
-        isMultiDay: values.isMultiDay
-      });
+        isMultiDay: values.isMultiDay,
+        startTime: new Date(),
+        isActive: true,
+        currentStatus: 'running',
+        sessionDuration: 0,
+        hands: [],
+        tables: []
+      };
 
-      if (!sessionId) {
-        throw new Error('Failed to create session - no session ID returned');
-      }
+      console.log('🎯 Starting session with SessionContext:', newSession);
 
-      console.log('✅ Session created successfully with ID:', sessionId);
+      // Use SessionContext to start the session - this handles both DB and state
+      await startSession(newSession);
+
+      console.log('✅ Session started successfully');
 
       toast({
         title: "Session Started",
         description: "Your poker session has been successfully created."
       });
 
-      // Navigate to the live session page
-      navigate(`/live-session/${sessionId}`);
+      // Navigate to home page where the active session will be displayed
+      navigate('/');
       
     } catch (error) {
       console.error('❌ Error starting session:', error);
