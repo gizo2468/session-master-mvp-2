@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
-import { format as dateFormat } from 'date-fns';
+import { format as dateFormat, differenceInSeconds } from 'date-fns';
 import { useSessionContext } from '@/context/SessionContext';
 
 interface SessionTimerCardProps {
@@ -35,8 +35,16 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   }, [updateSessionDuration, activeSession]);
   
   useEffect(() => {
-    const initialElapsedTime = Math.floor((new Date().getTime() - new Date(startTime).getTime()) / 1000);
-    setElapsedTime(initialElapsedTime);
+    if (!startTime) return;
+    
+    // Calculate elapsed time properly using date-fns
+    const now = new Date();
+    const sessionStart = new Date(startTime);
+    const initialElapsedTime = differenceInSeconds(now, sessionStart);
+    
+    // Ensure we don't have negative time
+    const correctedElapsedTime = Math.max(0, initialElapsedTime);
+    setElapsedTime(correctedElapsedTime);
     
     let timer: number | undefined;
     

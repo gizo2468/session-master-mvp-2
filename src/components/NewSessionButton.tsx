@@ -7,7 +7,7 @@ export default function NewSessionButton() {
   const navigate = useNavigate();
   
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center w-full">
       <button
         onClick={() => navigate('/new-session')}
         className="relative flex flex-col items-center justify-center w-40 h-40 rounded-full shadow-lg hover:shadow-xl transform transition-all hover:-translate-y-1 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-poker-gold"

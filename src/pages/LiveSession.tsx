@@ -56,17 +56,20 @@ export default function LiveSession() {
   const [nextDayStart, setNextDayStart] = useState<Date | null>(null);
   const [chipsCarryover, setChipsCarryover] = useState('');
   
+  // Find the session - prioritize activeSession if it matches the ID, otherwise find by ID
   const session = id 
-    ? sessions.find(s => s.id === id && s.isActive) 
+    ? (activeSession?.id === id ? activeSession : sessions.find(s => s.id === id && s.isActive))
     : activeSession;
   
   useEffect(() => {
     if (!session) {
+      console.log('No session found, navigating to home');
       navigate('/');
       return;
     }
     
     if (session && !session.isActive) {
+      console.log('Session is not active, redirecting to session detail');
       navigate(`/session/${session.id}`);
     }
   }, [session, navigate]);

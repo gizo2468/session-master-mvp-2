@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -130,8 +131,8 @@ export default function SessionForm() {
         description: "Your poker session has been successfully created."
       });
 
-      // Navigate to home page where the active session will be displayed
-      navigate('/');
+      // Navigate directly to the live session page
+      navigate(`/live-session/${newSession.id}`);
       
     } catch (error) {
       console.error('❌ Error starting session:', error);

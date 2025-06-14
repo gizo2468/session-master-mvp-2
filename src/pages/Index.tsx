@@ -20,7 +20,6 @@ export default function Index() {
   const { user, logout } = useAuth();
   const { 
     sessions, 
-    activeSession, 
     filters, 
     setFilters, 
     showStorageWarning, 
@@ -51,6 +50,7 @@ export default function Index() {
     return true;
   });
 
+  // Only show completed sessions (not active ones) in recent sessions
   const recentSessions = filteredSessions
     .filter(session => !session.isActive)
     .slice(0, 5);
@@ -111,28 +111,14 @@ export default function Index() {
           <DonationCard />
         )}
         
-        {user && <StatsQuickView />}
-        
         <div className="flex flex-col items-center gap-6">
-          {activeSession && (
-            <div className="w-full bg-white rounded-lg shadow-md p-4 border-l-4 border-green-500">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-bold text-poker-black">Active Session</h3>
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-                  Live
-                </span>
-              </div>
-              <SessionCard 
-                key={activeSession.id} 
-                session={activeSession} 
-                onClick={() => navigate(`/live-session/${activeSession.id}`)}
-              />
-            </div>
-          )}
-
+          {/* NEW SESSION button appears first, at the top */}
           <div className="flex justify-center">
             <NewSessionButton />
           </div>
+
+          {/* Stats section appears after the button */}
+          {user && <StatsQuickView />}
           
           {user && sessions.length > 0 && (
             <div className="w-full space-y-4">
