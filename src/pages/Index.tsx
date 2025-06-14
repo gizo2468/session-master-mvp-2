@@ -3,12 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useSessionContext } from '@/context/SessionContext';
+import { useActiveSessionRecovery } from '@/hooks/useActiveSessionRecovery';
 import SessionCard from '@/components/SessionCard';
 import NewSessionButton from '@/components/NewSessionButton';
 import StatsQuickView from '@/components/StatsQuickView';
 import StorageWarningAlert from '@/components/StorageWarningAlert';
 import DonationCard from '@/components/DonationCard';
 import FocusModeButton from '@/components/FocusModeButton';
+import ActiveSessionCard from '@/components/ActiveSessionCard';
 import Logo from '@/components/Logo';
 import Icon from '@/components/ui/Lucide';
 import { Button } from '@/components/ui/button';
@@ -20,13 +22,19 @@ export default function Index() {
   const { user, logout } = useAuth();
   const { 
     sessions, 
-    activeSession,
     filters, 
     setFilters, 
     showStorageWarning, 
     dismissStorageWarning,
     isLoading 
   } = useSessionContext();
+  
+  const { 
+    activeSession: recoveredActiveSession, 
+    isLoading: isRecovering, 
+    resumeSession,
+    hasActiveSession 
+  } = useActiveSessionRecovery();
   
   const [showDonation, setShowDonation] = useState(false);
 
@@ -60,13 +68,7 @@ export default function Index() {
     navigate(`/session/${sessionId}`);
   };
 
-  const handleResumeSession = () => {
-    if (activeSession) {
-      navigate(`/live-session/${activeSession.id}`);
-    }
-  };
-
-  if (isLoading) {
+  if (isLoading || isRecovering) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -127,28 +129,12 @@ export default function Index() {
           {/* Stats section appears after the button */}
           {user && <StatsQuickView />}
           
-          {/* Active Session Card - appears after stats if there's an active session */}
-          {user && activeSession && (
-            <div className="w-full">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-green-800 mb-1">Active Session</h3>
-                    <p className="text-green-700 text-sm">{activeSession.location}</p>
-                    <p className="text-green-600 text-xs">
-                      {activeSession.gameType} • {activeSession.format}
-                    </p>
-                  </div>
-                  <Button 
-                    onClick={handleResumeSession}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <Icon name="Play" size={16} className="mr-1" />
-                    Resume
-                  </Button>
-                </div>
-              </div>
-            </div>
+          {/* Active Session Card - appears after stats if there's an active session recovered from DB */}
+          {user && hasActiveSession && recoveredActiveSession && (
+            <ActiveSessionCard 
+              session={recoveredActiveSession}
+              onResume={resumeSession}
+            />
           )}
           
           {user && sessions.length > 0 && (
@@ -179,7 +165,7 @@ export default function Index() {
             </div>
           )}
 
-          {user && sessions.length === 0 && (
+          {user && sessions.length === 0 && !hasActiveSession && (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
                 <Icon name="PlusCircle" size={48} className="mx-auto" />

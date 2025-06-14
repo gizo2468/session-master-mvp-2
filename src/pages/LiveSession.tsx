@@ -7,13 +7,15 @@ import Icon from '@/components/ui/Lucide';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { TableData } from '@/types/poker';
+import { TableData, PokerSession } from '@/types/poker';
 import TableCard from '@/components/poker/TableCard';
 import AddTableForm from '@/components/poker/AddTableForm';
 import EndSessionSheet from '@/components/poker/EndSessionSheet';
 import RebuyConfirmationDialog from '@/components/poker/RebuyConfirmationDialog';
 import EndTableDialog from '@/components/poker/EndTableDialog';
 import CompletedTablesDisplay from '@/components/poker/CompletedTablesDisplay';
+import { supabase } from '@/integrations/supabase/client';
+import { convertDatabaseSessionToPokerSession } from '@/utils/sessionDatabase';
 
 export default function LiveSession() {
   const { id } = useParams<{ id: string }>();
@@ -26,11 +28,14 @@ export default function LiveSession() {
     addRebuy,
     addTable,
     endTable,
-    addTableRebuy
+    addTableRebuy,
+    updateSession
   } = useSessionContext();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   
+  const [currentSession, setCurrentSession] = useState<PokerSession | null>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [showEndSessionSheet, setShowEndSessionSheet] = useState(false);
   const [sessionNotes, setSessionNotes] = useState('');
   const [showAddTableForm, setShowAddTableForm] = useState(false);
@@ -56,25 +61,95 @@ export default function LiveSession() {
   const [nextDayStart, setNextDayStart] = useState<Date | null>(null);
   const [chipsCarryover, setChipsCarryover] = useState('');
   
-  // Find the session - PRIORITIZE activeSession from context (loaded from DB) over sessions array
-  const session = id 
-    ? (activeSession?.id === id ? activeSession : sessions.find(s => s.id === id && s.isActive))
-    : activeSession;
-  
+  // Load session from database if not found in context
   useEffect(() => {
-    if (!session) {
-      console.log('No session found, navigating to home');
-      navigate('/');
-      return;
-    }
-    
-    if (session && !session.isActive) {
-      console.log('Session is not active, redirecting to session detail');
-      navigate(`/session/${session.id}`);
-    }
-  }, [session, navigate]);
+    const loadSession = async () => {
+      if (!id) {
+        console.log('No session ID provided');
+        navigate('/');
+        return;
+      }
 
-  const autoCashOutAmount = session?.tables?.reduce((acc, table) => {
+      // First try to find session in context
+      let foundSession = activeSession?.id === id ? activeSession : sessions.find(s => s.id === id && s.isActive);
+      
+      if (foundSession) {
+        console.log('✅ Found session in context:', foundSession.id);
+        setCurrentSession(foundSession);
+        setIsLoadingSession(false);
+        return;
+      }
+
+      // If not found in context, try to load from database
+      console.log('🔍 Loading session from database:', id);
+      try {
+        const { data: sessionData, error: sessionError } = await supabase
+          .from('sessions')
+          .select('*')
+          .eq('id', id)
+          .eq('is_active', true)
+          .single();
+
+        if (sessionError || !sessionData) {
+          console.error('❌ Session not found or not active:', sessionError);
+          toast({
+            title: "Session Not Found",
+            description: "The session you're looking for doesn't exist or has ended.",
+            variant: "destructive"
+          });
+          navigate('/');
+          return;
+        }
+
+        // Fetch tables for this session
+        const { data: tables, error: tablesError } = await supabase
+          .from('session_tables')
+          .select('*')
+          .eq('session_id', id);
+
+        if (tablesError) {
+          console.error('❌ Error fetching tables:', tablesError);
+        }
+
+        // Fetch hands for this session
+        const { data: hands, error: handsError } = await supabase
+          .from('session_hands_new')
+          .select('*')
+          .eq('session_id', id);
+
+        if (handsError) {
+          console.error('❌ Error fetching hands:', handsError);
+        }
+
+        // Convert to PokerSession format
+        const convertedSession = convertDatabaseSessionToPokerSession(
+          sessionData as any,
+          (tables || []) as any[],
+          (hands || []) as any[]
+        );
+
+        console.log('✅ Session loaded from database successfully');
+        setCurrentSession(convertedSession);
+        
+        // Update the session context with the loaded session
+        await updateSession(convertedSession);
+      } catch (error) {
+        console.error('❌ Failed to load session from database:', error);
+        toast({
+          title: "Error Loading Session",
+          description: "There was a problem loading your session. Please try again.",
+          variant: "destructive"
+        });
+        navigate('/');
+      } finally {
+        setIsLoadingSession(false);
+      }
+    };
+
+    loadSession();
+  }, [id, activeSession, sessions, navigate, toast, updateSession]);
+
+  const autoCashOutAmount = currentSession?.tables?.reduce((acc, table) => {
     if (table.isActive === false && typeof table.cashOut === 'number') {
       return acc + table.cashOut;
     }
@@ -82,9 +157,9 @@ export default function LiveSession() {
   }, 0) ?? 0;
 
   const handleEndSession = () => {
-    if (!session) return;
+    if (!currentSession) return;
 
-    const hasActiveTables = session.tables && session.tables.some(table => table.isActive);
+    const hasActiveTables = currentSession.tables && currentSession.tables.some(table => table.isActive);
     
     if (hasActiveTables) {
       toast({
@@ -97,7 +172,7 @@ export default function LiveSession() {
     }
     
     try {
-      endSession(session.id, autoCashOutAmount, sessionNotes);
+      endSession(currentSession.id, autoCashOutAmount, sessionNotes);
       setShowEndSessionSheet(false);
       
       toast({
@@ -122,10 +197,10 @@ export default function LiveSession() {
   };
   
   const handleConfirmRebuy = () => {
-    if (!session || !pendingRebuyTableId) return;
+    if (!currentSession || !pendingRebuyTableId) return;
     
     try {
-      addTableRebuy(session.id, pendingRebuyTableId, pendingRebuyAmount);
+      addTableRebuy(currentSession.id, pendingRebuyTableId, pendingRebuyAmount);
       toast({
         title: "Rebuy Added",
         description: `$${pendingRebuyAmount.toFixed(2)} rebuy has been added to the table.`
@@ -139,7 +214,6 @@ export default function LiveSession() {
       });
     }
     
-    // Reset states
     setShowRebuyConfirmDialog(false);
     setPendingRebuyTableId(null);
     setPendingRebuyAmount(0);
@@ -152,10 +226,10 @@ export default function LiveSession() {
   };
   
   const handleAddRebuy = (amount: number) => {
-    if (!session) return;
+    if (!currentSession) return;
     
     try {
-      addRebuy(session.id, amount);
+      addRebuy(currentSession.id, amount);
       toast({
         title: "Rebuy Added",
         description: `$${amount.toFixed(2)} rebuy has been added to your session.`
@@ -171,10 +245,10 @@ export default function LiveSession() {
   };
   
   const handleAddTable = (tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
-    if (!session) return;
+    if (!currentSession) return;
     
     try {
-      addTable(session.id, tableData);
+      addTable(currentSession.id, tableData);
       toast({
         title: "Table Added",
         description: `${tableData.name} has been added to your session.`
@@ -205,7 +279,7 @@ export default function LiveSession() {
   
   // Modified to handle the final end table confirmation, now with multi-day support
   const handleConfirmEndTable = () => {
-    if (!session || !pendingEndTableId) return;
+    if (!currentSession || !pendingEndTableId) return;
     
     try {
       const multiDayInfo = endReason === 'day-ended' ? {
@@ -215,7 +289,7 @@ export default function LiveSession() {
       } : undefined;
 
       endTable(
-        session.id, 
+        currentSession.id, 
         pendingEndTableId, 
         endReason === 'day-ended' ? 0 : parseFloat(cashOutAmount), 
         tableNotes,
@@ -273,10 +347,10 @@ export default function LiveSession() {
       dayEndedWithoutElimination?: boolean
     }
   ) => {
-    if (!session) return;
+    if (!currentSession) return;
     
     try {
-      endTable(session.id, tableId, cashOut, notes, bounty, multiDayInfo);
+      endTable(currentSession.id, tableId, cashOut, notes, bounty, multiDayInfo);
       toast({
         title: multiDayInfo?.dayEndedWithoutElimination ? "Day Ended" : "Table Ended",
         description: multiDayInfo?.dayEndedWithoutElimination 
@@ -294,10 +368,10 @@ export default function LiveSession() {
   };
   
   const handleAddTableRebuy = (tableId: string, amount: number) => {
-    if (!session) return;
+    if (!currentSession) return;
     
     try {
-      addTableRebuy(session.id, tableId, amount);
+      addTableRebuy(currentSession.id, tableId, amount);
       toast({
         title: "Rebuy Added",
         description: `$${amount.toFixed(2)} rebuy has been added to the table.`
@@ -312,7 +386,18 @@ export default function LiveSession() {
     }
   };
   
-  if (!session) {
+  if (isLoadingSession) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading session...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!currentSession) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
@@ -329,11 +414,11 @@ export default function LiveSession() {
     );
   }
   
-  const activeTables = session.tables?.filter(table => table.isActive) || [];
-  const inactiveTables = session.tables?.filter(table => !table.isActive) || [];
+  const activeTables = currentSession.tables?.filter(table => table.isActive) || [];
+  const inactiveTables = currentSession.tables?.filter(table => !table.isActive) || [];
 
   const pendingTable = pendingEndTableId 
-    ? session.tables?.find(t => t.id === pendingEndTableId) 
+    ? currentSession.tables?.find(t => t.id === pendingEndTableId) 
     : null;
 
   // Map session format to AddTableForm format
@@ -364,19 +449,19 @@ export default function LiveSession() {
       <main className="flex-1 pt-4">
         <div className="container mx-auto max-w-md px-4 pb-8">
           <SessionTimerCard 
-            startTime={session?.startTime}
-            gameType={session?.gameType}
-            format={session?.format}
-            smallBlind={session?.smallBlind}
-            bigBlind={session?.bigBlind}
+            startTime={currentSession?.startTime}
+            gameType={currentSession?.gameType}
+            format={currentSession?.format}
+            smallBlind={currentSession?.smallBlind}
+            bigBlind={currentSession?.bigBlind}
             onEndSession={() => setShowEndSessionSheet(true)}
             onAddTable={() => setShowAddTableForm(true)}
           />
           
           <SessionDetailsCard 
             session={{
-              ...session,
-              location: session.tableName || session.location
+              ...currentSession,
+              location: currentSession.tableName || currentSession.location
             }}
           />
           
@@ -400,7 +485,7 @@ export default function LiveSession() {
                         <TableCard
                           key={table.id}
                           table={table}
-                          sessionId={session.id}
+                          sessionId={currentSession.id}
                           onEndTable={(tableId, cashOut, notes, bounty, multiDayInfo) => 
                             handleEndTable(tableId, cashOut, notes, bounty, multiDayInfo)
                           }
@@ -411,7 +496,7 @@ export default function LiveSession() {
                   </div>
                 )}
                 
-                <CompletedTablesDisplay tables={inactiveTables} sessionId={session.id} />
+                <CompletedTablesDisplay tables={inactiveTables} sessionId={currentSession.id} />
               </div>
             )}
           </div>
@@ -421,7 +506,7 @@ export default function LiveSession() {
       <EndSessionSheet
         open={showEndSessionSheet}
         onOpenChange={setShowEndSessionSheet}
-        session={session}
+        session={currentSession}
         autoCashOutAmount={autoCashOutAmount}
         sessionNotes={sessionNotes}
         onSessionNotesChange={setSessionNotes}
@@ -463,7 +548,7 @@ export default function LiveSession() {
       <AddTableForm
         open={showAddTableForm}
         onOpenChange={setShowAddTableForm}
-        sessionFormat={getTableFormat(session.format)} // Convert session format to table format
+        sessionFormat={getTableFormat(currentSession.format)}
         onAddTable={(tableData) => {
           handleAddTable(tableData);
         }}
