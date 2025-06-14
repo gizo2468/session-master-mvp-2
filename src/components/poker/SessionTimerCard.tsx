@@ -38,6 +38,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     if (!startTime) return;
     
     // Calculate elapsed time properly using date-fns
+    // Always calculate from the original start time, never use existing duration
     const now = new Date();
     const sessionStart = new Date(startTime);
     const initialElapsedTime = differenceInSeconds(now, sessionStart);
@@ -49,12 +50,14 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     let timer: number | undefined;
     
     timer = window.setInterval(() => {
-      setElapsedTime(prev => {
-        const newTime = prev + 1;
-        // Update session duration outside the render cycle
-        updateDuration(newTime);
-        return newTime;
-      });
+      // Always calculate from start time, not from previous elapsed time
+      const currentTime = new Date();
+      const actualElapsedSeconds = differenceInSeconds(currentTime, sessionStart);
+      const newTime = Math.max(0, actualElapsedSeconds);
+      
+      setElapsedTime(newTime);
+      // Update session duration outside the render cycle
+      updateDuration(newTime);
     }, 1000);
     
     return () => {

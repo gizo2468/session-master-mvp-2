@@ -38,13 +38,6 @@ export default function Index() {
     }
   }, [user]);
 
-  // Auto-redirect to live session if there's an active session
-  useEffect(() => {
-    if (activeSession && activeSession.isActive) {
-      console.log('Active session found, redirecting to live session:', activeSession.id);
-    }
-  }, [activeSession]);
-
   const filteredSessions = sessions.filter(session => {
     if (filters.gameType && filters.gameType !== 'All' && session.gameType !== filters.gameType) {
       return false;
@@ -58,18 +51,28 @@ export default function Index() {
     return true;
   });
 
-  // Only show completed sessions (not active ones) in recent sessions
-  const recentSessions = filteredSessions
-    .filter(session => !session.isActive)
-    .slice(0, 5);
-
-  const handleSessionClick = (sessionId: string) => {
-    navigate(`/session/${sessionId}`);
+  // Create a combined list with active session first, then recent completed sessions
+  const getDisplaySessions = () => {
+    const completedSessions = filteredSessions
+      .filter(session => !session.isActive)
+      .slice(0, 5);
+    
+    // If there's an active session, put it first in the list
+    if (activeSession && activeSession.isActive) {
+      return [activeSession, ...completedSessions];
+    }
+    
+    return completedSessions;
   };
 
-  const handleResumeSession = () => {
-    if (activeSession) {
-      navigate(`/live-session/${activeSession.id}`);
+  const displaySessions = getDisplaySessions();
+
+  const handleSessionClick = (sessionId: string) => {
+    // If it's the active session, navigate to live session view
+    if (activeSession && activeSession.id === sessionId && activeSession.isActive) {
+      navigate(`/live-session/${sessionId}`);
+    } else {
+      navigate(`/session/${sessionId}`);
     }
   };
 
@@ -131,50 +134,15 @@ export default function Index() {
             <NewSessionButton />
           </div>
 
-          {/* Active Session Card - show if there's an active session */}
-          {activeSession && activeSession.isActive && (
-            <div className="w-full">
-              <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-poker-feltGreen">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-lg font-bold text-poker-feltGreen">Active Session</h3>
-                  <div className="flex items-center text-sm text-green-600">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                    Live
-                  </div>
-                </div>
-                
-                <div className="text-sm text-gray-600 mb-3">
-                  <div className="flex justify-between">
-                    <span>Game:</span>
-                    <span>{activeSession.gameType} {activeSession.format}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Location:</span>
-                    <span>{activeSession.location}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Buy-in:</span>
-                    <span>${activeSession.buyIn.toFixed(2)}</span>
-                  </div>
-                </div>
-                
-                <Button 
-                  onClick={handleResumeSession}
-                  className="w-full bg-poker-feltGreen hover:bg-poker-darkGreen text-white"
-                >
-                  Resume Session
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Stats section appears after the button */}
+          {/* Stats section appears after the button - ALWAYS shown first */}
           {user && <StatsQuickView />}
           
           {user && sessions.length > 0 && (
             <div className="w-full space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-extrabold tracking-tight">Recent Sessions</h2>
+                <h2 className="text-xl font-extrabold tracking-tight">
+                  {activeSession && activeSession.isActive ? 'Current & Recent Sessions' : 'Recent Sessions'}
+                </h2>
                 <Button 
                   onClick={() => navigate('/history')}
                   variant="outline" 
@@ -188,7 +156,7 @@ export default function Index() {
               <FilterBar filters={filters} onFiltersChange={setFilters} />
               
               <div className="space-y-4">
-                {recentSessions.map((session) => (
+                {displaySessions.map((session) => (
                   <SessionCard 
                     key={session.id} 
                     session={session} 
