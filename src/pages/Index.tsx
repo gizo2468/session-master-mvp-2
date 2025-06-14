@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -16,7 +17,7 @@ import { SessionFilter } from '@/types/poker';
 
 export default function Index() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth(); // Use 'logout' instead of 'signOut'
   const { 
     sessions, 
     activeSession, 
@@ -79,7 +80,7 @@ export default function Index() {
               <FocusModeButton />
               {user ? (
                 <Button 
-                  onClick={signOut}
+                  onClick={logout}
                   variant="outline" 
                   size="sm"
                   className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
@@ -104,10 +105,10 @@ export default function Index() {
       </header>
 
       <main className="container mx-auto max-w-md px-4 py-6">
-        {showStorageWarning && <StorageWarningAlert onDismiss={dismissStorageWarning} />}
+        {showStorageWarning && <StorageWarningAlert />}
         
         {showDonation && !user && (
-          <DonationCard onClose={() => setShowDonation(false)} />
+          <DonationCard />
         )}
         
         {user && <StatsQuickView />}

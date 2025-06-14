@@ -314,6 +314,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         activeSession,
         filters,
         showStorageWarning,
+        isLoading: isLoadingFromDatabase,
         dismissStorageWarning,
         addSession: async (session) => await addSession(session),
         updateSession: async (session) => await updateSession(session),
