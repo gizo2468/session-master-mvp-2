@@ -707,7 +707,7 @@ export type Database = {
           created_at: string
           current_status: string | null
           email: string | null
-          end_time: string
+          end_time: string | null
           format: string
           game_type: string
           id: string
@@ -740,7 +740,7 @@ export type Database = {
           created_at?: string
           current_status?: string | null
           email?: string | null
-          end_time: string
+          end_time?: string | null
           format?: string
           game_type?: string
           id?: string
@@ -773,7 +773,7 @@ export type Database = {
           created_at?: string
           current_status?: string | null
           email?: string | null
-          end_time?: string
+          end_time?: string | null
           format?: string
           game_type?: string
           id?: string

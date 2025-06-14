@@ -83,7 +83,13 @@ export default function SessionForm() {
     setIsSubmitting(true);
     
     try {
+      console.log('📝 Form submitted with values:', values);
+      
       const buyInAmount = parseFloat(values.buyIn);
+      
+      if (isNaN(buyInAmount) || buyInAmount < 0) {
+        throw new Error('Invalid buy-in amount');
+      }
 
       const sessionId = await SessionPersistenceService.startSession({
         gameType: values.gameType,
@@ -101,20 +107,38 @@ export default function SessionForm() {
       });
 
       if (!sessionId) {
-        throw new Error('Failed to create session');
+        throw new Error('Failed to create session - no session ID returned');
       }
+
+      console.log('✅ Session created successfully with ID:', sessionId);
 
       toast({
         title: "Session Started",
         description: "Your poker session has been successfully created."
       });
 
+      // Navigate to the live session page
       navigate(`/live-session/${sessionId}`);
+      
     } catch (error) {
-      console.error('Error starting session:', error);
+      console.error('❌ Error starting session:', error);
+      
+      // Show more specific error message based on error type
+      let errorMessage = "There was a problem starting your session. Please try again.";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('RLS')) {
+          errorMessage = "Authentication required. Please log in and try again.";
+        } else if (error.message.includes('constraint')) {
+          errorMessage = "Invalid session data. Please check your inputs and try again.";
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        }
+      }
+      
       toast({
         title: "Error Starting Session",
-        description: "There was a problem starting your session. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
