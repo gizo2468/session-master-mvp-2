@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { SessionPersistenceService } from '@/services/sessionPersistence';
+import { fetchUserSessions } from '@/utils/sessionDatabase';
 import { PokerSession } from '@/types/poker';
 
 export default function StatsQuickView() {
@@ -13,7 +13,7 @@ export default function StatsQuickView() {
 
   const loadSessions = async () => {
     try {
-      const userSessions = await SessionPersistenceService.fetchUserSessions();
+      const userSessions = await fetchUserSessions();
       setSessions(userSessions);
     } catch (error) {
       console.error('Error loading sessions:', error);
