@@ -46,17 +46,15 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     const calculateInitialElapsedTime = () => {
       const storedDuration = activeSession?.sessionDuration || 0;
       
-      // Fix: Properly handle UTC timestamp - treat startTime as UTC
+      // Convert startTime to timestamp (handle both Date objects and ISO strings)
       let startTimeUTC: number;
-      // Cast to any to handle the potential string case from database
-      const startTimeValue = startTime as any;
-      if (typeof startTimeValue === 'string') {
-        // Ensure UTC if string
-        const timeString = (startTimeValue as string).includes('Z') ? startTimeValue : startTimeValue + 'Z';
-        startTimeUTC = Date.parse(timeString);
-      } else {
-        // Already a Date object
+      if (startTime instanceof Date) {
         startTimeUTC = startTime.getTime();
+      } else {
+        // Handle string from database - ensure it's treated as UTC
+        const timeString = startTime.toString();
+        const utcTimeString = timeString.includes('Z') ? timeString : timeString + 'Z';
+        startTimeUTC = Date.parse(utcTimeString);
       }
       
       const timeSinceStart = Math.floor((Date.now() - startTimeUTC) / 1000);
@@ -95,15 +93,14 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
   
-  // Fix: Ensure date formatting also handles UTC properly
+  // Convert startTime for display (handle both Date objects and strings)
   let startTimeForDisplay: Date;
-  // Cast to any to handle the potential string case from database
-  const startTimeValue = startTime as any;
-  if (typeof startTimeValue === 'string') {
-    const timeString = (startTimeValue as string).includes('Z') ? startTimeValue : startTimeValue + 'Z';
-    startTimeForDisplay = new Date(timeString);
-  } else {
+  if (startTime instanceof Date) {
     startTimeForDisplay = startTime;
+  } else {
+    const timeString = startTime.toString();
+    const utcTimeString = timeString.includes('Z') ? timeString : timeString + 'Z';
+    startTimeForDisplay = new Date(utcTimeString);
   }
   
   const formattedStartTime = dateFormat(startTimeForDisplay, 'h:mm a');

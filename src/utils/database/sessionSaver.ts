@@ -12,8 +12,15 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
       return false;
     }
 
-    // Prepare session data for database
-    const sessionData = {
+    // Check if session already exists to determine if this is an insert or update
+    const { data: existingSession } = await supabase
+      .from('sessions')
+      .select('id')
+      .eq('id', session.id)
+      .single();
+
+    // Prepare session data for database - NEVER include start_time in updates
+    const sessionData: any = {
       id: session.id,
       user_id: user.id,
       game_type: session.gameType,
@@ -29,7 +36,6 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
       starting_bb: session.startingBB,
       tournament_types: session.tournamentTypes,
       is_multi_day: session.isMultiDay,
-      start_time: session.startTime.toISOString(),
       end_time: session.endTime?.toISOString(),
       cash_out: session.cashOut,
       notes: session.notes,
@@ -45,16 +51,31 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
       tables_played: session.tablesPlayed || 0
     };
 
-    // Upsert session
-    const { error: sessionError } = await supabase
-      .from('sessions')
-      .upsert(sessionData, { 
-        onConflict: 'id',
-        ignoreDuplicates: false 
-      });
+    // Only include start_time for new sessions (inserts)
+    if (!existingSession) {
+      sessionData.start_time = session.startTime.toISOString();
+      console.log('🆕 New session - including start_time:', sessionData.start_time);
+    } else {
+      console.log('🔄 Existing session - NOT updating start_time');
+    }
 
-    if (sessionError) {
-      console.error('❌ Error saving session:', sessionError);
+    // Use insert for new sessions, update for existing ones
+    let error;
+    if (!existingSession) {
+      const { error: insertError } = await supabase
+        .from('sessions')
+        .insert(sessionData);
+      error = insertError;
+    } else {
+      const { error: updateError } = await supabase
+        .from('sessions')
+        .update(sessionData)
+        .eq('id', session.id);
+      error = updateError;
+    }
+
+    if (error) {
+      console.error('❌ Error saving session:', error);
       return false;
     }
 
@@ -63,7 +84,14 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
       console.log('💾 Saving tables to database:', session.tables.length);
       
       for (const table of session.tables) {
-        const tableData = {
+        // Check if table already exists
+        const { data: existingTable } = await supabase
+          .from('session_tables')
+          .select('id')
+          .eq('id', table.id)
+          .single();
+
+        const tableData: any = {
           id: table.id,
           session_id: session.id,
           user_id: user.id,
@@ -75,7 +103,6 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           starting_stack: table.startingBB,
           current_stack: table.currentStack,
           is_active: table.isActive,
-          start_time: table.startTime.toISOString(),
           end_time: table.endTime?.toISOString(),
           cashout: table.cashOut,
           rebuys: table.rebuys || 0,
@@ -85,12 +112,28 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           table_notes: table.notes
         };
 
-        const { error: tableError } = await supabase
-          .from('session_tables')
-          .upsert(tableData, { 
-            onConflict: 'id',
-            ignoreDuplicates: false 
-          });
+        // Only include start_time for new tables
+        if (!existingTable) {
+          tableData.start_time = table.startTime.toISOString();
+          console.log('🆕 New table - including start_time:', tableData.start_time);
+        } else {
+          console.log('🔄 Existing table - NOT updating start_time');
+        }
+
+        // Use insert for new tables, update for existing ones
+        let tableError;
+        if (!existingTable) {
+          const { error: insertError } = await supabase
+            .from('session_tables')
+            .insert(tableData);
+          tableError = insertError;
+        } else {
+          const { error: updateError } = await supabase
+            .from('session_tables')
+            .update(tableData)
+            .eq('id', table.id);
+          tableError = updateError;
+        }
 
         if (tableError) {
           console.error('❌ Error saving table:', tableError);

@@ -23,29 +23,27 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
     if (!startTime) return;
     
     const calculateElapsedTime = () => {
-      // Fix: Properly handle UTC timestamps
+      // Convert startTime to timestamp (handle both Date objects and ISO strings)
       let startTimeUTC: number;
-      // Cast to any to handle the potential string case from database
-      const startTimeValue = startTime as any;
-      if (typeof startTimeValue === 'string') {
-        // Ensure UTC if string
-        const timeString = (startTimeValue as string).includes('Z') ? startTimeValue : startTimeValue + 'Z';
-        startTimeUTC = Date.parse(timeString);
-      } else {
-        // Already a Date object
+      if (startTime instanceof Date) {
         startTimeUTC = startTime.getTime();
+      } else {
+        // Handle string from database - ensure it's treated as UTC
+        const timeString = startTime.toString();
+        const utcTimeString = timeString.includes('Z') ? timeString : timeString + 'Z';
+        startTimeUTC = Date.parse(utcTimeString);
       }
       
       // If table ended, use endTime; otherwise use current time
       let endTimestamp: number;
       if (endTime) {
-        // Cast to any to handle the potential string case from database
-        const endTimeValue = endTime as any;
-        if (typeof endTimeValue === 'string') {
-          const endTimeString = (endTimeValue as string).includes('Z') ? endTimeValue : endTimeValue + 'Z';
-          endTimestamp = Date.parse(endTimeString);
-        } else {
+        if (endTime instanceof Date) {
           endTimestamp = endTime.getTime();
+        } else {
+          // Handle string from database
+          const endTimeString = endTime.toString();
+          const utcEndTimeString = endTimeString.includes('Z') ? endTimeString : endTimeString + 'Z';
+          endTimestamp = Date.parse(utcEndTimeString);
         }
       } else {
         endTimestamp = Date.now(); // Current time is always UTC
