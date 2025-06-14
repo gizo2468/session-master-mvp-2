@@ -73,4 +73,26 @@ export class SessionPersistenceService {
       return false;
     }
   }
+
+  static async updateSessionDuration(sessionId: string, duration: number): Promise<boolean> {
+    try {
+      // Only update session_duration field, never start_time
+      const { error } = await supabase
+        .from('sessions')
+        .update({ 
+          session_duration: duration 
+        })
+        .eq('id', sessionId);
+
+      if (error) {
+        console.error('❌ Error updating session duration:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to update session duration:', error);
+      return false;
+    }
+  }
 }
