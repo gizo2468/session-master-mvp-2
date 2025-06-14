@@ -25,11 +25,18 @@ export class UIStateService {
     sessionId?: string
   ): Promise<boolean> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('User not authenticated');
+        return false;
+      }
+
       const { error } = await supabase
         .from('ui_state')
         .upsert({
+          user_id: user.id,
           screen_name: screenName,
-          state_data: stateData,
+          state_data: stateData as any,
           session_id: sessionId || null,
         }, {
           onConflict: 'user_id,screen_name,session_id'
@@ -67,7 +74,7 @@ export class UIStateService {
         return null;
       }
 
-      return data?.state_data || null;
+      return (data?.state_data as UIStateData) || null;
     } catch (error) {
       console.error('Error in loadUIState:', error);
       return null;
@@ -141,7 +148,10 @@ export class UIStateService {
         return [];
       }
 
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        state_data: item.state_data as UIStateData
+      }));
     } catch (error) {
       console.error('Error in getAllUIStates:', error);
       return [];

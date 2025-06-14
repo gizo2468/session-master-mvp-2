@@ -45,7 +45,7 @@ export const useUIState = (screenName: string, sessionId?: string) => {
       }
 
       if (data) {
-        setState(data.state_data || {});
+        setState((data.state_data as UIStateData) || {});
       }
     } catch (err) {
       console.error('Error in loadState:', err);
@@ -59,11 +59,18 @@ export const useUIState = (screenName: string, sessionId?: string) => {
     try {
       setError(null);
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError('User not authenticated');
+        return false;
+      }
+
       const { error: upsertError } = await supabase
         .from('ui_state')
         .upsert({
+          user_id: user.id,
           screen_name: screenName,
-          state_data: newState,
+          state_data: newState as any,
           session_id: sessionId || null,
         }, {
           onConflict: 'user_id,screen_name,session_id'
