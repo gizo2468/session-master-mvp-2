@@ -6,14 +6,18 @@ import Icon from '@/components/ui/Lucide';
 
 interface TableTimerDisplayProps {
   startTime: Date;
+  startTimeUTC?: number; // Raw UTC timestamp for accurate calculations
   endTime?: Date;
+  endTimeUTC?: number; // Raw UTC timestamp for accurate calculations
   className?: string;
   isActive?: boolean;
 }
 
 const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
   startTime,
+  startTimeUTC,
   endTime,
+  endTimeUTC,
   className = "",
   isActive = true
 }) => {
@@ -23,19 +27,32 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
     if (!startTime) return;
     
     const calculateElapsedTime = () => {
-      // CRITICAL: Use UTC timestamp parsing to prevent timezone offset corruption
-      // This ensures consistent time calculation matching the session timer
-      const startTimeUTC = startTime.getTime(); // Get raw milliseconds (already UTC)
+      // CRITICAL: Use raw UTC timestamps for accurate calculations without timezone shifts
+      let startTimestamp: number;
+      let endTimestamp: number;
+      
+      if (startTimeUTC) {
+        // Use raw UTC timestamp for accurate calculation
+        startTimestamp = startTimeUTC;
+      } else {
+        // Fallback to Date object method (less reliable across timezones)
+        startTimestamp = startTime.getTime();
+      }
       
       // If table ended, use endTime; otherwise use current time
-      let endTimestamp: number;
       if (endTime) {
-        endTimestamp = endTime.getTime(); // Get raw milliseconds (already UTC)
+        if (endTimeUTC) {
+          // Use raw UTC timestamp for accurate calculation
+          endTimestamp = endTimeUTC;
+        } else {
+          // Fallback to Date object method
+          endTimestamp = endTime.getTime();
+        }
       } else {
         endTimestamp = Date.now(); // Current time in UTC
       }
       
-      const elapsed = Math.floor((endTimestamp - startTimeUTC) / 1000);
+      const elapsed = Math.floor((endTimestamp - startTimestamp) / 1000);
       return Math.max(0, elapsed); // Ensure non-negative time
     };
     
@@ -54,7 +71,7 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [startTime, endTime, isActive]);
+  }, [startTime, startTimeUTC, endTime, endTimeUTC, isActive]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);

@@ -1,4 +1,3 @@
-
 export interface HandData {
   id: string;
   cards: string;
@@ -36,45 +35,43 @@ export interface HandData {
 export interface TableData {
   id: string;
   name?: string;
-  format: 'Cash' | 'Tournament';
-  gameType: 'NLH' | 'PLO';
+  format: string;
+  gameType: string;
   location: string;
   buyIn: number;
-  initialBuyIn: number;
-  cashOut?: number;
+  initialBuyIn?: number;
   smallBlind?: number;
   bigBlind?: number;
-  startTime: Date;
-  endTime?: Date;
-  isActive: boolean;
-  isOnline?: boolean;
-  rebuys?: number;
-  addOns?: number;
-  tournamentBuyIn?: number;
-  notes?: string;
-  finalPosition?: number;
   startingBB?: number;
-  bountyCount?: number;
+  currentStack?: number;
+  isActive: boolean;
+  startTime: Date;
+  startTimeUTC?: number; // Raw UTC timestamp for accurate calculations
+  endTime?: Date;
+  endTimeUTC?: number; // Raw UTC timestamp for accurate calculations
+  cashOut?: number;
+  rebuys?: number;
+  rebuyAmount?: number;
+  addOns?: number;
   bountyAmount?: number;
+  bountyCount?: number;
+  finalPosition?: number;
+  notes?: string;
+  session_id?: string;
+  hands?: HandData[];
+  tournamentBuyIn?: number;
   tournamentTypes?: string[];
   isMultiDay?: boolean;
   nextDayStart?: Date;
   chipsCarryover?: number;
   dayEndedWithoutElimination?: boolean;
-  hands?: HandData[];
-  
-  // New properties for Supabase sync
-  stakes?: string;
-  startingStack?: number;
-  currentStack?: number;
-  rebuyAmount?: number;
 }
 
 export interface SessionData {
   id: string;
   startTime: Date;
   endTime?: Date;
-  gameType: 'NLH' | 'PLO';
+  gameType: string;
   sessionType: string;
   notes?: string;
   tables: TableData[];
@@ -83,45 +80,36 @@ export interface SessionData {
 
 export interface PokerSession {
   id: string;
-  gameType: 'NLH' | 'PLO';
-  format: 'Cash' | 'Tournament' | 'Live Cash' | 'Live Tournament' | 'Online Cash' | 'Online Tournament' | 'Home Game';
-  tableName?: string;
+  gameType: string;
+  format: string;
   location: string;
   physicalLocation?: string;
-  initialBuyIn: number;
+  tableName?: string;
   buyIn: number;
-  cashOut?: number;
+  initialBuyIn?: number;
   smallBlind: number;
   bigBlind: number;
-  startTime: Date;
-  endTime?: Date;
-  notes?: string;
-  isActive?: boolean;
   isOnline?: boolean;
-
-  tournamentBuyIn?: number;
-  rebuys?: number;
-  addOns?: number;
-  finalPosition?: number;
-  bountyCount?: number;
-  bountyAmount?: number;
-
-  sessionDuration?: number;
-  currentStatus?: 'running' | 'paused' | 'ended';
-
-  hands?: HandData[];
-  tables?: TableData[];
-
-  // Additional properties for persistence
-  rebuyAmount?: number;
   startingBB?: number;
   tournamentTypes?: string[];
   isMultiDay?: boolean;
+  startTime: Date;
+  startTimeUTC?: number; // Raw UTC timestamp for accurate calculations
+  endTime?: Date;
+  endTimeUTC?: number; // Raw UTC timestamp for accurate calculations
+  cashOut?: number;
+  notes?: string;
+  isActive: boolean;
+  currentStatus: 'running' | 'paused' | 'ended';
+  sessionDuration?: number;
+  rebuys?: number;
+  rebuyAmount?: number;
   roi?: number;
   itmRatioNumerator?: number;
   itmRatioDenominator?: number;
   tablesPlayed?: number;
-  status?: 'active' | 'completed' | 'paused';
+  tables?: TableData[];
+  hands?: HandData[];
 }
 
 export interface SessionFilter {

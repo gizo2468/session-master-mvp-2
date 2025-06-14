@@ -1,3 +1,4 @@
+
 import { PokerSession } from '@/types/poker';
 
 // Helper function to safely parse UTC timestamps without timezone shifts
@@ -16,6 +17,19 @@ const parseUTCTimestamp = (timestamp: string | null | undefined): Date | undefin
     return new Date(parsedTime);
   } catch (error) {
     console.error('Error parsing timestamp:', timestamp, error);
+    return undefined;
+  }
+};
+
+// Helper function to get UTC timestamp from raw string for calculations
+const getUTCTimestampFromString = (timestamp: string | null | undefined): number | undefined => {
+  if (!timestamp) return undefined;
+  
+  try {
+    const parsedTime = Date.parse(timestamp);
+    return isNaN(parsedTime) ? undefined : parsedTime;
+  } catch (error) {
+    console.error('Error parsing timestamp for UTC calculation:', timestamp, error);
     return undefined;
   }
 };
@@ -40,9 +54,11 @@ export const convertDatabaseSessionToPokerSession = (
     startingBB: sessionData.starting_bb,
     tournamentTypes: sessionData.tournament_types,
     isMultiDay: sessionData.is_multi_day,
-    // CRITICAL: Safely parse UTC timestamps to prevent invalid Date objects
+    // CRITICAL: Safely parse UTC timestamps and store original strings for calculations
     startTime: parseUTCTimestamp(sessionData.start_time) || new Date(),
+    startTimeUTC: getUTCTimestampFromString(sessionData.start_time), // Store raw UTC timestamp for calculations
     endTime: parseUTCTimestamp(sessionData.end_time),
+    endTimeUTC: getUTCTimestampFromString(sessionData.end_time), // Store raw UTC timestamp for calculations
     cashOut: sessionData.cash_out,
     notes: sessionData.notes,
     isActive: sessionData.is_active,
@@ -67,9 +83,11 @@ export const convertDatabaseSessionToPokerSession = (
       startingBB: table.starting_stack,
       currentStack: table.current_stack,
       isActive: table.is_active,
-      // CRITICAL: Safely parse table timestamps
+      // CRITICAL: Store both Date objects and raw UTC timestamps for tables
       startTime: parseUTCTimestamp(table.start_time) || new Date(),
+      startTimeUTC: getUTCTimestampFromString(table.start_time),
       endTime: parseUTCTimestamp(table.end_time),
+      endTimeUTC: getUTCTimestampFromString(table.end_time),
       cashOut: table.cashout,
       rebuys: table.rebuys,
       rebuyAmount: table.rebuy_amount,

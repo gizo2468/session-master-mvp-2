@@ -177,7 +177,9 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
               <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
               <TableTimerDisplay 
                 startTime={safeStartTime}
+                startTimeUTC={table.startTimeUTC}
                 endTime={safeEndTime}
+                endTimeUTC={table.endTimeUTC}
                 isActive={table.isActive}
                 className="flex justify-center"
               />

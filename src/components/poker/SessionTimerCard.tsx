@@ -7,6 +7,7 @@ import { useSessionContext } from '@/context/SessionContext';
 
 interface SessionTimerCardProps {
   startTime: Date;
+  startTimeUTC?: number; // Raw UTC timestamp for accurate calculations
   gameType: string;
   format: string;
   smallBlind: number;
@@ -17,6 +18,7 @@ interface SessionTimerCardProps {
 
 const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   startTime,
+  startTimeUTC,
   gameType,
   format,
   smallBlind,
@@ -46,10 +48,16 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     const calculateInitialElapsedTime = () => {
       const storedDuration = activeSession?.sessionDuration || 0;
       
-      // CRITICAL: Use UTC timestamp parsing to prevent timezone offset corruption
-      // This ensures the timer calculation matches the actual session start time
-      const startTimeUTC = startTime.getTime(); // Get raw milliseconds (already UTC)
-      const timeSinceStart = Math.floor((Date.now() - startTimeUTC) / 1000);
+      // CRITICAL: Use raw UTC timestamp if available, otherwise fallback to Date object
+      // This ensures the timer calculation is accurate regardless of user timezone
+      let timeSinceStart: number;
+      if (startTimeUTC) {
+        // Use raw UTC timestamp for accurate calculation
+        timeSinceStart = Math.floor((Date.now() - startTimeUTC) / 1000);
+      } else {
+        // Fallback to Date object method (less reliable across timezones)
+        timeSinceStart = Math.floor((Date.now() - startTime.getTime()) / 1000);
+      }
       
       // Use the greater of stored duration or calculated time to handle refreshes properly
       // This ensures we don't go backwards in time
@@ -71,7 +79,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [startTime, updateDuration, activeSession?.sessionDuration]);
+  }, [startTime, startTimeUTC, updateDuration, activeSession?.sessionDuration]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -85,8 +93,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
   
-  // CRITICAL: Use UTC-aware formatting that matches the timer calculation
-  // Format the display time using the Date object directly (which is already properly timezone-handled)
+  // Use the Date object for display formatting (this is fine for display purposes)
   const formattedStartTime = dateFormat(startTime, 'h:mm a');
   const formattedDate = dateFormat(startTime, 'MMM d, yyyy');
   
