@@ -66,6 +66,30 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Enhanced session refresh function
+  const refreshSessionsFromDatabase = async () => {
+    if (!user?.id) return;
+    
+    try {
+      console.log('🔄 Refreshing sessions from database');
+      setIsLoadingFromDatabase(true);
+      
+      // Load fresh data from database
+      const databaseSessions = await fetchUserSessions();
+      const freshActiveSession = await loadActiveSessionFromDatabase(user.id);
+      
+      console.log(`✅ Refreshed ${databaseSessions.length} sessions from database`);
+      
+      setSessions(databaseSessions);
+      setActiveSession(freshActiveSession);
+      
+    } catch (error) {
+      console.error('❌ Failed to refresh sessions from database:', error);
+    } finally {
+      setIsLoadingFromDatabase(false);
+    }
+  };
+
   // Load sessions from database with fallback to localStorage
   const loadSessionsFromSources = async (userId: string | null) => {
     setIsLoadingFromDatabase(true);
@@ -346,8 +370,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         isActive: false,
         currentStatus: 'ended' as const,
       };
+      
+      // Update session locally first
       await updateSession(updatedSession);
       setActiveSession(null);
+      
+      // Force refresh from database after ending session
+      console.log('🔄 Session ended, refreshing session list from database');
+      setTimeout(() => {
+        refreshSessionsFromDatabase();
+      }, 100); // Small delay to ensure database is updated
     }
   };
 
@@ -632,6 +664,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           }
         },
         clearAllUserData,
+        refreshSessionsFromDatabase,
       }}
     >
       {children}

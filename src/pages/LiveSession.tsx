@@ -29,7 +29,8 @@ export default function LiveSession() {
     addTable,
     endTable,
     addTableRebuy,
-    updateSession
+    updateSession,
+    refreshSessionsFromDatabase
   } = useSessionContext();
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -74,7 +75,19 @@ export default function LiveSession() {
       let foundSession = activeSession?.id === id ? activeSession : sessions.find(s => s.id === id && s.isActive);
       
       if (foundSession) {
-        console.log('✅ Found session in context:', foundSession.id);
+        // Double-check that the session is actually active
+        if (!foundSession.isActive) {
+          console.warn('Session found but not active:', foundSession.id);
+          toast({
+            title: "Session Ended",
+            description: "This session has already been completed.",
+            variant: "destructive"
+          });
+          navigate('/');
+          return;
+        }
+        
+        console.log('✅ Found active session in context:', foundSession.id);
         setCurrentSession(foundSession);
         setIsLoadingSession(false);
         return;
@@ -156,7 +169,7 @@ export default function LiveSession() {
     return acc;
   }, 0) ?? 0;
 
-  const handleEndSession = () => {
+  const handleEndSession = async () => {
     if (!currentSession) return;
 
     const hasActiveTables = currentSession.tables && currentSession.tables.some(table => table.isActive);
@@ -172,13 +185,19 @@ export default function LiveSession() {
     }
     
     try {
-      endSession(currentSession.id, autoCashOutAmount, sessionNotes);
+      await endSession(currentSession.id, autoCashOutAmount, sessionNotes);
       setShowEndSessionSheet(false);
       
       toast({
         title: "Session Ended",
         description: "Your poker session has been successfully recorded."
       });
+      
+      // Force refresh sessions before navigating
+      if (refreshSessionsFromDatabase) {
+        await refreshSessionsFromDatabase();
+      }
+      
       navigate('/');
     } catch (error) {
       console.error("Error ending session:", error);

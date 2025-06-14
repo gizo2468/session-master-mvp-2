@@ -6,7 +6,7 @@ export interface SessionContextType {
   activeSession: PokerSession | null;
   filters: SessionFilter;
   showStorageWarning: boolean;
-  isLoading: boolean; // Add missing isLoading property
+  isLoading: boolean;
   dismissStorageWarning: () => void;
   addSession: (session: PokerSession) => Promise<void>;
   updateSession: (session: PokerSession) => Promise<void>;
@@ -21,7 +21,7 @@ export interface SessionContextType {
   addHand: (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => Promise<void>;
   updateHand: (sessionId: string, hand: HandData) => Promise<void>;
   deleteHand: (sessionId: string, handId: string) => Promise<void>;
-  addTableHand: (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => Promise<void>;
+  addTableHand: (sessionId: string, tableId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => Promise<void>;
   updateTableHand: (sessionId: string, tableId: string, hand: HandData) => Promise<void>;
   deleteTableHand: (sessionId: string, tableId: string, handId: string) => Promise<void>;
   addTable: (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => Promise<void>;
@@ -46,6 +46,7 @@ export interface SessionContextType {
   getTableById: (sessionId: string, tableId: string) => TableData | undefined;
   deleteTable: (sessionId: string, tableId: string) => Promise<void>;
   clearAllUserData: () => void;
+  refreshSessionsFromDatabase?: () => Promise<void>; // Add this new function
 }
 
 export const MAX_STORED_SESSIONS = 50;
