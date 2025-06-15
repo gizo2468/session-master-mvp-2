@@ -25,6 +25,10 @@ export interface HandData {
   image?: string;
   handImage?: string;
   currencyType?: 'currency' | 'chips';
+  smallBlind?: number; // Added back for form and display components
+  bigBlind?: number; // Added back for form and display components
+  pokercraftLink?: string; // Added back for video link functionality
+  gameType?: 'NLH' | 'PLO'; // Added back for game type selection
   createdAt: Date;
 }
 
