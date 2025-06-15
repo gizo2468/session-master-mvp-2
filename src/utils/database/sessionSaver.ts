@@ -15,7 +15,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
     // Check if session already exists to determine if this is an insert or update
     const { data: existingSession } = await supabase
       .from('sessions')
-      .select('id, start_time')
+      .select('id, start_time, start_time_utc')
       .eq('id', session.id)
       .single();
 
@@ -51,12 +51,17 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
       tables_played: session.tablesPlayed || 0
     };
 
-    // Only include start_time for new sessions (inserts) - NEVER for updates
+    // Only include start_time and start_time_utc for new sessions (inserts) - NEVER for updates
     if (!existingSession) {
       sessionData.start_time = session.startTime.toISOString();
-      console.log('🆕 New session - including start_time:', sessionData.start_time);
+      // CRITICAL FIX: Set start_time_utc as raw UTC timestamp for accurate calculations
+      sessionData.start_time_utc = session.startTimeUTC || session.startTime.getTime();
+      console.log('🆕 New session - including start_time and start_time_utc:', {
+        start_time: sessionData.start_time,
+        start_time_utc: sessionData.start_time_utc
+      });
     } else {
-      console.log('🔄 Existing session - NEVER updating start_time to preserve integrity');
+      console.log('🔄 Existing session - NEVER updating start_time or start_time_utc to preserve integrity');
     }
 
     // Use insert for new sessions, update for existing ones
@@ -87,7 +92,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
         // Check if table already exists
         const { data: existingTable } = await supabase
           .from('session_tables')
-          .select('id, start_time')
+          .select('id, start_time, start_time_utc')
           .eq('id', table.id)
           .single();
 
@@ -112,12 +117,17 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           table_notes: table.notes
         };
 
-        // Only include start_time for new tables - NEVER for updates
+        // Only include start_time and start_time_utc for new tables - NEVER for updates
         if (!existingTable) {
           tableData.start_time = table.startTime.toISOString();
-          console.log('🆕 New table - including start_time:', tableData.start_time);
+          // CRITICAL FIX: Set start_time_utc as raw UTC timestamp
+          tableData.start_time_utc = table.startTimeUTC || table.startTime.getTime();
+          console.log('🆕 New table - including start_time and start_time_utc:', {
+            start_time: tableData.start_time,
+            start_time_utc: tableData.start_time_utc
+          });
         } else {
-          console.log('🔄 Existing table - NEVER updating start_time to preserve integrity');
+          console.log('🔄 Existing table - NEVER updating start_time or start_time_utc to preserve integrity');
         }
 
         // Use insert for new tables, update for existing ones

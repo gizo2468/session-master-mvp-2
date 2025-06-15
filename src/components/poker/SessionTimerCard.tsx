@@ -30,72 +30,71 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   const { updateSessionDuration, activeSession } = useSessionContext();
   const updateCounterRef = useRef(0);
   
+  // CRITICAL FIX: Calculate duration from actual start time, not accumulated state
+  const calculateActualElapsedTime = useCallback(() => {
+    if (startTimeUTC) {
+      // Use raw UTC timestamp for accurate calculation
+      const timeSinceStart = Math.floor((Date.now() - startTimeUTC) / 1000);
+      console.log('🔧 FIXED: Using UTC timestamp for duration calculation:', {
+        startTimeUTC,
+        currentTimeUTC: Date.now(),
+        calculatedSeconds: timeSinceStart
+      });
+      return Math.max(0, timeSinceStart);
+    } else {
+      // Fallback to Date object method (less reliable across timezones)
+      const timeSinceStart = Math.floor((Date.now() - startTime.getTime()) / 1000);
+      console.log('🔧 FIXED: Using Date object fallback for duration calculation:', {
+        startTimeGetTime: startTime.getTime(),
+        currentTimeUTC: Date.now(),
+        calculatedSeconds: timeSinceStart,
+        WARNING: 'This path may be affected by timezone issues'
+      });
+      return Math.max(0, timeSinceStart);
+    }
+  }, [startTime, startTimeUTC]);
+  
   // Use useCallback to memoize the updateDuration function
-  const updateDuration = useCallback((newTime: number) => {
+  const updateDuration = useCallback(() => {
     if (typeof updateSessionDuration === 'function' && activeSession) {
+      // CRITICAL FIX: Always calculate duration from actual start time
+      const actualElapsedSeconds = calculateActualElapsedTime();
+      
       // Only update database every 30 seconds to reduce writes
       updateCounterRef.current++;
       if (updateCounterRef.current % 30 === 0) {
-        updateSessionDuration(activeSession.id, newTime);
+        console.log('🔧 FIXED: Updating database with actual elapsed time:', actualElapsedSeconds);
+        updateSessionDuration(activeSession.id, actualElapsedSeconds);
       }
     }
-  }, [updateSessionDuration, activeSession]);
+  }, [updateSessionDuration, activeSession, calculateActualElapsedTime]);
   
   useEffect(() => {
     if (!startTime) return;
     
-    // CRITICAL FIX: Always calculate elapsed time directly from start timestamp
-    // This eliminates the 3-hour offset issue caused by using stored duration
-    const calculateElapsedTime = () => {
-      // Use raw UTC timestamp if available for accurate calculation
-      let timeSinceStart: number;
-      if (startTimeUTC) {
-        // Use raw UTC timestamp for accurate calculation
-        timeSinceStart = Math.floor((Date.now() - startTimeUTC) / 1000);
-        console.log('🐛 DEBUG: Using UTC timestamp path:', {
-          startTimeUTC,
-          currentTimeUTC: Date.now(),
-          calculatedSeconds: timeSinceStart
-        });
-      } else {
-        // Fallback to Date object method (less reliable across timezones)
-        timeSinceStart = Math.floor((Date.now() - startTime.getTime()) / 1000);
-        console.log('🐛 DEBUG: Using Date object fallback path:', {
-          startTimeGetTime: startTime.getTime(),
-          currentTimeUTC: Date.now(),
-          calculatedSeconds: timeSinceStart,
-          WARNING: 'This path may be affected by timezone issues'
-        });
-      }
-      
-      // Ensure non-negative time and return the actual elapsed time
-      return Math.max(0, timeSinceStart);
-    };
-    
     // Set initial elapsed time using ONLY the calculated time from start timestamp
-    // This fixes the bug where Math.max(storedDuration, timeSinceStart) caused 3-hour offsets
-    const initialElapsedTime = calculateElapsedTime();
+    const initialElapsedTime = calculateActualElapsedTime();
     setElapsedTime(initialElapsedTime);
     
-    console.log('🐛 DEBUG: SessionTimerCard initialized with:', {
+    console.log('🔧 FIXED: SessionTimerCard initialized with correct duration:', {
       startTime,
       startTimeUTC,
       initialElapsedTime,
       formattedTime: formatTime(initialElapsedTime)
     });
     
-    // Set up interval to increment locally every second
+    // Set up interval to increment locally every second for smooth display
     const timer = setInterval(() => {
-      setElapsedTime(prev => {
-        const newTime = prev + 1;
-        // Update session duration in database periodically
-        updateDuration(newTime);
-        return newTime;
-      });
+      // CRITICAL FIX: Update display based on actual elapsed time, not previous state
+      const currentElapsedTime = calculateActualElapsedTime();
+      setElapsedTime(currentElapsedTime);
+      
+      // Update session duration in database periodically
+      updateDuration();
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [startTime, startTimeUTC, updateDuration]);
+  }, [startTime, startTimeUTC, calculateActualElapsedTime, updateDuration]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);

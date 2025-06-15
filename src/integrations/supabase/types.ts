@@ -726,6 +726,7 @@ export type Database = {
           session_duration: number | null
           small_blind: number | null
           start_time: string
+          start_time_utc: number | null
           starting_bb: number | null
           status: string | null
           table_name: string | null
@@ -759,6 +760,7 @@ export type Database = {
           session_duration?: number | null
           small_blind?: number | null
           start_time: string
+          start_time_utc?: number | null
           starting_bb?: number | null
           status?: string | null
           table_name?: string | null
@@ -792,6 +794,7 @@ export type Database = {
           session_duration?: number | null
           small_blind?: number | null
           start_time?: string
+          start_time_utc?: number | null
           starting_bb?: number | null
           status?: string | null
           table_name?: string | null

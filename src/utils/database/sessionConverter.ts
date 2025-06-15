@@ -1,125 +1,121 @@
 
-import { PokerSession } from '@/types/poker';
-
-// Helper function to safely parse UTC timestamps without timezone shifts
-const parseUTCTimestamp = (timestamp: string | null | undefined): Date | undefined => {
-  if (!timestamp) return undefined;
-  
-  try {
-    // Parse the timestamp and get the raw milliseconds (UTC)
-    const parsedTime = Date.parse(timestamp);
-    
-    // If parsing failed, return undefined
-    if (isNaN(parsedTime)) return undefined;
-    
-    // Create Date object directly from UTC milliseconds
-    // This preserves the exact moment in time without timezone interpretation
-    return new Date(parsedTime);
-  } catch (error) {
-    console.error('Error parsing timestamp:', timestamp, error);
-    return undefined;
-  }
-};
-
-// Helper function to get UTC timestamp from raw string for calculations
-const getUTCTimestampFromString = (timestamp: string | null | undefined): number | undefined => {
-  if (!timestamp) return undefined;
-  
-  try {
-    const parsedTime = Date.parse(timestamp);
-    return isNaN(parsedTime) ? undefined : parsedTime;
-  } catch (error) {
-    console.error('Error parsing timestamp for UTC calculation:', timestamp, error);
-    return undefined;
-  }
-};
+import { PokerSession, TableData, HandData } from '@/types/poker';
 
 export const convertDatabaseSessionToPokerSession = (
   sessionData: any,
-  tables: any[],
-  hands: any[]
+  tables: any[] = [],
+  hands: any[] = []
 ): PokerSession => {
-  return {
+  console.log('🔧 FIXED: Converting session with proper UTC handling:', {
+    sessionId: sessionData.id,
+    startTime: sessionData.start_time,
+    startTimeUTC: sessionData.start_time_utc
+  });
+
+  // Convert tables
+  const convertedTables: TableData[] = tables.map(table => ({
+    id: table.id,
+    name: table.table_name,
+    format: table.table_type as 'Cash' | 'Tournament',
+    gameType: table.game_format as 'NLH' | 'PLO',
+    location: table.table_name || 'Unknown',
+    buyIn: Number(table.buy_in) || 0,
+    initialBuyIn: Number(table.buy_in) || 0,
+    smallBlind: table.stakes ? Number(table.stakes.split('/')[0]) : undefined,
+    bigBlind: table.stakes ? Number(table.stakes.split('/')[1]) : undefined,
+    startingBB: table.starting_stack,
+    currentStack: table.current_stack,
+    isActive: table.is_active,
+    startTime: new Date(table.start_time),
+    startTimeUTC: table.start_time_utc ? Number(table.start_time_utc) : undefined,
+    endTime: table.end_time ? new Date(table.end_time) : undefined,
+    endTimeUTC: table.end_time_utc ? Number(table.end_time_utc) : undefined,
+    cashOut: table.cashout ? Number(table.cashout) : undefined,
+    rebuys: table.rebuys || 0,
+    rebuyAmount: Number(table.rebuy_amount) || 0,
+    bountyAmount: Number(table.bounty_amount) || 0,
+    finalPosition: table.final_position,
+    notes: table.table_notes,
+    session_id: sessionData.id,
+    hands: []
+  }));
+
+  // Convert hands
+  const convertedHands: HandData[] = hands.map(hand => ({
+    id: hand.id,
+    cards: hand.hole_cards || '',
+    position: hand.position || '',
+    action: hand.preflop_action || '',
+    notes: hand.hand_notes,
+    result: hand.showdown_result,
+    resultAmount: Number(hand.amount_won) || 0,
+    currencyType: hand.currency_type as 'currency' | 'chips' || 'currency',
+    smallBlind: undefined,
+    bigBlind: undefined,
+    image: hand.hand_image,
+    pokercraftLink: undefined,
+    createdAt: new Date(hand.created_at),
+    gameType: undefined,
+    tableId: hand.table_id,
+    handNumber: hand.hand_number,
+    holeCards: hand.hole_cards ? hand.hole_cards.split(',') : undefined,
+    preflopAction: hand.preflop_action,
+    flopCards: hand.flop_cards ? hand.flop_cards.split(',') : undefined,
+    flopAction: hand.flop_action,
+    turnCard: hand.turn_card,
+    turnAction: hand.turn_action,
+    riverCard: hand.river_card,
+    riverAction: hand.river_action,
+    showdownResult: hand.showdown_result,
+    potSize: Number(hand.pot_size) || 0,
+    amountWon: Number(hand.amount_won) || 0,
+    amountInvested: Number(hand.amount_invested) || 0,
+    handImage: hand.hand_image
+  }));
+
+  // CRITICAL FIX: Use start_time_utc from database for accurate calculations
+  const session: PokerSession = {
     id: sessionData.id,
-    gameType: sessionData.game_type || 'NLH',
-    format: sessionData.format || 'Cash',
-    location: sessionData.location || '',
+    gameType: sessionData.game_type as 'NLH' | 'PLO',
+    format: sessionData.format as any,
+    location: sessionData.location || 'Unknown',
     physicalLocation: sessionData.physical_location,
     tableName: sessionData.table_name,
-    buyIn: sessionData.buy_in || 0,
-    initialBuyIn: sessionData.initial_buy_in || sessionData.buy_in || 0,
-    smallBlind: sessionData.small_blind || 0,
-    bigBlind: sessionData.big_blind || 0,
-    isOnline: sessionData.is_online,
+    buyIn: Number(sessionData.buy_in) || 0,
+    initialBuyIn: Number(sessionData.initial_buy_in) || Number(sessionData.buy_in) || 0,
+    smallBlind: Number(sessionData.small_blind) || 0,
+    bigBlind: Number(sessionData.big_blind) || 0,
+    isOnline: sessionData.is_online || false,
     startingBB: sessionData.starting_bb,
     tournamentTypes: sessionData.tournament_types,
-    isMultiDay: sessionData.is_multi_day,
-    // CRITICAL: Safely parse UTC timestamps and store original strings for calculations
-    startTime: parseUTCTimestamp(sessionData.start_time) || new Date(),
-    startTimeUTC: getUTCTimestampFromString(sessionData.start_time), // Store raw UTC timestamp for calculations
-    endTime: parseUTCTimestamp(sessionData.end_time),
-    endTimeUTC: getUTCTimestampFromString(sessionData.end_time), // Store raw UTC timestamp for calculations
-    cashOut: sessionData.cash_out,
+    isMultiDay: sessionData.is_multi_day || false,
+    startTime: new Date(sessionData.start_time),
+    startTimeUTC: sessionData.start_time_utc ? Number(sessionData.start_time_utc) : undefined, // CRITICAL: Use UTC timestamp
+    endTime: sessionData.end_time ? new Date(sessionData.end_time) : undefined,
+    endTimeUTC: sessionData.end_time_utc ? Number(sessionData.end_time_utc) : undefined,
+    cashOut: sessionData.cash_out ? Number(sessionData.cash_out) : undefined,
     notes: sessionData.notes,
     isActive: sessionData.is_active,
-    currentStatus: sessionData.current_status,
-    sessionDuration: sessionData.session_duration,
-    rebuys: sessionData.rebuys,
-    rebuyAmount: sessionData.rebuy_amount,
-    roi: sessionData.roi,
-    itmRatioNumerator: sessionData.itm_ratio_numerator,
-    itmRatioDenominator: sessionData.itm_ratio_denominator,
-    tablesPlayed: sessionData.tables_played,
-    tables: tables.map(table => ({
-      id: table.id,
-      name: table.table_name || '',
-      format: table.table_type || 'Cash',
-      gameType: table.game_format || 'NLH',
-      location: table.location || sessionData.location || '',
-      buyIn: table.buy_in || 0,
-      initialBuyIn: table.buy_in || 0,
-      smallBlind: table.stakes ? parseFloat(table.stakes.split('/')[0]) : undefined,
-      bigBlind: table.stakes ? parseFloat(table.stakes.split('/')[1]) : undefined,
-      startingBB: table.starting_stack,
-      currentStack: table.current_stack,
-      isActive: table.is_active,
-      // CRITICAL: Store both Date objects and raw UTC timestamps for tables
-      startTime: parseUTCTimestamp(table.start_time) || new Date(),
-      startTimeUTC: getUTCTimestampFromString(table.start_time),
-      endTime: parseUTCTimestamp(table.end_time),
-      endTimeUTC: getUTCTimestampFromString(table.end_time),
-      cashOut: table.cashout,
-      rebuys: table.rebuys,
-      rebuyAmount: table.rebuy_amount,
-      bountyAmount: table.bounty_amount,
-      finalPosition: table.final_position,
-      notes: table.table_notes,
-      session_id: table.session_id,
-      hands: []
-    })),
-    hands: hands.map(hand => ({
-      id: hand.id,
-      tableId: hand.table_id,
-      handNumber: hand.hand_number,
-      position: hand.position,
-      cards: hand.hole_cards || '',
-      action: hand.preflop_action || '',
-      holeCards: hand.hole_cards ? hand.hole_cards.split(',') : [],
-      preflopAction: hand.preflop_action,
-      flopCards: hand.flop_cards ? hand.flop_cards.split(',') : [],
-      flopAction: hand.flop_action,
-      turnCard: hand.turn_card,
-      turnAction: hand.turn_action,
-      riverCard: hand.river_card,
-      riverAction: hand.river_action,
-      showdownResult: hand.showdown_result,
-      potSize: hand.pot_size,
-      amountInvested: hand.amount_invested,
-      amountWon: hand.amount_won,
-      notes: hand.hand_notes,
-      image: hand.hand_image,
-      currencyType: hand.currency_type,
-      createdAt: new Date(hand.created_at)
-    }))
+    currentStatus: sessionData.current_status as 'running' | 'paused' | 'ended',
+    status: sessionData.status,
+    sessionDuration: sessionData.session_duration || 0,
+    rebuys: sessionData.rebuys || 0,
+    rebuyAmount: Number(sessionData.rebuy_amount) || 0,
+    addOns: undefined,
+    tournamentBuyIn: undefined,
+    roi: sessionData.roi || 0,
+    itmRatioNumerator: sessionData.itm_ratio_numerator || 0,
+    itmRatioDenominator: sessionData.itm_ratio_denominator || 0,
+    tablesPlayed: sessionData.tables_played || 0,
+    tables: convertedTables,
+    hands: convertedHands
   };
+
+  console.log('🔧 FIXED: Session converted with UTC timestamp:', {
+    sessionId: session.id,
+    startTime: session.startTime,
+    startTimeUTC: session.startTimeUTC
+  });
+
+  return session;
 };
