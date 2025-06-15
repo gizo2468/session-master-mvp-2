@@ -18,11 +18,11 @@ export default function SessionCard({ session, onClick }: SessionCardProps) {
   const profit = session.cashOut !== undefined ? session.cashOut - session.buyIn : 0;
   
   const calculateDuration = () => {
-    // CRITICAL FIX: Ensure consistent timezone handling for duration calculation
+    // CRITICAL FIX: With schema fix, both start and end times are now timezone-aware
     const start = new Date(session.startTime);
     const end = session.endTime ? new Date(session.endTime) : new Date();
     
-    console.log('🕐 FIXED: Duration calculation with UTC consistency:', {
+    console.log('🕐 FIXED: Duration calculation with both timestamps timezone-aware:', {
       sessionId: session.id,
       startTime: start.toISOString(),
       endTime: end.toISOString(),
@@ -33,13 +33,16 @@ export default function SessionCard({ session, onClick }: SessionCardProps) {
     const hours = differenceInHours(end, start);
     const minutes = differenceInMinutes(end, start) % 60;
     
-    // Ensure we never get negative duration
+    // With timezone fix, duration should always be positive
     if (hours < 0 || (hours === 0 && minutes < 0)) {
-      console.warn('⚠️ FIXED: Detected negative duration, using absolute values:', {
+      console.error('❌ CRITICAL: Still getting negative duration after schema fix:', {
         originalHours: hours,
         originalMinutes: minutes,
-        sessionId: session.id
+        sessionId: session.id,
+        startTime: session.startTime,
+        endTime: session.endTime
       });
+      // Fallback to absolute values but this should not happen anymore
       const absHours = Math.abs(hours);
       const absMinutes = Math.abs(minutes);
       return absHours > 0 ? `${absHours}h ${absMinutes}m` : `${absMinutes}m`;

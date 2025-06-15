@@ -54,11 +54,11 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
       tables_played: session.tablesPlayed || 0
     };
 
-    // CRITICAL FIX: Handle end_time with proper UTC consistency
+    // CRITICAL FIX: Handle end_time with proper UTC consistency (now timestamptz)
     if (session.endTime) {
-      // Always save end_time as UTC ISO string for database consistency
+      // With schema fix, end_time is now timestamptz - save as UTC ISO string
       sessionData.end_time = session.endTime.toISOString();
-      console.log('🕐 FIXED: Setting end_time as UTC ISO:', sessionData.end_time);
+      console.log('🕐 FIXED: Setting end_time as UTC ISO (timestamptz):', sessionData.end_time);
     }
 
     // Only include start_time and start_time_utc for new sessions (inserts) - NEVER for updates
@@ -126,11 +126,12 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           table_notes: table.notes
         };
 
-        // CRITICAL FIX: Consistent UTC handling for table times
+        // CRITICAL FIX: Consistent UTC handling for table times (now timestamptz)
         if (table.endTime) {
+          // With schema fix, end_time is now timestamptz - save as UTC ISO string
           tableData.end_time = table.endTime.toISOString();
           tableData.end_time_utc = table.endTimeUTC || table.endTime.getTime();
-          console.log('🕐 FIXED: Setting table end_time as UTC ISO:', tableData.end_time);
+          console.log('🕐 FIXED: Setting table end_time as UTC ISO (timestamptz):', tableData.end_time);
         }
 
         // Only include start_time and start_time_utc for new tables - NEVER for updates

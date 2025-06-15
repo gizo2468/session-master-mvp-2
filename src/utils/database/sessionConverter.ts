@@ -31,14 +31,15 @@ export const convertDatabaseSessionToPokerSession = (
     });
   }
 
-  // CRITICAL FIX: Ensure proper UTC handling for end_time
+  // CRITICAL FIX: Ensure proper UTC handling for end_time (now timestamptz)
   let endTime: Date | undefined;
   if (sessionData.end_time) {
-    // Always treat end_time as UTC to match start_time handling
+    // With the schema fix, end_time is now timestamptz - treat it as timezone-aware
     endTime = new Date(sessionData.end_time);
-    console.log('🕐 FIXED: Converting end_time as UTC:', {
+    console.log('🕐 FIXED: Converting end_time as timezone-aware timestamp:', {
       original: sessionData.end_time,
-      converted: endTime.toISOString()
+      converted: endTime.toISOString(),
+      utc_timestamp: endTime.getTime()
     });
   }
 
@@ -60,8 +61,14 @@ export const convertDatabaseSessionToPokerSession = (
     let tableEndTime: Date | undefined;
     let tableEndTimeUTC: number | undefined;
     if (table.end_time) {
+      // With schema fix, table end_time is now timestamptz - treat as timezone-aware
       tableEndTime = new Date(table.end_time);
       tableEndTimeUTC = table.end_time_utc || tableEndTime.getTime();
+      console.log('🕐 FIXED: Table end_time now timezone-aware:', {
+        tableId: table.id,
+        original: table.end_time,
+        converted: tableEndTime.toISOString()
+      });
     }
 
     return {
@@ -69,7 +76,7 @@ export const convertDatabaseSessionToPokerSession = (
       name: table.table_name || 'Table',
       format: table.table_type || 'Cash',
       gameType: table.game_format || 'NLH',
-      location: sessionData.location || 'Unknown', // Add required location property
+      location: sessionData.location || 'Unknown',
       buyIn: parseFloat(table.buy_in || '0'),
       initialBuyIn: parseFloat(table.buy_in || '0'),
       smallBlind: table.stakes ? parseFloat(table.stakes.split('/')[0]) : undefined,
@@ -97,8 +104,8 @@ export const convertDatabaseSessionToPokerSession = (
     tableId: hand.table_id,
     handNumber: hand.hand_number,
     position: hand.position,
-    cards: hand.hole_cards || '', // Add required cards property
-    action: hand.preflop_action || '', // Add required action property
+    cards: hand.hole_cards || '',
+    action: hand.preflop_action || '',
     holeCards: hand.hole_cards ? hand.hole_cards.split(',') : [],
     preflopAction: hand.preflop_action,
     flopCards: hand.flop_cards ? hand.flop_cards.split(',') : [],

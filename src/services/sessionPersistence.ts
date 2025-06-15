@@ -53,7 +53,7 @@ export class SessionPersistenceService {
 
   static async endSession(sessionId: string, cashOut: number, notes?: string): Promise<boolean> {
     try {
-      console.log('🏁 FIXED: Ending session with UTC consistency:', sessionId, 'with cashOut:', cashOut);
+      console.log('🏁 FIXED: Ending session with UTC consistency (timestamptz):', sessionId, 'with cashOut:', cashOut);
       
       const { data, error } = await supabase.rpc('end_session', {
         p_session_id: sessionId,
@@ -66,7 +66,7 @@ export class SessionPersistenceService {
         return false;
       }
 
-      console.log('✅ FIXED: Session ended successfully with UTC consistency:', data);
+      console.log('✅ FIXED: Session ended successfully with UTC consistency (timestamptz):', data);
       return true;
     } catch (error) {
       console.error('❌ Failed to end session:', error);
