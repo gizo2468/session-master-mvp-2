@@ -26,8 +26,8 @@ export const findSupabaseSessionId = async (localSessionId: string, userId: stri
 
 export const syncHandToSupabase = async (hand: HandData, supabaseSessionId: string): Promise<string | null> => {
   try {
-    console.log('🔄 FIXED: Syncing hand to Supabase with proper data consistency:', {
-      handId: hand.id,
+    console.log('🔄 CRITICAL FIX: Syncing hand to Supabase with enhanced ID tracking:', {
+      handLocalId: hand.id,
       tableId: hand.tableId,
       sessionId: supabaseSessionId,
       holeCards: hand.holeCards,
@@ -43,19 +43,16 @@ export const syncHandToSupabase = async (hand: HandData, supabaseSessionId: stri
       ? hand.flopCards.join(',')
       : null;
 
-    // CRITICAL FIX: Ensure table_id is always set for table hands
-    if (!hand.tableId) {
-      console.warn('⚠️ FIXED: Hand missing tableId - this may cause persistence issues:', hand.id);
-    }
-
+    // CRITICAL FIX: Use the hand's local ID as the Supabase ID for consistency
     const { data, error } = await supabase
       .from('session_hands_new')
       .insert({
+        id: hand.id, // CRITICAL FIX: Use local ID as Supabase ID for consistency
         session_id: supabaseSessionId,
         user_id: undefined, // Will use DEFAULT auth.uid()
-        table_id: hand.tableId || null, // CRITICAL: Ensure table_id is set
+        table_id: hand.tableId || null,
         hand_number: hand.handNumber || null,
-        hole_cards: holeCardsString || null, // FIXED: Consistent string format
+        hole_cards: holeCardsString || null,
         position: hand.position || null,
         preflop_action: hand.preflopAction || hand.action || null,
         flop_cards: flopCardsString,
@@ -77,12 +74,12 @@ export const syncHandToSupabase = async (hand: HandData, supabaseSessionId: stri
       .single();
 
     if (error) {
-      console.error('❌ FIXED: Error syncing hand to Supabase:', error);
+      console.error('❌ CRITICAL FIX: Error syncing hand to Supabase:', error);
       return null;
     }
 
-    console.log('✅ FIXED: Hand synced successfully to Supabase:', {
-      handId: hand.id,
+    console.log('✅ CRITICAL FIX: Hand synced successfully to Supabase:', {
+      handLocalId: hand.id,
       supabaseId: data?.id,
       tableId: hand.tableId,
       holeCards: holeCardsString
@@ -90,46 +87,30 @@ export const syncHandToSupabase = async (hand: HandData, supabaseSessionId: stri
 
     return data?.id || null;
   } catch (error) {
-    console.error('❌ FIXED: Error in syncHandToSupabase:', error);
+    console.error('❌ CRITICAL FIX: Error in syncHandToSupabase:', error);
     return null;
   }
 };
 
 export const syncHandUpdateToSupabase = async (hand: HandData, supabaseSessionId: string, supabaseHandId?: string): Promise<boolean> => {
   try {
-    console.log('🔄 CRITICAL FIX: Updating hand in Supabase:', {
-      handId: hand.id,
+    console.log('🔄 CRITICAL FIX: Updating hand in Supabase with enhanced logic:', {
+      handLocalId: hand.id,
       supabaseHandId: hand.supabaseId || supabaseHandId,
       tableId: hand.tableId,
-      sessionId: supabaseSessionId
+      sessionId: supabaseSessionId,
+      handData: {
+        position: hand.position,
+        holeCards: hand.holeCards,
+        cards: hand.cards,
+        action: hand.preflopAction || hand.action
+      }
     });
 
-    // CRITICAL FIX: Use the supabase hand ID from the hand object first, then fallback
-    let targetHandId = hand.supabaseId || supabaseHandId;
+    // CRITICAL FIX: Use the hand's local ID directly since it should match Supabase ID
+    const targetHandId = hand.supabaseId || hand.id;
     
-    if (!targetHandId) {
-      console.log('🔍 CRITICAL FIX: No supabase hand ID available, searching by local hand ID...');
-      
-      // CRITICAL FIX: Try to find the hand by the local hand ID stored as the id in Supabase
-      const { data: existingHands, error: findError } = await supabase
-        .from('session_hands_new')
-        .select('id')
-        .eq('session_id', supabaseSessionId)
-        .eq('id', hand.id) // Use local hand ID as it should match Supabase ID
-        .maybeSingle();
-
-      if (findError) {
-        console.error('❌ CRITICAL FIX: Error finding hand for update:', findError);
-        return false;
-      }
-
-      if (!existingHands) {
-        console.warn('⚠️ CRITICAL FIX: Hand not found in Supabase for update, this should not happen for existing hands');
-        return false;
-      }
-
-      targetHandId = existingHands.id;
-    }
+    console.log('🔄 CRITICAL FIX: Using hand ID for update:', targetHandId);
 
     // CRITICAL FIX: Ensure consistent data serialization for updates
     const holeCardsString = hand.holeCards && hand.holeCards.length > 0 
@@ -140,14 +121,14 @@ export const syncHandUpdateToSupabase = async (hand: HandData, supabaseSessionId
       ? hand.flopCards.join(',')
       : null;
 
-    console.log('🔄 CRITICAL FIX: Updating hand with data:', {
+    console.log('🔄 CRITICAL FIX: Updating hand with serialized data:', {
       targetHandId,
       holeCards: holeCardsString,
       position: hand.position,
       action: hand.preflopAction || hand.action
     });
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('session_hands_new')
       .update({
         table_id: hand.tableId || null,
@@ -170,14 +151,54 @@ export const syncHandUpdateToSupabase = async (hand: HandData, supabaseSessionId
         currency_type: hand.currencyType || 'currency',
         updated_at: new Date().toISOString()
       })
-      .eq('id', targetHandId);
+      .eq('id', targetHandId)
+      .eq('session_id', supabaseSessionId)
+      .select('id');
 
     if (error) {
       console.error('❌ CRITICAL FIX: Error updating hand in Supabase:', error);
+      console.error('❌ CRITICAL FIX: Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return false;
     }
 
-    console.log('✅ CRITICAL FIX: Hand updated successfully in Supabase with ID:', targetHandId);
+    // CRITICAL FIX: Check if the update actually affected any rows
+    if (!data || data.length === 0) {
+      console.warn('⚠️ CRITICAL FIX: Update succeeded but no rows were affected - hand may not exist in database');
+      console.warn('⚠️ CRITICAL FIX: Attempting to find hand in database for debugging...');
+      
+      // Try to find the hand to debug
+      const { data: existingHand, error: findError } = await supabase
+        .from('session_hands_new')
+        .select('id, session_id, table_id, hole_cards, position')
+        .eq('id', targetHandId)
+        .maybeSingle();
+      
+      if (findError) {
+        console.error('❌ CRITICAL FIX: Error searching for hand:', findError);
+      } else if (!existingHand) {
+        console.error('❌ CRITICAL FIX: Hand not found in database with ID:', targetHandId);
+      } else {
+        console.log('🔍 CRITICAL FIX: Found existing hand in database:', existingHand);
+      }
+      
+      return false;
+    }
+
+    console.log('✅ CRITICAL FIX: Hand updated successfully in Supabase:', {
+      targetHandId,
+      affectedRows: data.length,
+      updatedData: {
+        holeCards: holeCardsString,
+        position: hand.position,
+        action: hand.preflopAction || hand.action
+      }
+    });
+    
     return true;
   } catch (error) {
     console.error('❌ CRITICAL FIX: Error in syncHandUpdateToSupabase:', error);
@@ -188,24 +209,19 @@ export const syncHandUpdateToSupabase = async (hand: HandData, supabaseSessionId
 export const syncHandDeleteToSupabase = async (hand: HandData, supabaseSessionId: string, supabaseHandId?: string): Promise<boolean> => {
   try {
     console.log('🔄 CRITICAL FIX: Deleting hand from Supabase:', {
-      handId: hand.id,
+      handLocalId: hand.id,
       supabaseHandId: hand.supabaseId || supabaseHandId,
       tableId: hand.tableId
     });
 
-    // CRITICAL FIX: Use the supabase hand ID from the hand object first, then fallback
-    let targetHandId = hand.supabaseId || supabaseHandId;
-    
-    if (!targetHandId) {
-      console.log('🔍 CRITICAL FIX: No supabase hand ID available, using local hand ID...');
-      // For deletion, we can try using the local hand ID directly
-      targetHandId = hand.id;
-    }
+    // CRITICAL FIX: Use the hand's ID consistently
+    const targetHandId = hand.supabaseId || hand.id;
 
     const { error } = await supabase
       .from('session_hands_new')
       .delete()
-      .eq('id', targetHandId);
+      .eq('id', targetHandId)
+      .eq('session_id', supabaseSessionId);
 
     if (error) {
       console.error('❌ CRITICAL FIX: Error deleting hand from Supabase:', error);

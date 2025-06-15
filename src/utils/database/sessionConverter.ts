@@ -6,7 +6,7 @@ export const convertDatabaseSessionToPokerSession = (
   tables: any[] = [],
   hands: any[] = []
 ): PokerSession => {
-  console.log('🔄 FIXED: Converting database session with UTC consistency:', sessionData.id);
+  console.log('🔄 CRITICAL FIX: Converting database session with enhanced hand ID consistency:', sessionData.id);
   
   // CRITICAL FIX: Ensure proper UTC handling for start_time
   let startTime: Date;
@@ -43,10 +43,10 @@ export const convertDatabaseSessionToPokerSession = (
     });
   }
 
-  // CRITICAL FIX: Convert hands and include supabase ID for persistence
+  // CRITICAL FIX: Convert hands with consistent ID mapping
   const convertedHands: HandData[] = hands.map(hand => ({
-    id: hand.id,
-    supabaseId: hand.id, // CRITICAL FIX: Store the Supabase ID for updates/deletes
+    id: hand.id, // CRITICAL FIX: Use Supabase ID as local ID for consistency
+    supabaseId: hand.id, // CRITICAL FIX: Store the same ID as supabaseId for future updates
     sessionId: hand.session_id,
     tableId: hand.table_id,
     handNumber: hand.hand_number,
@@ -71,11 +71,12 @@ export const convertDatabaseSessionToPokerSession = (
     createdAt: new Date(hand.created_at)
   }));
 
-  console.log('🔄 FIXED: Converting hands with proper table associations and Supabase IDs:', {
+  console.log('🔄 CRITICAL FIX: Converting hands with consistent ID mapping:', {
     totalHands: convertedHands.length,
     handsWithTableId: convertedHands.filter(h => h.tableId).length,
     handsWithoutTableId: convertedHands.filter(h => !h.tableId).length,
-    handsWithSupabaseId: convertedHands.filter(h => h.supabaseId).length
+    handsWithSupabaseId: convertedHands.filter(h => h.supabaseId).length,
+    sampleHandIds: convertedHands.slice(0, 3).map(h => ({ localId: h.id, supabaseId: h.supabaseId }))
   });
 
   // Create a mapping of hands by table_id
@@ -96,7 +97,7 @@ export const convertDatabaseSessionToPokerSession = (
 
   // Convert tables with consistent UTC handling and proper hand assignment
   const convertedTables: TableData[] = tables.map(table => {
-    console.log('🔄 FIXED: Converting table with UTC consistency:', table.id);
+    console.log('🔄 CRITICAL FIX: Converting table with proper hand assignment:', table.id);
     
     let tableStartTime: Date;
     let tableStartTimeUTC: number | undefined;
@@ -122,13 +123,18 @@ export const convertDatabaseSessionToPokerSession = (
       });
     }
 
-    // CRITICAL FIX: Assign hands to this specific table with Supabase IDs
+    // CRITICAL FIX: Assign hands to this specific table with consistent IDs
     const tableHands = handsByTableId.get(table.id) || [];
-    console.log('🔄 CRITICAL FIX: Assigning hands to table with Supabase IDs:', {
+    console.log('🔄 CRITICAL FIX: Assigning hands to table with consistent IDs:', {
       tableId: table.id,
       tableName: table.table_name,
       handsCount: tableHands.length,
-      handsWithSupabaseId: tableHands.filter(h => h.supabaseId).length
+      handsWithSupabaseId: tableHands.filter(h => h.supabaseId).length,
+      sampleHandMapping: tableHands.slice(0, 2).map(h => ({ 
+        localId: h.id, 
+        supabaseId: h.supabaseId,
+        consistent: h.id === h.supabaseId 
+      }))
     });
 
     return {
@@ -154,7 +160,7 @@ export const convertDatabaseSessionToPokerSession = (
       bountyAmount: parseFloat(table.bounty_amount || '0'),
       finalPosition: table.final_position,
       notes: table.table_notes,
-      hands: tableHands // CRITICAL FIX: Properly assign hands to table with Supabase IDs
+      hands: tableHands // CRITICAL FIX: Properly assign hands with consistent IDs
     };
   });
 
@@ -191,7 +197,7 @@ export const convertDatabaseSessionToPokerSession = (
     hands: sessionLevelHands // Only session-level hands (legacy support)
   };
 
-  console.log('✅ CRITICAL FIX: Session conversion complete with proper hand distribution and Supabase IDs:', {
+  console.log('✅ CRITICAL FIX: Session conversion complete with consistent hand ID mapping:', {
     sessionId: session.id,
     startTime: session.startTime.toISOString(),
     endTime: session.endTime?.toISOString(),
@@ -199,8 +205,8 @@ export const convertDatabaseSessionToPokerSession = (
     tablesCount: convertedTables.length,
     totalTableHands: convertedTables.reduce((sum, table) => sum + (table.hands?.length || 0), 0),
     sessionLevelHands: sessionLevelHands.length,
-    totalHandsWithSupabaseId: convertedTables.reduce((sum, table) => 
-      sum + (table.hands?.filter(h => h.supabaseId).length || 0), 0
+    totalHandsWithConsistentIds: convertedTables.reduce((sum, table) => 
+      sum + (table.hands?.filter(h => h.id === h.supabaseId).length || 0), 0
     )
   });
 

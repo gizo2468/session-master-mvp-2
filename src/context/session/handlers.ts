@@ -1,4 +1,3 @@
-
 import { PokerSession, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { findSupabaseSessionId, syncHandToSupabase, syncHandUpdateToSupabase, syncHandDeleteToSupabase } from '@/utils/handSync';
@@ -19,7 +18,7 @@ export const createTableHandHandlers = (
     const table = session.tables[tableIndex];
     const tableFormat = table.format;
     
-    console.log('🔄 FIXED: Adding hand to table with proper data structure:', {
+    console.log('🔄 CRITICAL FIX: Adding hand to table with enhanced ID tracking:', {
       sessionId,
       tableId,
       tableFormat,
@@ -31,7 +30,7 @@ export const createTableHandHandlers = (
       }
     });
 
-    // CRITICAL FIX: Ensure proper data conversion and validation
+    // CRITICAL FIX: Create hand with proper data structure
     const holeCardsArray = hand.holeCards && Array.isArray(hand.holeCards) 
       ? hand.holeCards 
       : (hand.cards ? [String(hand.cards)] : []);
@@ -40,20 +39,18 @@ export const createTableHandHandlers = (
       ...hand,
       id: uuidv4(),
       createdAt: new Date(),
-      tableId: tableId, // CRITICAL: Ensure tableId is always set
+      tableId: tableId,
       holeCards: holeCardsArray,
-      cards: hand.cards ? String(hand.cards) : '', // FIXED: Ensure string conversion
-      // Auto-determine currency type based on table format
+      cards: hand.cards ? String(hand.cards) : '',
       currencyType: tableFormat === 'Cash' ? 'currency' : 'chips'
     };
     
-    console.log('🔄 FIXED: Created new hand with consistent data:', {
+    console.log('🔄 CRITICAL FIX: Created new hand with local ID:', {
       handId: newHand.id,
-      tableId: newHand.tableId,
-      holeCards: newHand.holeCards,
-      cards: newHand.cards
+      tableId: newHand.tableId
     });
 
+    // CRITICAL FIX: First update local state
     const updatedTable = {
       ...table,
       hands: [...(table.hands || []), newHand]
@@ -67,36 +64,48 @@ export const createTableHandHandlers = (
       tables: updatedTables
     };
     
-    console.log('🔄 FIXED: Updating session with new hand count:', {
-      tableId,
-      previousHandsCount: table.hands?.length || 0,
-      newHandsCount: updatedTable.hands.length
-    });
-
     await updateSession(updatedSession);
+    console.log('✅ CRITICAL FIX: Local session state updated with new hand');
 
-    // Sync to Supabase if user is logged in
+    // CRITICAL FIX: Sync to Supabase and update hand with Supabase ID
     if (user) {
       try {
         const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
         if (supabaseSessionId) {
-          console.log('🔄 FIXED: Syncing hand to Supabase:', {
+          console.log('🔄 CRITICAL FIX: Syncing hand to Supabase for ID assignment:', {
             handId: newHand.id,
             supabaseSessionId
           });
+          
           const supabaseHandId = await syncHandToSupabase(newHand, supabaseSessionId);
-          if (!supabaseHandId) {
-            console.warn('⚠️ FIXED: Failed to sync table hand to Supabase, but saved locally');
-          } else {
-            console.log('✅ FIXED: Hand successfully synced to Supabase with ID:', supabaseHandId);
-            // Store the supabase ID for future operations
+          if (supabaseHandId) {
+            // CRITICAL FIX: Update the hand with the Supabase ID in local state
             newHand.supabaseId = supabaseHandId;
+            
+            // Update the hand in the session with the Supabase ID
+            const handIndex = updatedTable.hands.findIndex(h => h.id === newHand.id);
+            if (handIndex !== -1) {
+              updatedTable.hands[handIndex] = { ...newHand };
+              
+              const finalUpdatedSession = {
+                ...updatedSession,
+                tables: [...updatedTables]
+              };
+              
+              await updateSession(finalUpdatedSession);
+              console.log('✅ CRITICAL FIX: Hand updated with Supabase ID:', {
+                localId: newHand.id,
+                supabaseId: supabaseHandId
+              });
+            }
+          } else {
+            console.warn('⚠️ CRITICAL FIX: Failed to get Supabase ID for hand, but saved locally');
           }
         } else {
-          console.warn('⚠️ FIXED: Could not find Supabase session ID for sync');
+          console.warn('⚠️ CRITICAL FIX: Could not find Supabase session ID for sync');
         }
       } catch (error) {
-        console.error('❌ FIXED: Error syncing table hand to Supabase:', error);
+        console.error('❌ CRITICAL FIX: Error syncing table hand to Supabase:', error);
       }
     }
   };
@@ -111,7 +120,7 @@ export const createTableHandHandlers = (
     const table = session.tables[tableIndex];
     if (!table.hands) return;
     
-    console.log('🔄 CRITICAL FIX: Updating hand in table with enhanced logging:', {
+    console.log('🔄 CRITICAL FIX: Updating hand with enhanced tracking:', {
       sessionId,
       tableId,
       handId: hand.id,
@@ -120,10 +129,12 @@ export const createTableHandHandlers = (
       handData: {
         position: hand.position,
         holeCards: hand.holeCards,
-        action: hand.action || hand.preflopAction
+        action: hand.action || hand.preflopAction,
+        cards: hand.cards
       }
     });
 
+    // CRITICAL FIX: Update local state first
     const updatedHands = table.hands.map(h => 
       h.id === hand.id ? hand : h
     );
@@ -141,28 +152,34 @@ export const createTableHandHandlers = (
       tables: updatedTables
     };
     
-    // CRITICAL FIX: Update local state first
     await updateSession(updatedSession);
     console.log('✅ CRITICAL FIX: Local session state updated successfully');
 
-    // CRITICAL FIX: Sync update to Supabase if user is logged in
+    // CRITICAL FIX: Sync update to Supabase with better error handling
     if (user) {
       try {
         console.log('🔄 CRITICAL FIX: Starting Supabase sync for hand update...');
         const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
         if (supabaseSessionId) {
-          console.log('🔄 CRITICAL FIX: Found Supabase session ID, syncing update:', supabaseSessionId);
+          console.log('🔄 CRITICAL FIX: Found Supabase session ID, attempting update:', {
+            supabaseSessionId,
+            handLocalId: hand.id,
+            handSupabaseId: hand.supabaseId
+          });
+          
           const synced = await syncHandUpdateToSupabase(hand, supabaseSessionId, hand.supabaseId);
           if (!synced) {
-            console.error('❌ CRITICAL FIX: Failed to sync table hand update to Supabase, but saved locally');
+            console.error('❌ CRITICAL FIX: Supabase update failed - hand changes may not persist across refreshes');
+            // Don't throw error here - keep local changes but warn user
           } else {
-            console.log('✅ CRITICAL FIX: Hand update successfully synced to Supabase');
+            console.log('✅ CRITICAL FIX: Hand update successfully synced to Supabase - changes will persist');
           }
         } else {
           console.error('❌ CRITICAL FIX: Could not find Supabase session ID for sync');
         }
       } catch (error) {
         console.error('❌ CRITICAL FIX: Error syncing table hand update to Supabase:', error);
+        // Don't fail the entire operation - local changes are preserved
       }
     } else {
       console.warn('⚠️ CRITICAL FIX: No user logged in, skipping Supabase sync');
@@ -203,7 +220,7 @@ export const createTableHandHandlers = (
     
     await updateSession(updatedSession);
 
-    // CRITICAL FIX: Sync deletion to Supabase if user is logged in
+    // CRITICAL FIX: Sync deletion to Supabase
     if (user && handToDelete) {
       try {
         const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
