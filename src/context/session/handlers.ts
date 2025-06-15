@@ -84,11 +84,13 @@ export const createTableHandHandlers = (
             handId: newHand.id,
             supabaseSessionId
           });
-          const synced = await syncHandToSupabase(newHand, supabaseSessionId);
-          if (!synced) {
+          const supabaseHandId = await syncHandToSupabase(newHand, supabaseSessionId);
+          if (!supabaseHandId) {
             console.warn('⚠️ FIXED: Failed to sync table hand to Supabase, but saved locally');
           } else {
-            console.log('✅ FIXED: Hand successfully synced to Supabase');
+            console.log('✅ FIXED: Hand successfully synced to Supabase with ID:', supabaseHandId);
+            // Store the supabase ID for future operations
+            newHand.supabaseId = supabaseHandId;
           }
         } else {
           console.warn('⚠️ FIXED: Could not find Supabase session ID for sync');
@@ -109,10 +111,11 @@ export const createTableHandHandlers = (
     const table = session.tables[tableIndex];
     if (!table.hands) return;
     
-    console.log('🔄 FIXED: Updating hand in table:', {
+    console.log('🔄 CRITICAL FIX: Updating hand in table with Supabase sync:', {
       sessionId,
       tableId,
-      handId: hand.id
+      handId: hand.id,
+      supabaseId: hand.supabaseId
     });
 
     const updatedHands = table.hands.map(h => 
@@ -134,20 +137,20 @@ export const createTableHandHandlers = (
     
     await updateSession(updatedSession);
 
-    // Sync update to Supabase if user is logged in
+    // CRITICAL FIX: Sync update to Supabase if user is logged in
     if (user) {
       try {
         const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
         if (supabaseSessionId) {
-          const synced = await syncHandUpdateToSupabase(hand, supabaseSessionId);
+          const synced = await syncHandUpdateToSupabase(hand, supabaseSessionId, hand.supabaseId);
           if (!synced) {
-            console.warn('⚠️ FIXED: Failed to sync table hand update to Supabase, but saved locally');
+            console.warn('⚠️ CRITICAL FIX: Failed to sync table hand update to Supabase, but saved locally');
           } else {
-            console.log('✅ FIXED: Hand update successfully synced to Supabase');
+            console.log('✅ CRITICAL FIX: Hand update successfully synced to Supabase');
           }
         }
       } catch (error) {
-        console.error('❌ FIXED: Error syncing table hand update to Supabase:', error);
+        console.error('❌ CRITICAL FIX: Error syncing table hand update to Supabase:', error);
       }
     }
   };
@@ -162,7 +165,7 @@ export const createTableHandHandlers = (
     const table = session.tables[tableIndex];
     if (!table.hands) return;
     
-    console.log('🔄 FIXED: Deleting hand from table:', {
+    console.log('🔄 CRITICAL FIX: Deleting hand from table with Supabase sync:', {
       sessionId,
       tableId,
       handId
@@ -186,20 +189,20 @@ export const createTableHandHandlers = (
     
     await updateSession(updatedSession);
 
-    // Sync deletion to Supabase if user is logged in
+    // CRITICAL FIX: Sync deletion to Supabase if user is logged in
     if (user && handToDelete) {
       try {
         const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
         if (supabaseSessionId) {
-          const synced = await syncHandDeleteToSupabase(handToDelete, supabaseSessionId);
+          const synced = await syncHandDeleteToSupabase(handToDelete, supabaseSessionId, handToDelete.supabaseId);
           if (!synced) {
-            console.warn('⚠️ FIXED: Failed to sync table hand deletion to Supabase, but deleted locally');
+            console.warn('⚠️ CRITICAL FIX: Failed to sync table hand deletion to Supabase, but deleted locally');
           } else {
-            console.log('✅ FIXED: Hand deletion successfully synced to Supabase');
+            console.log('✅ CRITICAL FIX: Hand deletion successfully synced to Supabase');
           }
         }
       } catch (error) {
-        console.error('❌ FIXED: Error syncing hand deletion to Supabase:', error);
+        console.error('❌ CRITICAL FIX: Error syncing hand deletion to Supabase:', error);
       }
     }
   };

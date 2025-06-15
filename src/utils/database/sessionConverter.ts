@@ -43,9 +43,10 @@ export const convertDatabaseSessionToPokerSession = (
     });
   }
 
-  // Convert hands and create a mapping by table_id
+  // CRITICAL FIX: Convert hands and include supabase ID for persistence
   const convertedHands: HandData[] = hands.map(hand => ({
     id: hand.id,
+    supabaseId: hand.id, // CRITICAL FIX: Store the Supabase ID for updates/deletes
     sessionId: hand.session_id,
     tableId: hand.table_id,
     handNumber: hand.hand_number,
@@ -70,10 +71,11 @@ export const convertDatabaseSessionToPokerSession = (
     createdAt: new Date(hand.created_at)
   }));
 
-  console.log('🔄 FIXED: Converting hands with proper table associations:', {
+  console.log('🔄 FIXED: Converting hands with proper table associations and Supabase IDs:', {
     totalHands: convertedHands.length,
     handsWithTableId: convertedHands.filter(h => h.tableId).length,
-    handsWithoutTableId: convertedHands.filter(h => !h.tableId).length
+    handsWithoutTableId: convertedHands.filter(h => !h.tableId).length,
+    handsWithSupabaseId: convertedHands.filter(h => h.supabaseId).length
   });
 
   // Create a mapping of hands by table_id
@@ -120,12 +122,13 @@ export const convertDatabaseSessionToPokerSession = (
       });
     }
 
-    // CRITICAL FIX: Assign hands to this specific table
+    // CRITICAL FIX: Assign hands to this specific table with Supabase IDs
     const tableHands = handsByTableId.get(table.id) || [];
-    console.log('🔄 FIXED: Assigning hands to table:', {
+    console.log('🔄 CRITICAL FIX: Assigning hands to table with Supabase IDs:', {
       tableId: table.id,
       tableName: table.table_name,
-      handsCount: tableHands.length
+      handsCount: tableHands.length,
+      handsWithSupabaseId: tableHands.filter(h => h.supabaseId).length
     });
 
     return {
@@ -151,7 +154,7 @@ export const convertDatabaseSessionToPokerSession = (
       bountyAmount: parseFloat(table.bounty_amount || '0'),
       finalPosition: table.final_position,
       notes: table.table_notes,
-      hands: tableHands // CRITICAL FIX: Properly assign hands to table
+      hands: tableHands // CRITICAL FIX: Properly assign hands to table with Supabase IDs
     };
   });
 
@@ -188,14 +191,17 @@ export const convertDatabaseSessionToPokerSession = (
     hands: sessionLevelHands // Only session-level hands (legacy support)
   };
 
-  console.log('✅ FIXED: Session conversion complete with proper hand distribution:', {
+  console.log('✅ CRITICAL FIX: Session conversion complete with proper hand distribution and Supabase IDs:', {
     sessionId: session.id,
     startTime: session.startTime.toISOString(),
     endTime: session.endTime?.toISOString(),
     isActive: session.isActive,
     tablesCount: convertedTables.length,
     totalTableHands: convertedTables.reduce((sum, table) => sum + (table.hands?.length || 0), 0),
-    sessionLevelHands: sessionLevelHands.length
+    sessionLevelHands: sessionLevelHands.length,
+    totalHandsWithSupabaseId: convertedTables.reduce((sum, table) => 
+      sum + (table.hands?.filter(h => h.supabaseId).length || 0), 0
+    )
   });
 
   return session;
