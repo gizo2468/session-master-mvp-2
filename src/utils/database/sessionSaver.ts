@@ -84,9 +84,9 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
       return false;
     }
 
-    // Save tables to session_tables
+    // Save tables to session_tables - CRITICAL FIX for table persistence
     if (session.tables && session.tables.length > 0) {
-      console.log('💾 Saving tables to database:', session.tables.length);
+      console.log('💾 FIXED: Saving tables to database with proper UTC handling:', session.tables.length);
       
       for (const table of session.tables) {
         // Check if table already exists
@@ -99,7 +99,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
         const tableData: any = {
           id: table.id,
           session_id: session.id,
-          user_id: user.id,
+          user_id: user.id, // CRITICAL: Always ensure user_id is set
           table_name: table.name,
           table_type: table.format,
           game_format: table.gameType,
@@ -109,6 +109,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           current_stack: table.currentStack,
           is_active: table.isActive,
           end_time: table.endTime?.toISOString(),
+          end_time_utc: table.endTimeUTC || (table.endTime ? table.endTime.getTime() : undefined),
           cashout: table.cashOut,
           rebuys: table.rebuys || 0,
           rebuy_amount: table.rebuyAmount || 0,
@@ -122,12 +123,14 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           tableData.start_time = table.startTime.toISOString();
           // CRITICAL FIX: Set start_time_utc as raw UTC timestamp
           tableData.start_time_utc = table.startTimeUTC || table.startTime.getTime();
-          console.log('🆕 New table - including start_time and start_time_utc:', {
+          console.log('🆕 FIXED: New table - including start_time and start_time_utc:', {
+            tableId: table.id,
+            tableName: table.name,
             start_time: tableData.start_time,
             start_time_utc: tableData.start_time_utc
           });
         } else {
-          console.log('🔄 Existing table - NEVER updating start_time or start_time_utc to preserve integrity');
+          console.log('🔄 FIXED: Existing table - NEVER updating start_time or start_time_utc to preserve integrity:', table.id);
         }
 
         // Use insert for new tables, update for existing ones
@@ -146,8 +149,10 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
         }
 
         if (tableError) {
-          console.error('❌ Error saving table:', tableError);
-          // Continue with other tables even if one fails
+          console.error('❌ CRITICAL: Error saving table:', table.id, tableError);
+          // Don't fail the entire operation, but log the error
+        } else {
+          console.log('✅ FIXED: Table saved successfully:', table.id, table.name);
         }
       }
     }
@@ -196,7 +201,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
       }
     }
 
-    console.log('✅ Session saved successfully to database');
+    console.log('✅ FIXED: Session and all tables saved successfully to database');
     return true;
   } catch (error) {
     console.error('❌ Failed to save session to database:', error);

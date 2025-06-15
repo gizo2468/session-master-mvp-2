@@ -632,6 +632,7 @@ export type Database = {
           created_at: string | null
           current_stack: number | null
           end_time: string | null
+          end_time_utc: number | null
           final_position: number | null
           game_format: string | null
           id: string
@@ -642,6 +643,7 @@ export type Database = {
           session_id: string
           stakes: string | null
           start_time: string | null
+          start_time_utc: number | null
           starting_stack: number | null
           table_name: string | null
           table_notes: string | null
@@ -656,6 +658,7 @@ export type Database = {
           created_at?: string | null
           current_stack?: number | null
           end_time?: string | null
+          end_time_utc?: number | null
           final_position?: number | null
           game_format?: string | null
           id?: string
@@ -666,6 +669,7 @@ export type Database = {
           session_id: string
           stakes?: string | null
           start_time?: string | null
+          start_time_utc?: number | null
           starting_stack?: number | null
           table_name?: string | null
           table_notes?: string | null
@@ -680,6 +684,7 @@ export type Database = {
           created_at?: string | null
           current_stack?: number | null
           end_time?: string | null
+          end_time_utc?: number | null
           final_position?: number | null
           game_format?: string | null
           id?: string
@@ -690,6 +695,7 @@ export type Database = {
           session_id?: string
           stakes?: string | null
           start_time?: string | null
+          start_time_utc?: number | null
           starting_stack?: number | null
           table_name?: string | null
           table_notes?: string | null

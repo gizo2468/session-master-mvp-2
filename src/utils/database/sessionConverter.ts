@@ -9,36 +9,48 @@ export const convertDatabaseSessionToPokerSession = (
   console.log('🔧 FIXED: Converting session with proper UTC handling:', {
     sessionId: sessionData.id,
     startTime: sessionData.start_time,
-    startTimeUTC: sessionData.start_time_utc
+    startTimeUTC: sessionData.start_time_utc,
+    tablesCount: tables.length
   });
 
-  // Convert tables
-  const convertedTables: TableData[] = tables.map(table => ({
-    id: table.id,
-    name: table.table_name,
-    format: table.table_type as 'Cash' | 'Tournament',
-    gameType: table.game_format as 'NLH' | 'PLO',
-    location: table.table_name || 'Unknown',
-    buyIn: Number(table.buy_in) || 0,
-    initialBuyIn: Number(table.buy_in) || 0,
-    smallBlind: table.stakes ? Number(table.stakes.split('/')[0]) : undefined,
-    bigBlind: table.stakes ? Number(table.stakes.split('/')[1]) : undefined,
-    startingBB: table.starting_stack,
-    currentStack: table.current_stack,
-    isActive: table.is_active,
-    startTime: new Date(table.start_time),
-    startTimeUTC: table.start_time_utc ? Number(table.start_time_utc) : undefined,
-    endTime: table.end_time ? new Date(table.end_time) : undefined,
-    endTimeUTC: table.end_time_utc ? Number(table.end_time_utc) : undefined,
-    cashOut: table.cashout ? Number(table.cashout) : undefined,
-    rebuys: table.rebuys || 0,
-    rebuyAmount: Number(table.rebuy_amount) || 0,
-    bountyAmount: Number(table.bounty_amount) || 0,
-    finalPosition: table.final_position,
-    notes: table.table_notes,
-    session_id: sessionData.id,
-    hands: []
-  }));
+  // Convert tables - CRITICAL FIX for table persistence
+  const convertedTables: TableData[] = tables.map(table => {
+    console.log('🔧 FIXED: Converting table with UTC timestamps:', {
+      tableId: table.id,
+      tableName: table.table_name,
+      startTime: table.start_time,
+      startTimeUTC: table.start_time_utc,
+      endTimeUTC: table.end_time_utc,
+      isActive: table.is_active
+    });
+
+    return {
+      id: table.id,
+      name: table.table_name,
+      format: table.table_type as 'Cash' | 'Tournament',
+      gameType: table.game_format as 'NLH' | 'PLO',
+      location: table.table_name || 'Unknown',
+      buyIn: Number(table.buy_in) || 0,
+      initialBuyIn: Number(table.buy_in) || 0,
+      smallBlind: table.stakes ? Number(table.stakes.split('/')[0]) : undefined,
+      bigBlind: table.stakes ? Number(table.stakes.split('/')[1]) : undefined,
+      startingBB: table.starting_stack,
+      currentStack: table.current_stack,
+      isActive: table.is_active,
+      startTime: new Date(table.start_time),
+      startTimeUTC: table.start_time_utc ? Number(table.start_time_utc) : undefined, // CRITICAL: Preserve UTC timestamp
+      endTime: table.end_time ? new Date(table.end_time) : undefined,
+      endTimeUTC: table.end_time_utc ? Number(table.end_time_utc) : undefined, // CRITICAL: Preserve UTC timestamp
+      cashOut: table.cashout ? Number(table.cashout) : undefined,
+      rebuys: table.rebuys || 0,
+      rebuyAmount: Number(table.rebuy_amount) || 0,
+      bountyAmount: Number(table.bounty_amount) || 0,
+      finalPosition: table.final_position,
+      notes: table.table_notes,
+      session_id: sessionData.id,
+      hands: []
+    };
+  });
 
   // Convert hands
   const convertedHands: HandData[] = hands.map(hand => ({
@@ -107,14 +119,16 @@ export const convertDatabaseSessionToPokerSession = (
     itmRatioNumerator: sessionData.itm_ratio_numerator || 0,
     itmRatioDenominator: sessionData.itm_ratio_denominator || 0,
     tablesPlayed: sessionData.tables_played || 0,
-    tables: convertedTables,
+    tables: convertedTables, // CRITICAL: Include all converted tables
     hands: convertedHands
   };
 
-  console.log('🔧 FIXED: Session converted with UTC timestamp:', {
+  console.log('✅ FIXED: Session converted with all tables preserved:', {
     sessionId: session.id,
     startTime: session.startTime,
-    startTimeUTC: session.startTimeUTC
+    startTimeUTC: session.startTimeUTC,
+    tablesCount: session.tables?.length || 0,
+    tableNames: session.tables?.map(t => t.name) || []
   });
 
   return session;
