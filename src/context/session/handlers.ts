@@ -111,11 +111,17 @@ export const createTableHandHandlers = (
     const table = session.tables[tableIndex];
     if (!table.hands) return;
     
-    console.log('🔄 CRITICAL FIX: Updating hand in table with Supabase sync:', {
+    console.log('🔄 CRITICAL FIX: Updating hand in table with enhanced logging:', {
       sessionId,
       tableId,
       handId: hand.id,
-      supabaseId: hand.supabaseId
+      supabaseId: hand.supabaseId,
+      hasUser: !!user,
+      handData: {
+        position: hand.position,
+        holeCards: hand.holeCards,
+        action: hand.action || hand.preflopAction
+      }
     });
 
     const updatedHands = table.hands.map(h => 
@@ -135,23 +141,31 @@ export const createTableHandHandlers = (
       tables: updatedTables
     };
     
+    // CRITICAL FIX: Update local state first
     await updateSession(updatedSession);
+    console.log('✅ CRITICAL FIX: Local session state updated successfully');
 
     // CRITICAL FIX: Sync update to Supabase if user is logged in
     if (user) {
       try {
+        console.log('🔄 CRITICAL FIX: Starting Supabase sync for hand update...');
         const supabaseSessionId = await findSupabaseSessionId(sessionId, user.id, session.startTime);
         if (supabaseSessionId) {
+          console.log('🔄 CRITICAL FIX: Found Supabase session ID, syncing update:', supabaseSessionId);
           const synced = await syncHandUpdateToSupabase(hand, supabaseSessionId, hand.supabaseId);
           if (!synced) {
-            console.warn('⚠️ CRITICAL FIX: Failed to sync table hand update to Supabase, but saved locally');
+            console.error('❌ CRITICAL FIX: Failed to sync table hand update to Supabase, but saved locally');
           } else {
             console.log('✅ CRITICAL FIX: Hand update successfully synced to Supabase');
           }
+        } else {
+          console.error('❌ CRITICAL FIX: Could not find Supabase session ID for sync');
         }
       } catch (error) {
         console.error('❌ CRITICAL FIX: Error syncing table hand update to Supabase:', error);
       }
+    } else {
+      console.warn('⚠️ CRITICAL FIX: No user logged in, skipping Supabase sync');
     }
   };
 
