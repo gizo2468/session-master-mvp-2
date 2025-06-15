@@ -43,49 +43,7 @@ export const convertDatabaseSessionToPokerSession = (
     });
   }
 
-  // CRITICAL FIX: Convert hands with proper data reconstruction
-  const convertedHands: HandData[] = hands.map(hand => {
-    console.log('🔧 FIXED: Converting hand data with all fields:', {
-      handId: hand.id,
-      cards: hand.hole_cards,
-      action: hand.preflop_action,
-      position: hand.position,
-      result: hand.showdown_result
-    });
-
-    return {
-      id: hand.id,
-      sessionId: hand.session_id,
-      tableId: hand.table_id,
-      handNumber: hand.hand_number,
-      position: hand.position,
-      // CRITICAL FIX: Properly reconstruct cards data
-      cards: hand.hole_cards || '',
-      action: hand.preflop_action || '',
-      holeCards: hand.hole_cards ? hand.hole_cards.split(',').filter(card => card.trim()) : [],
-      preflopAction: hand.preflop_action,
-      flopCards: hand.flop_cards ? hand.flop_cards.split(',').filter(card => card.trim()) : [],
-      flopAction: hand.flop_action,
-      turnCard: hand.turn_card,
-      turnAction: hand.turn_action,
-      riverCard: hand.river_card,
-      riverAction: hand.river_action,
-      showdownResult: hand.showdown_result,
-      // CRITICAL FIX: Ensure result fields are properly mapped
-      result: hand.showdown_result,
-      resultAmount: parseFloat(hand.amount_won || '0'),
-      potSize: parseFloat(hand.pot_size || '0'),
-      amountInvested: parseFloat(hand.amount_invested || '0'),
-      amountWon: parseFloat(hand.amount_won || '0'),
-      notes: hand.hand_notes,
-      image: hand.hand_image,
-      handImage: hand.hand_image,
-      currencyType: hand.currency_type || 'currency',
-      createdAt: new Date(hand.created_at)
-    };
-  });
-
-  // Convert tables with consistent UTC handling and proper hand assignment
+  // Convert tables with consistent UTC handling
   const convertedTables: TableData[] = tables.map(table => {
     console.log('🔄 FIXED: Converting table with UTC consistency:', table.id);
     
@@ -113,14 +71,6 @@ export const convertDatabaseSessionToPokerSession = (
       });
     }
 
-    // CRITICAL FIX: Assign hands to tables properly
-    const tableHands = convertedHands.filter(hand => hand.tableId === table.id);
-    console.log('🔧 FIXED: Assigning hands to table:', {
-      tableId: table.id,
-      tableName: table.table_name,
-      handsCount: tableHands.length
-    });
-
     return {
       id: table.id,
       name: table.table_name || 'Table',
@@ -143,11 +93,36 @@ export const convertDatabaseSessionToPokerSession = (
       rebuyAmount: parseFloat(table.rebuy_amount || '0'),
       bountyAmount: parseFloat(table.bounty_amount || '0'),
       finalPosition: table.final_position,
-      notes: table.table_notes,
-      // CRITICAL FIX: Ensure hands are properly assigned to tables
-      hands: tableHands
+      notes: table.table_notes
     };
   });
+
+  // Convert hands
+  const convertedHands: HandData[] = hands.map(hand => ({
+    id: hand.id,
+    sessionId: hand.session_id,
+    tableId: hand.table_id,
+    handNumber: hand.hand_number,
+    position: hand.position,
+    cards: hand.hole_cards || '',
+    action: hand.preflop_action || '',
+    holeCards: hand.hole_cards ? hand.hole_cards.split(',') : [],
+    preflopAction: hand.preflop_action,
+    flopCards: hand.flop_cards ? hand.flop_cards.split(',') : [],
+    flopAction: hand.flop_action,
+    turnCard: hand.turn_card,
+    turnAction: hand.turn_action,
+    riverCard: hand.river_card,
+    riverAction: hand.river_action,
+    showdownResult: hand.showdown_result,
+    potSize: parseFloat(hand.pot_size || '0'),
+    amountInvested: parseFloat(hand.amount_invested || '0'),
+    amountWon: parseFloat(hand.amount_won || '0'),
+    notes: hand.hand_notes,
+    image: hand.hand_image,
+    currencyType: hand.currency_type || 'currency',
+    createdAt: new Date(hand.created_at)
+  }));
 
   const session: PokerSession = {
     id: sessionData.id,
@@ -179,19 +154,16 @@ export const convertDatabaseSessionToPokerSession = (
     itmRatioDenominator: sessionData.itm_ratio_denominator || 0,
     tablesPlayed: sessionData.tables_played || 0,
     tables: convertedTables,
-    // CRITICAL FIX: Include session-level hands that don't belong to specific tables
-    hands: convertedHands.filter(hand => !hand.tableId)
+    hands: convertedHands
   };
 
-  console.log('✅ FIXED: Session conversion complete with proper hand assignment:', {
+  console.log('✅ FIXED: Session conversion complete with UTC consistency:', {
     sessionId: session.id,
     startTime: session.startTime.toISOString(),
     endTime: session.endTime?.toISOString(),
     isActive: session.isActive,
     tablesCount: convertedTables.length,
-    totalHandsCount: convertedHands.length,
-    sessionLevelHands: session.hands?.length || 0,
-    tableHandsBreakdown: convertedTables.map(t => ({ tableId: t.id, handsCount: t.hands?.length || 0 }))
+    handsCount: convertedHands.length
   });
 
   return session;
