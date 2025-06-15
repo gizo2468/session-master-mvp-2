@@ -1,24 +1,13 @@
-
 export interface HandData {
   id: string;
-  cards: string;
-  position: string;
-  action: string;
-  notes?: string;
-  result?: number | string;
-  resultAmount?: number;
-  currencyType?: 'currency' | 'chips';
-  smallBlind?: number;
-  bigBlind?: number;
-  image?: string;
-  pokercraftLink?: string;
-  createdAt: Date;
-  gameType?: 'NLH' | 'PLO';
-  tableId?: string; // Optional to support legacy hands
-  
-  // New detailed hand tracking properties for Supabase sync
+  supabaseId?: string; // CRITICAL FIX: Add supabaseId for database operations
+  sessionId?: string;
+  tableId?: string;
   handNumber?: number;
-  holeCards?: string[]; // Keep existing 'cards' for backward compatibility
+  position?: string;
+  cards?: string;
+  action?: string;
+  holeCards?: string[];
   preflopAction?: string;
   flopCards?: string[];
   flopAction?: string;
@@ -26,11 +15,17 @@ export interface HandData {
   turnAction?: string;
   riverCard?: string;
   riverAction?: string;
-  showdownResult?: string; // Keep existing 'result' for backward compatibility
+  showdownResult?: string;
+  result?: string | number;
+  resultAmount?: number;
   potSize?: number;
-  amountWon?: number;
   amountInvested?: number;
-  handImage?: string; // Keep existing 'image' for backward compatibility
+  amountWon?: number;
+  notes?: string;
+  image?: string;
+  handImage?: string;
+  currencyType?: 'currency' | 'chips';
+  createdAt: Date;
 }
 
 export interface TableData {

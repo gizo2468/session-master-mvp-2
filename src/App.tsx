@@ -41,11 +41,11 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <Toaster />
       <Sonner />
-      <AuthProvider>
-        <LanguageProvider>
-          <SessionProvider>
-            <CoachStudentProvider>
-              <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
+          <LanguageProvider>
+            <SessionProvider>
+              <CoachStudentProvider>
                 <Routes>
                   {/* Auth Routes */}
                   <Route path="/auth/login" element={<Login />} />
@@ -183,11 +183,11 @@ const App = () => (
                   {/* Catch-all route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </BrowserRouter>
-            </CoachStudentProvider>
-          </SessionProvider>
-        </LanguageProvider>
-      </AuthProvider>
+              </CoachStudentProvider>
+            </SessionProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   </TooltipPrimitive.Provider>
 );
