@@ -62,63 +62,74 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
   }
 };
 
-export const fetchActiveSession = async (): Promise<PokerSession | null> => {
+export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       console.error('❌ No authenticated user found');
-      return null;
+      return [];
     }
 
-    const { data: sessionData, error: sessionError } = await supabase
+    const { data: sessionsData, error: sessionError } = await supabase
       .from('sessions')
       .select('*')
       .eq('is_active', true)
       .eq('user_id', user.id)
-      .order('start_time', { ascending: false })
-      .limit(1)
-      .single();
+      .order('start_time', { ascending: false });
 
-    if (sessionError && sessionError.code !== 'PGRST116') {
-      console.error('❌ Error fetching active session:', sessionError);
-      return null;
+    if (sessionError) {
+      console.error('❌ Error fetching active sessions:', sessionError);
+      return [];
     }
 
-    if (!sessionData) {
-      console.log('📋 No active session found');
-      return null;
+    if (!sessionsData || sessionsData.length === 0) {
+      console.log('📋 No active sessions found');
+      return [];
     }
 
-    // Fetch tables for this session
-    const { data: tables, error: tablesError } = await supabase
-      .from('session_tables')
-      .select('*')
-      .eq('session_id', sessionData.id);
+    console.log(`✅ Found ${sessionsData.length} active sessions`);
 
-    if (tablesError) {
-      console.error('❌ Error fetching tables:', tablesError);
+    const activeSessions: PokerSession[] = [];
+
+    for (const sessionData of sessionsData) {
+      // Fetch tables for this session
+      const { data: tables, error: tablesError } = await supabase
+        .from('session_tables')
+        .select('*')
+        .eq('session_id', sessionData.id);
+
+      if (tablesError) {
+        console.error('❌ Error fetching tables:', tablesError);
+      }
+
+      // Fetch hands for this session
+      const { data: hands, error: handsError } = await supabase
+        .from('session_hands_new')
+        .select('*')
+        .eq('session_id', sessionData.id);
+
+      if (handsError) {
+        console.error('❌ Error fetching hands:', handsError);
+      }
+
+      // Convert to PokerSession format
+      const pokerSession = convertDatabaseSessionToPokerSession(
+        sessionData,
+        tables || [],
+        hands || []
+      );
+
+      activeSessions.push(pokerSession);
     }
 
-    // Fetch hands for this session
-    const { data: hands, error: handsError } = await supabase
-      .from('session_hands_new')
-      .select('*')
-      .eq('session_id', sessionData.id);
-
-    if (handsError) {
-      console.error('❌ Error fetching hands:', handsError);
-    }
-
-    // Convert to PokerSession format
-    const pokerSession = convertDatabaseSessionToPokerSession(
-      sessionData,
-      tables || [],
-      hands || []
-    );
-
-    return pokerSession;
+    return activeSessions;
   } catch (error) {
-    console.error('❌ Failed to fetch active session:', error);
-    return null;
+    console.error('❌ Failed to fetch active sessions:', error);
+    return [];
   }
+};
+
+export const fetchActiveSession = async (): Promise<PokerSession | null> => {
+  const activeSessions = await fetchActiveSessions();
+  return activeSessions.length > 0 ? activeSessions[0] : null;
 };

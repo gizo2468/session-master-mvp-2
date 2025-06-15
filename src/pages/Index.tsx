@@ -10,7 +10,7 @@ import StatsQuickView from '@/components/StatsQuickView';
 import StorageWarningAlert from '@/components/StorageWarningAlert';
 import DonationCard from '@/components/DonationCard';
 import FocusModeButton from '@/components/FocusModeButton';
-import ActiveSessionCard from '@/components/ActiveSessionCard';
+import ActiveSessionsList from '@/components/ActiveSessionsList';
 import Logo from '@/components/Logo';
 import Icon from '@/components/ui/Lucide';
 import { Button } from '@/components/ui/button';
@@ -30,10 +30,10 @@ export default function Index() {
   } = useSessionContext();
   
   const { 
-    activeSession: recoveredActiveSession, 
+    activeSessions, 
     isLoading: isRecovering, 
     resumeSession,
-    hasActiveSession 
+    hasActiveSessions 
   } = useActiveSessionRecovery();
   
   const [showDonation, setShowDonation] = useState(false);
@@ -129,10 +129,10 @@ export default function Index() {
           {/* Stats section appears after the button */}
           {user && <StatsQuickView />}
           
-          {/* Active Session Card - appears after stats if there's an active session recovered from DB */}
-          {user && hasActiveSession && recoveredActiveSession && (
-            <ActiveSessionCard 
-              session={recoveredActiveSession}
+          {/* Active Sessions List - appears after stats if there are active sessions */}
+          {user && hasActiveSessions && (
+            <ActiveSessionsList 
+              sessions={activeSessions}
               onResume={resumeSession}
             />
           )}
@@ -165,7 +165,7 @@ export default function Index() {
             </div>
           )}
 
-          {user && sessions.length === 0 && !hasActiveSession && (
+          {user && sessions.length === 0 && !hasActiveSessions && (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
                 <Icon name="PlusCircle" size={48} className="mx-auto" />

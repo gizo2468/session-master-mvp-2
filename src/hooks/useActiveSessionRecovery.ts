@@ -10,8 +10,8 @@ export const useActiveSessionRecovery = () => {
   const { sessions, isLoading: isSessionsLoading } = useSessionContext();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Find active session from the main session context instead of fetching separately
-  const activeSession = sessions.find(session => session.isActive) || null;
+  // Find ALL active sessions from the main session context
+  const activeSessions = sessions.filter(session => session.isActive) || [];
 
   useEffect(() => {
     if (!isSessionsLoading) {
@@ -19,22 +19,23 @@ export const useActiveSessionRecovery = () => {
     }
   }, [isSessionsLoading]);
 
-  const resumeSession = () => {
-    if (activeSession) {
+  const resumeSession = (sessionId: string) => {
+    const sessionToResume = activeSessions.find(session => session.id === sessionId);
+    if (sessionToResume) {
       // Add safety check - verify session is still valid before navigating
-      if (activeSession.isActive) {
-        navigate(`/live-session/${activeSession.id}`);
+      if (sessionToResume.isActive) {
+        navigate(`/live-session/${sessionToResume.id}`);
       } else {
-        console.warn('Attempted to resume inactive session:', activeSession.id);
+        console.warn('Attempted to resume inactive session:', sessionToResume.id);
         // Session is no longer active, don't navigate
       }
     }
   };
 
   return {
-    activeSession,
+    activeSessions,
     isLoading,
     resumeSession,
-    hasActiveSession: !!activeSession && activeSession.isActive
+    hasActiveSessions: activeSessions.length > 0
   };
 };
