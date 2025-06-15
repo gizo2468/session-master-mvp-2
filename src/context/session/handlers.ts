@@ -19,22 +19,17 @@ export const createTableHandHandlers = (
     const table = session.tables[tableIndex];
     const tableFormat = table.format;
     
-    // CRITICAL FIX: Ensure all hand data is preserved when creating new hand with proper string conversion
+    // CRITICAL FIX: Ensure all hand data is preserved when creating new hand
     const newHand: HandData = {
       ...hand,
       id: uuidv4(),
       createdAt: new Date(),
       tableId: tableId,
       sessionId: sessionId,
-      // Ensure cards data is properly set as string with safe conversion
-      cards: hand.cards || (hand.holeCards ? 
-        (Array.isArray(hand.holeCards) ? 
-          hand.holeCards.map(card => String(card)).join(',') : 
-          String(hand.holeCards)
-        ) : ''
-      ),
+      // Ensure cards data is properly set
+      cards: hand.cards || (hand.holeCards ? (Array.isArray(hand.holeCards) ? hand.holeCards.join(',') : hand.holeCards) : ''),
       holeCards: hand.holeCards || (hand.cards ? hand.cards.split(',').filter(c => c.trim()) : []),
-      // Ensure action is properly set as string
+      // Ensure action is properly set
       action: hand.action || hand.preflopAction || '',
       preflopAction: hand.preflopAction || hand.action || '',
       // Ensure result data is preserved
@@ -101,16 +96,11 @@ export const createTableHandHandlers = (
     const table = session.tables[tableIndex];
     if (!table.hands) return;
     
-    // CRITICAL FIX: Ensure all hand data is preserved during update with proper string conversion
+    // CRITICAL FIX: Ensure all hand data is preserved during update
     const updatedHand = {
       ...hand,
-      // Preserve essential data mappings with proper string conversion
-      cards: hand.cards || (hand.holeCards ? 
-        (Array.isArray(hand.holeCards) ? 
-          hand.holeCards.map(card => String(card)).join(',') : 
-          String(hand.holeCards)
-        ) : ''
-      ),
+      // Preserve essential data mappings
+      cards: hand.cards || (hand.holeCards ? (Array.isArray(hand.holeCards) ? hand.holeCards.join(',') : hand.holeCards) : ''),
       action: hand.action || hand.preflopAction || '',
       result: hand.result || hand.showdownResult,
       resultAmount: hand.resultAmount || hand.amountWon || 0
