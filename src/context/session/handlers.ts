@@ -26,8 +26,13 @@ export const createTableHandHandlers = (
       createdAt: new Date(),
       tableId: tableId,
       sessionId: sessionId,
-      // Ensure cards data is properly set as string
-      cards: hand.cards || (hand.holeCards ? (Array.isArray(hand.holeCards) ? hand.holeCards.map(String).join(',') : String(hand.holeCards)) : ''),
+      // Ensure cards data is properly set as string with safe conversion
+      cards: hand.cards || (hand.holeCards ? 
+        (Array.isArray(hand.holeCards) ? 
+          hand.holeCards.map(card => String(card)).join(',') : 
+          String(hand.holeCards)
+        ) : ''
+      ),
       holeCards: hand.holeCards || (hand.cards ? hand.cards.split(',').filter(c => c.trim()) : []),
       // Ensure action is properly set as string
       action: hand.action || hand.preflopAction || '',
@@ -100,7 +105,12 @@ export const createTableHandHandlers = (
     const updatedHand = {
       ...hand,
       // Preserve essential data mappings with proper string conversion
-      cards: hand.cards || (hand.holeCards ? (Array.isArray(hand.holeCards) ? hand.holeCards.map(String).join(',') : String(hand.holeCards)) : ''),
+      cards: hand.cards || (hand.holeCards ? 
+        (Array.isArray(hand.holeCards) ? 
+          hand.holeCards.map(card => String(card)).join(',') : 
+          String(hand.holeCards)
+        ) : ''
+      ),
       action: hand.action || hand.preflopAction || '',
       result: hand.result || hand.showdownResult,
       resultAmount: hand.resultAmount || hand.amountWon || 0
