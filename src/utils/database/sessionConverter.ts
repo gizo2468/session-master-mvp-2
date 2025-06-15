@@ -6,9 +6,9 @@ export const convertDatabaseSessionToPokerSession = (
   tables: any[] = [],
   hands: any[] = []
 ): PokerSession => {
-  console.log('🔄 CRITICAL FIX: Converting database session with enhanced hand ID consistency:', sessionData.id);
+  console.log('🔄 CONVERTER: Converting database session with proper hand ID mapping:', sessionData.id);
   
-  // CRITICAL FIX: Ensure proper UTC handling for start_time
+  // Ensure proper UTC handling for start_time
   let startTime: Date;
   let startTimeUTC: number | undefined;
   
@@ -16,7 +16,7 @@ export const convertDatabaseSessionToPokerSession = (
     // Use the raw UTC timestamp for accuracy
     startTimeUTC = sessionData.start_time_utc;
     startTime = new Date(startTimeUTC);
-    console.log('🕐 FIXED: Using start_time_utc for accurate timing:', { 
+    console.log('🕐 CONVERTER: Using start_time_utc for timing:', { 
       start_time_utc: startTimeUTC, 
       converted_date: startTime.toISOString() 
     });
@@ -24,59 +24,73 @@ export const convertDatabaseSessionToPokerSession = (
     // Fallback to start_time but ensure it's treated as UTC
     startTime = new Date(sessionData.start_time);
     startTimeUTC = startTime.getTime();
-    console.log('🕐 FIXED: Fallback to start_time with UTC conversion:', {
+    console.log('🕐 CONVERTER: Fallback to start_time with UTC conversion:', {
       original: sessionData.start_time,
       converted: startTime.toISOString(),
       utc_timestamp: startTimeUTC
     });
   }
 
-  // CRITICAL FIX: Ensure proper UTC handling for end_time (now timestamptz)
+  // Ensure proper UTC handling for end_time
   let endTime: Date | undefined;
   if (sessionData.end_time) {
-    // With the schema fix, end_time is now timestamptz - treat it as timezone-aware
     endTime = new Date(sessionData.end_time);
-    console.log('🕐 FIXED: Converting end_time as timezone-aware timestamp:', {
+    console.log('🕐 CONVERTER: Converting end_time as timezone-aware timestamp:', {
       original: sessionData.end_time,
       converted: endTime.toISOString(),
       utc_timestamp: endTime.getTime()
     });
   }
 
-  // CRITICAL FIX: Convert hands with consistent ID mapping
-  const convertedHands: HandData[] = hands.map(hand => ({
-    id: hand.id, // CRITICAL FIX: Use Supabase ID as local ID for consistency
-    supabaseId: hand.id, // CRITICAL FIX: Store the same ID as supabaseId for future updates
-    sessionId: hand.session_id,
-    tableId: hand.table_id,
-    handNumber: hand.hand_number,
-    position: hand.position,
-    cards: hand.hole_cards || '',
-    action: hand.preflop_action || '',
-    holeCards: hand.hole_cards ? hand.hole_cards.split(',').filter(card => card.trim()) : [],
-    preflopAction: hand.preflop_action,
-    flopCards: hand.flop_cards ? hand.flop_cards.split(',').filter(card => card.trim()) : [],
-    flopAction: hand.flop_action,
-    turnCard: hand.turn_card,
-    turnAction: hand.turn_action,
-    riverCard: hand.river_card,
-    riverAction: hand.river_action,
-    showdownResult: hand.showdown_result,
-    potSize: parseFloat(hand.pot_size || '0'),
-    amountInvested: parseFloat(hand.amount_invested || '0'),
-    amountWon: parseFloat(hand.amount_won || '0'),
-    notes: hand.hand_notes,
-    image: hand.hand_image,
-    currencyType: hand.currency_type || 'currency',
-    createdAt: new Date(hand.created_at)
-  }));
+  // CRITICAL FIX: Convert hands with proper ID consistency
+  const convertedHands: HandData[] = hands.map(hand => {
+    const convertedHand: HandData = {
+      id: hand.id, // Use Supabase ID as local ID
+      supabaseId: hand.id, // CRITICAL: Store Supabase ID for future updates
+      sessionId: hand.session_id,
+      tableId: hand.table_id,
+      handNumber: hand.hand_number,
+      position: hand.position,
+      cards: hand.hole_cards || '',
+      action: hand.preflop_action || '',
+      holeCards: hand.hole_cards ? hand.hole_cards.split(',').filter(card => card.trim()) : [],
+      preflopAction: hand.preflop_action,
+      flopCards: hand.flop_cards ? hand.flop_cards.split(',').filter(card => card.trim()) : [],
+      flopAction: hand.flop_action,
+      turnCard: hand.turn_card,
+      turnAction: hand.turn_action,
+      riverCard: hand.river_card,
+      riverAction: hand.river_action,
+      showdownResult: hand.showdown_result,
+      potSize: parseFloat(hand.pot_size || '0'),
+      amountInvested: parseFloat(hand.amount_invested || '0'),
+      amountWon: parseFloat(hand.amount_won || '0'),
+      notes: hand.hand_notes,
+      image: hand.hand_image,
+      currencyType: hand.currency_type || 'currency',
+      createdAt: new Date(hand.created_at)
+    };
+    
+    console.log('🔄 CONVERTER: Converted hand with consistent IDs:', {
+      localId: convertedHand.id,
+      supabaseId: convertedHand.supabaseId,
+      consistent: convertedHand.id === convertedHand.supabaseId,
+      position: convertedHand.position,
+      holeCards: convertedHand.holeCards
+    });
+    
+    return convertedHand;
+  });
 
-  console.log('🔄 CRITICAL FIX: Converting hands with consistent ID mapping:', {
+  console.log('🔄 CONVERTER: Hand conversion summary:', {
     totalHands: convertedHands.length,
     handsWithTableId: convertedHands.filter(h => h.tableId).length,
-    handsWithoutTableId: convertedHands.filter(h => !h.tableId).length,
-    handsWithSupabaseId: convertedHands.filter(h => h.supabaseId).length,
-    sampleHandIds: convertedHands.slice(0, 3).map(h => ({ localId: h.id, supabaseId: h.supabaseId }))
+    handsWithConsistentIds: convertedHands.filter(h => h.id === h.supabaseId).length,
+    sampleHandMapping: convertedHands.slice(0, 2).map(h => ({ 
+      localId: h.id, 
+      supabaseId: h.supabaseId,
+      position: h.position 
+    }))
   });
 
   // Create a mapping of hands by table_id
@@ -95,9 +109,9 @@ export const convertDatabaseSessionToPokerSession = (
     }
   });
 
-  // Convert tables with consistent UTC handling and proper hand assignment
+  // Convert tables with proper hand assignment
   const convertedTables: TableData[] = tables.map(table => {
-    console.log('🔄 CRITICAL FIX: Converting table with proper hand assignment:', table.id);
+    console.log('🔄 CONVERTER: Converting table with hand assignment:', table.id);
     
     let tableStartTime: Date;
     let tableStartTimeUTC: number | undefined;
@@ -113,28 +127,17 @@ export const convertDatabaseSessionToPokerSession = (
     let tableEndTime: Date | undefined;
     let tableEndTimeUTC: number | undefined;
     if (table.end_time) {
-      // With schema fix, table end_time is now timestamptz - treat as timezone-aware
       tableEndTime = new Date(table.end_time);
       tableEndTimeUTC = table.end_time_utc || tableEndTime.getTime();
-      console.log('🕐 FIXED: Table end_time now timezone-aware:', {
-        tableId: table.id,
-        original: table.end_time,
-        converted: tableEndTime.toISOString()
-      });
     }
 
-    // CRITICAL FIX: Assign hands to this specific table with consistent IDs
+    // Assign hands to this specific table with consistent IDs
     const tableHands = handsByTableId.get(table.id) || [];
-    console.log('🔄 CRITICAL FIX: Assigning hands to table with consistent IDs:', {
+    console.log('🔄 CONVERTER: Assigning hands to table:', {
       tableId: table.id,
       tableName: table.table_name,
       handsCount: tableHands.length,
-      handsWithSupabaseId: tableHands.filter(h => h.supabaseId).length,
-      sampleHandMapping: tableHands.slice(0, 2).map(h => ({ 
-        localId: h.id, 
-        supabaseId: h.supabaseId,
-        consistent: h.id === h.supabaseId 
-      }))
+      handsWithConsistentIds: tableHands.filter(h => h.id === h.supabaseId).length
     });
 
     return {
@@ -160,7 +163,7 @@ export const convertDatabaseSessionToPokerSession = (
       bountyAmount: parseFloat(table.bounty_amount || '0'),
       finalPosition: table.final_position,
       notes: table.table_notes,
-      hands: tableHands // CRITICAL FIX: Properly assign hands with consistent IDs
+      hands: tableHands // Properly assign hands with consistent IDs
     };
   });
 
@@ -197,7 +200,7 @@ export const convertDatabaseSessionToPokerSession = (
     hands: sessionLevelHands // Only session-level hands (legacy support)
   };
 
-  console.log('✅ CRITICAL FIX: Session conversion complete with consistent hand ID mapping:', {
+  console.log('✅ CONVERTER: Session conversion complete with consistent hand ID mapping:', {
     sessionId: session.id,
     startTime: session.startTime.toISOString(),
     endTime: session.endTime?.toISOString(),
