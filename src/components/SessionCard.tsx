@@ -2,6 +2,8 @@
 import React from 'react';
 import { format, differenceInMinutes, differenceInHours } from 'date-fns';
 import ProfitLossBadge from './poker/ProfitLossBadge';
+import SessionStatsDisplay from './poker/SessionStatsDisplay';
+import { useSessionStats } from '@/hooks/useSessionStats';
 import { PokerSession } from '@/types/poker';
 
 interface SessionCardProps {
@@ -10,6 +12,8 @@ interface SessionCardProps {
 }
 
 export default function SessionCard({ session, onClick }: SessionCardProps) {
+  const { stats, loading } = useSessionStats(session.id, session);
+  
   // Calculate derived values from database data
   const profit = session.cashOut !== undefined ? session.cashOut - session.buyIn : 0;
   
@@ -80,6 +84,15 @@ export default function SessionCard({ session, onClick }: SessionCardProps) {
           </div>
         )}
       </div>
+      
+      {/* Session Statistics Display */}
+      <SessionStatsDisplay 
+        tables={stats.tables}
+        hands={stats.hands}
+        totalBuyIns={stats.totalBuyIns}
+        totalPayout={stats.totalPayout}
+        loading={loading}
+      />
       
       {session.notes && (
         <div className="mt-3 pt-3 border-t border-gray-200">
