@@ -69,6 +69,7 @@ export const convertDatabaseSessionToPokerSession = (
       name: table.table_name || 'Table',
       format: table.table_type || 'Cash',
       gameType: table.game_format || 'NLH',
+      location: sessionData.location || 'Unknown', // Add required location property
       buyIn: parseFloat(table.buy_in || '0'),
       initialBuyIn: parseFloat(table.buy_in || '0'),
       smallBlind: table.stakes ? parseFloat(table.stakes.split('/')[0]) : undefined,
@@ -96,6 +97,8 @@ export const convertDatabaseSessionToPokerSession = (
     tableId: hand.table_id,
     handNumber: hand.hand_number,
     position: hand.position,
+    cards: hand.hole_cards || '', // Add required cards property
+    action: hand.preflop_action || '', // Add required action property
     holeCards: hand.hole_cards ? hand.hole_cards.split(',') : [],
     preflopAction: hand.preflop_action,
     flopCards: hand.flop_cards ? hand.flop_cards.split(',') : [],
