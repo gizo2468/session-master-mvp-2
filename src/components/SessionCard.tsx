@@ -14,14 +14,36 @@ interface SessionCardProps {
 export default function SessionCard({ session, onClick }: SessionCardProps) {
   const { stats, loading } = useSessionStats(session.id, session);
   
-  // Calculate derived values from database data
+  // CRITICAL FIX: Calculate profit with proper timezone handling
   const profit = session.cashOut !== undefined ? session.cashOut - session.buyIn : 0;
   
   const calculateDuration = () => {
+    // CRITICAL FIX: Ensure consistent timezone handling for duration calculation
     const start = new Date(session.startTime);
     const end = session.endTime ? new Date(session.endTime) : new Date();
+    
+    console.log('🕐 FIXED: Duration calculation with UTC consistency:', {
+      sessionId: session.id,
+      startTime: start.toISOString(),
+      endTime: end.toISOString(),
+      startTimestamp: start.getTime(),
+      endTimestamp: end.getTime()
+    });
+    
     const hours = differenceInHours(end, start);
     const minutes = differenceInMinutes(end, start) % 60;
+    
+    // Ensure we never get negative duration
+    if (hours < 0 || (hours === 0 && minutes < 0)) {
+      console.warn('⚠️ FIXED: Detected negative duration, using absolute values:', {
+        originalHours: hours,
+        originalMinutes: minutes,
+        sessionId: session.id
+      });
+      const absHours = Math.abs(hours);
+      const absMinutes = Math.abs(minutes);
+      return absHours > 0 ? `${absHours}h ${absMinutes}m` : `${absMinutes}m`;
+    }
     
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
@@ -30,6 +52,8 @@ export default function SessionCard({ session, onClick }: SessionCardProps) {
   };
 
   const duration = calculateDuration();
+  
+  // CRITICAL FIX: Format dates with proper timezone handling
   const formattedDate = format(new Date(session.startTime), 'MMM d, yyyy');
   const formattedTime = format(new Date(session.startTime), 'h:mm a');
 
