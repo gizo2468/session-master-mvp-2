@@ -36,7 +36,7 @@ export default function SessionCard({ session, onClick }: SessionCardProps) {
   return (
     <div 
       onClick={onClick}
-      className="bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-poker-feltGreen"
+      className="bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer hover:shadow-lg transition-shadow"
     >
       <div className="flex justify-between items-start mb-3">
         <div>
@@ -52,7 +52,7 @@ export default function SessionCard({ session, onClick }: SessionCardProps) {
         )}
       </div>
       
-      <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="grid grid-cols-2 gap-4 text-sm mb-3">
         <div>
           <span className="text-gray-500">Game:</span>
           <span className="ml-1 font-medium">{session.gameType}</span>
@@ -62,25 +62,13 @@ export default function SessionCard({ session, onClick }: SessionCardProps) {
           <span className="ml-1 font-medium">{session.format}</span>
         </div>
         <div>
-          <span className="text-gray-500">Buy-in:</span>
-          <span className="ml-1 font-medium">${session.buyIn.toFixed(2)}</span>
-        </div>
-        <div>
           <span className="text-gray-500">Duration:</span>
           <span className="ml-1 font-medium">{duration}</span>
         </div>
         {session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined && (
-          <>
-            <div className="col-span-2">
-              <span className="text-gray-500">Blinds:</span>
-              <span className="ml-1 font-medium">${session.smallBlind}/${session.bigBlind}</span>
-            </div>
-          </>
-        )}
-        {!session.isActive && session.cashOut !== undefined && (
           <div>
-            <span className="text-gray-500">Cash Out:</span>
-            <span className="ml-1 font-medium">${session.cashOut.toFixed(2)}</span>
+            <span className="text-gray-500">Blinds:</span>
+            <span className="ml-1 font-medium">${session.smallBlind}/${session.bigBlind}</span>
           </div>
         )}
       </div>
