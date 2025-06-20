@@ -3,15 +3,17 @@ import React from 'react';
 import { format, differenceInMinutes, differenceInHours } from 'date-fns';
 import ProfitLossBadge from './poker/ProfitLossBadge';
 import SessionStatsDisplay from './poker/SessionStatsDisplay';
+import SessionActionButtons from './SessionActionButtons';
 import { useSessionStats } from '@/hooks/useSessionStats';
 import { PokerSession } from '@/types/poker';
 
 interface SessionCardProps {
   session: PokerSession;
   onClick: () => void;
+  showActions?: boolean;
 }
 
-export default function SessionCard({ session, onClick }: SessionCardProps) {
+export default function SessionCard({ session, onClick, showActions = false }: SessionCardProps) {
   const { stats, loading } = useSessionStats(session.id, session);
   
   // CRITICAL FIX: Calculate profit with proper timezone handling
@@ -60,9 +62,17 @@ export default function SessionCard({ session, onClick }: SessionCardProps) {
   const formattedDate = format(new Date(session.startTime), 'MMM d, yyyy');
   const formattedTime = format(new Date(session.startTime), 'h:mm a');
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent card click when clicking on action buttons
+    if ((e.target as HTMLElement).closest('.session-actions')) {
+      return;
+    }
+    onClick();
+  };
+
   return (
     <div 
-      onClick={onClick}
+      onClick={handleCardClick}
       className="bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer hover:shadow-lg transition-shadow"
     >
       <div className="flex justify-between items-start mb-3">
@@ -112,6 +122,13 @@ export default function SessionCard({ session, onClick }: SessionCardProps) {
       {session.notes && (
         <div className="mt-3 pt-3 border-t border-gray-200">
           <p className="text-sm text-gray-600 line-clamp-2">{session.notes}</p>
+        </div>
+      )}
+      
+      {/* Action buttons for completed sessions */}
+      {showActions && !session.isActive && (
+        <div className="session-actions mt-3 pt-3 border-t border-gray-200">
+          <SessionActionButtons session={session} />
         </div>
       )}
     </div>

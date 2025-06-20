@@ -1,195 +1,51 @@
 
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/context/AuthContext";
+import { SessionProvider } from "@/context/SessionContext";
 import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import SessionForm from "./pages/SessionForm";
+import NewSession from "./pages/NewSession";
+import LiveSession from "./pages/LiveSession";
 import SessionHistory from "./pages/SessionHistory";
 import SessionDetail from "./pages/SessionDetail";
-import LiveSession from "./pages/LiveSession";
-import ConfirmSession from "./pages/ConfirmSession";
-import FocusModePage from "./pages/FocusModePage";
-import CoachProfile from "./pages/CoachProfile";
-import ConnectCoach from "./pages/ConnectCoach";
-import CoachDashboard from "./pages/CoachDashboard";
-import CoachStudentDetail from "./pages/CoachStudentDetail";
-import CoachSessionReview from "./pages/CoachSessionReview";
-import CoachUpgrade from "./pages/CoachUpgrade";
-import PlayerDashboard from "./pages/PlayerDashboard";
-import Settings from "./pages/Settings";
+import EditSession from "./pages/EditSession";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
-import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
-import TermsOfUse from "./pages/legal/TermsOfUse";
-import CookiePolicy from "./pages/legal/CookiePolicy";
-import { SessionProvider } from "./context/SessionContext";
-import { CoachStudentProvider } from "./context/CoachStudentContext";
-import { AuthProvider } from "./context/AuthContext";
-import { LanguageProvider } from "./context/LanguageContext";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import CoachDashboard from "./pages/coach/CoachDashboard";
+import StudentDetail from "./pages/coach/StudentDetail";
+import StudentSessionDetail from "./pages/coach/StudentSessionDetail";
 
-// Create a new query client instance
 const queryClient = new QueryClient();
 
 const App = () => (
-  <TooltipPrimitive.Provider>
-    <QueryClientProvider client={queryClient}>
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <LanguageProvider>
-            <SessionProvider>
-              <CoachStudentProvider>
-                <Routes>
-                  {/* Auth Routes */}
-                  <Route path="/auth/login" element={<Login />} />
-                  <Route path="/auth/signup" element={<Signup />} />
-                  <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/auth/reset-password" element={<ResetPassword />} />
-                  
-                  {/* Legal Pages - Available without authentication */}
-                  <Route path="/legal/privacy" element={<PrivacyPolicy />} />
-                  <Route path="/legal/terms" element={<TermsOfUse />} />
-                  <Route path="/legal/cookie" element={<CookiePolicy />} />
-                  
-                  {/* Protected Routes */}
-                  <Route 
-                    path="/" 
-                    element={
-                      <ProtectedRoute>
-                        <Index />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/new-session" 
-                    element={
-                      <ProtectedRoute>
-                        <SessionForm />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/history" 
-                    element={
-                      <ProtectedRoute>
-                        <SessionHistory />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/session/:id" 
-                    element={
-                      <ProtectedRoute>
-                        <SessionDetail />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/live-session/:id" 
-                    element={
-                      <ProtectedRoute>
-                        <LiveSession />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/confirm-session" 
-                    element={
-                      <ProtectedRoute>
-                        <ConfirmSession />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/focus-mode" 
-                    element={
-                      <ProtectedRoute>
-                        <FocusModePage />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/coach-profile" 
-                    element={
-                      <ProtectedRoute>
-                        <CoachProfile />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/connect-coach" 
-                    element={
-                      <ProtectedRoute>
-                        <ConnectCoach />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/coach-dashboard" 
-                    element={
-                      <ProtectedRoute>
-                        <CoachDashboard />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/coach-upgrade" 
-                    element={
-                      <ProtectedRoute>
-                        <CoachUpgrade />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/player-dashboard" 
-                    element={
-                      <ProtectedRoute>
-                        <PlayerDashboard />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/coach/student/:studentId" 
-                    element={
-                      <ProtectedRoute>
-                        <CoachStudentDetail />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/coach/student/:studentId/session/:sessionId" 
-                    element={
-                      <ProtectedRoute>
-                        <CoachSessionReview />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/settings" 
-                    element={
-                      <ProtectedRoute>
-                        <Settings />
-                      </ProtectedRoute>
-                    } 
-                  />
-
-                  {/* Catch-all route */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </CoachStudentProvider>
-            </SessionProvider>
-          </LanguageProvider>
+          <SessionProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/new-session" element={<NewSession />} />
+              <Route path="/session/:sessionId" element={<LiveSession />} />
+              <Route path="/session/:sessionId/edit" element={<EditSession />} />
+              <Route path="/session/:sessionId/details" element={<SessionDetail />} />
+              <Route path="/history" element={<SessionHistory />} />
+              <Route path="/auth/login" element={<Login />} />
+              <Route path="/auth/signup" element={<Signup />} />
+              <Route path="/coach" element={<CoachDashboard />} />
+              <Route path="/coach/student/:studentId" element={<StudentDetail />} />
+              <Route path="/coach/student/:studentId/session/:sessionId" element={<StudentSessionDetail />} />
+            </Routes>
+          </SessionProvider>
         </AuthProvider>
       </BrowserRouter>
-    </QueryClientProvider>
-  </TooltipPrimitive.Provider>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;
