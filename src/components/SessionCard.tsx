@@ -16,8 +16,11 @@ interface SessionCardProps {
 export default function SessionCard({ session, onClick, showActions = false }: SessionCardProps) {
   const { stats, loading } = useSessionStats(session.id, session);
   
-  // CRITICAL FIX: Calculate profit with proper timezone handling
-  const profit = session.cashOut !== undefined ? session.cashOut - session.buyIn : 0;
+  // FIXED: Calculate net profit correctly: Payout - Buy-ins
+  // This matches the logic used in StatsQuickView for consistency
+  const netProfit = session.cashOut !== undefined && !isNaN(session.cashOut) && !isNaN(session.buyIn) 
+    ? session.cashOut - session.buyIn 
+    : -session.buyIn; // If no cashOut, it's a loss of the buy-in amount
   
   const calculateDuration = () => {
     // CRITICAL FIX: With schema fix, both start and end times are now timezone-aware
@@ -35,7 +38,6 @@ export default function SessionCard({ session, onClick, showActions = false }: S
     const hours = differenceInHours(end, start);
     const minutes = differenceInMinutes(end, start) % 60;
     
-    // With timezone fix, duration should always be positive
     if (hours < 0 || (hours === 0 && minutes < 0)) {
       console.error('❌ CRITICAL: Still getting negative duration after schema fix:', {
         originalHours: hours,
@@ -44,7 +46,6 @@ export default function SessionCard({ session, onClick, showActions = false }: S
         startTime: session.startTime,
         endTime: session.endTime
       });
-      // Fallback to absolute values but this should not happen anymore
       const absHours = Math.abs(hours);
       const absMinutes = Math.abs(minutes);
       return absHours > 0 ? `${absHours}h ${absMinutes}m` : `${absMinutes}m`;
@@ -63,7 +64,6 @@ export default function SessionCard({ session, onClick, showActions = false }: S
   const formattedTime = format(new Date(session.startTime), 'h:mm a');
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Prevent card click when clicking on action buttons
     if ((e.target as HTMLElement).closest('.session-actions')) {
       return;
     }
@@ -85,7 +85,7 @@ export default function SessionCard({ session, onClick, showActions = false }: S
             Live
           </span>
         ) : (
-          <ProfitLossBadge profit={profit} />
+          <ProfitLossBadge profit={netProfit} />
         )}
       </div>
       

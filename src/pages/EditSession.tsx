@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,10 +20,19 @@ export default function EditSession() {
   const [session, setSession] = useState<PokerSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    location: string;
+    gameType: 'NLH' | 'PLO';
+    format: 'Cash' | 'Tournament';
+    buyIn: number;
+    cashOut: number;
+    smallBlind: number;
+    bigBlind: number;
+    notes: string;
+  }>({
     location: '',
-    gameType: 'NLH' as const,
-    format: 'Cash' as const,
+    gameType: 'NLH',
+    format: 'Cash',
     buyIn: 0,
     cashOut: 0,
     smallBlind: 0,
@@ -41,7 +49,6 @@ export default function EditSession() {
         setLoading(true);
         console.log('🔄 Loading session for edit from database:', sessionId);
         
-        // Fetch fresh data from database
         const sessions = await fetchUserSessions();
         const foundSession = sessions.find(s => s.id === sessionId);
         
@@ -112,10 +119,8 @@ export default function EditSession() {
         notes: formData.notes
       };
       
-      // Update session in database
       await updateSession(updatedSession);
       
-      // Refresh sessions list to ensure UI reflects database state
       if (refreshSessionsFromDatabase) {
         await refreshSessionsFromDatabase();
       }
