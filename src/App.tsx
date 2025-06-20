@@ -7,16 +7,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { SessionProvider } from "@/context/SessionContext";
 import Index from "./pages/Index";
-import NewSession from "./pages/NewSession";
 import LiveSession from "./pages/LiveSession";
 import SessionHistory from "./pages/SessionHistory";
 import SessionDetail from "./pages/SessionDetail";
 import EditSession from "./pages/EditSession";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
-import CoachDashboard from "./pages/coach/CoachDashboard";
-import StudentDetail from "./pages/coach/StudentDetail";
-import StudentSessionDetail from "./pages/coach/StudentSessionDetail";
 
 const queryClient = new QueryClient();
 
@@ -30,16 +26,12 @@ const App = () => (
           <SessionProvider>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/new-session" element={<NewSession />} />
               <Route path="/session/:sessionId" element={<LiveSession />} />
               <Route path="/session/:sessionId/edit" element={<EditSession />} />
               <Route path="/session/:sessionId/details" element={<SessionDetail />} />
               <Route path="/history" element={<SessionHistory />} />
               <Route path="/auth/login" element={<Login />} />
               <Route path="/auth/signup" element={<Signup />} />
-              <Route path="/coach" element={<CoachDashboard />} />
-              <Route path="/coach/student/:studentId" element={<StudentDetail />} />
-              <Route path="/coach/student/:studentId/session/:sessionId" element={<StudentSessionDetail />} />
             </Routes>
           </SessionProvider>
         </AuthProvider>

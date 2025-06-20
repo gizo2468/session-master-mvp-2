@@ -23,8 +23,8 @@ export default function EditSession() {
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     location: '',
-    gameType: '',
-    format: '',
+    gameType: 'NLH' as const,
+    format: 'Cash' as const,
     buyIn: 0,
     cashOut: 0,
     smallBlind: 0,
@@ -61,8 +61,8 @@ export default function EditSession() {
         // Pre-populate form with database values
         setFormData({
           location: foundSession.location || '',
-          gameType: foundSession.gameType || 'NLH',
-          format: foundSession.format || 'Cash',
+          gameType: (foundSession.gameType as 'NLH' | 'PLO') || 'NLH',
+          format: (foundSession.format as 'Cash' | 'Tournament') || 'Cash',
           buyIn: foundSession.buyIn || 0,
           cashOut: foundSession.cashOut || 0,
           smallBlind: foundSession.smallBlind || 0,
