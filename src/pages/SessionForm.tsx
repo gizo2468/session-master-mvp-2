@@ -149,14 +149,18 @@ export default function SessionForm() {
 
       console.log('✅ Session started successfully with initial table');
 
+      // Show success message
       toast({
         title: "Session Started",
         description: "Your poker session has been successfully created with the initial table."
       });
 
-      // Navigate to the live session page - this is the key fix
+      // Small delay to ensure session is properly saved before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Navigate to the live session page
       console.log('🔄 Navigating to live session page:', `/session/${newSession.id}`);
-      navigate(`/session/${newSession.id}`);
+      navigate(`/session/${newSession.id}`, { replace: true });
       
     } catch (error) {
       console.error('❌ Error starting session:', error);
@@ -170,6 +174,8 @@ export default function SessionForm() {
           errorMessage = "Invalid session data. Please check your inputs and try again.";
         } else if (error.message.includes('network') || error.message.includes('fetch')) {
           errorMessage = "Network error. Please check your connection and try again.";
+        } else {
+          errorMessage = `Session creation failed: ${error.message}`;
         }
       }
       

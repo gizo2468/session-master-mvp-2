@@ -20,11 +20,12 @@ export default function LiveSession() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
-  const { currentSession, isLoadingSession } = useSessionLoader(id);
+  const { currentSession, isLoadingSession, loadingError } = useSessionLoader(id);
   const sessionActions = useSessionActions(currentSession);
   const rebuyActions = useRebuyActions(currentSession?.id);
   const endTableActions = useEndTableActions(currentSession);
   
+  // Loading state with better error handling
   if (isLoadingSession) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -36,12 +37,57 @@ export default function LiveSession() {
     );
   }
   
+  // Error state
+  if (loadingError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold mb-4 text-red-600">Session Error</h1>
+          <p className="text-gray-600 mb-6">{loadingError}</p>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
+            >
+              Retry
+            </Button>
+            <Button 
+              onClick={() => navigate('/')}
+              className="bg-poker-gold hover:bg-poker-darkGold text-white flex-1"
+            >
+              Return to Home
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // No session found state
   if (!currentSession) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold mb-4">No active session</h1>
+          <h1 className="text-2xl font-bold mb-4">No Active Session</h1>
           <p className="text-gray-600 mb-6">There is no active poker session at the moment.</p>
+          <Button 
+            onClick={() => navigate('/')}
+            className="bg-poker-gold hover:bg-poker-darkGold text-white"
+          >
+            Return to Home
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Validate session data before rendering components
+  if (!currentSession.startTime || !currentSession.gameType || !currentSession.format) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold mb-4 text-red-600">Invalid Session Data</h1>
+          <p className="text-gray-600 mb-6">The session data appears to be corrupted or incomplete.</p>
           <Button 
             onClick={() => navigate('/')}
             className="bg-poker-gold hover:bg-poker-darkGold text-white"
