@@ -45,7 +45,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     addSession: async () => {},
     updateSession: async () => {},
     deleteSession: async () => {},
-    startSession: async () => {},
+    startSession: async (session: PokerSession) => session, // FIXED: Return the session instead of void
     endSession: async () => {},
     pauseSession: async () => {},
     resumeSession: async () => {},

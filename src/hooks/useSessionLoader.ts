@@ -17,7 +17,6 @@ export const useSessionLoader = (id: string | undefined) => {
   const [loadingError, setLoadingError] = useState<string | null>(null);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
     let isCancelled = false;
 
     const loadSession = async () => {
@@ -34,7 +33,7 @@ export const useSessionLoader = (id: string | undefined) => {
 
         console.log('🔍 Looking for session:', id);
 
-        // FIXED: First try to find session in context with validation
+        // First try to find session in context with validation
         let foundSession = activeSession?.id === id ? activeSession : sessions.find(s => s.id === id);
         
         if (foundSession?.isActive && foundSession.startTime && foundSession.gameType && foundSession.format) {
@@ -47,15 +46,15 @@ export const useSessionLoader = (id: string | undefined) => {
           return;
         }
 
-        // FIXED: If not found in context or invalid, try to load from database with proper relationship
+        // If not found in context or invalid, try to load from database
         console.log('🔍 Loading session from database:', id);
         
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
           .select(`
             *,
-            session_tables!session_tables_session_id_fkey(*),
-            session_hands_new!session_hands_new_session_id_fkey(*)
+            session_tables(*),
+            session_hands_new(*)
           `)
           .eq('id', id)
           .eq('is_active', true)
@@ -131,21 +130,6 @@ export const useSessionLoader = (id: string | undefined) => {
       }
     };
 
-    // Set up timeout for stuck loading (10 seconds)
-    timeoutId = setTimeout(() => {
-      if (!isCancelled && isLoadingSession) {
-        console.error('❌ Session loading timeout');
-        setLoadingError('Session loading timeout - please try again');
-        setIsLoadingSession(false);
-        toast({
-          title: "Loading Timeout",
-          description: "Session loading took too long. Please try again.",
-          variant: "destructive"
-        });
-        navigate('/');
-      }
-    }, 10000);
-
     // Only load if we have an ID
     if (id) {
       loadSession();
@@ -153,7 +137,6 @@ export const useSessionLoader = (id: string | undefined) => {
 
     return () => {
       isCancelled = true;
-      clearTimeout(timeoutId);
     };
   }, [id, navigate, toast, sessions, activeSession]);
 
