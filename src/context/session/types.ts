@@ -11,7 +11,7 @@ export interface SessionContextType {
   addSession: (session: PokerSession) => Promise<void>;
   updateSession: (session: PokerSession) => Promise<void>;
   deleteSession: (id: string) => Promise<void>;
-  startSession: (session: PokerSession) => Promise<void>;
+  startSession: (session: PokerSession) => Promise<PokerSession>;
   endSession: (id: string, cashOut: number, notes?: string) => Promise<void>;
   pauseSession: (id: string) => Promise<void>;
   resumeSession: (id: string) => Promise<void>;
