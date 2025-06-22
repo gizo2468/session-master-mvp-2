@@ -20,6 +20,7 @@ export default function SessionDetail() {
   const navigate = useNavigate();
   const { sessions, updateSession, deleteSession, endSession, pauseSession, resumeSession } = useSessionContext();
   
+  // FIXED: Find session regardless of active status
   const session = sessions.find(s => s.id === id);
   const isMobile = useIsMobile();
   
@@ -70,6 +71,7 @@ export default function SessionDetail() {
     );
   }
   
+  // FIXED: Check for completion using both isActive and cashOut
   const isCompleted = !session.isActive && session.cashOut !== undefined;
   
   // Calculate total initial buy-ins across all tables
@@ -201,8 +203,9 @@ export default function SessionDetail() {
     updateSession(updatedSession);
   };
   
+  // FIXED: Only allow ending active sessions
   const handleEndSession = () => {
-    if (!session || !cashOutAmount) return;
+    if (!session || !cashOutAmount || !session.isActive) return;
     
     endSession(session.id, parseFloat(cashOutAmount));
     setShowEndSessionModal(false);
@@ -287,6 +290,7 @@ export default function SessionDetail() {
           </div>
         </header>
         
+        {/* FIXED: Only show timer for active sessions */}
         {session.isActive && (
           <SessionTimerCard
             startTime={session.startTime}
@@ -382,6 +386,7 @@ export default function SessionDetail() {
             )}
           </div>
           
+          {/* FIXED: Only show end session button for active sessions */}
           {session.isActive && (
             <button
               onClick={() => setShowEndSessionModal(true)}
@@ -453,7 +458,8 @@ export default function SessionDetail() {
           </div>
         )}
         
-        {showEndSessionModal && (
+        {/* FIXED: Only show end session modal for active sessions */}
+        {showEndSessionModal && session.isActive && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
               <h2 className="text-xl font-bold mb-4">End Session</h2>

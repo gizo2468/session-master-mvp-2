@@ -36,8 +36,8 @@ export const useSessionLoader = (id: string | undefined) => {
         // First try to find session in context with validation
         let foundSession = activeSession?.id === id ? activeSession : sessions.find(s => s.id === id);
         
-        if (foundSession?.isActive && foundSession.startTime && foundSession.gameType && foundSession.format) {
-          console.log('✅ Found valid active session in context:', foundSession.id);
+        if (foundSession && foundSession.startTime && foundSession.gameType && foundSession.format) {
+          console.log('✅ Found valid session in context:', foundSession.id);
           console.log('📋 Session tables:', foundSession.tables?.length || 0);
           if (!isCancelled) {
             setCurrentSession(foundSession);
@@ -49,6 +49,8 @@ export const useSessionLoader = (id: string | undefined) => {
         // If not found in context or invalid, try to load from database
         console.log('🔍 Loading session from database:', id);
         
+        // FIXED: Remove is_active filter to allow loading both active and completed sessions
+        // FIXED: Use maybeSingle() instead of single() to handle zero results gracefully
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
           .select(`
@@ -57,8 +59,7 @@ export const useSessionLoader = (id: string | undefined) => {
             session_hands_new(*)
           `)
           .eq('id', id)
-          .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
         if (isCancelled) return;
 
@@ -68,11 +69,11 @@ export const useSessionLoader = (id: string | undefined) => {
         }
 
         if (!sessionData) {
-          console.error('❌ Session not found in database or not active');
-          setLoadingError('Session not found or has ended');
+          console.error('❌ Session not found in database');
+          setLoadingError('Session not found');
           toast({
             title: "Session Not Found",
-            description: "The session you're looking for doesn't exist or has ended.",
+            description: "The session you're looking for doesn't exist.",
             variant: "destructive"
           });
           navigate('/');
@@ -99,6 +100,10 @@ export const useSessionLoader = (id: string | undefined) => {
 
         console.log('✅ Session loaded and converted successfully');
         console.log('📋 Converted session tables:', convertedSession.tables?.length || 0);
+        console.log('📊 Session status:', { 
+          isActive: convertedSession.isActive, 
+          currentStatus: convertedSession.currentStatus 
+        });
         
         if (!isCancelled) {
           setCurrentSession(convertedSession);
