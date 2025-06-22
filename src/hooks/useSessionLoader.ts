@@ -20,20 +20,24 @@ export const useSessionLoader = (id: string | undefined) => {
     const loadSession = async () => {
       try {
         setLoadingError(null);
+        setIsLoadingSession(true);
         
         if (!id) {
-          console.log('No session ID provided');
+          console.log('❌ No session ID provided');
+          setLoadingError('No session ID provided');
           navigate('/');
           return;
         }
 
-        // First try to find session in context
-        let foundSession = activeSession?.id === id ? activeSession : sessions.find(s => s.id === id && s.isActive);
+        console.log('🔍 Looking for session:', id);
+
+        // First try to find session in context (both active and in sessions list)
+        let foundSession = activeSession?.id === id ? activeSession : sessions.find(s => s.id === id);
         
         if (foundSession) {
-          // Double-check that the session is actually active
+          // Check if the session is actually active
           if (!foundSession.isActive) {
-            console.warn('Session found but not active:', foundSession.id);
+            console.warn('⚠️ Session found but not active:', foundSession.id);
             toast({
               title: "Session Ended",
               description: "This session has already been completed.",
@@ -45,7 +49,6 @@ export const useSessionLoader = (id: string | undefined) => {
           
           console.log('✅ Found active session in context:', foundSession.id);
           setCurrentSession(foundSession);
-          setIsLoadingSession(false);
           return;
         }
 
@@ -57,10 +60,15 @@ export const useSessionLoader = (id: string | undefined) => {
           .select('*')
           .eq('id', id)
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
-        if (sessionError || !sessionData) {
-          console.error('❌ Session not found or not active:', sessionError);
+        if (sessionError) {
+          console.error('❌ Database error loading session:', sessionError);
+          throw new Error(`Database error: ${sessionError.message}`);
+        }
+
+        if (!sessionData) {
+          console.error('❌ Session not found in database or not active');
           setLoadingError('Session not found or has ended');
           toast({
             title: "Session Not Found",
@@ -105,7 +113,7 @@ export const useSessionLoader = (id: string | undefined) => {
         await updateSession(convertedSession);
         
       } catch (error) {
-        console.error('❌ Failed to load session from database:', error);
+        console.error('❌ Failed to load session:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         setLoadingError(`Failed to load session: ${errorMessage}`);
         

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -155,7 +154,8 @@ export default function SessionForm() {
         description: "Your poker session has been successfully created with the initial table."
       });
 
-      // Navigate to the live session page
+      // Navigate to the live session page - this is the key fix
+      console.log('🔄 Navigating to live session page:', `/session/${newSession.id}`);
       navigate(`/session/${newSession.id}`);
       
     } catch (error) {
@@ -545,7 +545,14 @@ export default function SessionForm() {
               disabled={isSubmitting}
               className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md shadow-md transition-all"
             >
-              {isSubmitting ? 'Starting Session...' : 'Start Session'}
+              {isSubmitting ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Starting Session...
+                </div>
+              ) : (
+                'Start Session'
+              )}
             </Button>
           </form>
         </Form>

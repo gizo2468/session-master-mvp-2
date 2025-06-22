@@ -1,34 +1,39 @@
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
 import { useSessionContext } from '@/context/SessionContext';
+import { PokerSession } from '@/types/poker';
 
 export const useActiveSessionRecovery = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const { sessions, isLoading: isSessionsLoading } = useSessionContext();
-  const [isLoading, setIsLoading] = useState(true);
+  const { sessions } = useSessionContext();
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Find ALL active sessions from the main session context
-  const activeSessions = sessions.filter(session => session.isActive) || [];
+  // Get active sessions from the context
+  const activeSessions = sessions.filter(session => session.isActive);
+  const hasActiveSessions = activeSessions.length > 0;
 
-  useEffect(() => {
-    if (!isSessionsLoading) {
-      setIsLoading(false);
-    }
-  }, [isSessionsLoading]);
-
-  const resumeSession = (sessionId: string) => {
-    const sessionToResume = activeSessions.find(session => session.id === sessionId);
-    if (sessionToResume) {
-      // Add safety check - verify session is still valid before navigating
-      if (sessionToResume.isActive) {
-        navigate(`/live-session/${sessionToResume.id}`);
-      } else {
-        console.warn('Attempted to resume inactive session:', sessionToResume.id);
-        // Session is no longer active, don't navigate
+  const resumeSession = async (sessionId: string) => {
+    try {
+      setIsLoading(true);
+      console.log('🔄 Resuming session:', sessionId);
+      
+      // Find the session to ensure it exists and is active
+      const session = sessions.find(s => s.id === sessionId && s.isActive);
+      
+      if (!session) {
+        console.error('❌ Session not found or not active:', sessionId);
+        throw new Error('Session not found or no longer active');
       }
+
+      console.log('✅ Session found, navigating to live session page');
+      navigate(`/session/${sessionId}`);
+      
+    } catch (error) {
+      console.error('❌ Failed to resume session:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -36,6 +41,6 @@ export const useActiveSessionRecovery = () => {
     activeSessions,
     isLoading,
     resumeSession,
-    hasActiveSessions: activeSessions.length > 0
+    hasActiveSessions
   };
 };

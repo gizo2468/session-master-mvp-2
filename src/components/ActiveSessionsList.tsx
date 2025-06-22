@@ -26,6 +26,15 @@ export default function ActiveSessionsList({ sessions, onResume }: ActiveSession
     return null;
   }
 
+  const handleResume = async (sessionId: string) => {
+    try {
+      console.log('🔄 Resume button clicked for session:', sessionId);
+      await onResume(sessionId);
+    } catch (error) {
+      console.error('❌ Error in resume handler:', error);
+    }
+  };
+
   return (
     <div className="w-full space-y-3">
       <h3 className="text-lg font-bold text-green-800 mb-3">
@@ -51,7 +60,7 @@ export default function ActiveSessionsList({ sessions, onResume }: ActiveSession
               )}
             </div>
             <Button 
-              onClick={() => onResume(session.id)}
+              onClick={() => handleResume(session.id)}
               className="bg-green-600 hover:bg-green-700 text-white"
               size="sm"
             >

@@ -12,7 +12,7 @@ export default function NewSessionButton() {
       navigate('/new-session');
     } catch (error) {
       console.error('❌ Error navigating to new session:', error);
-      // Fallback: try to reload the page to the new session route
+      // Fallback: use window.location as backup
       window.location.href = '/new-session';
     }
   };
