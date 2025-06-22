@@ -23,6 +23,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [activeSession, setActiveSession] = useState<PokerSession | null>(null);
   const [showStorageWarning, setShowStorageWarning] = useState(false);
   const [isLoadingFromDatabase, setIsLoadingFromDatabase] = useState(false);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
   const [filters, setFilters] = useState<SessionFilter>({
     gameType: 'All',
     format: 'All',
@@ -48,7 +49,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     clearUserData(currentUserId);
   };
 
-  // Load active session from database
+  // Load active session from database with error handling
   const loadActiveSessionFromDatabase = async (userId: string | null) => {
     if (!userId) return null;
     
@@ -62,11 +63,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       return null;
     } catch (error) {
       console.error('❌ Failed to load active session from database:', error);
+      // Don't throw, just return null and continue with localStorage fallback
       return null;
     }
   };
 
-  // Enhanced session refresh function
+  // Enhanced session refresh function with error handling
   const refreshSessionsFromDatabase = async () => {
     if (!user?.id) return;
     
@@ -85,6 +87,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       
     } catch (error) {
       console.error('❌ Failed to refresh sessions from database:', error);
+      toast({
+        title: "Database Error",
+        description: "Failed to refresh sessions from database. Using local data.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoadingFromDatabase(false);
     }
@@ -118,60 +125,77 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('❌ Failed to load from database, falling back to localStorage:', error);
-        toast({
-          title: "Database connection issue",
-          description: "Loading sessions from local storage. Your data is safe.",
-          variant: "destructive"
-        });
+        
         // Fallback to localStorage
-        loadedSessions = loadSessions(userId);
-        setActiveSession(findActiveSession(loadedSessions));
+        try {
+          loadedSessions = loadSessions(userId);
+          setActiveSession(findActiveSession(loadedSessions));
+          console.log(`✅ Loaded ${loadedSessions.length} sessions from localStorage as fallback`);
+        } catch (localStorageError) {
+          console.error('❌ Failed to load from localStorage:', localStorageError);
+          setInitializationError('Failed to load session data. Please refresh the page.');
+          loadedSessions = [];
+          setActiveSession(null);
+        }
       }
     } else {
       // User not logged in, load from localStorage
-      loadedSessions = loadSessions(userId);
-      setActiveSession(findActiveSession(loadedSessions));
+      try {
+        loadedSessions = loadSessions(userId);
+        setActiveSession(findActiveSession(loadedSessions));
+      } catch (error) {
+        console.error('❌ Failed to load from localStorage (no user):', error);
+        loadedSessions = [];
+        setActiveSession(null);
+      }
     }
 
     setIsLoadingFromDatabase(false);
     return loadedSessions;
   };
 
-  // Initialize sessions on mount and when user changes
+  // Initialize sessions on mount and when user changes with better error handling
   useEffect(() => {
     const initializeSessions = async () => {
-      console.log('🔄 User changed, reinitializing sessions. User:', user?.id);
-      
-      // Clear sessions when user changes or logs out
-      if (currentUserId !== user?.id) {
-        console.log('👤 User switch detected, clearing sessions');
+      try {
+        console.log('🔄 User changed, reinitializing sessions. User:', user?.id);
         
-        // Complete reset of all session state
-        setSessions([]);
-        setActiveSession(null);
-        setShowStorageWarning(false);
-        
-        // If user logged out (user is null), clear all data
-        if (!user) {
-          clearUserData(currentUserId);
-          setCurrentUserId(null);
-          setIsInitialized(true);
-          return;
+        // Clear sessions when user changes or logs out
+        if (currentUserId !== user?.id) {
+          console.log('👤 User switch detected, clearing sessions');
+          
+          // Complete reset of all session state
+          setSessions([]);
+          setActiveSession(null);
+          setShowStorageWarning(false);
+          setInitializationError(null);
+          
+          // If user logged out (user is null), clear all data
+          if (!user) {
+            clearUserData(currentUserId);
+            setCurrentUserId(null);
+            setIsInitialized(true);
+            return;
+          }
+          
+          setCurrentUserId(user.id);
+          
+          // Clear sessions from other users to prevent leakage
+          clearOtherUserSessions(user.id);
         }
         
-        setCurrentUserId(user.id);
+        // Load sessions from database or localStorage
+        const loadedSessions = await loadSessionsFromSources(user?.id || null);
+        console.log('📋 Loaded sessions for user:', user?.id, 'Count:', loadedSessions.length);
         
-        // Clear sessions from other users to prevent leakage
-        clearOtherUserSessions(user.id);
+        setSessions(loadedSessions);
+        setIsInitialized(true);
+        
+      } catch (error) {
+        console.error('❌ Failed to initialize sessions:', error);
+        setInitializationError('Failed to initialize session data. Please refresh the page.');
+        setIsInitialized(true); // Still set to true to prevent infinite loading
       }
-      
-      // Load sessions from database or localStorage
-      const loadedSessions = await loadSessionsFromSources(user?.id || null);
-      console.log('📋 Loaded sessions for user:', user?.id, 'Count:', loadedSessions.length);
-      
-      setSessions(loadedSessions);
-      
-      setIsInitialized(true);
     };
 
     initializeSessions();
@@ -314,35 +338,40 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   const startSession = async (session: PokerSession) => {
-    const sessionWithActive = {
-      ...session,
-      initialBuyIn: session.buyIn,
-      isActive: true,
-      currentStatus: 'running' as const,
-      sessionDuration: 0,
-      hands: [],
-      tables: session.tables !== undefined ? session.tables : []
-    };
-    
-    console.log('🎯 Starting session with tables:', sessionWithActive.tables?.length || 0);
-    
-    setActiveSession(sessionWithActive);
-    await addSession(sessionWithActive);
-    
-    // Ensure the session and its tables are immediately saved to database
-    if (user?.id) {
-      try {
-        console.log('💾 Immediately saving new session to database...');
-        await saveSessionToDatabase(sessionWithActive);
-        console.log('✅ Session and tables saved to database successfully');
-      } catch (error) {
-        console.error('❌ Failed to save new session to database:', error);
-        toast({
-          title: "Warning",
-          description: "Session created but may not sync to cloud immediately. It will sync when connection is restored.",
-          variant: "destructive"
-        });
+    try {
+      const sessionWithActive = {
+        ...session,
+        initialBuyIn: session.buyIn,
+        isActive: true,
+        currentStatus: 'running' as const,
+        sessionDuration: 0,
+        hands: [],
+        tables: session.tables !== undefined ? session.tables : []
+      };
+      
+      console.log('🎯 Starting session with tables:', sessionWithActive.tables?.length || 0);
+      
+      setActiveSession(sessionWithActive);
+      await addSession(sessionWithActive);
+      
+      // Ensure the session and its tables are immediately saved to database
+      if (user?.id) {
+        try {
+          console.log('💾 Immediately saving new session to database...');
+          await saveSessionToDatabase(sessionWithActive);
+          console.log('✅ Session and tables saved to database successfully');
+        } catch (error) {
+          console.error('❌ Failed to save new session to database:', error);
+          toast({
+            title: "Warning",
+            description: "Session created but may not sync to cloud immediately. It will sync when connection is restored.",
+            variant: "destructive"
+          });
+        }
       }
+    } catch (error) {
+      console.error('❌ Failed to start session:', error);
+      throw error; // Re-throw to be handled by the calling component
     }
   };
 
@@ -395,6 +424,27 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           <p className="text-gray-600">
             {isLoadingFromDatabase ? 'Loading your sessions...' : 'Initializing...'}
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if initialization failed
+  if (initializationError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md">
+          <div className="text-red-500 mb-4">
+            <Icon name="AlertCircle" size={48} className="mx-auto" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Initialization Error</h2>
+          <p className="text-gray-600 mb-4">{initializationError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-poker-feltGreen text-white px-4 py-2 rounded hover:bg-poker-darkGreen transition-colors"
+          >
+            Refresh Page
+          </button>
         </div>
       </div>
     );

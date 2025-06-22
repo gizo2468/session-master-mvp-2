@@ -6,10 +6,21 @@ import Icon from '@/components/ui/Lucide';
 export default function NewSessionButton() {
   const navigate = useNavigate();
   
+  const handleClick = () => {
+    try {
+      console.log('🎯 Navigating to new session form');
+      navigate('/new-session');
+    } catch (error) {
+      console.error('❌ Error navigating to new session:', error);
+      // Fallback: try to reload the page to the new session route
+      window.location.href = '/new-session';
+    }
+  };
+  
   return (
     <div className="flex justify-center w-full">
       <button
-        onClick={() => navigate('/new-session')}
+        onClick={handleClick}
         className="relative flex flex-col items-center justify-center w-40 h-40 rounded-full shadow-lg hover:shadow-xl transform transition-all hover:-translate-y-1 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-poker-gold"
         aria-label="New session"
       >

@@ -17,58 +17,111 @@ export default function SessionCard({ session, onClick, showActions = false }: S
   const { stats, loading } = useSessionStats(session.id, session);
   
   // FIXED: Calculate net profit correctly: Payout - Buy-ins
-  // This matches the logic used in StatsQuickView for consistency
-  const netProfit = session.cashOut !== undefined && !isNaN(session.cashOut) && !isNaN(session.buyIn) 
+  // Handle cases where cashOut might be undefined or null
+  const netProfit = session.cashOut !== undefined && session.cashOut !== null && !isNaN(session.cashOut) && !isNaN(session.buyIn) 
     ? session.cashOut - session.buyIn 
     : -session.buyIn; // If no cashOut, it's a loss of the buy-in amount
   
   const calculateDuration = () => {
-    // CRITICAL FIX: With schema fix, both start and end times are now timezone-aware
-    const start = new Date(session.startTime);
-    const end = session.endTime ? new Date(session.endTime) : new Date();
-    
-    console.log('🕐 FIXED: Duration calculation with both timestamps timezone-aware:', {
-      sessionId: session.id,
-      startTime: start.toISOString(),
-      endTime: end.toISOString(),
-      startTimestamp: start.getTime(),
-      endTimestamp: end.getTime()
-    });
-    
-    const hours = differenceInHours(end, start);
-    const minutes = differenceInMinutes(end, start) % 60;
-    
-    if (hours < 0 || (hours === 0 && minutes < 0)) {
-      console.error('❌ CRITICAL: Still getting negative duration after schema fix:', {
-        originalHours: hours,
-        originalMinutes: minutes,
+    try {
+      // CRITICAL FIX: With schema fix, both start and end times are now timezone-aware
+      const start = new Date(session.startTime);
+      const end = session.endTime ? new Date(session.endTime) : new Date();
+      
+      // Validate dates
+      if (isNaN(start.getTime())) {
+        console.error('❌ Invalid start time:', session.startTime);
+        return '0m';
+      }
+      
+      console.log('🕐 FIXED: Duration calculation with both timestamps timezone-aware:', {
         sessionId: session.id,
-        startTime: session.startTime,
-        endTime: session.endTime
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
+        startTimestamp: start.getTime(),
+        endTimestamp: end.getTime()
       });
-      const absHours = Math.abs(hours);
-      const absMinutes = Math.abs(minutes);
-      return absHours > 0 ? `${absHours}h ${absMinutes}m` : `${absMinutes}m`;
+      
+      const hours = differenceInHours(end, start);
+      const minutes = differenceInMinutes(end, start) % 60;
+      
+      if (hours < 0 || (hours === 0 && minutes < 0)) {
+        console.error('❌ CRITICAL: Still getting negative duration after schema fix:', {
+          originalHours: hours,
+          originalMinutes: minutes,
+          sessionId: session.id,
+          startTime: session.startTime,
+          endTime: session.endTime
+        });
+        const absHours = Math.abs(hours);
+        const absMinutes = Math.abs(minutes);
+        return absHours > 0 ? `${absHours}h ${absMinutes}m` : `${absMinutes}m`;
+      }
+      
+      if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+      }
+      return `${minutes}m`;
+    } catch (error) {
+      console.error('❌ Error calculating duration:', error);
+      return '0m';
     }
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    }
-    return `${minutes}m`;
   };
 
   const duration = calculateDuration();
   
-  // CRITICAL FIX: Format dates with proper timezone handling
-  const formattedDate = format(new Date(session.startTime), 'MMM d, yyyy');
-  const formattedTime = format(new Date(session.startTime), 'h:mm a');
+  // CRITICAL FIX: Format dates with proper timezone handling and error checking
+  const getFormattedDate = () => {
+    try {
+      const startDate = new Date(session.startTime);
+      if (isNaN(startDate.getTime())) {
+        return 'Invalid Date';
+      }
+      return format(startDate, 'MMM d, yyyy');
+    } catch (error) {
+      console.error('❌ Error formatting date:', error);
+      return 'Invalid Date';
+    }
+  };
+
+  const getFormattedTime = () => {
+    try {
+      const startDate = new Date(session.startTime);
+      if (isNaN(startDate.getTime())) {
+        return 'Invalid Time';
+      }
+      return format(startDate, 'h:mm a');
+    } catch (error) {
+      console.error('❌ Error formatting time:', error);
+      return 'Invalid Time';
+    }
+  };
+
+  const formattedDate = getFormattedDate();
+  const formattedTime = getFormattedTime();
 
   const handleCardClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.session-actions')) {
-      return;
+    try {
+      if ((e.target as HTMLElement).closest('.session-actions')) {
+        return;
+      }
+      onClick();
+    } catch (error) {
+      console.error('❌ Error handling card click:', error);
     }
-    onClick();
   };
+
+  // Ensure we have minimum required data to render the card
+  if (!session || !session.id) {
+    console.error('❌ Invalid session data:', session);
+    return (
+      <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+        <div className="text-center text-gray-500">
+          <p>Invalid session data</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -77,7 +130,7 @@ export default function SessionCard({ session, onClick, showActions = false }: S
     >
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="text-lg font-bold text-poker-black">{session.location}</h3>
+          <h3 className="text-lg font-bold text-poker-black">{session.location || 'Unknown Location'}</h3>
           <p className="text-sm text-gray-500">{formattedDate} at {formattedTime}</p>
         </div>
         {session.isActive ? (
@@ -92,11 +145,11 @@ export default function SessionCard({ session, onClick, showActions = false }: S
       <div className="grid grid-cols-2 gap-4 text-sm mb-3">
         <div>
           <span className="text-gray-500">Game:</span>
-          <span className="ml-1 font-medium">{session.gameType}</span>
+          <span className="ml-1 font-medium">{session.gameType || 'Unknown'}</span>
         </div>
         <div>
           <span className="text-gray-500">Format:</span>
-          <span className="ml-1 font-medium">{session.format}</span>
+          <span className="ml-1 font-medium">{session.format || 'Unknown'}</span>
         </div>
         <div>
           <span className="text-gray-500">Duration:</span>

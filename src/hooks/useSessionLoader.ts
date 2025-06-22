@@ -14,40 +14,44 @@ export const useSessionLoader = (id: string | undefined) => {
   
   const [currentSession, setCurrentSession] = useState<PokerSession | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadSession = async () => {
-      if (!id) {
-        console.log('No session ID provided');
-        navigate('/');
-        return;
-      }
-
-      // First try to find session in context
-      let foundSession = activeSession?.id === id ? activeSession : sessions.find(s => s.id === id && s.isActive);
-      
-      if (foundSession) {
-        // Double-check that the session is actually active
-        if (!foundSession.isActive) {
-          console.warn('Session found but not active:', foundSession.id);
-          toast({
-            title: "Session Ended",
-            description: "This session has already been completed.",
-            variant: "destructive"
-          });
+      try {
+        setLoadingError(null);
+        
+        if (!id) {
+          console.log('No session ID provided');
           navigate('/');
           return;
         }
-        
-        console.log('✅ Found active session in context:', foundSession.id);
-        setCurrentSession(foundSession);
-        setIsLoadingSession(false);
-        return;
-      }
 
-      // If not found in context, try to load from database
-      console.log('🔍 Loading session from database:', id);
-      try {
+        // First try to find session in context
+        let foundSession = activeSession?.id === id ? activeSession : sessions.find(s => s.id === id && s.isActive);
+        
+        if (foundSession) {
+          // Double-check that the session is actually active
+          if (!foundSession.isActive) {
+            console.warn('Session found but not active:', foundSession.id);
+            toast({
+              title: "Session Ended",
+              description: "This session has already been completed.",
+              variant: "destructive"
+            });
+            navigate('/');
+            return;
+          }
+          
+          console.log('✅ Found active session in context:', foundSession.id);
+          setCurrentSession(foundSession);
+          setIsLoadingSession(false);
+          return;
+        }
+
+        // If not found in context, try to load from database
+        console.log('🔍 Loading session from database:', id);
+        
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
           .select('*')
@@ -57,6 +61,7 @@ export const useSessionLoader = (id: string | undefined) => {
 
         if (sessionError || !sessionData) {
           console.error('❌ Session not found or not active:', sessionError);
+          setLoadingError('Session not found or has ended');
           toast({
             title: "Session Not Found",
             description: "The session you're looking for doesn't exist or has ended.",
@@ -98,8 +103,12 @@ export const useSessionLoader = (id: string | undefined) => {
         
         // Update the session context with the loaded session
         await updateSession(convertedSession);
+        
       } catch (error) {
         console.error('❌ Failed to load session from database:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        setLoadingError(`Failed to load session: ${errorMessage}`);
+        
         toast({
           title: "Error Loading Session",
           description: "There was a problem loading your session. Please try again.",
@@ -114,5 +123,5 @@ export const useSessionLoader = (id: string | undefined) => {
     loadSession();
   }, [id, activeSession, sessions, navigate, toast, updateSession]);
 
-  return { currentSession, isLoadingSession };
+  return { currentSession, isLoadingSession, loadingError };
 };

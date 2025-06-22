@@ -15,7 +15,17 @@ import EditSession from "./pages/EditSession";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
