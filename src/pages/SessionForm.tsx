@@ -154,13 +154,12 @@ export default function SessionForm() {
         description: "Your poker session has been successfully created with the initial table."
       });
 
-      // Navigate directly to the live session page
-      navigate(`/live-session/${newSession.id}`);
+      // Navigate to the live session page that actually exists
+      navigate(`/session/${newSession.id}`);
       
     } catch (error) {
       console.error('❌ Error starting session:', error);
       
-      // Show more specific error message based on error type
       let errorMessage = "There was a problem starting your session. Please try again.";
       
       if (error instanceof Error) {

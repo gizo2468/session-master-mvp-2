@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { SessionProvider } from "@/context/SessionContext";
 import Index from "./pages/Index";
+import SessionForm from "./pages/SessionForm";
 import LiveSession from "./pages/LiveSession";
 import SessionHistory from "./pages/SessionHistory";
 import SessionDetail from "./pages/SessionDetail";
@@ -26,6 +27,7 @@ const App = () => (
           <SessionProvider>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/new-session" element={<SessionForm />} />
               <Route path="/session/:sessionId" element={<LiveSession />} />
               <Route path="/session/:sessionId/edit" element={<EditSession />} />
               <Route path="/session/:sessionId/details" element={<SessionDetail />} />
