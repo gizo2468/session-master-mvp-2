@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
@@ -35,13 +34,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     refreshSessionsFromDatabase
   } = useSessionInitialization();
 
-  // Create a default context value that's always available
+  // Create a stable default context value to prevent infinite re-renders
   const defaultContextValue: SessionContextType = {
     sessions: [],
     activeSession: null,
     filters,
     showStorageWarning: false,
-    isLoading: true,
+    isLoading: false,
     dismissStorageWarning: () => {},
     addSession: async () => {},
     updateSession: async () => {},
@@ -98,11 +97,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     sessionStorage.setItem('storageWarningDismissed', 'true');
   };
 
-  // Save sessions when they change
+  // Save sessions when they change - with debouncing to prevent excessive saves
   useEffect(() => {
     if (!isInitialized || !user?.id) return;
     
-    saveSessionsToSources(sessions, user.id, setShowStorageWarning, toast);
+    const timeoutId = setTimeout(() => {
+      saveSessionsToSources(sessions, user.id, setShowStorageWarning, toast);
+    }, 1000); // Debounce saves by 1 second
+    
+    return () => clearTimeout(timeoutId);
   }, [sessions, user?.id, isInitialized]);
 
   // Show error state if initialization failed
@@ -121,12 +124,23 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Initialization Error</h2>
             <p className="text-gray-600 mb-4">{initializationError}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-poker-feltGreen text-white px-4 py-2 rounded hover:bg-poker-darkGreen transition-colors"
-            >
-              Refresh Page
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full bg-poker-feltGreen text-white px-4 py-2 rounded hover:bg-poker-darkGreen transition-colors"
+              >
+                Refresh Page
+              </button>
+              <button
+                onClick={() => {
+                  clearAllUserData();
+                  window.location.reload();
+                }}
+                className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+              >
+                Clear Data & Refresh
+              </button>
+            </div>
           </div>
         </div>
       </SessionContext.Provider>

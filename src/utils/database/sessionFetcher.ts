@@ -11,9 +11,16 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
       return [];
     }
 
+    console.log('🔄 Fetching user sessions with optimized query');
+
+    // Use a single optimized query with joins instead of multiple queries
     const { data: sessions, error: sessionError } = await supabase
       .from('sessions')
-      .select('*')
+      .select(`
+        *,
+        session_tables(*),
+        session_hands_new(*)
+      `)
       .eq('user_id', user.id)
       .order('start_time', { ascending: false });
 
@@ -22,38 +29,21 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
       return [];
     }
 
-    const pokerSessions: PokerSession[] = [];
-
-    for (const session of sessions) {
-      // Fetch tables for this session
-      const { data: tables, error: tablesError } = await supabase
-        .from('session_tables')
-        .select('*')
-        .eq('session_id', session.id);
-
-      if (tablesError) {
-        console.error('❌ Error fetching tables:', tablesError);
-      }
-
-      // Fetch hands for this session
-      const { data: hands, error: handsError } = await supabase
-        .from('session_hands_new')
-        .select('*')
-        .eq('session_id', session.id);
-
-      if (handsError) {
-        console.error('❌ Error fetching hands:', handsError);
-      }
-
-      // Convert to PokerSession format
-      const pokerSession = convertDatabaseSessionToPokerSession(
-        session,
-        tables || [],
-        hands || []
-      );
-
-      pokerSessions.push(pokerSession);
+    if (!sessions || sessions.length === 0) {
+      console.log('📋 No sessions found');
+      return [];
     }
+
+    console.log(`✅ Fetched ${sessions.length} sessions with related data in single query`);
+
+    // Convert all sessions in batch
+    const pokerSessions: PokerSession[] = sessions.map(session => {
+      return convertDatabaseSessionToPokerSession(
+        session,
+        session.session_tables || [],
+        session.session_hands_new || []
+      );
+    });
 
     return pokerSessions;
   } catch (error) {
@@ -70,9 +60,16 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
       return [];
     }
 
-    const { data: sessionsData, error: sessionError } = await supabase
+    console.log('🔄 Fetching active sessions with optimized query');
+
+    // Use a single optimized query for active sessions
+    const { data: sessions, error: sessionError } = await supabase
       .from('sessions')
-      .select('*')
+      .select(`
+        *,
+        session_tables(*),
+        session_hands_new(*)
+      `)
       .eq('is_active', true)
       .eq('user_id', user.id)
       .order('start_time', { ascending: false });
@@ -82,45 +79,21 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
       return [];
     }
 
-    if (!sessionsData || sessionsData.length === 0) {
+    if (!sessions || sessions.length === 0) {
       console.log('📋 No active sessions found');
       return [];
     }
 
-    console.log(`✅ Found ${sessionsData.length} active sessions`);
+    console.log(`✅ Found ${sessions.length} active sessions`);
 
-    const activeSessions: PokerSession[] = [];
-
-    for (const sessionData of sessionsData) {
-      // Fetch tables for this session
-      const { data: tables, error: tablesError } = await supabase
-        .from('session_tables')
-        .select('*')
-        .eq('session_id', sessionData.id);
-
-      if (tablesError) {
-        console.error('❌ Error fetching tables:', tablesError);
-      }
-
-      // Fetch hands for this session
-      const { data: hands, error: handsError } = await supabase
-        .from('session_hands_new')
-        .select('*')
-        .eq('session_id', sessionData.id);
-
-      if (handsError) {
-        console.error('❌ Error fetching hands:', handsError);
-      }
-
-      // Convert to PokerSession format
-      const pokerSession = convertDatabaseSessionToPokerSession(
-        sessionData,
-        tables || [],
-        hands || []
+    // Convert all sessions in batch
+    const activeSessions: PokerSession[] = sessions.map(session => {
+      return convertDatabaseSessionToPokerSession(
+        session,
+        session.session_tables || [],
+        session.session_hands_new || []
       );
-
-      activeSessions.push(pokerSession);
-    }
+    });
 
     return activeSessions;
   } catch (error) {

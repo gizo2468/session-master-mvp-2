@@ -155,8 +155,31 @@ export default function SessionForm() {
         description: "Your poker session has been successfully created with the initial table."
       });
 
-      // Small delay to ensure session is properly saved before navigation
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait a bit longer to ensure database transaction is fully committed
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Verify session was created before navigating
+      try {
+        const { data: verifySession } = await supabase
+          .from('sessions')
+          .select('id, is_active')
+          .eq('id', newSession.id)
+          .single();
+
+        if (!verifySession) {
+          throw new Error('Session was not properly saved to database');
+        }
+
+        console.log('✅ Session verified in database, navigating...');
+      } catch (verifyError) {
+        console.error('❌ Session verification failed:', verifyError);
+        // Still try to navigate, but with a warning
+        toast({
+          title: "Warning",
+          description: "Session created but verification failed. If you encounter issues, please try refreshing.",
+          variant: "destructive"
+        });
+      }
 
       // Navigate to the live session page
       console.log('🔄 Navigating to live session page:', `/session/${newSession.id}`);
@@ -168,7 +191,9 @@ export default function SessionForm() {
       let errorMessage = "There was a problem starting your session. Please try again.";
       
       if (error instanceof Error) {
-        if (error.message.includes('RLS')) {
+        if (error.message.includes('duplicate key')) {
+          errorMessage = "Session ID conflict. Please try again.";
+        } else if (error.message.includes('RLS')) {
           errorMessage = "Authentication required. Please log in and try again.";
         } else if (error.message.includes('constraint')) {
           errorMessage = "Invalid session data. Please check your inputs and try again.";
