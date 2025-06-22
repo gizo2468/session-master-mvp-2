@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -215,8 +214,8 @@ export default function SessionDetail() {
         
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <SessionStatusBadges
-            startTime={session.startTime}
-            endTime={session.endTime}
+            startTime={session.startTime.toISOString()}
+            endTime={session.endTime?.toISOString()}
           />
           
           <SessionInfoDisplay
