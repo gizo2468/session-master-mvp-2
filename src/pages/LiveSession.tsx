@@ -25,6 +25,17 @@ export default function LiveSession() {
   const rebuyActions = useRebuyActions(currentSession?.id);
   const endTableActions = useEndTableActions(currentSession);
   
+  // Debug logging to help identify the issue
+  console.log('🔍 LiveSession Debug:', {
+    sessionId: id,
+    currentSession: currentSession,
+    isLoadingSession,
+    loadingError,
+    sessionTables: currentSession?.tables?.length || 0,
+    sessionFormat: currentSession?.format,
+    sessionGameType: currentSession?.gameType
+  });
+  
   // Loading state with better error handling
   if (isLoadingSession) {
     return (
@@ -142,6 +153,22 @@ export default function LiveSession() {
               location: currentSession.tableName || currentSession.location
             }}
           />
+          
+          {/* Force render LiveSessionTables to debug */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-extrabold tracking-tight">Debug Session Info</h3>
+            </div>
+            <div className="text-sm text-gray-600 space-y-1">
+              <p>Session ID: {currentSession.id}</p>
+              <p>Tables Count: {currentSession.tables?.length || 0}</p>
+              <p>Active Tables: {currentSession.tables?.filter(t => t.isActive).length || 0}</p>
+              <p>Inactive Tables: {currentSession.tables?.filter(t => !t.isActive).length || 0}</p>
+              <p>Session Format: {currentSession.format}</p>
+              <p>Session Status: {currentSession.currentStatus}</p>
+              <p>Is Active: {currentSession.isActive ? 'Yes' : 'No'}</p>
+            </div>
+          </div>
           
           <LiveSessionTables
             currentSession={currentSession}

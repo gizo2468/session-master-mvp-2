@@ -39,6 +39,7 @@ export const useSessionLoader = (id: string | undefined) => {
         
         if (foundSession?.isActive && foundSession.startTime && foundSession.gameType && foundSession.format) {
           console.log('✅ Found valid active session in context:', foundSession.id);
+          console.log('📋 Session tables:', foundSession.tables?.length || 0);
           if (!isCancelled) {
             setCurrentSession(foundSession);
             setIsLoadingSession(false);
@@ -98,6 +99,8 @@ export const useSessionLoader = (id: string | undefined) => {
         }
 
         console.log('✅ Session loaded and converted successfully');
+        console.log('📋 Converted session tables:', convertedSession.tables?.length || 0);
+        
         if (!isCancelled) {
           setCurrentSession(convertedSession);
         }
@@ -152,7 +155,7 @@ export const useSessionLoader = (id: string | undefined) => {
       isCancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [id, navigate, toast]); // Removed sessions, activeSession, and updateSession to prevent infinite loops
+  }, [id, navigate, toast, sessions, activeSession]); // Added sessions and activeSession back for proper dependency tracking
 
   return { currentSession, isLoadingSession, loadingError };
 };

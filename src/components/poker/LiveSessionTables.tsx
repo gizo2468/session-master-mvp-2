@@ -29,6 +29,15 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
   onEndTable,
   onAddTableRebuy
 }) => {
+  // Debug logging to help identify the issue
+  console.log('🔍 LiveSessionTables Debug:', {
+    sessionId: currentSession.id,
+    tablesArray: currentSession.tables,
+    tablesLength: currentSession.tables?.length || 0,
+    activeTables: currentSession.tables?.filter(table => table.isActive).length || 0,
+    inactiveTables: currentSession.tables?.filter(table => !table.isActive).length || 0
+  });
+
   const activeTables = currentSession.tables?.filter(table => table.isActive) || [];
   const inactiveTables = currentSession.tables?.filter(table => !table.isActive) || [];
 
@@ -36,6 +45,24 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-extrabold tracking-tight">Tables</h3>
+      </div>
+      
+      {/* Debug info */}
+      <div className="mb-4 p-3 bg-blue-50 rounded text-sm">
+        <p className="font-semibold text-blue-800">Debug Info:</p>
+        <p>Total tables: {currentSession.tables?.length || 0}</p>
+        <p>Active tables: {activeTables.length}</p>
+        <p>Inactive tables: {inactiveTables.length}</p>
+        {currentSession.tables?.length > 0 && (
+          <div className="mt-2">
+            <p className="font-medium">Table details:</p>
+            {currentSession.tables.map((table, index) => (
+              <p key={table.id} className="ml-2">
+                {index + 1}. {table.name} - {table.isActive ? 'Active' : 'Inactive'}
+              </p>
+            ))}
+          </div>
+        )}
       </div>
       
       {activeTables.length === 0 && inactiveTables.length === 0 ? (
@@ -47,7 +74,7 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
         <div>
           {activeTables.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-lg font-bold mb-2">Active Tables</h4>
+              <h4 className="text-lg font-bold mb-2">Active Tables ({activeTables.length})</h4>
               <div className="space-y-3">
                 {activeTables.map((table) => (
                   <TableCard
@@ -62,7 +89,9 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
             </div>
           )}
           
-          <CompletedTablesDisplay tables={inactiveTables} sessionId={currentSession.id} />
+          {inactiveTables.length > 0 && (
+            <CompletedTablesDisplay tables={inactiveTables} sessionId={currentSession.id} />
+          )}
         </div>
       )}
     </div>
