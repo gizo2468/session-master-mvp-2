@@ -16,13 +16,25 @@ export const useSessionInitialization = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Load active session from database with error handling
+  // Load active session from database with error handling and timeout
   const loadActiveSessionFromDatabase = async (userId: string | null) => {
     if (!userId) return null;
     
     try {
       console.log('🔄 Loading active session from database for user:', userId);
-      const activeSession = await fetchActiveSession();
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database timeout')), 8000)
+      );
+      
+      const activeSessionPromise = fetchActiveSession();
+      
+      const activeSession = await Promise.race([
+        activeSessionPromise,
+        timeoutPromise
+      ]) as PokerSession | null;
+      
       if (activeSession) {
         console.log('✅ Found active session:', activeSession.id);
         return activeSession;
@@ -44,9 +56,24 @@ export const useSessionInitialization = () => {
       try {
         console.log('🔄 Loading sessions from database for user:', userId);
         
-        loadedActiveSession = await loadActiveSessionFromDatabase(userId);
-        const databaseSessions = await fetchUserSessions();
+        // Add timeout to prevent database operations from hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Database timeout')), 10000)
+        );
+        
+        const databasePromise = Promise.all([
+          loadActiveSessionFromDatabase(userId),
+          fetchUserSessions()
+        ]);
+        
+        const [activeSessionResult, databaseSessions] = await Promise.race([
+          databasePromise,
+          timeoutPromise
+        ]) as [PokerSession | null, PokerSession[]];
+        
+        loadedActiveSession = activeSessionResult;
         loadedSessions = databaseSessions;
+        
         console.log(`✅ Loaded ${loadedSessions.length} sessions from database`);
         
         if (loadedActiveSession) {
@@ -84,7 +111,7 @@ export const useSessionInitialization = () => {
     return loadedSessions;
   };
 
-  // Enhanced session refresh function with error handling
+  // Enhanced session refresh function with error handling and timeout
   const refreshSessionsFromDatabase = async () => {
     if (!user?.id) return;
     
@@ -92,8 +119,20 @@ export const useSessionInitialization = () => {
       console.log('🔄 Refreshing sessions from database');
       setIsLoadingFromDatabase(true);
       
-      const databaseSessions = await fetchUserSessions();
-      const freshActiveSession = await loadActiveSessionFromDatabase(user.id);
+      // Add timeout for refresh operations
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database refresh timeout')), 8000)
+      );
+      
+      const refreshPromise = Promise.all([
+        fetchUserSessions(),
+        loadActiveSessionFromDatabase(user.id)
+      ]);
+      
+      const [databaseSessions, freshActiveSession] = await Promise.race([
+        refreshPromise,
+        timeoutPromise
+      ]) as [PokerSession[], PokerSession | null];
       
       console.log(`✅ Refreshed ${databaseSessions.length} sessions from database`);
       
@@ -150,7 +189,7 @@ export const useSessionInitialization = () => {
     };
 
     initializeSessions();
-  }, [user?.id, currentUserId]);
+  }, [user?.id, currentUserId, toast]);
 
   return {
     isInitialized,

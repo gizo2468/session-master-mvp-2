@@ -56,22 +56,41 @@ export const useSessionLoader = (id: string | undefined) => {
           }
         }
 
-        // If not found in context or invalid, try to load from database
+        // If not found in context or invalid, try to load from database with timeout
         console.log('🔍 Loading session from database:', id);
         
-        const { data: sessionData, error: sessionError } = await supabase
-          .from('sessions')
-          .select('*')
-          .eq('id', id)
-          .eq('is_active', true)
-          .maybeSingle();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Database query timeout')), 10000)
+        );
+        
+        const queryPromise = Promise.all([
+          supabase
+            .from('sessions')
+            .select('*')
+            .eq('id', id)
+            .eq('is_active', true)
+            .maybeSingle(),
+          supabase
+            .from('session_tables')
+            .select('*')
+            .eq('session_id', id),
+          supabase
+            .from('session_hands_new')
+            .select('*')
+            .eq('session_id', id)
+        ]);
 
-        if (sessionError) {
-          console.error('❌ Database error loading session:', sessionError);
-          throw new Error(`Database error: ${sessionError.message}`);
+        const [sessionResult, tablesResult, handsResult] = await Promise.race([
+          queryPromise,
+          timeoutPromise
+        ]) as any;
+
+        if (sessionResult.error) {
+          console.error('❌ Database error loading session:', sessionResult.error);
+          throw new Error(`Database error: ${sessionResult.error.message}`);
         }
 
-        if (!sessionData) {
+        if (!sessionResult.data) {
           console.error('❌ Session not found in database or not active');
           setLoadingError('Session not found or has ended');
           toast({
@@ -84,73 +103,42 @@ export const useSessionLoader = (id: string | undefined) => {
         }
 
         // Validate required database fields
+        const sessionData = sessionResult.data;
         if (!sessionData.start_time || !sessionData.game_type || !sessionData.format) {
           console.error('❌ Session data incomplete:', sessionData);
           throw new Error('Session data is incomplete or corrupted');
         }
 
-        // Fetch related data with error handling
-        let tables = [];
-        let hands = [];
+        // Get related data (don't fail if these are missing)
+        const tables = tablesResult.error ? [] : (tablesResult.data || []);
+        const hands = handsResult.error ? [] : (handsResult.data || []);
 
-        try {
-          const { data: tablesData, error: tablesError } = await supabase
-            .from('session_tables')
-            .select('*')
-            .eq('session_id', id);
-
-          if (tablesError) {
-            console.error('⚠️ Error fetching tables:', tablesError);
-            // Continue without tables - non-critical error
-          } else {
-            tables = tablesData || [];
-          }
-
-          const { data: handsData, error: handsError } = await supabase
-            .from('session_hands_new')
-            .select('*')
-            .eq('session_id', id);
-
-          if (handsError) {
-            console.error('⚠️ Error fetching hands:', handsError);
-            // Continue without hands - non-critical error
-          } else {
-            hands = handsData || [];
-          }
-        } catch (relatedDataError) {
-          console.error('⚠️ Error fetching related data:', relatedDataError);
-          // Continue with empty arrays - we can still load the session
+        if (tablesResult.error) {
+          console.warn('⚠️ Error fetching tables:', tablesResult.error);
+        }
+        if (handsResult.error) {
+          console.warn('⚠️ Error fetching hands:', handsResult.error);
         }
 
         // Convert to PokerSession format with validation
-        let convertedSession;
-        try {
-          convertedSession = convertDatabaseSessionToPokerSession(
-            sessionData as any,
-            tables as any[],
-            hands as any[]
-          );
+        const convertedSession = convertDatabaseSessionToPokerSession(
+          sessionData,
+          tables,
+          hands
+        );
 
-          // Validate converted session
-          if (!convertedSession.id || !convertedSession.startTime) {
-            throw new Error('Session conversion resulted in invalid data');
-          }
-
-          console.log('✅ Session loaded and converted successfully');
-          setCurrentSession(convertedSession);
-          
-          // Update the session context with the loaded session
-          try {
-            await updateSession(convertedSession);
-          } catch (updateError) {
-            console.error('⚠️ Failed to update session context:', updateError);
-            // Continue anyway - session is loaded locally
-          }
-          
-        } catch (conversionError) {
-          console.error('❌ Session conversion failed:', conversionError);
-          throw new Error(`Failed to process session data: ${conversionError instanceof Error ? conversionError.message : 'Unknown conversion error'}`);
+        // Final validation
+        if (!convertedSession.id || !convertedSession.startTime) {
+          throw new Error('Session conversion resulted in invalid data');
         }
+
+        console.log('✅ Session loaded and converted successfully');
+        setCurrentSession(convertedSession);
+        
+        // Update the session context with the loaded session (don't wait for this)
+        updateSession(convertedSession).catch(error => {
+          console.warn('⚠️ Failed to update session context:', error);
+        });
         
       } catch (error) {
         console.error('❌ Failed to load session:', error);
@@ -172,11 +160,13 @@ export const useSessionLoader = (id: string | undefined) => {
       }
     };
 
-    // Only load if we have an ID and haven't loaded yet
-    if (id && isLoadingSession) {
+    // Only load if we have an ID
+    if (id) {
       loadSession();
+    } else {
+      setIsLoadingSession(false);
     }
-  }, [id, navigate, toast, updateSession]); // Removed sessions and activeSession from deps to avoid infinite loops
+  }, [id, navigate, toast, updateSession]); // Fixed dependency array
 
   return { currentSession, isLoadingSession, loadingError };
 };
