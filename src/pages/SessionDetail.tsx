@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
+import { useSessionLoader } from '@/hooks/useSessionLoader';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import TableDetailsCard from '@/components/poker/TableDetailsCard';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -12,12 +14,13 @@ import SessionActions from '@/components/poker/SessionActions';
 import SessionModals from '@/components/poker/SessionModals';
 
 export default function SessionDetail() {
-  const { id } = useParams<{ id: string }>();
+  const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const { sessions, updateSession, deleteSession, endSession } = useSessionContext();
+  const { updateSession, deleteSession, endSession } = useSessionContext();
   
-  // Find session regardless of active status
-  const session = sessions.find(s => s.id === id);
+  // Use the session loader hook to properly load sessions from database
+  const { currentSession: session, isLoadingSession, loadingError } = useSessionLoader(sessionId);
+  
   const isMobile = useIsMobile();
   
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -27,6 +30,38 @@ export default function SessionDetail() {
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [cashOutAmount, setCashOutAmount] = useState('');
   
+  // Show loading state while fetching session
+  if (isLoadingSession) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
+          <h1 className="text-xl font-bold mb-2">Loading Session...</h1>
+          <p className="text-gray-600">Please wait while we fetch your session details.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show error state if loading failed
+  if (loadingError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold mb-4 text-red-600">Error Loading Session</h1>
+          <p className="text-gray-600 mb-4">{loadingError}</p>
+          <button
+            onClick={() => navigate('/')}
+            className="py-2 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md"
+          >
+            Go Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show not found if session doesn't exist
   if (!session) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -254,6 +289,7 @@ export default function SessionDetail() {
           <HandManagementPanel 
             sessionId={session.id} 
             hands={session.hands || []}
+            readOnly={!session.isActive}
           />
         </div>
 
