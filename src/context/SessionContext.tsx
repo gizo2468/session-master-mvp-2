@@ -1,8 +1,10 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import Icon from '@/components/ui/Lucide';
 import { findSupabaseSessionId, syncHandToSupabase, syncHandUpdateToSupabase, syncHandDeleteToSupabase } from '@/utils/handSync';
 import { SessionContextType, MAX_STORED_SESSIONS } from './session/types';
 import { loadSessions, findActiveSession, clearUserData, clearOtherUserSessions, getUserStorageKey } from './session/storage';
