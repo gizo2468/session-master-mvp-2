@@ -1,4 +1,3 @@
-
 import { PokerSession, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '@/context/AuthContext';
@@ -212,13 +211,15 @@ export const createSessionOperations = (
         currentStatus: 'ended' as const,
       };
       
+      console.log('🏁 Ending session with data preserved:', updatedSession.id);
+      
+      // FIXED: Update session and keep it in the sessions list (don't delete it)
       await updateSession(updatedSession);
+      
+      // Only clear active session, don't refresh from database
       setActiveSession(null);
       
-      console.log('🔄 Session ended, refreshing session list from database');
-      setTimeout(() => {
-        refreshSessionsFromDatabase();
-      }, 500); // Increased delay to ensure database consistency
+      console.log('✅ Session ended successfully and data preserved');
     }
   };
 
