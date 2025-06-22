@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
-import { PokerSession } from '@/types/PokerSession';
+import { PokerSession } from '@/types/poker';
 import { useToast } from '@/hooks/use-toast';
 
 interface ActiveSessionsListProps {
