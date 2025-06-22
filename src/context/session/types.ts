@@ -48,5 +48,3 @@ export interface SessionContextType {
   clearAllUserData: () => void;
   refreshSessionsFromDatabase?: () => Promise<void>;
 }
-
-export const MAX_STORED_SESSIONS = 50;

@@ -1,6 +1,8 @@
 
 import { PokerSession, HandData, TableData } from '@/types/poker';
 
+export const MAX_STORED_SESSIONS = 50;
+
 // Generate user-specific localStorage key
 export const getUserStorageKey = (userId: string | null): string => {
   if (!userId) return 'pokerSessions_anonymous';

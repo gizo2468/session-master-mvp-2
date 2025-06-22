@@ -5,27 +5,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import Icon from '@/components/ui/Lucide';
-import { findSupabaseSessionId, syncHandToSupabase, syncHandUpdateToSupabase, syncHandDeleteToSupabase } from '@/utils/handSync';
-import { SessionContextType, MAX_STORED_SESSIONS } from './session/types';
-import { loadSessions, findActiveSession, clearUserData, clearOtherUserSessions, getUserStorageKey } from './session/storage';
-import { syncSessionToSupabase } from './session/supabaseSync';
-import { createTableHandHandlers } from './session/handlers';
-import { 
-  fetchUserSessions, 
-  fetchActiveSession,
-  saveSessionToDatabase, 
-  deleteSessionFromDatabase 
-} from '@/utils/database';
+import { SessionContextType } from './session/types';
+import { useSessionInitialization } from './session/useSessionInitialization';
+import { createSessionOperations } from './session/sessionOperations';
+import { saveSessionsToSources } from './session/databaseSync';
+import { clearUserData } from './session/storage';
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [sessions, setSessions] = useState<PokerSession[]>([]);
-  const [activeSession, setActiveSession] = useState<PokerSession | null>(null);
   const [showStorageWarning, setShowStorageWarning] = useState(false);
-  const [isLoadingFromDatabase, setIsLoadingFromDatabase] = useState(false);
-  const [initializationError, setInitializationError] = useState<string | null>(null);
   const [filters, setFilters] = useState<SessionFilter>({
     gameType: 'All',
     format: 'All',
@@ -33,7 +22,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   });
   const { toast } = useToast();
   const { user } = useAuth();
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const {
+    isInitialized,
+    sessions,
+    setSessions,
+    activeSession,
+    setActiveSession,
+    isLoadingFromDatabase,
+    initializationError,
+    currentUserId,
+    refreshSessionsFromDatabase
+  } = useSessionInitialization();
+
+  const sessionOperations = createSessionOperations(
+    sessions,
+    setSessions,
+    activeSession,
+    setActiveSession,
+    user,
+    toast,
+    refreshSessionsFromDatabase
+  );
 
   // Clear all user data function
   const clearAllUserData = () => {
@@ -46,376 +56,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       location: '',
     });
     setShowStorageWarning(false);
-    
-    // Clear localStorage for current user
     clearUserData(currentUserId);
   };
 
-  // Load active session from database with error handling
-  const loadActiveSessionFromDatabase = async (userId: string | null) => {
-    if (!userId) return null;
-    
-    try {
-      console.log('🔄 Loading active session from database for user:', userId);
-      const activeSession = await fetchActiveSession();
-      if (activeSession) {
-        console.log('✅ Found active session:', activeSession.id);
-        return activeSession;
-      }
-      return null;
-    } catch (error) {
-      console.error('❌ Failed to load active session from database:', error);
-      // Don't throw, just return null and continue with localStorage fallback
-      return null;
-    }
-  };
-
-  // Enhanced session refresh function with error handling
-  const refreshSessionsFromDatabase = async () => {
-    if (!user?.id) return;
-    
-    try {
-      console.log('🔄 Refreshing sessions from database');
-      setIsLoadingFromDatabase(true);
-      
-      // Load fresh data from database
-      const databaseSessions = await fetchUserSessions();
-      const freshActiveSession = await loadActiveSessionFromDatabase(user.id);
-      
-      console.log(`✅ Refreshed ${databaseSessions.length} sessions from database`);
-      
-      setSessions(databaseSessions);
-      setActiveSession(freshActiveSession);
-      
-    } catch (error) {
-      console.error('❌ Failed to refresh sessions from database:', error);
-      toast({
-        title: "Database Error",
-        description: "Failed to refresh sessions from database. Using local data.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingFromDatabase(false);
-    }
-  };
-
-  // Load sessions from database with fallback to localStorage
-  const loadSessionsFromSources = async (userId: string | null) => {
-    setIsLoadingFromDatabase(true);
-    let loadedSessions: PokerSession[] = [];
-    let loadedActiveSession: PokerSession | null = null;
-
-    if (userId) {
-      try {
-        console.log('🔄 Loading sessions from database for user:', userId);
-        
-        // First, load the active session specifically
-        loadedActiveSession = await loadActiveSessionFromDatabase(userId);
-        
-        // Then load all sessions
-        const databaseSessions = await fetchUserSessions();
-        loadedSessions = databaseSessions;
-        console.log(`✅ Loaded ${loadedSessions.length} sessions from database`);
-        
-        // Set active session from database if found
-        if (loadedActiveSession) {
-          setActiveSession(loadedActiveSession);
-        } else {
-          // Fallback to finding active session in loaded sessions
-          const foundActiveSession = findActiveSession(loadedSessions);
-          setActiveSession(foundActiveSession);
-        }
-      } catch (error) {
-        console.error('❌ Failed to load from database, falling back to localStorage:', error);
-        
-        // Fallback to localStorage
-        try {
-          loadedSessions = loadSessions(userId);
-          setActiveSession(findActiveSession(loadedSessions));
-          console.log(`✅ Loaded ${loadedSessions.length} sessions from localStorage as fallback`);
-        } catch (localStorageError) {
-          console.error('❌ Failed to load from localStorage:', localStorageError);
-          setInitializationError('Failed to load session data. Please refresh the page.');
-          loadedSessions = [];
-          setActiveSession(null);
-        }
-      }
-    } else {
-      // User not logged in, load from localStorage
-      try {
-        loadedSessions = loadSessions(userId);
-        setActiveSession(findActiveSession(loadedSessions));
-      } catch (error) {
-        console.error('❌ Failed to load from localStorage (no user):', error);
-        loadedSessions = [];
-        setActiveSession(null);
-      }
-    }
-
-    setIsLoadingFromDatabase(false);
-    return loadedSessions;
-  };
-
-  // Initialize sessions on mount and when user changes with better error handling
-  useEffect(() => {
-    const initializeSessions = async () => {
-      try {
-        console.log('🔄 User changed, reinitializing sessions. User:', user?.id);
-        
-        // Clear sessions when user changes or logs out
-        if (currentUserId !== user?.id) {
-          console.log('👤 User switch detected, clearing sessions');
-          
-          // Complete reset of all session state
-          setSessions([]);
-          setActiveSession(null);
-          setShowStorageWarning(false);
-          setInitializationError(null);
-          
-          // If user logged out (user is null), clear all data
-          if (!user) {
-            clearUserData(currentUserId);
-            setCurrentUserId(null);
-            setIsInitialized(true);
-            return;
-          }
-          
-          setCurrentUserId(user.id);
-          
-          // Clear sessions from other users to prevent leakage
-          clearOtherUserSessions(user.id);
-        }
-        
-        // Load sessions from database or localStorage
-        const loadedSessions = await loadSessionsFromSources(user?.id || null);
-        console.log('📋 Loaded sessions for user:', user?.id, 'Count:', loadedSessions.length);
-        
-        setSessions(loadedSessions);
-        setIsInitialized(true);
-        
-      } catch (error) {
-        console.error('❌ Failed to initialize sessions:', error);
-        setInitializationError('Failed to initialize session data. Please refresh the page.');
-        setIsInitialized(true); // Still set to true to prevent infinite loading
-      }
-    };
-
-    initializeSessions();
-  }, [user?.id, currentUserId]);
-
   const dismissStorageWarning = () => {
     setShowStorageWarning(false);
-    // Remember dismissal for this session
     sessionStorage.setItem('storageWarningDismissed', 'true');
   };
 
-  // Save to both localStorage and database
-  const saveSessionsToSources = async (sessionsToSave: PokerSession[]) => {
-    // Always save to localStorage for offline access
-    if (user?.id) {
-      try {
-        const sortedSessions = [...sessionsToSave].sort((a, b) => 
-          new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-        );
-        
-        let sessionsToStore = sortedSessions;
-        
-        if (sortedSessions.length > MAX_STORED_SESSIONS) {
-          const activeSessions = sortedSessions.filter(s => s.isActive);
-          const inactiveSessions = sortedSessions.filter(s => !s.isActive).slice(0, MAX_STORED_SESSIONS - activeSessions.length);
-          sessionsToStore = [...activeSessions, ...inactiveSessions];
-          
-          if (sortedSessions.length !== sessionsToStore.length) {
-            // Check if warning was already dismissed for this session
-            const wasDismissed = sessionStorage.getItem('storageWarningDismissed') === 'true';
-            if (!wasDismissed) {
-              setShowStorageWarning(true);
-            }
-          }
-        }
-        
-        // Store sessions with user-specific key
-        const storageKey = getUserStorageKey(user.id);
-        localStorage.setItem(storageKey, JSON.stringify(sessionsToStore));
-        console.log('💾 Saved sessions to localStorage key:', storageKey, 'Count:', sessionsToStore.length);
-      } catch (error) {
-        console.error("Failed to save sessions to localStorage:", error);
-        
-        toast({
-          title: "Storage issue detected",
-          description: "There was a problem saving your sessions. Try clearing some old sessions to free up space.",
-          variant: "destructive"
-        });
-      }
-    }
-
-    // Save to database if user is logged in
-    if (user?.id) {
-      // Save each session to database (they will be upserted)
-      for (const session of sessionsToSave) {
-        try {
-          await saveSessionToDatabase(session);
-        } catch (error) {
-          console.error('Failed to save session to database:', session.id, error);
-        }
-      }
-    }
-  };
-
+  // Save sessions when they change
   useEffect(() => {
     if (!isInitialized || !user?.id) return;
     
-    saveSessionsToSources(sessions);
+    saveSessionsToSources(sessions, user.id, setShowStorageWarning, toast);
   }, [sessions, user?.id, isInitialized]);
-
-  const addSession = async (session: PokerSession) => {
-    const sessionWithInitialBuyIn = {
-      ...session,
-      initialBuyIn: session.buyIn
-    };
-
-    setSessions((prev) => [...prev, sessionWithInitialBuyIn]);
-    
-    // Immediately save to database if user is logged in
-    if (user?.id) {
-      try {
-        await saveSessionToDatabase(sessionWithInitialBuyIn);
-      } catch (error) {
-        console.error('Failed to save new session to database:', error);
-        toast({
-          title: "Sync Warning",
-          description: "Session saved locally but failed to sync to cloud. It will sync when connection is restored.",
-          variant: "destructive"
-        });
-      }
-    }
-  };
-
-  const updateSession = async (updatedSession: PokerSession) => {
-    setSessions((prev) =>
-      prev.map((session) =>
-        session.id === updatedSession.id ? updatedSession : session
-      )
-    );
-    
-    if (activeSession && activeSession.id === updatedSession.id) {
-      setActiveSession(updatedSession);
-    }
-
-    // Immediately save to database if user is logged in
-    if (user?.id) {
-      try {
-        await saveSessionToDatabase(updatedSession);
-      } catch (error) {
-        console.error('Failed to update session in database:', error);
-        toast({
-          title: "Sync Warning",
-          description: "Session updated locally but failed to sync to cloud. It will sync when connection is restored.",
-          variant: "destructive"
-        });
-      }
-    }
-  };
-
-  const deleteSession = async (id: string) => {
-    setSessions((prev) => prev.filter((session) => session.id !== id));
-    
-    if (activeSession && activeSession.id === id) {
-      setActiveSession(null);
-    }
-
-    // Delete from database if user is logged in
-    if (user?.id) {
-      try {
-        await deleteSessionFromDatabase(id);
-      } catch (error) {
-        console.error('Failed to delete session from database:', error);
-        toast({
-          title: "Sync Warning",
-          description: "Session deleted locally but failed to sync to cloud. It will sync when connection is restored.",
-          variant: "destructive"
-        });
-      }
-    }
-  };
-
-  const startSession = async (session: PokerSession) => {
-    try {
-      const sessionWithActive = {
-        ...session,
-        initialBuyIn: session.buyIn,
-        isActive: true,
-        currentStatus: 'running' as const,
-        sessionDuration: 0,
-        hands: [],
-        tables: session.tables !== undefined ? session.tables : []
-      };
-      
-      console.log('🎯 Starting session with tables:', sessionWithActive.tables?.length || 0);
-      
-      setActiveSession(sessionWithActive);
-      await addSession(sessionWithActive);
-      
-      // Ensure the session and its tables are immediately saved to database
-      if (user?.id) {
-        try {
-          console.log('💾 Immediately saving new session to database...');
-          await saveSessionToDatabase(sessionWithActive);
-          console.log('✅ Session and tables saved to database successfully');
-        } catch (error) {
-          console.error('❌ Failed to save new session to database:', error);
-          toast({
-            title: "Warning",
-            description: "Session created but may not sync to cloud immediately. It will sync when connection is restored.",
-            variant: "destructive"
-          });
-        }
-      }
-    } catch (error) {
-      console.error('❌ Failed to start session:', error);
-      throw error; // Re-throw to be handled by the calling component
-    }
-  };
-
-  const endSession = async (id: string, cashOut: number, notes?: string) => {
-    const session = sessions.find((s) => s.id === id);
-    if (session) {
-      const hasActiveTables = session.tables && session.tables.some(table => table.isActive);
-      
-      if (hasActiveTables) {
-        // Check if all active tables have been properly ended
-        const activeTablesWithoutResults = session.tables.filter(table => 
-          table.isActive && (table.cashOut === undefined || table.cashOut === null)
-        );
-        
-        if (activeTablesWithoutResults.length > 0) {
-          throw new Error("Cannot end session while tables are still active. Please end all active tables first.");
-        }
-      }
-      
-      const updatedSession = {
-        ...session,
-        cashOut,
-        notes: notes || session.notes,
-        endTime: new Date(),
-        isActive: false,
-        currentStatus: 'ended' as const,
-      };
-      
-      // Update session locally first
-      await updateSession(updatedSession);
-      setActiveSession(null);
-      
-      // Force refresh from database after ending session
-      console.log('🔄 Session ended, refreshing session list from database');
-      setTimeout(() => {
-        refreshSessionsFromDatabase();
-      }, 100); // Small delay to ensure database is updated
-    }
-  };
-
-  // Create table hand handlers
-  const tableHandHandlers = createTableHandHandlers(sessions, updateSession, user);
 
   // Only render children after initialization to prevent context usage before setup
   if (!isInitialized) {
@@ -461,11 +115,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         showStorageWarning,
         isLoading: isLoadingFromDatabase,
         dismissStorageWarning,
-        addSession: async (session) => await addSession(session),
-        updateSession: async (session) => await updateSession(session),
-        deleteSession: async (id) => await deleteSession(id),
-        startSession,
-        endSession,
+        addSession: sessionOperations.addSession,
+        updateSession: sessionOperations.updateSession,
+        deleteSession: sessionOperations.deleteSession,
+        startSession: sessionOperations.startSession,
+        endSession: sessionOperations.endSession,
         pauseSession: async (id: string) => {
           const session = sessions.find((s) => s.id === id);
           if (session && session.isActive) {
@@ -473,7 +127,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
               ...session,
               currentStatus: 'paused' as const,
             };
-            await updateSession(updatedSession);
+            await sessionOperations.updateSession(updatedSession);
           }
         },
         resumeSession: async (id: string) => {
@@ -483,7 +137,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
               ...session,
               currentStatus: 'running' as const,
             };
-            await updateSession(updatedSession);
+            await sessionOperations.updateSession(updatedSession);
           }
         },
         updateSessionDuration: async (id: string, duration: number) => {
@@ -493,7 +147,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
               ...session,
               sessionDuration: duration,
             };
-            await updateSession(updatedSession);
+            await sessionOperations.updateSession(updatedSession);
           }
         },
         addRebuy: async (id: string, amount: number) => {
@@ -505,16 +159,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
               rebuys: currentRebuys + 1,
               buyIn: session.buyIn + amount
             };
-            await updateSession(updatedSession);
+            await sessionOperations.updateSession(updatedSession);
           }
         },
         setFilters,
         addHand: async (sessionId: string, hand: Omit<HandData, 'id' | 'createdAt'>) => {
           const session = sessions.find(s => s.id === sessionId);
           if (session) {
-            // If tableId is provided, add to that table
             if (hand.tableId) {
-              await tableHandHandlers.addTableHand(sessionId, hand.tableId, hand);
+              await sessionOperations.tableHandHandlers.addTableHand(sessionId, hand.tableId, hand);
               return;
             }
             
@@ -529,15 +182,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
               hands: [...(session.hands || []), newHand]
             };
             
-            await updateSession(updatedSession);
+            await sessionOperations.updateSession(updatedSession);
           }
         },
         updateHand: async (sessionId: string, hand: HandData) => {
           const session = sessions.find(s => s.id === sessionId);
           if (session) {
-            // If tableId is provided, update in that table
             if (hand.tableId) {
-              await tableHandHandlers.updateTableHand(sessionId, hand.tableId, hand);
+              await sessionOperations.tableHandHandlers.updateTableHand(sessionId, hand.tableId, hand);
               return;
             }
             
@@ -551,18 +203,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
                 hands: updatedHands
               };
               
-              await updateSession(updatedSession);
+              await sessionOperations.updateSession(updatedSession);
             }
           }
         },
         deleteHand: async (sessionId: string, handId: string) => {
           const session = sessions.find(s => s.id === sessionId);
           if (session) {
-            // Check if this hand belongs to a table
             if (session.tables && session.tables.length > 0) {
               for (const table of session.tables) {
                 if (table.hands && table.hands.some(h => h.id === handId)) {
-                  await tableHandHandlers.deleteTableHand(sessionId, table.id, handId);
+                  await sessionOperations.tableHandHandlers.deleteTableHand(sessionId, table.id, handId);
                   return;
                 }
               }
@@ -576,13 +227,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
                 hands: updatedHands
               };
               
-              await updateSession(updatedSession);
+              await sessionOperations.updateSession(updatedSession);
             }
           }
         },
-        addTableHand: tableHandHandlers.addTableHand,
-        updateTableHand: tableHandHandlers.updateTableHand,
-        deleteTableHand: tableHandHandlers.deleteTableHand,
+        addTableHand: sessionOperations.tableHandHandlers.addTableHand,
+        updateTableHand: sessionOperations.tableHandHandlers.updateTableHand,
+        deleteTableHand: sessionOperations.tableHandHandlers.deleteTableHand,
         addTable: async (sessionId: string, table: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
           const session = sessions.find(s => s.id === sessionId);
           if (session) {
@@ -600,7 +251,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
               buyIn: session.buyIn + table.buyIn
             };
             
-            await updateSession(updatedSession);
+            await sessionOperations.updateSession(updatedSession);
           }
         },
         updateTable: async (sessionId: string, updatedTable: TableData) => {
@@ -615,7 +266,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
               tables: updatedTables
             };
             
-            await updateSession(updatedSession);
+            await sessionOperations.updateSession(updatedSession);
           }
         },
         endTable: async (
@@ -660,7 +311,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
               tables: updatedTables
             };
             
-            await updateSession(updatedSession);
+            await sessionOperations.updateSession(updatedSession);
           }
         },
         addTableRebuy: async (sessionId: string, tableId: string, amount: number) => {
@@ -688,7 +339,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
               buyIn: session.buyIn + buyInDifference
             };
             
-            await updateSession(updatedSession);
+            await sessionOperations.updateSession(updatedSession);
           }
         },
         getTableById: (sessionId: string, tableId: string): TableData | undefined => {
@@ -711,7 +362,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
                 buyIn: session.buyIn - tableToDelete.buyIn
               };
               
-              await updateSession(updatedSession);
+              await sessionOperations.updateSession(updatedSession);
             }
           }
         },
