@@ -145,10 +145,11 @@ export default function SessionForm() {
 
       console.log('🎯 Starting session with initial table:', newSession);
 
-      // Use SessionContext to start the session - this handles both DB and state
-      await startSession(newSession);
+      // FIXED: Use SessionContext to start the session and wait for the returned session
+      const createdSession = await startSession(newSession);
+      const finalSessionId = createdSession.id;
 
-      console.log('✅ Session started successfully with initial table');
+      console.log('✅ Session started successfully with ID:', finalSessionId);
 
       // Show success message
       toast({
@@ -156,35 +157,51 @@ export default function SessionForm() {
         description: "Your poker session has been successfully created with the initial table."
       });
 
-      // Wait a bit longer to ensure database transaction is fully committed
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // FIXED: Wait longer and add better verification
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Verify session was created before navigating
-      try {
-        const { data: verifySession } = await supabase
-          .from('sessions')
-          .select('id, is_active')
-          .eq('id', newSession.id)
-          .single();
+      // FIXED: Verify session was created before navigating with retry mechanism
+      let verificationAttempts = 0;
+      const maxVerificationAttempts = 5;
+      let sessionVerified = false;
 
-        if (!verifySession) {
-          throw new Error('Session was not properly saved to database');
+      while (verificationAttempts < maxVerificationAttempts && !sessionVerified) {
+        try {
+          const { data: verifySession } = await supabase
+            .from('sessions')
+            .select('id, is_active')
+            .eq('id', finalSessionId)
+            .single();
+
+          if (verifySession && verifySession.is_active) {
+            sessionVerified = true;
+            console.log('✅ Session verified in database, navigating...');
+          } else {
+            throw new Error('Session not found or not active');
+          }
+        } catch (verifyError) {
+          verificationAttempts++;
+          console.warn(`⚠️ Session verification attempt ${verificationAttempts} failed:`, verifyError);
+          
+          if (verificationAttempts < maxVerificationAttempts) {
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
         }
+      }
 
-        console.log('✅ Session verified in database, navigating...');
-      } catch (verifyError) {
-        console.error('❌ Session verification failed:', verifyError);
-        // Still try to navigate, but with a warning
+      if (!sessionVerified) {
+        console.warn('⚠️ Session verification failed after all attempts, but proceeding with navigation');
         toast({
           title: "Warning",
-          description: "Session created but verification failed. If you encounter issues, please try refreshing.",
+          description: "Session created but verification incomplete. If you encounter issues, please try refreshing.",
           variant: "destructive"
         });
       }
 
-      // Navigate to the live session page
-      console.log('🔄 Navigating to live session page:', `/session/${newSession.id}`);
-      navigate(`/session/${newSession.id}`, { replace: true });
+      // FIXED: Navigate to the live session page with the correct session ID
+      console.log('🔄 Navigating to live session page:', `/session/${finalSessionId}`);
+      navigate(`/session/${finalSessionId}`, { replace: true });
       
     } catch (error) {
       console.error('❌ Error starting session:', error);

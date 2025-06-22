@@ -13,13 +13,13 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
 
     console.log('🔄 Fetching user sessions with optimized query');
 
-    // Use a single optimized query with joins instead of multiple queries
+    // FIXED: Use proper table relationship - session_tables references sessions via session_id
     const { data: sessions, error: sessionError } = await supabase
       .from('sessions')
       .select(`
         *,
-        session_tables(*),
-        session_hands_new(*)
+        session_tables!session_tables_session_id_fkey(*),
+        session_hands_new!session_hands_new_session_id_fkey(*)
       `)
       .eq('user_id', user.id)
       .order('start_time', { ascending: false });
@@ -62,13 +62,13 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
 
     console.log('🔄 Fetching active sessions with optimized query');
 
-    // Use a single optimized query for active sessions
+    // FIXED: Use proper table relationship for active sessions
     const { data: sessions, error: sessionError } = await supabase
       .from('sessions')
       .select(`
         *,
-        session_tables(*),
-        session_hands_new(*)
+        session_tables!session_tables_session_id_fkey(*),
+        session_hands_new!session_hands_new_session_id_fkey(*)
       `)
       .eq('is_active', true)
       .eq('user_id', user.id)

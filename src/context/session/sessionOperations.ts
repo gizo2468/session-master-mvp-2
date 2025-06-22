@@ -46,6 +46,7 @@ export const createSessionOperations = (
       initialBuyIn: session.buyIn
     };
 
+    // FIXED: Update sessions state immediately
     setSessions((prev) => [...prev, sessionWithInitialBuyIn]);
     
     if (user?.id) {
@@ -123,7 +124,10 @@ export const createSessionOperations = (
       
       console.log('🎯 Starting session with tables:', sessionWithActive.tables?.length || 0);
       
+      // FIXED: Set active session IMMEDIATELY before adding to sessions
       setActiveSession(sessionWithActive);
+      
+      // FIXED: Add session to state immediately and wait for completion
       await addSession(sessionWithActive);
       
       if (user?.id) {
@@ -153,6 +157,8 @@ export const createSessionOperations = (
                   id: table.id.includes('_table_') ? newUniqueId + '_table_' + uuidv4() : table.id
                 }));
                 console.log(`🔄 Duplicate key error, retrying with new ID: ${newUniqueId}`);
+                // Update the active session with new ID
+                setActiveSession(sessionWithActive);
               } else if (saveAttempts >= maxSaveAttempts) {
                 throw saveError;
               }
@@ -172,6 +178,10 @@ export const createSessionOperations = (
           });
         }
       }
+
+      // FIXED: Return the session with final ID for navigation
+      return sessionWithActive;
+      
     } catch (error) {
       console.error('❌ Failed to start session:', error);
       throw error;

@@ -38,7 +38,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/new-session" element={<SessionForm />} />
-              <Route path="/session/:sessionId" element={<LiveSession />} />
+              {/* FIXED: Change route parameter from :sessionId to :id to match useParams */}
+              <Route path="/session/:id" element={<LiveSession />} />
               <Route path="/session/:sessionId/edit" element={<EditSession />} />
               <Route path="/session/:sessionId/details" element={<SessionDetail />} />
               <Route path="/history" element={<SessionHistory />} />

@@ -34,7 +34,7 @@ export const useSessionLoader = (id: string | undefined) => {
 
         console.log('🔍 Looking for session:', id);
 
-        // First try to find session in context with validation
+        // FIXED: First try to find session in context with validation
         let foundSession = activeSession?.id === id ? activeSession : sessions.find(s => s.id === id);
         
         if (foundSession?.isActive && foundSession.startTime && foundSession.gameType && foundSession.format) {
@@ -47,15 +47,15 @@ export const useSessionLoader = (id: string | undefined) => {
           return;
         }
 
-        // If not found in context or invalid, try to load from database
+        // FIXED: If not found in context or invalid, try to load from database with proper relationship
         console.log('🔍 Loading session from database:', id);
         
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
           .select(`
             *,
-            session_tables(*),
-            session_hands_new(*)
+            session_tables!session_tables_session_id_fkey(*),
+            session_hands_new!session_hands_new_session_id_fkey(*)
           `)
           .eq('id', id)
           .eq('is_active', true)
@@ -155,7 +155,7 @@ export const useSessionLoader = (id: string | undefined) => {
       isCancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [id, navigate, toast, sessions, activeSession]); // Added sessions and activeSession back for proper dependency tracking
+  }, [id, navigate, toast, sessions, activeSession]);
 
   return { currentSession, isLoadingSession, loadingError };
 };
