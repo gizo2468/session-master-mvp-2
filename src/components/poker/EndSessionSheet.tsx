@@ -36,6 +36,18 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
 
   const profit = autoCashOutAmount - session.buyIn;
 
+  // Calculate additional session statistics
+  const tablesPlayed = session.tables?.length || 0;
+  
+  const handsEntered = (session.hands?.length || 0) + 
+    (session.tables?.reduce((total, table) => total + (table.hands?.length || 0), 0) || 0);
+  
+  const cashoutsRecorded = session.tables?.filter(table => 
+    !table.isActive && typeof table.cashOut === 'number' && table.cashOut > 0
+  ).length || 0;
+  
+  const roi = session.buyIn > 0 ? ((profit / session.buyIn) * 100) : 0;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[80vh]">
@@ -92,6 +104,24 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
               <div>
                 <div className="text-gray-500">Total Cash-out</div>
                 <div className="font-medium">${autoCashOutAmount.toFixed(2)}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Tables Played</div>
+                <div className="font-medium">{tablesPlayed}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Hands Entered</div>
+                <div className="font-medium">{handsEntered}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Cashouts Made</div>
+                <div className="font-medium">{cashoutsRecorded}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">ROI %</div>
+                <div className={`font-medium ${roi >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {roi.toFixed(1)}%
+                </div>
               </div>
               <div className="col-span-2 pt-2 border-t border-gray-200">
                 <div className="text-gray-500">Net Result</div>

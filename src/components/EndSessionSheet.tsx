@@ -44,6 +44,16 @@ export default function EndSessionSheet({
   const profit = cashOut - session.buyIn;
   const roi = session.buyIn > 0 ? ((profit / session.buyIn) * 100) : 0;
 
+  // Calculate additional session statistics
+  const tablesPlayed = session.tables?.length || 0;
+  
+  const handsEntered = (session.hands?.length || 0) + 
+    (session.tables?.reduce((total, table) => total + (table.hands?.length || 0), 0) || 0);
+  
+  const cashoutsRecorded = session.tables?.filter(table => 
+    !table.isActive && typeof table.cashOut === 'number' && table.cashOut > 0
+  ).length || 0;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
@@ -71,6 +81,24 @@ export default function EndSessionSheet({
               <div>
                 <span className="text-gray-500">Rebuys:</span>
                 <span className="ml-1 font-medium">{session.rebuys || 0}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Tables Played:</span>
+                <span className="ml-1 font-medium">{tablesPlayed}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Hands Entered:</span>
+                <span className="ml-1 font-medium">{handsEntered}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Cashouts Made:</span>
+                <span className="ml-1 font-medium">{cashoutsRecorded}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">ROI:</span>
+                <span className={`ml-1 font-medium ${roi >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {roi.toFixed(1)}%
+                </span>
               </div>
             </div>
           </div>
