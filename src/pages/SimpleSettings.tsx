@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Icon from '@/components/ui/Lucide';
 import { useToast } from '@/hooks/use-toast';
 
-const Settings: React.FC = () => {
+const SimpleSettings: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout, isLoading } = useAuth();
   const { toast } = useToast();
@@ -110,4 +110,4 @@ const Settings: React.FC = () => {
   );
 };
 
-export default Settings;
+export default SimpleSettings;

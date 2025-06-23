@@ -19,7 +19,7 @@ import { SessionFilter } from '@/types/poker';
 
 export default function Index() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { 
     sessions, 
     filters, 
@@ -93,18 +93,15 @@ export default function Index() {
       <header className="bg-white shadow-sm">
         <div className="container mx-auto max-w-md px-4 py-4">
           <div className="flex justify-between items-center">
-            <Logo />
-            <div className="flex items-center gap-4">
-              <FocusModeButton />
+            <div className="flex-1">
               {user ? (
                 <Button 
-                  onClick={logout}
+                  onClick={() => navigate('/settings')}
                   variant="outline" 
                   size="sm"
                   className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
                 >
-                  <Icon name="LogOut" size={16} className="mr-1" />
-                  Sign Out
+                  <Icon name="Settings" size={16} />
                 </Button>
               ) : (
                 <Button 
@@ -117,6 +114,12 @@ export default function Index() {
                   Sign In
                 </Button>
               )}
+            </div>
+            <div className="flex-1 flex justify-center">
+              <Logo />
+            </div>
+            <div className="flex-1 flex justify-end">
+              <FocusModeButton />
             </div>
           </div>
         </div>

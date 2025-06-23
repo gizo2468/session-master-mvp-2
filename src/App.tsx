@@ -12,6 +12,7 @@ import LiveSession from "./pages/LiveSession";
 import SessionHistory from "./pages/SessionHistory";
 import SessionDetail from "./pages/SessionDetail";
 import EditSession from "./pages/EditSession";
+import Settings from "./pages/Settings";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/session/:sessionId/edit" element={<EditSession />} />
               <Route path="/session/:sessionId/details" element={<SessionDetail />} />
               <Route path="/history" element={<SessionHistory />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/auth/login" element={<Login />} />
               <Route path="/auth/signup" element={<Signup />} />
             </Routes>
