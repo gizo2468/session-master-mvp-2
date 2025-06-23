@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -257,7 +258,7 @@ export default function SessionForm() {
             <span>Back</span>
           </button>
           <h1 className="text-2xl font-bold text-poker-black">Start New Session</h1>
-          <p className="text-gray-500 text-sm mt-1">Enter your session details below</p>
+          <p className="text-gray-500 text-sm mt-1">Enter your first table details below</p>
         </header>
         
         <Form {...form}>
