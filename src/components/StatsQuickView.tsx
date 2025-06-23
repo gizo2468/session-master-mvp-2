@@ -65,11 +65,35 @@ export default function StatsQuickView() {
     }, 0
   );
   
-  // Calculate ITM% (In The Money percentage) - sessions with payout > 0
-  const itmSessions = completedSessions.filter(
-    s => s.cashOut !== undefined && s.cashOut > 0
-  ).length;
-  const itmPercentage = totalSessions > 0 ? (itmSessions / totalSessions) * 100 : 0;
+  // FIXED: Calculate ITM% per table instead of per session
+  let totalTournamentTables = 0;
+  let itmTables = 0;
+  
+  completedSessions.forEach(session => {
+    if (session.tables && session.tables.length > 0) {
+      // Count tournament tables only
+      const tournamentTables = session.tables.filter(table => 
+        table.format === 'Tournament' && !table.isActive
+      );
+      
+      totalTournamentTables += tournamentTables.length;
+      
+      // Count tables that cashed (cashOut > 0)
+      const cashedTables = tournamentTables.filter(table => 
+        table.cashOut !== undefined && table.cashOut > 0
+      );
+      
+      itmTables += cashedTables.length;
+    } else if (session.format === 'Tournament' || session.format === 'Live Tournament' || session.format === 'Online Tournament') {
+      // Handle sessions without separate tables (legacy format)
+      totalTournamentTables += 1;
+      if (session.cashOut !== undefined && session.cashOut > 0) {
+        itmTables += 1;
+      }
+    }
+  });
+  
+  const itmPercentage = totalTournamentTables > 0 ? (itmTables / totalTournamentTables) * 100 : 0;
   
   // Calculate total hands entered across all sessions
   const totalHands = completedSessions.reduce((total, session) => {
