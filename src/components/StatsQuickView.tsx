@@ -1,26 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
-import { fetchUserSessions } from '@/utils/database';
-import { PokerSession } from '@/types/poker';
+import React from 'react';
+import { useSessionContext } from '@/context/SessionContext';
 
 export default function StatsQuickView() {
-  const [sessions, setSessions] = useState<PokerSession[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadSessions();
-  }, []);
-
-  const loadSessions = async () => {
-    try {
-      const userSessions = await fetchUserSessions();
-      setSessions(userSessions);
-    } catch (error) {
-      console.error('Error loading sessions:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { sessions, isLoading } = useSessionContext();
   
   if (isLoading) {
     return (
