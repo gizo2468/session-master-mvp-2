@@ -121,10 +121,6 @@ export default function EditSession() {
       
       await updateSession(updatedSession);
       
-      if (refreshSessionsFromDatabase) {
-        await refreshSessionsFromDatabase();
-      }
-      
       toast({
         title: "Session Updated",
         description: "Your session has been successfully updated."
