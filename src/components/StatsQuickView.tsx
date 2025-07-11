@@ -57,10 +57,23 @@ export default function StatsQuickView() {
   // Calculate overall results (net profit from completed sessions)
   const overallResults = completedSessions.reduce(
     (total, session) => {
+      // If session has tables, calculate from table-level data
+      if (session.tables && session.tables.length > 0) {
+        const completedTables = session.tables.filter(table => !table.isActive);
+        const sessionResult = completedTables.reduce((sessionTotal, table) => {
+          const tableBuyIn = table.buyIn || 0;
+          const tableCashOut = table.cashOut !== undefined ? table.cashOut : 0;
+          return sessionTotal + (tableCashOut - tableBuyIn);
+        }, 0);
+        return total + sessionResult;
+      }
+      
+      // Otherwise use session-level data (legacy format)
       if (session.cashOut !== undefined && !isNaN(session.cashOut) && 
           !isNaN(session.buyIn)) {
         return total + (session.cashOut - session.buyIn);
       }
+      
       return total;
     }, 0
   );
