@@ -11,7 +11,7 @@ const Logo: React.FC<LogoProps> = ({ className }) => {
       <img 
         src="/lovable-uploads/f2b42ae3-8208-4bb8-ad36-4a84f55ab3b1.png" 
         alt="SessionMaster Logo" 
-        className="h-40 w-auto object-contain"
+        className="h-40 w-48 object-contain"
       />
     </div>
   );
