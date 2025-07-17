@@ -6,6 +6,7 @@ import SessionStatsDisplay from './poker/SessionStatsDisplay';
 import SessionActionButtons from './SessionActionButtons';
 import { useSessionStats } from '@/hooks/useSessionStats';
 import { PokerSession } from '@/types/poker';
+import { calculateSessionProfit } from '@/utils/sessionCalculations';
 
 interface SessionCardProps {
   session: PokerSession;
@@ -17,10 +18,8 @@ export default function SessionCard({ session, onClick, showActions = false }: S
   const { stats, loading } = useSessionStats(session.id, session);
   
   // FIXED: Calculate net profit correctly: Payout - Buy-ins
-  // Handle cases where cashOut might be undefined or null
-  const netProfit = session.cashOut !== undefined && session.cashOut !== null && !isNaN(session.cashOut) && !isNaN(session.buyIn) 
-    ? session.cashOut - session.buyIn 
-    : -session.buyIn; // If no cashOut, it's a loss of the buy-in amount
+  // Calculate net profit using unified calculation logic
+  const netProfit = calculateSessionProfit(session);
   
   const calculateDuration = () => {
     try {

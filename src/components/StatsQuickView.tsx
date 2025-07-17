@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useSessionContext } from '@/context/SessionContext';
+import { calculateOverallResults } from '@/utils/sessionCalculations';
 
 export default function StatsQuickView() {
   const { sessions, isLoading } = useSessionContext();
@@ -37,29 +38,8 @@ export default function StatsQuickView() {
     s => s.cashOut !== undefined && s.cashOut < s.buyIn
   ).length;
   
-  // Calculate overall results (net profit from completed sessions)
-  const overallResults = completedSessions.reduce(
-    (total, session) => {
-      // If session has tables, calculate from table-level data
-      if (session.tables && session.tables.length > 0) {
-        const completedTables = session.tables.filter(table => !table.isActive);
-        const sessionResult = completedTables.reduce((sessionTotal, table) => {
-          const tableBuyIn = table.buyIn || 0;
-          const tableCashOut = table.cashOut !== undefined ? table.cashOut : 0;
-          return sessionTotal + (tableCashOut - tableBuyIn);
-        }, 0);
-        return total + sessionResult;
-      }
-      
-      // Otherwise use session-level data (legacy format)
-      if (session.cashOut !== undefined && !isNaN(session.cashOut) && 
-          !isNaN(session.buyIn)) {
-        return total + (session.cashOut - session.buyIn);
-      }
-      
-      return total;
-    }, 0
-  );
+  // Calculate overall results using unified calculation logic
+  const overallResults = calculateOverallResults(sessions);
   
   // FIXED: Calculate ITM% per table instead of per session
   let totalTournamentTables = 0;
