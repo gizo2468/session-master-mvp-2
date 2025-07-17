@@ -114,10 +114,6 @@ export default function Index() {
       <main className="container mx-auto max-w-md px-4 py-6">
         {showStorageWarning && <StorageWarningAlert />}
         
-        {showDonation && (
-          <DonationCard />
-        )}
-        
         
         <div className="flex flex-col items-center gap-6">
           {/* NEW SESSION button appears first, at the top */}
