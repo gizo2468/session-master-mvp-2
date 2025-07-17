@@ -9,12 +9,11 @@ import Icon from '@/components/ui/Lucide';
 import { useSessionContext } from '@/context/SessionContext';
 import { useToast } from '@/hooks/use-toast';
 import { PokerSession } from '@/types/poker';
-import { fetchUserSessions } from '@/utils/database';
 
 export default function EditSession() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const { updateSession, refreshSessionsFromDatabase } = useSessionContext();
+  const { sessions, updateSession } = useSessionContext();
   const { toast } = useToast();
 
   const [session, setSession] = useState<PokerSession | null>(null);
@@ -40,16 +39,16 @@ export default function EditSession() {
     notes: ''
   });
 
-  // Load session data directly from database
+  // Load session data from SessionContext (unified data source)
   useEffect(() => {
-    const loadSessionFromDatabase = async () => {
+    const loadSessionFromContext = () => {
       if (!sessionId) return;
       
       try {
         setLoading(true);
-        console.log('🔄 Loading session for edit from database:', sessionId);
+        console.log('🔄 Loading session for edit from context:', sessionId);
         
-        const sessions = await fetchUserSessions();
+        // Find session in the context's sessions array
         const foundSession = sessions.find(s => s.id === sessionId);
         
         if (!foundSession) {
@@ -62,16 +61,31 @@ export default function EditSession() {
           return;
         }
 
-        console.log('✅ Loaded session from database for editing:', foundSession);
+        console.log('✅ Loaded session from context for editing:', foundSession);
         setSession(foundSession);
         
-        // Pre-populate form with database values
+        // Calculate correct financial values based on session structure
+        const hasTableData = foundSession.tables && foundSession.tables.length > 0;
+        let buyInValue = 0;
+        let cashOutValue = 0;
+        
+        if (hasTableData) {
+          // Sum up table-level data
+          buyInValue = foundSession.tables.reduce((sum, table) => sum + (table.buyIn || 0), 0);
+          cashOutValue = foundSession.tables.reduce((sum, table) => sum + (table.cashOut || 0), 0);
+        } else {
+          // Use session-level data
+          buyInValue = foundSession.buyIn || 0;
+          cashOutValue = foundSession.cashOut || 0;
+        }
+        
+        // Pre-populate form with correct values
         setFormData({
           location: foundSession.location || '',
           gameType: (foundSession.gameType as 'NLH' | 'PLO') || 'NLH',
           format: (foundSession.format as 'Cash' | 'Tournament') || 'Cash',
-          buyIn: foundSession.buyIn || 0,
-          cashOut: foundSession.cashOut || 0,
+          buyIn: buyInValue,
+          cashOut: cashOutValue,
           smallBlind: foundSession.smallBlind || 0,
           bigBlind: foundSession.bigBlind || 0,
           notes: foundSession.notes || ''
@@ -90,8 +104,14 @@ export default function EditSession() {
       }
     };
 
-    loadSessionFromDatabase();
-  }, [sessionId, navigate, toast]);
+    // Only load if sessions are available in context
+    if (sessions.length > 0) {
+      loadSessionFromContext();
+    } else {
+      // If no sessions in context yet, keep loading until they arrive
+      setLoading(true);
+    }
+  }, [sessionId, sessions, navigate, toast]);
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({
@@ -107,18 +127,51 @@ export default function EditSession() {
       setSaving(true);
       console.log('💾 Saving session changes to database:', session.id);
       
-      const updatedSession: PokerSession = {
-        ...session,
-        location: formData.location,
-        gameType: formData.gameType,
-        format: formData.format,
-        buyIn: formData.buyIn,
-        cashOut: formData.cashOut,
-        smallBlind: formData.smallBlind,
-        bigBlind: formData.bigBlind,
-        notes: formData.notes
-      };
+      // Determine if this session has table-level data
+      const hasTableData = session.tables && session.tables.length > 0;
       
+      let updatedSession: PokerSession;
+      
+      if (hasTableData) {
+        // Update table-level data while preserving session-level metadata
+        const updatedTables = session.tables.map((table, index) => {
+          if (index === 0) {
+            // Update first table with form data (simplified single-table edit for now)
+            return {
+              ...table,
+              buyIn: formData.buyIn,
+              cashOut: formData.cashOut
+            };
+          }
+          return table;
+        });
+        
+        updatedSession = {
+          ...session,
+          location: formData.location,
+          gameType: formData.gameType,
+          format: formData.format,
+          smallBlind: formData.smallBlind,
+          bigBlind: formData.bigBlind,
+          notes: formData.notes,
+          tables: updatedTables
+        };
+      } else {
+        // Update session-level data
+        updatedSession = {
+          ...session,
+          location: formData.location,
+          gameType: formData.gameType,
+          format: formData.format,
+          buyIn: formData.buyIn,
+          cashOut: formData.cashOut,
+          smallBlind: formData.smallBlind,
+          bigBlind: formData.bigBlind,
+          notes: formData.notes
+        };
+      }
+      
+      // Update session in context - this will immediately update all UI components
       await updateSession(updatedSession);
       
       toast({
