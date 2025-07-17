@@ -38,13 +38,11 @@ export default function Index() {
   
   const [showDonation, setShowDonation] = useState(false);
 
-  // Show donation card occasionally for non-authenticated users
+  // Show donation card occasionally (now that only authenticated users see dashboard)
   useEffect(() => {
-    if (!user) {
-      const shouldShow = Math.random() < 0.3; // 30% chance
-      setShowDonation(shouldShow);
-    }
-  }, [user]);
+    const shouldShow = Math.random() < 0.3; // 30% chance
+    setShowDonation(shouldShow);
+  }, []);
 
   const filteredSessions = sessions.filter(session => {
     if (filters.gameType && filters.gameType !== 'All' && session.gameType !== filters.gameType) {
@@ -94,26 +92,14 @@ export default function Index() {
         <div className="container mx-auto max-w-md px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex-1">
-              {user ? (
-                <Button 
-                  onClick={() => navigate('/settings')}
-                  variant="outline" 
-                  size="sm"
-                  className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
-                >
-                  <Icon name="Settings" size={16} />
-                </Button>
-              ) : (
-                <Button 
-                  onClick={() => navigate('/auth/login')}
-                  variant="outline" 
-                  size="sm"
-                  className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
-                >
-                  <Icon name="LogIn" size={16} className="mr-1" />
-                  Sign In
-                </Button>
-              )}
+              <Button 
+                onClick={() => navigate('/settings')}
+                variant="outline" 
+                size="sm"
+                className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+              >
+                <Icon name="Settings" size={16} />
+              </Button>
             </div>
             <div className="flex-1 flex justify-center">
               <Logo />
@@ -128,9 +114,10 @@ export default function Index() {
       <main className="container mx-auto max-w-md px-4 py-6">
         {showStorageWarning && <StorageWarningAlert />}
         
-        {showDonation && !user && (
+        {showDonation && (
           <DonationCard />
         )}
+        
         
         <div className="flex flex-col items-center gap-6">
           {/* NEW SESSION button appears first, at the top */}
@@ -139,17 +126,17 @@ export default function Index() {
           </div>
 
           {/* Stats section appears after the button */}
-          {user && <StatsQuickView />}
+          <StatsQuickView />
           
           {/* Active Sessions List - appears after stats if there are active sessions */}
-          {user && hasActiveSessions && (
+          {hasActiveSessions && (
             <ActiveSessionsList 
               sessions={activeSessions}
               onResume={resumeSession}
             />
           )}
           
-          {user && sessions.length > 0 && (
+          {sessions.length > 0 && (
             <div className="w-full space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-extrabold tracking-tight">Recent Sessions</h2>
@@ -178,29 +165,13 @@ export default function Index() {
             </div>
           )}
 
-          {user && sessions.length === 0 && !hasActiveSessions && (
+          {sessions.length === 0 && !hasActiveSessions && (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
                 <Icon name="PlusCircle" size={48} className="mx-auto" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No sessions yet</h3>
               <p className="text-gray-500 mb-6">Start your first poker session to begin tracking your performance.</p>
-            </div>
-          )}
-          
-          {!user && (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <Icon name="TrendingUp" size={48} className="mx-auto" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Track Your Poker Journey</h3>
-              <p className="text-gray-500 mb-6">Sign up to start tracking your sessions, analyze your performance, and improve your game.</p>
-              <Button 
-                onClick={() => navigate('/auth/signup')}
-                className="bg-poker-gold hover:bg-poker-darkGold text-white"
-              >
-                Get Started
-              </Button>
             </div>
           )}
         </div>

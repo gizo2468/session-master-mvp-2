@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { SessionProvider } from "@/context/SessionContext";
+import AuthGuard from "@/components/auth/AuthGuard";
 import Index from "./pages/Index";
 import SessionForm from "./pages/SessionForm";
 import LiveSession from "./pages/LiveSession";
@@ -35,20 +36,22 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <SessionProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/new-session" element={<SessionForm />} />
-              {/* FIXED: Change route parameter from :sessionId to :id to match useParams */}
-              <Route path="/session/:id" element={<LiveSession />} />
-              <Route path="/session/:sessionId/edit" element={<EditSession />} />
-              <Route path="/session/:sessionId/details" element={<SessionDetail />} />
-              <Route path="/history" element={<SessionHistory />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/auth/login" element={<Login />} />
-              <Route path="/auth/signup" element={<Signup />} />
-            </Routes>
-          </SessionProvider>
+          <AuthGuard>
+            <SessionProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/new-session" element={<SessionForm />} />
+                {/* FIXED: Change route parameter from :sessionId to :id to match useParams */}
+                <Route path="/session/:id" element={<LiveSession />} />
+                <Route path="/session/:sessionId/edit" element={<EditSession />} />
+                <Route path="/session/:sessionId/details" element={<SessionDetail />} />
+                <Route path="/history" element={<SessionHistory />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/auth/login" element={<Login />} />
+                <Route path="/auth/signup" element={<Signup />} />
+              </Routes>
+            </SessionProvider>
+          </AuthGuard>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
