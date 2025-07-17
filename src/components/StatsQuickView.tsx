@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { useSessionContext } from '@/context/SessionContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { calculateOverallResults } from '@/utils/sessionCalculations';
 
 export default function StatsQuickView() {
