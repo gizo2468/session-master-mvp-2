@@ -89,7 +89,7 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
-        <div className="container mx-auto max-w-md px-4 py-2">
+        <div className="container mx-auto max-w-md px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex-1">
               <Button 
@@ -113,6 +113,10 @@ export default function Index() {
 
       <main className="container mx-auto max-w-md px-4 py-6">
         {showStorageWarning && <StorageWarningAlert />}
+        
+        {showDonation && (
+          <DonationCard />
+        )}
         
         
         <div className="flex flex-col items-center gap-6">
