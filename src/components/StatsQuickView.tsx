@@ -3,7 +3,7 @@ import React from 'react';
 import { useSessionContext } from '@/context/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { calculateOverallResults } from '@/utils/sessionCalculations';
+import { calculateOverallResults, calculateSessionProfit } from '@/utils/sessionCalculations';
 
 export default function StatsQuickView() {
   const { sessions, isLoading } = useSessionContext();
@@ -32,13 +32,9 @@ export default function StatsQuickView() {
   const completedSessions = sessions.filter(s => !s.isActive && (s.currentStatus === 'ended' || s.status === 'completed' || !s.status));
   const totalSessions = completedSessions.length;
   
-  const wins = completedSessions.filter(
-    s => s.cashOut !== undefined && s.cashOut > s.buyIn
-  ).length;
-  
-  const losses = completedSessions.filter(
-    s => s.cashOut !== undefined && s.cashOut < s.buyIn
-  ).length;
+  // Calculate wins and losses using the same logic as Overall Results
+  const wins = completedSessions.filter(s => calculateSessionProfit(s) > 0).length;
+  const losses = completedSessions.filter(s => calculateSessionProfit(s) <= 0).length;
   
   // Calculate overall results using unified calculation logic
   const overallResults = calculateOverallResults(sessions);
