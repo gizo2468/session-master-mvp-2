@@ -35,7 +35,7 @@ const BLIND_PRESETS = {
 const formSchema = z.object({
   gameType: z.enum(['NLH', 'PLO']),
   format: z.enum(['Cash', 'Tournament']),
-  location: z.string().min(1, "Table name is required"),
+  location: z.string().optional(),
   physicalLocation: z.string().optional(),
   buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "Buy-in amount must be a valid number",
