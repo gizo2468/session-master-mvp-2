@@ -8,7 +8,7 @@ const Logo: React.FC<LogoProps> = ({ className }) => {
   return (
     <div className={`w-full flex flex-col items-center justify-center ${className || ''}`}>
       <img 
-        src="/lovable-uploads/ccb5a20f-df89-4606-ba41-209ac023d7b4.png" 
+        src="/lovable-uploads/2101ccb7-bfc0-4bef-8b16-7ddd2a48c88d.png" 
         alt="Session Master Logo" 
         className="h-16 object-contain"
       />
