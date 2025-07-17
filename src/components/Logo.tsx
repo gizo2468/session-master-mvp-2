@@ -10,7 +10,7 @@ const Logo: React.FC<LogoProps> = ({ className }) => {
       <img 
         src="/lovable-uploads/8090f74c-bebb-42fa-a365-6c0af4dd9444.png" 
         alt="Session Master Logo" 
-        className="h-16 object-contain"
+        className="h-48 object-contain"
       />
     </div>
   );
