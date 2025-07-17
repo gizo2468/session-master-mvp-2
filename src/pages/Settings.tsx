@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/ui/Lucide';
 import { useToast } from '@/hooks/use-toast';
+import DonationCard from '@/components/DonationCard';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
@@ -99,6 +100,9 @@ const Settings: React.FC = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Support SessionMaster Section */}
+          <DonationCard />
         </div>
 
         {/* App Version at bottom */}

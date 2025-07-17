@@ -8,7 +8,7 @@ import SessionCard from '@/components/SessionCard';
 import NewSessionButton from '@/components/NewSessionButton';
 import StatsQuickView from '@/components/StatsQuickView';
 import StorageWarningAlert from '@/components/StorageWarningAlert';
-import DonationCard from '@/components/DonationCard';
+
 import FocusModeButton from '@/components/FocusModeButton';
 import ActiveSessionsList from '@/components/ActiveSessionsList';
 import Logo from '@/components/Logo';
@@ -36,13 +36,6 @@ export default function Index() {
     hasActiveSessions 
   } = useActiveSessionRecovery();
   
-  const [showDonation, setShowDonation] = useState(false);
-
-  // Show donation card occasionally (now that only authenticated users see dashboard)
-  useEffect(() => {
-    const shouldShow = Math.random() < 0.3; // 30% chance
-    setShowDonation(shouldShow);
-  }, []);
 
   const filteredSessions = sessions.filter(session => {
     if (filters.gameType && filters.gameType !== 'All' && session.gameType !== filters.gameType) {
@@ -113,10 +106,6 @@ export default function Index() {
 
       <main className="container mx-auto max-w-md px-4 py-6">
         {showStorageWarning && <StorageWarningAlert />}
-        
-        {showDonation && (
-          <DonationCard />
-        )}
         
         
         <div className="flex flex-col items-center gap-6">
