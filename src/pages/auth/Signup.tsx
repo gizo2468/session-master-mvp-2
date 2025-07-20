@@ -44,6 +44,7 @@ const Signup: React.FC = () => {
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const [userEmail, setUserEmail] = useState('');
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -88,6 +89,9 @@ const Signup: React.FC = () => {
   };
 
   const onSubmit = async (values: FormValues) => {
+    if (isSubmitting) return; // Prevent double submission
+    
+    setIsSubmitting(true);
     try {
       console.log("Signup form submitted with values:", {
         email: values.email,
@@ -96,20 +100,28 @@ const Signup: React.FC = () => {
         username: values.username
       });
       
-      // Final username availability check
-      const { data: existingUsers, error: checkError } = await supabase
-        .from('profiles')
-        .select('username')
-        .ilike('username', values.username)
-        .limit(1);
-      
-      if (checkError || (existingUsers && existingUsers.length > 0)) {
-        toast({
-          title: "Username Unavailable",
-          description: "The username you selected is already taken. Please choose a different one.",
-          variant: "destructive",
-        });
-        return;
+      // Final username availability check with proper error handling
+      try {
+        const { data: existingUsers, error: checkError } = await supabase
+          .from('profiles')
+          .select('username')
+          .ilike('username', values.username)
+          .limit(1);
+        
+        if (checkError) {
+          // If username column doesn't exist yet, we'll handle it in the trigger
+          console.warn("Username check failed (likely migration not applied):", checkError.message);
+        } else if (existingUsers && existingUsers.length > 0) {
+          toast({
+            title: "Username Unavailable",
+            description: "The username you selected is already taken. Please choose a different one.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } catch (usernameError) {
+        console.warn("Username availability check failed:", usernameError);
+        // Continue with signup - let the database constraints handle uniqueness
       }
       
       // Check if email confirmation is enabled
@@ -129,11 +141,21 @@ const Signup: React.FC = () => {
 
       if (error) {
         console.error("Signup error:", error);
-        toast({
-          title: "Signup Failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        
+        // Check for username conflict errors
+        if (error.message.includes('username') || error.message.includes('unique')) {
+          toast({
+            title: "Username Unavailable",
+            description: "The username you selected is already taken. Please choose a different one.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Signup Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
         return;
       }
 
@@ -156,12 +178,14 @@ const Signup: React.FC = () => {
         navigate('/');
       }
     } catch (error) {
-      console.error("Signup failed:", error);
+      console.error("Signup error:", error);
       toast({
-        title: "Signup Failed",
+        title: "Error",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -383,21 +407,13 @@ const Signup: React.FC = () => {
                 )}
               />
 
-              <Button 
-                type="submit" 
-                variant="poker" 
-                className="w-full mt-2" 
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Icon name="Loader" className="mr-2 animate-spin" />
-                    Creating Account...
-                  </>
-                ) : (
-                  'Create Account'
-                )}
-              </Button>
+               <Button 
+                 type="submit" 
+                 className="w-full"
+                 disabled={!form.formState.isValid || !form.watch('agreeToTerms') || isSubmitting}
+               >
+                 {isSubmitting ? "Creating Account..." : "Create Account"}
+               </Button>
             </form>
           </Form>
         </CardContent>
