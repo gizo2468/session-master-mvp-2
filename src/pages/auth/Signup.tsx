@@ -45,6 +45,7 @@ const Signup: React.FC = () => {
   const [userEmail, setUserEmail] = useState('');
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -142,8 +143,14 @@ const Signup: React.FC = () => {
       if (error) {
         console.error("Signup error:", error);
         
-        // Check for username conflict errors
-        if (error.message.includes('username') || error.message.includes('unique')) {
+        // Check for specific error types
+        if (error.message.includes('User already registered')) {
+          toast({
+            title: "Email Already Registered",
+            description: "This email is already registered. Please log in instead.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('username') || error.message.includes('unique')) {
           toast({
             title: "Username Unavailable",
             description: "The username you selected is already taken. Please choose a different one.",
@@ -189,6 +196,44 @@ const Signup: React.FC = () => {
     }
   };
 
+  const resendVerificationEmail = async () => {
+    if (!userEmail) return;
+    
+    setIsResendingEmail(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: userEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        console.error("Error resending verification email:", error);
+        toast({
+          title: "Resend Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Verification Email Sent",
+          description: "We've sent another verification email to your inbox.",
+        });
+      }
+    } catch (error) {
+      console.error("Error resending verification email:", error);
+      toast({
+        title: "Error",
+        description: "Failed to resend verification email. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResendingEmail(false);
+    }
+  };
+
   const roleOptions = [
     {
       value: 'student',
@@ -225,7 +270,14 @@ const Signup: React.FC = () => {
               Please check your email and click the confirmation link to activate your account. 
               You won't be able to sign in until you confirm your email address.
             </p>
-            <div className="pt-4">
+            <div className="pt-4 space-y-2">
+              <Button 
+                onClick={resendVerificationEmail}
+                disabled={isResendingEmail}
+                className="w-full"
+              >
+                {isResendingEmail ? "Sending..." : "Resend Verification Email"}
+              </Button>
               <Button 
                 variant="outline" 
                 onClick={() => setShowEmailConfirmation(false)}
