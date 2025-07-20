@@ -25,6 +25,7 @@ interface HandManagementPanelProps {
   tableId?: string;
   tableFormat?: 'Cash' | 'Tournament';
   readOnly?: boolean; // New prop to indicate if the panel is read-only
+  sessionBuyIn?: number; // Buy-in amount for the session
 }
 
 const HandManagementPanel: React.FC<HandManagementPanelProps> = ({ 
@@ -33,7 +34,8 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   tables = [],
   tableId,
   tableFormat,
-  readOnly = false // Default to false for backward compatibility
+  readOnly = false, // Default to false for backward compatibility
+  sessionBuyIn
 }) => {
   const [isAddHandOpen, setIsAddHandOpen] = useState(false);
   const [isEditHandOpen, setIsEditHandOpen] = useState(false);
@@ -181,6 +183,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
         onEditHand={onEditHand}
         onDeleteHand={onDeleteHand}
         readOnly={readOnly} // Pass the readOnly prop to HandsList
+        sessionBuyIn={sessionBuyIn}
       />
       
       {!readOnly && ( // Only render form components if not in read-only mode

@@ -16,9 +16,10 @@ interface HandsListProps {
   onEditHand: (hand: HandData) => void;
   onDeleteHand: (handId: string) => void;
   readOnly?: boolean; // Add readOnly prop
+  sessionBuyIn?: number; // Buy-in amount for the session
 }
 
-const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, readOnly = false }) => {
+const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, readOnly = false, sessionBuyIn }) => {
   // Sort hands by createdAt date
   const sortedHands = [...hands].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -39,9 +40,10 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-1/4">Cards</TableHead>
-                <TableHead className="w-[12%]">Position</TableHead>
-                <TableHead className="w-1/3">Action</TableHead>
+                <TableHead className="w-1/5">Cards</TableHead>
+                <TableHead className="w-[10%]">Position</TableHead>
+                <TableHead className="w-1/4">Action</TableHead>
+                <TableHead className="w-[15%]">Buy-In</TableHead>
                 <TableHead className="w-1/5">Result</TableHead>
                 {!readOnly && (
                   <TableHead className="w-[100px] text-right">Actions</TableHead>
@@ -119,6 +121,16 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                         </AdaptiveTooltip>
                       )}
                     </div>
+                  </TableCell>
+                  
+                  <TableCell>
+                    {sessionBuyIn !== undefined && (
+                      <div className="flex items-center justify-center">
+                        <span className="text-sm font-medium">
+                          ${sessionBuyIn.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                   </TableCell>
                   
                   <TableCell>

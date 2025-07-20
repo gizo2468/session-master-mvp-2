@@ -293,6 +293,7 @@ export default function SessionDetail() {
               ...(session.tables?.flatMap(table => table.hands || []) || [])
             ]}
             readOnly={!session.isActive}
+            sessionBuyIn={session.buyIn}
           />
         </div>
 
