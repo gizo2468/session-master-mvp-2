@@ -53,11 +53,6 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
       </div>
       
       <div className="flex justify-between py-2 border-b">
-        <span className="text-gray-500">Payout:</span>
-        <span className="font-medium">${totalCashout.toFixed(2)}</span>
-      </div>
-      
-      <div className="flex justify-between py-2 border-b">
         <span className="text-gray-500">ITM:</span>
         <span className="font-medium">
           {(() => {
@@ -65,6 +60,13 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
             const itmTables = session.tables?.filter(table => (table.cashOut || 0) > 0).length || 0;
             return `${itmTables} / ${totalTables}`;
           })()}
+        </span>
+      </div>
+      
+      <div className="flex justify-between py-2 border-b">
+        <span className="text-gray-500">Payout:</span>
+        <span className={`font-medium ${totalCashout > 0 ? 'text-green-600' : 'text-red-600'}`}>
+          ${totalCashout.toFixed(2)}
         </span>
       </div>
       
