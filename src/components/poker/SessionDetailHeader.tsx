@@ -21,28 +21,33 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
   };
 
   return (
-    <header className="mb-8">
+    <header className="mb-6">
       <Button 
         onClick={handleGoBack} 
         variant="ghost" 
-        className="text-poker-feltGreen mb-4 flex items-center p-0 hover:bg-transparent"
+        className="text-poker-feltGreen mb-6 flex items-center p-0 hover:bg-transparent"
       >
         ← Back
       </Button>
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-serif font-bold">
-          {location}
-        </h1>
+      <div className="flex justify-between items-start">
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-serif font-bold text-gray-900">
+            {location}
+          </h1>
+          <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+            Tournament
+          </span>
+        </div>
         <div className="flex gap-2">
           <button 
             onClick={onEditClick}
-            className="text-sm py-1 px-3 border border-gray-300 rounded"
+            className="text-sm py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
           >
             Edit Tables
           </button>
           <button 
             onClick={onDeleteClick}
-            className="text-sm py-1 px-3 border border-red-300 text-poker-red rounded"
+            className="text-sm py-2 px-4 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors"
           >
             Delete
           </button>

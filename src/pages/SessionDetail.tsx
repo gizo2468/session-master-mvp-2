@@ -247,7 +247,7 @@ export default function SessionDetail() {
           onEndSession={() => setShowEndSessionModal(true)}
         />
         
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-white rounded-lg shadow-md p-6 mb-4">
           <SessionStatusBadges
             startTime={session.startTime.toISOString()}
             endTime={session.endTime?.toISOString()}
