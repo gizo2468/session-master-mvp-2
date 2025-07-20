@@ -89,6 +89,30 @@ const Signup: React.FC = () => {
     }
   };
 
+  // Check email availability
+  const checkEmailAvailability = async (email: string) => {
+    if (!email || !email.includes('@')) return;
+    
+    try {
+      // Check if email exists in profiles table
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('email')
+        .ilike('email', email)
+        .limit(1);
+      
+      if (error) {
+        console.error('Error checking email availability:', error);
+        return false;
+      }
+      
+      return data && data.length === 0; // true if email is available
+    } catch (error) {
+      console.error('Email check failed:', error);
+      return false;
+    }
+  };
+
   const onSubmit = async (values: FormValues) => {
     if (isSubmitting) return; // Prevent double submission
     
@@ -124,6 +148,17 @@ const Signup: React.FC = () => {
         console.warn("Username availability check failed:", usernameError);
         // Continue with signup - let the database constraints handle uniqueness
       }
+
+      // Check email availability before attempting signup
+      const emailAvailable = await checkEmailAvailability(values.email);
+      if (emailAvailable === false) {
+        toast({
+          title: "Email Already Registered",
+          description: "This email is already registered. Please sign in instead or use a different email.",
+          variant: "destructive",
+        });
+        return;
+      }
       
       // Check if email confirmation is enabled
       const { data: { user }, error } = await supabase.auth.signUp({
@@ -143,23 +178,34 @@ const Signup: React.FC = () => {
       if (error) {
         console.error("Signup error:", error);
         
-        // Check for specific error types
-        if (error.message.includes('User already registered')) {
+        // Check for specific error types and provide clear messages
+        if (error.message.includes('User already registered') || 
+            error.message.includes('already been registered') ||
+            error.message.includes('email address not authorized') ||
+            error.code === 'user_already_exists') {
           toast({
             title: "Email Already Registered",
-            description: "This email is already registered. Please log in instead.",
+            description: "This email is already registered. Please sign in instead or try resetting your password.",
             variant: "destructive",
           });
-        } else if (error.message.includes('username') || error.message.includes('unique')) {
+        } else if (error.message.includes('username') || 
+                   error.message.includes('unique') ||
+                   error.message.includes('already taken')) {
           toast({
-            title: "Username Unavailable",
+            title: "Username Unavailable", 
             description: "The username you selected is already taken. Please choose a different one.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('email') && error.message.includes('already')) {
+          toast({
+            title: "Email Already Registered",
+            description: "This email is already registered. Please sign in instead.",
             variant: "destructive",
           });
         } else {
           toast({
             title: "Signup Failed",
-            description: error.message,
+            description: error.message || "An error occurred during signup. Please try again.",
             variant: "destructive",
           });
         }
