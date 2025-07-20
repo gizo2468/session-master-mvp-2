@@ -14,114 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      coach_student_connections: {
-        Row: {
-          approved: boolean
-          coach_id: string
-          created_at: string
-          id: string
-          student_id: string
-          updated_at: string
-        }
-        Insert: {
-          approved?: boolean
-          coach_id: string
-          created_at?: string
-          id?: string
-          student_id: string
-          updated_at?: string
-        }
-        Update: {
-          approved?: boolean
-          coach_id?: string
-          created_at?: string
-          id?: string
-          student_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "coach_student_connections_coach_id_fkey"
-            columns: ["coach_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "coach_student_connections_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      coach_to_hand_reviews: {
-        Row: {
-          coach_id: string
-          created_at: string | null
-          hand_id: string
-          id: string
-          message: string
-          session_id: string
-          student_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          coach_id: string
-          created_at?: string | null
-          hand_id: string
-          id?: string
-          message: string
-          session_id: string
-          student_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          coach_id?: string
-          created_at?: string | null
-          hand_id?: string
-          id?: string
-          message?: string
-          session_id?: string
-          student_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      coach_to_table_reviews: {
-        Row: {
-          coach_id: string
-          created_at: string | null
-          id: string
-          message: string
-          session_id: string
-          student_id: string
-          table_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          coach_id: string
-          created_at?: string | null
-          id?: string
-          message: string
-          session_id: string
-          student_id: string
-          table_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          coach_id?: string
-          created_at?: string | null
-          id?: string
-          message?: string
-          session_id?: string
-          student_id?: string
-          table_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       donation_logs: {
         Row: {
           clicked_at: string
@@ -152,64 +44,6 @@ export type Database = {
         }
         Relationships: []
       }
-      player_to_coach_reviews: {
-        Row: {
-          coach_id: string
-          created_at: string
-          hand_id: string | null
-          id: string
-          message: string
-          player_id: string
-          read: boolean
-          review_type: string
-          session_id: string | null
-        }
-        Insert: {
-          coach_id: string
-          created_at?: string
-          hand_id?: string | null
-          id?: string
-          message: string
-          player_id: string
-          read?: boolean
-          review_type: string
-          session_id?: string | null
-        }
-        Update: {
-          coach_id?: string
-          created_at?: string
-          hand_id?: string | null
-          id?: string
-          message?: string
-          player_id?: string
-          read?: boolean
-          review_type?: string
-          session_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "player_to_coach_feedback_coach_id_fkey"
-            columns: ["coach_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "player_to_coach_feedback_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "player_to_coach_reviews_hand_id_fkey"
-            columns: ["hand_id"]
-            isOneToOne: false
-            referencedRelation: "session_hands"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           bio: string | null
@@ -231,6 +65,7 @@ export type Database = {
           profile_picture: string | null
           role: string
           updated_at: string
+          username: string | null
         }
         Insert: {
           bio?: string | null
@@ -252,6 +87,7 @@ export type Database = {
           profile_picture?: string | null
           role?: string
           updated_at?: string
+          username?: string | null
         }
         Update: {
           bio?: string | null
@@ -273,104 +109,9 @@ export type Database = {
           profile_picture?: string | null
           role?: string
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
-      }
-      review_hand_associations: {
-        Row: {
-          created_at: string
-          hand_id: string
-          id: string
-          review_id: string
-        }
-        Insert: {
-          created_at?: string
-          hand_id: string
-          id?: string
-          review_id: string
-        }
-        Update: {
-          created_at?: string
-          hand_id?: string
-          id?: string
-          review_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "review_hand_associations_hand_id_fkey"
-            columns: ["hand_id"]
-            isOneToOne: false
-            referencedRelation: "session_hands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "review_hand_associations_review_id_fkey"
-            columns: ["review_id"]
-            isOneToOne: false
-            referencedRelation: "session_comments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      session_comments: {
-        Row: {
-          coach_id: string
-          comment: string
-          created_at: string
-          hand_number: number | null
-          id: string
-          is_read: boolean | null
-          review_category: string | null
-          review_type: string | null
-          session_id: string
-          star_rating: number | null
-          student_id: string
-          updated_at: string
-        }
-        Insert: {
-          coach_id: string
-          comment: string
-          created_at?: string
-          hand_number?: number | null
-          id?: string
-          is_read?: boolean | null
-          review_category?: string | null
-          review_type?: string | null
-          session_id: string
-          star_rating?: number | null
-          student_id: string
-          updated_at?: string
-        }
-        Update: {
-          coach_id?: string
-          comment?: string
-          created_at?: string
-          hand_number?: number | null
-          id?: string
-          is_read?: boolean | null
-          review_category?: string | null
-          review_type?: string | null
-          session_id?: string
-          star_rating?: number | null
-          student_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "session_comments_coach_id_fkey"
-            columns: ["coach_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "session_comments_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       session_hands: {
         Row: {
