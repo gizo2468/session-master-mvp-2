@@ -52,6 +52,25 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
         <span className="font-medium">{totalRebuys}</span>
       </div>
       
+      <div className="flex justify-between py-2 border-b">
+        <span className="text-gray-500">Payout:</span>
+        <span className="font-medium">${totalCashout.toFixed(2)}</span>
+      </div>
+      
+      <div className="flex justify-between py-2 border-b">
+        <span className="text-gray-500">ITM:</span>
+        <span className={`font-medium ${totalCashout > 0 ? 'text-green-600' : 'text-gray-600'}`}>
+          {totalCashout > 0 ? 'Yes' : 'No'}
+        </span>
+      </div>
+      
+      {session.notes && (
+        <div className="flex justify-between py-2 border-b">
+          <span className="text-gray-500">Session Notes:</span>
+          <span className="font-medium text-sm max-w-xs text-right">{session.notes}</span>
+        </div>
+      )}
+      
       {/* Only show blinds for Cash game format */}
       {shouldShowBlinds && (
         <div className="flex justify-between py-2 border-b">
@@ -61,24 +80,10 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
       )}
       
       {isCompleted && (
-        <>
-          <div className="flex justify-between py-2 border-b">
-            <span className="text-gray-500">Total Payout:</span>
-            <span className="font-medium">${totalCashout.toFixed(2)}</span>
-          </div>
-          
-          <div className="flex flex-col items-center py-2">
-            <span className="text-gray-500 mb-2">Profit/Loss</span>
-            <ProfitLossBadge profit={profit} size="lg" />
-          </div>
-          
-          {session.notes && (
-            <div className="flex flex-col py-2 border-b">
-              <span className="text-gray-500 mb-1">Session Notes:</span>
-              <p className="text-sm bg-gray-50 p-3 rounded">{session.notes}</p>
-            </div>
-          )}
-        </>
+        <div className="flex flex-col items-center py-2">
+          <span className="text-gray-500 mb-2">Profit/Loss</span>
+          <ProfitLossBadge profit={profit} size="lg" />
+        </div>
       )}
     </div>
   );
