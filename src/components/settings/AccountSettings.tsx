@@ -213,6 +213,12 @@ const AccountSettings: React.FC = () => {
                 />
                 
                 <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <Input value={user?.username || 'Not set'} disabled />
+                  <p className="text-xs text-gray-500 mt-1">Your unique username identifier</p>
+                </FormItem>
+                
+                <FormItem>
                   <FormLabel>{t('email')}</FormLabel>
                   <Input value={user?.email} disabled />
                   <p className="text-xs text-gray-500 mt-1">Last login: {lastLoginFormatted}</p>

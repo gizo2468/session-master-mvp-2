@@ -19,6 +19,10 @@ import { useToast } from '@/components/ui/use-toast';
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters long' }),
+  username: z.string()
+    .min(3, { message: 'Username must be at least 3 characters long' })
+    .max(20, { message: 'Username must be 20 characters or less' })
+    .regex(/^[a-zA-Z0-9_]+$/, { message: 'Username can only contain letters, numbers, and underscores' }),
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters long' }),
   confirmPassword: z.string(),
@@ -39,11 +43,13 @@ const Signup: React.FC = () => {
   const { toast } = useToast();
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       fullName: '',
+      username: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -52,13 +58,59 @@ const Signup: React.FC = () => {
     },
   });
 
+  // Check username availability
+  const checkUsernameAvailability = async (username: string) => {
+    if (username.length < 3) return;
+    
+    setIsCheckingUsername(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .ilike('username', username)
+        .limit(1);
+      
+      if (error) {
+        console.error('Error checking username:', error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        form.setError('username', { message: 'Username is already taken' });
+      } else {
+        form.clearErrors('username');
+      }
+    } catch (error) {
+      console.error('Username check failed:', error);
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
   const onSubmit = async (values: FormValues) => {
     try {
       console.log("Signup form submitted with values:", {
         email: values.email,
         role: values.role,
-        fullName: values.fullName
+        fullName: values.fullName,
+        username: values.username
       });
+      
+      // Final username availability check
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('profiles')
+        .select('username')
+        .ilike('username', values.username)
+        .limit(1);
+      
+      if (checkError || (existingUsers && existingUsers.length > 0)) {
+        toast({
+          title: "Username Unavailable",
+          description: "The username you selected is already taken. Please choose a different one.",
+          variant: "destructive",
+        });
+        return;
+      }
       
       // Check if email confirmation is enabled
       const { data: { user }, error } = await supabase.auth.signUp({
@@ -67,6 +119,7 @@ const Signup: React.FC = () => {
         options: {
           data: {
             fullName: values.fullName,
+            username: values.username,
             role: values.role,
             hasAcceptedTerms: values.agreeToTerms
           },
@@ -192,6 +245,33 @@ const Signup: React.FC = () => {
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
                       <Input placeholder="John Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input 
+                          placeholder="johndoe123" 
+                          {...field} 
+                          onChange={(e) => {
+                            field.onChange(e);
+                            if (e.target.value.length >= 3) {
+                              checkUsernameAvailability(e.target.value);
+                            }
+                          }}
+                        />
+                        {isCheckingUsername && (
+                          <Icon name="Loader" className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -9,6 +9,7 @@ export interface User {
   id: string;
   email: string;
   fullName: string;
+  username?: string;
   onlineNickname?: string;
   profilePicture?: string;
   role: UserRole;
@@ -72,6 +73,7 @@ const createUserFromSupabaseUser = (supabaseUser: SupabaseUser, role: UserRole =
     id: supabaseUser.id,
     email: supabaseUser.email || '',
     fullName: supabaseUser.user_metadata?.fullName || 'New User',
+    username: supabaseUser.user_metadata?.username,
     onlineNickname: supabaseUser.user_metadata?.onlineNickname,
     profilePicture: optimizeImageData(supabaseUser.user_metadata?.profilePicture),
     role: userRole,
@@ -140,6 +142,7 @@ const createUserFromProfile = (supabaseUser: SupabaseUser, profileData: any): Us
     id: supabaseUser.id,
     email: profileData.email || supabaseUser.email || '',
     fullName: profileData.full_name || supabaseUser.user_metadata?.fullName || 'New User',
+    username: profileData.username || supabaseUser.user_metadata?.username,
     onlineNickname: profileData.online_nickname || supabaseUser.user_metadata?.onlineNickname,
     profilePicture: optimizeImageData(profileData.profile_picture || supabaseUser.user_metadata?.profilePicture),
     role: userRole,
@@ -530,6 +533,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .update({
           full_name: optimizedUserData.fullName || user.fullName,
+          username: optimizedUserData.username || user.username,
           online_nickname: optimizedUserData.onlineNickname || user.onlineNickname,
           profile_picture: optimizedUserData.profilePicture || user.profilePicture,
           role: optimizedUserData.role || user.role,
