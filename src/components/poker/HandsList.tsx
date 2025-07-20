@@ -17,9 +17,10 @@ interface HandsListProps {
   onDeleteHand: (handId: string) => void;
   readOnly?: boolean; // Add readOnly prop
   sessionBuyIn?: number; // Buy-in amount for the session
+  tables?: any[]; // Tables data to get table-specific buy-ins
 }
 
-const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, readOnly = false, sessionBuyIn }) => {
+const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, readOnly = false, sessionBuyIn, tables = [] }) => {
   // Sort hands by createdAt date
   const sortedHands = [...hands].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -124,13 +125,19 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                   </TableCell>
                   
                   <TableCell>
-                    {sessionBuyIn !== undefined && (
-                      <div className="flex items-center justify-center">
-                        <span className="text-sm font-medium">
-                          ${sessionBuyIn.toFixed(2)}
-                        </span>
-                      </div>
-                    )}
+                    {(() => {
+                      // Find the table this hand belongs to
+                      const handTable = tables.find(table => table.id === hand.tableId);
+                      const buyIn = handTable?.buyIn || sessionBuyIn;
+                      
+                      return buyIn !== undefined ? (
+                        <div className="flex items-center justify-center">
+                          <span className="text-sm font-medium">
+                            ${buyIn.toFixed(2)}
+                          </span>
+                        </div>
+                      ) : null;
+                    })()}
                   </TableCell>
                   
                   <TableCell>

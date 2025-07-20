@@ -184,6 +184,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
         onDeleteHand={onDeleteHand}
         readOnly={readOnly} // Pass the readOnly prop to HandsList
         sessionBuyIn={sessionBuyIn}
+        tables={tables}
       />
       
       {!readOnly && ( // Only render form components if not in read-only mode
