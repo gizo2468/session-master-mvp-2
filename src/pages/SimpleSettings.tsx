@@ -1,16 +1,19 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/ui/Lucide';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const SimpleSettings: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout, isLoading } = useAuth();
   const { toast } = useToast();
+  const [profile, setProfile] = useState<{ username?: string; role?: string } | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   const handleLogout = async () => {
     try {
@@ -24,6 +27,43 @@ const SimpleSettings: React.FC = () => {
         variant: "destructive",
       });
     }
+  };
+
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.id) {
+        setProfileLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('username, role')
+          .eq('id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching profile:', error);
+        } else {
+          setProfile(data);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user?.id]);
+
+  // Helper function to display role with proper formatting
+  const getDisplayRole = (role?: string) => {
+    if (role === 'student') return 'Player';
+    if (role === 'coach') return 'Coach';
+    return role || 'Unknown';
   };
 
   const appVersion = "0.0.0"; // From package.json
@@ -51,12 +91,53 @@ const SimpleSettings: React.FC = () => {
               <CardDescription>Your account information</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-3">
-                <Icon name="User" className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="font-medium">{user?.email || 'Not signed in'}</p>
-                  <p className="text-sm text-gray-500">Email</p>
+              <div className="space-y-4">
+                {/* Email */}
+                <div className="flex items-center gap-3">
+                  <Icon name="Mail" className="h-5 w-5 text-gray-500" />
+                  <div>
+                    <p className="font-medium">{user?.email || 'Not signed in'}</p>
+                    <p className="text-sm text-gray-500">Email</p>
+                  </div>
                 </div>
+
+                {/* Username */}
+                {profileLoading ? (
+                  <div className="flex items-center gap-3">
+                    <Icon name="AtSign" className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                      <p className="text-sm text-gray-500">Username</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <Icon name="AtSign" className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <p className="font-medium">@{profile?.username || 'Not set'}</p>
+                      <p className="text-sm text-gray-500">Username</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Role */}
+                {profileLoading ? (
+                  <div className="flex items-center gap-3">
+                    <Icon name="User" className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+                      <p className="text-sm text-gray-500">Role</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <Icon name="User" className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <p className="font-medium">{getDisplayRole(profile?.role)}</p>
+                      <p className="text-sm text-gray-500">Role</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
