@@ -1,6 +1,4 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 
 interface SessionComment {
@@ -50,41 +48,12 @@ export const useCoachDashboardData = () => {
     try {
       console.log('🔍 Loading coach dashboard data for:', user.id);
 
-      // Execute both queries in parallel for better performance
-      const [recentReviewsResult, playerReviewsResult] = await Promise.all([
-        supabase
-          .from('session_comments')
-          .select('*')
-          .eq('coach_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(5),
-        
-        supabase
-          .from('player_to_coach_reviews')
-          .select('*')
-          .eq('coach_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(5)
-      ]);
-
-      // Handle potential errors from either query
-      if (recentReviewsResult.error) {
-        console.error('❌ Error loading recent reviews:', recentReviewsResult.error);
-        throw new Error('Failed to load recent reviews');
-      }
-
-      if (playerReviewsResult.error) {
-        console.error('❌ Error loading player reviews:', playerReviewsResult.error);
-        throw new Error('Failed to load player reviews');
-      }
-
-      console.log('✅ Dashboard data loaded successfully');
-      console.log('Recent reviews:', recentReviewsResult.data?.length || 0);
-      console.log('Player reviews:', playerReviewsResult.data?.length || 0);
-
+      // Note: Mock data since review tables don't exist yet
+      console.log('📋 Using mock data - review system not implemented yet');
+      
       setData({
-        recentReviews: recentReviewsResult.data || [],
-        playerReviews: playerReviewsResult.data || [],
+        recentReviews: [],
+        playerReviews: [],
         loading: false,
         error: null,
       });
@@ -102,26 +71,8 @@ export const useCoachDashboardData = () => {
   // Mark player review as read
   const markReviewAsRead = useCallback(async (reviewId: string) => {
     try {
-      const { error } = await supabase
-        .from('player_to_coach_reviews')
-        .update({ read: true })
-        .eq('id', reviewId);
-
-      if (error) {
-        console.error('Error marking review as read:', error);
-        return false;
-      }
-
-      // Update local state immediately for better UX
-      setData(prev => ({
-        ...prev,
-        playerReviews: prev.playerReviews.map(review => 
-          review.id === reviewId 
-            ? { ...review, read: true }
-            : review
-        )
-      }));
-
+      // Note: Review system not implemented yet
+      console.log('📋 Review system not implemented yet');
       return true;
     } catch (error) {
       console.error('Error in markReviewAsRead:', error);

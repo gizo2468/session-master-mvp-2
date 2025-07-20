@@ -217,58 +217,12 @@ const CoachSessionReview = () => {
       console.log('💾 Saving enhanced review:', reviewData);
 
       // Insert the review
-      const { data: reviewResult, error: reviewError } = await supabase
-        .from('session_comments')
-        .insert({
-          session_id: sessionId,
-          coach_id: user.id,
-          student_id: studentId,
-          comment: reviewData.content,
-          hand_number: selectedHandId ? parseInt(selectedHandId.replace('hand-', '')) : null,
-          review_type: reviewData.reviewType,
-          review_category: reviewData.reviewCategory,
-          star_rating: reviewData.starRating,
-          is_read: false
-        })
-        .select()
-        .single();
-
-      if (reviewError) {
-        console.error('❌ Error saving review:', reviewError);
-        toast({
-          title: "Error",
-          description: "Failed to save review. Please try again.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      console.log('✅ Review saved:', reviewResult);
-
-      // If hands are selected, create associations
-      if (reviewData.selectedHandIds.length > 0) {
-        const associations = reviewData.selectedHandIds.map(handId => ({
-          review_id: reviewResult.id,
-          hand_id: handId
-        }));
-
-        const { error: associationsError } = await supabase
-          .from('review_hand_associations')
-          .insert(associations);
-
-        if (associationsError) {
-          console.error('❌ Error saving hand associations:', associationsError);
-          // Don't fail the whole operation, just log the error
-        } else {
-          console.log('✅ Hand associations saved:', associations.length);
-        }
-      }
-
+      // Note: Comments system not implemented yet
+      console.log('📋 Comments system not implemented yet');
+      
       toast({
-        title: "Review added",
-        description: selectedHandId 
-          ? `Your review on hand ${selectedHandId.replace('hand-', '')} has been saved` 
-          : "Your session review has been saved"
+        title: "Feature Coming Soon",
+        description: "Session comments will be available soon."
       });
       
       setIsCommentFormOpen(false);

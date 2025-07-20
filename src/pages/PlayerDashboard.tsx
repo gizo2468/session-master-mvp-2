@@ -36,19 +36,9 @@ const PlayerDashboard = () => {
     
     setLoadingReviews(true);
     try {
-      const { data: reviews, error } = await supabase
-        .from('player_to_coach_reviews')
-        .select('*')
-        .eq('player_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) {
-        console.error('Error loading reviews:', error);
-        return;
-      }
-
-      setRecentReviews(reviews || []);
+      // Note: Player reviews system not implemented yet
+      console.log('📋 Player reviews system not implemented yet');
+      setRecentReviews([]);
     } catch (error) {
       console.error('Error in loadRecentReviews:', error);
     } finally {
