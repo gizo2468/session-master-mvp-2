@@ -70,6 +70,13 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
         </span>
       </div>
       
+      {/* Overall Result Display */}
+      <div className="flex justify-center py-4">
+        <div className={`px-4 py-2 rounded-full text-lg font-bold ${profit >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+          {profit >= 0 ? '+' : ''}${profit.toFixed(2)}
+        </div>
+      </div>
+      
       {session.notes && (
         <div className="flex justify-between py-2 border-b">
           <span className="text-gray-500">Session Notes:</span>
