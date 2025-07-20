@@ -270,20 +270,13 @@ const Signup: React.FC = () => {
               Please check your email and click the confirmation link to activate your account. 
               You won't be able to sign in until you confirm your email address.
             </p>
-            <div className="pt-4 space-y-2">
+            <div className="pt-4">
               <Button 
                 onClick={resendVerificationEmail}
                 disabled={isResendingEmail}
                 className="w-full"
               >
                 {isResendingEmail ? "Sending..." : "Resend Verification Email"}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowEmailConfirmation(false)}
-                className="w-full"
-              >
-                Back to Signup
               </Button>
             </div>
           </CardContent>
