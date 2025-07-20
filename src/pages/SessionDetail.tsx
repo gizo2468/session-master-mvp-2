@@ -288,7 +288,10 @@ export default function SessionDetail() {
         <div className="bg-white rounded-lg shadow-md p-6">
           <HandManagementPanel 
             sessionId={session.id} 
-            hands={session.hands || []}
+            hands={[
+              ...(session.hands || []),
+              ...(session.tables?.flatMap(table => table.hands || []) || [])
+            ]}
             readOnly={!session.isActive}
           />
         </div>

@@ -43,14 +43,14 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   const { addHand, updateHand, deleteHand, addTableHand, updateTableHand, deleteTableHand, getTableById } = useSessionContext();
   const { toast } = useToast();
   
-  // Get hands based on the specified table or filter session-level hands
+  // Get hands based on the specified table or show all hands
   const getDisplayedHands = (): HandData[] => {
     if (tableId) {
       // If a tableId is provided, only show hands for that specific table
       return hands.filter(h => h.tableId === tableId);
     } else {
-      // If no tableId is provided, show session-level hands (ones without tableId)
-      return hands.filter(h => !h.tableId);
+      // If no tableId is provided, show all hands from this session
+      return hands;
     }
   };
 
