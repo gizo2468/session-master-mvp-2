@@ -283,7 +283,7 @@ const Signup: React.FC = () => {
   const roleOptions = [
     {
       value: 'student',
-      label: 'Student',
+      label: 'Player',
       description: 'Track your poker sessions and connect with coaches for feedback',
     },
     { 
