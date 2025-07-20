@@ -46,6 +46,8 @@ const Signup: React.FC = () => {
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -359,7 +361,7 @@ const Signup: React.FC = () => {
                   <FormItem>
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="John Doe" {...field} />
+                      <Input placeholder="" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -374,7 +376,7 @@ const Signup: React.FC = () => {
                     <FormControl>
                       <div className="relative">
                         <Input 
-                          placeholder="johndoe123" 
+                          placeholder="" 
                           {...field} 
                           onChange={(e) => {
                             field.onChange(e);
@@ -412,7 +414,25 @@ const Signup: React.FC = () => {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <div className="relative">
+                        <Input 
+                          type={showPassword ? "text" : "password"} 
+                          placeholder="••••••••" 
+                          {...field} 
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          <Icon 
+                            name={showPassword ? "EyeOff" : "Eye"} 
+                            className="h-4 w-4 text-gray-400" 
+                          />
+                        </Button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -425,7 +445,25 @@ const Signup: React.FC = () => {
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <div className="relative">
+                        <Input 
+                          type={showConfirmPassword ? "text" : "password"} 
+                          placeholder="••••••••" 
+                          {...field} 
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          <Icon 
+                            name={showConfirmPassword ? "EyeOff" : "Eye"} 
+                            className="h-4 w-4 text-gray-400" 
+                          />
+                        </Button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
