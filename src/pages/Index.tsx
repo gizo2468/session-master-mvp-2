@@ -16,7 +16,7 @@ import Icon from '@/components/ui/Lucide';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import FilterBar from '@/components/ui/FilterBar';
-import PastSessionForm from '@/components/poker/PastSessionForm';
+import PastSessionWithHands from '@/components/poker/PastSessionWithHands';
 import { SessionFilter } from '@/types/poker';
 
 export default function Index() {
@@ -182,8 +182,8 @@ export default function Index() {
       
       {/* Add Past Session Form Dialog */}
       <Dialog open={showPastSessionForm} onOpenChange={setShowPastSessionForm}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
-          <PastSessionForm 
+        <DialogContent className="max-w-none w-fit p-0 gap-0">
+          <PastSessionWithHands 
             onClose={() => setShowPastSessionForm(false)} 
           />
         </DialogContent>
