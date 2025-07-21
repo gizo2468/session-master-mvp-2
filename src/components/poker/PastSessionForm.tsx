@@ -40,12 +40,10 @@ const formSchema = z.object({
     required_error: "Start date is required",
   }),
   startTime: z.string().min(1, 'Start time is required'),
-  durationHours: z.string().refine(val => !isNaN(parseInt(val)) && parseInt(val) >= 0, {
-    message: "Duration hours must be a valid number",
+  endDate: z.date({
+    required_error: "End date is required",
   }),
-  durationMinutes: z.string().refine(val => !isNaN(parseInt(val)) && parseInt(val) >= 0 && parseInt(val) < 60, {
-    message: "Duration minutes must be between 0-59",
-  }),
+  endTime: z.string().min(1, 'End time is required'),
   numberOfTables: z.string().refine(val => !isNaN(parseInt(val)) && parseInt(val) >= 1, {
     message: "Number of tables must be at least 1",
   }),
@@ -84,8 +82,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
       format: 'Cash',
       location: '',
       startTime: '19:00',
-      durationHours: '2',
-      durationMinutes: '30',
+      endTime: '21:30',
       numberOfTables: '1',
       numberOfHands: '0',
       buyIn: '',
@@ -106,24 +103,21 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
       
       const buyInAmount = parseFloat(values.buyIn);
       const payoutAmount = parseFloat(values.payout);
-      const durationHours = parseInt(values.durationHours);
-      const durationMinutes = parseInt(values.durationMinutes);
       const numberOfTables = parseInt(values.numberOfTables);
       const numberOfHands = parseInt(values.numberOfHands);
       
       // Create start datetime
-      const [hours, minutes] = values.startTime.split(':').map(Number);
+      const [startHours, startMinutes] = values.startTime.split(':').map(Number);
       const startDateTime = new Date(values.startDate);
-      startDateTime.setHours(hours, minutes, 0, 0);
+      startDateTime.setHours(startHours, startMinutes, 0, 0);
       
       // Create end datetime
-      const endDateTime = new Date(startDateTime);
-      endDateTime.setHours(
-        endDateTime.getHours() + durationHours,
-        endDateTime.getMinutes() + durationMinutes
-      );
+      const [endHours, endMinutes] = values.endTime.split(':').map(Number);
+      const endDateTime = new Date(values.endDate);
+      endDateTime.setHours(endHours, endMinutes, 0, 0);
       
-      const sessionDurationInMinutes = durationHours * 60 + durationMinutes;
+      // Calculate duration in minutes
+      const sessionDurationInMinutes = Math.round((endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60));
       
       const newSession: PokerSession = {
         id: uuidv4(),
@@ -453,22 +447,44 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               />
             </div>
 
-            {/* Duration */}
+            {/* End Date and Time */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="durationHours"
+                name="endDate"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Duration (Hours)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="0" 
-                        placeholder="2" 
-                        {...field} 
-                      />
-                    </FormControl>
+                  <FormItem className="flex flex-col">
+                    <FormLabel>End Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick end date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date > new Date()}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -476,16 +492,13 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
 
               <FormField
                 control={form.control}
-                name="durationMinutes"
+                name="endTime"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Duration (Minutes)</FormLabel>
+                    <FormLabel>End Time</FormLabel>
                     <FormControl>
                       <Input 
-                        type="number" 
-                        min="0" 
-                        max="59" 
-                        placeholder="30" 
+                        type="time" 
                         {...field} 
                       />
                     </FormControl>
