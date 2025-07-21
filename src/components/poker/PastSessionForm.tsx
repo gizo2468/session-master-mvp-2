@@ -549,6 +549,71 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               />
             </div>
 
+            {/* Notes */}
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Any notes about the session..."
+                      className="resize-none"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Online checkbox */}
+            <FormField
+              control={form.control}
+              name="isOnline"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Online Session</FormLabel>
+                    <p className="text-sm text-muted-foreground">
+                      Check this if this was an online poker session
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            {/* Multi-day for tournaments */}
+            {watchedFormat === 'Tournament' && (
+              <FormField
+                control={form.control}
+                name="isMultiDay"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Multi-Day Tournament</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Check this for tournaments that span multiple days
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            )}
+
             {/* Buy-in and Currency */}
             <div className="grid grid-cols-3 gap-4">
               <div className="col-span-2">
@@ -611,71 +676,6 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                       min="0" 
                       step="0.01" 
                       placeholder="0.00" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Online checkbox */}
-            <FormField
-              control={form.control}
-              name="isOnline"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Online Session</FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      Check this if this was an online poker session
-                    </p>
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            {/* Multi-day for tournaments */}
-            {watchedFormat === 'Tournament' && (
-              <FormField
-                control={form.control}
-                name="isMultiDay"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Multi-Day Tournament</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        Check this for tournaments that span multiple days
-                      </p>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            )}
-
-            {/* Notes */}
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Any notes about the session..."
-                      className="resize-none"
                       {...field} 
                     />
                   </FormControl>
