@@ -14,6 +14,7 @@ import ActiveSessionsList from '@/components/ActiveSessionsList';
 import Logo from '@/components/Logo';
 import Icon from '@/components/ui/Lucide';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import FilterBar from '@/components/ui/FilterBar';
 import AddPastSessionForm from '@/components/poker/AddPastSessionForm';
 import { SessionFilter } from '@/types/poker';
@@ -179,14 +180,14 @@ export default function Index() {
         </div>
       </main>
       
-      {/* Add Past Session Form Modal */}
-      {showPastSessionForm && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50">
+      {/* Add Past Session Form Dialog */}
+      <Dialog open={showPastSessionForm} onOpenChange={setShowPastSessionForm}>
+        <DialogContent className="max-w-full max-h-full p-0 bg-transparent border-none">
           <AddPastSessionForm 
             onClose={() => setShowPastSessionForm(false)} 
           />
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
