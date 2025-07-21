@@ -15,6 +15,7 @@ import Logo from '@/components/Logo';
 import Icon from '@/components/ui/Lucide';
 import { Button } from '@/components/ui/button';
 import FilterBar from '@/components/ui/FilterBar';
+import AddPastSessionForm from '@/components/poker/AddPastSessionForm';
 import { SessionFilter } from '@/types/poker';
 
 export default function Index() {
@@ -35,6 +36,8 @@ export default function Index() {
     resumeSession,
     hasActiveSessions 
   } = useActiveSessionRecovery();
+  
+  const [showPastSessionForm, setShowPastSessionForm] = useState(false);
   
 
   const filteredSessions = sessions.filter(session => {
@@ -129,14 +132,24 @@ export default function Index() {
             <div className="w-full space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-extrabold tracking-tight">Recent Sessions</h2>
-                <Button 
-                  onClick={() => navigate('/history')}
-                  variant="outline" 
-                  size="sm"
-                  className="text-poker-feltGreen"
-                >
-                  View All
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={() => setShowPastSessionForm(true)}
+                    variant="outline" 
+                    size="sm"
+                    className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+                  >
+                    <Icon name="Plus" size={16} />
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/history')}
+                    variant="outline" 
+                    size="sm"
+                    className="text-poker-feltGreen"
+                  >
+                    View All
+                  </Button>
+                </div>
               </div>
               
               <FilterBar filters={filters} onFiltersChange={setFilters} />
@@ -165,6 +178,15 @@ export default function Index() {
           )}
         </div>
       </main>
+      
+      {/* Add Past Session Form Modal */}
+      {showPastSessionForm && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50">
+          <AddPastSessionForm 
+            onClose={() => setShowPastSessionForm(false)} 
+          />
+        </div>
+      )}
     </div>
   );
 }
