@@ -85,6 +85,9 @@ const Settings: React.FC = () => {
         </header>
         
         <div className="space-y-6">
+          {/* Support SessionMaster Section */}
+          <DonationCard />
+
           {/* Account Section */}
           <Card>
             <CardHeader>
@@ -181,9 +184,6 @@ const Settings: React.FC = () => {
               </CardContent>
             </Card>
           )}
-
-          {/* Support SessionMaster Section */}
-          <DonationCard />
         </div>
 
         {/* App Version at bottom */}
