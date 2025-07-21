@@ -47,6 +47,9 @@ const formSchema = z.object({
   numberOfTables: z.string().refine(val => !isNaN(parseInt(val)) && parseInt(val) >= 1, {
     message: "Number of tables must be at least 1",
   }),
+  numberOfHands: z.string().refine(val => !isNaN(parseInt(val)) && parseInt(val) >= 0, {
+    message: "Number of hands must be a valid number",
+  }),
   buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "Buy-in amount must be a valid number",
   }),
@@ -64,10 +67,9 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface PastSessionFormProps {
   onClose: () => void;
-  onSessionCreated?: (sessionId: string) => void;
 }
 
-const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose, onSessionCreated }) => {
+const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
   const { addSession } = useSessionContext();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -82,6 +84,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose, onSessionCre
       startTime: '19:00',
       endTime: '21:30',
       numberOfTables: '1',
+      numberOfHands: '0',
       buyIn: '',
       currency: 'USD',
       payout: '',
@@ -101,6 +104,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose, onSessionCre
       const buyInAmount = parseFloat(values.buyIn);
       const payoutAmount = parseFloat(values.payout);
       const numberOfTables = parseInt(values.numberOfTables);
+      const numberOfHands = parseInt(values.numberOfHands);
       
       // Create start datetime
       const [startHours, startMinutes] = values.startTime.split(':').map(Number);
@@ -199,12 +203,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose, onSessionCre
         });
       }
       
-      // Call onSessionCreated callback if provided
-      if (onSessionCreated) {
-        onSessionCreated(newSession.id);
-      } else {
-        onClose();
-      }
+      onClose();
     } catch (error) {
       console.error('Error saving past session:', error);
       toast({
@@ -509,25 +508,46 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose, onSessionCre
               />
             </div>
 
-            {/* Number of Tables */}
-            <FormField
-              control={form.control}
-              name="numberOfTables"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Number of Tables</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min="1" 
-                      placeholder="1" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Tables and Hands */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="numberOfTables"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Number of Tables</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="1" 
+                        placeholder="1" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="numberOfHands"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Number of Hands</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        placeholder="0" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Buy-in and Currency */}
             <div className="grid grid-cols-3 gap-4">
