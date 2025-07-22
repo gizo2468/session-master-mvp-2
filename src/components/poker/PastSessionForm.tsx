@@ -139,8 +139,8 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
     });
   };
 
-  const updateTable = (updatedTable: TableData) => {
-    setTables(tables.map(table => table.id === updatedTable.id ? updatedTable : table));
+  const updateTable = (tableId: string, updatedTable: TableData) => {
+    setTables(tables.map(table => table.id === tableId ? updatedTable : table));
   };
 
   const deleteTable = (tableId: string) => {
@@ -333,174 +333,100 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Game Type */}
               <FormField
-                control={form.control}
-                name="gameType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Game Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select game type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="NLH">No Limit Hold'em</SelectItem>
-                        <SelectItem value="PLO">Pot Limit Omaha</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              control={form.control}
+              name="gameType"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel className="text-base font-medium">Game Type</FormLabel>
+                  <FormControl>
+                    <RadioGroup 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value} 
+                      className="grid grid-cols-2 gap-4"
+                    >
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="NLH" id="nlh" className="sr-only peer" />
+                        </FormControl>
+                        <label 
+                          htmlFor="nlh" 
+                          className={`flex-1 cursor-pointer py-2 px-3 rounded-md border text-center text-sm ${
+                            field.value === 'NLH' 
+                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          No Limit Hold'em
+                        </label>
+                      </FormItem>
+                      
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="PLO" id="plo" className="sr-only peer" />
+                        </FormControl>
+                        <label 
+                          htmlFor="plo" 
+                          className={`flex-1 cursor-pointer py-2 px-3 rounded-md border text-center text-sm ${
+                            field.value === 'PLO' 
+                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          Pot Limit Omaha
+                        </label>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              {/* Format */}
-              <FormField
-                control={form.control}
-                name="format"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Format</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select format" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Cash">Cash Game</SelectItem>
-                        <SelectItem value="Tournament">Tournament</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Location */}
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Location</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Casino, home game, online..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-            {/* Start Date and Time */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Date</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            const date = new Date(e.target.value);
-                            date.setHours(0, 0, 0, 0);
-                            field.onChange(date);
-                          } else {
-                            field.onChange(null);
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="startTime"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Time</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="time"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* End Date and Time */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Date</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            const date = new Date(e.target.value);
-                            date.setHours(23, 59, 59, 999);
-                            field.onChange(date);
-                          } else {
-                            field.onChange(null);
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="endTime"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Time</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="time"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Notes */}
+            {/* Format */}
             <FormField
               control={form.control}
-              name="notes"
+              name="format"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes (Optional)</FormLabel>
+                <FormItem className="space-y-3">
+                  <FormLabel className="text-base font-medium">Format</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Session notes, key hands, observations..."
-                      {...field}
-                      rows={3}
-                    />
+                    <RadioGroup 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value} 
+                      className="grid grid-cols-2 gap-4"
+                    >
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Cash" id="cash" className="sr-only peer" />
+                        </FormControl>
+                        <label 
+                          htmlFor="cash" 
+                          className={`flex-1 cursor-pointer py-2 px-3 rounded-md border text-center text-sm ${
+                            field.value === 'Cash' 
+                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          Cash Game
+                        </label>
+                      </FormItem>
+                      
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="Tournament" id="tournament" className="sr-only peer" />
+                        </FormControl>
+                        <label 
+                          htmlFor="tournament" 
+                          className={`flex-1 cursor-pointer py-2 px-3 rounded-md border text-center text-sm ${
+                            field.value === 'Tournament' 
+                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          Tournament
+                        </label>
+                      </FormItem>
+                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -515,7 +441,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tournament Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select tournament type" />
@@ -535,113 +461,17 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               />
             )}
 
-            {/* Online/Live Checkbox */}
+            {/* Location */}
             <FormField
               control={form.control}
-              name="isOnline"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Online Session
-                    </FormLabel>
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            {/* Multi-day Tournament */}
-            {watchedFormat === 'Tournament' && (
-              <FormField
-                control={form.control}
-                name="isMultiDay"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Multi-day Tournament
-                      </FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            )}
-
-            {/* Buy-in and Currency */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="col-span-1 sm:col-span-2">
-                <FormField
-                  control={form.control}
-                  name="buyIn"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Buy-in Amount</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder="100.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="currency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Currency</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Currency" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="USD">USD ($)</SelectItem>
-                        <SelectItem value="EUR">EUR (€)</SelectItem>
-                        <SelectItem value="GBP">GBP (£)</SelectItem>
-                        <SelectItem value="CAD">CAD (C$)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Payout */}
-            <FormField
-              control={form.control}
-              name="payout"
+              name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Total Payout</FormLabel>
+                  <FormLabel>Location</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="150.00"
-                      {...field}
+                    <Input 
+                      placeholder="Casino name or site name" 
+                      {...field} 
                     />
                   </FormControl>
                   <FormMessage />
@@ -649,38 +479,302 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               )}
             />
 
-            {/* Add Table Button */}
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Tables</h3>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addTable}
-                className="flex items-center gap-2"
-              >
-                <Icon name="Plus" className="h-4 w-4" />
-                Add Table
-              </Button>
+            {/* Start Date and Time */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Start Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date > new Date()}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="startTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Time</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="time" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            {/* Tables List */}
-            {tables.length > 0 && (
-              <div className="space-y-3 max-h-60 overflow-y-auto overflow-x-hidden w-full">
-                <h4 className="text-sm font-medium text-gray-700">Added Tables:</h4>
-                {tables.map((table) => (
-                  <PastTableCard
-                    key={table.id}
-                    table={table}
-                    onUpdate={updateTable}
-                    onDelete={() => deleteTable(table.id)}
-                  />
-                ))}
-              </div>
+            {/* End Date and Time */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>End Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick end date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date > new Date()}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="endTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End Time</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="time" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+
+            {/* Notes */}
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Any notes about the session..."
+                      className="resize-none"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Online checkbox */}
+            <FormField
+              control={form.control}
+              name="isOnline"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Online Session</FormLabel>
+                    <p className="text-sm text-muted-foreground">
+                      Check this if this was an online poker session
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            {/* Multi-day for tournaments */}
+            {watchedFormat === 'Tournament' && (
+              <FormField
+                control={form.control}
+                name="isMultiDay"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Multi-Day Tournament</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Check this for tournaments that span multiple days
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
             )}
 
+            {/* Add Table Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Table Management</h3>
+                <div className="text-sm text-gray-500">
+                  {tables.length} table{tables.length !== 1 ? 's' : ''} added
+                </div>
+              </div>
+
+              {/* Buy-in and Currency */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="col-span-1 sm:col-span-2">
+                  <FormField
+                    control={form.control}
+                    name="buyIn"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Buy-in Amount</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="0" 
+                            step="0.01" 
+                            placeholder="100.00" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="currency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Currency</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="USD" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="EUR">EUR</SelectItem>
+                          <SelectItem value="GBP">GBP</SelectItem>
+                          <SelectItem value="CAD">CAD</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Payout */}
+              <FormField
+                control={form.control}
+                name="payout"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payout Amount</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        step="0.01" 
+                        placeholder="0.00" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Add Table Button */}
+              <Button 
+                type="button" 
+                onClick={addTable}
+                variant="outline"
+                className="w-full"
+              >
+                <Icon name="Plus" className="h-4 w-4 mr-2" />
+                Add Table
+              </Button>
+
+              {/* Tables List */}
+              {tables.length > 0 && (
+                <div className="space-y-3 max-h-60 overflow-y-auto overflow-x-hidden w-full">
+                  <h4 className="text-sm font-medium text-gray-700">Added Tables:</h4>
+                  {tables.map((table) => (
+                    <PastTableCard
+                      key={table.id}
+                      table={table}
+                      onUpdate={(updatedTable) => updateTable(table.id, updatedTable)}
+                      onDelete={() => deleteTable(table.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
               {/* Submit buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200 mb-0">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
                 <Button 
                   type="button" 
                   variant="outline" 
