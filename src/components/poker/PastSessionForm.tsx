@@ -17,10 +17,11 @@ import Icon from '@/components/ui/Lucide';
 import { useSessionContext } from '@/context/SessionContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { PokerSession } from '@/types/poker';
+import { PokerSession, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import PastTableCard from './PastTableCard';
 
 const TOURNAMENT_TYPES = [
   'Freezeout',
@@ -44,12 +45,6 @@ const formSchema = z.object({
     required_error: "End date is required",
   }),
   endTime: z.string().min(1, 'End time is required'),
-  numberOfTables: z.string().refine(val => !isNaN(parseInt(val)) && parseInt(val) >= 1, {
-    message: "Number of tables must be at least 1",
-  }),
-  numberOfHands: z.string().refine(val => !isNaN(parseInt(val)) && parseInt(val) >= 0, {
-    message: "Number of hands must be a valid number",
-  }),
   buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "Buy-in amount must be a valid number",
   }),
@@ -74,6 +69,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [tables, setTables] = useState<TableData[]>([]);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -83,8 +79,6 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
       location: '',
       startTime: '19:00',
       endTime: '21:30',
-      numberOfTables: '1',
-      numberOfHands: '0',
       buyIn: '',
       currency: 'USD',
       payout: '',
@@ -95,16 +89,78 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
     }
   });
 
+  const addTable = () => {
+    const values = form.getValues();
+    const buyInAmount = parseFloat(values.buyIn) || 0;
+    const payoutAmount = parseFloat(values.payout) || 0;
+
+    if (buyInAmount === 0 && payoutAmount === 0) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please enter buy-in and payout amounts before adding a table.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newTable: TableData = {
+      id: uuidv4(),
+      name: `Table ${tables.length + 1}`,
+      gameType: values.gameType,
+      format: values.format,
+      location: values.location,
+      buyIn: buyInAmount,
+      initialBuyIn: buyInAmount,
+      cashOut: payoutAmount,
+      smallBlind: values.format === 'Cash' ? 1 : 0,
+      bigBlind: values.format === 'Cash' ? 2 : 0,
+      startTime: new Date(),
+      endTime: new Date(),
+      isActive: false,
+      isOnline: values.isOnline,
+      rebuys: 0,
+      notes: '',
+      hands: [],
+      ...(values.format === 'Tournament' && {
+        tournamentTypes: values.tournamentType ? [values.tournamentType] : undefined,
+        isMultiDay: values.isMultiDay,
+      }),
+    };
+
+    setTables([...tables, newTable]);
+    
+    // Clear the input fields
+    form.setValue('buyIn', '');
+    form.setValue('payout', '');
+    
+    toast({
+      title: 'Table Added',
+      description: `Table ${tables.length + 1} has been added to the session.`,
+    });
+  };
+
+  const updateTable = (tableId: string, updatedTable: TableData) => {
+    setTables(tables.map(table => table.id === tableId ? updatedTable : table));
+  };
+
+  const deleteTable = (tableId: string) => {
+    setTables(tables.filter(table => table.id !== tableId));
+  };
+
   const onSubmit = async (values: FormValues) => {
+    if (tables.length === 0) {
+      toast({
+        title: 'No Tables Added',
+        description: 'Please add at least one table before saving the session.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
       console.log('📝 Past session form submitted with values:', values);
-      
-      const buyInAmount = parseFloat(values.buyIn);
-      const payoutAmount = parseFloat(values.payout);
-      const numberOfTables = parseInt(values.numberOfTables);
-      const numberOfHands = parseInt(values.numberOfHands);
       
       // Create start datetime
       const [startHours, startMinutes] = values.startTime.split(':').map(Number);
@@ -119,16 +175,20 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
       // Calculate duration in minutes
       const sessionDurationInMinutes = Math.round((endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60));
       
+      // Calculate totals from all tables
+      const totalBuyIn = tables.reduce((sum, table) => sum + table.buyIn, 0);
+      const totalCashOut = tables.reduce((sum, table) => sum + (table.cashOut || 0), 0);
+      
       const newSession: PokerSession = {
         id: uuidv4(),
         gameType: values.gameType,
         format: values.format,
         location: values.location,
-        buyIn: buyInAmount,
-        initialBuyIn: buyInAmount,
-        cashOut: payoutAmount,
-        smallBlind: values.format === 'Cash' ? 1 : 0, // Default small blind
-        bigBlind: values.format === 'Cash' ? 2 : 0, // Default big blind
+        buyIn: totalBuyIn,
+        initialBuyIn: totalBuyIn,
+        cashOut: totalCashOut,
+        smallBlind: values.format === 'Cash' ? 1 : 0,
+        bigBlind: values.format === 'Cash' ? 2 : 0,
         startTime: startDateTime,
         endTime: endDateTime,
         isActive: false,
@@ -137,9 +197,9 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
         sessionDuration: sessionDurationInMinutes,
         currentStatus: 'ended',
         status: 'completed',
-        tablesPlayed: numberOfTables,
+        tablesPlayed: tables.length,
         hands: [],
-        tables: [],
+        tables: tables,
         ...(values.format === 'Tournament' && {
           tournamentTypes: values.tournamentType ? [values.tournamentType] : undefined,
           isMultiDay: values.isMultiDay,
@@ -164,9 +224,9 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
             game_type: values.gameType,
             format: values.format,
             location: values.location,
-            buy_in: buyInAmount,
-            initial_buy_in: buyInAmount,
-            cash_out: payoutAmount,
+            buy_in: totalBuyIn,
+            initial_buy_in: totalBuyIn,
+            cash_out: totalCashOut,
             small_blind: newSession.smallBlind,
             big_blind: newSession.bigBlind,
             is_online: values.isOnline,
@@ -175,7 +235,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
             is_active: false,
             status: 'completed',
             current_status: 'ended',
-            tables_played: numberOfTables,
+            tables_played: tables.length,
             tournament_types: newSession.tournamentTypes || null,
             start_time_utc: startDateTime.getTime(),
           })
@@ -191,6 +251,39 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
           });
         } else if (sessionData) {
           console.log('✅ Past session synced with ID:', sessionData.id);
+          
+          // Sync tables to database
+          if (tables.length > 0) {
+            const tablesData = tables.map(table => ({
+              id: table.id,
+              session_id: sessionData.id,
+              table_name: table.name,
+              game_format: table.format,
+              buy_in: table.buyIn,
+              starting_stack: table.startingBB,
+              current_stack: table.currentStack,
+              rebuys: table.rebuys || 0,
+              bounty_amount: table.bountyAmount || 0,
+              players_eliminated: table.bountyCount || 0,
+              final_position: table.finalPosition,
+              cashout: table.cashOut || 0,
+              start_time: startDateTime.toISOString(),
+              end_time: endDateTime.toISOString(),
+              is_active: false,
+              table_notes: table.notes,
+              table_type: table.gameType,
+              stakes: `${table.smallBlind}/${table.bigBlind}`,
+            }));
+
+            const { error: tablesError } = await supabase
+              .from('session_tables')
+              .insert(tablesData);
+
+            if (tablesError) {
+              console.error('❌ Error syncing tables:', tablesError);
+            }
+          }
+          
           toast({
             title: 'Past Session Added',
             description: 'Your past session has been successfully recorded and synced to the cloud.',
@@ -508,46 +601,6 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               />
             </div>
 
-            {/* Tables and Hands */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="numberOfTables"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Number of Tables</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="1" 
-                        placeholder="1" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="numberOfHands"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Number of Hands</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="0" 
-                        placeholder="0" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
             {/* Notes */}
             <FormField
@@ -614,75 +667,111 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               />
             )}
 
-            {/* Buy-in and Currency */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-2">
+            {/* Add Table Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Table Management</h3>
+                <div className="text-sm text-gray-500">
+                  {tables.length} table{tables.length !== 1 ? 's' : ''} added
+                </div>
+              </div>
+
+              {/* Buy-in and Currency */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2">
+                  <FormField
+                    control={form.control}
+                    name="buyIn"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Buy-in Amount</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="0" 
+                            step="0.01" 
+                            placeholder="100.00" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={form.control}
-                  name="buyIn"
+                  name="currency"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Buy-in Amount</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          min="0" 
-                          step="0.01" 
-                          placeholder="100.00" 
-                          {...field} 
-                        />
-                      </FormControl>
+                      <FormLabel>Currency</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="USD" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="EUR">EUR</SelectItem>
+                          <SelectItem value="GBP">GBP</SelectItem>
+                          <SelectItem value="CAD">CAD</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
+              {/* Payout */}
               <FormField
                 control={form.control}
-                name="currency"
+                name="payout"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Currency</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="USD" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">EUR</SelectItem>
-                        <SelectItem value="GBP">GBP</SelectItem>
-                        <SelectItem value="CAD">CAD</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Payout Amount</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        step="0.01" 
+                        placeholder="0.00" 
+                        {...field} 
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
 
-            {/* Payout */}
-            <FormField
-              control={form.control}
-              name="payout"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payout Amount</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min="0" 
-                      step="0.01" 
-                      placeholder="0.00" 
-                      {...field} 
+              {/* Add Table Button */}
+              <Button 
+                type="button" 
+                onClick={addTable}
+                variant="outline"
+                className="w-full"
+              >
+                <Icon name="Plus" className="h-4 w-4 mr-2" />
+                Add Table
+              </Button>
+
+              {/* Tables List */}
+              {tables.length > 0 && (
+                <div className="space-y-3 max-h-60 overflow-y-auto">
+                  <h4 className="text-sm font-medium text-gray-700">Added Tables:</h4>
+                  {tables.map((table) => (
+                    <PastTableCard
+                      key={table.id}
+                      table={table}
+                      onUpdate={(updatedTable) => updateTable(table.id, updatedTable)}
+                      onDelete={() => deleteTable(table.id)}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+                  ))}
+                </div>
               )}
-            />
+            </div>
 
             {/* Submit buttons */}
             <div className="flex gap-3 pt-4 border-t">
