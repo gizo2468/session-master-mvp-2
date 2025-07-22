@@ -182,7 +182,7 @@ export default function Index() {
       
       {/* Add Past Session Form Dialog */}
       <Dialog open={showPastSessionForm} onOpenChange={setShowPastSessionForm}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+        <DialogContent className="w-full max-w-[95vw] sm:max-w-4xl max-h-[95vh] overflow-hidden p-0">
           <PastSessionForm 
             onClose={() => setShowPastSessionForm(false)} 
           />

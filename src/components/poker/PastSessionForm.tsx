@@ -312,8 +312,8 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
   const watchedFormat = form.watch('format');
 
   return (
-    <div className="w-full max-h-[90vh] flex flex-col">
-      <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
+    <div className="w-full max-w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900">Add Past Session</h2>
             <Button
@@ -328,7 +328,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
           <p className="text-sm text-gray-500 mt-1">Enter details for a completed poker session</p>
         </div>
 
-        <div className="px-6 py-4 overflow-y-auto flex-1 min-h-0">
+        <div className="px-4 sm:px-6 py-4 overflow-y-auto overflow-x-hidden flex-1 min-h-0">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Game Type */}
@@ -480,7 +480,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
             />
 
             {/* Start Date and Time */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="startDate"
@@ -541,7 +541,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
             </div>
 
             {/* End Date and Time */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="endDate"
@@ -677,8 +677,8 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               </div>
 
               {/* Buy-in and Currency */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="col-span-1 sm:col-span-2">
                   <FormField
                     control={form.control}
                     name="buyIn"
@@ -759,7 +759,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
 
               {/* Tables List */}
               {tables.length > 0 && (
-                <div className="space-y-3 max-h-60 overflow-y-auto">
+                <div className="space-y-3 max-h-60 overflow-y-auto overflow-x-hidden w-full">
                   <h4 className="text-sm font-medium text-gray-700">Added Tables:</h4>
                   {tables.map((table) => (
                     <PastTableCard
@@ -774,7 +774,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
             </div>
 
               {/* Submit buttons */}
-              <div className="flex gap-3 pt-4 border-t">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
                 <Button 
                   type="button" 
                   variant="outline" 
