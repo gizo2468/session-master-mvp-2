@@ -79,9 +79,9 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
         <Card className="w-full max-w-full overflow-hidden">
           <CollapsibleTrigger asChild>
             <CardContent className="p-4 cursor-pointer hover:bg-gray-50 transition-colors min-w-0">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="w-full">
+                  <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
                     <Badge variant="secondary" className="shrink-0">{table.gameType}</Badge>
                     <Badge variant={table.format === 'Cash' ? 'default' : 'destructive'} className="shrink-0">
                       {table.format}
@@ -104,11 +104,11 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 truncate">{getGameDetails()}</p>
+                  <p className="text-sm text-gray-600">{getGameDetails()}</p>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0">
-                  <div className="text-left sm:text-right">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="text-center">
                     {!isContinuing && (
                       <p className={`font-bold text-xl whitespace-nowrap ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)}
@@ -121,7 +121,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                     )}
                   </div>
                   
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center justify-center gap-1 shrink-0">
                     {isMultiDayTable && !isContinuing && (
                       <Button
                         size="sm"
