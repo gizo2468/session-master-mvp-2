@@ -147,6 +147,12 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
     onOpenChange(false);
   };
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    form.handleSubmit(handleSubmit)(e);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -155,7 +161,7 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={handleFormSubmit} className="space-y-6">
             {/* Game & Format Section */}
             <div className="space-y-4">
               <h4 className="text-sm font-medium text-gray-900">Game & Format</h4>
