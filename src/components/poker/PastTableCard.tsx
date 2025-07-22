@@ -79,7 +79,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
         <Card className="w-full">
           <CollapsibleTrigger asChild>
             <CardContent className="p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <Badge variant="secondary" className="shrink-0">{table.gameType}</Badge>

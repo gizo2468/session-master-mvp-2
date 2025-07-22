@@ -312,24 +312,23 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
   const watchedFormat = form.watch('format');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-        <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Add Past Session</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-8 w-8 p-0"
-            >
-              <Icon name="X" className="h-4 w-4" />
-            </Button>
-          </div>
-          <p className="text-sm text-gray-500 mt-1">Enter details for a completed poker session</p>
+    <div className="bg-white rounded-lg shadow-xl max-w-2xl mx-auto my-8">
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-gray-900">Add Past Session</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-8 w-8 p-0"
+          >
+            <Icon name="X" className="h-4 w-4" />
+          </Button>
         </div>
+        <p className="text-sm text-gray-500 mt-1">Enter details for a completed poker session</p>
+      </div>
 
-        <div className="px-6 py-4 flex-1 overflow-y-auto">
+      <div className="px-6 py-4 max-h-[80vh] overflow-y-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Game Type */}
@@ -760,19 +759,16 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
 
               {/* Tables List */}
               {tables.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-60 overflow-y-auto">
                   <h4 className="text-sm font-medium text-gray-700">Added Tables:</h4>
-                  <div className="space-y-3 max-h-80 overflow-y-auto">
-                    {tables.map((table) => (
-                      <div key={table.id} className="w-full">
-                        <PastTableCard
-                          table={table}
-                          onUpdate={(updatedTable) => updateTable(table.id, updatedTable)}
-                          onDelete={() => deleteTable(table.id)}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  {tables.map((table) => (
+                    <PastTableCard
+                      key={table.id}
+                      table={table}
+                      onUpdate={(updatedTable) => updateTable(table.id, updatedTable)}
+                      onDelete={() => deleteTable(table.id)}
+                    />
+                  ))}
                 </div>
               )}
             </div>
@@ -798,7 +794,6 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
             </div>
           </form>
         </Form>
-        </div>
       </div>
     </div>
   );
