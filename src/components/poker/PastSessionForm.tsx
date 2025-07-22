@@ -45,13 +45,9 @@ const formSchema = z.object({
     required_error: "End date is required",
   }),
   endTime: z.string().min(1, 'End time is required'),
-  buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
-    message: "Buy-in amount must be a valid number",
-  }),
+  buyIn: z.string().optional(),
   currency: z.enum(['USD', 'EUR', 'GBP', 'CAD']),
-  payout: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
-    message: "Payout amount must be a valid number",
-  }),
+  payout: z.string().optional(),
   notes: z.string().optional(),
   isOnline: z.boolean().default(false),
   tournamentType: z.string().optional(),
@@ -91,10 +87,10 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
 
   const addTable = () => {
     const values = form.getValues();
-    const buyInAmount = parseFloat(values.buyIn) || 0;
-    const payoutAmount = parseFloat(values.payout) || 0;
+    const buyInAmount = parseFloat(values.buyIn || '') || 0;
+    const payoutAmount = parseFloat(values.payout || '') || 0;
 
-    if (buyInAmount === 0 && payoutAmount === 0) {
+    if ((!values.buyIn || !values.payout) || (buyInAmount === 0 && payoutAmount === 0)) {
       toast({
         title: 'Missing Information',
         description: 'Please enter buy-in and payout amounts before adding a table.',
