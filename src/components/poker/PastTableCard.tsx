@@ -76,9 +76,9 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
   return (
     <>
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-        <Card className="w-full">
+        <Card className="w-full max-w-full overflow-hidden">
           <CollapsibleTrigger asChild>
-            <CardContent className="p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+            <CardContent className="p-4 cursor-pointer hover:bg-gray-50 transition-colors min-w-0">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
