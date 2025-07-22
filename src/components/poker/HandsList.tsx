@@ -67,13 +67,21 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                             <Image size={16} />
                           </button>
                         )}
-                        {hand.pokercraftLink && (
+                        {hand.pokercraftLink && hand.pokercraftLink.trim() !== '' && (
                           <a 
                             href={hand.pokercraftLink} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="text-poker-feltGreen hover:text-poker-feltGreen/80"
                             aria-label="View hand video"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Ensure we have a valid URL
+                              if (!hand.pokercraftLink?.startsWith('http')) {
+                                e.preventDefault();
+                                return false;
+                              }
+                            }}
                           >
                             <Video size={16} />
                           </a>
