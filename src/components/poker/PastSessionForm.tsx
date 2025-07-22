@@ -312,13 +312,8 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
   const watchedFormat = form.watch('format');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      
-      {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-        <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
+    <div className="w-full max-h-[90vh] flex flex-col">
+      <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900">Add Past Session</h2>
             <Button
@@ -801,8 +796,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
           </Form>
         </div>
       </div>
-    </div>
-  );
+    );
 };
 
 export default PastSessionForm;
