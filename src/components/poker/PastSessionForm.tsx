@@ -457,7 +457,113 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               />
             )}
 
-            {/* Location */}
+            {/* Table Management Section - Moved up after Format */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Table Management</h3>
+                <div className="text-sm text-gray-500">
+                  {tables.length} table{tables.length !== 1 ? 's' : ''} added
+                </div>
+              </div>
+
+              {/* Currency and Buy-in - Reordered */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="currency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Currency</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="USD" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="EUR">EUR</SelectItem>
+                          <SelectItem value="GBP">GBP</SelectItem>
+                          <SelectItem value="CAD">CAD</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="col-span-1 sm:col-span-2">
+                  <FormField
+                    control={form.control}
+                    name="buyIn"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Buy-in Amount</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="0" 
+                            step="0.01" 
+                            placeholder="100.00" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Payout */}
+              <FormField
+                control={form.control}
+                name="payout"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payout Amount</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        step="0.01" 
+                        placeholder="0.00" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Add Table Button */}
+              <Button 
+                type="button" 
+                onClick={addTable}
+                variant="outline"
+                className="w-full"
+              >
+                <Icon name="Plus" className="h-4 w-4 mr-2" />
+                Add Table
+              </Button>
+
+              {/* Tables List */}
+              {tables.length > 0 && (
+                <div className="space-y-3 max-h-60 overflow-y-auto overflow-x-hidden w-full">
+                  <h4 className="text-sm font-medium text-gray-700">Added Tables:</h4>
+                  {tables.map((table) => (
+                    <PastTableCard
+                      key={table.id}
+                      table={table}
+                      onUpdate={(updatedTable) => updateTable(table.id, updatedTable)}
+                      onDelete={() => deleteTable(table.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Location - Moved after tables list */}
             <FormField
               control={form.control}
               name="location"
@@ -597,7 +703,6 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               />
             </div>
 
-
             {/* Notes */}
             <FormField
               control={form.control}
@@ -613,28 +718,6 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                     />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Online checkbox */}
-            <FormField
-              control={form.control}
-              name="isOnline"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Online Session</FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      Check this if this was an online poker session
-                    </p>
-                  </div>
                 </FormItem>
               )}
             />
@@ -663,111 +746,27 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               />
             )}
 
-            {/* Add Table Section */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Table Management</h3>
-                <div className="text-sm text-gray-500">
-                  {tables.length} table{tables.length !== 1 ? 's' : ''} added
-                </div>
-              </div>
-
-              {/* Buy-in and Currency */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="col-span-1 sm:col-span-2">
-                  <FormField
-                    control={form.control}
-                    name="buyIn"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Buy-in Amount</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min="0" 
-                            step="0.01" 
-                            placeholder="100.00" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="currency"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Currency</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="USD" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="USD">USD</SelectItem>
-                          <SelectItem value="EUR">EUR</SelectItem>
-                          <SelectItem value="GBP">GBP</SelectItem>
-                          <SelectItem value="CAD">CAD</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Payout */}
-              <FormField
-                control={form.control}
-                name="payout"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Payout Amount</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="0" 
-                        step="0.01" 
-                        placeholder="0.00" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Add Table Button */}
-              <Button 
-                type="button" 
-                onClick={addTable}
-                variant="outline"
-                className="w-full"
-              >
-                <Icon name="Plus" className="h-4 w-4 mr-2" />
-                Add Table
-              </Button>
-
-              {/* Tables List */}
-              {tables.length > 0 && (
-                <div className="space-y-3 max-h-60 overflow-y-auto overflow-x-hidden w-full">
-                  <h4 className="text-sm font-medium text-gray-700">Added Tables:</h4>
-                  {tables.map((table) => (
-                    <PastTableCard
-                      key={table.id}
-                      table={table}
-                      onUpdate={(updatedTable) => updateTable(table.id, updatedTable)}
-                      onDelete={() => deleteTable(table.id)}
+            {/* Online checkbox - Moved to bottom */}
+            <FormField
+              control={form.control}
+              name="isOnline"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
                     />
-                  ))}
-                </div>
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Online Session</FormLabel>
+                    <p className="text-sm text-muted-foreground">
+                      Check this if this was an online poker session
+                    </p>
+                  </div>
+                </FormItem>
               )}
-            </div>
+            />
 
               {/* Submit buttons */}
               <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
