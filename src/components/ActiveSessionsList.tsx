@@ -1,8 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import { PokerSession } from '@/types/poker';
 import { useToast } from '@/hooks/use-toast';
+import { useSessionContext } from '@/context/SessionContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface ActiveSessionsListProps {
   sessions: PokerSession[];
@@ -11,6 +22,9 @@ interface ActiveSessionsListProps {
 
 export default function ActiveSessionsList({ sessions, onResume }: ActiveSessionsListProps) {
   const { toast } = useToast();
+  const { deleteSession } = useSessionContext();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<PokerSession | null>(null);
   
   const formatDuration = (startTime: Date) => {
     try {
@@ -65,6 +79,34 @@ export default function ActiveSessionsList({ sessions, onResume }: ActiveSession
     }
   };
 
+  const handleDeleteClick = (session: PokerSession) => {
+    setSessionToDelete(session);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!sessionToDelete) return;
+    
+    try {
+      await deleteSession(sessionToDelete.id);
+      toast({
+        title: "Session Deleted",
+        description: "The active session has been successfully deleted.",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('❌ Error deleting session:', error);
+      toast({
+        title: "Delete Failed",
+        description: "Could not delete the session. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setSessionToDelete(null);
+    }
+  };
+
   return (
     <div className="w-full space-y-3">
       <h3 className="text-lg font-bold text-green-800 mb-3">
@@ -89,18 +131,49 @@ export default function ActiveSessionsList({ sessions, onResume }: ActiveSession
                 </p>
               )}
             </div>
-            <Button 
-              onClick={() => handleResume(session.id)}
-              className="bg-green-600 hover:bg-green-700 text-white"
-              size="sm"
-              disabled={!session.id}
-            >
-              <Icon name="Play" size={16} className="mr-1" />
-              Resume
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => handleResume(session.id)}
+                className="bg-green-600 hover:bg-green-700 text-white"
+                size="sm"
+                disabled={!session.id}
+              >
+                <Icon name="Play" size={16} className="mr-1" />
+                Resume
+              </Button>
+              <Button
+                onClick={() => handleDeleteClick(session)}
+                variant="ghost"
+                size="sm"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2"
+                disabled={!session.id}
+              >
+                <Icon name="Trash2" size={16} />
+              </Button>
+            </div>
           </div>
         </div>
       ))}
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Active Session</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this active session? This action cannot be undone and will remove all session data including tables and hands.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Session
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
