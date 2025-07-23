@@ -53,6 +53,7 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
                   <TableCard
                     key={table.id}
                     table={table}
+                    currency={currentSession.currency}
                     sessionId={currentSession.id}
                     onEndTable={onEndTable}
                     onAddRebuy={onAddTableRebuy}
@@ -63,7 +64,7 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
           )}
           
           {inactiveTables.length > 0 && (
-            <CompletedTablesDisplay tables={inactiveTables} sessionId={currentSession.id} />
+            <CompletedTablesDisplay tables={inactiveTables} sessionId={currentSession.id} currency={currentSession.currency} />
           )}
         </div>
       )}

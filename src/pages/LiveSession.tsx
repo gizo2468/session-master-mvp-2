@@ -122,6 +122,7 @@ export default function LiveSession() {
             format={currentSession.format}
             smallBlind={currentSession.smallBlind}
             bigBlind={currentSession.bigBlind}
+            currency={currentSession.currency}
             onEndSession={() => sessionActions.setShowEndSessionSheet(true)}
             onAddTable={() => sessionActions.setShowAddTableForm(true)}
           />

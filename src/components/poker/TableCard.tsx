@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { TableData } from '@/types/poker';
 import { format as dateFormat, differenceInMinutes, isValid } from 'date-fns';
 import Icon from '@/components/ui/Lucide';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { 
   Dialog,
   DialogContent,
@@ -23,13 +24,15 @@ import EditTableForm from './EditTableForm';
 
 interface TableCardProps {
   table: TableData;
+  currency?: string; // Currency code from session
   onEndTable: (tableId: string, cashOut: number, notes?: string, bounty?: { bountyCount?: number, bountyAmount?: number, finalPosition?: number }, multiDayInfo?: { nextDayStart?: Date, chipsCarryover?: number, dayEndedWithoutElimination?: boolean }) => void;
   onAddRebuy: (tableId: string, amount: number) => void;
   sessionId: string;
 }
 
-const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, sessionId }) => {
+const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAddRebuy, sessionId }) => {
   const { updateTable, deleteTable } = useSessionContext();
+  const currencySymbol = getCurrencySymbol(currency);
   const [showEndTableDialog, setShowEndTableDialog] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [cashOutAmount, setCashOutAmount] = useState('');
@@ -223,7 +226,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
             <div className="text-right">
               <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
               <span className="font-bold text-2xl">
-                ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+                {currencySymbol}{table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
               </span>
             </div>
             {(() => {
@@ -236,7 +239,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                   <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
                   <div>
                     <span className="font-bold text-2xl text-red-600">
-                      +${extra.toFixed(2)}
+                      +{currencySymbol}{extra.toFixed(2)}
                     </span>
                     {rebuyCount > 0 && (
                       <span className="text-sm text-gray-500 ml-1">({rebuyCount})</span>
@@ -250,7 +253,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
           {table.format === 'Cash' && (
             <div className="flex justify-between">
               <span className="text-gray-600">Blinds:</span>
-              <span className="font-medium">${table.smallBlind}/{table.bigBlind}</span>
+              <span className="font-medium">{currencySymbol}{table.smallBlind}/{currencySymbol}{table.bigBlind}</span>
             </div>
           )}
           
@@ -321,7 +324,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                 ) && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Bounty Collected:</span>
-                    <span className="font-medium text-gray-500">${table.bountyAmount.toFixed(2)}</span>
+                    <span className="font-medium text-gray-500">{currencySymbol}{table.bountyAmount.toFixed(2)}</span>
                   </div>
                 )}
                 {table.finalPosition && (
@@ -356,7 +359,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
                   <div className="flex flex-col items-center justify-center mt-4 mb-2">
                     <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
                     <span className="font-bold text-2xl text-poker-gold">
-                      ${(table.cashOut ?? 0).toFixed(2)}
+                      {currencySymbol}{(table.cashOut ?? 0).toFixed(2)}
                     </span>
                   </div>
                 )}
@@ -367,7 +370,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onEndTable, onAddRebuy, se
               <div className="flex flex-col items-center justify-center mt-4 mb-2">
                 <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
                 <span className="font-bold text-2xl text-poker-gold">
-                  ${(table.cashOut ?? 0).toFixed(2)}
+                  {currencySymbol}{(table.cashOut ?? 0).toFixed(2)}
                 </span>
               </div>
             )}

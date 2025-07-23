@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import { format as dateFormat } from 'date-fns';
 import { useSessionContext } from '@/context/SessionContext';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface SessionTimerCardProps {
   startTime: Date;
@@ -12,6 +13,7 @@ interface SessionTimerCardProps {
   format: string;
   smallBlind: number;
   bigBlind: number;
+  currency?: string; // Currency code
   onEndSession: () => void;
   onAddTable?: () => void;
 }
@@ -23,6 +25,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   format,
   smallBlind,
   bigBlind,
+  currency,
   onEndSession,
   onAddTable,
 }) => {
@@ -114,6 +117,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   
   // IMPORTANT: Only show blinds for Cash format - strict check to ensure it's never shown for Tournament
   const shouldShowBlinds = format === 'Cash' && smallBlind !== undefined && bigBlind !== undefined;
+  const currencySymbol = getCurrencySymbol(currency);
   
   const handleEndSession = (e: React.MouseEvent) => {
     // Prevent event bubbling
@@ -155,7 +159,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
           <div className="text-xs text-gray-400">
             {format}
             {shouldShowBlinds && (
-              <> - ${smallBlind}/${bigBlind}</>
+              <> - {currencySymbol}{smallBlind}/{currencySymbol}{bigBlind}</>
             )}
           </div>
         </div>

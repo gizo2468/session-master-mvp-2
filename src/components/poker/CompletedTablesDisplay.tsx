@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
 import EditTableForm from './EditTableForm';
 import { useSessionContext } from '@/context/SessionContext';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import {
   Dialog,
   DialogContent,
@@ -18,10 +19,12 @@ import {
 interface CompletedTablesDisplayProps {
   tables: TableData[];
   sessionId: string;
+  currency?: string; // Currency code from session
 }
 
-export default function CompletedTablesDisplay({ tables, sessionId }: CompletedTablesDisplayProps) {
+export default function CompletedTablesDisplay({ tables, sessionId, currency }: CompletedTablesDisplayProps) {
   const { updateTable, deleteTable } = useSessionContext();
+  const currencySymbol = getCurrencySymbol(currency);
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -103,7 +106,7 @@ export default function CompletedTablesDisplay({ tables, sessionId }: CompletedT
                     table.cashOut >= table.buyIn ? 'text-green-600' : 'text-red-600'
                   }`}>
                     {table.cashOut >= table.buyIn ? '+' : ''}
-                    ${(table.cashOut - table.buyIn).toFixed(2)}
+                    {currencySymbol}{(table.cashOut - table.buyIn).toFixed(2)}
                   </div>
                 )}
               </div>
@@ -146,7 +149,7 @@ export default function CompletedTablesDisplay({ tables, sessionId }: CompletedT
                 <div className="text-right">
                   <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
                   <span className="font-bold text-xl">
-                    ${(table.initialBuyIn ?? table.buyIn).toFixed(2)}
+                    {currencySymbol}{(table.initialBuyIn ?? table.buyIn).toFixed(2)}
                   </span>
                 </div>
                 {(() => {
@@ -159,7 +162,7 @@ export default function CompletedTablesDisplay({ tables, sessionId }: CompletedT
                       <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
                       <div>
                         <span className="font-bold text-xl text-amber-600">
-                          +${extra.toFixed(2)}
+                          +{currencySymbol}{extra.toFixed(2)}
                         </span>
                         {rebuyCount > 0 && (
                           <span className="text-sm text-gray-500 ml-1">({rebuyCount})</span>
@@ -204,7 +207,7 @@ export default function CompletedTablesDisplay({ tables, sessionId }: CompletedT
                 table.bountyAmount > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Bounty Collected:</span>
-                    <span className="font-medium text-poker-gold">${table.bountyAmount.toFixed(2)}</span>
+                    <span className="font-medium text-poker-gold">{currencySymbol}{table.bountyAmount.toFixed(2)}</span>
                   </div>
                 )}
               </div>
@@ -252,7 +255,7 @@ export default function CompletedTablesDisplay({ tables, sessionId }: CompletedT
                   <span className="font-bold text-xl text-poker-feltGreen">Continuing</span>
                 ) : (
                   <span className="font-bold text-xl text-poker-gold">
-                    ${actualPayout.toFixed(2)}
+                    {currencySymbol}{actualPayout.toFixed(2)}
                   </span>
                 )}
               </div>

@@ -5,6 +5,7 @@ import { PokerSession, TableData } from '@/types/poker';
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe, Calendar, CreditCard } from "lucide-react";
 import { format } from 'date-fns';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface SessionDetailsCardProps {
   session: PokerSession;
@@ -12,6 +13,7 @@ interface SessionDetailsCardProps {
 
 const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   const tables = session.tables || [];
+  const currencySymbol = getCurrencySymbol(session.currency);
 
   // Calculate total initial buy-ins and rebuys across all tables
   let totalInitialBuyin = 0, totalRebuyAmount = 0, rebuyCount = 0;
@@ -97,7 +99,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
             >
               <DollarSign className="w-4 h-4 text-gray-600 flex-shrink-0" />
-              <span className="font-bold text-poker-gold">${totalInitialBuyin.toFixed(2)}</span>
+              <span className="font-bold text-poker-gold">{currencySymbol}{totalInitialBuyin.toFixed(2)}</span>
               <span className="ml-1 opacity-80 text-xs">
                 {tableCount > 0 ? `from ${tableCount} table${tableCount !== 1 ? "s" : ""}` : "buy-in"}
               </span>
@@ -108,7 +110,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
                 className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
               >
                 <CircleDollarSign className="w-4 h-4 text-gray-600 flex-shrink-0" />
-                <span className="font-bold text-poker-gold">+${totalRebuyAmount.toFixed(2)}</span>
+                <span className="font-bold text-poker-gold">+{currencySymbol}{totalRebuyAmount.toFixed(2)}</span>
                 <span className="ml-1 opacity-80 text-xs">
                   from {rebuyCount} rebuy{rebuyCount !== 1 ? "s" : ""}
                 </span>
@@ -121,7 +123,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               className="flex items-center gap-1 border-amber-400 bg-amber-50 text-amber-800 px-4 py-1.5 font-normal text-sm w-full mt-2 justify-center"
             >
               <DollarSign className="w-5 h-5 text-amber-600 flex-shrink-0" />
-              <span className="font-bold text-amber-700 text-base">Total Buy-Ins: ${totalBuyIn.toFixed(2)}</span>
+              <span className="font-bold text-amber-700 text-base">Total Buy-Ins: {currencySymbol}{totalBuyIn.toFixed(2)}</span>
             </Badge>
             
             {/* Total Payouts Badge - only show if there are completed tables with payouts */}
@@ -131,7 +133,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
                 className="flex items-center gap-1 border-green-400 bg-green-50 text-green-800 px-4 py-1.5 font-normal text-sm w-full justify-center"
               >
                 <DollarSign className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span className="font-bold text-green-700 text-base">Total Payouts: ${totalPayouts.toFixed(2)}</span>
+                <span className="font-bold text-green-700 text-base">Total Payouts: {currencySymbol}{totalPayouts.toFixed(2)}</span>
               </Badge>
             )}
             
@@ -160,7 +162,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
                   <TrendingDown className="w-4 h-4 text-red-600" />
                 )}
                 <span className={`font-bold ${profitClass}`}>
-                  {totalProfit >= 0 ? '+' : ''}${Math.abs(totalProfit).toFixed(2)}
+                  {totalProfit >= 0 ? '+' : ''}{currencySymbol}{Math.abs(totalProfit).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -170,7 +172,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           {shouldShowBlinds && (
             <div className="flex justify-between">
               <span className="text-gray-500">Blinds:</span>
-              <span className="font-medium">${session.smallBlind}/{session.bigBlind}</span>
+              <span className="font-medium">{currencySymbol}{session.smallBlind}/{currencySymbol}{session.bigBlind}</span>
             </div>
           )}
           
