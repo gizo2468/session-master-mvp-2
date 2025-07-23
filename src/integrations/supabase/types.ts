@@ -50,6 +50,7 @@ export type Database = {
           coach_tier: string | null
           connection_code: string | null
           created_at: string
+          default_currency: string | null
           deletion_requested: boolean | null
           email: string | null
           full_name: string
@@ -72,6 +73,7 @@ export type Database = {
           coach_tier?: string | null
           connection_code?: string | null
           created_at?: string
+          default_currency?: string | null
           deletion_requested?: boolean | null
           email?: string | null
           full_name: string
@@ -94,6 +96,7 @@ export type Database = {
           coach_tier?: string | null
           connection_code?: string | null
           created_at?: string
+          default_currency?: string | null
           deletion_requested?: boolean | null
           email?: string | null
           full_name?: string

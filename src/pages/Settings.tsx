@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/Lucide';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,8 +14,19 @@ const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout, isLoading } = useAuth();
   const { toast } = useToast();
-  const [profile, setProfile] = useState<{ username?: string; role?: string } | null>(null);
+  const [profile, setProfile] = useState<{ username?: string; role?: string; default_currency?: string } | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  
+  const currencies = [
+    { code: 'USD', symbol: '$', name: 'USD ($)' },
+    { code: 'EUR', symbol: '€', name: 'EUR (€)' },
+    { code: 'GBP', symbol: '£', name: 'GBP (£)' },
+    { code: 'ILS', symbol: '₪', name: 'ILS (₪)' },
+    { code: 'BRL', symbol: 'R$', name: 'BRL (R$)' },
+    { code: 'CNY', symbol: '¥', name: 'CNY (¥)' },
+    { code: 'THB', symbol: '฿', name: 'THB (฿)' },
+    { code: 'INR', symbol: '₹', name: 'INR (₹)' },
+  ];
 
   const handleLogout = async () => {
     try {
@@ -41,7 +53,7 @@ const Settings: React.FC = () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('username, role')
+          .select('username, role, default_currency')
           .eq('id', user.id)
           .single();
 
@@ -65,6 +77,40 @@ const Settings: React.FC = () => {
     if (role === 'student') return 'Player';
     if (role === 'coach') return 'Coach';
     return role || 'Unknown';
+  };
+
+  // Handle currency change
+  const handleCurrencyChange = async (currencyCode: string) => {
+    if (!user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ default_currency: currencyCode })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error updating currency:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update default currency. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        setProfile(prev => prev ? { ...prev, default_currency: currencyCode } : null);
+        toast({
+          title: "Success",
+          description: "Default currency updated successfully.",
+        });
+      }
+    } catch (error) {
+      console.error('Error updating currency:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update default currency. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const appVersion = "0.0.0"; // From package.json
@@ -142,6 +188,49 @@ const Settings: React.FC = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* General Settings Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>General Settings</CardTitle>
+              <CardDescription>Customize your app preferences</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Default Currency */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Icon name="DollarSign" className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Default Currency</p>
+                      <p className="text-sm text-gray-500">Currency for new sessions</p>
+                    </div>
+                  </div>
+                  <div className="min-w-[140px]">
+                    {profileLoading ? (
+                      <div className="h-9 w-full bg-gray-200 rounded animate-pulse"></div>
+                    ) : (
+                      <Select
+                        value={profile?.default_currency || 'USD'}
+                        onValueChange={handleCurrencyChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {currencies.map((currency) => (
+                            <SelectItem key={currency.code} value={currency.code}>
+                              {currency.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
