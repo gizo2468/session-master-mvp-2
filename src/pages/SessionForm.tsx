@@ -160,6 +160,7 @@ export default function SessionForm() {
         startingBB: values.format === 'Tournament' && values.startingBB ? parseInt(values.startingBB) : undefined,
         tournamentTypes: values.format === 'Tournament' && values.tournamentType ? [values.tournamentType] : undefined,
         isMultiDay: values.isMultiDay,
+        currency: values.currency || defaultCurrency,
         startTime: new Date(),
         isActive: true,
         currentStatus: 'running',
