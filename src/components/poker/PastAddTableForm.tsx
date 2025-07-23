@@ -242,6 +242,32 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
                 )}
               />
 
+              {/* Multi-Day Tournament Toggle (only for tournaments) */}
+              {watchedFormat === 'Tournament' && (
+                <FormField
+                  control={form.control}
+                  name="isMultiDay"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Multi-Day Tournament</FormLabel>
+                        <p className="text-xs text-green-600 font-medium">
+                          {watchedIsMultiDay 
+                            ? '✅ Additional options will appear below'
+                            : 'Check this for multi-day tournaments'
+                          }
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             <Separator />
