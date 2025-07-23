@@ -17,6 +17,7 @@ import Icon from '@/components/ui/Lucide';
 import { useSessionContext } from '@/context/SessionContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useDefaultCurrency, CURRENCIES } from '@/hooks/useDefaultCurrency';
 import { PokerSession, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,7 +47,7 @@ const formSchema = z.object({
   }),
   endTime: z.string().min(1, 'End time is required'),
   buyIn: z.string().optional(),
-  currency: z.enum(['USD', 'EUR', 'GBP', 'CAD']),
+  currency: z.enum(['USD', 'EUR', 'GBP', 'ILS', 'BRL', 'CNY', 'THB', 'INR']),
   payout: z.string().optional(),
   notes: z.string().optional(),
   isOnline: z.boolean().default(false),
@@ -64,6 +65,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
   const { addSession } = useSessionContext();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { defaultCurrency, getCurrencySymbol } = useDefaultCurrency();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tables, setTables] = useState<TableData[]>([]);
   
@@ -76,7 +78,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
       startTime: '19:00',
       endTime: '21:30',
       buyIn: '',
-      currency: 'USD',
+      currency: (defaultCurrency && ['USD', 'EUR', 'GBP', 'ILS', 'BRL', 'CNY', 'THB', 'INR'].includes(defaultCurrency)) ? defaultCurrency as 'USD' | 'EUR' | 'GBP' | 'ILS' | 'BRL' | 'CNY' | 'THB' | 'INR' : 'USD', // Use user's default currency
       payout: '',
       notes: '',
       isOnline: false,
@@ -84,6 +86,13 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
       isMultiDay: false,
     }
   });
+
+  // Update form currency when default currency changes
+  useEffect(() => {
+    if (defaultCurrency && ['USD', 'EUR', 'GBP', 'ILS', 'BRL', 'CNY', 'THB', 'INR'].includes(defaultCurrency)) {
+      form.setValue('currency', defaultCurrency as 'USD' | 'EUR' | 'GBP' | 'ILS' | 'BRL' | 'CNY' | 'THB' | 'INR');
+    }
+  }, [defaultCurrency, form]);
 
   const addTable = () => {
     const values = form.getValues();
@@ -452,12 +461,13 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                             <SelectValue placeholder="USD" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="USD">USD</SelectItem>
-                          <SelectItem value="EUR">EUR</SelectItem>
-                          <SelectItem value="GBP">GBP</SelectItem>
-                          <SelectItem value="CAD">CAD</SelectItem>
-                        </SelectContent>
+                         <SelectContent>
+                           {CURRENCIES.map((currency) => (
+                             <SelectItem key={currency.code} value={currency.code}>
+                               {currency.name}
+                             </SelectItem>
+                           ))}
+                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>

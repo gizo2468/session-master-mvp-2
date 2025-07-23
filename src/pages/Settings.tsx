@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/Lucide';
 import { useToast } from '@/hooks/use-toast';
+import { useDefaultCurrency, CURRENCIES } from '@/hooks/useDefaultCurrency';
 import { supabase } from '@/integrations/supabase/client';
 import DonationCard from '@/components/DonationCard';
 
@@ -14,19 +15,9 @@ const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout, isLoading } = useAuth();
   const { toast } = useToast();
+  const { defaultCurrency } = useDefaultCurrency();
   const [profile, setProfile] = useState<{ username?: string; role?: string; default_currency?: string } | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
-  
-  const currencies = [
-    { code: 'USD', symbol: '$', name: 'USD ($)' },
-    { code: 'EUR', symbol: '€', name: 'EUR (€)' },
-    { code: 'GBP', symbol: '£', name: 'GBP (£)' },
-    { code: 'ILS', symbol: '₪', name: 'ILS (₪)' },
-    { code: 'BRL', symbol: 'R$', name: 'BRL (R$)' },
-    { code: 'CNY', symbol: '¥', name: 'CNY (¥)' },
-    { code: 'THB', symbol: '฿', name: 'THB (฿)' },
-    { code: 'INR', symbol: '₹', name: 'INR (₹)' },
-  ];
 
   const handleLogout = async () => {
     try {
@@ -55,7 +46,7 @@ const Settings: React.FC = () => {
           .from('profiles')
           .select('username, role, default_currency')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
           console.error('Error fetching profile:', error);
@@ -221,11 +212,11 @@ const Settings: React.FC = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {currencies.map((currency) => (
-                            <SelectItem key={currency.code} value={currency.code}>
-                              {currency.name}
-                            </SelectItem>
-                          ))}
+                           {CURRENCIES.map((currency) => (
+                             <SelectItem key={currency.code} value={currency.code}>
+                               {currency.name}
+                             </SelectItem>
+                           ))}
                         </SelectContent>
                       </Select>
                     )}
