@@ -98,7 +98,7 @@ export default function EditSession() {
           description: "There was a problem loading the session data.",
           variant: "destructive"
         });
-        navigate('/', { state: { refresh: true } });
+        navigate('/');
       } finally {
         setLoading(false);
       }
@@ -179,7 +179,7 @@ export default function EditSession() {
         description: "Your session has been successfully updated."
       });
       
-      navigate('/', { state: { refresh: true } });
+      navigate('/');
       
     } catch (error) {
       console.error('❌ Error saving session:', error);

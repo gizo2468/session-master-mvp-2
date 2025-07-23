@@ -14,11 +14,11 @@ const LiveSessionHeader: React.FC = () => {
     try {
       setIsRefreshing(true);
       await refreshSessionsFromDatabase();
-      navigate('/', { state: { refresh: true } });
+      navigate('/');
     } catch (error) {
       console.error('Failed to refresh session data:', error);
       // Navigate anyway to avoid blocking user
-      navigate('/', { state: { refresh: true } });
+      navigate('/');
     } finally {
       setIsRefreshing(false);
     }

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useSessionContext } from '@/context/SessionContext';
 import { useActiveSessionRecovery } from '@/hooks/useActiveSessionRecovery';
@@ -21,7 +21,6 @@ import { SessionFilter } from '@/types/poker';
 
 export default function Index() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
   const { 
     sessions, 
@@ -30,7 +29,7 @@ export default function Index() {
     showStorageWarning, 
     dismissStorageWarning,
     isLoading,
-    refreshSessionsFromDatabase
+    refreshSessionsFromDatabase 
   } = useSessionContext();
   
   const { 
@@ -41,15 +40,14 @@ export default function Index() {
   } = useActiveSessionRecovery();
   
   const [showPastSessionForm, setShowPastSessionForm] = useState(false);
-  
-  // Refresh data when arriving via navigation
+
+  // Automatically refresh data whenever returning to home screen
   useEffect(() => {
-    if (location.state?.refresh) {
+    if (user) {
       refreshSessionsFromDatabase();
-      // Clear the state to prevent subsequent refreshes
-      window.history.replaceState(null, '');
     }
-  }, [location.state?.refresh, refreshSessionsFromDatabase]);
+  }, [user, refreshSessionsFromDatabase]);
+  
 
   const filteredSessions = sessions.filter(session => {
     if (filters.gameType && filters.gameType !== 'All' && session.gameType !== filters.gameType) {

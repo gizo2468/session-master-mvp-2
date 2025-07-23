@@ -210,7 +210,7 @@ export default function SessionDetail() {
     
     endSession(session.id, parseFloat(cashOutAmount));
     setShowEndSessionModal(false);
-    navigate('/', { state: { refresh: true } });
+    navigate('/');
   };
   
   const handleDelete = () => {
@@ -218,7 +218,7 @@ export default function SessionDetail() {
     
     deleteSession(session.id);
     setShowDeleteModal(false);
-    navigate('/', { state: { refresh: true } });
+    navigate('/');
   };
 
   const handleNotesChange = (notes: string) => {
