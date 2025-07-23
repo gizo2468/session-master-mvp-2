@@ -5,16 +5,10 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { v4 as uuidv4 } from 'uuid';
 import { PokerSession, TableData } from '@/types/poker';
-import { format } from 'date-fns';
-import { DollarSign, Calendar, Clock, MapPin, CheckCircle } from 'lucide-react';
 import PastSessionInfoStep from './PastSessionInfoStep';
 import PastSessionTablesStep from './PastSessionTablesStep';
-import PastSessionConfirmationModal from './PastSessionConfirmationModal';
 
 interface AddPastSessionFormProps {
   onClose: () => void;
@@ -40,8 +34,6 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
     notes: ''
   });
   const [tables, setTables] = useState<TableData[]>([]);
-  const [savedSession, setSavedSession] = useState<PokerSession | null>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const handleSessionInfoSubmit = (info: SessionInfo) => {
     setSessionInfo(info);
@@ -117,9 +109,6 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
       // Add to local state first
       addSession(newSession);
       
-      // Store session for confirmation screen
-      setSavedSession(newSession);
-      
       // Then sync to Supabase if user is logged in
       if (user) {
         console.log('🔄 Syncing past session to Supabase for user:', user.id, 'Email:', user.email);
@@ -147,11 +136,19 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
           });
         } else {
           console.log('✅ Past session synced with ID:', sessionData.id, 'for user:', user.id, 'email:', user.email);
+          toast({
+            title: 'Past Session Added',
+            description: 'Your past session has been successfully recorded and synced to the cloud.',
+          });
         }
+      } else {
+        toast({
+          title: 'Past Session Added',
+          description: 'Your past session has been successfully recorded locally.',
+        });
       }
       
-      // Show confirmation dialog
-      setShowConfirmation(true);
+      onClose();
     } catch (error) {
       console.error('Error saving past session:', error);
       toast({
@@ -163,62 +160,50 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
   };
 
   return (
-    <>
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto max-w-4xl px-4 py-4 md:py-8">
-          <header className="mb-6 md:mb-8">
-            <Button 
-              onClick={() => {
-                if (currentStep === 'tables') {
-                  setCurrentStep('info');
-                } else {
-                  onClose();
-                }
-              }} 
-              variant="ghost"
-              className="mb-4"
-            >
-              ← {currentStep === 'tables' ? 'Back to Session Info' : 'Back'}
-            </Button>
-            <h1 className="text-xl md:text-2xl font-bold">Add Past Session</h1>
-            <p className="text-muted-foreground text-sm md:text-base">
-              {currentStep === 'info' 
-                ? 'Step 1: Enter session information' 
-                : 'Step 2: Add tables and hands'
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto max-w-4xl px-4 py-4 md:py-8">
+        <header className="mb-6 md:mb-8">
+          <Button 
+            onClick={() => {
+              if (currentStep === 'tables') {
+                setCurrentStep('info');
+              } else {
+                onClose();
               }
-            </p>
-          </header>
+            }} 
+            variant="ghost"
+            className="mb-4"
+          >
+            ← {currentStep === 'tables' ? 'Back to Session Info' : 'Back'}
+          </Button>
+          <h1 className="text-xl md:text-2xl font-bold">Add Past Session</h1>
+          <p className="text-muted-foreground text-sm md:text-base">
+            {currentStep === 'info' 
+              ? 'Step 1: Enter session information' 
+              : 'Step 2: Add tables and hands'
+            }
+          </p>
+        </header>
 
-          {currentStep === 'info' ? (
-            <PastSessionInfoStep
-              initialData={sessionInfo}
-              onSubmit={handleSessionInfoSubmit}
-              onCancel={onClose}
-            />
-          ) : (
-            <PastSessionTablesStep
-              sessionInfo={sessionInfo}
-              tables={tables}
-              onAddTable={handleAddTable}
-              onUpdateTable={handleUpdateTable}
-              onDeleteTable={handleDeleteTable}
-              onSave={handleSaveSession}
-              onBack={() => setCurrentStep('info')}
-            />
-          )}
-        </div>
+        {currentStep === 'info' ? (
+          <PastSessionInfoStep
+            initialData={sessionInfo}
+            onSubmit={handleSessionInfoSubmit}
+            onCancel={onClose}
+          />
+        ) : (
+          <PastSessionTablesStep
+            sessionInfo={sessionInfo}
+            tables={tables}
+            onAddTable={handleAddTable}
+            onUpdateTable={handleUpdateTable}
+            onDeleteTable={handleDeleteTable}
+            onSave={handleSaveSession}
+            onBack={() => setCurrentStep('info')}
+          />
+        )}
       </div>
-
-      {/* Confirmation Modal */}
-      {savedSession && (
-        <PastSessionConfirmationModal
-          open={showConfirmation}
-          onOpenChange={setShowConfirmation}
-          session={savedSession}
-          onClose={onClose}
-        />
-      )}
-    </>
+    </div>
   );
 };
 
