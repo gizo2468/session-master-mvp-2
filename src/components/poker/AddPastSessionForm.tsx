@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { DollarSign, Calendar, Clock, MapPin, CheckCircle } from 'lucide-react';
 import PastSessionInfoStep from './PastSessionInfoStep';
 import PastSessionTablesStep from './PastSessionTablesStep';
+import PastSessionConfirmationModal from './PastSessionConfirmationModal';
 
 interface AddPastSessionFormProps {
   onClose: () => void;
@@ -161,133 +162,6 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
     }
   };
 
-  const renderConfirmationSummary = () => {
-    if (!savedSession) return null;
-
-    const totalBuyIn = savedSession.tables?.reduce((sum, table) => sum + table.buyIn, 0) || savedSession.buyIn;
-    const totalCashOut = savedSession.tables?.reduce((sum, table) => sum + (table.cashOut || 0), 0) || savedSession.cashOut || 0;
-    const totalProfit = totalCashOut - totalBuyIn;
-    const sessionDuration = savedSession.endTime && savedSession.startTime 
-      ? Math.round((savedSession.endTime.getTime() - savedSession.startTime.getTime()) / (1000 * 60 * 60 * 24) * 24 * 60) 
-      : 0;
-    const hours = Math.floor(sessionDuration / 60);
-    const minutes = sessionDuration % 60;
-
-    return (
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center pb-4">
-          <div className="flex justify-center mb-2">
-            <CheckCircle className="h-12 w-12 text-green-600" />
-          </div>
-          <CardTitle className="text-xl font-bold">Session Saved Successfully!</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Session Name */}
-          <div className="text-center">
-            <h3 className="text-lg font-semibold">{savedSession.location || 'Poker Session'}</h3>
-          </div>
-
-          {/* Date */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Date</span>
-            </div>
-            <span className="font-medium">
-              {format(savedSession.startTime, 'MMM d, yyyy')}
-            </span>
-          </div>
-
-          {/* Time */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Time</span>
-            </div>
-            <span className="font-medium">
-              {format(savedSession.startTime, 'h:mm a')} - {savedSession.endTime ? format(savedSession.endTime, 'h:mm a') : 'Ongoing'}
-            </span>
-          </div>
-
-          {/* Duration */}
-          {sessionDuration > 0 && (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Duration</span>
-              </div>
-              <span className="font-medium">
-                {hours > 0 && `${hours}h`} {minutes}m
-              </span>
-            </div>
-          )}
-
-          {/* Tables Played */}
-          <div className="border-t pt-4">
-            <h4 className="font-medium mb-3">Tables Played ({savedSession.tables?.length || 0})</h4>
-            {savedSession.tables && savedSession.tables.length > 0 ? (
-              <div className="space-y-2">
-                {savedSession.tables.map((table, index) => {
-                  const tableProfit = (table.cashOut || 0) - table.buyIn;
-                  const profitColor = tableProfit >= 0 ? 'text-green-600' : 'text-red-600';
-                  
-                  return (
-                    <div key={table.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <div>
-                        <span className="font-medium">Table {index + 1}</span>
-                        <div className="text-xs text-muted-foreground">
-                          {table.gameType} • {table.format}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant="outline" className="mb-1">
-                          Buy-in: ${table.buyIn.toFixed(2)}
-                        </Badge>
-                        {table.cashOut !== undefined && (
-                          <div className={`text-sm font-medium ${profitColor}`}>
-                            {tableProfit >= 0 ? '+' : ''}${tableProfit.toFixed(2)}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center text-muted-foreground py-4">
-                No tables recorded
-              </div>
-            )}
-          </div>
-
-          {/* Total Summary */}
-          {totalBuyIn > 0 && (
-            <div className="border-t pt-4 space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Total Buy-in:</span>
-                <span className="font-medium">${totalBuyIn.toFixed(2)}</span>
-              </div>
-              {totalCashOut > 0 && (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Total Cash-out:</span>
-                    <span className="font-medium">${totalCashOut.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Net Profit/Loss:</span>
-                    <span className={totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}>
-                      {totalProfit >= 0 ? '+' : ''}${totalProfit.toFixed(2)}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
-  };
-
   return (
     <>
       <div className="min-h-screen bg-background">
@@ -335,26 +209,15 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
         </div>
       </div>
 
-      {/* Confirmation Dialog */}
-      <Dialog open={showConfirmation} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Session Confirmation</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col items-center gap-4">
-            {renderConfirmationSummary()}
-            <Button 
-              onClick={() => {
-                setShowConfirmation(false);
-                onClose();
-              }}
-              className="w-full"
-            >
-              Done
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Confirmation Modal */}
+      {savedSession && (
+        <PastSessionConfirmationModal
+          open={showConfirmation}
+          onOpenChange={setShowConfirmation}
+          session={savedSession}
+          onClose={onClose}
+        />
+      )}
     </>
   );
 };
