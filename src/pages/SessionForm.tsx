@@ -294,7 +294,7 @@ export default function SessionForm() {
         </header>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="bg-white rounded-lg shadow-md p-6 space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="off" className="bg-white rounded-lg shadow-md p-6 space-y-6">
             <FormField
               control={form.control}
               name="gameType"
