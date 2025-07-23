@@ -17,7 +17,7 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
   const navigate = useNavigate();
 
   const handleGoBack = () => {
-    navigate('/');
+    navigate('/', { state: { refresh: true } });
   };
 
   return (

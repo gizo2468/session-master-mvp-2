@@ -97,7 +97,7 @@ export default function ConfirmSession() {
       title: "Session Ended",
       description: "Your poker session has been successfully recorded."
     });
-    navigate('/');
+    navigate('/', { state: { refresh: true } });
   };
   
   const handleInitiateRebuy = (amount: number) => {
@@ -177,7 +177,7 @@ export default function ConfirmSession() {
           <h1 className="text-2xl font-bold mb-4">No active session</h1>
           <p className="text-gray-600 mb-6">There is no active poker session at the moment.</p>
           <Button 
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/', { state: { refresh: true } })}
             className="bg-poker-gold hover:bg-poker-darkGold text-white"
           >
             Return to Home
@@ -193,7 +193,7 @@ export default function ConfirmSession() {
         <div className="container mx-auto max-w-md">
           <div className="flex justify-between items-center">
             <Button 
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/', { state: { refresh: true } })}
               variant="ghost"
               className="text-poker-feltGreen p-0"
             >
