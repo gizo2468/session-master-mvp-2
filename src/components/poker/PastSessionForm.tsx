@@ -722,29 +722,6 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               )}
             />
 
-            {/* Multi-day for tournaments */}
-            {watchedFormat === 'Tournament' && (
-              <FormField
-                control={form.control}
-                name="isMultiDay"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Multi-Day Tournament</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        Check this for tournaments that span multiple days
-                      </p>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            )}
 
             {/* Online checkbox - Moved to bottom */}
             <FormField
