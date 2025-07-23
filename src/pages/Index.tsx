@@ -46,7 +46,8 @@ export default function Index() {
     if (user) {
       refreshSessionsFromDatabase();
     }
-  }, [user, refreshSessionsFromDatabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
   
 
   const filteredSessions = sessions.filter(session => {
