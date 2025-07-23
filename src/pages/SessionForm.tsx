@@ -9,10 +9,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/Lucide';
 import { Slider } from '@/components/ui/slider';
 import { useSessionContext } from '@/context/SessionContext';
 import { useToast } from '@/hooks/use-toast';
+import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 import { PokerSession, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +29,18 @@ const TOURNAMENT_TYPES = [
   'Satellite'
 ];
 
+const CURRENCIES = [
+  { code: 'USD', symbol: '$', name: 'USD ($)' },
+  { code: 'EUR', symbol: '€', name: 'EUR (€)' },
+  { code: 'GBP', symbol: '£', name: 'GBP (£)' },
+  { code: 'CAD', symbol: '$', name: 'CAD ($)' },
+  { code: 'ILS', symbol: '₪', name: 'ILS (₪)' },
+  { code: 'BRL', symbol: 'R$', name: 'BRL (R$)' },
+  { code: 'CNY', symbol: '¥', name: 'CNY (¥)' },
+  { code: 'THB', symbol: '฿', name: 'THB (฿)' },
+  { code: 'INR', symbol: '₹', name: 'INR (₹)' },
+];
+
 const BLIND_PRESETS = {
   smallBlind: [0.25, 0.5, 1, 2, 3, 5, 10, 25, 50, 100, 200, 500],
   bigBlind: [0.5, 1, 2, 5, 10, 25, 50, 100, 200, 500, 1000]
@@ -35,6 +49,7 @@ const BLIND_PRESETS = {
 const formSchema = z.object({
   gameType: z.enum(['NLH', 'PLO']),
   format: z.enum(['Cash', 'Tournament']),
+  currency: z.enum(['USD', 'EUR', 'GBP', 'CAD', 'ILS', 'BRL', 'CNY', 'THB', 'INR']),
   location: z.string().optional(),
   physicalLocation: z.string().optional(),
   buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
@@ -54,6 +69,7 @@ export default function SessionForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { startSession } = useSessionContext();
+  const { defaultCurrency, getCurrencySymbol } = useDefaultCurrency();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[2]);
@@ -64,6 +80,7 @@ export default function SessionForm() {
     defaultValues: {
       gameType: 'NLH',
       format: 'Cash',
+      currency: (defaultCurrency && ['USD', 'EUR', 'GBP', 'CAD', 'ILS', 'BRL', 'CNY', 'THB', 'INR'].includes(defaultCurrency)) ? defaultCurrency as 'USD' | 'EUR' | 'GBP' | 'CAD' | 'ILS' | 'BRL' | 'CNY' | 'THB' | 'INR' : 'USD',
       location: '',
       physicalLocation: '',
       buyIn: '',
@@ -75,6 +92,13 @@ export default function SessionForm() {
       bigBlind: BLIND_PRESETS.smallBlind[2] * 2
     }
   });
+
+  // Update form currency when default currency changes
+  useEffect(() => {
+    if (defaultCurrency && ['USD', 'EUR', 'GBP', 'CAD', 'ILS', 'BRL', 'CNY', 'THB', 'INR'].includes(defaultCurrency)) {
+      form.setValue('currency', defaultCurrency as 'USD' | 'EUR' | 'GBP' | 'CAD' | 'ILS' | 'BRL' | 'CNY' | 'THB' | 'INR');
+    }
+  }, [defaultCurrency, form]);
 
   // Update big blind whenever small blind changes for cash games
   useEffect(() => {
@@ -235,6 +259,13 @@ export default function SessionForm() {
 
   const format = form.watch('format');
   const isOnline = form.watch('isOnline');
+  const selectedCurrency = form.watch('currency');
+  
+  // Get current currency symbol
+  const getCurrentCurrencySymbol = () => {
+    const currency = CURRENCIES.find(c => c.code === selectedCurrency);
+    return currency?.symbol || '$';
+  };
 
   const handleSmallBlindChange = (value: number[]) => {
     const index = value[0];
@@ -485,7 +516,33 @@ export default function SessionForm() {
                 )}
               />
             )}
+            {/* Currency Dropdown */}
+            <FormField
+              control={form.control}
+              name="currency"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Currency</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {CURRENCIES.map((currency) => (
+                        <SelectItem key={currency.code} value={currency.code}>
+                          {currency.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
+            {/* Table Name */}
             <FormField
               control={form.control}
               name="location"
@@ -511,9 +568,9 @@ export default function SessionForm() {
                   <FormLabel className="text-base font-medium">Buy-in Amount</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <span className="text-gray-500">$</span>
-                      </div>
+                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                         <span className="text-gray-500">{getCurrentCurrencySymbol()}</span>
+                       </div>
                       <Input 
                         type="number" 
                         placeholder="0.00" 
@@ -539,7 +596,7 @@ export default function SessionForm() {
                     <FormItem>
                       <div className="flex justify-between">
                         <FormLabel>Small Blind</FormLabel>
-                        <span className="text-sm font-medium">${smallBlind}</span>
+                        <span className="text-sm font-medium">{getCurrentCurrencySymbol()}{smallBlind}</span>
                       </div>
                       <FormControl>
                         <Slider
@@ -556,7 +613,7 @@ export default function SessionForm() {
                     <FormItem>
                       <div className="flex justify-between">
                         <FormLabel>Big Blind</FormLabel>
-                        <span className="text-sm font-medium">${bigBlind}</span>
+                        <span className="text-sm font-medium">{getCurrentCurrencySymbol()}{bigBlind}</span>
                       </div>
                       <div className="py-2 px-3 bg-gray-100 rounded-md border">
                         <div className="text-sm text-gray-600 text-center">
