@@ -98,7 +98,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               variant="outline"
               className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
             >
-              <DollarSign className="w-4 h-4 text-gray-600 flex-shrink-0" />
               <span className="font-bold text-poker-gold">{currencySymbol}{totalInitialBuyin.toFixed(2)}</span>
               <span className="ml-1 opacity-80 text-xs">
                 {tableCount > 0 ? `from ${tableCount} table${tableCount !== 1 ? "s" : ""}` : "buy-in"}
@@ -109,7 +108,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
                 variant="outline"
                 className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
               >
-                <CircleDollarSign className="w-4 h-4 text-gray-600 flex-shrink-0" />
                 <span className="font-bold text-poker-gold">+{currencySymbol}{totalRebuyAmount.toFixed(2)}</span>
                 <span className="ml-1 opacity-80 text-xs">
                   from {rebuyCount} rebuy{rebuyCount !== 1 ? "s" : ""}
@@ -122,7 +120,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               variant="outline"
               className="flex items-center gap-1 border-amber-400 bg-amber-50 text-amber-800 px-4 py-1.5 font-normal text-sm w-full mt-2 justify-center"
             >
-              <DollarSign className="w-5 h-5 text-amber-600 flex-shrink-0" />
               <span className="font-bold text-amber-700 text-base">Total Buy-Ins: {currencySymbol}{totalBuyIn.toFixed(2)}</span>
             </Badge>
             
@@ -132,7 +129,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
                 variant="outline"
                 className="flex items-center gap-1 border-green-400 bg-green-50 text-green-800 px-4 py-1.5 font-normal text-sm w-full justify-center"
               >
-                <DollarSign className="w-5 h-5 text-green-600 flex-shrink-0" />
                 <span className="font-bold text-green-700 text-base">Total Payouts: {currencySymbol}{totalPayouts.toFixed(2)}</span>
               </Badge>
             )}
