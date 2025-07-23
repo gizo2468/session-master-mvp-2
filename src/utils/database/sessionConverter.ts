@@ -253,6 +253,7 @@ export const convertDatabaseSessionToPokerSession = (
       startingBB: sessionData.starting_bb,
       tournamentTypes: sessionData.tournament_types,
       isMultiDay: sessionData.is_multi_day || false,
+      currency: sessionData.currency || 'USD',
       startTime,
       startTimeUTC,
       endTime,

@@ -468,6 +468,7 @@ export type Database = {
           buy_in: number | null
           cash_out: number | null
           created_at: string
+          currency: string | null
           current_status: string | null
           email: string | null
           end_time: string | null
@@ -502,6 +503,7 @@ export type Database = {
           buy_in?: number | null
           cash_out?: number | null
           created_at?: string
+          currency?: string | null
           current_status?: string | null
           email?: string | null
           end_time?: string | null
@@ -536,6 +538,7 @@ export type Database = {
           buy_in?: number | null
           cash_out?: number | null
           created_at?: string
+          currency?: string | null
           current_status?: string | null
           email?: string | null
           end_time?: string | null
