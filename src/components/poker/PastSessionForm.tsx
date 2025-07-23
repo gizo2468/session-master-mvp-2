@@ -429,34 +429,6 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               )}
             />
 
-            {/* Tournament Type */}
-            {watchedFormat === 'Tournament' && (
-              <FormField
-                control={form.control}
-                name="tournamentType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tournament Type</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select tournament type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {TOURNAMENT_TYPES.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
             {/* Table Management Section - Moved up after Format */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -466,7 +438,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                 </div>
               </div>
 
-              {/* Currency and Buy-in - Reordered */}
+              {/* Currency and Tournament Type and Buy-in */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -491,6 +463,34 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                     </FormItem>
                   )}
                 />
+
+                {/* Tournament Type */}
+                {watchedFormat === 'Tournament' && (
+                  <FormField
+                    control={form.control}
+                    name="tournamentType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tournament Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select tournament type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {TOURNAMENT_TYPES.map((type) => (
+                              <SelectItem key={type} value={type}>
+                                {type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <div className="col-span-1 sm:col-span-2">
                   <FormField
@@ -721,7 +721,6 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                 </FormItem>
               )}
             />
-
 
             {/* Online checkbox - Moved to bottom */}
             <FormField
