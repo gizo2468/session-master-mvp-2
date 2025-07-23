@@ -28,7 +28,8 @@ export default function Index() {
     setFilters, 
     showStorageWarning, 
     dismissStorageWarning,
-    isLoading 
+    isLoading,
+    refreshSessionsFromDatabase 
   } = useSessionContext();
   
   const { 
@@ -39,6 +40,13 @@ export default function Index() {
   } = useActiveSessionRecovery();
   
   const [showPastSessionForm, setShowPastSessionForm] = useState(false);
+
+  // Automatically refresh data whenever returning to home screen
+  useEffect(() => {
+    if (user) {
+      refreshSessionsFromDatabase();
+    }
+  }, [user, refreshSessionsFromDatabase]);
   
 
   const filteredSessions = sessions.filter(session => {
