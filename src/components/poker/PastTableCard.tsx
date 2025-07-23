@@ -78,33 +78,33 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <Card className="w-full max-w-full overflow-hidden">
           <CollapsibleTrigger asChild>
-            <CardContent className="p-4 cursor-pointer hover:bg-gray-50 transition-colors min-w-0">
-              <div className="flex flex-col items-center text-center gap-4">
+            <CardContent className="p-3 md:p-4 cursor-pointer hover:bg-muted/50 transition-colors min-w-0">
+              <div className="flex flex-col items-center text-center gap-3 md:gap-4">
                 <div className="w-full">
-                  <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
-                    <Badge variant="secondary" className="shrink-0">{table.gameType}</Badge>
-                    <Badge variant={table.format === 'Cash' ? 'default' : 'destructive'} className="shrink-0">
+                  <div className="flex flex-wrap items-center justify-center gap-1 md:gap-2 mb-2">
+                    <Badge variant="secondary" className="shrink-0 text-xs">{table.gameType}</Badge>
+                    <Badge variant={table.format === 'Cash' ? 'default' : 'destructive'} className="shrink-0 text-xs">
                       {table.format}
                     </Badge>
                     {table.isOnline && (
-                      <Badge variant="outline" className="shrink-0">Online</Badge>
+                      <Badge variant="outline" className="shrink-0 text-xs">Online</Badge>
                     )}
                     {isMultiDayTable && (
-                      <Badge variant="outline" className="shrink-0">
+                      <Badge variant="outline" className="shrink-0 text-xs">
                         <Calendar className="h-3 w-3 mr-1" />
                         Multi-Day
                       </Badge>
                     )}
                     {isContinuing && (
-                      <Badge variant="success" className="shrink-0">Continuing</Badge>
+                      <Badge variant="secondary" className="shrink-0 text-xs">Continuing</Badge>
                     )}
                     {table.tournamentTypes && table.tournamentTypes.length > 0 && (
-                      <Badge variant="outline" className="shrink-0 max-w-[150px] truncate">
+                      <Badge variant="outline" className="shrink-0 max-w-[120px] md:max-w-[150px] truncate text-xs">
                         {table.tournamentTypes[0]}
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600">{getGameDetails()}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">{getGameDetails()}</p>
                 </div>
                 
                 <div className="flex flex-col items-center gap-4">
@@ -121,7 +121,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                     )}
                   </div>
                   
-                  <div className="flex items-center justify-center gap-1 shrink-0">
+                  <div className="flex items-center justify-center gap-1 shrink-0 flex-wrap">
                     {isMultiDayTable && !isContinuing && (
                       <Button
                         size="sm"
@@ -130,7 +130,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                           e.stopPropagation();
                           setShowMultiDayDialog(true);
                         }}
-                        className="whitespace-nowrap"
+                        className="whitespace-nowrap text-xs"
                       >
                         End Day
                       </Button>
@@ -142,8 +142,9 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                         e.stopPropagation();
                         setShowEditForm(true);
                       }}
+                      className="p-1"
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className="h-3 w-3 md:h-4 md:w-4" />
                     </Button>
                     <Button
                       size="sm"
@@ -152,14 +153,14 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                         e.stopPropagation();
                         onDelete();
                       }}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-destructive hover:text-destructive/80 p-1"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                     </Button>
                     {isExpanded ? (
-                      <ChevronUp className="h-4 w-4" />
+                      <ChevronUp className="h-3 w-3 md:h-4 md:w-4" />
                     ) : (
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className="h-3 w-3 md:h-4 md:w-4" />
                     )}
                   </div>
                 </div>

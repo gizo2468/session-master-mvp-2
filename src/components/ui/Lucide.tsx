@@ -15,6 +15,9 @@ const Icon = ({ name, ...props }: IconProps) => {
     "BarChart2": "BarChart", // Map BarChart2 to BarChart
     "barChart2": "BarChart",
     "bar-chart-2": "BarChart",
+    "edit": "Pencil",
+    "trash-2": "Trash2",
+    "trash": "Trash2",
   };
   
   // Check if this is a special case name that needs mapping

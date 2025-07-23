@@ -99,12 +99,6 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
   const profitLoss = (watchedCashOut + (watchedFormat === 'Tournament' ? watchedBountyAmount : 0)) - totalBuyIn;
 
   const handleSubmit = (data: TableFormData) => {
-    console.log('=== FORM SUBMISSION START ===');
-    console.log('Form submitted with data:', data);
-    console.log('Is Multi Day:', data.isMultiDay);
-    console.log('Multi Day Status:', data.multiDayStatus);
-    console.log('Format:', data.format);
-    
     // Process multi-day tournament data inline
     const multiDayInfo = data.isMultiDay && data.format === 'Tournament' ? {
       nextDayStart: data.nextDayStart,
@@ -139,35 +133,26 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
       hands: []
     };
     
-    console.log('Calling onSubmit with tableData:', tableData);
     onSubmit(tableData);
     form.reset();
     onOpenChange(false);
   };
 
-  const onFormSubmit = (data: TableFormData) => {
-    console.log('=== ON FORM SUBMIT CALLED ===');
-    console.log('Raw form data:', data);
-    console.log('Is multi-day:', data.isMultiDay);
-    console.log('Format:', data.format);
-    
-    handleSubmit(data);
-  };
-
-  const onFormError = (errors: any) => {
-    console.log('=== FORM VALIDATION ERRORS ===');
-    console.log('Errors:', errors);
+  const onFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    form.handleSubmit(handleSubmit)(e);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
           <DialogTitle>Add Table</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onFormSubmit, onFormError)} className="space-y-6">
+          <form onSubmit={onFormSubmit} className="space-y-6">
             {/* Game & Format Section */}
             <div className="space-y-4">
               <h4 className="text-sm font-medium text-gray-900">Game & Format</h4>

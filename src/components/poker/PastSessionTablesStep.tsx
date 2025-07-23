@@ -42,21 +42,21 @@ const PastSessionTablesStep: React.FC<PastSessionTablesStepProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-background rounded-lg border p-4 md:p-6">
         <h3 className="text-lg font-semibold mb-4">Session Summary</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-          <div>
-            <span className="text-gray-600">Location:</span>
-            <p className="font-medium">{sessionInfo.location}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+          <div className="space-y-1">
+            <span className="text-muted-foreground">Location:</span>
+            <p className="font-medium break-words">{sessionInfo.location}</p>
           </div>
-          <div>
-            <span className="text-gray-600">Tables:</span>
+          <div className="space-y-1">
+            <span className="text-muted-foreground">Tables:</span>
             <p className="font-medium">{tables.length}</p>
           </div>
-          <div>
-            <span className="text-gray-600">Total P/L:</span>
+          <div className="space-y-1">
+            <span className="text-muted-foreground">Total P/L:</span>
             <p className={`font-medium ${totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {totalProfit >= 0 ? '+' : ''}${totalProfit.toFixed(2)}
+              {totalProfit >= 0 ? '+' : ''}${Math.abs(totalProfit).toFixed(2)}
             </p>
           </div>
         </div>
@@ -76,7 +76,7 @@ const PastSessionTablesStep: React.FC<PastSessionTablesStepProps> = ({
         </div>
 
         {tables.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
+          <div className="bg-background rounded-lg border p-8 text-center text-muted-foreground">
             <p>No tables added yet. Click "Add Table" to get started.</p>
           </div>
         ) : (
