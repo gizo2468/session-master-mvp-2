@@ -59,7 +59,16 @@ export default function SessionHistory() {
   const completedSessions = sortedSessions.filter(s => !s.isActive);
 
   const handleSessionClick = (sessionId: string) => {
-    navigate(`/session/${sessionId}`);
+    // Find the session to check its status
+    const session = sessions.find(s => s.id === sessionId);
+    
+    if (session?.isActive) {
+      // Active session -> route to LiveSession
+      navigate(`/session/${sessionId}`);
+    } else {
+      // Completed session -> route to SessionDetail
+      navigate(`/session/${sessionId}/details`);
+    }
   };
 
   return (
