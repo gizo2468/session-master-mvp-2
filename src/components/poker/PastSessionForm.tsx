@@ -542,10 +542,10 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               <Button 
                 type="button" 
                 onClick={addTable}
-                className="w-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center"
+                className="w-full bg-red-500 hover:bg-red-600 text-white"
               >
                 <Icon name="Plus" className="h-4 w-4 mr-2" />
-                Add Table
+                + Add Table
               </Button>
 
               {/* Tables List */}
