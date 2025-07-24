@@ -46,7 +46,6 @@ const ProfitLossBadge: React.FC<ProfitLossBadgeProps> = ({
       
       {/* Profit/loss badge */}
       <div className={`relative inline-flex items-center gap-2 ${currentSize.container} rounded-full shadow-md ${profit >= 0 ? 'bg-green-100/70 shadow-green-200/50' : 'bg-red-100/70 shadow-red-200/50'}`}>
-        <Icon name="dollar-sign" size={currentSize.icon} className={profitClass} />
         <span className={`${currentSize.text} font-bold ${profitClass}`}>
           {profit >= 0 ? '+' : ''}{currencySymbol}{Math.abs(profit).toFixed(2)}
         </span>
