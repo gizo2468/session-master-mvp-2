@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/Lucide';
@@ -13,6 +14,7 @@ import DonationCard from '@/components/DonationCard';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
+  const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
   const { user, logout, isLoading } = useAuth();
   const { toast } = useToast();
   const { defaultCurrency } = useDefaultCurrency();
@@ -111,11 +113,12 @@ const Settings: React.FC = () => {
       <div className="container mx-auto max-w-md px-4 py-8">
         <header className="mb-8">
           <Button 
-            onClick={() => navigate('/')} 
+            onClick={navigateToHomeWithRefresh}
             variant="ghost"
             className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:bg-transparent hover:text-poker-green"
+            disabled={isRefreshing}
           >
-            <Icon name="ArrowLeft" size={16} />
+            <Icon name={isRefreshing ? "Loader2" : "ArrowLeft"} size={16} className={isRefreshing ? 'animate-spin' : ''} />
             <span>Back</span>
           </Button>
           <h1 className="text-2xl font-bold text-poker-black">Settings</h1>

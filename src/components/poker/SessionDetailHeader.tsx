@@ -1,7 +1,7 @@
-
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
+import Icon from '@/components/ui/Lucide';
 
 interface SessionDetailHeaderProps {
   location: string;
@@ -14,20 +14,18 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
   onEditClick,
   onDeleteClick
 }) => {
-  const navigate = useNavigate();
-
-  const handleGoBack = () => {
-    navigate('/');
-  };
+  const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
 
   return (
     <header className="mb-8">
       <Button 
-        onClick={handleGoBack} 
+        onClick={navigateToHomeWithRefresh}
         variant="ghost" 
         className="text-poker-feltGreen mb-4 flex items-center p-0 hover:bg-transparent"
+        disabled={isRefreshing}
       >
-        ← Back
+        <Icon name={isRefreshing ? "Loader2" : "ArrowLeft"} size={16} className={`mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+        Back
       </Button>
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-serif font-bold">

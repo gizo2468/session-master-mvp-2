@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
+import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
 import SessionCard from '@/components/SessionCard';
 import { Button } from '@/components/ui/button';
 import FilterBar from '@/components/ui/FilterBar';
@@ -10,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function SessionHistory() {
   const navigate = useNavigate();
+  const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
   const { user } = useAuth();
   const { sessions, filters, setFilters, isLoading } = useSessionContext();
   const [sortBy, setSortBy] = useState<'date' | 'profit'>('date');
@@ -77,11 +79,12 @@ export default function SessionHistory() {
         <div className="container mx-auto max-w-md">
           <div className="flex justify-between items-center">
             <Button 
-              onClick={() => navigate('/')}
+              onClick={navigateToHomeWithRefresh}
               variant="ghost"
               className="text-poker-feltGreen p-0"
+              disabled={isRefreshing}
             >
-              <Icon name="ArrowLeft" size={16} className="mr-1" />
+              <Icon name={isRefreshing ? "Loader2" : "ArrowLeft"} size={16} className={`mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span>Home</span>
             </Button>
             <h1 className="text-xl font-bold">Session History</h1>

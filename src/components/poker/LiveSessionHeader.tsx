@@ -1,35 +1,18 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
-import { useSessionContext } from '@/context/SessionContext';
+import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
 
 const LiveSessionHeader: React.FC = () => {
-  const navigate = useNavigate();
-  const { refreshSessionsFromDatabase } = useSessionContext();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const handleHomeClick = async () => {
-    try {
-      setIsRefreshing(true);
-      await refreshSessionsFromDatabase();
-      navigate('/');
-    } catch (error) {
-      console.error('Failed to refresh session data:', error);
-      // Navigate anyway to avoid blocking user
-      navigate('/');
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
+  const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
 
   return (
     <header className="bg-white shadow-sm px-4 py-4 sticky top-0 z-10">
       <div className="container mx-auto max-w-md">
         <div className="flex justify-between items-center">
           <Button 
-            onClick={handleHomeClick}
+            onClick={navigateToHomeWithRefresh}
             variant="ghost"
             className="text-poker-feltGreen p-0"
             disabled={isRefreshing}
