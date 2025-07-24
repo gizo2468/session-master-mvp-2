@@ -4,6 +4,7 @@ import { useSessionContext } from '@/context/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { calculateOverallResults, calculateSessionProfit } from '@/utils/sessionCalculations';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 export default function StatsQuickView() {
   const { sessions, isLoading } = useSessionContext();
@@ -36,9 +37,19 @@ export default function StatsQuickView() {
   const wins = completedSessions.filter(s => calculateSessionProfit(s) > 0).length;
   const losses = completedSessions.filter(s => calculateSessionProfit(s) <= 0).length;
   
-  // Calculate overall results using unified calculation logic
-  const overallResults = calculateOverallResults(sessions);
-  
+  // Group sessions by currency and calculate results for each
+  const resultsByCurrency = completedSessions.reduce((acc, session) => {
+    const currency = session.currency || 'USD';
+    const profit = calculateSessionProfit(session);
+    
+    if (!acc[currency]) {
+      acc[currency] = 0;
+    }
+    acc[currency] += profit;
+    
+    return acc;
+  }, {} as Record<string, number>);
+
   // FIXED: Calculate ITM% per table instead of per session
   let totalTournamentTables = 0;
   let itmTables = 0;
@@ -98,9 +109,6 @@ export default function StatsQuickView() {
   // Convert average duration from milliseconds to hours
   const averageHours = averageDuration / (1000 * 60 * 60);
   
-  const formattedResults = overallResults.toFixed(2);
-  const resultsClass = overallResults >= 0 ? 'text-green-500' : 'text-poker-red';
-
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
       <h2 className="text-xl font-extrabold tracking-tight mb-4 text-center">Session Stats</h2>
@@ -118,9 +126,21 @@ export default function StatsQuickView() {
         
         <div className="flex flex-col">
           <span className="text-gray-500 text-sm">Overall Results</span>
-          <span className={`text-lg font-bold ${resultsClass}`}>
-            ${formattedResults}
-          </span>
+          <div className="space-y-1">
+            {Object.keys(resultsByCurrency).length === 0 ? (
+              <span className="text-lg font-bold text-gray-400">$0.00</span>
+            ) : (
+              Object.entries(resultsByCurrency).map(([currency, amount]) => {
+                const symbol = getCurrencySymbol(currency);
+                const resultsClass = amount >= 0 ? 'text-green-500' : 'text-red-500';
+                return (
+                  <div key={currency} className={`text-lg font-bold ${resultsClass}`}>
+                    {amount >= 0 ? '' : '-'}{symbol}{Math.abs(amount).toFixed(2)}
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
       
