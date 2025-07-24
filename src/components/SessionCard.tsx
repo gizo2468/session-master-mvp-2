@@ -130,7 +130,7 @@ export default function SessionCard({ session, onClick, showActions = false }: S
     >
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="text-lg font-bold text-poker-black">{session.location || 'Unknown Location'}</h3>
+          <h3 className="text-lg font-bold text-primary">{session.location || 'Unknown Location'}</h3>
           <p className="text-sm text-gray-500">{formattedDate} at {formattedTime}</p>
         </div>
         {session.isActive ? (
