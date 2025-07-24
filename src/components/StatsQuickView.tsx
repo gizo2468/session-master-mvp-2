@@ -1,13 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useSessionContext } from '@/context/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { calculateOverallResults, calculateSessionProfit } from '@/utils/sessionCalculations';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 export default function StatsQuickView() {
   const { sessions, isLoading } = useSessionContext();
+  const [showCurrencyBreakdown, setShowCurrencyBreakdown] = useState(false);
   
   if (isLoading) {
     return (
@@ -49,6 +51,9 @@ export default function StatsQuickView() {
     
     return acc;
   }, {} as Record<string, number>);
+
+  // Get USD total for main display
+  const usdTotal = resultsByCurrency['USD'] || 0;
 
   // FIXED: Calculate ITM% per table instead of per session
   let totalTournamentTables = 0;
@@ -126,27 +131,17 @@ export default function StatsQuickView() {
         
         <div className="flex flex-col">
           <span className="text-gray-500 text-sm">Overall Results</span>
-          <div className="space-y-1">
+          <div 
+            className="cursor-pointer"
+            onClick={() => setShowCurrencyBreakdown(true)}
+            title="Click to view currency breakdown"
+          >
             {Object.keys(resultsByCurrency).length === 0 ? (
               <span className="text-lg font-bold text-gray-400">$0.00</span>
             ) : (
-              // Sort currencies: USD first if it exists, then by amount
-              Object.entries(resultsByCurrency)
-                .sort(([currencyA], [currencyB]) => {
-                  if (currencyA === 'USD') return -1;
-                  if (currencyB === 'USD') return 1;
-                  return 0;
-                })
-                .map(([currency, amount], index) => {
-                  const symbol = getCurrencySymbol(currency);
-                  const resultsClass = amount >= 0 ? 'text-green-500' : 'text-red-500';
-                  const isFirst = index === 0;
-                  return (
-                    <div key={currency} className={`${isFirst ? 'text-xl' : 'text-lg'} font-bold ${resultsClass}`}>
-                      {amount >= 0 ? '' : '-'}{symbol}{Math.abs(amount).toFixed(2)}
-                    </div>
-                  );
-                })
+              <div className={`text-xl font-bold ${usdTotal >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {usdTotal >= 0 ? '' : '-'}$ {Math.abs(usdTotal).toFixed(2)}
+              </div>
             )}
           </div>
         </div>
@@ -168,6 +163,51 @@ export default function StatsQuickView() {
           <span className="text-lg font-bold">{averageHours.toFixed(1)}h</span>
         </div>
       </div>
+      
+      {/* Currency Breakdown Dialog */}
+      <Dialog open={showCurrencyBreakdown} onOpenChange={setShowCurrencyBreakdown}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Currency Breakdown</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {Object.keys(resultsByCurrency).length === 0 ? (
+              <div className="text-center text-gray-500 py-4">
+                No sessions with results found
+              </div>
+            ) : (
+              Object.entries(resultsByCurrency)
+                .sort(([currencyA], [currencyB]) => {
+                  if (currencyA === 'USD') return -1;
+                  if (currencyB === 'USD') return 1;
+                  return 0;
+                })
+                .map(([currency, amount]) => {
+                  const symbol = getCurrencySymbol(currency);
+                  const resultsClass = amount >= 0 ? 'text-green-600' : 'text-red-600';
+                  const currencyName = currency === 'USD' ? 'USD' : 
+                                     currency === 'ILS' ? 'ILS' : 
+                                     currency === 'EUR' ? 'EUR' : currency;
+                  const flag = currency === 'USD' ? '💵' : 
+                              currency === 'ILS' ? '₪' : 
+                              currency === 'EUR' ? '€' : '💰';
+                  
+                  return (
+                    <div key={currency} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{flag}</span>
+                        <span className="font-medium text-gray-700">{currencyName}</span>
+                      </div>
+                      <div className={`text-lg font-bold ${resultsClass}`}>
+                        {amount >= 0 ? '+' : '-'}{symbol} {Math.abs(amount).toFixed(2)}
+                      </div>
+                    </div>
+                  );
+                })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
