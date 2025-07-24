@@ -119,18 +119,18 @@ export default function StatsQuickView() {
       <h2 className="text-xl font-extrabold tracking-tight mb-4 text-center">Session Stats</h2>
       
       <div className="grid grid-cols-3 gap-4 text-center mb-4">
-        <div className="flex flex-col">
-          <span className="text-gray-500 text-sm">Sessions</span>
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-gray-500 text-sm mb-1">Sessions</span>
           <span className="text-lg font-bold">{totalSessions}</span>
         </div>
         
-        <div className="flex flex-col">
-          <span className="text-gray-500 text-sm">Record</span>
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-gray-500 text-sm mb-1">Record</span>
           <span className="text-lg font-bold">{wins}W - {losses}L</span>
         </div>
         
-        <div className="flex flex-col">
-          <span className="text-gray-500 text-sm">Overall Results</span>
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-gray-500 text-sm mb-1">Overall Results</span>
           <div 
             className="cursor-pointer"
             onClick={() => setShowCurrencyBreakdown(true)}
@@ -148,18 +148,18 @@ export default function StatsQuickView() {
       </div>
       
       <div className="grid grid-cols-3 gap-4 text-center">
-        <div className="flex flex-col">
-          <span className="text-gray-500 text-sm">ITM %</span>
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-gray-500 text-sm mb-1">ITM %</span>
           <span className="text-lg font-bold">{itmPercentage.toFixed(1)}%</span>
         </div>
         
-        <div className="flex flex-col">
-          <span className="text-gray-500 text-sm">Total Hands</span>
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-gray-500 text-sm mb-1">Total Hands</span>
           <span className="text-lg font-bold">{totalHands}</span>
         </div>
         
-        <div className="flex flex-col">
-          <span className="text-gray-500 text-sm">Avg Duration</span>
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-gray-500 text-sm mb-1">Avg Duration</span>
           <span className="text-lg font-bold">{averageHours.toFixed(1)}h</span>
         </div>
       </div>
