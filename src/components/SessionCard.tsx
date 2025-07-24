@@ -7,6 +7,7 @@ import SessionActionButtons from './SessionActionButtons';
 import { useSessionStats } from '@/hooks/useSessionStats';
 import { PokerSession } from '@/types/poker';
 import { calculateSessionProfit } from '@/utils/sessionCalculations';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface SessionCardProps {
   session: PokerSession;
@@ -137,7 +138,7 @@ export default function SessionCard({ session, onClick, showActions = false }: S
             Live
           </span>
         ) : (
-          <ProfitLossBadge profit={netProfit} />
+          <ProfitLossBadge profit={netProfit} currency={session.currency} />
         )}
       </div>
       
@@ -157,7 +158,7 @@ export default function SessionCard({ session, onClick, showActions = false }: S
         {session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined && (
           <div>
             <span className="text-gray-500">Blinds:</span>
-            <span className="ml-1 font-medium">${session.smallBlind}/${session.bigBlind}</span>
+            <span className="ml-1 font-medium">{getCurrencySymbol(session.currency)}{session.smallBlind}/{getCurrencySymbol(session.currency)}{session.bigBlind}</span>
           </div>
         )}
       </div>
@@ -168,6 +169,7 @@ export default function SessionCard({ session, onClick, showActions = false }: S
         hands={stats.hands}
         totalBuyIns={stats.totalBuyIns}
         totalPayout={stats.totalPayout}
+        currency={session.currency}
         loading={loading}
       />
       

@@ -2,6 +2,7 @@
 import React from 'react';
 import { PokerSession } from '@/types/poker';
 import ProfitLossBadge from './ProfitLossBadge';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface SessionInfoDisplayProps {
   session: PokerSession;
@@ -22,6 +23,7 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
   profit,
   isCompleted
 }) => {
+  const currencySymbol = getCurrencySymbol(session.currency);
   // Determine if blinds should be shown - strict check for Cash format only
   const shouldShowBlinds = session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined;
 
@@ -40,9 +42,9 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
       <div className="flex justify-between py-2 border-b">
         <span className="text-gray-500">Buy-in:</span>
         <span className="font-medium">
-          ${totalInitialBuyin.toFixed(2)}
+          {currencySymbol}{totalInitialBuyin.toFixed(2)}
           {additionalBuyins > 0 && (
-            <span className="text-gray-600"> (+${additionalBuyins.toFixed(2)})</span>
+            <span className="text-gray-600"> (+{currencySymbol}{additionalBuyins.toFixed(2)})</span>
           )}
         </span>
       </div>
@@ -66,7 +68,7 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
       <div className="flex justify-between py-2 border-b">
         <span className="text-gray-500">Payout:</span>
         <span className="font-medium">
-          ${totalCashout.toFixed(2)}
+          {currencySymbol}{totalCashout.toFixed(2)}
         </span>
       </div>
       
@@ -81,14 +83,14 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
       {shouldShowBlinds && (
         <div className="flex justify-between py-2 border-b">
           <span className="text-gray-500">Blinds:</span>
-          <span className="font-medium">${session.smallBlind || 0}/${session.bigBlind || 0}</span>
+          <span className="font-medium">{currencySymbol}{session.smallBlind || 0}/{currencySymbol}{session.bigBlind || 0}</span>
         </div>
       )}
       
       {isCompleted && (
         <div className="flex flex-col items-center py-2">
           <span className="text-gray-500 mb-2">Profit/Loss</span>
-          <ProfitLossBadge profit={profit} size="lg" />
+          <ProfitLossBadge profit={profit} currency={session.currency} size="lg" />
         </div>
       )}
     </div>

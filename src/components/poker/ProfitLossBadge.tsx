@@ -1,19 +1,23 @@
 
 import React from 'react';
 import Icon from '@/components/ui/Lucide';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface ProfitLossBadgeProps {
   profit: number;
+  currency?: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
 
 const ProfitLossBadge: React.FC<ProfitLossBadgeProps> = ({ 
   profit, 
+  currency = 'USD',
   size = 'md', 
   className = '' 
 }) => {
   const profitClass = profit >= 0 ? 'text-green-700' : 'text-red-700';
+  const currencySymbol = getCurrencySymbol(currency);
   
   const sizeClasses = {
     sm: {
@@ -44,7 +48,7 @@ const ProfitLossBadge: React.FC<ProfitLossBadgeProps> = ({
       <div className={`relative inline-flex items-center gap-2 ${currentSize.container} rounded-full shadow-md ${profit >= 0 ? 'bg-green-100/70 shadow-green-200/50' : 'bg-red-100/70 shadow-red-200/50'}`}>
         <Icon name="dollar-sign" size={currentSize.icon} className={profitClass} />
         <span className={`${currentSize.text} font-bold ${profitClass}`}>
-          {profit >= 0 ? '+' : ''}{profit.toFixed(2)}
+          {profit >= 0 ? '+' : ''}{currencySymbol}{Math.abs(profit).toFixed(2)}
         </span>
       </div>
     </div>

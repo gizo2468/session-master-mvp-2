@@ -1,11 +1,13 @@
 
 import React from 'react';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface SessionStatsDisplayProps {
   tables: number;
   hands: number;
   totalBuyIns: number;
   totalPayout: number;
+  currency?: string;
   loading?: boolean;
 }
 
@@ -14,9 +16,11 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
   hands,
   totalBuyIns,
   totalPayout,
+  currency = 'USD',
   loading = false
 }) => {
-  console.log('SessionStatsDisplay props:', { tables, hands, totalBuyIns, totalPayout, loading });
+  const currencySymbol = getCurrencySymbol(currency);
+  console.log('SessionStatsDisplay props:', { tables, hands, totalBuyIns, totalPayout, currency, loading });
 
   if (loading) {
     return (
@@ -40,11 +44,11 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
           </div>
           <div className="text-center">
             <div className="font-medium text-xs text-black">Buy-ins</div>
-            <div className="text-gray-800 font-semibold">${totalBuyIns.toFixed(0)}</div>
+            <div className="text-gray-800 font-semibold">{currencySymbol}{totalBuyIns.toFixed(0)}</div>
           </div>
           <div className="text-center">
             <div className="font-medium text-xs text-black">Payout</div>
-            <div className="text-gray-800 font-semibold">${totalPayout.toFixed(0)}</div>
+            <div className="text-gray-800 font-semibold">{currencySymbol}{totalPayout.toFixed(0)}</div>
           </div>
         </div>
       </div>
