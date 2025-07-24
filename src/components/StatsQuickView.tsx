@@ -116,7 +116,7 @@ export default function StatsQuickView() {
   
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-      <h2 className="text-xl font-extrabold tracking-tight mb-4 text-center">My Sessions Stats</h2>
+      <h2 className="text-xl font-extrabold tracking-tight mb-4 text-center text-primary">Sessions Stats</h2>
       
       <div className="grid grid-cols-3 gap-4 text-center mb-4">
         <div className="flex flex-col items-center justify-center">
