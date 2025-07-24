@@ -130,15 +130,23 @@ export default function StatsQuickView() {
             {Object.keys(resultsByCurrency).length === 0 ? (
               <span className="text-lg font-bold text-gray-400">$0.00</span>
             ) : (
-              Object.entries(resultsByCurrency).map(([currency, amount]) => {
-                const symbol = getCurrencySymbol(currency);
-                const resultsClass = amount >= 0 ? 'text-green-500' : 'text-red-500';
-                return (
-                  <div key={currency} className={`text-lg font-bold ${resultsClass}`}>
-                    {amount >= 0 ? '' : '-'}{symbol}{Math.abs(amount).toFixed(2)}
-                  </div>
-                );
-              })
+              // Sort currencies: USD first if it exists, then by amount
+              Object.entries(resultsByCurrency)
+                .sort(([currencyA], [currencyB]) => {
+                  if (currencyA === 'USD') return -1;
+                  if (currencyB === 'USD') return 1;
+                  return 0;
+                })
+                .map(([currency, amount], index) => {
+                  const symbol = getCurrencySymbol(currency);
+                  const resultsClass = amount >= 0 ? 'text-green-500' : 'text-red-500';
+                  const isFirst = index === 0;
+                  return (
+                    <div key={currency} className={`${isFirst ? 'text-xl' : 'text-lg'} font-bold ${resultsClass}`}>
+                      {amount >= 0 ? '' : '-'}{symbol}{Math.abs(amount).toFixed(2)}
+                    </div>
+                  );
+                })
             )}
           </div>
         </div>
