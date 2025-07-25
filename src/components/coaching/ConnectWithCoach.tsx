@@ -33,7 +33,7 @@ const ConnectWithCoach = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Input
               value={code}
