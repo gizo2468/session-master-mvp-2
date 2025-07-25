@@ -27,7 +27,7 @@ export default function SessionActionButtons({ session }: SessionActionButtonsPr
   const handleDeleteConfirm = async () => {
     try {
       setIsDeleting(true);
-      console.log('🗑️ Deleting session from database:', session.id);
+      // Deleting session from database
       
       await deleteSession(session.id);
       
@@ -43,7 +43,7 @@ export default function SessionActionButtons({ session }: SessionActionButtonsPr
       
       setShowDeleteDialog(false);
     } catch (error) {
-      console.error('❌ Error deleting session:', error);
+      console.error('Error deleting session:', error);
       toast({
         title: "Error Deleting Session",
         description: "There was a problem deleting the session. Please try again.",

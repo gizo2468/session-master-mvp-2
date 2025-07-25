@@ -47,7 +47,7 @@ export const EnhancedStudentSessions = ({ studentId }: { studentId: string }) =>
       setLoading(true);
       setError(null);
       
-      console.log('🔍 Loading enhanced sessions for student:', studentId);
+      // Loading enhanced sessions for student
       
       // Load sessions
       const { data: sessionsData, error: sessionsError } = await supabase
@@ -57,12 +57,12 @@ export const EnhancedStudentSessions = ({ studentId }: { studentId: string }) =>
         .order('start_time', { ascending: false });
 
       if (sessionsError) {
-        console.error('❌ Error loading student sessions:', sessionsError);
+        console.error('Error loading student sessions:', sessionsError);
         setError('Failed to load sessions');
         return;
       }
 
-      console.log(`📋 Loaded ${sessionsData?.length || 0} sessions`);
+      // Sessions loaded successfully
       setSessions(sessionsData || []);
 
       // Load session statistics
@@ -71,7 +71,7 @@ export const EnhancedStudentSessions = ({ studentId }: { studentId: string }) =>
       }
       
     } catch (error) {
-      console.error('❌ Error in loadStudentSessions:', error);
+      console.error('Error in loadStudentSessions:', error);
       setError('Failed to load sessions');
     } finally {
       setLoading(false);
@@ -99,7 +99,7 @@ export const EnhancedStudentSessions = ({ studentId }: { studentId: string }) =>
         .in('session_id', sessionIds);
 
       if (handsError || tablesError || resultsError) {
-        console.error('❌ Error loading session stats:', { handsError, tablesError, resultsError });
+        console.error('Error loading session stats:', { handsError, tablesError, resultsError });
         return;
       }
 
@@ -120,7 +120,7 @@ export const EnhancedStudentSessions = ({ studentId }: { studentId: string }) =>
 
       setSessionStats(stats);
     } catch (error) {
-      console.error('❌ Error in loadSessionStats:', error);
+      console.error('Error in loadSessionStats:', error);
     }
   };
 

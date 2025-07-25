@@ -36,8 +36,7 @@ const PlayerDashboard = () => {
     
     setLoadingReviews(true);
     try {
-      // Note: Player reviews system not implemented yet
-      console.log('📋 Player reviews system not implemented yet');
+      // Player reviews system not implemented yet
       setRecentReviews([]);
     } catch (error) {
       console.error('Error in loadRecentReviews:', error);

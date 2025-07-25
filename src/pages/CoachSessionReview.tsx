@@ -214,12 +214,7 @@ const CoachSessionReview = () => {
     if (!user?.id || !studentId || !sessionId) return;
 
     try {
-      console.log('💾 Saving enhanced review:', reviewData);
-
-      // Insert the review
-      // Note: Comments system not implemented yet
-      console.log('📋 Comments system not implemented yet');
-      
+      // Comments system not implemented yet
       toast({
         title: "Feature Coming Soon",
         description: "Session comments will be available soon."

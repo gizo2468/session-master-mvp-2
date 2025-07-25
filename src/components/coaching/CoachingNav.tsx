@@ -16,7 +16,7 @@ const CoachingNav = () => {
     const coachStudentContext = useCoachStudent();
     pendingRequests = coachStudentContext?.pendingRequests || [];
   } catch (error) {
-    console.log('CoachStudent context not available, defaulting to empty state');
+    // CoachStudent context not available, using defaults
   }
   
   // Don't render anything if auth is still loading or user is not available
@@ -24,7 +24,7 @@ const CoachingNav = () => {
     return null;
   }
   
-  console.log('CoachingNav: User role is', user.role, 'User data:', user);
+  // Render navigation based on user role
   
   return (
     <div className="mt-8">

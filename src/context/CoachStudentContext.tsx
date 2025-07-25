@@ -181,13 +181,10 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setRequestsLoading(true);
     try {
-      console.log('🔍 Loading pending requests for coach:', user.id);
-      
-      // Note: Using mock data since coach_student_connections table doesn't exist yet
-      console.log('📋 No connection system configured yet');
+      // Coach connection system not implemented yet
       setPendingRequests([]);
     } catch (error) {
-      console.error('❌ Error in loadPendingRequests:', error);
+      console.error('Error in loadPendingRequests:', error);
     } finally {
       setRequestsLoading(false);
     }
@@ -198,13 +195,10 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setStudentsLoading(true);
     try {
-      console.log('🔍 Loading students for coach:', user.id);
-      
-      // Note: Using mock data since coach_student_connections table doesn't exist yet
-      console.log('📋 No student connection system configured yet');
+      // Student connection system not implemented yet
       setStudents([]);
     } catch (error) {
-      console.error('❌ Error in loadStudents:', error);
+      console.error('Error in loadStudents:', error);
     } finally {
       setStudentsLoading(false);
     }
@@ -214,20 +208,16 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!user?.id) return;
 
     try {
-      console.log('🔍 Loading connected coaches for student:', user.id);
-      // Note: Using mock data since coach_student_connections table doesn't exist yet
-      console.log('📋 No coach connection system configured yet');
+      // Coach connection system not implemented yet
       setConnectedCoaches([]);
     } catch (error) {
-      console.error('❌ Error in loadConnectedCoaches:', error);
+      console.error('Error in loadConnectedCoaches:', error);
     }
   };
 
   const createCoachProfile = async (displayName: string, bio?: string) => {
-    console.log('🔄 Starting coach profile creation process');
-    
     if (!user?.id) {
-      console.error('❌ No authenticated user found');
+      console.error('No authenticated user found');
       toast({
         title: "Authentication Error",
         description: "You must be logged in to create a coach profile.",
@@ -370,10 +360,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const approveConnectionRequest = async (requestId: string) => {
     setLoading(true);
     try {
-      console.log('✅ Approving connection request:', requestId);
-      // Note: Connection system not implemented yet
-      console.log('📋 No connection system configured yet');
-      
+      // Connection system not implemented yet
       toast({
         title: "Feature Coming Soon",
         description: "Coach-student connections will be available soon."
@@ -393,10 +380,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const declineConnectionRequest = async (requestId: string) => {
     setLoading(true);
     try {
-      console.log('❌ Declining connection request:', requestId);
-      // Note: Connection system not implemented yet
-      console.log('📋 No connection system configured yet');
-      
+      // Connection system not implemented yet
       toast({
         title: "Feature Coming Soon",
         description: "Coach-student connections will be available soon."
@@ -418,10 +402,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setLoading(true);
     try {
-      console.log('🗑️ Removing student connection:', { coachId: user.id, studentId });
-      // Note: Connection system not implemented yet
-      console.log('📋 No connection system configured yet');
-      
+      // Connection system not implemented yet
       toast({
         title: "Feature Coming Soon",
         description: "Coach-student connections will be available soon."
@@ -485,9 +466,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setLoading(true);
     try {
-      // Note: Connection system not implemented yet
-      console.log('📋 No connection system configured yet');
-      
+      // Connection system not implemented yet
       toast({
         title: "Feature Coming Soon",
         description: "Coach-student connections will be available soon."
@@ -509,10 +488,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setLoading(true);
     try {
-      console.log('🗑️ Disconnecting from coach:', { studentId: user.id, coachId });
-      // Note: Connection system not implemented yet
-      console.log('📋 No connection system configured yet');
-      
+      // Connection system not implemented yet
       toast({
         title: "Feature Coming Soon",
         description: "Coach-student connections will be available soon."

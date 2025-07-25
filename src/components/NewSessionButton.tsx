@@ -8,10 +8,9 @@ export default function NewSessionButton() {
   
   const handleClick = () => {
     try {
-      console.log('🎯 Navigating to new session form');
       navigate('/new-session');
     } catch (error) {
-      console.error('❌ Error navigating to new session:', error);
+      console.error('Error navigating to new session:', error);
       // Fallback: use window.location as backup
       window.location.href = '/new-session';
     }

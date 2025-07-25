@@ -32,8 +32,7 @@ const CreateCoachProfileForm = () => {
   });
   
   const onSubmit = async (values: FormValues) => {
-    console.log('📝 Form submitted with values:', values);
-    console.log('👤 Current user:', user?.id);
+    // Create coach profile with form values
     
     // Phase 4: Form validation before submission
     if (!user?.id) {

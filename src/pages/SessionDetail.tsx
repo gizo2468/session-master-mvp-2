@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
 import { useSessionLoader } from '@/hooks/useSessionLoader';
+import { useToast } from '@/hooks/use-toast';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import TableDetailsCard from '@/components/poker/TableDetailsCard';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -17,6 +18,7 @@ export default function SessionDetail() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const { updateSession, deleteSession, endSession } = useSessionContext();
+  const { toast } = useToast();
   
   // Use the session loader hook to properly load sessions from database
   const { currentSession: session, isLoadingSession, loadingError } = useSessionLoader(sessionId);
@@ -180,7 +182,11 @@ export default function SessionDetail() {
     if (session.tables && session.tables.length > 0) {
       setShowTableSelection(true);
     } else {
-      alert('No tables found in this session to edit.');
+      toast({
+        title: "No Tables Found",
+        description: "No tables found in this session to edit.",
+        variant: "destructive"
+      });
     }
   };
 

@@ -8,8 +8,7 @@ import Icon from '@/components/ui/Lucide';
 const PendingRequestsList = () => {
   const { pendingRequests, approveConnectionRequest, declineConnectionRequest, loading } = useCoachStudent();
 
-  console.log('🔄 PendingRequestsList render - pendingRequests:', pendingRequests);
-  console.table(pendingRequests);
+  // Component renders pending connection requests
 
   if (pendingRequests.length === 0) {
     return null;
@@ -26,7 +25,7 @@ const PendingRequestsList = () => {
       <CardContent>
         <ul className="space-y-4">
           {pendingRequests.map((request) => {
-            console.log('🔄 Rendering pending request:', request);
+            // Render each pending request
             
             // Better handling of student name display - should now be resolved properly
             const studentDisplayText = request.studentName && request.studentName !== 'Unknown Student' 
@@ -58,7 +57,7 @@ const PendingRequestsList = () => {
                 <div className="flex gap-2 mt-3">
                   <Button
                     onClick={() => {
-                      console.log('✅ Approving request:', request.id);
+                      // Approve connection request
                       approveConnectionRequest(request.id);
                     }}
                     variant="poker"
@@ -75,7 +74,7 @@ const PendingRequestsList = () => {
                   </Button>
                   <Button
                     onClick={() => {
-                      console.log('❌ Declining request:', request.id);
+                      // Decline connection request
                       declineConnectionRequest(request.id);
                     }}
                     variant="outline"

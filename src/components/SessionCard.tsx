@@ -30,23 +30,17 @@ export default function SessionCard({ session, onClick, showActions = false }: S
       
       // Validate dates
       if (isNaN(start.getTime())) {
-        console.error('❌ Invalid start time:', session.startTime);
+        console.error('Invalid start time:', session.startTime);
         return '0m';
       }
       
-      console.log('🕐 FIXED: Duration calculation with both timestamps timezone-aware:', {
-        sessionId: session.id,
-        startTime: start.toISOString(),
-        endTime: end.toISOString(),
-        startTimestamp: start.getTime(),
-        endTimestamp: end.getTime()
-      });
+      // Duration calculation with timezone-aware timestamps
       
       const hours = differenceInHours(end, start);
       const minutes = differenceInMinutes(end, start) % 60;
       
       if (hours < 0 || (hours === 0 && minutes < 0)) {
-        console.error('❌ CRITICAL: Still getting negative duration after schema fix:', {
+        console.error('CRITICAL: Still getting negative duration after schema fix:', {
           originalHours: hours,
           originalMinutes: minutes,
           sessionId: session.id,
@@ -63,7 +57,7 @@ export default function SessionCard({ session, onClick, showActions = false }: S
       }
       return `${minutes}m`;
     } catch (error) {
-      console.error('❌ Error calculating duration:', error);
+      console.error('Error calculating duration:', error);
       return '0m';
     }
   };
@@ -79,7 +73,7 @@ export default function SessionCard({ session, onClick, showActions = false }: S
       }
       return format(startDate, 'MMM d, yyyy');
     } catch (error) {
-      console.error('❌ Error formatting date:', error);
+      console.error('Error formatting date:', error);
       return 'Invalid Date';
     }
   };
@@ -92,7 +86,7 @@ export default function SessionCard({ session, onClick, showActions = false }: S
       }
       return format(startDate, 'h:mm a');
     } catch (error) {
-      console.error('❌ Error formatting time:', error);
+      console.error('Error formatting time:', error);
       return 'Invalid Time';
     }
   };
@@ -107,13 +101,13 @@ export default function SessionCard({ session, onClick, showActions = false }: S
       }
       onClick();
     } catch (error) {
-      console.error('❌ Error handling card click:', error);
+      console.error('Error handling card click:', error);
     }
   };
 
   // Ensure we have minimum required data to render the card
   if (!session || !session.id) {
-    console.error('❌ Invalid session data:', session);
+    console.error('Invalid session data:', session);
     return (
       <div className="bg-white rounded-lg shadow-md p-4 mb-4">
         <div className="text-center text-gray-500">

@@ -46,11 +46,7 @@ export const useCoachDashboardData = () => {
     setData(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      console.log('🔍 Loading coach dashboard data for:', user.id);
-
-      // Note: Mock data since review tables don't exist yet
-      console.log('📋 Using mock data - review system not implemented yet');
-      
+      // Review system not implemented yet
       setData({
         recentReviews: [],
         playerReviews: [],
@@ -71,8 +67,7 @@ export const useCoachDashboardData = () => {
   // Mark player review as read
   const markReviewAsRead = useCallback(async (reviewId: string) => {
     try {
-      // Note: Review system not implemented yet
-      console.log('📋 Review system not implemented yet');
+      // Review system not implemented yet
       return true;
     } catch (error) {
       console.error('Error in markReviewAsRead:', error);

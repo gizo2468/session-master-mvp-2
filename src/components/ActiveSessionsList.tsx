@@ -59,7 +59,7 @@ export default function ActiveSessionsList({ sessions, onResume }: ActiveSession
 
   const handleResume = async (sessionId: string) => {
     try {
-      console.log('🔄 Resume button clicked for session:', sessionId);
+      // Resume session
       
       if (!sessionId) {
         throw new Error('No session ID provided');
@@ -67,7 +67,7 @@ export default function ActiveSessionsList({ sessions, onResume }: ActiveSession
       
       await onResume(sessionId);
     } catch (error) {
-      console.error('❌ Error in resume handler:', error);
+      console.error('Error in resume handler:', error);
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       
@@ -95,7 +95,7 @@ export default function ActiveSessionsList({ sessions, onResume }: ActiveSession
         variant: "default"
       });
     } catch (error) {
-      console.error('❌ Error deleting session:', error);
+      console.error('Error deleting session:', error);
       toast({
         title: "Delete Failed",
         description: "Could not delete the session. Please try again.",

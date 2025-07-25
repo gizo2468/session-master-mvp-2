@@ -19,8 +19,7 @@ import {
 const StudentsList = () => {
   const { students, removeStudent, loading } = useCoachStudent();
 
-  console.log('🔄 StudentsList render - students:', students);
-  console.table(students);
+  // Component renders list of connected students
 
   if (students.length === 0) {
     return (
@@ -55,7 +54,7 @@ const StudentsList = () => {
       <CardContent>
         <ul className="space-y-3">
           {students.map((student) => {
-            console.log('🔄 Rendering student:', student);
+            // Render individual student card
             
             // Student names should now be properly resolved from the context
             const displayName = student.displayName;
@@ -106,7 +105,7 @@ const StudentsList = () => {
                         <AlertDialogAction 
                           className="bg-red-500 hover:bg-red-600"
                           onClick={() => {
-                            console.log('🗑️ Removing student:', student.id);
+                            // Remove student connection
                             removeStudent(student.id);
                           }}
                         >
