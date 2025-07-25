@@ -2,11 +2,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useLanguage } from '@/context/LanguageContext';
 import Icon from '@/components/ui/Lucide';
 
 const LegalSettings: React.FC = () => {
-  const { t } = useLanguage();
   const navigate = useNavigate();
 
   return (
