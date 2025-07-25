@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useLanguage } from '@/context/LanguageContext';
+
 import Icon from '@/components/ui/Lucide';
 import DonationCard from '@/components/DonationCard';
 import { Separator } from '@/components/ui/separator';
@@ -11,7 +11,6 @@ import PrivacyPolicyModal from '@/components/legal/PrivacyPolicyModal';
 import TermsOfUseModal from '@/components/legal/TermsOfUseModal';
 
 const SupportSettings: React.FC = () => {
-  const { t } = useLanguage();
   const navigate = useNavigate();
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -19,20 +18,24 @@ const SupportSettings: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold mb-6">{t('help')}</h2>
+        <h2 className="text-xl font-semibold mb-6">Support / Contact</h2>
         
         {/* Support Request Section */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>{t('support_request')}</CardTitle>
+            <CardTitle>Contact Support</CardTitle>
             <CardDescription>
               Get help with any issues or questions about the app
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="poker" className="w-full">
+            <Button 
+              variant="poker" 
+              className="w-full"
+              onClick={() => window.location.href = 'mailto:sessionmaster11@gmail.com'}
+            >
               <Icon name="LifeBuoy" className="mr-2 h-4 w-4" />
-              {t('support_request')}
+              Contact Support
             </Button>
           </CardContent>
         </Card>
