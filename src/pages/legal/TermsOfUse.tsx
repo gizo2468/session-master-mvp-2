@@ -1,120 +1,88 @@
+
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 const TermsOfUse: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center">
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        <header className="mb-8">
           <Button 
-            variant="ghost" 
-            onClick={() => navigate(-1)}
-            className="mr-4"
+            onClick={() => navigate(-1)} 
+            variant="ghost"
+            className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:bg-transparent hover:text-poker-green"
           >
-            <Icon name="ArrowLeft" className="h-4 w-4 mr-2" />
-            Back
+            <Icon name="ArrowLeft" size={16} />
+            <span>Back</span>
           </Button>
-          <h1 className="text-xl font-semibold">Terms of Use</h1>
+          <h1 className="text-2xl font-serif font-bold text-poker-black mb-6">Terms of Use</h1>
+        </header>
+
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="prose max-w-none">
+            <p className="text-sm text-gray-500 mb-4">Effective Date: May 3, 2025</p>
+            
+            <p className="mb-4">
+              Welcome to SessionMaster. These Terms of Use ("Terms") govern your access to and use of the 
+              SessionMaster mobile application and related services (the "App"), operated by us ("we", "our", or "SessionMaster"). 
+              By using our App, you agree to be bound by these Terms.
+            </p>
+
+            <h2 className="text-xl font-bold mt-6 mb-3">1. Eligibility</h2>
+            <p>You must be at least 16 years old to use the App. By creating an account, you confirm that you meet this requirement.</p>
+
+            <h2 className="text-xl font-bold mt-6 mb-3">2. Account Registration</h2>
+            <p>To access most features, you must register and maintain an active account. You agree to provide accurate information and keep it up to date.</p>
+            <p>You are responsible for maintaining the confidentiality of your login credentials and for all activity under your account.</p>
+
+            <h2 className="text-xl font-bold mt-6 mb-3">3. Use of the App</h2>
+            <p>You agree to use SessionMaster solely for lawful purposes and in accordance with these Terms. You may not:</p>
+            <ul className="list-disc pl-6 mb-4">
+              <li>Use the App for any fraudulent or harmful activity.</li>
+              <li>Attempt to reverse-engineer or disrupt the App.</li>
+              <li>Misuse coach-player connections for purposes outside of training or performance feedback.</li>
+            </ul>
+
+            <h2 className="text-xl font-bold mt-6 mb-3">4. Coach Features</h2>
+            <p>If you upgrade your account to a Coach tier, you may connect with players, view their session data, and leave feedback.</p>
+            <p>Coaches agree to:</p>
+            <ul className="list-disc pl-6 mb-4">
+              <li>Use student data responsibly and confidentially.</li>
+              <li>Not misuse access for non-training purposes.</li>
+              <li>Comply with all relevant data privacy laws.</li>
+            </ul>
+
+            <h2 className="text-xl font-bold mt-6 mb-3">5. Subscription & Payments</h2>
+            <p>Certain features (such as Coach mode) are only available via paid subscription. By purchasing a subscription, you authorize us to charge the applicable fees.</p>
+            <p>Prices and features are subject to change, but we'll notify you in advance where required.</p>
+
+            <h2 className="text-xl font-bold mt-6 mb-3">6. Data & Privacy</h2>
+            <p>Your data is handled according to our Privacy Policy. By using the App, you consent to the collection and use of your data as outlined there.</p>
+            <p>You are responsible for reviewing and understanding our Privacy Policy before using the App.</p>
+
+            <h2 className="text-xl font-bold mt-6 mb-3">7. Intellectual Property</h2>
+            <p>All content in the App, including logos, features, and code, is the property of SessionMaster and protected by intellectual property laws. You may not copy, modify, or distribute any part of the App without our written consent.</p>
+
+            <h2 className="text-xl font-bold mt-6 mb-3">8. Termination</h2>
+            <p>We may suspend or terminate your account if you violate these Terms or misuse the App.</p>
+            <p>You may delete your account at any time through the App. Upon deletion, your data will be permanently erased.</p>
+
+            <h2 className="text-xl font-bold mt-6 mb-3">9. Disclaimer</h2>
+            <p>SessionMaster is provided "as-is" without warranties of any kind. We do not guarantee that the App will always be secure or error-free.</p>
+            <p>Use of the App is at your own risk.</p>
+
+            <h2 className="text-xl font-bold mt-6 mb-3">10. Changes to Terms</h2>
+            <p>We may update these Terms occasionally. When we do, we will update the Effective Date above and notify users if the changes are significant.</p>
+
+            <h2 className="text-xl font-bold mt-6 mb-3">11. Contact</h2>
+            <p>If you have questions about these Terms, please contact us at:</p>
+            <p>📧 <a href="mailto:sessionmaster11@gmail.com" className="text-poker-gold hover:underline">sessionmaster11@gmail.com</a></p>
+          </div>
         </div>
-      </div>
-      
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-serif text-center">SessionMaster - Terms of Use</CardTitle>
-            <p className="text-center text-muted-foreground">Last updated: July 23, 2025</p>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[70vh] pr-4">
-              <div className="space-y-6">
-                <section>
-                  <h2 className="text-xl font-semibold mb-3 text-primary">1. Eligibility and Account Types</h2>
-                  <p className="mb-3">
-                    To use SessionMaster, you must be at least 13 years old. By registering, you affirm that you meet this requirement.
-                  </p>
-                  <p className="mb-3">There are currently two user roles in the app:</p>
-                  <ul className="list-disc pl-6 space-y-1">
-                    <li><strong>Player:</strong> Tracks personal sessions, goals, and notes.</li>
-                    <li><strong>Coach:</strong> May connect with players to view session data, provide feedback, and monitor progress.</li>
-                  </ul>
-                  <p className="mt-3">
-                    Players have full control over their data and must explicitly connect with a coach to share information.
-                  </p>
-                </section>
-
-                <section>
-                  <h2 className="text-xl font-semibold mb-3 text-primary">2. Subscriptions and Payments</h2>
-                  <p className="mb-3">SessionMaster may offer premium features through subscription plans in the future. These subscriptions:</p>
-                  <ul className="list-disc pl-6 space-y-1">
-                    <li>Will be available through Google Play and Apple App Store only.</li>
-                    <li>May include a free trial period before billing begins.</li>
-                  </ul>
-                  <p className="mt-3">Until then, all core features are available free of charge.</p>
-                </section>
-
-                <section>
-                  <h2 className="text-xl font-semibold mb-3 text-primary">3. User-Generated Content</h2>
-                  <p className="mb-3">Users may upload or submit content such as:</p>
-                  <ul className="list-disc pl-6 space-y-1">
-                    <li>Notes</li>
-                    <li>Screenshots</li>
-                    <li>Feedback or messages shared between players and coaches</li>
-                  </ul>
-                  <p className="mt-3">
-                    Currently, shared content is only visible to the connected coach. As the platform evolves, we reserve the right to moderate and remove content deemed inappropriate, offensive, or in violation of these Terms.
-                  </p>
-                </section>
-
-                <section>
-                  <h2 className="text-xl font-semibold mb-3 text-primary">4. Data Storage and Responsibility</h2>
-                  <p className="mb-3">
-                    While we take reasonable steps to protect your data using secure third-party services (e.g., Supabase), SessionMaster is a new and evolving platform, and we cannot guarantee the absence of technical issues, data loss, or service interruptions.
-                  </p>
-                  <p className="mb-3">You acknowledge that:</p>
-                  <ul className="list-disc pl-6 space-y-1">
-                    <li>You are solely responsible for backing up your own session data or exported content.</li>
-                    <li>We are not liable for any loss, damage, or corruption of data.</li>
-                  </ul>
-                </section>
-
-                <section>
-                  <h2 className="text-xl font-semibold mb-3 text-primary">5. Acceptable Use and Restrictions</h2>
-                  <p className="mb-3">You agree not to:</p>
-                  <ul className="list-disc pl-6 space-y-1">
-                    <li>Use the app for unlawful purposes</li>
-                    <li>Harass, abuse, or impersonate other users</li>
-                    <li>Attempt to access unauthorized data</li>
-                    <li>Upload harmful, defamatory, or offensive content</li>
-                  </ul>
-                  <p className="mt-3">
-                    We reserve the right to suspend or terminate any account found to be in violation of these Terms, at our sole discretion.
-                  </p>
-                </section>
-
-                <section>
-                  <h2 className="text-xl font-semibold mb-3 text-primary">6. Modifications and Feature Changes</h2>
-                  <p>
-                    We may update or modify features, content, or these Terms at any time. When we do, we will notify users through the app or via email. Continued use of the app after changes implies acceptance of the new Terms.
-                  </p>
-                </section>
-
-                <section>
-                  <h2 className="text-xl font-semibold mb-3 text-primary">7. Contact</h2>
-                  <p>
-                    If you have questions about these Terms, please contact us at:
-                  </p>
-                  <p className="font-medium">sessionmaster11@gmail.com</p>
-                </section>
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
