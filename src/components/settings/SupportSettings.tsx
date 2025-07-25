@@ -30,7 +30,7 @@ const SupportSettings: React.FC = () => {
           </CardHeader>
           <CardContent>
             <Button 
-              variant="poker" 
+              variant="outline" 
               className="w-full"
               onClick={() => window.location.href = 'mailto:sessionmaster11@gmail.com'}
             >
