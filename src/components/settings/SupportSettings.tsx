@@ -18,33 +18,14 @@ const SupportSettings: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold mb-6">Support / Contact</h2>
+        <h2 className="text-xl font-semibold mb-6">Support</h2>
         
-        {/* Support Request Section */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Contact Support</CardTitle>
-            <CardDescription>
-              Get help with any issues or questions about the app
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => window.location.href = 'mailto:sessionmaster11@gmail.com'}
-            >
-              <Icon name="LifeBuoy" className="mr-2 h-4 w-4" />
-              Contact Support
-            </Button>
-          </CardContent>
-        </Card>
-        {/* Legal Documents Section */}
+        {/* Support Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Legal Information</CardTitle>
+            <CardTitle>Support</CardTitle>
             <CardDescription>
-              Review our terms and policies
+              Review our terms and policies or get help
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -68,7 +49,7 @@ const SupportSettings: React.FC = () => {
               </div>
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
             </div>
-            <div className="flex items-center justify-between pt-1" 
+            <div className="flex items-center justify-between border-b pb-3" 
                  onClick={() => setShowCookieModal(true)}
                  role="button"
                  aria-label="View cookie policy">
@@ -77,6 +58,16 @@ const SupportSettings: React.FC = () => {
                 <span>Cookie Policy</span>
               </div>
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
+            </div>
+            <div className="pt-1">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => window.location.href = 'mailto:sessionmaster11@gmail.com'}
+              >
+                <Icon name="LifeBuoy" className="mr-2 h-4 w-4" />
+                Contact Support
+              </Button>
             </div>
           </CardContent>
         </Card>
