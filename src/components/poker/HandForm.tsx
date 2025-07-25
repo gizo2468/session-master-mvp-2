@@ -214,7 +214,7 @@ const HandForm: React.FC<HandFormProps> = ({
                 }
                 
                 form.handleSubmit(handleSubmit)(e);
-              }} className="space-y-6">
+              }} autoComplete="off" className="space-y-6">
                 
                 {/* Circular Image Upload Button */}
                 <div className="flex flex-col items-center gap-3 py-4">

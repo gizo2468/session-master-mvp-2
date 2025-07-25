@@ -161,7 +161,7 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={handleFormSubmit} className="space-y-6">
+          <form onSubmit={handleFormSubmit} autoComplete="off" className="space-y-6">
             {/* Game & Format Section */}
             <div className="space-y-4">
               <h4 className="text-sm font-medium text-gray-900">Game & Format</h4>

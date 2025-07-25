@@ -27,6 +27,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         onFocus={handleInputFocus}
         onBlur={handleInputBlur}
         ref={ref}
+        autoComplete={type === "password" || type === "email" ? undefined : "off"}
         {...props}
       />
     )

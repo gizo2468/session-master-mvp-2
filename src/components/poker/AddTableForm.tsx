@@ -157,7 +157,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="tableName">Table Name (Optional)</Label>
             <Input

@@ -327,7 +327,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
 
         <div className="px-4 sm:px-6 py-4 overflow-y-auto overflow-x-hidden flex-1 min-h-0">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="off" className="space-y-6">
               {/* Game Type */}
               <FormField
               control={form.control}
