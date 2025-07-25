@@ -513,7 +513,7 @@ const Signup: React.FC = () => {
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel className="text-sm font-normal">
-                        I agree to the{' '}
+                        By signing up, you agree to our{' '}
                         <Link 
                           to="/legal/terms" 
                           className="text-poker-gold hover:underline"
