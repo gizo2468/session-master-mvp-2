@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import Icon from '@/components/ui/Lucide';
-import DonationCard from '@/components/DonationCard';
+
 import { Separator } from '@/components/ui/separator';
 import { useNavigate } from 'react-router-dom';
 import PrivacyPolicyModal from '@/components/legal/PrivacyPolicyModal';
@@ -39,12 +39,6 @@ const SupportSettings: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
-        
-        {/* Donation Card */}
-        <DonationCard />
-        
-        <Separator className="my-8" />
-        
         {/* Legal Documents Section */}
         <Card>
           <CardHeader>
