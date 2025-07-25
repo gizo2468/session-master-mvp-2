@@ -1,13 +1,15 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useLanguage } from '@/context/LanguageContext';
 import Icon from '@/components/ui/Lucide';
+import PrivacyPolicyModal from '@/components/legal/PrivacyPolicyModal';
+import TermsOfUseModal from '@/components/legal/TermsOfUseModal';
+import CookiePolicyModal from '@/components/legal/CookiePolicyModal';
 
 const LegalSettings: React.FC = () => {
-  const { t } = useLanguage();
-  const navigate = useNavigate();
+  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [cookieModalOpen, setCookieModalOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -22,8 +24,8 @@ const LegalSettings: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between border-b pb-3" 
-                 onClick={() => navigate('/legal/privacy')}
+            <div className="flex items-center justify-between border-b pb-3 cursor-pointer hover:bg-gray-50" 
+                 onClick={() => setPrivacyModalOpen(true)}
                  role="button"
                  aria-label="View privacy policy">
               <div className="flex items-center">
@@ -32,8 +34,8 @@ const LegalSettings: React.FC = () => {
               </div>
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
             </div>
-            <div className="flex items-center justify-between border-b pb-3" 
-                 onClick={() => navigate('/legal/terms')}
+            <div className="flex items-center justify-between border-b pb-3 cursor-pointer hover:bg-gray-50" 
+                 onClick={() => setTermsModalOpen(true)}
                  role="button"
                  aria-label="View terms of use">
               <div className="flex items-center">
@@ -42,8 +44,8 @@ const LegalSettings: React.FC = () => {
               </div>
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
             </div>
-            <div className="flex items-center justify-between pt-1" 
-                 onClick={() => navigate('/legal/cookie')}
+            <div className="flex items-center justify-between pt-1 cursor-pointer hover:bg-gray-50" 
+                 onClick={() => setCookieModalOpen(true)}
                  role="button"
                  aria-label="View cookie policy">
               <div className="flex items-center">
@@ -55,6 +57,11 @@ const LegalSettings: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modals */}
+      <PrivacyPolicyModal open={privacyModalOpen} onOpenChange={setPrivacyModalOpen} />
+      <TermsOfUseModal open={termsModalOpen} onOpenChange={setTermsModalOpen} />
+      <CookiePolicyModal open={cookieModalOpen} onOpenChange={setCookieModalOpen} />
     </div>
   );
 };
