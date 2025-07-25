@@ -18,7 +18,6 @@ const SupportSettings: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold mb-6">Support</h2>
         
         {/* Support Section */}
         <Card>
