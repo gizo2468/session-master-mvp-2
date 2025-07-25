@@ -15,6 +15,8 @@ import SessionDetail from "./pages/SessionDetail";
 import EditSession from "./pages/EditSession";
 import Settings from "./pages/Settings";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import TermsOfUse from "./pages/legal/TermsOfUse";
+import CookiePolicy from "./pages/legal/CookiePolicy";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 
@@ -49,6 +51,8 @@ const App = () => (
                 <Route path="/history" element={<SessionHistory />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+                <Route path="/legal/terms" element={<TermsOfUse />} />
+                <Route path="/legal/cookie" element={<CookiePolicy />} />
                 <Route path="/auth/login" element={<Login />} />
                 <Route path="/auth/signup" element={<Signup />} />
               </Routes>

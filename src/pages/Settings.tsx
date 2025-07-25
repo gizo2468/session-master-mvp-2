@@ -12,6 +12,7 @@ import { useDefaultCurrency, CURRENCIES } from '@/hooks/useDefaultCurrency';
 import { supabase } from '@/integrations/supabase/client';
 import DonationCard from '@/components/DonationCard';
 import SupportSettings from '@/components/settings/SupportSettings';
+import LegalSettings from '@/components/settings/LegalSettings';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
@@ -232,6 +233,9 @@ const Settings: React.FC = () => {
 
           {/* Support Section */}
           <SupportSettings />
+
+          {/* Legal Section */}
+          <LegalSettings />
 
           {/* Logout Section */}
           {user && (
