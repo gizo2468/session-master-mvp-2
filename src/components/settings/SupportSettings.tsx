@@ -6,14 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Icon from '@/components/ui/Lucide';
 
 import { Separator } from '@/components/ui/separator';
-import { useNavigate } from 'react-router-dom';
 import PrivacyPolicyModal from '@/components/legal/PrivacyPolicyModal';
 import TermsOfUseModal from '@/components/legal/TermsOfUseModal';
+import CookiePolicyModal from '@/components/legal/CookiePolicyModal';
 
 const SupportSettings: React.FC = () => {
-  const navigate = useNavigate();
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showCookieModal, setShowCookieModal] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -69,7 +69,7 @@ const SupportSettings: React.FC = () => {
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
             </div>
             <div className="flex items-center justify-between pt-1" 
-                 onClick={() => navigate('/legal/cookie')}
+                 onClick={() => setShowCookieModal(true)}
                  role="button"
                  aria-label="View cookie policy">
               <div className="flex items-center">
@@ -90,6 +90,11 @@ const SupportSettings: React.FC = () => {
       <TermsOfUseModal 
         open={showTermsModal} 
         onOpenChange={setShowTermsModal} 
+      />
+      
+      <CookiePolicyModal 
+        open={showCookieModal} 
+        onOpenChange={setShowCookieModal} 
       />
     </div>
   );
