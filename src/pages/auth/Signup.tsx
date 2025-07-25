@@ -17,6 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import PrivacyPolicyModal from '@/components/legal/PrivacyPolicyModal';
+import TermsOfUseModal from '@/components/legal/TermsOfUseModal';
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters long' }),
@@ -50,6 +51,7 @@ const Signup: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -516,13 +518,17 @@ const Signup: React.FC = () => {
                     <div className="space-y-1 leading-none">
                       <FormLabel className="text-sm font-normal">
                         By signing up, you agree to our{' '}
-                        <Link 
-                          to="/legal/terms" 
-                          className="text-poker-gold hover:underline"
-                          onClick={(e) => e.stopPropagation()}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowTermsModal(true);
+                          }}
+                          className="text-poker-gold hover:underline cursor-pointer"
                         >
                           Terms of Use
-                        </Link>{' '}
+                        </button>{' '}
                         and{' '}
                         <button
                           type="button"
@@ -565,6 +571,11 @@ const Signup: React.FC = () => {
       <PrivacyPolicyModal 
         open={showPrivacyModal} 
         onOpenChange={setShowPrivacyModal} 
+      />
+      
+      <TermsOfUseModal 
+        open={showTermsModal} 
+        onOpenChange={setShowTermsModal} 
       />
     </div>
   );

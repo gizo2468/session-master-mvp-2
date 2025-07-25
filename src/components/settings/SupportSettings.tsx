@@ -8,11 +8,13 @@ import DonationCard from '@/components/DonationCard';
 import { Separator } from '@/components/ui/separator';
 import { useNavigate } from 'react-router-dom';
 import PrivacyPolicyModal from '@/components/legal/PrivacyPolicyModal';
+import TermsOfUseModal from '@/components/legal/TermsOfUseModal';
 
 const SupportSettings: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -60,7 +62,7 @@ const SupportSettings: React.FC = () => {
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
             </div>
             <div className="flex items-center justify-between border-b pb-3" 
-                 onClick={() => navigate('/legal/terms')}
+                 onClick={() => setShowTermsModal(true)}
                  role="button"
                  aria-label="View terms of use">
               <div className="flex items-center">
@@ -86,6 +88,11 @@ const SupportSettings: React.FC = () => {
       <PrivacyPolicyModal 
         open={showPrivacyModal} 
         onOpenChange={setShowPrivacyModal} 
+      />
+      
+      <TermsOfUseModal 
+        open={showTermsModal} 
+        onOpenChange={setShowTermsModal} 
       />
     </div>
   );
