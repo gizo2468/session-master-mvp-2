@@ -16,6 +16,8 @@ import EditSession from "./pages/EditSession";
 import Settings from "./pages/Settings";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+import TermsOfUse from "./pages/legal/TermsOfUse";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,6 +51,8 @@ const App = () => (
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/auth/login" element={<Login />} />
                 <Route path="/auth/signup" element={<Signup />} />
+                <Route path="/legal/terms" element={<TermsOfUse />} />
+                <Route path="/legal/privacy" element={<PrivacyPolicy />} />
               </Routes>
             </SessionProvider>
           </AuthGuard>
