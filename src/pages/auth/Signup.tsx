@@ -16,6 +16,7 @@ import { UserRole } from '@/types/poker';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import PrivacyPolicyModal from '@/components/legal/PrivacyPolicyModal';
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters long' }),
@@ -48,6 +49,7 @@ const Signup: React.FC = () => {
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -522,13 +524,17 @@ const Signup: React.FC = () => {
                           Terms of Use
                         </Link>{' '}
                         and{' '}
-                        <Link 
-                          to="/legal/privacy" 
-                          className="text-poker-gold hover:underline"
-                          onClick={(e) => e.stopPropagation()}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowPrivacyModal(true);
+                          }}
+                          className="text-poker-gold hover:underline cursor-pointer"
                         >
                           Privacy Policy
-                        </Link>
+                        </button>
                       </FormLabel>
                       <FormMessage />
                     </div>
@@ -555,6 +561,11 @@ const Signup: React.FC = () => {
           </p>
         </CardFooter>
       </Card>
+      
+      <PrivacyPolicyModal 
+        open={showPrivacyModal} 
+        onOpenChange={setShowPrivacyModal} 
+      />
     </div>
   );
 };

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/context/LanguageContext';
@@ -7,10 +7,12 @@ import Icon from '@/components/ui/Lucide';
 import DonationCard from '@/components/DonationCard';
 import { Separator } from '@/components/ui/separator';
 import { useNavigate } from 'react-router-dom';
+import PrivacyPolicyModal from '@/components/legal/PrivacyPolicyModal';
 
 const SupportSettings: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -48,7 +50,7 @@ const SupportSettings: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between border-b pb-3" 
-                 onClick={() => navigate('/legal/privacy')}
+                 onClick={() => setShowPrivacyModal(true)}
                  role="button"
                  aria-label="View privacy policy">
               <div className="flex items-center">
@@ -80,6 +82,11 @@ const SupportSettings: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+      
+      <PrivacyPolicyModal 
+        open={showPrivacyModal} 
+        onOpenChange={setShowPrivacyModal} 
+      />
     </div>
   );
 };
