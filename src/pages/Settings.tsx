@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDefaultCurrency, CURRENCIES } from '@/hooks/useDefaultCurrency';
 import { supabase } from '@/integrations/supabase/client';
 import DonationCard from '@/components/DonationCard';
+import SupportSettings from '@/components/settings/SupportSettings';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
@@ -230,22 +231,7 @@ const Settings: React.FC = () => {
           </Card>
 
           {/* Support Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Support / Contact</CardTitle>
-              <CardDescription>Get help or send feedback</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => window.location.href = 'mailto:sessionmaster11@gmail.com'}
-              >
-                <Icon name="Mail" className="mr-2 h-4 w-4" />
-                Contact Support
-              </Button>
-            </CardContent>
-          </Card>
+          <SupportSettings />
 
           {/* Logout Section */}
           {user && (
