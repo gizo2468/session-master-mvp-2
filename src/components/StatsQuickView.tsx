@@ -139,9 +139,9 @@ export default function StatsQuickView() {
             {Object.keys(resultsByCurrency).length === 0 ? (
               <span className="text-lg font-bold text-gray-400">$0.00</span>
             ) : (
-              <div className={`text-xl font-bold ${usdTotal >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                {usdTotal >= 0 ? '' : '-'}$ {Math.abs(usdTotal).toFixed(2)}
-              </div>
+              <span className={`text-xl font-bold ${usdTotal >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                ${usdTotal >= 0 ? usdTotal.toFixed(2) : `-${Math.abs(usdTotal).toFixed(2)}`}
+              </span>
             )}
           </div>
         </div>
