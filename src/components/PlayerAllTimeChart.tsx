@@ -244,16 +244,25 @@ const PlayerAllTimeChart: React.FC = () => {
                   tickFormatter={(value) => `$${value}`}
                 />
                 <ChartTooltip 
-                  content={
-                    <ChartTooltipContent 
-                      formatter={(value, name) => {
-                        const numValue = Number(value);
-                        const sign = numValue >= 0 ? '+' : '';
-                        return [`${sign}₪${numValue.toFixed(2)}`, ''];
-                      }}
-                      labelFormatter={(label) => format(new Date(label), 'MMM dd, yyyy')}
-                    />
-                  }
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      const value = Number(payload[0].value);
+                      const sign = value >= 0 ? '+' : '−';
+                      const colorClass = value >= 0 ? 'text-green-600' : 'text-red-600';
+                      
+                      return (
+                        <div className="bg-background border border-border rounded-lg shadow-lg p-3">
+                          <div className="text-center text-sm text-muted-foreground mb-1">
+                            {format(new Date(label), 'MMM dd, yyyy')}
+                          </div>
+                          <div className={`text-center font-semibold ${colorClass}`}>
+                            {sign}₪{Math.abs(value).toFixed(2)}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
                 />
                 <Line
                   type="monotone"
