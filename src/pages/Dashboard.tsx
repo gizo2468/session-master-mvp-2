@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
+import PlayerAllTimeChart from '@/components/PlayerAllTimeChart';
 
 const Dashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -74,11 +75,9 @@ const Dashboard: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <p className="text-lg font-medium text-poker-feltGreen">Player Dashboard</p>
-                <p className="text-sm text-gray-500">
-                  Player-specific features will be available here.
-                </p>
+                <PlayerAllTimeChart />
               </div>
             )}
           </div>
