@@ -77,10 +77,17 @@ const PlayerAllTimeChart: React.FC = () => {
 
     const filtered = chartData.filter(point => {
       const pointDate = new Date(point.date);
-      const startDate = dateRange.start ? new Date(dateRange.start) : new Date('1900-01-01');
-      const endDate = dateRange.end ? new Date(dateRange.end) : new Date('2100-12-31');
+      const startDate = dateRange.start ? new Date(dateRange.start + 'T00:00:00') : null;
+      const endDate = dateRange.end ? new Date(dateRange.end + 'T23:59:59') : null;
       
-      return pointDate >= startDate && pointDate <= endDate;
+      if (startDate && endDate) {
+        return pointDate >= startDate && pointDate <= endDate;
+      } else if (startDate) {
+        return pointDate >= startDate;
+      } else if (endDate) {
+        return pointDate <= endDate;
+      }
+      return true;
     });
 
     // Recalculate cumulative for filtered data
@@ -122,7 +129,9 @@ const PlayerAllTimeChart: React.FC = () => {
     );
   }
 
-  const dataToDisplay = filteredData.length > 0 ? filteredData : chartData;
+  // Determine what data to display
+  const hasDateFilter = dateRange.start || dateRange.end;
+  const dataToDisplay = hasDateFilter ? filteredData : chartData;
 
   return (
     <Card>
@@ -166,7 +175,9 @@ const PlayerAllTimeChart: React.FC = () => {
       <CardContent>
         {dataToDisplay.length === 0 ? (
           <div className="flex items-center justify-center h-64">
-            <div className="text-muted-foreground">No session data available</div>
+            <div className="text-muted-foreground">
+              {hasDateFilter ? "No data available for selected dates" : "No session data available"}
+            </div>
           </div>
         ) : (
           <ChartContainer config={chartConfig} className="h-64 w-full">
