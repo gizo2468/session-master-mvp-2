@@ -408,10 +408,10 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
         description: "Coach-student connections will be available soon."
       });
     } catch (error) {
-      console.error('❌ Error removing student:', error);
+      console.error('❌ Error removing player:', error);
       toast({
         title: "Error",
-        description: "Failed to remove student. Please try again.",
+        description: "Failed to remove player. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -439,14 +439,14 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       await loadUserProfile();
       
       toast({
-        title: "Student Profile Created",
+        title: "Player Profile Created",
         description: "You can now connect with coaches using their codes."
       });
     } catch (error) {
       console.error('❌ Error creating student profile:', error);
       toast({
         title: "Error",
-        description: "Failed to create student profile.",
+        description: "Failed to create player profile.",
         variant: "destructive"
       });
     } finally {
@@ -458,7 +458,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!user?.id || !studentProfile) {
       toast({
         title: "Error",
-        description: "Please create a student profile first.",
+        description: "Please create a player profile first.",
         variant: "destructive"
       });
       return;

@@ -26,7 +26,7 @@ const StudentList = () => {
         <div className="mb-4">
           <Icon name="Users" size={48} className="mx-auto text-gray-300" />
         </div>
-        <p className="text-lg font-medium text-gray-600 mb-2">No students connected yet</p>
+        <p className="text-lg font-medium text-gray-600 mb-2">No players connected yet</p>
         <p className="text-sm">Share your connection code to get started coaching players.</p>
       </div>
     );
@@ -78,9 +78,9 @@ const StudentList = () => {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Remove student</AlertDialogTitle>
+                      <AlertDialogTitle>Remove player</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to remove {student.displayName} from your students list? 
+                        Are you sure you want to remove {student.displayName} from your players list? 
                         This will revoke their connection to you.
                       </AlertDialogDescription>
                     </AlertDialogHeader>

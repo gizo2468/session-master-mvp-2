@@ -94,9 +94,9 @@ const StudentsList = () => {
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Remove student</AlertDialogTitle>
+                        <AlertDialogTitle>Remove player</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to remove {displayName} from your students list? 
+                          Are you sure you want to remove {displayName} from your players list? 
                           This will revoke their connection to you.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

@@ -46,7 +46,7 @@ const CreateStudentProfileForm = () => {
         />
         
         <Button type="submit" variant="poker" className="w-full mt-6">
-          Create Student Profile
+          Create Player Profile
         </Button>
       </form>
     </Form>

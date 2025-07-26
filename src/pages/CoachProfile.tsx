@@ -58,14 +58,14 @@ const CoachProfile = () => {
             <span>Back</span>
           </button>
           <h1 className="text-2xl font-bold text-poker-black">Coach Profile</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your students and connection codes</p>
+          <p className="text-gray-500 text-sm mt-1">Manage your players and connection codes</p>
         </header>
         
         {!isCoach && (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Become a Coach</CardTitle>
-              <CardDescription>Create your coach profile to connect with students</CardDescription>
+              <CardDescription>Create your coach profile to connect with players</CardDescription>
             </CardHeader>
             <CardContent>
               <CreateCoachProfileForm />

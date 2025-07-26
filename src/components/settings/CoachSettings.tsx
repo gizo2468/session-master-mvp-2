@@ -48,7 +48,7 @@ const CoachSettings: React.FC = () => {
                     {connectionCode}
                   </div>
                   <p className="text-sm text-gray-500">
-                    Share this code with your students to connect with them
+                    Share this code with your players to connect with them
                   </p>
                 </div>
                 

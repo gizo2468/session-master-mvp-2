@@ -83,8 +83,8 @@ const ConnectCoach = () => {
         {!isStudent && (
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Student Profile</CardTitle>
-              <CardDescription>Create your student profile to connect with coaches</CardDescription>
+              <CardTitle>Player Profile</CardTitle>
+              <CardDescription>Create your player profile to connect with coaches</CardDescription>
             </CardHeader>
             <CardContent>
               <CreateStudentProfileForm />
@@ -97,7 +97,7 @@ const ConnectCoach = () => {
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="text-xl">{studentProfile.displayName}</CardTitle>
-                <CardDescription>Student Profile</CardDescription>
+                <CardDescription>Player Profile</CardDescription>
               </CardHeader>
             </Card>
             

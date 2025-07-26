@@ -8,6 +8,13 @@ const Dashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Helper function to display role with proper formatting
+  const getDisplayRole = (role?: string) => {
+    if (role === 'student') return 'Player';
+    if (role === 'coach') return 'Coach';
+    return role || 'Unknown';
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -55,7 +62,7 @@ const Dashboard: React.FC = () => {
               Welcome, {user.fullName || user.username}!
             </h2>
             <p className="text-gray-600 mb-4">
-              Role: <span className="font-semibold capitalize">{user.role}</span>
+              Role: <span className="font-semibold">{getDisplayRole(user.role)}</span>
             </p>
             
             {user.role === 'coach' ? (

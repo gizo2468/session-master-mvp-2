@@ -295,7 +295,7 @@ const Signup: React.FC = () => {
     { 
       value: 'coach',
       label: 'Coach',
-      description: 'Help students improve their poker game with insights and feedback',
+      description: 'Help players improve their poker game with insights and feedback',
     },
   ];
 

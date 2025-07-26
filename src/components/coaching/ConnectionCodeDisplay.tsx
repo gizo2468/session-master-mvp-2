@@ -71,7 +71,7 @@ const ConnectionCodeDisplay = () => {
         </div>
         
         <p className="text-sm text-gray-600 text-center mb-4">
-          Share this code with students to allow them to connect with you
+          Share this code with players to allow them to connect with you
         </p>
         
         <Button 
