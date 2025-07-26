@@ -364,7 +364,7 @@ const PlayerAllTimeChart: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <ChartContainer config={chartConfig} className={`h-64 w-full ${isMonthlyView ? 'min-w-[800px]' : dataToDisplay.length > 20 ? 'min-w-[1200px]' : dataToDisplay.length > 10 ? 'min-w-[600px]' : 'min-w-[300px]'}`}>
+            <ChartContainer config={chartConfig} className={`h-64 w-full ${isMonthlyView ? 'min-w-[400px]' : dataToDisplay.length > 30 ? 'min-w-[600px]' : dataToDisplay.length > 15 ? 'min-w-[400px]' : 'min-w-[200px]'}`}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={dataToDisplay} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
                 <XAxis 
