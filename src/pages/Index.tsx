@@ -97,7 +97,7 @@ export default function Index() {
       <header className="bg-white shadow-sm">
         <div className="container mx-auto max-w-md px-4 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex-1">
+            <div className="flex-1 flex justify-start gap-2">
               <Button 
                 onClick={() => navigate('/settings')}
                 variant="outline" 
@@ -105,6 +105,14 @@ export default function Index() {
                 className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
               >
                 <Icon name="Settings" size={16} />
+              </Button>
+              <Button 
+                onClick={() => navigate('/dashboard')}
+                variant="outline" 
+                size="sm"
+                className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+              >
+                <Icon name="User" size={16} />
               </Button>
             </div>
             <div className="flex-1 flex justify-center">
