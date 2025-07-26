@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { fetchUserSessions } from '@/utils/database/sessionFetcher';
 import { calculateSessionProfit } from '@/utils/sessionCalculations';
 import { PokerSession } from '@/types/poker';
-import { format, startOfMonth, endOfMonth, eachMonthOfInterval, isSameMonth, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachMonthOfInterval, isSameMonth, isSameDay, startOfYear, endOfYear } from 'date-fns';
 
 interface ChartDataPoint {
   date: string;
@@ -183,6 +184,22 @@ const PlayerAllTimeChart: React.FC = () => {
     setDateRange({ start: '', end: '' });
   };
 
+  const selectMonth = (month: Date) => {
+    const startDate = startOfMonth(month);
+    const endDate = endOfMonth(month);
+    setDateRange({
+      start: format(startDate, 'yyyy-MM-dd'),
+      end: format(endDate, 'yyyy-MM-dd')
+    });
+  };
+
+  const generateCurrentYearMonths = () => {
+    const currentYear = new Date().getFullYear();
+    const yearStart = startOfYear(new Date(currentYear, 0, 1));
+    const yearEnd = endOfYear(new Date(currentYear, 11, 31));
+    return eachMonthOfInterval({ start: yearStart, end: yearEnd });
+  };
+
   const chartConfig = {
     cumulativeProfit: {
       label: "Net Profit",
@@ -245,6 +262,28 @@ const PlayerAllTimeChart: React.FC = () => {
             >
               All Time
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs"
+                >
+                  Monthly
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-background border border-border z-50">
+                {generateCurrentYearMonths().map((month) => (
+                  <DropdownMenuItem 
+                    key={month.getTime()}
+                    onClick={() => selectMonth(month)}
+                    className="hover:bg-muted/50"
+                  >
+                    {format(month, 'MMMM yyyy')}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </CardHeader>
