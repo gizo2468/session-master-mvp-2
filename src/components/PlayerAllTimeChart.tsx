@@ -315,6 +315,10 @@ const PlayerAllTimeChart: React.FC = () => {
                 <XAxis 
                   dataKey="date" 
                   tick={{ fontSize: 12 }}
+                  type={isMonthlyView ? "category" : "category"}
+                  domain={isMonthlyView ? ['dataMin', 'dataMax'] : ['dataMin', 'dataMax']}
+                  ticks={isMonthlyView ? dataToDisplay.map(d => d.date) : undefined}
+                  interval={0}
                   tickFormatter={(value) => {
                     const date = new Date(value);
                     if (isMonthlyView) {
