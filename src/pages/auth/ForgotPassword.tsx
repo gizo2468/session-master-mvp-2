@@ -30,7 +30,7 @@ const ForgotPassword: React.FC = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://session-master-mvp.lovable.app/auth/reset-password',
+        redirectTo: `${window.location.origin}/auth/reset-password`,
       });
 
       if (error) {
