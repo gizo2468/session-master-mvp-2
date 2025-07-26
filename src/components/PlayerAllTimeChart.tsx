@@ -171,15 +171,9 @@ const PlayerAllTimeChart: React.FC = () => {
     const hasDateFilter = dateRange.start || dateRange.end;
     
     if (!hasDateFilter) {
-      // No filter - show all time daily data (not monthly aggregated)
-      if (sessions.length > 0) {
-        const firstSessionDate = new Date(sessions[0].startTime);
-        const currentDate = new Date();
-        const dailyData = processDailyData(sessions, firstSessionDate, currentDate);
-        setFilteredData(dailyData);
-      } else {
-        setFilteredData([]);
-      }
+      // No filter - show monthly data
+      const monthlyData = processMonthlyData(sessions);
+      setFilteredData(monthlyData);
       return;
     }
 
@@ -257,7 +251,7 @@ const PlayerAllTimeChart: React.FC = () => {
 
   // Determine what data to display
   const hasDateFilter = dateRange.start || dateRange.end;
-  const dataToDisplay = isMonthlyView ? filteredData : filteredData;
+  const dataToDisplay = isMonthlyView ? filteredData : (hasDateFilter ? filteredData : chartData);
 
   return (
     <Card>
