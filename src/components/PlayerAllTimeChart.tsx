@@ -246,10 +246,11 @@ const PlayerAllTimeChart: React.FC = () => {
                 <ChartTooltip 
                   content={
                     <ChartTooltipContent 
-                      formatter={(value, name) => [
-                        `$${Number(value).toFixed(2)}`,
-                        name === 'cumulativeProfit' ? 'Cumulative Profit' : name
-                      ]}
+                      formatter={(value, name) => {
+                        const numValue = Number(value);
+                        const sign = numValue >= 0 ? '+' : '';
+                        return [`${sign}₪${numValue.toFixed(2)}`, ''];
+                      }}
                       labelFormatter={(label) => format(new Date(label), 'MMM dd, yyyy')}
                     />
                   }
