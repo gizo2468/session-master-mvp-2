@@ -184,6 +184,20 @@ const PlayerAllTimeChart: React.FC = () => {
       };
     });
 
+    // Always ensure the chart ends with today's date
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const lastDataPoint = allTimeData[allTimeData.length - 1];
+    
+    if (!lastDataPoint || lastDataPoint.date < today) {
+      // Add today's date as the final point to extend timeline
+      allTimeData.push({
+        date: today,
+        profit: 0, // No new profit for today if no session
+        cumulativeProfit: lastDataPoint ? lastDataPoint.cumulativeProfit : 0,
+        sessionCount: 0 // No sessions today if this is just a timeline extension
+      });
+    }
+
     return allTimeData;
   };
 
@@ -206,7 +220,23 @@ const PlayerAllTimeChart: React.FC = () => {
       return sessionDate >= startDate && sessionDate <= endDate;
     });
     
-    const filteredAllTimeData = processAllTimeData(filteredSessions);
+    let filteredAllTimeData = processAllTimeData(filteredSessions);
+    
+    // For date-filtered view, ensure chart ends with the selected end date
+    if (dateRange.end) {
+      const endDateString = format(endDate, 'yyyy-MM-dd');
+      const lastPoint = filteredAllTimeData[filteredAllTimeData.length - 1];
+      
+      if (!lastPoint || lastPoint.date < endDateString) {
+        filteredAllTimeData.push({
+          date: endDateString,
+          profit: 0,
+          cumulativeProfit: lastPoint ? lastPoint.cumulativeProfit : 0,
+          sessionCount: 0
+        });
+      }
+    }
+    
     setFilteredData(filteredAllTimeData);
   };
 
@@ -334,16 +364,18 @@ const PlayerAllTimeChart: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-             <ChartContainer config={chartConfig} className={`h-64 w-full ${isMonthlyView ? 'min-w-[800px]' : dataToDisplay.length > 10 ? 'min-w-[1200px]' : ''}`}>
+            <ChartContainer config={chartConfig} className={`h-64 w-full ${isMonthlyView ? 'min-w-[800px]' : 'min-w-[1200px]'}`}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={dataToDisplay}>
                 <XAxis 
                   dataKey="date" 
                   tick={{ fontSize: 12 }}
-                  type={isMonthlyView ? "category" : "category"}
-                  domain={isMonthlyView ? ['dataMin', 'dataMax'] : ['dataMin', 'dataMax']}
-                  ticks={isMonthlyView ? dataToDisplay.map(d => d.date) : undefined}
+                  type="category"
+                  domain={['dataMin', 'dataMax']}
                   interval={0}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
                    tickFormatter={(value) => {
                      const date = new Date(value);
                      if (isMonthlyView) {
