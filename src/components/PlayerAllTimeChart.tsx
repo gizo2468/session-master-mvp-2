@@ -90,7 +90,7 @@ const PlayerAllTimeChart: React.FC = () => {
       cumulativeProfit += monthProfit;
 
       return {
-        date: month.getTime().toString(),
+        date: format(month, 'yyyy-MM-dd'),
         profit: monthProfit,
         cumulativeProfit,
         sessionCount: monthSessions.length
@@ -177,7 +177,7 @@ const PlayerAllTimeChart: React.FC = () => {
       cumulativeProfit += sessionProfit;
 
       return {
-        date: new Date(session.startTime).getTime().toString(), // Convert to timestamp
+        date: format(new Date(session.startTime), 'yyyy-MM-dd'),
         profit: sessionProfit,
         cumulativeProfit,
         sessionCount: 1
@@ -185,10 +185,10 @@ const PlayerAllTimeChart: React.FC = () => {
     });
 
     // Always ensure the chart ends with today's date
-    const today = new Date().getTime().toString();
+    const today = format(new Date(), 'yyyy-MM-dd');
     const lastDataPoint = allTimeData[allTimeData.length - 1];
     
-    if (!lastDataPoint || parseInt(lastDataPoint.date) < parseInt(today)) {
+    if (!lastDataPoint || lastDataPoint.date < today) {
       // Add today's date as the final point to extend timeline
       allTimeData.push({
         date: today,
@@ -224,12 +224,12 @@ const PlayerAllTimeChart: React.FC = () => {
     
     // For date-filtered view, ensure chart ends with the selected end date
     if (dateRange.end) {
-      const endDateTimestamp = endDate.getTime().toString();
+      const endDateString = format(endDate, 'yyyy-MM-dd');
       const lastPoint = filteredAllTimeData[filteredAllTimeData.length - 1];
       
-      if (!lastPoint || parseInt(lastPoint.date) < parseInt(endDateTimestamp)) {
+      if (!lastPoint || lastPoint.date < endDateString) {
         filteredAllTimeData.push({
-          date: endDateTimestamp,
+          date: endDateString,
           profit: 0,
           cumulativeProfit: lastPoint ? lastPoint.cumulativeProfit : 0,
           sessionCount: 0
@@ -264,7 +264,7 @@ const PlayerAllTimeChart: React.FC = () => {
       }, 0);
 
       return {
-        date: month.getTime().toString(),
+        date: format(month, 'yyyy-MM-dd'),
         profit: monthProfit,
         cumulativeProfit: monthProfit, // For monthly view, show monthly profit, not cumulative
         sessionCount: monthSessions.length
@@ -366,18 +366,18 @@ const PlayerAllTimeChart: React.FC = () => {
           <div className="overflow-x-auto">
             <ChartContainer config={chartConfig} className={`h-64 w-full ${isMonthlyView ? 'min-w-[800px]' : dataToDisplay.length > 20 ? 'min-w-[1200px]' : dataToDisplay.length > 10 ? 'min-w-[600px]' : 'min-w-[300px]'}`}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={dataToDisplay} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
+                <LineChart data={dataToDisplay}>
                 <XAxis 
                   dataKey="date" 
                   tick={{ fontSize: 12 }}
-                  type="number"
-                  scale="time"
+                  type="category"
                   domain={['dataMin', 'dataMax']}
+                  interval={0}
                   angle={0}
                   textAnchor="middle"
                   height={60}
                    tickFormatter={(value) => {
-                     const date = new Date(parseInt(value));
+                     const date = new Date(value);
                      if (isMonthlyView) {
                        return format(date, 'MMM');
                      }
@@ -398,7 +398,7 @@ const PlayerAllTimeChart: React.FC = () => {
                       return (
                         <div className="bg-background border border-border rounded-lg shadow-lg p-3">
                            <div className="text-center text-sm text-muted-foreground mb-1">
-                             {format(new Date(parseInt(label)), 'dd/MM/yyyy')}
+                             {format(new Date(label), 'dd/MM/yyyy')}
                            </div>
                           <div className={`text-center font-semibold ${colorClass}`}>
                             {sign}₪{Math.abs(value).toFixed(2)}
