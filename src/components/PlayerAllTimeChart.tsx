@@ -373,15 +373,15 @@ const PlayerAllTimeChart: React.FC = () => {
                   type="category"
                   domain={['dataMin', 'dataMax']}
                   interval={0}
-                  angle={90}
-                  textAnchor="start"
-                  height={100}
+                  angle={0}
+                  textAnchor="middle"
+                  height={60}
                    tickFormatter={(value) => {
                      const date = new Date(value);
                      if (isMonthlyView) {
                        return format(date, 'MMM');
                      }
-                     return format(date, 'dd/MM/yyyy');
+                     return format(date, 'dd/MM');
                    }}
                 />
                 <YAxis 
