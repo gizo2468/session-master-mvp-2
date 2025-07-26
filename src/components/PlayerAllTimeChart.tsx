@@ -53,9 +53,9 @@ const PlayerAllTimeChart: React.FC = () => {
 
       setSessions(completedSessions);
       
-      // Process monthly data by default
-      const monthlyData = processMonthlyData(completedSessions);
-      setChartData(monthlyData);
+      // Process daily session data by default (All Time view)
+      const dailySessionData = processAllTimeData(completedSessions);
+      setChartData(dailySessionData);
     } catch (error) {
       console.error('Error loading session data:', error);
     } finally {
@@ -167,22 +167,47 @@ const PlayerAllTimeChart: React.FC = () => {
     return dailyData;
   };
 
+  const processAllTimeData = (sessions: PokerSession[]): ChartDataPoint[] => {
+    if (sessions.length === 0) return [];
+
+    // Create individual data points for each session
+    let cumulativeProfit = 0;
+    const allTimeData: ChartDataPoint[] = sessions.map(session => {
+      const sessionProfit = calculateSessionProfit(session);
+      cumulativeProfit += sessionProfit;
+
+      return {
+        date: format(new Date(session.startTime), 'yyyy-MM-dd'),
+        profit: sessionProfit,
+        cumulativeProfit,
+        sessionCount: 1
+      };
+    });
+
+    return allTimeData;
+  };
+
   const filterDataByDateRange = () => {
     const hasDateFilter = dateRange.start || dateRange.end;
     
     if (!hasDateFilter) {
-      // No filter - show monthly data
-      const monthlyData = processMonthlyData(sessions);
-      setFilteredData(monthlyData);
+      // No filter - show all time session data
+      const allTimeData = processAllTimeData(sessions);
+      setFilteredData(allTimeData);
       return;
     }
 
-    // Date filter applied - switch to daily view
+    // Date filter applied - filter sessions by date range
     const startDate = dateRange.start ? new Date(dateRange.start + 'T00:00:00') : new Date(sessions[0]?.startTime || new Date());
     const endDate = dateRange.end ? new Date(dateRange.end + 'T23:59:59') : new Date();
     
-    const dailyData = processDailyData(sessions, startDate, endDate);
-    setFilteredData(dailyData);
+    const filteredSessions = sessions.filter(session => {
+      const sessionDate = new Date(session.startTime);
+      return sessionDate >= startDate && sessionDate <= endDate;
+    });
+    
+    const filteredAllTimeData = processAllTimeData(filteredSessions);
+    setFilteredData(filteredAllTimeData);
   };
 
   const resetDateRange = () => {
@@ -308,8 +333,8 @@ const PlayerAllTimeChart: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className={isMonthlyView ? "overflow-x-auto" : ""}>
-            <ChartContainer config={chartConfig} className={`h-64 w-full ${isMonthlyView ? 'min-w-[800px]' : ''}`}>
+          <div className="overflow-x-auto">
+             <ChartContainer config={chartConfig} className={`h-64 w-full ${isMonthlyView ? 'min-w-[800px]' : dataToDisplay.length > 10 ? 'min-w-[1200px]' : ''}`}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={dataToDisplay}>
                 <XAxis 
@@ -319,13 +344,13 @@ const PlayerAllTimeChart: React.FC = () => {
                   domain={isMonthlyView ? ['dataMin', 'dataMax'] : ['dataMin', 'dataMax']}
                   ticks={isMonthlyView ? dataToDisplay.map(d => d.date) : undefined}
                   interval={0}
-                  tickFormatter={(value) => {
-                    const date = new Date(value);
-                    if (isMonthlyView) {
-                      return format(date, 'MMM');
-                    }
-                    return hasDateFilter ? format(date, 'MMM dd') : format(date, 'MMM yyyy');
-                  }}
+                   tickFormatter={(value) => {
+                     const date = new Date(value);
+                     if (isMonthlyView) {
+                       return format(date, 'MMM');
+                     }
+                     return format(date, 'dd/MM/yyyy');
+                   }}
                 />
                 <YAxis 
                   tick={{ fontSize: 12 }}
@@ -340,9 +365,9 @@ const PlayerAllTimeChart: React.FC = () => {
                       
                       return (
                         <div className="bg-background border border-border rounded-lg shadow-lg p-3">
-                          <div className="text-center text-sm text-muted-foreground mb-1">
-                            {format(new Date(label), 'MMM dd, yyyy')}
-                          </div>
+                           <div className="text-center text-sm text-muted-foreground mb-1">
+                             {format(new Date(label), 'dd/MM/yyyy')}
+                           </div>
                           <div className={`text-center font-semibold ${colorClass}`}>
                             {sign}₪{Math.abs(value).toFixed(2)}
                           </div>
