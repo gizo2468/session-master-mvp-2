@@ -221,15 +221,20 @@ const PlayerAllTimeChart: React.FC = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="relative">
+        {dataToDisplay.length === 0 ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-muted-foreground">
+              {hasDateFilter ? "No data available for selected dates" : "No session data available"}
+            </div>
+          </div>
+        ) : (
           <ChartContainer config={chartConfig} className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dataToDisplay.length > 0 ? dataToDisplay : []}>
+              <LineChart data={dataToDisplay}>
                 <XAxis 
                   dataKey="date" 
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) => {
-                    if (!value) return '';
                     const date = new Date(value);
                     return hasDateFilter ? format(date, 'MMM dd') : format(date, 'MMM yyyy');
                   }}
@@ -249,27 +254,18 @@ const PlayerAllTimeChart: React.FC = () => {
                     />
                   }
                 />
-                {dataToDisplay.length > 0 && (
-                  <Line
-                    type="monotone"
-                    dataKey="cumulativeProfit"
-                    stroke="var(--color-cumulativeProfit)"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    activeDot={{ r: 5 }}
-                  />
-                )}
+                <Line
+                  type="monotone"
+                  dataKey="cumulativeProfit"
+                  stroke="var(--color-cumulativeProfit)"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </ChartContainer>
-          {dataToDisplay.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-muted-foreground text-sm">
-                No session data available
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </CardContent>
     </Card>
   );
