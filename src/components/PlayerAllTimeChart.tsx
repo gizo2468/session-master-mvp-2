@@ -8,13 +8,13 @@ import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { fetchUserSessions } from '@/utils/database/sessionFetcher';
 import { calculateSessionProfit } from '@/utils/sessionCalculations';
 import { PokerSession } from '@/types/poker';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachMonthOfInterval, isSameMonth, isSameDay } from 'date-fns';
 
 interface ChartDataPoint {
   date: string;
   profit: number;
   cumulativeProfit: number;
-  sessionId: string;
+  sessionCount: number;
 }
 
 const PlayerAllTimeChart: React.FC = () => {
@@ -47,21 +47,9 @@ const PlayerAllTimeChart: React.FC = () => {
 
       setSessions(completedSessions);
       
-      // Process data for chart
-      let cumulativeProfit = 0;
-      const processedData: ChartDataPoint[] = completedSessions.map(session => {
-        const sessionProfit = calculateSessionProfit(session);
-        cumulativeProfit += sessionProfit;
-        
-        return {
-          date: format(new Date(session.startTime), 'yyyy-MM-dd'),
-          profit: sessionProfit,
-          cumulativeProfit,
-          sessionId: session.id
-        };
-      });
-
-      setChartData(processedData);
+      // Process monthly data by default
+      const monthlyData = processMonthlyData(completedSessions);
+      setChartData(monthlyData);
     } catch (error) {
       console.error('Error loading session data:', error);
     } finally {
@@ -69,38 +57,98 @@ const PlayerAllTimeChart: React.FC = () => {
     }
   };
 
-  const filterDataByDateRange = () => {
-    if (!dateRange.start && !dateRange.end) {
-      setFilteredData(chartData);
-      return;
-    }
+  const processMonthlyData = (sessions: PokerSession[]): ChartDataPoint[] => {
+    if (sessions.length === 0) return [];
 
-    const filtered = chartData.filter(point => {
-      const pointDate = new Date(point.date);
-      const startDate = dateRange.start ? new Date(dateRange.start + 'T00:00:00') : null;
-      const endDate = dateRange.end ? new Date(dateRange.end + 'T23:59:59') : null;
-      
-      if (startDate && endDate) {
-        return pointDate >= startDate && pointDate <= endDate;
-      } else if (startDate) {
-        return pointDate >= startDate;
-      } else if (endDate) {
-        return pointDate <= endDate;
-      }
-      return true;
-    });
+    // Get the range from first session to current month
+    const firstSessionDate = new Date(sessions[0].startTime);
+    const currentDate = new Date();
+    const firstMonth = startOfMonth(firstSessionDate);
+    const currentMonth = startOfMonth(currentDate);
 
-    // Recalculate cumulative for filtered data
+    // Generate all months in the range
+    const months = eachMonthOfInterval({ start: firstMonth, end: currentMonth });
+
     let cumulativeProfit = 0;
-    const recalculatedData = filtered.map(point => {
-      cumulativeProfit += point.profit;
+    const monthlyData: ChartDataPoint[] = months.map(month => {
+      // Find all sessions in this month
+      const monthSessions = sessions.filter(session =>
+        isSameMonth(new Date(session.startTime), month)
+      );
+
+      // Calculate total profit for this month
+      const monthProfit = monthSessions.reduce((total, session) => {
+        return total + calculateSessionProfit(session);
+      }, 0);
+
+      cumulativeProfit += monthProfit;
+
       return {
-        ...point,
-        cumulativeProfit
+        date: format(month, 'yyyy-MM-dd'),
+        profit: monthProfit,
+        cumulativeProfit,
+        sessionCount: monthSessions.length
       };
     });
 
-    setFilteredData(recalculatedData);
+    return monthlyData;
+  };
+
+  const processDailyData = (sessions: PokerSession[], startDate: Date, endDate: Date): ChartDataPoint[] => {
+    // Filter sessions within the date range
+    const filteredSessions = sessions.filter(session => {
+      const sessionDate = new Date(session.startTime);
+      return sessionDate >= startDate && sessionDate <= endDate;
+    });
+
+    // Group sessions by day
+    const sessionsByDay = new Map<string, PokerSession[]>();
+    filteredSessions.forEach(session => {
+      const dayKey = format(new Date(session.startTime), 'yyyy-MM-dd');
+      if (!sessionsByDay.has(dayKey)) {
+        sessionsByDay.set(dayKey, []);
+      }
+      sessionsByDay.get(dayKey)!.push(session);
+    });
+
+    // Convert to chart data points
+    let cumulativeProfit = 0;
+    const dailyData: ChartDataPoint[] = Array.from(sessionsByDay.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, daySessions]) => {
+        const dayProfit = daySessions.reduce((total, session) => {
+          return total + calculateSessionProfit(session);
+        }, 0);
+
+        cumulativeProfit += dayProfit;
+
+        return {
+          date,
+          profit: dayProfit,
+          cumulativeProfit,
+          sessionCount: daySessions.length
+        };
+      });
+
+    return dailyData;
+  };
+
+  const filterDataByDateRange = () => {
+    const hasDateFilter = dateRange.start || dateRange.end;
+    
+    if (!hasDateFilter) {
+      // No filter - show monthly data
+      const monthlyData = processMonthlyData(sessions);
+      setFilteredData(monthlyData);
+      return;
+    }
+
+    // Date filter applied - switch to daily view
+    const startDate = dateRange.start ? new Date(dateRange.start + 'T00:00:00') : new Date(sessions[0]?.startTime || new Date());
+    const endDate = dateRange.end ? new Date(dateRange.end + 'T23:59:59') : new Date();
+    
+    const dailyData = processDailyData(sessions, startDate, endDate);
+    setFilteredData(dailyData);
   };
 
   const resetDateRange = () => {
@@ -186,7 +234,10 @@ const PlayerAllTimeChart: React.FC = () => {
                 <XAxis 
                   dataKey="date" 
                   tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => format(new Date(value), 'MMM dd')}
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return hasDateFilter ? format(date, 'MMM dd') : format(date, 'MMM yyyy');
+                  }}
                 />
                 <YAxis 
                   tick={{ fontSize: 12 }}
