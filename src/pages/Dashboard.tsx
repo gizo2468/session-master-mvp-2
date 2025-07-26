@@ -2,11 +2,11 @@ import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
-import { useNavigate } from 'react-router-dom';
+import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
 
 const Dashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
 
   // Helper function to display role with proper formatting
   const getDisplayRole = (role?: string) => {
@@ -42,11 +42,12 @@ const Dashboard: React.FC = () => {
         <div className="container mx-auto max-w-md px-4 py-4">
           <div className="flex justify-between items-center">
             <Button 
-              onClick={() => navigate('/')}
+              onClick={navigateToHomeWithRefresh}
               variant="ghost"
               className="text-poker-feltGreen p-0"
+              disabled={isRefreshing}
             >
-              <Icon name="ArrowLeft" size={16} className="mr-1" />
+              <Icon name={isRefreshing ? "Loader2" : "ArrowLeft"} size={16} className={`mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span>Home</span>
             </Button>
             <h1 className="text-xl font-bold">Dashboard</h1>
