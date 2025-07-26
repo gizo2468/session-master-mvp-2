@@ -27,14 +27,19 @@ const PlayerAllTimeChart: React.FC = () => {
     end: ''
   });
   const [filteredData, setFilteredData] = useState<ChartDataPoint[]>([]);
+  const [isMonthlyView, setIsMonthlyView] = useState(false);
 
   useEffect(() => {
     loadSessionData();
   }, []);
 
   useEffect(() => {
-    filterDataByDateRange();
-  }, [chartData, dateRange]);
+    if (isMonthlyView) {
+      displayMonthlyView();
+    } else {
+      filterDataByDateRange();
+    }
+  }, [chartData, dateRange, isMonthlyView]);
 
   const loadSessionData = async () => {
     try {
@@ -182,22 +187,44 @@ const PlayerAllTimeChart: React.FC = () => {
 
   const resetDateRange = () => {
     setDateRange({ start: '', end: '' });
+    setIsMonthlyView(false);
   };
 
-  const selectMonth = (month: Date) => {
-    const startDate = startOfMonth(month);
-    const endDate = endOfMonth(month);
-    setDateRange({
-      start: format(startDate, 'yyyy-MM-dd'),
-      end: format(endDate, 'yyyy-MM-dd')
-    });
-  };
-
-  const generateCurrentYearMonths = () => {
+  const displayMonthlyView = () => {
     const currentYear = new Date().getFullYear();
-    const yearStart = startOfYear(new Date(currentYear, 0, 1));
-    const yearEnd = endOfYear(new Date(currentYear, 11, 31));
-    return eachMonthOfInterval({ start: yearStart, end: yearEnd });
+    const yearMonths = eachMonthOfInterval({ 
+      start: startOfYear(new Date(currentYear, 0, 1)), 
+      end: endOfYear(new Date(currentYear, 11, 31)) 
+    });
+
+    const monthlyData: ChartDataPoint[] = yearMonths.map(month => {
+      // Find all sessions in this month
+      const monthSessions = sessions.filter(session =>
+        isSameMonth(new Date(session.startTime), month)
+      );
+
+      // Calculate total profit for this month (not cumulative)
+      const monthProfit = monthSessions.reduce((total, session) => {
+        return total + calculateSessionProfit(session);
+      }, 0);
+
+      return {
+        date: format(month, 'yyyy-MM-dd'),
+        profit: monthProfit,
+        cumulativeProfit: monthProfit, // For monthly view, show monthly profit, not cumulative
+        sessionCount: monthSessions.length
+      };
+    });
+
+    setFilteredData(monthlyData);
+  };
+
+  const toggleMonthlyView = () => {
+    setIsMonthlyView(!isMonthlyView);
+    // Clear date range when switching to monthly view
+    if (!isMonthlyView) {
+      setDateRange({ start: '', end: '' });
+    }
   };
 
   const chartConfig = {
@@ -224,7 +251,7 @@ const PlayerAllTimeChart: React.FC = () => {
 
   // Determine what data to display
   const hasDateFilter = dateRange.start || dateRange.end;
-  const dataToDisplay = hasDateFilter ? filteredData : chartData;
+  const dataToDisplay = isMonthlyView ? filteredData : (hasDateFilter ? filteredData : chartData);
 
   return (
     <Card>
@@ -262,28 +289,14 @@ const PlayerAllTimeChart: React.FC = () => {
             >
               All Time
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-xs"
-                >
-                  Monthly
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-background border border-border z-50">
-                {generateCurrentYearMonths().map((month) => (
-                  <DropdownMenuItem 
-                    key={month.getTime()}
-                    onClick={() => selectMonth(month)}
-                    className="hover:bg-muted/50"
-                  >
-                    {format(month, 'MMMM yyyy')}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={toggleMonthlyView}
+              className="text-xs"
+            >
+              Monthly
+            </Button>
           </div>
         </div>
       </CardHeader>
@@ -303,6 +316,9 @@ const PlayerAllTimeChart: React.FC = () => {
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) => {
                     const date = new Date(value);
+                    if (isMonthlyView) {
+                      return format(date, 'MMM');
+                    }
                     return hasDateFilter ? format(date, 'MMM dd') : format(date, 'MMM yyyy');
                   }}
                 />
