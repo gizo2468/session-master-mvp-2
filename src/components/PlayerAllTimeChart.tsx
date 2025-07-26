@@ -130,6 +130,20 @@ const PlayerAllTimeChart: React.FC = () => {
         };
       });
 
+    // Always extend chart to the selected end date if needed
+    const endDateString = format(endDate, 'yyyy-MM-dd');
+    const lastDataPoint = dailyData[dailyData.length - 1];
+    
+    if (dailyData.length > 0 && lastDataPoint && lastDataPoint.date < endDateString) {
+      // Add a virtual point at the end date to extend the chart
+      dailyData.push({
+        date: endDateString,
+        profit: 0, // No new profit for this virtual point
+        cumulativeProfit: lastDataPoint.cumulativeProfit, // Same cumulative value
+        sessionCount: 0 // No sessions on this virtual point
+      });
+    }
+
     return dailyData;
   };
 
