@@ -90,7 +90,7 @@ const PlayerAllTimeChart: React.FC = () => {
       cumulativeProfit += monthProfit;
 
       return {
-        date: format(month, 'yyyy-MM-dd'),
+        date: month.getTime().toString(),
         profit: monthProfit,
         cumulativeProfit,
         sessionCount: monthSessions.length
@@ -177,7 +177,7 @@ const PlayerAllTimeChart: React.FC = () => {
       cumulativeProfit += sessionProfit;
 
       return {
-        date: format(new Date(session.startTime), 'yyyy-MM-dd'),
+        date: new Date(session.startTime).getTime().toString(), // Convert to timestamp
         profit: sessionProfit,
         cumulativeProfit,
         sessionCount: 1
@@ -185,10 +185,10 @@ const PlayerAllTimeChart: React.FC = () => {
     });
 
     // Always ensure the chart ends with today's date
-    const today = format(new Date(), 'yyyy-MM-dd');
+    const today = new Date().getTime().toString();
     const lastDataPoint = allTimeData[allTimeData.length - 1];
     
-    if (!lastDataPoint || lastDataPoint.date < today) {
+    if (!lastDataPoint || parseInt(lastDataPoint.date) < parseInt(today)) {
       // Add today's date as the final point to extend timeline
       allTimeData.push({
         date: today,
@@ -224,12 +224,12 @@ const PlayerAllTimeChart: React.FC = () => {
     
     // For date-filtered view, ensure chart ends with the selected end date
     if (dateRange.end) {
-      const endDateString = format(endDate, 'yyyy-MM-dd');
+      const endDateTimestamp = endDate.getTime().toString();
       const lastPoint = filteredAllTimeData[filteredAllTimeData.length - 1];
       
-      if (!lastPoint || lastPoint.date < endDateString) {
+      if (!lastPoint || parseInt(lastPoint.date) < parseInt(endDateTimestamp)) {
         filteredAllTimeData.push({
-          date: endDateString,
+          date: endDateTimestamp,
           profit: 0,
           cumulativeProfit: lastPoint ? lastPoint.cumulativeProfit : 0,
           sessionCount: 0
@@ -264,7 +264,7 @@ const PlayerAllTimeChart: React.FC = () => {
       }, 0);
 
       return {
-        date: format(month, 'yyyy-MM-dd'),
+        date: month.getTime().toString(),
         profit: monthProfit,
         cumulativeProfit: monthProfit, // For monthly view, show monthly profit, not cumulative
         sessionCount: monthSessions.length
@@ -370,14 +370,14 @@ const PlayerAllTimeChart: React.FC = () => {
                 <XAxis 
                   dataKey="date" 
                   tick={{ fontSize: 12 }}
-                  type="category"
+                  type="number"
+                  scale="time"
                   domain={['dataMin', 'dataMax']}
-                  interval={0}
                   angle={0}
                   textAnchor="middle"
                   height={60}
                    tickFormatter={(value) => {
-                     const date = new Date(value);
+                     const date = new Date(parseInt(value));
                      if (isMonthlyView) {
                        return format(date, 'MMM');
                      }
@@ -398,7 +398,7 @@ const PlayerAllTimeChart: React.FC = () => {
                       return (
                         <div className="bg-background border border-border rounded-lg shadow-lg p-3">
                            <div className="text-center text-sm text-muted-foreground mb-1">
-                             {format(new Date(label), 'dd/MM/yyyy')}
+                             {format(new Date(parseInt(label)), 'dd/MM/yyyy')}
                            </div>
                           <div className={`text-center font-semibold ${colorClass}`}>
                             {sign}₪{Math.abs(value).toFixed(2)}
