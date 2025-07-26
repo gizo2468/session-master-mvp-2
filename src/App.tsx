@@ -17,6 +17,7 @@ import Settings from "./pages/Settings";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 import FocusModePage from "./pages/FocusModePage";
 
 const queryClient = new QueryClient({
@@ -53,6 +54,7 @@ const App = () => (
                 <Route path="/legal/privacy" element={<PrivacyPolicy />} />
                 <Route path="/auth/login" element={<Login />} />
                 <Route path="/auth/signup" element={<Signup />} />
+                <Route path="/auth/forgot-password" element={<ForgotPassword />} />
               </Routes>
             </SessionProvider>
           </AuthGuard>
