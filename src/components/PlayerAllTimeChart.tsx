@@ -308,9 +308,10 @@ const PlayerAllTimeChart: React.FC = () => {
             </div>
           </div>
         ) : (
-          <ChartContainer config={chartConfig} className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dataToDisplay}>
+          <div className={isMonthlyView ? "overflow-x-auto" : ""}>
+            <ChartContainer config={chartConfig} className={`h-64 w-full ${isMonthlyView ? 'min-w-[800px]' : ''}`}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dataToDisplay}>
                 <XAxis 
                   dataKey="date" 
                   tick={{ fontSize: 12 }}
@@ -358,6 +359,7 @@ const PlayerAllTimeChart: React.FC = () => {
               </LineChart>
             </ResponsiveContainer>
           </ChartContainer>
+          </div>
         )}
       </CardContent>
     </Card>
