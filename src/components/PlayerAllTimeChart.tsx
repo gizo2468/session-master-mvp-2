@@ -364,7 +364,7 @@ const PlayerAllTimeChart: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <ChartContainer config={chartConfig} className={`h-64 w-full ${isMonthlyView ? 'min-w-[800px]' : 'min-w-[1200px]'}`}>
+            <ChartContainer config={chartConfig} className={`h-64 w-full ${isMonthlyView ? 'min-w-[800px]' : dataToDisplay.length > 15 ? 'min-w-[1200px]' : dataToDisplay.length > 8 ? 'min-w-[600px]' : 'min-w-[400px]'}`}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={dataToDisplay}>
                 <XAxis 
@@ -373,9 +373,9 @@ const PlayerAllTimeChart: React.FC = () => {
                   type="category"
                   domain={['dataMin', 'dataMax']}
                   interval={0}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
+                  angle={-90}
+                  textAnchor="middle"
+                  height={100}
                    tickFormatter={(value) => {
                      const date = new Date(value);
                      if (isMonthlyView) {
