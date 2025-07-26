@@ -70,7 +70,10 @@ const FocusModePage = () => {
           <LockKeyhole className="h-20 w-20 text-poker-gold mb-4" />
           <h1 className="text-3xl font-bold text-center mb-2">Focus Mode Active</h1>
           <div className="text-5xl font-bold mb-6 text-poker-black">{formatTime(timeLeft)}</div>
-          <p className="text-center text-gray-500 mb-8">Stay focused on your game and avoid distractions</p>
+          <p className="text-center text-gray-500 mb-8">
+            This is your break from the phone, it's time to play your best game.<br />
+            Stay off the phone. Stay in the zone.
+          </p>
           
           <Button 
             variant="destructive" 
