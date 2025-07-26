@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -25,6 +25,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [hasValidSession, setHasValidSession] = useState(false);
@@ -43,24 +44,67 @@ const ResetPassword: React.FC = () => {
       console.log("Checking for password reset session...");
       
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // First, try to get tokens from URL parameters (for reset password flow)
+        const accessToken = searchParams.get('access_token');
+        const refreshToken = searchParams.get('refresh_token');
+        const type = searchParams.get('type');
         
-        if (error) {
-          console.error("Error getting session:", error);
-          throw error;
-        }
+        // Also check URL hash (Supabase sometimes uses hash fragments)
+        const hashParams = new URLSearchParams(window.location.hash.slice(1));
+        const hashAccessToken = hashParams.get('access_token');
+        const hashRefreshToken = hashParams.get('refresh_token');
+        const hashType = hashParams.get('type');
         
-        if (session?.user) {
-          console.log("Valid session found for password reset");
-          setHasValidSession(true);
-        } else {
-          console.log("No valid session found");
-          toast({
-            title: "Invalid Reset Link",
-            description: "This password reset link is invalid or has expired.",
-            variant: "destructive",
+        const finalAccessToken = accessToken || hashAccessToken;
+        const finalRefreshToken = refreshToken || hashRefreshToken;
+        const finalType = type || hashType;
+        
+        console.log("Reset token check:", { 
+          finalAccessToken: finalAccessToken ? 'present' : 'missing',
+          finalRefreshToken: finalRefreshToken ? 'present' : 'missing',
+          type: finalType
+        });
+        
+        if (finalAccessToken && finalRefreshToken && finalType === 'recovery') {
+          // Set the session with the tokens from URL
+          const { data, error } = await supabase.auth.setSession({
+            access_token: finalAccessToken,
+            refresh_token: finalRefreshToken
           });
-          setHasValidSession(false);
+          
+          if (error) {
+            console.error("Error setting session:", error);
+            throw error;
+          }
+          
+          if (data.session?.user) {
+            console.log("Valid session set for password reset");
+            setHasValidSession(true);
+          } else {
+            console.log("Failed to establish session");
+            setHasValidSession(false);
+          }
+        } else {
+          // Fallback: check for existing session
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error("Error getting session:", error);
+            throw error;
+          }
+          
+          if (session?.user) {
+            console.log("Existing valid session found");
+            setHasValidSession(true);
+          } else {
+            console.log("No valid session or tokens found");
+            toast({
+              title: "Error",
+              description: "No reset token found. Please request a new password reset link.",
+              variant: "destructive",
+            });
+            setHasValidSession(false);
+          }
         }
       } catch (error: any) {
         console.error("Session check failed:", error);
@@ -76,7 +120,7 @@ const ResetPassword: React.FC = () => {
     };
 
     checkSession();
-  }, [toast]);
+  }, [toast, searchParams]);
 
   const onSubmit = async (values: FormValues) => {
     if (!hasValidSession) {
