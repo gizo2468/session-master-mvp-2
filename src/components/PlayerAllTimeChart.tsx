@@ -308,61 +308,56 @@ const PlayerAllTimeChart: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className={`h-64 ${isMonthlyView ? 'overflow-x-auto' : 'w-full'}`}>
-            <ChartContainer 
-              config={chartConfig} 
-              className={`h-64 ${isMonthlyView ? 'min-w-[800px]' : 'w-full'}`}
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={dataToDisplay}>
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={(value) => {
-                      const date = new Date(value);
-                      if (isMonthlyView) {
-                        return format(date, 'MMM');
-                      }
-                      return hasDateFilter ? format(date, 'MMM dd') : format(date, 'MMM yyyy');
-                    }}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={(value) => `$${value}`}
-                  />
-                  <ChartTooltip 
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        const value = Number(payload[0].value);
-                        const sign = value >= 0 ? '+' : '−';
-                        const colorClass = value >= 0 ? 'text-green-600' : 'text-red-600';
-                        
-                        return (
-                          <div className="bg-background border border-border rounded-lg shadow-lg p-3">
-                            <div className="text-center text-sm text-muted-foreground mb-1">
-                              {format(new Date(label), 'MMM dd, yyyy')}
-                            </div>
-                            <div className={`text-center font-semibold ${colorClass}`}>
-                              {sign}₪{Math.abs(value).toFixed(2)}
-                            </div>
+          <ChartContainer config={chartConfig} className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dataToDisplay}>
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    if (isMonthlyView) {
+                      return format(date, 'MMM');
+                    }
+                    return hasDateFilter ? format(date, 'MMM dd') : format(date, 'MMM yyyy');
+                  }}
+                />
+                <YAxis 
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(value) => `$${value}`}
+                />
+                <ChartTooltip 
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      const value = Number(payload[0].value);
+                      const sign = value >= 0 ? '+' : '−';
+                      const colorClass = value >= 0 ? 'text-green-600' : 'text-red-600';
+                      
+                      return (
+                        <div className="bg-background border border-border rounded-lg shadow-lg p-3">
+                          <div className="text-center text-sm text-muted-foreground mb-1">
+                            {format(new Date(label), 'MMM dd, yyyy')}
                           </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="cumulativeProfit"
-                    stroke="var(--color-cumulativeProfit)"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    activeDot={{ r: 5 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </div>
+                          <div className={`text-center font-semibold ${colorClass}`}>
+                            {sign}₪{Math.abs(value).toFixed(2)}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="cumulativeProfit"
+                  stroke="var(--color-cumulativeProfit)"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartContainer>
         )}
       </CardContent>
     </Card>
