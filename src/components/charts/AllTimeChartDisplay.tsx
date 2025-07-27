@@ -79,6 +79,7 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
             <YAxis 
               tick={{ fontSize: 12 }}
               tickFormatter={(value) => `$${value}`}
+              domain={['dataMin', 'dataMax']}
             />
             <ChartTooltip 
               content={({ active, payload, label }) => {
