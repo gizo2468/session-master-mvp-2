@@ -114,6 +114,11 @@ export default function StatsQuickView() {
   // Convert average duration from milliseconds to hours
   const averageHours = averageDuration / (1000 * 60 * 60);
   
+  // Helper function to format currency without unnecessary decimal places
+  const formatCurrency = (amount: number): string => {
+    return amount % 1 === 0 ? amount.toString() : amount.toFixed(2);
+  };
+  
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
       <h2 className="text-2xl font-extrabold tracking-tight mb-4 text-center text-primary">Sessions Stats</h2>
@@ -140,7 +145,7 @@ export default function StatsQuickView() {
               <span className="text-lg font-bold text-gray-400">$0.00</span>
             ) : (
               <span className={`text-xl font-bold ${usdTotal >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                ${usdTotal >= 0 ? usdTotal.toFixed(2) : `-${Math.abs(usdTotal).toFixed(2)}`}
+                ${usdTotal >= 0 ? formatCurrency(usdTotal) : `-${formatCurrency(Math.abs(usdTotal))}`}
               </span>
             )}
           </div>
@@ -199,7 +204,7 @@ export default function StatsQuickView() {
                         <span className="font-medium text-gray-700">{currencyName}</span>
                       </div>
                       <div className={`text-lg font-bold ${resultsClass}`}>
-                        {amount >= 0 ? '+' : '-'}{symbol} {Math.abs(amount).toFixed(2)}
+                        {amount >= 0 ? '+' : '-'}{symbol} {formatCurrency(Math.abs(amount))}
                       </div>
                     </div>
                   );
