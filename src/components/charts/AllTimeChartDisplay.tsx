@@ -68,9 +68,6 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
               angle={0}
               textAnchor="middle"
               height={60}
-              axisLine={false}
-              tickLine={false}
-              orientation="bottom"
               tickFormatter={(value) => {
                 const date = new Date(value);
                 if (isMonthlyView) {
@@ -82,7 +79,6 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
             <YAxis 
               tick={{ fontSize: 12 }}
               tickFormatter={(value) => `$${value}`}
-              domain={['dataMin', 'dataMax']}
             />
             <ChartTooltip 
               content={({ active, payload, label }) => {
