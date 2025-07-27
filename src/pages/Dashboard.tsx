@@ -5,6 +5,7 @@ import Icon from '@/components/ui/Lucide';
 import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
 import PlayerAllTimeChart from '@/components/PlayerAllTimeChart';
 import StatsQuickView from '@/components/StatsQuickView';
+import MyCoachingNetwork from '@/components/coaching/MyCoachingNetwork';
 
 const Dashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -69,17 +70,16 @@ const Dashboard: React.FC = () => {
             </p>
             
             {user.role === 'coach' ? (
-              <div className="space-y-2">
+              <div className="space-y-6">
                 <p className="text-lg font-medium text-poker-feltGreen">Coach Dashboard</p>
-                <p className="text-sm text-gray-500">
-                  Coach-specific features will be available here.
-                </p>
+                <MyCoachingNetwork />
               </div>
             ) : (
               <div className="space-y-6">
                 <p className="text-lg font-medium text-poker-feltGreen">Player Dashboard</p>
                 <PlayerAllTimeChart />
                 <StatsQuickView />
+                <MyCoachingNetwork />
               </div>
             )}
           </div>

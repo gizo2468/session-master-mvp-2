@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      coach_student_connections: {
+        Row: {
+          coach_id: string
+          created_at: string
+          id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          id?: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       donation_logs: {
         Row: {
           clicked_at: string
