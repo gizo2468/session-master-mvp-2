@@ -387,6 +387,9 @@ const PlayerAllTimeChart: React.FC = () => {
                 <YAxis 
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) => `$${value}`}
+                  domain={[(dataMin) => Math.min(dataMin, 0), (dataMax) => Math.max(dataMax, 0)]}
+                  axisLine={true}
+                  tickLine={true}
                 />
                 <ChartTooltip 
                   content={({ active, payload, label }) => {
