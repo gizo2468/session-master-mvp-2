@@ -376,8 +376,6 @@ const PlayerAllTimeChart: React.FC = () => {
                   angle={0}
                   textAnchor="middle"
                   height={60}
-                  axisLine={{ stroke: 'var(--border)', strokeWidth: 1 }}
-                  tickLine={{ stroke: 'var(--border)', strokeWidth: 1 }}
                    tickFormatter={(value) => {
                      const date = new Date(value);
                      if (isMonthlyView) {
@@ -389,8 +387,6 @@ const PlayerAllTimeChart: React.FC = () => {
                 <YAxis 
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) => `$${value}`}
-                  domain={[(dataMin: number) => Math.min(dataMin, 0), 'dataMax']}
-                  allowDataOverflow={false}
                 />
                 <ChartTooltip 
                   content={({ active, payload, label }) => {
