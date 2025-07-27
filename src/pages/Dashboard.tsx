@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
 import PlayerAllTimeChart from '@/components/PlayerAllTimeChart';
+import StatsQuickView from '@/components/StatsQuickView';
 
 const Dashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -75,9 +76,10 @@ const Dashboard: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <p className="text-lg font-medium text-poker-feltGreen">Player Dashboard</p>
                 <PlayerAllTimeChart />
+                <StatsQuickView />
               </div>
             )}
           </div>
