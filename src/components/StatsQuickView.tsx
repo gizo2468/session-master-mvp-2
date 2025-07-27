@@ -114,9 +114,9 @@ export default function StatsQuickView() {
   // Convert average duration from milliseconds to hours
   const averageHours = averageDuration / (1000 * 60 * 60);
   
-  // Helper function to format currency without unnecessary decimal places
+  // Helper function to format currency without unnecessary decimal places and with commas
   const formatCurrency = (amount: number): string => {
-    return amount % 1 === 0 ? amount.toString() : amount.toFixed(2);
+    return amount % 1 === 0 ? amount.toLocaleString() : amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
   
   return (
