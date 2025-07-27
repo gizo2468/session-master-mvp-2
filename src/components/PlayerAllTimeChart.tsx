@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { fetchUserSessions } from '@/utils/database/sessionFetcher';
 import { calculateSessionProfit } from '@/utils/sessionCalculations';
 import { PokerSession } from '@/types/poker';
@@ -387,8 +387,20 @@ const PlayerAllTimeChart: React.FC = () => {
                 <YAxis 
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) => `$${value}`}
+                  domain={[
+                    (dataMin: number) => Math.min(dataMin, 0),
+                    (dataMax: number) => Math.max(dataMax, 0)
+                  ]}
+                  axisLine={{ stroke: 'hsl(var(--border))', strokeWidth: 1 }}
+                  tickLine={{ stroke: 'hsl(var(--border))', strokeWidth: 1 }}
                 />
-                <ChartTooltip 
+                <ReferenceLine 
+                  y={0} 
+                  stroke="hsl(var(--border))" 
+                  strokeWidth={2}
+                  strokeDasharray="none"
+                />
+                <ChartTooltip
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       const value = Number(payload[0].value);
