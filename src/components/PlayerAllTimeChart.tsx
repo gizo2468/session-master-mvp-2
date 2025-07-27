@@ -170,18 +170,27 @@ const PlayerAllTimeChart: React.FC = () => {
   const processAllTimeData = (sessions: PokerSession[]): ChartDataPoint[] => {
     if (sessions.length === 0) return [];
 
-    // Create individual data points for each session
+    // Start with a point at $0 before the first session
+    const firstSessionDate = format(new Date(sessions[0].startTime), 'yyyy-MM-dd');
+    const allTimeData: ChartDataPoint[] = [{
+      date: firstSessionDate,
+      profit: 0,
+      cumulativeProfit: 0,
+      sessionCount: 0
+    }];
+
+    // Create individual data points for each session, starting cumulative from 0
     let cumulativeProfit = 0;
-    const allTimeData: ChartDataPoint[] = sessions.map(session => {
+    sessions.forEach(session => {
       const sessionProfit = calculateSessionProfit(session);
       cumulativeProfit += sessionProfit;
 
-      return {
+      allTimeData.push({
         date: format(new Date(session.startTime), 'yyyy-MM-dd'),
         profit: sessionProfit,
         cumulativeProfit,
         sessionCount: 1
-      };
+      });
     });
 
     // Always ensure the chart ends with today's date
