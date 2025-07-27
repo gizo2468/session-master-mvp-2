@@ -405,8 +405,8 @@ const PlayerAllTimeChart: React.FC = () => {
                 />
                 <ReferenceLine 
                   y={0} 
-                  stroke="hsl(var(--border))" 
-                  strokeWidth={2}
+                  stroke="hsl(0, 84%, 60%)" 
+                  strokeWidth={1}
                   strokeDasharray="none"
                 />
                 <ChartTooltip
