@@ -400,6 +400,8 @@ const PlayerAllTimeChart: React.FC = () => {
                     (dataMin: number) => Math.min(dataMin, 0),
                     (dataMax: number) => Math.max(dataMax, 0)
                   ]}
+                  includeHidden={true}
+                  type="number"
                   axisLine={{ stroke: 'hsl(var(--border))', strokeWidth: 1 }}
                   tickLine={{ stroke: 'hsl(var(--border))', strokeWidth: 1 }}
                 />
