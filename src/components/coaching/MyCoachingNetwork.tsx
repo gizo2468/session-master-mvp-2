@@ -471,28 +471,31 @@ const MyCoachingNetwork: React.FC = () => {
         {pendingRequests.map((request) => (
           <div
             key={request.id}
-            className="flex items-center space-x-3 p-3 rounded-lg border bg-card/30"
+            className="flex items-center justify-between p-4 rounded-lg border bg-card/30 min-h-[80px]"
           >
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={request.profiles.profile_picture || ''} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                {getInitials(request.profiles.full_name || request.profiles.username || 'Player')}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm">
-                {request.profiles.full_name || request.profiles.username || 'Player'}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {new Date(request.created_at).toLocaleDateString()}
-              </p>
+            <div className="flex items-center space-x-3 flex-1 min-w-0 mr-4">
+              <Avatar className="h-10 w-10 shrink-0">
+                <AvatarImage src={request.profiles.profile_picture || ''} />
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  {getInitials(request.profiles.full_name || request.profiles.username || 'Player')}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">
+                  {request.profiles.full_name || request.profiles.username || 'Player'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(request.created_at).toLocaleDateString()}
+                </p>
+              </div>
             </div>
-            <div className="flex space-x-2">
+            
+            <div className="flex space-x-2 shrink-0">
               <Button
                 size="sm"
                 variant="default"
                 onClick={() => handleApproveRequest(request.id, request.profiles.username || request.profiles.full_name || 'Player')}
-                className="h-8 px-3"
+                className="h-8 px-3 text-xs"
               >
                 <Icon name="Check" className="h-3 w-3 mr-1" />
                 Approve
@@ -501,7 +504,7 @@ const MyCoachingNetwork: React.FC = () => {
                 size="sm"
                 variant="outline"
                 onClick={() => handleRejectRequest(request.id, request.profiles.username || request.profiles.full_name || 'Player')}
-                className="h-8 px-3"
+                className="h-8 px-3 text-xs"
               >
                 <Icon name="X" className="h-3 w-3 mr-1" />
                 Reject
