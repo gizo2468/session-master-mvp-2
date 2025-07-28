@@ -241,6 +241,7 @@ export default function SessionDetail() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-3xl px-4 py-8">
         <SessionDetailHeader
+          sessionId={sessionId}
           location={session.location}
           onEditClick={handleEditClick}
           onDeleteClick={() => setShowDeleteModal(true)}

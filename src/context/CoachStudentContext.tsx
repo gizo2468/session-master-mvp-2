@@ -208,8 +208,46 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!user?.id) return;
 
     try {
-      // Coach connection system not implemented yet
-      setConnectedCoaches([]);
+      // Load coaches connected to this student
+      const { data: connections, error } = await supabase
+        .from('coach_student_connections')
+        .select('coach_id, status')
+        .eq('student_id', user.id)
+        .eq('status', 'approved');
+
+      if (error) {
+        console.error('Error loading connected coaches:', error);
+        return;
+      }
+
+      if (!connections || connections.length === 0) {
+        setConnectedCoaches([]);
+        return;
+      }
+
+      // Get coach profiles
+      const coachIds = connections.map(conn => conn.coach_id);
+      const { data: coachProfiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, online_nickname')
+        .in('id', coachIds);
+
+      if (profileError) {
+        console.error('Error loading coach profiles:', profileError);
+        return;
+      }
+
+      const coaches: CoachProfile[] = (coachProfiles || []).map(profile => ({
+        id: profile.id,
+        userId: profile.id,
+        displayName: profile.full_name || 'Unknown Coach',
+        bio: profile.online_nickname,
+        students: [],
+        comments: [],
+        createdAt: new Date(),
+      }));
+
+      setConnectedCoaches(coaches);
     } catch (error) {
       console.error('Error in loadConnectedCoaches:', error);
     }
