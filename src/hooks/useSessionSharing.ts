@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-interface ConnectedCoach {
+interface ConnectedPerson {
   id: string;
   full_name: string;
   email: string;
@@ -10,11 +10,12 @@ interface ConnectedCoach {
 
 export const useSessionSharing = (sessionId: string, userId: string) => {
   const [isShared, setIsShared] = useState(false);
-  const [connectedCoaches, setConnectedCoaches] = useState<ConnectedCoach[]>([]);
+  const [connectedPeople, setConnectedPeople] = useState<ConnectedPerson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userRole, setUserRole] = useState<'student' | 'coach' | null>(null);
   const { toast } = useToast();
 
-  // Fetch connected coaches and current sharing status
+  // Fetch connected people and current sharing status
   useEffect(() => {
     const fetchData = async () => {
       if (!sessionId || !userId) return;
@@ -22,46 +23,82 @@ export const useSessionSharing = (sessionId: string, userId: string) => {
       try {
         setIsLoading(true);
 
-        // Get connected coaches
-        const { data: connections, error: connectionsError } = await supabase
-          .from('coach_student_connections')
-          .select('coach_id')
-          .eq('student_id', userId)
-          .eq('status', 'accepted');
+        // First, get the user's role
+        const { data: userProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .single();
 
-        if (connectionsError) {
-          console.error('Error fetching connected coaches:', connectionsError);
+        if (profileError) {
+          console.error('Error fetching user profile:', profileError);
+          return;
+        }
+
+        const currentUserRole = userProfile?.role as 'student' | 'coach';
+        setUserRole(currentUserRole);
+
+        let connections;
+        let connectionError;
+
+        if (currentUserRole === 'student') {
+          // Student: get connected coaches
+          const { data, error } = await supabase
+            .from('coach_student_connections')
+            .select('coach_id')
+            .eq('student_id', userId)
+            .eq('status', 'accepted');
+          
+          connections = data;
+          connectionError = error;
+        } else {
+          // Coach: get connected students
+          const { data, error } = await supabase
+            .from('coach_student_connections')
+            .select('student_id')
+            .eq('coach_id', userId)
+            .eq('status', 'accepted');
+          
+          connections = data;
+          connectionError = error;
+        }
+
+        if (connectionError) {
+          console.error('Error fetching connections:', connectionError);
           return;
         }
 
         if (!connections || connections.length === 0) {
-          setConnectedCoaches([]);
+          setConnectedPeople([]);
           setIsLoading(false);
           return;
         }
 
-        // Get coach profiles
-        const coachIds = connections.map(conn => conn.coach_id);
-        const { data: coachProfiles, error: profilesError } = await supabase
+        // Get profiles of connected people
+        const personIds = connections.map(conn => 
+          currentUserRole === 'student' ? conn.coach_id : conn.student_id
+        );
+        
+        const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, full_name, email')
-          .in('id', coachIds);
+          .in('id', personIds);
 
         if (profilesError) {
-          console.error('Error fetching coach profiles:', profilesError);
+          console.error('Error fetching profiles:', profilesError);
           return;
         }
 
-        const coaches = coachProfiles?.map(profile => ({
+        const people = profiles?.map(profile => ({
           id: profile.id,
-          full_name: profile.full_name || 'Unknown Coach',
+          full_name: profile.full_name || 'Unknown',
           email: profile.email || ''
         })) || [];
 
-        setConnectedCoaches(coaches);
+        setConnectedPeople(people);
 
         // Check if session is currently shared
-        if (coaches.length > 0) {
+        if (people.length > 0) {
           const { data: sharedSessions, error: sharingError } = await supabase
             .from('shared_sessions')
             .select('id')
@@ -86,10 +123,11 @@ export const useSessionSharing = (sessionId: string, userId: string) => {
   }, [sessionId, userId]);
 
   const toggleSharing = async (shouldShare: boolean) => {
-    if (!sessionId || !userId || connectedCoaches.length === 0) {
+    if (!sessionId || !userId || connectedPeople.length === 0) {
+      const roleName = userRole === 'student' ? 'coaches' : 'students';
       toast({
-        title: "No coaches connected",
-        description: "You need to connect with coaches before sharing sessions.",
+        title: `No ${roleName} connected`,
+        description: `You need to connect with ${roleName} before sharing sessions.`,
         variant: "destructive"
       });
       return;
@@ -97,11 +135,12 @@ export const useSessionSharing = (sessionId: string, userId: string) => {
 
     try {
       if (shouldShare) {
-        // Create shared_sessions records for each connected coach
-        const sharedSessionsData = connectedCoaches.map(coach => ({
+        // Create shared_sessions records for each connected person
+        // For students: share with coaches, For coaches: share with students
+        const sharedSessionsData = connectedPeople.map(person => ({
           session_id: sessionId,
           player_id: userId,
-          coach_id: coach.id
+          coach_id: userRole === 'student' ? person.id : userId
         }));
 
         const { error } = await supabase
@@ -112,16 +151,17 @@ export const useSessionSharing = (sessionId: string, userId: string) => {
           console.error('Error sharing session:', error);
           toast({
             title: "Failed to share session",
-            description: "There was an error sharing your session with coaches.",
+            description: "There was an error sharing your session.",
             variant: "destructive"
           });
           return;
         }
 
         setIsShared(true);
+        const roleText = userRole === 'student' ? 'coach' : 'student';
         toast({
           title: "Session shared",
-          description: `Session shared with ${connectedCoaches.length} coach${connectedCoaches.length > 1 ? 'es' : ''}.`
+          description: `Session shared with ${connectedPeople.length} ${roleText}${connectedPeople.length > 1 ? 's' : ''}.`
         });
       } else {
         // Remove shared_sessions records for this session
@@ -144,7 +184,7 @@ export const useSessionSharing = (sessionId: string, userId: string) => {
         setIsShared(false);
         toast({
           title: "Session unshared",
-          description: "Session is no longer shared with coaches."
+          description: "Session is no longer shared."
         });
       }
     } catch (error) {
@@ -159,8 +199,9 @@ export const useSessionSharing = (sessionId: string, userId: string) => {
 
   return {
     isShared,
-    connectedCoaches,
+    connectedPeople,
     isLoading,
-    toggleSharing
+    toggleSharing,
+    userRole
   };
 };

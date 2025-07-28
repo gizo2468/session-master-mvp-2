@@ -22,7 +22,7 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
 }) => {
   const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
   const { user } = useAuth();
-  const { isShared, connectedCoaches, isLoading, toggleSharing } = useSessionSharing(
+  const { isShared, connectedPeople, isLoading, toggleSharing, userRole } = useSessionSharing(
     sessionId, 
     user?.id || ''
   );
@@ -31,8 +31,8 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
     toggleSharing(checked);
   };
 
-  // Only show the toggle if user has connected coaches
-  const showSharingToggle = connectedCoaches.length > 0;
+  // Only show the toggle if user has connected people
+  const showSharingToggle = connectedPeople.length > 0;
 
   return (
     <header className="mb-8">
@@ -59,7 +59,7 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
                 disabled={isLoading}
               />
               <Label htmlFor="share-coach" className="text-sm">
-                Share with Coach{connectedCoaches.length > 1 ? 'es' : ''}
+                Share with {userRole === 'student' ? 'Coach' : 'Student'}{connectedPeople.length > 1 ? 's' : ''}
               </Label>
             </div>
           )}
