@@ -597,6 +597,41 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_sessions: {
+        Row: {
+          coach_id: string
+          created_at: string | null
+          id: string
+          player_id: string
+          session_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string | null
+          id?: string
+          player_id: string
+          session_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string | null
+          id?: string
+          player_id?: string
+          session_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_sessions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tutorial_steps: {
         Row: {
           created_at: string | null
