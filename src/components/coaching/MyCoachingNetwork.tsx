@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ interface PendingRequest {
 
 const MyCoachingNetwork: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [loading, setLoading] = useState(false);
@@ -425,6 +427,11 @@ const MyCoachingNetwork: React.FC = () => {
           <div
             key={connectedUser.id}
             className="flex items-center space-x-3 p-3 rounded-lg bg-card/50 hover:bg-card/80 transition-colors cursor-pointer"
+            onClick={() => {
+              if (isCoach) {
+                navigate(`/player/${connectedUser.id}`);
+              }
+            }}
           >
             <Avatar className="h-10 w-10">
               <AvatarImage src={connectedUser.profile_picture || ''} />

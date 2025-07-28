@@ -20,6 +20,7 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import FocusModePage from "./pages/FocusModePage";
+import PlayerProfile from "./pages/PlayerProfile";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,6 +53,7 @@ const App = () => (
                 <Route path="/history" element={<SessionHistory />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/player/:playerId" element={<PlayerProfile />} />
                 <Route path="/focus-mode" element={<FocusModePage />} />
                 <Route path="/legal/privacy" element={<PrivacyPolicy />} />
                 <Route path="/auth/login" element={<Login />} />
