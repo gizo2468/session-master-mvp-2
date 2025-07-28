@@ -471,9 +471,10 @@ const MyCoachingNetwork: React.FC = () => {
         {pendingRequests.map((request) => (
           <div
             key={request.id}
-            className="flex items-center justify-between p-4 rounded-lg border bg-card/30 min-h-[80px]"
+            className="flex flex-col p-4 rounded-lg border bg-card/30 space-y-3"
           >
-            <div className="flex items-center space-x-3 flex-1 min-w-0 mr-4">
+            {/* Player Info Row */}
+            <div className="flex items-center space-x-3">
               <Avatar className="h-10 w-10 shrink-0">
                 <AvatarImage src={request.profiles.profile_picture || ''} />
                 <AvatarFallback className="bg-primary/10 text-primary">
@@ -481,7 +482,7 @@ const MyCoachingNetwork: React.FC = () => {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">
+                <p className="font-medium text-sm">
                   {request.profiles.full_name || request.profiles.username || 'Player'}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -490,7 +491,8 @@ const MyCoachingNetwork: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex space-x-2 shrink-0">
+            {/* Buttons Row */}
+            <div className="flex space-x-2 justify-end">
               <Button
                 size="sm"
                 variant="default"
