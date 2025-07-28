@@ -22,7 +22,7 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
 }) => {
   const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
   const { user } = useAuth();
-  const { isShared, connectedPeople, isLoading, toggleSharing, userRole } = useSessionSharing(
+  const { isShared, connectedCoaches, isLoading, toggleSharing } = useSessionSharing(
     sessionId, 
     user?.id || ''
   );
@@ -31,8 +31,8 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
     toggleSharing(checked);
   };
 
-  // Only show the toggle if user has connected people
-  const showSharingToggle = connectedPeople.length > 0;
+  // Only show the toggle if user has connected coaches
+  const showSharingToggle = connectedCoaches.length > 0;
 
   return (
     <header className="mb-8">
@@ -45,29 +45,11 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
         <Icon name={isRefreshing ? "Loader2" : "ArrowLeft"} size={16} className={`mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
         Back
       </Button>
-      <div className="flex justify-between items-start">
-        <h1 className="text-2xl font-serif font-bold">
-          Session Summary
-        </h1>
-        <div className="flex flex-col items-end gap-3">
-          <div className="flex gap-2">
-            <Button 
-              onClick={onEditClick}
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-            >
-              <Icon name="Pencil" size={16} />
-            </Button>
-            <Button 
-              onClick={onDeleteClick}
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-            >
-              <Icon name="Trash2" size={16} />
-            </Button>
-          </div>
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-serif font-bold">
+            Session Summary
+          </h1>
           {showSharingToggle && (
             <div className="flex items-center space-x-2">
               <Switch 
@@ -77,10 +59,28 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
                 disabled={isLoading}
               />
               <Label htmlFor="share-coach" className="text-sm">
-                Share with {userRole === 'student' ? 'Coach' : 'Student'}{connectedPeople.length > 1 ? 's' : ''}
+                Share with Coach{connectedCoaches.length > 1 ? 'es' : ''}
               </Label>
             </div>
           )}
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            onClick={onEditClick}
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+          >
+            <Icon name="Pencil" size={16} />
+          </Button>
+          <Button 
+            onClick={onDeleteClick}
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+          >
+            <Icon name="Trash2" size={16} />
+          </Button>
         </div>
       </div>
     </header>
