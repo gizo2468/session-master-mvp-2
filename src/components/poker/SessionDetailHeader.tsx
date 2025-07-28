@@ -3,20 +3,36 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
+import { useSessionSharing } from '@/hooks/useSessionSharing';
+import { useAuth } from '@/context/AuthContext';
 import Icon from '@/components/ui/Lucide';
 
 interface SessionDetailHeaderProps {
+  sessionId: string;
   location: string;
   onEditClick: () => void;
   onDeleteClick: () => void;
 }
 
 const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
+  sessionId,
   location,
   onEditClick,
   onDeleteClick
 }) => {
   const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
+  const { user } = useAuth();
+  const { isShared, connectedCoaches, isLoading, toggleSharing } = useSessionSharing(
+    sessionId, 
+    user?.id || ''
+  );
+
+  const handleToggleChange = (checked: boolean) => {
+    toggleSharing(checked);
+  };
+
+  // Only show the toggle if user has connected coaches
+  const showSharingToggle = connectedCoaches.length > 0;
 
   return (
     <header className="mb-8">
@@ -34,10 +50,19 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
           <h1 className="text-2xl font-serif font-bold">
             Session Summary
           </h1>
-          <div className="flex items-center space-x-2">
-            <Switch id="share-coach" />
-            <Label htmlFor="share-coach" className="text-sm">Share with Coach</Label>
-          </div>
+          {showSharingToggle && (
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="share-coach" 
+                checked={isShared}
+                onCheckedChange={handleToggleChange}
+                disabled={isLoading}
+              />
+              <Label htmlFor="share-coach" className="text-sm">
+                Share with Coach{connectedCoaches.length > 1 ? 'es' : ''}
+              </Label>
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           <Button 
