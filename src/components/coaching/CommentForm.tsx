@@ -107,7 +107,7 @@ export const CommentForm = ({
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}

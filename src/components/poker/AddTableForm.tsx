@@ -157,7 +157,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 py-4 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="space-y-4 py-4 overflow-y-auto" autoComplete="off">
           <div className="space-y-2">
             <Label htmlFor="tableName">Table Name (Optional)</Label>
             <Input
@@ -165,6 +165,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
               placeholder="Enter a custom table name (optional)"
               value={tableName}
               onChange={(e) => setTableName(e.target.value)}
+              autoComplete="off"
             />
           </div>
 
@@ -251,6 +252,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
               placeholder="100.00"
               value={buyIn}
               onChange={(e) => setBuyIn(e.target.value)}
+              autoComplete="off"
               required
             />
           </div>
@@ -266,6 +268,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
                   placeholder="Enter starting big blinds"
                   value={startingBB}
                   onChange={(e) => setStartingBB(e.target.value)}
+                  autoComplete="off"
                 />
               </div>
               
