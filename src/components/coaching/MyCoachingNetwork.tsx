@@ -41,16 +41,6 @@ const MyCoachingNetwork: React.FC = () => {
   const isCoach = user?.role === 'coach';
   const isStudent = user?.role === 'student';
   
-  // Load connected users and pending requests on component mount and when user changes
-  useEffect(() => {
-    if (user?.id && (isCoach || isStudent)) {
-      loadConnectedUsers();
-      if (isCoach) {
-        loadPendingRequests();
-      }
-    }
-  }, [user?.id, isCoach, isStudent]);
-
   const loadConnectedUsers = async () => {
     if (!user?.id) return;
     
@@ -160,6 +150,17 @@ const MyCoachingNetwork: React.FC = () => {
       setPendingLoading(false);
     }
   };
+
+  // Load connected users and pending requests on component mount and when user changes
+  useEffect(() => {
+    if (user?.id && (isCoach || isStudent)) {
+      loadConnectedUsers();
+      if (isCoach) {
+        loadPendingRequests();
+      }
+    }
+  }, [user?.id, isCoach, isStudent]);
+
 
   const handleApproveRequest = async (requestId: string, studentUsername: string) => {
     try {
