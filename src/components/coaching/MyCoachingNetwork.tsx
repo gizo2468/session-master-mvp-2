@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/Lucide';
 
 interface ConnectedUser {
@@ -16,6 +20,9 @@ const MyCoachingNetwork: React.FC = () => {
   const { user } = useAuth();
   const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
   const [loading, setLoading] = useState(false);
+  const [coachUsername, setCoachUsername] = useState('');
+  const [connectDialogOpen, setConnectDialogOpen] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   
   const isCoach = user?.role === 'coach';
   const isStudent = user?.role === 'student';
@@ -92,6 +99,110 @@ const MyCoachingNetwork: React.FC = () => {
       console.error('Error in loadConnectedUsers:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConnectToCoach = async () => {
+    if (!coachUsername.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a coach username.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (coachUsername.trim() === user?.username) {
+      toast({
+        title: "Error",
+        description: "You cannot send a request to yourself.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setConnecting(true);
+    try {
+      // Search for coach by username
+      const { data: coachProfile, error: searchError } = await supabase
+        .from('profiles')
+        .select('id, username, role')
+        .eq('username', coachUsername.trim())
+        .eq('role', 'coach')
+        .single();
+
+      if (searchError || !coachProfile) {
+        toast({
+          title: "Coach not found",
+          description: "No coach found with that username.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if connection already exists
+      const { data: existingConnection, error: checkError } = await supabase
+        .from('coach_student_connections')
+        .select('id, status')
+        .eq('coach_id', coachProfile.id)
+        .eq('student_id', user?.id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Error checking existing connection:', checkError);
+        toast({
+          title: "Error",
+          description: "Failed to check existing connections.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (existingConnection) {
+        toast({
+          title: "Request already exists",
+          description: `You already have a ${existingConnection.status} request with this coach.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create new connection request
+      const { error: insertError } = await supabase
+        .from('coach_student_connections')
+        .insert({
+          coach_id: coachProfile.id,
+          student_id: user?.id,
+          status: 'pending'
+        });
+
+      if (insertError) {
+        console.error('Error creating connection:', insertError);
+        toast({
+          title: "Error",
+          description: "Failed to send connection request.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Request sent!",
+        description: `Request sent to ${coachUsername}.`,
+      });
+
+      setCoachUsername('');
+      setConnectDialogOpen(false);
+      loadConnectedUsers(); // Refresh the list
+    } catch (error) {
+      console.error('Error in handleConnectToCoach:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setConnecting(false);
     }
   };
 
@@ -178,6 +289,52 @@ const MyCoachingNetwork: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {isStudent && (
+          <div className="mb-4">
+            <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <Icon name="UserPlus" className="h-4 w-4 mr-2" />
+                  Connect to Coach
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Connect to Coach</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Enter your coach's username to request a connection.
+                  </p>
+                  <Input
+                    placeholder="Coach username"
+                    value={coachUsername}
+                    onChange={(e) => setCoachUsername(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !connecting) {
+                        handleConnectToCoach();
+                      }
+                    }}
+                  />
+                  <Button 
+                    onClick={handleConnectToCoach} 
+                    disabled={connecting || !coachUsername.trim()}
+                    className="w-full"
+                  >
+                    {connecting ? (
+                      <>
+                        <Icon name="Loader" className="h-4 w-4 mr-2 animate-spin" />
+                        Sending Request...
+                      </>
+                    ) : (
+                      'Send Request'
+                    )}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
         {renderConnections()}
       </CardContent>
     </Card>
