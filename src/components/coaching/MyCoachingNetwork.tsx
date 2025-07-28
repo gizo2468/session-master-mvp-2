@@ -46,61 +46,78 @@ const MyCoachingNetwork: React.FC = () => {
     
     setLoading(true);
     try {
-      let query;
-      
       if (isCoach) {
         // Load connected students for coaches
-        query = supabase
+        const { data: connections, error: connectionsError } = await supabase
           .from('coach_student_connections')
-          .select(`
-            student_id,
-            profiles!coach_student_connections_student_id_fkey (
-              id,
-              full_name,
-              username,
-              profile_picture
-            )
-          `)
+          .select('student_id')
           .eq('coach_id', user.id)
           .eq('status', 'approved');
-      } else if (isStudent) {
-        // Load connected coaches for students
-        query = supabase
-          .from('coach_student_connections')
-          .select(`
-            coach_id,
-            profiles!coach_student_connections_coach_id_fkey (
-              id,
-              full_name,
-              username,
-              profile_picture
-            )
-          `)
-          .eq('student_id', user.id)
-          .eq('status', 'approved');
-      }
 
-      if (query) {
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error('Error loading connected users:', error);
+        if (connectionsError) {
+          console.error('Error loading connections:', connectionsError);
           return;
         }
 
-        const users = data?.map((connection: any) => {
-          const profile = isCoach 
-            ? connection.profiles 
-            : connection.profiles;
-          return {
+        if (connections && connections.length > 0) {
+          const studentIds = connections.map(c => c.student_id);
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, full_name, username, profile_picture')
+            .in('id', studentIds);
+
+          if (profilesError) {
+            console.error('Error loading student profiles:', profilesError);
+            return;
+          }
+
+          const users = profiles?.map(profile => ({
             id: profile.id,
             full_name: profile.full_name || '',
             username: profile.username || '',
             profile_picture: profile.profile_picture
-          };
-        }) || [];
+          })) || [];
 
-        setConnectedUsers(users);
+          setConnectedUsers(users);
+        } else {
+          setConnectedUsers([]);
+        }
+      } else if (isStudent) {
+        // Load connected coaches for students
+        const { data: connections, error: connectionsError } = await supabase
+          .from('coach_student_connections')
+          .select('coach_id')
+          .eq('student_id', user.id)
+          .eq('status', 'approved');
+
+        if (connectionsError) {
+          console.error('Error loading connections:', connectionsError);
+          return;
+        }
+
+        if (connections && connections.length > 0) {
+          const coachIds = connections.map(c => c.coach_id);
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, full_name, username, profile_picture')
+            .in('id', coachIds);
+
+          if (profilesError) {
+            console.error('Error loading coach profiles:', profilesError);
+            return;
+          }
+
+          const users = profiles?.map(profile => ({
+            id: profile.id,
+            full_name: profile.full_name || '',
+            username: profile.username || '',
+            profile_picture: profile.profile_picture
+          })) || [];
+
+          setConnectedUsers(users);
+        } else {
+          setConnectedUsers([]);
+        }
       }
     } catch (error) {
       console.error('Error in loadConnectedUsers:', error);
@@ -114,36 +131,57 @@ const MyCoachingNetwork: React.FC = () => {
     
     setPendingLoading(true);
     try {
-      const { data, error } = await supabase
+      // First get the pending connections
+      const { data: connections, error: connectionsError } = await supabase
         .from('coach_student_connections')
-        .select(`
-          id,
-          student_id,
-          created_at,
-          profiles!coach_student_connections_student_id_fkey (
-            id,
-            full_name,
-            username,
-            profile_picture
-          )
-        `)
+        .select('id, student_id, created_at')
         .eq('coach_id', user.id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error loading pending requests:', error);
+      if (connectionsError) {
+        console.error('Error loading pending connections:', connectionsError);
         return;
       }
 
-      const requests = data?.map((request: any) => ({
-        id: request.id,
-        student_id: request.student_id,
-        created_at: request.created_at,
-        profiles: request.profiles
-      })) || [];
+      if (connections && connections.length > 0) {
+        // Then get the student profiles
+        const studentIds = connections.map(c => c.student_id);
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, profile_picture')
+          .in('id', studentIds);
 
-      setPendingRequests(requests);
+        if (profilesError) {
+          console.error('Error loading student profiles:', profilesError);
+          return;
+        }
+
+        // Combine the data
+        const requests = connections.map(connection => {
+          const profile = profiles?.find(p => p.id === connection.student_id);
+          return {
+            id: connection.id,
+            student_id: connection.student_id,
+            created_at: connection.created_at,
+            profiles: profile ? {
+              id: profile.id,
+              full_name: profile.full_name || '',
+              username: profile.username || '',
+              profile_picture: profile.profile_picture
+            } : {
+              id: connection.student_id,
+              full_name: '',
+              username: 'Unknown Student',
+              profile_picture: undefined
+            }
+          };
+        });
+
+        setPendingRequests(requests);
+      } else {
+        setPendingRequests([]);
+      }
     } catch (error) {
       console.error('Error in loadPendingRequests:', error);
     } finally {
