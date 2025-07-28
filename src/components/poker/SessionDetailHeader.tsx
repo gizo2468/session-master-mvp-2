@@ -1,5 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
 import Icon from '@/components/ui/Lucide';
 
@@ -28,22 +30,32 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
         Back
       </Button>
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-serif font-bold">
-          Session Summary
-        </h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-serif font-bold">
+            Session Summary
+          </h1>
+          <div className="flex items-center space-x-2">
+            <Switch id="share-coach" />
+            <Label htmlFor="share-coach" className="text-sm">Share with Coach</Label>
+          </div>
+        </div>
         <div className="flex gap-2">
-          <button 
+          <Button 
             onClick={onEditClick}
-            className="text-sm py-1 px-3 border border-gray-300 rounded"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
           >
-            Edit Tables
-          </button>
-          <button 
+            <Icon name="Pencil" size={16} />
+          </Button>
+          <Button 
             onClick={onDeleteClick}
-            className="text-sm py-1 px-3 border border-red-300 text-poker-red rounded"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
           >
-            Delete
-          </button>
+            <Icon name="Trash2" size={16} />
+          </Button>
         </div>
       </div>
     </header>
