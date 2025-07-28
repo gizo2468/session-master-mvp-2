@@ -45,11 +45,29 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
         <Icon name={isRefreshing ? "Loader2" : "ArrowLeft"} size={16} className={`mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
         Back
       </Button>
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-serif font-bold">
-            Session Summary
-          </h1>
+      <div className="flex justify-between items-start">
+        <h1 className="text-2xl font-serif font-bold">
+          Session Summary
+        </h1>
+        <div className="flex flex-col items-end gap-3">
+          <div className="flex gap-2">
+            <Button 
+              onClick={onEditClick}
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+            >
+              <Icon name="Pencil" size={16} />
+            </Button>
+            <Button 
+              onClick={onDeleteClick}
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            >
+              <Icon name="Trash2" size={16} />
+            </Button>
+          </div>
           {showSharingToggle && (
             <div className="flex items-center space-x-2">
               <Switch 
@@ -63,24 +81,6 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
               </Label>
             </div>
           )}
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            onClick={onEditClick}
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-          >
-            <Icon name="Pencil" size={16} />
-          </Button>
-          <Button 
-            onClick={onDeleteClick}
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-          >
-            <Icon name="Trash2" size={16} />
-          </Button>
         </div>
       </div>
     </header>
