@@ -149,7 +149,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Table</DialogTitle>
           <DialogDescription>
@@ -157,7 +157,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4 py-4 overflow-y-auto">
           <div className="space-y-2">
             <Label htmlFor="tableName">Table Name (Optional)</Label>
             <Input
