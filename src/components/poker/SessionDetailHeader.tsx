@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
+import { useAuth } from '@/context/AuthContext';
 import Icon from '@/components/ui/Lucide';
 
 interface SessionDetailHeaderProps {
@@ -17,6 +18,10 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
   onDeleteClick
 }) => {
   const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
+  const { user } = useAuth();
+  
+  // Only show the toggle for players (students), not coaches
+  const showShareToggle = user?.role === 'student';
 
   return (
     <header className="mb-8">
@@ -34,10 +39,12 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
           <h1 className="text-2xl font-serif font-bold">
             Session Summary
           </h1>
-          <div className="flex items-center space-x-2">
-            <Switch id="share-coach" />
-            <Label htmlFor="share-coach" className="text-sm">Share with Coach</Label>
-          </div>
+          {showShareToggle && (
+            <div className="flex items-center space-x-2">
+              <Switch id="share-coach" />
+              <Label htmlFor="share-coach" className="text-sm">Share with Coach</Label>
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           <Button 
