@@ -137,7 +137,17 @@ const PlayerProfile = () => {
       }
 
       const sessions = sharedSessionsData?.map(item => item.sessions).filter(Boolean) || [];
-      setSharedSessions(sessions);
+      
+      // Sort sessions to prioritize live sessions first
+      const sortedSessions = sessions.sort((a, b) => {
+        // Live sessions (is_active = true) should appear first
+        if (a.is_active && !b.is_active) return -1;
+        if (!a.is_active && b.is_active) return 1;
+        // If both have the same active status, maintain original order
+        return 0;
+      });
+      
+      setSharedSessions(sortedSessions);
       
       // Calculate summary
       calculateSummary(sessions);
