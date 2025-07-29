@@ -10,6 +10,7 @@ import Icon from '@/components/ui/Lucide';
 import CoachProfileCard from '@/components/coaching/CoachProfileCard';
 import PageContainer from '@/components/ui/PageContainer';
 import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
+import SharedSessionModal from '@/components/coaching/SharedSessionModal';
 
 interface CoachData {
   id: string;
@@ -41,6 +42,8 @@ const CoachProfile: React.FC = () => {
   const [coach, setCoach] = useState<CoachData | null>(null);
   const [sharedSessions, setSharedSessions] = useState<SharedSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [showSessionModal, setShowSessionModal] = useState(false);
 
   useEffect(() => {
     const loadCoachData = async () => {
@@ -169,6 +172,16 @@ const CoachProfile: React.FC = () => {
     });
   };
 
+  const handleSessionClick = (sessionId: string) => {
+    setSelectedSessionId(sessionId);
+    setShowSessionModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowSessionModal(false);
+    setSelectedSessionId(null);
+  };
+
   if (loading) {
     return (
       <PageContainer>
@@ -240,11 +253,12 @@ const CoachProfile: React.FC = () => {
                 return (
                   <div
                     key={session.id}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors"
+                    onClick={() => handleSessionClick(session.id)}
+                    className="flex items-center justify-between p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors cursor-pointer group"
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">{session.game_type}</span>
+                        <span className="font-medium group-hover:text-primary transition-colors">{session.game_type}</span>
                         <Badge variant="outline" className="text-xs">
                           {session.format}
                         </Badge>
@@ -253,6 +267,7 @@ const CoachProfile: React.FC = () => {
                             Live
                           </Badge>
                         )}
+                        <Icon name="ExternalLink" className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />
                       </div>
                       <div className="text-sm text-muted-foreground">
                         <span>{formatSessionDateTime(session.start_time)}</span>
@@ -308,6 +323,16 @@ const CoachProfile: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Session Detail Modal */}
+      {selectedSessionId && coach && (
+        <SharedSessionModal
+          isOpen={showSessionModal}
+          onClose={handleCloseModal}
+          sessionId={selectedSessionId}
+          playerName={coach.full_name || coach.username}
+        />
+      )}
     </PageContainer>
   );
 };
