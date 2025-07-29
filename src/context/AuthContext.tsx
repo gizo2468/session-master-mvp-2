@@ -289,6 +289,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                      "Metadata role:", currentSession.user.user_metadata?.role);
           await fetchAndSetUser(currentSession.user, false); // false = not a fresh login
         } else {
+          // No session found - complete the auth check
           setIsLoading(false);
           setAuthChecked(true);
           setInitialCheckComplete(true);
@@ -370,6 +371,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         showWelcomeToast(fallbackUser.fullName);
       }
     } finally {
+      // Only set loading to false when we have completed the auth check
       setIsLoading(false);
       setAuthChecked(true);
       setInitialCheckComplete(true);
