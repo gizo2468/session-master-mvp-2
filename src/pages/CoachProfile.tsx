@@ -10,6 +10,7 @@ import Icon from '@/components/ui/Lucide';
 import CoachProfileCard from '@/components/coaching/CoachProfileCard';
 import PageContainer from '@/components/ui/PageContainer';
 import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
+import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
 
 interface CoachData {
   id: string;
@@ -41,6 +42,8 @@ const CoachProfile: React.FC = () => {
   const [coach, setCoach] = useState<CoachData | null>(null);
   const [sharedSessions, setSharedSessions] = useState<SharedSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadCoachData = async () => {
@@ -240,7 +243,11 @@ const CoachProfile: React.FC = () => {
                 return (
                   <div
                     key={session.id}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors"
+                    className="flex items-center justify-between p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setSelectedSessionId(session.id);
+                      setSelectedPlayerId(user.id);
+                    }}
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -277,10 +284,23 @@ const CoachProfile: React.FC = () => {
               })}
             </div>
           )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Placeholder sections for future content */}
+        {/* Session Modal */}
+        {selectedSessionId && selectedPlayerId && (
+          <SharedSessionModal
+            isOpen={!!selectedSessionId}
+            onClose={() => {
+              setSelectedSessionId(null);
+              setSelectedPlayerId(null);
+            }}
+            sessionId={selectedSessionId}
+            playerId={selectedPlayerId}
+          />
+        )}
+
+        {/* Placeholder sections for future content */}
       <div className="space-y-6">
         {/* Placeholder: Coach Feedback */}
         <Card>
