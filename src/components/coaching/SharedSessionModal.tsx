@@ -66,7 +66,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [sessionDetails, setSessionDetails] = useState<SessionDetails | null>(null);
   const [sessionHands, setSessionHands] = useState<SessionHand[]>([]);
   const [loading, setLoading] = useState(false);
-  const [liveDuration, setLiveDuration] = useState<number | null>(null);
+  const [liveDuration, setLiveDuration] = useState<number | null>(null); // in seconds for live sessions, minutes for ended sessions
 
   useEffect(() => {
     if (isOpen && sessionId) {
@@ -133,10 +133,15 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   };
 
   // Calculate live elapsed time for active sessions
-  const calculateLiveElapsedTime = useCallback((startTime: string) => {
+  const calculateLiveElapsedTime = useCallback((startTime: string, returnSeconds = false) => {
     const start = new Date(startTime);
-    const elapsed = Math.floor((Date.now() - start.getTime()) / (1000 * 60)); // in minutes
-    return Math.max(0, elapsed);
+    const elapsedMs = Math.max(0, Date.now() - start.getTime());
+    
+    if (returnSeconds) {
+      return Math.floor(elapsedMs / 1000); // in seconds
+    } else {
+      return Math.floor(elapsedMs / (1000 * 60)); // in minutes
+    }
   }, []);
 
   // Set up live timer for active sessions
@@ -146,26 +151,26 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
       return;
     }
 
-    // Calculate initial live duration
-    const initialDuration = calculateLiveElapsedTime(sessionDetails.start_time);
+    // Calculate initial live duration in seconds for live sessions
+    const initialDuration = calculateLiveElapsedTime(sessionDetails.start_time, true);
     setLiveDuration(initialDuration);
 
-    // Update live duration every minute for active sessions
+    // Update live duration every second for active sessions
     const timer = setInterval(() => {
-      const currentDuration = calculateLiveElapsedTime(sessionDetails.start_time);
+      const currentDuration = calculateLiveElapsedTime(sessionDetails.start_time, true);
       setLiveDuration(currentDuration);
-    }, 60000); // Update every minute
+    }, 1000); // Update every second
 
     return () => clearInterval(timer);
   }, [sessionDetails, calculateLiveElapsedTime]);
 
   const calculateDuration = (session: SessionDetails) => {
-    // For live sessions, use the live duration
+    // For live sessions, return duration in seconds for formatting
     if (session.is_active && liveDuration !== null) {
-      return liveDuration;
+      return liveDuration; // liveDuration is in seconds for live sessions
     }
     
-    // For ended sessions, prioritize calculation from start and end times
+    // For ended sessions, prioritize calculation from start and end times (return minutes)
     if (session.start_time && session.end_time) {
       const start = new Date(session.start_time);
       const end = new Date(session.end_time);
@@ -180,11 +185,27 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
     return null;
   };
 
-  const formatDuration = (minutes?: number | null) => {
-    if (!minutes) return 'N/A';
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  const formatDuration = (duration?: number | null) => {
+    if (!duration) return 'N/A';
+    
+    // For live sessions, duration is in seconds
+    if (sessionDetails?.is_active && sessionDetails?.format === 'Live') {
+      const totalSeconds = duration;
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      
+      if (hours > 0) {
+        return `${hours}h ${minutes}m ${seconds}s`;
+      } else {
+        return `${minutes}m ${seconds}s`;
+      }
+    } else {
+      // For ended sessions, duration is in minutes
+      const hours = Math.floor(duration / 60);
+      const mins = duration % 60;
+      return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    }
   };
 
   const profit = sessionDetails ? (sessionDetails.cash_out || 0) - sessionDetails.buy_in : 0;
