@@ -9,7 +9,6 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/Lucide';
-import CoachProfileCard from './CoachProfileCard';
 
 interface ConnectedUser {
   id: string;
@@ -41,8 +40,6 @@ const MyCoachingNetwork: React.FC = () => {
   const [coachUsername, setCoachUsername] = useState('');
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
-  const [selectedCoach, setSelectedCoach] = useState<ConnectedUser | null>(null);
-  const [coachProfileOpen, setCoachProfileOpen] = useState(false);
   
   const isCoach = user?.role === 'coach';
   const isStudent = user?.role === 'student';
@@ -436,9 +433,8 @@ const MyCoachingNetwork: React.FC = () => {
               if (isCoach) {
                 navigate(`/player/${connectedUser.id}`);
               } else {
-                // Student clicking on a coach - show profile card
-                setSelectedCoach(connectedUser);
-                setCoachProfileOpen(true);
+                // Student clicking on a coach - navigate to coach profile page
+                navigate(`/coach/${connectedUser.id}`);
               }
             }}
           >
@@ -535,14 +531,13 @@ const MyCoachingNetwork: React.FC = () => {
   };
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Icon name="Network" className="h-5 w-5" />
-            <span>My Coaching Network</span>
-          </CardTitle>
-        </CardHeader>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <Icon name="Network" className="h-5 w-5" />
+          <span>My Coaching Network</span>
+        </CardTitle>
+      </CardHeader>
       <CardContent>
         {isStudent && (
           <div className="mb-4">
@@ -618,16 +613,6 @@ const MyCoachingNetwork: React.FC = () => {
         </div>
       </CardContent>
     </Card>
-
-    <CoachProfileCard
-      isOpen={coachProfileOpen}
-      onClose={() => {
-        setCoachProfileOpen(false);
-        setSelectedCoach(null);
-      }}
-      coach={selectedCoach}
-    />
-  </>
   );
 };
 

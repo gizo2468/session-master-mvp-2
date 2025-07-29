@@ -1,167 +1,179 @@
-
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useCoachStudent } from '@/context/CoachStudentContext';
+import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/Lucide';
-import GenerateCodeButton from '@/components/coaching/GenerateCodeButton';
-import ConnectionCodeDisplay from '@/components/coaching/ConnectionCodeDisplay';
-import PendingRequestsList from '@/components/coaching/PendingRequestsList';
-import StudentsList from '@/components/coaching/StudentsList';
-import CreateCoachProfileForm from '@/components/coaching/CreateCoachProfileForm';
-import { coachTiers, hasFeatureAccess, isAtStudentLimit, getMaxStudents } from '@/utils/coachTiers';
-import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
-import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import CoachProfileCard from '@/components/coaching/CoachProfileCard';
+import PageContainer from '@/components/ui/PageContainer';
 
-const CoachProfile = () => {
+interface CoachData {
+  id: string;
+  full_name: string;
+  username: string;
+  profile_picture?: string;
+  bio?: string;
+}
+
+const CoachProfile: React.FC = () => {
+  const { coachId } = useParams<{ coachId: string }>();
   const navigate = useNavigate();
-  const { isCoach, coachProfile, students } = useCoachStudent();
   const { user } = useAuth();
-  
-  // Get coach tier information
-  const coachTier = user?.coachTier || 'free';
-  const tierDetails = coachTiers[coachTier];
-  const studentCount = students.length;
-  const maxStudents = getMaxStudents(coachTier);
-  const studentPercentage = maxStudents > 0 ? (studentCount / maxStudents) * 100 : 0;
-  const atStudentLimit = isAtStudentLimit(coachTier, studentCount);
-  
-  // Handle plan badge click
-  const handlePlanBadgeClick = () => {
-    navigate('/coach-upgrade');
-  };
-  
-  // Helper function to get the appropriate plan badge variant
-  const getPlanBadgeVariant = (tier: string) => {
-    switch (tier) {
-      case 'free': return 'planFree';
-      case 'starter': return 'planStarter';
-      case 'pro': return 'planPro';
-      case 'elite': return 'planElite';
-      default: return 'planFree';
-    }
-  };
-  
+  const [coach, setCoach] = useState<CoachData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCoachData = async () => {
+      if (!coachId || !user?.id) return;
+
+      try {
+        // Verify the user is connected to this coach
+        const { data: connection, error: connectionError } = await supabase
+          .from('coach_student_connections')
+          .select('id')
+          .eq('coach_id', coachId)
+          .eq('student_id', user.id)
+          .eq('status', 'approved')
+          .single();
+
+        if (connectionError || !connection) {
+          toast({
+            title: "Access denied",
+            description: "You don't have access to view this coach's profile.",
+            variant: "destructive",
+          });
+          navigate('/dashboard');
+          return;
+        }
+
+        // Load coach profile data
+        const { data: coachProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, profile_picture, bio')
+          .eq('id', coachId)
+          .eq('role', 'coach')
+          .single();
+
+        if (profileError || !coachProfile) {
+          console.error('Error loading coach profile:', profileError);
+          toast({
+            title: "Error",
+            description: "Failed to load coach profile.",
+            variant: "destructive",
+          });
+          navigate('/dashboard');
+          return;
+        }
+
+        setCoach(coachProfile);
+      } catch (error) {
+        console.error('Error in loadCoachData:', error);
+        toast({
+          title: "Error",
+          description: "Something went wrong loading the coach profile.",
+          variant: "destructive",
+        });
+        navigate('/dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCoachData();
+  }, [coachId, user?.id, navigate]);
+
+  if (loading) {
+    return (
+      <PageContainer>
+        <div className="flex items-center justify-center py-12">
+          <Icon name="Loader" className="h-8 w-8 animate-spin text-muted-foreground" />
+          <span className="ml-3 text-muted-foreground">Loading coach profile...</span>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  if (!coach) {
+    return (
+      <PageContainer>
+        <div className="text-center py-12">
+          <Icon name="UserX" className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h2 className="text-xl font-semibold mb-2">Coach not found</h2>
+          <p className="text-muted-foreground mb-4">
+            The coach profile you're looking for could not be found.
+          </p>
+          <Button onClick={() => navigate('/dashboard')}>
+            <Icon name="ArrowLeft" className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </div>
+      </PageContainer>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto max-w-md px-4 py-8">
-        <header className="mb-8">
-          <button 
-            onClick={() => navigate('/')} 
-            className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:underline"
-          >
-            <Icon name="ArrowLeft" size={16} />
-            <span>Back</span>
-          </button>
-          <h1 className="text-2xl font-bold text-poker-black">Coach Profile</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your players and connection codes</p>
-        </header>
-        
-        {!isCoach && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Become a Coach</CardTitle>
-              <CardDescription>Create your coach profile to connect with players</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CreateCoachProfileForm />
-            </CardContent>
-          </Card>
-        )}
-        
-        {isCoach && coachProfile && (
-          <div>
-            {/* Coach tier info card */}
-            <Card className="mb-6">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-xl">{coachProfile.displayName}</CardTitle>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge 
-                          onClick={handlePlanBadgeClick}
-                          variant={getPlanBadgeVariant(coachTier)}
-                        >
-                          {tierDetails.name}
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Click to change plan</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-                {coachProfile.bio && (
-                  <CardDescription>{coachProfile.bio}</CardDescription>
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Student Capacity</span>
-                      <span className={atStudentLimit ? "text-red-600 font-medium" : ""}>
-                        {studentCount} / {maxStudents} students
-                      </span>
-                    </div>
-                    <Progress 
-                      value={studentPercentage} 
-                      className={`h-2 ${
-                        studentPercentage > 90 ? 'bg-red-100' : 
-                        studentPercentage > 70 ? 'bg-amber-100' : 'bg-gray-100'
-                      }`} 
-                    />
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <GenerateCodeButton />
-                    {coachTier === 'free' && (
-                      <Button 
-                        onClick={handlePlanBadgeClick}
-                        variant="default"
-                        className="w-full bg-poker-gold hover:bg-poker-darkGold"
-                      >
-                        <Icon name="package-plus" size={16} className="mr-2" />
-                        Upgrade Plan
-                      </Button>
-                    )}
-                  </div>
-                  
-                  {coachProfile.students.length > 0 && (
-                    <Button 
-                      onClick={() => navigate('/coach-dashboard')}
-                      variant="outline"
-                      className="w-full mt-2"
-                    >
-                      Go to Coach Dashboard
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Connection Code Component wrapped with overlay if at student limit */}
-            <div className="relative">
-              <ConnectionCodeDisplay />
-              {atStudentLimit && (
-                <FeatureLockOverlay featureName="Additional Students" />
-              )}
-            </div>
-            
-            {/* Pending Requests Component */}
-            <PendingRequestsList />
-            
-            {/* Students List Component */}
-            <StudentsList />
-          </div>
-        )}
+    <PageContainer>
+      {/* Header with back button */}
+      <div className="flex items-center justify-between mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center space-x-2"
+        >
+          <Icon name="ArrowLeft" className="h-4 w-4" />
+          <span>Back</span>
+        </Button>
       </div>
-    </div>
+
+      {/* Coach Profile Card */}
+      <div className="mb-8">
+        <CoachProfileCard coach={coach} />
+      </div>
+
+      {/* Placeholder sections for future content */}
+      <div className="space-y-6">
+        {/* Placeholder: Reviewed Sessions */}
+        <Card>
+          <CardContent className="p-8">
+            <div className="text-center text-muted-foreground">
+              <Icon name="FileText" className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">Reviewed Sessions</h3>
+              <p className="text-sm">
+                Session reviews and feedback from your coach will appear here.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Placeholder: Coach Feedback */}
+        <Card>
+          <CardContent className="p-8">
+            <div className="text-center text-muted-foreground">
+              <Icon name="MessageSquare" className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">Coach Feedback</h3>
+              <p className="text-sm">
+                Personal feedback and coaching notes will be displayed here.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Placeholder: Learning Progress */}
+        <Card>
+          <CardContent className="p-8">
+            <div className="text-center text-muted-foreground">
+              <Icon name="TrendingUp" className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">Learning Progress</h3>
+              <p className="text-sm">
+                Your progress tracking and improvement insights will be shown here.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </PageContainer>
   );
 };
 
