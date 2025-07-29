@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/Lucide';
 import CoachProfileCard from '@/components/coaching/CoachProfileCard';
 import PageContainer from '@/components/ui/PageContainer';
+import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 
 interface CoachData {
   id: string;
@@ -15,6 +17,20 @@ interface CoachData {
   username: string;
   profile_picture?: string;
   bio?: string;
+  default_currency?: string;
+}
+
+interface SharedSession {
+  id: string;
+  game_type: string;
+  format: string;
+  location?: string;
+  buy_in: number;
+  cash_out?: number;
+  start_time: string;
+  is_active: boolean;
+  tables_played: number;
+  currency?: string;
 }
 
 const CoachProfile: React.FC = () => {
@@ -22,6 +38,7 @@ const CoachProfile: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [coach, setCoach] = useState<CoachData | null>(null);
+  const [sharedSessions, setSharedSessions] = useState<SharedSession[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,7 +68,7 @@ const CoachProfile: React.FC = () => {
         // Load coach profile data
         const { data: coachProfile, error: profileError } = await supabase
           .from('profiles')
-          .select('id, full_name, username, profile_picture, bio')
+          .select('id, full_name, username, profile_picture, bio, default_currency')
           .eq('id', coachId)
           .eq('role', 'coach')
           .single();
@@ -68,6 +85,53 @@ const CoachProfile: React.FC = () => {
         }
 
         setCoach(coachProfile);
+
+        // Load shared sessions with this coach
+        const { data: sessionsData, error: sessionsError } = await supabase
+          .from('shared_sessions')
+          .select(`
+            session_id,
+            sessions!inner(
+              id,
+              game_type,
+              format,
+              location,
+              buy_in,
+              cash_out,
+              start_time,
+              is_active,
+              tables_played,
+              currency
+            )
+          `)
+          .eq('player_id', user.id)
+          .eq('coach_id', coachId);
+
+        if (sessionsError) {
+          console.error('Error loading shared sessions:', sessionsError);
+        } else if (sessionsData) {
+          const formattedSessions = sessionsData.map((item: any) => ({
+            id: item.sessions.id,
+            game_type: item.sessions.game_type,
+            format: item.sessions.format,
+            location: item.sessions.location,
+            buy_in: item.sessions.buy_in,
+            cash_out: item.sessions.cash_out,
+            start_time: item.sessions.start_time,
+            is_active: item.sessions.is_active,
+            tables_played: item.sessions.tables_played || 0,
+            currency: item.sessions.currency
+          }));
+          
+          // Sort sessions: active sessions first, then by start time (newest first)
+          formattedSessions.sort((a, b) => {
+            if (a.is_active && !b.is_active) return -1;
+            if (!a.is_active && b.is_active) return 1;
+            return new Date(b.start_time).getTime() - new Date(a.start_time).getTime();
+          });
+          
+          setSharedSessions(formattedSessions);
+        }
       } catch (error) {
         console.error('Error in loadCoachData:', error);
         toast({
@@ -83,6 +147,26 @@ const CoachProfile: React.FC = () => {
 
     loadCoachData();
   }, [coachId, user?.id, navigate]);
+
+  const getCurrencySymbol = (currency?: string) => {
+    switch (currency) {
+      case 'EUR': return '€';
+      case 'GBP': return '£';
+      case 'JPY': return '¥';
+      case 'USD':
+      default: return '$';
+    }
+  };
+
+  const formatSessionDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   if (loading) {
     return (
@@ -131,6 +215,69 @@ const CoachProfile: React.FC = () => {
       <div className="mb-8">
         <CoachProfileCard coach={coach} />
       </div>
+
+      {/* Shared Sessions */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Icon name="Share2" size={18} />
+            <span>Shared Sessions</span>
+            <Badge variant="secondary">{sharedSessions.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {sharedSessions.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Icon name="Inbox" className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>No sessions have been shared with this coach yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sharedSessions.map((session) => {
+                const profit = (session.cash_out || 0) - session.buy_in;
+                const currencySymbol = getCurrencySymbol(session.currency || coach?.default_currency);
+                return (
+                  <div
+                    key={session.id}
+                    className="flex items-center justify-between p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium">{session.game_type}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {session.format}
+                        </Badge>
+                        {session.is_active && (
+                          <Badge variant="default" className="text-xs">
+                            Live
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        <span>{formatSessionDateTime(session.start_time)}</span>
+                        {session.location && <span> • {session.location}</span>}
+                        {session.tables_played > 0 && <span> • {session.tables_played} tables</span>}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-muted-foreground mb-1">
+                        Buy-in: {currencySymbol}{session.buy_in.toFixed(0)}
+                      </div>
+                      {!session.is_active && session.cash_out !== undefined && (
+                        <ProfitLossBadge 
+                          profit={profit} 
+                          currency={session.currency || coach?.default_currency || 'USD'}
+                          size="sm"
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Placeholder sections for future content */}
       <div className="space-y-6">
