@@ -205,9 +205,9 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Buy-in</p>
-                      <p className="font-medium">{currencySymbol}{sessionDetails.buy_in.toFixed(0)}</p>
+                      <p className="font-medium">{currencySymbol}{(sessionDetails.buy_in || 0).toFixed(0)}</p>
                     </div>
-                    {sessionDetails.cash_out !== undefined && (
+                    {sessionDetails.cash_out !== undefined && sessionDetails.cash_out !== null && (
                       <div>
                         <p className="text-sm text-muted-foreground">Cash Out</p>
                         <p className="font-medium">{currencySymbol}{sessionDetails.cash_out.toFixed(0)}</p>
@@ -280,19 +280,19 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                         )}
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                          {hand.pot_size !== undefined && (
+                          {hand.pot_size !== undefined && hand.pot_size !== null && (
                             <div>
                               <span className="text-muted-foreground">Pot: </span>
                               <span>{currencySymbol}{hand.pot_size.toFixed(0)}</span>
                             </div>
                           )}
-                          {hand.amount_invested !== undefined && (
+                          {hand.amount_invested !== undefined && hand.amount_invested !== null && (
                             <div>
                               <span className="text-muted-foreground">Invested: </span>
                               <span>{currencySymbol}{hand.amount_invested.toFixed(0)}</span>
                             </div>
                           )}
-                          {hand.amount_won !== undefined && (
+                          {hand.amount_won !== undefined && hand.amount_won !== null && (
                             <div>
                               <span className="text-muted-foreground">Won: </span>
                               <span>{currencySymbol}{hand.amount_won.toFixed(0)}</span>
