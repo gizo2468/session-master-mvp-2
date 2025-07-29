@@ -282,19 +282,6 @@ const CoachProfile: React.FC = () => {
 
       {/* Placeholder sections for future content */}
       <div className="space-y-6">
-        {/* Placeholder: Reviewed Sessions */}
-        <Card>
-          <CardContent className="p-8">
-            <div className="text-center text-muted-foreground">
-              <Icon name="FileText" className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium mb-2">Reviewed Sessions</h3>
-              <p className="text-sm">
-                Session reviews and feedback from your coach will appear here.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Placeholder: Coach Feedback */}
         <Card>
           <CardContent className="p-8">
