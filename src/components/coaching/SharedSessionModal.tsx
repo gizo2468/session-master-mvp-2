@@ -132,16 +132,16 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   };
 
   const calculateDuration = (session: SessionDetails) => {
-    // If session has a stored duration, use it (in minutes)
-    if (session.session_duration) {
-      return session.session_duration;
-    }
-    
-    // Otherwise calculate from start and end times
+    // Always prioritize calculation from start and end times for consistency
     if (session.start_time && session.end_time) {
       const start = new Date(session.start_time);
       const end = new Date(session.end_time);
       return Math.floor((end.getTime() - start.getTime()) / (1000 * 60));
+    }
+    
+    // Fall back to stored duration if start/end times are not available
+    if (session.session_duration) {
+      return session.session_duration;
     }
     
     return null;
