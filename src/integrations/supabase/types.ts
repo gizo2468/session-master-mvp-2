@@ -92,6 +92,7 @@ export type Database = {
           online_nickname: string | null
           profile_picture: string | null
           role: string
+          students_coached_count: number
           updated_at: string
           username: string | null
         }
@@ -115,6 +116,7 @@ export type Database = {
           online_nickname?: string | null
           profile_picture?: string | null
           role?: string
+          students_coached_count?: number
           updated_at?: string
           username?: string | null
         }
@@ -138,6 +140,7 @@ export type Database = {
           online_nickname?: string | null
           profile_picture?: string | null
           role?: string
+          students_coached_count?: number
           updated_at?: string
           username?: string | null
         }
