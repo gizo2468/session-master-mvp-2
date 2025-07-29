@@ -18,6 +18,7 @@ interface CoachData {
   profile_picture?: string;
   bio?: string;
   default_currency?: string;
+  students_coached_count?: number;
 }
 
 interface SharedSession {
@@ -68,7 +69,7 @@ const CoachProfile: React.FC = () => {
         // Load coach profile data
         const { data: coachProfile, error: profileError } = await supabase
           .from('profiles')
-          .select('id, full_name, username, profile_picture, bio, default_currency')
+          .select('id, full_name, username, profile_picture, bio, default_currency, students_coached_count')
           .eq('id', coachId)
           .eq('role', 'coach')
           .single();

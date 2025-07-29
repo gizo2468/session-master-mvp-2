@@ -11,6 +11,7 @@ interface CoachProfileCardProps {
     username: string;
     profile_picture?: string;
     bio?: string;
+    students_coached_count?: number;
   };
 }
 
@@ -28,38 +29,6 @@ const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
   // Mock data for now - these will be editable by the coach later
   const mockCoachingFocus = ['Tournaments', 'Cash Games'];
   const mockYearsExperience = 5;
-  const mockStarRating = 4.2;
-
-  const renderStars = (rating: number) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-
-    return (
-      <div className="flex items-center space-x-1">
-        {/* Full stars */}
-        {Array.from({ length: fullStars }).map((_, i) => (
-          <Icon key={`full-${i}`} name="Star" className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-        ))}
-        {/* Half star */}
-        {hasHalfStar && (
-          <div className="relative">
-            <Icon name="Star" className="h-4 w-4 text-muted-foreground" />
-            <div className="absolute inset-0 overflow-hidden w-1/2">
-              <Icon name="Star" className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            </div>
-          </div>
-        )}
-        {/* Empty stars */}
-        {Array.from({ length: emptyStars }).map((_, i) => (
-          <Icon key={`empty-${i}`} name="Star" className="h-4 w-4 text-muted-foreground" />
-        ))}
-        <span className="ml-2 text-sm text-muted-foreground">
-          {rating.toFixed(1)}
-        </span>
-      </div>
-    );
-  };
 
   return (
     <Card>
@@ -111,15 +80,15 @@ const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
           </p>
         </div>
 
-        {/* Star Rating */}
+        {/* Students Coached */}
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <Icon name="Star" className="h-4 w-4 text-primary" />
-            <span className="font-medium text-sm">Rating</span>
+            <Icon name="Users" className="h-4 w-4 text-primary" />
+            <span className="font-medium text-sm">Students Coached</span>
           </div>
-          <div className="ml-6">
-            {renderStars(mockStarRating)}
-          </div>
+          <p className="text-sm text-muted-foreground ml-6">
+            {coach.students_coached_count || 0}
+          </p>
         </div>
 
         {/* Bio/Tagline */}
