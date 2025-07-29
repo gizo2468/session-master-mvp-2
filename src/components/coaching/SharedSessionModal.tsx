@@ -131,7 +131,23 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
     });
   };
 
-  const formatDuration = (minutes?: number) => {
+  const calculateDuration = (session: SessionDetails) => {
+    // If session has a stored duration, use it (in minutes)
+    if (session.session_duration) {
+      return session.session_duration;
+    }
+    
+    // Otherwise calculate from start and end times
+    if (session.start_time && session.end_time) {
+      const start = new Date(session.start_time);
+      const end = new Date(session.end_time);
+      return Math.floor((end.getTime() - start.getTime()) / (1000 * 60));
+    }
+    
+    return null;
+  };
+
+  const formatDuration = (minutes?: number | null) => {
     if (!minutes) return 'N/A';
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -199,7 +215,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                     )}
                     <div>
                       <p className="text-sm text-muted-foreground">Duration</p>
-                      <p className="font-medium">{formatDuration(sessionDetails.session_duration)}</p>
+                      <p className="font-medium">{formatDuration(calculateDuration(sessionDetails))}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Tables</p>
@@ -207,18 +223,6 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Start Time</p>
-                      <p className="font-medium">{formatDateTime(sessionDetails.start_time)}</p>
-                    </div>
-                    {sessionDetails.end_time && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">End Time</p>
-                        <p className="font-medium">{formatDateTime(sessionDetails.end_time)}</p>
-                      </div>
-                    )}
-                  </div>
 
                   {sessionDetails.location && (
                     <div>
