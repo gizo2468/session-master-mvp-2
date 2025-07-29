@@ -84,7 +84,7 @@ const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Icon name="Users" className="h-4 w-4 text-primary" />
-            <span className="font-medium text-sm">Students Coached</span>
+            <span className="font-medium text-sm">Student Count</span>
           </div>
           <p className="text-sm text-muted-foreground ml-6">
             {coach.students_coached_count || 0}
