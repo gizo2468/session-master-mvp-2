@@ -13,6 +13,7 @@ import { StudentSessionStats } from '@/components/coaching/StudentSessionStats';
 import { calculateSessionProfit } from '@/utils/sessionCalculations';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
+import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
 
 interface PlayerProfile {
   id: string;
@@ -58,6 +59,8 @@ const PlayerProfile = () => {
   const [summary, setSummary] = useState<SessionSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (!playerId || !user?.id) return;
@@ -217,6 +220,16 @@ const PlayerProfile = () => {
     });
   };
 
+  const handleSessionClick = (sessionId: string) => {
+    setSelectedSessionId(sessionId);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedSessionId(null);
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -343,7 +356,8 @@ const PlayerProfile = () => {
                   return (
                     <div
                       key={session.id}
-                      className="flex items-center justify-between p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors"
+                      className="flex items-center justify-between p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors cursor-pointer"
+                      onClick={() => handleSessionClick(session.id)}
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -438,6 +452,16 @@ const PlayerProfile = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Shared Session Modal */}
+        {selectedSessionId && (
+          <SharedSessionModal
+            isOpen={isModalOpen}
+            onClose={closeModal}
+            sessionId={selectedSessionId}
+            playerId={playerId!}
+          />
         )}
       </div>
     </div>
