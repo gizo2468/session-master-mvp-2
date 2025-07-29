@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +66,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [sessionDetails, setSessionDetails] = useState<SessionDetails | null>(null);
   const [sessionHands, setSessionHands] = useState<SessionHand[]>([]);
   const [loading, setLoading] = useState(false);
+  const [liveDuration, setLiveDuration] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen && sessionId) {
@@ -131,8 +132,40 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
     });
   };
 
+  // Calculate live elapsed time for active sessions
+  const calculateLiveElapsedTime = useCallback((startTime: string) => {
+    const start = new Date(startTime);
+    const elapsed = Math.floor((Date.now() - start.getTime()) / (1000 * 60)); // in minutes
+    return Math.max(0, elapsed);
+  }, []);
+
+  // Set up live timer for active sessions
+  useEffect(() => {
+    if (!sessionDetails || !sessionDetails.is_active || !sessionDetails.start_time) {
+      setLiveDuration(null);
+      return;
+    }
+
+    // Calculate initial live duration
+    const initialDuration = calculateLiveElapsedTime(sessionDetails.start_time);
+    setLiveDuration(initialDuration);
+
+    // Update live duration every minute for active sessions
+    const timer = setInterval(() => {
+      const currentDuration = calculateLiveElapsedTime(sessionDetails.start_time);
+      setLiveDuration(currentDuration);
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, [sessionDetails, calculateLiveElapsedTime]);
+
   const calculateDuration = (session: SessionDetails) => {
-    // Always prioritize calculation from start and end times for consistency
+    // For live sessions, use the live duration
+    if (session.is_active && liveDuration !== null) {
+      return liveDuration;
+    }
+    
+    // For ended sessions, prioritize calculation from start and end times
     if (session.start_time && session.end_time) {
       const start = new Date(session.start_time);
       const end = new Date(session.end_time);
