@@ -396,19 +396,24 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                           )}
                         </div>
 
-                        {/* Financial info grid - responsive */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4 text-sm">{table.buy_in !== undefined && table.buy_in !== null && (
-                            <div className="bg-muted/50 p-2 rounded">
-                              <span className="text-muted-foreground block">Buy-in</span>
+                        {/* Buy-in and Cash Out side by side */}
+                        <div className="flex gap-6 mt-2 text-sm">
+                          {table.buy_in !== undefined && table.buy_in !== null && (
+                            <div>
+                              <span className="text-muted-foreground">Buy-in: </span>
                               <span className="font-medium">{currencySymbol}{table.buy_in.toFixed(0)}</span>
                             </div>
                           )}
                           {table.cashout !== undefined && table.cashout !== null && (
-                            <div className="bg-muted/50 p-2 rounded">
-                              <span className="text-muted-foreground block">Cash Out</span>
+                            <div>
+                              <span className="text-muted-foreground">Cash Out: </span>
                               <span className="font-medium">{currencySymbol}{table.cashout.toFixed(0)}</span>
                             </div>
                           )}
+                        </div>
+
+                        {/* Other financial info grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 mt-4 text-sm">
                           {table.rebuys !== undefined && table.rebuys > 0 && (
                             <div className="bg-muted/50 p-2 rounded">
                               <span className="text-muted-foreground block">Rebuys</span>
