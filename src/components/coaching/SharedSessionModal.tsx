@@ -584,17 +584,193 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                   Hand Review
                 </DialogTitle>
               </DialogHeader>
-              <div className="p-4">
+              <div className="p-6">
                 {(() => {
                   const hand = sessionHands.find(h => h.id === reviewHandId);
                   if (!hand) return <p>Hand not found</p>;
                   
                   return (
-                    <div className="space-y-4">
-                      <p className="text-muted-foreground">
-                        Detailed hand review interface will be implemented here.
-                      </p>
-                      <p className="text-sm">Hand ID: {hand.id}</p>
+                    <div className="space-y-6">
+                      {/* Image attachment at top */}
+                      {hand.hand_image && (
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => setSelectedImage(hand.hand_image || null)}
+                            className="flex items-center gap-2 p-3 rounded-lg border border-muted hover:bg-muted/20 transition-colors"
+                            aria-label="View hand screenshot"
+                          >
+                            <Icon name="Image" size={20} />
+                            <span>View Hand Screenshot</span>
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Hand details grid */}
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Hand number and position */}
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm text-muted-foreground">Hand #</span>
+                            <p className="font-medium">{hand.hand_number || 'N/A'}</p>
+                          </div>
+                          {hand.position && (
+                            <div>
+                              <span className="text-sm text-muted-foreground">Position</span>
+                              <p className="font-medium">{hand.position}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Game type and stakes */}
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm text-muted-foreground">Game Type</span>
+                            <p className="font-medium">{sessionDetails?.game_type || 'N/A'}</p>
+                          </div>
+                          {sessionDetails?.small_blind && sessionDetails?.big_blind && (
+                            <div>
+                              <span className="text-sm text-muted-foreground">Stakes</span>
+                              <p className="font-medium">{getCurrencySymbol()}{sessionDetails.small_blind}/{getCurrencySymbol()}{sessionDetails.big_blind}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Cards */}
+                      {hand.hole_cards && (
+                        <div>
+                          <span className="text-sm text-muted-foreground">Hole Cards</span>
+                          <div className="mt-2">
+                            <CardDisplay cards={hand.hole_cards} size="lg" />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Community cards */}
+                      <div className="space-y-3">
+                        {hand.flop_cards && (
+                          <div>
+                            <span className="text-sm text-muted-foreground">Flop</span>
+                            <div className="mt-2">
+                              <CardDisplay cards={hand.flop_cards} size="md" />
+                            </div>
+                          </div>
+                        )}
+                        
+                        {hand.turn_card && (
+                          <div>
+                            <span className="text-sm text-muted-foreground">Turn</span>
+                            <div className="mt-2">
+                              <CardDisplay cards={hand.turn_card} size="md" />
+                            </div>
+                          </div>
+                        )}
+                        
+                        {hand.river_card && (
+                          <div>
+                            <span className="text-sm text-muted-foreground">River</span>
+                            <div className="mt-2">
+                              <CardDisplay cards={hand.river_card} size="md" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Financial details */}
+                      <div className="grid grid-cols-2 gap-4">
+                        {typeof hand.pot_size === 'number' && (
+                          <div>
+                            <span className="text-sm text-muted-foreground">Pot Size</span>
+                            <p className="font-medium">{getCurrencySymbol()}{hand.pot_size.toFixed(2)}</p>
+                          </div>
+                        )}
+                        {typeof hand.amount_invested === 'number' && (
+                          <div>
+                            <span className="text-sm text-muted-foreground">Amount Invested</span>
+                            <p className="font-medium">{getCurrencySymbol()}{hand.amount_invested.toFixed(2)}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action details */}
+                      <div className="space-y-3">
+                        {hand.preflop_action && (
+                          <div>
+                            <span className="text-sm text-muted-foreground">Preflop Action</span>
+                            <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.preflop_action}</p>
+                          </div>
+                        )}
+                        {hand.flop_action && (
+                          <div>
+                            <span className="text-sm text-muted-foreground">Flop Action</span>
+                            <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.flop_action}</p>
+                          </div>
+                        )}
+                        {hand.turn_action && (
+                          <div>
+                            <span className="text-sm text-muted-foreground">Turn Action</span>
+                            <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.turn_action}</p>
+                          </div>
+                        )}
+                        {hand.river_action && (
+                          <div>
+                            <span className="text-sm text-muted-foreground">River Action</span>
+                            <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.river_action}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Player notes */}
+                      {hand.hand_notes && (
+                        <div>
+                          <span className="text-sm text-muted-foreground">Player Notes</span>
+                          <div className="mt-2 p-3 bg-muted rounded-lg">
+                            <p className="text-sm">{hand.hand_notes}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Result - emphasized at bottom */}
+                      <div className="border-t pt-4">
+                        <div className="text-center">
+                          <span className="text-sm text-muted-foreground">Hand Result</span>
+                          <div className="mt-2">
+                            {typeof hand.amount_won === 'number' && typeof hand.amount_invested === 'number' ? (
+                              <div className="flex justify-center">
+                                <ProfitLossBadge 
+                                  profit={hand.amount_won - hand.amount_invested}
+                                  currency={sessionDetails?.currency || 'USD'}
+                                />
+                              </div>
+                            ) : hand.showdown_result ? (
+                              <Badge variant="outline" className="text-base px-4 py-2">
+                                {hand.showdown_result}
+                              </Badge>
+                            ) : (
+                              <p className="text-muted-foreground">No result recorded</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Coach comment section */}
+                      <div className="border-t pt-4 space-y-3">
+                        <div>
+                          <span className="text-sm font-medium">Coach Feedback</span>
+                          <textarea
+                            placeholder="Add your feedback for this hand..."
+                            className="mt-2 w-full min-h-[100px] p-3 border border-muted rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" onClick={() => setReviewHandId(null)}>
+                            Cancel
+                          </Button>
+                          <Button>
+                            Save Feedback
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   );
                 })()}
