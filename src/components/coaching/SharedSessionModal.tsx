@@ -339,8 +339,10 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                   {sessionTables.map((table, index) => (
                     <Card key={table.id}>
                       <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-2">
+                        {/* Mobile-friendly header layout */}
+                        <div className="space-y-3">
+                          {/* Badges row */}
+                          <div className="flex flex-wrap items-center gap-2">
                             <Badge variant="outline">
                               Table #{index + 1}
                             </Badge>
@@ -354,40 +356,42 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                               <Badge variant="default">Active</Badge>
                             )}
                           </div>
-                          <div className="text-right">
-                            {table.cashout !== undefined && table.buy_in !== undefined && (
+                          
+                          {/* Profit badge - separate row on mobile */}
+                          {table.cashout !== undefined && table.buy_in !== undefined && (
+                            <div className="flex justify-end">
                               <ProfitLossBadge 
                                 profit={calculateTableProfit(table)}
                                 currency={sessionDetails.currency || 'USD'}
                                 size="sm"
                               />
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm mb-3">
-                          {table.buy_in !== undefined && table.buy_in !== null && (
-                            <div>
-                              <span className="text-muted-foreground">Buy-in: </span>
-                              <span>{currencySymbol}{table.buy_in.toFixed(0)}</span>
+                        {/* Financial info grid - responsive */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4 text-sm">{table.buy_in !== undefined && table.buy_in !== null && (
+                            <div className="bg-muted/50 p-2 rounded">
+                              <span className="text-muted-foreground block">Buy-in</span>
+                              <span className="font-medium">{currencySymbol}{table.buy_in.toFixed(0)}</span>
                             </div>
                           )}
                           {table.cashout !== undefined && table.cashout !== null && (
-                            <div>
-                              <span className="text-muted-foreground">Cash Out: </span>
-                              <span>{currencySymbol}{table.cashout.toFixed(0)}</span>
+                            <div className="bg-muted/50 p-2 rounded">
+                              <span className="text-muted-foreground block">Cash Out</span>
+                              <span className="font-medium">{currencySymbol}{table.cashout.toFixed(0)}</span>
                             </div>
                           )}
                           {table.rebuys !== undefined && table.rebuys > 0 && (
-                            <div>
-                              <span className="text-muted-foreground">Rebuys: </span>
-                              <span>{table.rebuys} ({currencySymbol}{(table.rebuy_amount || 0).toFixed(0)})</span>
+                            <div className="bg-muted/50 p-2 rounded">
+                              <span className="text-muted-foreground block">Rebuys</span>
+                              <span className="font-medium">{table.rebuys} ({currencySymbol}{(table.rebuy_amount || 0).toFixed(0)})</span>
                             </div>
                           )}
                           {calculateTableDuration(table) && (
-                            <div>
-                              <span className="text-muted-foreground">Duration: </span>
-                              <span>{formatDuration(calculateTableDuration(table))}</span>
+                            <div className="bg-muted/50 p-2 rounded">
+                              <span className="text-muted-foreground block">Duration</span>
+                              <span className="font-medium">{formatDuration(calculateTableDuration(table))}</span>
                             </div>
                           )}
                         </div>
