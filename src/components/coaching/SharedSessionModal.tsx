@@ -70,7 +70,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [liveDuration, setLiveDuration] = useState<number | null>(null);
   
   // Use the same stats calculation as the SessionCard
-  const { stats } = useSessionStats(sessionId);
+  const { stats } = useSessionStats(sessionId, sessionDetails as any);
 
   useEffect(() => {
     if (isOpen && sessionId) {
