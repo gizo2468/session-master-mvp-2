@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import Icon from '@/components/ui/Lucide';
 import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
+import { useSessionStats } from '@/hooks/useSessionStats';
 
 interface SessionDetails {
   id: string;
@@ -67,6 +68,9 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [sessionHands, setSessionHands] = useState<SessionHand[]>([]);
   const [loading, setLoading] = useState(false);
   const [liveDuration, setLiveDuration] = useState<number | null>(null);
+  
+  // Use the same stats calculation as the SessionCard
+  const { stats } = useSessionStats(sessionId);
 
   useEffect(() => {
     if (isOpen && sessionId) {
@@ -252,7 +256,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Tables</p>
-                      <p className="font-medium">{sessionDetails.tables_played || 0}</p>
+                      <p className="font-medium">{stats.tables}</p>
                     </div>
                   </div>
 
