@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import Icon from '@/components/ui/Lucide';
 import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 import { useSessionStats } from '@/hooks/useSessionStats';
 import CardDisplay from '@/components/poker/CardDisplay';
+import { useToast } from '@/hooks/use-toast';
 
 interface SessionDetails {
   id: string;
@@ -93,6 +95,13 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [liveDuration, setLiveDuration] = useState<number | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [reviewHandId, setReviewHandId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState('');
+  const [existingFeedback, setExistingFeedback] = useState<string | null>(null);
+  const [isSavingFeedback, setIsSavingFeedback] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isCoach, setIsCoach] = useState(false);
+  
+  const { toast } = useToast();
   
   // Use the same stats calculation as the SessionCard
   const { stats } = useSessionStats(sessionId, sessionDetails as any);
@@ -144,6 +153,8 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
       }
 
       setSessionDetails(sessionData);
+      setCurrentUserId(user.id);
+      setIsCoach(!isSessionOwner); // If not session owner, then must be coach
 
       // Always use the session owner's user_id for fetching hands and tables
       const sessionOwnerId = sessionData.user_id;
@@ -271,6 +282,96 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
     const totalCashOut = (table.cashout || 0) + ((table.bounty_amount || 0) * (table.players_eliminated || 0));
     return totalCashOut - totalBuyIn;
   };
+
+  // Load existing feedback when a hand is selected for review
+  const loadFeedback = async (handId: string) => {
+    if (!currentUserId || !sessionDetails) return;
+    
+    try {
+      const { data: feedbackData, error } = await supabase
+        .from('hand_feedback')
+        .select('*')
+        .eq('hand_id', handId)
+        .eq('coach_id', isCoach ? currentUserId : '')
+        .eq('student_id', isCoach ? playerId : currentUserId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error loading feedback:', error);
+        return;
+      }
+
+      if (feedbackData) {
+        setExistingFeedback(feedbackData.feedback_content);
+        setFeedback(feedbackData.feedback_content);
+      } else {
+        setExistingFeedback(null);
+        setFeedback('');
+      }
+    } catch (error) {
+      console.error('Error in loadFeedback:', error);
+    }
+  };
+
+  // Save feedback
+  const saveFeedback = async () => {
+    if (!reviewHandId || !currentUserId || !sessionDetails || !isCoach || !feedback.trim()) {
+      return;
+    }
+
+    setIsSavingFeedback(true);
+    try {
+      const feedbackData = {
+        hand_id: reviewHandId,
+        coach_id: currentUserId,
+        student_id: playerId,
+        feedback_content: feedback.trim()
+      };
+
+      if (existingFeedback) {
+        // Update existing feedback
+        const { error } = await supabase
+          .from('hand_feedback')
+          .update({ feedback_content: feedback.trim() })
+          .eq('hand_id', reviewHandId)
+          .eq('coach_id', currentUserId);
+
+        if (error) throw error;
+      } else {
+        // Insert new feedback
+        const { error } = await supabase
+          .from('hand_feedback')
+          .insert(feedbackData);
+
+        if (error) throw error;
+      }
+
+      setExistingFeedback(feedback);
+      toast({
+        title: "Feedback saved",
+        description: "Your feedback has been saved successfully."
+      });
+    } catch (error) {
+      console.error('Error saving feedback:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save feedback. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingFeedback(false);
+    }
+  };
+
+  // Load feedback when hand is selected for review
+  useEffect(() => {
+    if (reviewHandId) {
+      loadFeedback(reviewHandId);
+    } else {
+      setFeedback('');
+      setExistingFeedback(null);
+    }
+  }, [reviewHandId, currentUserId, isCoach]);
 
   const profit = sessionDetails ? (sessionDetails.cash_out || 0) - sessionDetails.buy_in : 0;
   const currencySymbol = getCurrencySymbol(sessionDetails?.currency);
@@ -753,22 +854,58 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Coach comment section */}
+                      {/* Coach feedback section */}
                       <div className="border-t pt-4 space-y-3">
                         <div>
                           <span className="text-sm font-medium">Coach Feedback</span>
-                          <textarea
-                            placeholder="Add your feedback for this hand..."
-                            className="mt-2 w-full min-h-[100px] p-3 border border-muted rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-                          />
-                        </div>
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setReviewHandId(null)}>
-                            Cancel
-                          </Button>
-                          <Button>
-                            Save Feedback
-                          </Button>
+                          
+                          {isCoach ? (
+                            // Coach view: Input for adding/editing feedback
+                            <>
+                              <Textarea
+                                value={feedback}
+                                onChange={(e) => setFeedback(e.target.value)}
+                                placeholder="Add your feedback for this hand..."
+                                className="mt-2 min-h-[100px] resize-none"
+                              />
+                              <div className="flex justify-end gap-2">
+                                <Button variant="outline" onClick={() => setReviewHandId(null)}>
+                                  Cancel
+                                </Button>
+                                <Button 
+                                  onClick={saveFeedback}
+                                  disabled={!feedback.trim() || isSavingFeedback}
+                                >
+                                  {isSavingFeedback ? (
+                                    <>
+                                      <Icon name="Loader" className="h-4 w-4 animate-spin mr-2" />
+                                      Saving...
+                                    </>
+                                  ) : (
+                                    'Save Feedback'
+                                  )}
+                                </Button>
+                              </div>
+                            </>
+                          ) : (
+                            // Player view: Read-only feedback display
+                            <>
+                              {existingFeedback ? (
+                                <div className="mt-2 p-3 bg-muted rounded-lg">
+                                  <p className="text-sm whitespace-pre-wrap">{existingFeedback}</p>
+                                </div>
+                              ) : (
+                                <div className="mt-2 p-3 bg-muted/50 rounded-lg text-center">
+                                  <p className="text-sm text-muted-foreground">No coach feedback yet</p>
+                                </div>
+                              )}
+                              <div className="flex justify-end">
+                                <Button variant="outline" onClick={() => setReviewHandId(null)}>
+                                  Close
+                                </Button>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

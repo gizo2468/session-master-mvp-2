@@ -71,6 +71,36 @@ export type Database = {
         }
         Relationships: []
       }
+      hand_feedback: {
+        Row: {
+          coach_id: string
+          created_at: string
+          feedback_content: string
+          hand_id: string
+          id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          feedback_content: string
+          hand_id: string
+          id?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          feedback_content?: string
+          hand_id?: string
+          id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           bio: string | null
