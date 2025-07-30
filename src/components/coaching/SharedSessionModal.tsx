@@ -293,13 +293,22 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
     if (!currentUserId || !sessionDetails) return;
     
     try {
-      const { data: feedbackData, error } = await supabase
+      let query = supabase
         .from('hand_feedback')
         .select('*')
-        .eq('hand_id', handId)
-        .eq('coach_id', isCoach ? currentUserId : '')
-        .eq('student_id', isCoach ? playerId : currentUserId)
-        .order('created_at', { ascending: true });
+        .eq('hand_id', handId);
+
+      if (isCoach) {
+        // Coach: load only their own feedback for this hand
+        query = query
+          .eq('coach_id', currentUserId)
+          .eq('student_id', playerId);
+      } else {
+        // Player: load all feedback for this hand where they are the student
+        query = query.eq('student_id', currentUserId);
+      }
+
+      const { data: feedbackData, error } = await query.order('created_at', { ascending: true });
 
       if (error) {
         console.error('Error loading feedback:', error);
