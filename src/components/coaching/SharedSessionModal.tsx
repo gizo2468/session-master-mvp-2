@@ -384,16 +384,6 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                             )}
                           </div>
                           
-                          {/* Profit badge - separate row on mobile */}
-                          {table.cashout !== undefined && table.buy_in !== undefined && (
-                            <div className="flex justify-end">
-                              <ProfitLossBadge 
-                                profit={calculateTableProfit(table)}
-                                currency={sessionDetails.currency || 'USD'}
-                                size="sm"
-                              />
-                            </div>
-                          )}
                         </div>
 
                         {/* Buy-in and Cash Out side by side */}
@@ -420,12 +410,12 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                               <span className="font-medium">{table.rebuys} ({currencySymbol}{(table.rebuy_amount || 0).toFixed(0)})</span>
                             </div>
                           )}
-                          {calculateTableDuration(table) && (
+                          {calculateTableDuration(table) ? (
                             <div className="bg-muted/50 p-2 rounded">
                               <span className="text-muted-foreground block">Duration</span>
                               <span className="font-medium">{formatDuration(calculateTableDuration(table))}</span>
                             </div>
-                          )}
+                          ) : null}
                         </div>
 
 
@@ -457,6 +447,17 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                           <div className="mt-2 p-2 bg-muted rounded text-sm">
                             <span className="text-muted-foreground">Notes: </span>
                             {table.table_notes}
+                          </div>
+                        )}
+
+                        {/* Centered profit/loss badge at bottom */}
+                        {table.cashout !== undefined && table.buy_in !== undefined && (
+                          <div className="flex justify-center mt-4">
+                            <ProfitLossBadge 
+                              profit={calculateTableProfit(table)}
+                              currency={sessionDetails.currency || 'USD'}
+                              size="sm"
+                            />
                           </div>
                         )}
                       </CardContent>
