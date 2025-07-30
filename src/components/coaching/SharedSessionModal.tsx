@@ -485,7 +485,10 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                 <div className="space-y-3">
                   {sessionHands.map((hand, index) => (
                     <Card key={hand.id}>
-                      <CardContent className="p-4">
+                      <CardContent 
+                        className="p-4 cursor-pointer hover:bg-muted/20 transition-colors"
+                        onClick={() => setReviewHandId(hand.id)}
+                      >
                          <div className="flex justify-between items-start mb-3">
                            <div className="flex items-center gap-2">
                              <Badge variant="outline">
@@ -496,7 +499,10 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                              )}
                              {hand.hand_image && (
                                <button
-                                 onClick={() => setSelectedImage(hand.hand_image || null)}
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   setSelectedImage(hand.hand_image || null);
+                                 }}
                                  className="flex items-center gap-1 p-1 rounded hover:bg-muted transition-colors"
                                  aria-label="View hand screenshot"
                                >
@@ -529,18 +535,6 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                             {hand.hand_notes}
                           </div>
                         )}
-
-                        {/* Review button aligned to bottom-right with reduced spacing */}
-                        <div className="flex justify-end mt-1">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => setReviewHandId(hand.id)}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            Review
-                          </Button>
-                        </div>
                       </CardContent>
                     </Card>
                   ))}
