@@ -101,27 +101,44 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const loadSessionData = async () => {
     setLoading(true);
     try {
-      // Load session details
+      // First, verify this is a valid shared session and get session details
       const { data: sessionData, error: sessionError } = await supabase
         .from('sessions')
         .select('*')
         .eq('id', sessionId)
-        .eq('user_id', playerId)
         .single();
 
-      if (sessionError) {
+      if (sessionError || !sessionData) {
         console.error('Error loading session details:', sessionError);
+        return;
+      }
+
+      // Verify this session is actually shared with the current user
+      const { data: sharedSession } = await supabase
+        .from('shared_sessions')
+        .select('*')
+        .eq('session_id', sessionId)
+        .eq('coach_id', playerId)
+        .single();
+
+      // If not found as coach, check if user is the session owner
+      const isOwner = sessionData.user_id === playerId;
+      if (!sharedSession && !isOwner) {
+        console.error('User does not have access to this session');
         return;
       }
 
       setSessionDetails(sessionData);
 
-      // Load session hands
+      // Always use the session owner's user_id for fetching hands and tables
+      const sessionOwnerId = sessionData.user_id;
+
+      // Load session hands using session owner's ID
       const { data: handsData, error: handsError } = await supabase
         .from('session_hands_new')
         .select('*')
         .eq('session_id', sessionId)
-        .eq('user_id', playerId)
+        .eq('user_id', sessionOwnerId)
         .order('created_at', { ascending: true });
 
       if (handsError) {
@@ -130,12 +147,12 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
         setSessionHands(handsData || []);
       }
 
-      // Load session tables
+      // Load session tables using session owner's ID  
       const { data: tablesData, error: tablesError } = await supabase
         .from('session_tables')
         .select('*')
         .eq('session_id', sessionId)
-        .eq('user_id', playerId)
+        .eq('user_id', sessionOwnerId)
         .order('start_time', { ascending: true });
 
       if (tablesError) {
