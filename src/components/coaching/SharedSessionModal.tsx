@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import Icon from '@/components/ui/Lucide';
@@ -527,6 +528,21 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                             {hand.hand_notes}
                           </div>
                         )}
+
+                        {/* Review button aligned to bottom-right */}
+                        <div className="flex justify-end mt-3">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              // TODO: Open hand review modal
+                              console.log('Review hand:', hand.id);
+                            }}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            Review
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
