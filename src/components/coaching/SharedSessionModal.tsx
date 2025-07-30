@@ -211,8 +211,9 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
           </div>
         ) : sessionDetails ? (
           <Tabs defaultValue="summary" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="summary">Session Summary</TabsTrigger>
+              <TabsTrigger value="tables">Tables</TabsTrigger>
               <TabsTrigger value="hands">
                 Hands ({sessionHands.length})
               </TabsTrigger>
@@ -276,6 +277,13 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="tables" className="space-y-4">
+              <div className="text-center py-12 text-muted-foreground">
+                <Icon name="Table" className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>Tables data will be displayed here soon.</p>
+              </div>
             </TabsContent>
 
             <TabsContent value="hands" className="space-y-4">
