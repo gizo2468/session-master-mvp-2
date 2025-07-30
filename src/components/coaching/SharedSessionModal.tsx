@@ -106,6 +106,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
         .from('sessions')
         .select('*')
         .eq('id', sessionId)
+        .eq('user_id', playerId)
         .single();
 
       if (sessionError) {
@@ -113,29 +114,14 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
         return;
       }
 
-      // Verify this is a shared session the current user can access
-      const { data: sharedSession } = await supabase
-        .from('shared_sessions')
-        .select('*')
-        .eq('session_id', sessionId)
-        .single();
-
-      if (!sharedSession) {
-        console.error('Session not shared or access denied');
-        return;
-      }
-
       setSessionDetails(sessionData);
 
-      // Use the session owner's ID (not the viewer's ID) for fetching related data
-      const sessionOwnerId = sessionData.user_id;
-
-      // Load session hands
+      // Load session hands - use session owner's user_id from session data
       const { data: handsData, error: handsError } = await supabase
         .from('session_hands_new')
         .select('*')
         .eq('session_id', sessionId)
-        .eq('user_id', sessionOwnerId)
+        .eq('user_id', sessionData.user_id)
         .order('created_at', { ascending: true });
 
       if (handsError) {
@@ -144,12 +130,12 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
         setSessionHands(handsData || []);
       }
 
-      // Load session tables
+      // Load session tables - use session owner's user_id from session data
       const { data: tablesData, error: tablesError } = await supabase
         .from('session_tables')
         .select('*')
         .eq('session_id', sessionId)
-        .eq('user_id', sessionOwnerId)
+        .eq('user_id', sessionData.user_id)
         .order('start_time', { ascending: true });
 
       if (tablesError) {
