@@ -41,10 +41,11 @@ interface CoachFeedback {
   created_at: string;
   coach_id: string;
   hand_id: string;
-  session_id: string;
+  session_id: string | null;
   game_type: string;
   format: string;
   start_time: string;
+  location: string | null;
   coach_name: string;
 }
 
@@ -160,13 +161,14 @@ const CoachProfile: React.FC = () => {
             created_at,
             coach_id,
             hand_id,
-            session_hands_new!inner(
+            session_hands_new(
               session_id,
-              sessions!inner(
+              sessions(
                 id,
                 game_type,
                 format,
-                start_time
+                start_time,
+                location
               )
             ),
             profiles!coach_id(
@@ -186,10 +188,11 @@ const CoachProfile: React.FC = () => {
             created_at: item.created_at,
             coach_id: item.coach_id,
             hand_id: item.hand_id,
-            session_id: item.session_hands_new.sessions.id,
-            game_type: item.session_hands_new.sessions.game_type,
-            format: item.session_hands_new.sessions.format,
-            start_time: item.session_hands_new.sessions.start_time,
+            session_id: item.session_hands_new?.sessions?.id || null,
+            game_type: item.session_hands_new?.sessions?.game_type || 'Unknown Game',
+            format: item.session_hands_new?.sessions?.format || 'Unknown Format',
+            start_time: item.session_hands_new?.sessions?.start_time || item.created_at,
+            location: item.session_hands_new?.sessions?.location || null,
             coach_name: item.profiles?.full_name || 'Unknown Coach'
           }));
           
@@ -400,10 +403,17 @@ const CoachProfile: React.FC = () => {
                         })}
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground mb-2">
-                      Session: {formatSessionDateTime(feedback.start_time)}
+                    <div className="text-sm text-muted-foreground mb-3">
+                      {feedback.session_id ? (
+                        <>
+                          Session: {formatSessionDateTime(feedback.start_time)}
+                          {feedback.location && <span> • {feedback.location}</span>}
+                        </>
+                      ) : (
+                        'Hand feedback'
+                      )}
                     </div>
-                    <div className="text-sm">
+                    <div className="text-sm leading-relaxed">
                       {feedback.feedback_content}
                     </div>
                   </div>
