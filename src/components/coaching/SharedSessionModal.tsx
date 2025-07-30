@@ -48,6 +48,7 @@ interface SessionHand {
   river_action?: string;
   showdown_result?: string;
   hand_notes?: string;
+  hand_image?: string;
   created_at: string;
 }
 
@@ -88,6 +89,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [sessionTables, setSessionTables] = useState<SessionTable[]>([]);
   const [loading, setLoading] = useState(false);
   const [liveDuration, setLiveDuration] = useState<number | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
   // Use the same stats calculation as the SessionCard
   const { stats } = useSessionStats(sessionId, sessionDetails as any);
@@ -481,15 +483,24 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                   {sessionHands.map((hand, index) => (
                     <Card key={hand.id}>
                       <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">
-                              Hand #{hand.hand_number || index + 1}
-                            </Badge>
-                            {hand.position && (
-                              <Badge variant="secondary">{hand.position}</Badge>
-                            )}
-                          </div>
+                         <div className="flex justify-between items-start mb-3">
+                           <div className="flex items-center gap-2">
+                             <Badge variant="outline">
+                               Hand #{hand.hand_number || index + 1}
+                             </Badge>
+                             {hand.position && (
+                               <Badge variant="secondary">{hand.position}</Badge>
+                             )}
+                             {hand.hand_image && (
+                               <button
+                                 onClick={() => setSelectedImage(hand.hand_image || null)}
+                                 className="flex items-center gap-1 p-1 rounded hover:bg-muted transition-colors"
+                                 aria-label="View hand screenshot"
+                               >
+                                 <Icon name="Image" size={16} className="text-muted-foreground hover:text-foreground" />
+                               </button>
+                             )}
+                           </div>
                           <div className="text-right">
                             {hand.amount_won !== undefined && hand.amount_invested !== undefined && (
                               <ProfitLossBadge 
@@ -527,6 +538,31 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
             <Icon name="AlertCircle" className="h-12 w-12 mx-auto mb-2 opacity-50" />
             <p>Failed to load session data.</p>
           </div>
+        )}
+
+        {/* Image Modal */}
+        {selectedImage && (
+          <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+            <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+              <DialogHeader className="p-4">
+                <DialogTitle className="flex items-center gap-2">
+                  <Icon name="Image" size={20} />
+                  Hand Screenshot
+                </DialogTitle>
+              </DialogHeader>
+              <div className="p-4">
+                <img
+                  src={selectedImage}
+                  alt="Hand screenshot"
+                  className="w-full h-auto max-h-[70vh] object-contain rounded"
+                  onError={(e) => {
+                    console.error('Failed to load image:', selectedImage);
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
       </DialogContent>
     </Dialog>
