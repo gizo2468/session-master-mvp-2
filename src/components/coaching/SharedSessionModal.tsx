@@ -403,20 +403,12 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                         </div>
 
                         {/* Other financial info grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 mt-4 text-sm">
-                          {table.rebuys !== undefined && table.rebuys > 0 && (
-                            <div className="bg-muted/50 p-2 rounded">
-                              <span className="text-muted-foreground block">Rebuys</span>
-                              <span className="font-medium">{table.rebuys} ({currencySymbol}{(table.rebuy_amount || 0).toFixed(0)})</span>
-                            </div>
-                          )}
-                          {calculateTableDuration(table) ? (
-                            <div className="bg-muted/50 p-2 rounded">
-                              <span className="text-muted-foreground block">Duration</span>
-                              <span className="font-medium">{formatDuration(calculateTableDuration(table))}</span>
-                            </div>
-                          ) : null}
-                        </div>
+                        {table.rebuys !== undefined && table.rebuys > 0 && (
+                          <div className="bg-muted/50 p-2 rounded mt-4 text-sm">
+                            <span className="text-muted-foreground block">Rebuys</span>
+                            <span className="font-medium">{table.rebuys} ({currencySymbol}{(table.rebuy_amount || 0).toFixed(0)})</span>
+                          </div>
+                        )}
 
 
                         {table.stakes && (
