@@ -285,9 +285,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           initialBuyIn: table.buyIn,
         };
         
+        const newTables = [...(session.tables || []), newTable];
         const updatedSession = {
           ...session,
-          tables: [...(session.tables || []), newTable],
+          tables: newTables,
+          tablesPlayed: newTables.length, // Update tables count
           buyIn: session.buyIn + table.buyIn
         };
         
@@ -399,6 +401,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           const updatedSession = {
             ...session,
             tables: updatedTables,
+            tablesPlayed: updatedTables.length, // Update tables count
             buyIn: session.buyIn - tableToDelete.buyIn
           };
           

@@ -74,6 +74,50 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
     }
   }, [isOpen, sessionId]);
 
+  // Set up real-time subscription for session updates
+  useEffect(() => {
+    if (!isOpen || !sessionId) return;
+
+    console.log('🔄 Setting up real-time subscription for session:', sessionId);
+    
+    const channel = supabase
+      .channel(`session_${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sessions',
+          filter: `id=eq.${sessionId}`,
+        },
+        (payload) => {
+          console.log('🔄 Real-time session update:', payload);
+          // Reload session data when it changes
+          loadSessionData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'session_tables',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          console.log('🔄 Real-time session tables update:', payload);
+          // Reload session data when tables change
+          loadSessionData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔄 Cleaning up session real-time subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [isOpen, sessionId]);
+
   const loadSessionData = async () => {
     setLoading(true);
     try {
