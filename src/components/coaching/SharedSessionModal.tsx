@@ -423,19 +423,6 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                           )}
                         </div>
 
-                        {table.start_time && (
-                          <div className="text-sm text-muted-foreground mb-2">
-                            <span>Started: </span>
-                            <span>{formatDateTime(table.start_time)}</span>
-                            {table.end_time && (
-                              <>
-                                <span className="mx-2">•</span>
-                                <span>Ended: </span>
-                                <span>{formatDateTime(table.end_time)}</span>
-                              </>
-                            )}
-                          </div>
-                        )}
 
                         {table.stakes && (
                           <div className="text-sm mb-2">
