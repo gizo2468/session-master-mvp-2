@@ -116,12 +116,12 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
 
       setSessionDetails(sessionData);
 
-      // Load session hands - use session owner's user_id from session data
+      // Load session hands
       const { data: handsData, error: handsError } = await supabase
         .from('session_hands_new')
         .select('*')
         .eq('session_id', sessionId)
-        .eq('user_id', sessionData.user_id)
+        .eq('user_id', playerId)
         .order('created_at', { ascending: true });
 
       if (handsError) {
@@ -130,12 +130,12 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
         setSessionHands(handsData || []);
       }
 
-      // Load session tables - use session owner's user_id from session data
+      // Load session tables
       const { data: tablesData, error: tablesError } = await supabase
         .from('session_tables')
         .select('*')
         .eq('session_id', sessionId)
-        .eq('user_id', sessionData.user_id)
+        .eq('user_id', playerId)
         .order('start_time', { ascending: true });
 
       if (tablesError) {
