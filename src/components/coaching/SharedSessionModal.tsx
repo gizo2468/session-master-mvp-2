@@ -391,7 +391,12 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                           {table.buy_in !== undefined && table.buy_in !== null && (
                             <div>
                               <span className="text-muted-foreground">Buy-in: </span>
-                              <span className="font-medium">{currencySymbol}{table.buy_in.toFixed(0)}</span>
+                              <span className="font-medium">{currencySymbol}{(() => {
+                                // Display original buy-in only (total buy-in divided by 1 + number of rebuys)
+                                const totalRebuys = table.rebuys || 0;
+                                const originalBuyIn = totalRebuys > 0 ? table.buy_in / (1 + totalRebuys) : table.buy_in;
+                                return originalBuyIn.toFixed(0);
+                              })()}</span>
                             </div>
                           )}
                           {table.cashout !== undefined && table.cashout !== null && (
@@ -406,7 +411,13 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                         {table.rebuys !== undefined && table.rebuys > 0 && (
                           <div className="bg-muted/50 p-2 rounded mt-4 text-sm">
                             <span className="text-muted-foreground block">Rebuys</span>
-                            <span className="font-medium">{table.rebuys} ({currencySymbol}{(table.rebuy_amount || 0).toFixed(0)})</span>
+                            <span className="font-medium">{table.rebuys} ({currencySymbol}{(() => {
+                              // Calculate total rebuy amount: original buy-in × number of rebuys
+                              const totalRebuys = table.rebuys || 0;
+                              const originalBuyIn = totalRebuys > 0 ? table.buy_in / (1 + totalRebuys) : table.buy_in;
+                              const totalRebuyAmount = originalBuyIn * totalRebuys;
+                              return totalRebuyAmount.toFixed(0);
+                            })()})</span>
                           </div>
                         )}
 
