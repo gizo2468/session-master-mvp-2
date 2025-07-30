@@ -101,23 +101,12 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const loadSessionData = async () => {
     setLoading(true);
     try {
-      // First, verify this is a shared session and get the actual session owner
-      const { data: sharedSession, error: sharedError } = await supabase
-        .from('shared_sessions')
-        .select('player_id')
-        .eq('session_id', sessionId)
-        .eq('coach_id', await supabase.auth.getUser().then(({ data }) => data.user?.id))
-        .single();
-
-      // Determine the actual session owner (player who created the session)
-      const sessionOwnerId = sharedSession?.player_id || playerId;
-
-      // Load session details using the actual session owner's ID
+      // Load session details
       const { data: sessionData, error: sessionError } = await supabase
         .from('sessions')
         .select('*')
         .eq('id', sessionId)
-        .eq('user_id', sessionOwnerId)
+        .eq('user_id', playerId)
         .single();
 
       if (sessionError) {
@@ -127,12 +116,12 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
 
       setSessionDetails(sessionData);
 
-      // Load session hands using the actual session owner's ID
+      // Load session hands
       const { data: handsData, error: handsError } = await supabase
         .from('session_hands_new')
         .select('*')
         .eq('session_id', sessionId)
-        .eq('user_id', sessionOwnerId)
+        .eq('user_id', playerId)
         .order('created_at', { ascending: true });
 
       if (handsError) {
@@ -141,12 +130,12 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
         setSessionHands(handsData || []);
       }
 
-      // Load session tables using the actual session owner's ID
+      // Load session tables
       const { data: tablesData, error: tablesError } = await supabase
         .from('session_tables')
         .select('*')
         .eq('session_id', sessionId)
-        .eq('user_id', sessionOwnerId)
+        .eq('user_id', playerId)
         .order('start_time', { ascending: true });
 
       if (tablesError) {
