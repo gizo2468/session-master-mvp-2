@@ -92,6 +92,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [liveDuration, setLiveDuration] = useState<number | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [reviewHandId, setReviewHandId] = useState<string | null>(null);
   
   // Use the same stats calculation as the SessionCard
   const { stats } = useSessionStats(sessionId, sessionDetails as any);
@@ -529,15 +530,12 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                           </div>
                         )}
 
-                        {/* Review button aligned to bottom-right */}
-                        <div className="flex justify-end mt-3">
+                        {/* Review button aligned to bottom-right with reduced spacing */}
+                        <div className="flex justify-end mt-1">
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={() => {
-                              // TODO: Open hand review modal
-                              console.log('Review hand:', hand.id);
-                            }}
+                            onClick={() => setReviewHandId(hand.id)}
                             className="text-muted-foreground hover:text-foreground"
                           >
                             Review
@@ -577,6 +575,35 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                     e.currentTarget.style.display = 'none';
                   }}
                 />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Hand Review Modal */}
+        {reviewHandId && (
+          <Dialog open={!!reviewHandId} onOpenChange={() => setReviewHandId(null)}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Icon name="Eye" size={20} />
+                  Hand Review
+                </DialogTitle>
+              </DialogHeader>
+              <div className="p-4">
+                {(() => {
+                  const hand = sessionHands.find(h => h.id === reviewHandId);
+                  if (!hand) return <p>Hand not found</p>;
+                  
+                  return (
+                    <div className="space-y-4">
+                      <p className="text-muted-foreground">
+                        Detailed hand review interface will be implemented here.
+                      </p>
+                      <p className="text-sm">Hand ID: {hand.id}</p>
+                    </div>
+                  );
+                })()}
               </div>
             </DialogContent>
           </Dialog>
