@@ -35,12 +35,26 @@ interface SharedSession {
   currency?: string;
 }
 
+interface CoachFeedback {
+  id: string;
+  feedback_content: string;
+  created_at: string;
+  coach_id: string;
+  hand_id: string;
+  session_id: string;
+  game_type: string;
+  format: string;
+  start_time: string;
+  coach_name: string;
+}
+
 const CoachProfile: React.FC = () => {
   const { coachId } = useParams<{ coachId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [coach, setCoach] = useState<CoachData | null>(null);
   const [sharedSessions, setSharedSessions] = useState<SharedSession[]>([]);
+  const [coachFeedback, setCoachFeedback] = useState<CoachFeedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
@@ -135,6 +149,51 @@ const CoachProfile: React.FC = () => {
           });
           
           setSharedSessions(formattedSessions);
+        }
+
+        // Load latest coach feedback for this player
+        const { data: feedbackData, error: feedbackError } = await supabase
+          .from('hand_feedback')
+          .select(`
+            id,
+            feedback_content,
+            created_at,
+            coach_id,
+            hand_id,
+            session_hands_new!inner(
+              session_id,
+              sessions!inner(
+                id,
+                game_type,
+                format,
+                start_time
+              )
+            ),
+            profiles!coach_id(
+              full_name
+            )
+          `)
+          .eq('student_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(7);
+
+        if (feedbackError) {
+          console.error('Error loading coach feedback:', feedbackError);
+        } else if (feedbackData) {
+          const formattedFeedback = feedbackData.map((item: any) => ({
+            id: item.id,
+            feedback_content: item.feedback_content,
+            created_at: item.created_at,
+            coach_id: item.coach_id,
+            hand_id: item.hand_id,
+            session_id: item.session_hands_new.sessions.id,
+            game_type: item.session_hands_new.sessions.game_type,
+            format: item.session_hands_new.sessions.format,
+            start_time: item.session_hands_new.sessions.start_time,
+            coach_name: item.profiles?.full_name || 'Unknown Coach'
+          }));
+          
+          setCoachFeedback(formattedFeedback);
         }
       } catch (error) {
         console.error('Error in loadCoachData:', error);
@@ -302,16 +361,55 @@ const CoachProfile: React.FC = () => {
 
         {/* Placeholder sections for future content */}
       <div className="space-y-6">
-        {/* Placeholder: Coach Feedback */}
+        {/* Coach Feedback */}
         <Card>
-          <CardContent className="p-8">
-            <div className="text-center text-muted-foreground">
-              <Icon name="MessageSquare" className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium mb-2">Coach Feedback</h3>
-              <p className="text-sm">
-                Personal feedback and coaching notes will be displayed here.
-              </p>
-            </div>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Icon name="MessageSquare" size={18} />
+              <span>Coach Feedback</span>
+              <Badge variant="secondary">{coachFeedback.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {coachFeedback.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Icon name="MessageSquare" className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No feedback from coaches yet.</p>
+                <p className="text-sm mt-2">Personal feedback and coaching notes will be displayed here.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {coachFeedback.map((feedback) => (
+                  <div
+                    key={feedback.id}
+                    className="p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{feedback.coach_name}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {feedback.game_type} • {feedback.format}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(feedback.created_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground mb-2">
+                      Session: {formatSessionDateTime(feedback.start_time)}
+                    </div>
+                    <div className="text-sm">
+                      {feedback.feedback_content}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
