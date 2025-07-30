@@ -51,6 +51,25 @@ interface SessionHand {
   created_at: string;
 }
 
+interface SessionTable {
+  id: string;
+  table_name?: string;
+  table_type?: string;
+  game_format?: string;
+  stakes?: string;
+  buy_in?: number;
+  cashout?: number;
+  rebuys?: number;
+  rebuy_amount?: number;
+  bounty_amount?: number;
+  players_eliminated?: number;
+  final_position?: number;
+  start_time?: string;
+  end_time?: string;
+  is_active?: boolean;
+  table_notes?: string;
+}
+
 interface SharedSessionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -66,6 +85,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
 }) => {
   const [sessionDetails, setSessionDetails] = useState<SessionDetails | null>(null);
   const [sessionHands, setSessionHands] = useState<SessionHand[]>([]);
+  const [sessionTables, setSessionTables] = useState<SessionTable[]>([]);
   const [loading, setLoading] = useState(false);
   const [liveDuration, setLiveDuration] = useState<number | null>(null);
   
@@ -108,6 +128,20 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
         console.error('Error loading session hands:', handsError);
       } else {
         setSessionHands(handsData || []);
+      }
+
+      // Load session tables
+      const { data: tablesData, error: tablesError } = await supabase
+        .from('session_tables')
+        .select('*')
+        .eq('session_id', sessionId)
+        .eq('user_id', playerId)
+        .order('start_time', { ascending: true });
+
+      if (tablesError) {
+        console.error('Error loading session tables:', tablesError);
+      } else {
+        setSessionTables(tablesData || []);
       }
     } catch (error) {
       console.error('Error in loadSessionData:', error);
@@ -189,6 +223,21 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  };
+
+  const calculateTableDuration = (table: SessionTable) => {
+    if (table.start_time && table.end_time) {
+      const start = new Date(table.start_time);
+      const end = new Date(table.end_time);
+      return Math.floor((end.getTime() - start.getTime()) / (1000 * 60));
+    }
+    return null;
+  };
+
+  const calculateTableProfit = (table: SessionTable) => {
+    const totalBuyIn = (table.buy_in || 0) + (table.rebuy_amount || 0);
+    const totalCashOut = (table.cashout || 0) + ((table.bounty_amount || 0) * (table.players_eliminated || 0));
+    return totalCashOut - totalBuyIn;
   };
 
   const profit = sessionDetails ? (sessionDetails.cash_out || 0) - sessionDetails.buy_in : 0;
@@ -280,10 +329,118 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
             </TabsContent>
 
             <TabsContent value="tables" className="space-y-4">
-              <div className="text-center py-12 text-muted-foreground">
-                <Icon name="Table" className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Tables data will be displayed here soon.</p>
-              </div>
+              {sessionTables.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Icon name="Table" className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No tables have been opened for this session.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {sessionTables.map((table, index) => (
+                    <Card key={table.id}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">
+                              Table #{index + 1}
+                            </Badge>
+                            {table.table_name && (
+                              <Badge variant="secondary">{table.table_name}</Badge>
+                            )}
+                            {table.game_format && (
+                              <Badge variant="outline">{table.game_format}</Badge>
+                            )}
+                            {table.is_active && (
+                              <Badge variant="default">Active</Badge>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            {table.cashout !== undefined && table.buy_in !== undefined && (
+                              <ProfitLossBadge 
+                                profit={calculateTableProfit(table)}
+                                currency={sessionDetails.currency || 'USD'}
+                                size="sm"
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm mb-3">
+                          {table.buy_in !== undefined && table.buy_in !== null && (
+                            <div>
+                              <span className="text-muted-foreground">Buy-in: </span>
+                              <span>{currencySymbol}{table.buy_in.toFixed(0)}</span>
+                            </div>
+                          )}
+                          {table.cashout !== undefined && table.cashout !== null && (
+                            <div>
+                              <span className="text-muted-foreground">Cash Out: </span>
+                              <span>{currencySymbol}{table.cashout.toFixed(0)}</span>
+                            </div>
+                          )}
+                          {table.rebuys !== undefined && table.rebuys > 0 && (
+                            <div>
+                              <span className="text-muted-foreground">Rebuys: </span>
+                              <span>{table.rebuys} ({currencySymbol}{(table.rebuy_amount || 0).toFixed(0)})</span>
+                            </div>
+                          )}
+                          {calculateTableDuration(table) && (
+                            <div>
+                              <span className="text-muted-foreground">Duration: </span>
+                              <span>{formatDuration(calculateTableDuration(table))}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {table.start_time && (
+                          <div className="text-sm text-muted-foreground mb-2">
+                            <span>Started: </span>
+                            <span>{formatDateTime(table.start_time)}</span>
+                            {table.end_time && (
+                              <>
+                                <span className="mx-2">•</span>
+                                <span>Ended: </span>
+                                <span>{formatDateTime(table.end_time)}</span>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {table.stakes && (
+                          <div className="text-sm mb-2">
+                            <span className="text-muted-foreground">Stakes: </span>
+                            <span>{table.stakes}</span>
+                          </div>
+                        )}
+
+                        {sessionDetails.format === 'Tournament' && (
+                          <div className="grid grid-cols-2 gap-2 text-sm mb-2">
+                            {table.final_position !== undefined && table.final_position !== null && (
+                              <div>
+                                <span className="text-muted-foreground">Position: </span>
+                                <span>{table.final_position}</span>
+                              </div>
+                            )}
+                            {table.players_eliminated !== undefined && table.players_eliminated > 0 && (
+                              <div>
+                                <span className="text-muted-foreground">Bounties: </span>
+                                <span>{table.players_eliminated} ({currencySymbol}{((table.bounty_amount || 0) * table.players_eliminated).toFixed(0)})</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {table.table_notes && (
+                          <div className="mt-2 p-2 bg-muted rounded text-sm">
+                            <span className="text-muted-foreground">Notes: </span>
+                            {table.table_notes}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="hands" className="space-y-4">
