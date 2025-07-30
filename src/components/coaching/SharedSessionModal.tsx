@@ -503,7 +503,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
 
                         {hand.hole_cards && (
                           <div className="mb-2">
-                            <span className="text-sm text-muted-foreground">Hole Cards: </span>
+                            <span className="text-sm text-muted-foreground">Cards: </span>
                             <span className="font-medium">{hand.hole_cards}</span>
                           </div>
                         )}
