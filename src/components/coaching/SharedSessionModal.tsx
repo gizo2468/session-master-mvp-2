@@ -96,7 +96,12 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [reviewHandId, setReviewHandId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const [existingFeedback, setExistingFeedback] = useState<string | null>(null);
+  const [feedbackEntries, setFeedbackEntries] = useState<Array<{
+    id: string;
+    feedback_content: string;
+    created_at: string;
+    coach_id: string;
+  }>>([]);
   const [isSavingFeedback, setIsSavingFeedback] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isCoach, setIsCoach] = useState(false);
@@ -294,20 +299,15 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
         .eq('hand_id', handId)
         .eq('coach_id', isCoach ? currentUserId : '')
         .eq('student_id', isCoach ? playerId : currentUserId)
-        .maybeSingle();
+        .order('created_at', { ascending: true });
 
       if (error) {
         console.error('Error loading feedback:', error);
         return;
       }
 
-      if (feedbackData) {
-        setExistingFeedback(feedbackData.feedback_content);
-        setFeedback(feedbackData.feedback_content);
-      } else {
-        setExistingFeedback(null);
-        setFeedback('');
-      }
+      setFeedbackEntries(feedbackData || []);
+      setFeedback(''); // Clear input field
     } catch (error) {
       console.error('Error in loadFeedback:', error);
     }
@@ -328,25 +328,23 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
         feedback_content: feedback.trim()
       };
 
-      if (existingFeedback) {
-        // Update existing feedback
-        const { error } = await supabase
-          .from('hand_feedback')
-          .update({ feedback_content: feedback.trim() })
-          .eq('hand_id', reviewHandId)
-          .eq('coach_id', currentUserId);
+      // Always insert new feedback (no more updating existing)
+      const { data: newFeedback, error } = await supabase
+        .from('hand_feedback')
+        .insert(feedbackData)
+        .select()
+        .single();
 
-        if (error) throw error;
-      } else {
-        // Insert new feedback
-        const { error } = await supabase
-          .from('hand_feedback')
-          .insert(feedbackData);
+      if (error) throw error;
 
-        if (error) throw error;
+      // Add the new feedback to our local state
+      if (newFeedback) {
+        setFeedbackEntries(prev => [...prev, newFeedback]);
       }
 
-      setExistingFeedback(feedback);
+      // Clear the input field
+      setFeedback('');
+      
       toast({
         title: "Feedback saved",
         description: "Your feedback has been saved successfully."
@@ -369,7 +367,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
       loadFeedback(reviewHandId);
     } else {
       setFeedback('');
-      setExistingFeedback(null);
+      setFeedbackEntries([]);
     }
   }, [reviewHandId, currentUserId, isCoach]);
 
@@ -859,53 +857,71 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                         <div>
                           <span className="text-sm font-medium">Coach Feedback</span>
                           
-                          {isCoach ? (
-                            // Coach view: Input for adding/editing feedback
-                            <>
-                              <Textarea
-                                value={feedback}
-                                onChange={(e) => setFeedback(e.target.value)}
-                                placeholder="Add your feedback for this hand..."
-                                className="mt-2 min-h-[100px] resize-none"
-                              />
-                              <div className="flex justify-end gap-2">
-                                <Button variant="outline" onClick={() => setReviewHandId(null)}>
-                                  Cancel
-                                </Button>
-                                <Button 
-                                  onClick={saveFeedback}
-                                  disabled={!feedback.trim() || isSavingFeedback}
-                                >
-                                  {isSavingFeedback ? (
-                                    <>
-                                      <Icon name="Loader" className="h-4 w-4 animate-spin mr-2" />
-                                      Saving...
-                                    </>
-                                  ) : (
-                                    'Save Feedback'
-                                  )}
-                                </Button>
-                              </div>
-                            </>
-                          ) : (
-                            // Player view: Read-only feedback display
-                            <>
-                              {existingFeedback ? (
-                                <div className="mt-2 p-3 bg-muted rounded-lg">
-                                  <p className="text-sm whitespace-pre-wrap">{existingFeedback}</p>
-                                </div>
-                              ) : (
-                                <div className="mt-2 p-3 bg-muted/50 rounded-lg text-center">
-                                  <p className="text-sm text-muted-foreground">No coach feedback yet</p>
-                                </div>
-                              )}
-                              <div className="flex justify-end">
-                                <Button variant="outline" onClick={() => setReviewHandId(null)}>
-                                  Close
-                                </Button>
-                              </div>
-                            </>
-                          )}
+                           {/* Display existing feedback entries */}
+                           {feedbackEntries.length > 0 && (
+                             <div className="mt-3 space-y-3">
+                               <div className="text-sm text-muted-foreground">Previous Feedback:</div>
+                               {feedbackEntries.map((entry, index) => (
+                                 <div key={entry.id} className="p-3 bg-muted rounded-lg">
+                                   <div className="flex justify-between items-start mb-2">
+                                     <span className="text-xs text-muted-foreground">
+                                       #{index + 1} • {new Date(entry.created_at).toLocaleDateString('en-US', {
+                                         month: 'short',
+                                         day: 'numeric',
+                                         hour: '2-digit',
+                                         minute: '2-digit'
+                                       })}
+                                     </span>
+                                   </div>
+                                   <p className="text-sm whitespace-pre-wrap">{entry.feedback_content}</p>
+                                 </div>
+                               ))}
+                             </div>
+                           )}
+
+                           {isCoach ? (
+                             // Coach view: Input for adding new feedback
+                             <>
+                               <Textarea
+                                 value={feedback}
+                                 onChange={(e) => setFeedback(e.target.value)}
+                                 placeholder="Add your feedback for this hand..."
+                                 className="mt-3 min-h-[100px] resize-none"
+                               />
+                               <div className="flex justify-end gap-2 mt-2">
+                                 <Button variant="outline" onClick={() => setReviewHandId(null)}>
+                                   Cancel
+                                 </Button>
+                                 <Button 
+                                   onClick={saveFeedback}
+                                   disabled={!feedback.trim() || isSavingFeedback}
+                                 >
+                                   {isSavingFeedback ? (
+                                     <>
+                                       <Icon name="Loader" className="h-4 w-4 animate-spin mr-2" />
+                                       Saving...
+                                     </>
+                                   ) : (
+                                     'Add Feedback'
+                                   )}
+                                 </Button>
+                               </div>
+                             </>
+                           ) : (
+                             // Player view: Read-only feedback display
+                             <>
+                               {feedbackEntries.length === 0 && (
+                                 <div className="mt-2 p-3 bg-muted/50 rounded-lg text-center">
+                                   <p className="text-sm text-muted-foreground">No coach feedback yet</p>
+                                 </div>
+                               )}
+                               <div className="flex justify-end mt-3">
+                                 <Button variant="outline" onClick={() => setReviewHandId(null)}>
+                                   Close
+                                 </Button>
+                               </div>
+                             </>
+                           )}
                         </div>
                       </div>
                     </div>
