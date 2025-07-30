@@ -508,26 +508,6 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                           </div>
                         )}
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                          {hand.pot_size !== undefined && hand.pot_size !== null && (
-                            <div>
-                              <span className="text-muted-foreground">Pot: </span>
-                              <span>{currencySymbol}{hand.pot_size.toFixed(0)}</span>
-                            </div>
-                          )}
-                          {hand.amount_invested !== undefined && hand.amount_invested !== null && (
-                            <div>
-                              <span className="text-muted-foreground">Invested: </span>
-                              <span>{currencySymbol}{hand.amount_invested.toFixed(0)}</span>
-                            </div>
-                          )}
-                          {hand.amount_won !== undefined && hand.amount_won !== null && (
-                            <div>
-                              <span className="text-muted-foreground">Won: </span>
-                              <span>{currencySymbol}{hand.amount_won.toFixed(0)}</span>
-                            </div>
-                          )}
-                        </div>
 
                         {hand.hand_notes && (
                           <div className="mt-2 p-2 bg-muted rounded text-sm">
