@@ -288,7 +288,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
         ) : sessionDetails ? (
           <Tabs defaultValue="summary" className="w-full">
             <TabsList className="grid w-full grid-cols-3 h-auto">
-              <TabsTrigger value="summary" className="text-center justify-center">Session Summary</TabsTrigger>
+              <TabsTrigger value="summary" className="text-center justify-center">Summary</TabsTrigger>
               <TabsTrigger value="tables" className="text-center justify-center">Tables</TabsTrigger>
               <TabsTrigger value="hands" className="text-center justify-center">
                 Hands ({sessionHands.length})
