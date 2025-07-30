@@ -391,7 +391,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                           {table.buy_in !== undefined && table.buy_in !== null && (
                             <div>
                               <span className="text-muted-foreground">Buy-in: </span>
-                              <span className="font-medium">{currencySymbol}{table.buy_in.toFixed(0)}</span>
+                              <span className="font-medium">{currencySymbol}{(table.buy_in - (table.rebuy_amount || 0)).toFixed(0)}</span>
                             </div>
                           )}
                           {table.cashout !== undefined && table.cashout !== null && (
