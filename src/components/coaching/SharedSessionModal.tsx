@@ -101,7 +101,14 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const loadSessionData = async () => {
     setLoading(true);
     try {
-      // First, verify this is a valid shared session and get session details
+      // First, get the current authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('No authenticated user found');
+        return;
+      }
+
+      // Get session details first
       const { data: sessionData, error: sessionError } = await supabase
         .from('sessions')
         .select('*')
@@ -113,19 +120,22 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
         return;
       }
 
-      // Verify this session is actually shared with the current user
-      const { data: sharedSession } = await supabase
-        .from('shared_sessions')
-        .select('*')
-        .eq('session_id', sessionId)
-        .eq('coach_id', playerId)
-        .single();
+      // Check if current user has access to this session
+      const isSessionOwner = sessionData.user_id === user.id;
+      
+      if (!isSessionOwner) {
+        // If not the session owner, verify this session is shared with current user as coach
+        const { data: sharedSession } = await supabase
+          .from('shared_sessions')
+          .select('*')
+          .eq('session_id', sessionId)
+          .eq('coach_id', user.id)
+          .single();
 
-      // If not found as coach, check if user is the session owner
-      const isOwner = sessionData.user_id === playerId;
-      if (!sharedSession && !isOwner) {
-        console.error('User does not have access to this session');
-        return;
+        if (!sharedSession) {
+          console.error('User does not have access to this session');
+          return;
+        }
       }
 
       setSessionDetails(sessionData);
