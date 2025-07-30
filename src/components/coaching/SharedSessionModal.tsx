@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Icon from '@/components/ui/Lucide';
 import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 import { useSessionStats } from '@/hooks/useSessionStats';
+import CardDisplay from '@/components/poker/CardDisplay';
 
 interface SessionDetails {
   id: string;
@@ -513,9 +514,9 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                         </div>
 
                         {hand.hole_cards && (
-                          <div className="mb-2">
-                            <span className="text-sm text-muted-foreground">Cards: </span>
-                            <span className="font-medium">{hand.hole_cards}</span>
+                          <div className="mb-2 flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">Cards:</span>
+                            <CardDisplay cards={hand.hole_cards} size="sm" />
                           </div>
                         )}
 
