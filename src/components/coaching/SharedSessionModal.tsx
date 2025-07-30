@@ -322,6 +322,36 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
     }
   };
 
+  // Delete feedback
+  const deleteFeedback = async (feedbackId: string) => {
+    if (!currentUserId || !isCoach) return;
+
+    try {
+      const { error } = await supabase
+        .from('hand_feedback')
+        .delete()
+        .eq('id', feedbackId)
+        .eq('coach_id', currentUserId); // Only allow coaches to delete their own feedback
+
+      if (error) throw error;
+
+      // Remove from local state
+      setFeedbackEntries(prev => prev.filter(entry => entry.id !== feedbackId));
+      
+      toast({
+        title: "Feedback deleted",
+        description: "The feedback has been successfully removed.",
+      });
+    } catch (error) {
+      console.error('Error deleting feedback:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete feedback. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Save feedback
   const saveFeedback = async () => {
     if (!reviewHandId || !currentUserId || !sessionDetails || !isCoach || !feedback.trim()) {
@@ -870,21 +900,31 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                            {feedbackEntries.length > 0 && (
                              <div className="mt-3 space-y-3">
                                <div className="text-sm text-muted-foreground">Previous Feedback:</div>
-                               {feedbackEntries.map((entry, index) => (
-                                 <div key={entry.id} className="p-3 bg-muted rounded-lg">
-                                   <div className="flex justify-between items-start mb-2">
-                                     <span className="text-xs text-muted-foreground">
-                                       #{index + 1} • {new Date(entry.created_at).toLocaleDateString('en-US', {
-                                         month: 'short',
-                                         day: 'numeric',
-                                         hour: '2-digit',
-                                         minute: '2-digit'
-                                       })}
-                                     </span>
-                                   </div>
-                                   <p className="text-sm whitespace-pre-wrap">{entry.feedback_content}</p>
-                                 </div>
-                               ))}
+                                {feedbackEntries.map((entry, index) => (
+                                  <div key={entry.id} className="p-3 bg-muted rounded-lg">
+                                    <div className="flex justify-between items-start mb-2">
+                                      <span className="text-xs text-muted-foreground">
+                                        #{index + 1} • {new Date(entry.created_at).toLocaleDateString('en-US', {
+                                          month: 'short',
+                                          day: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                        })}
+                                      </span>
+                                      {isCoach && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => deleteFeedback(entry.id)}
+                                          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                                        >
+                                          <Icon name="trash-2" className="h-3 w-3" />
+                                        </Button>
+                                      )}
+                                    </div>
+                                    <p className="text-sm whitespace-pre-wrap">{entry.feedback_content}</p>
+                                  </div>
+                                ))}
                              </div>
                            )}
 
