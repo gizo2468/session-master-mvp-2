@@ -285,21 +285,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           initialBuyIn: table.buyIn,
         };
         
-        const newTables = [...(session.tables || []), newTable];
         const updatedSession = {
           ...session,
-          tables: newTables,
-          tablesPlayed: newTables.length, // Update tables count
+          tables: [...(session.tables || []), newTable],
           buyIn: session.buyIn + table.buyIn
         };
         
         await sessionOperations.updateSession(updatedSession);
-        
-        // Force refresh from database to ensure all components get updated data
-        if (refreshSessionsFromDatabase) {
-          console.log('🔄 Triggering session refresh after table addition');
-          await refreshSessionsFromDatabase();
-        }
       }
     },
     updateTable: async (sessionId: string, updatedTable: TableData) => {
@@ -407,7 +399,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           const updatedSession = {
             ...session,
             tables: updatedTables,
-            tablesPlayed: updatedTables.length, // Update tables count
             buyIn: session.buyIn - tableToDelete.buyIn
           };
           
