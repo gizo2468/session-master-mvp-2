@@ -17,7 +17,7 @@ import SessionModals from '@/components/poker/SessionModals';
 export default function SessionDetail() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const { updateSession, deleteSession, endSession, addTable } = useSessionContext();
+  const { updateSession, deleteSession, endSession, addTable, deleteTable } = useSessionContext();
   const { toast } = useToast();
   
   // Use the session loader hook to properly load sessions from database
@@ -254,6 +254,24 @@ export default function SessionDetail() {
       description: "New table has been added to your session.",
     });
   };
+
+  const handleDeleteTable = async (tableId: string) => {
+    if (!session) return;
+    
+    try {
+      await deleteTable(session.id, tableId);
+      toast({
+        title: "Table Deleted",
+        description: "Table has been removed from your session.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete table. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -341,6 +359,7 @@ export default function SessionDetail() {
           onTableUpdate={handleTableUpdate}
           onAddTable={handleAddTable}
           onAddTableButtonClick={handleAddTableButtonClick}
+          onDeleteTable={handleDeleteTable}
           onDelete={handleDelete}
           onEndSession={handleEndSession}
           onCashOutAmountChange={setCashOutAmount}

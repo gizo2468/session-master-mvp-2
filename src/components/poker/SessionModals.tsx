@@ -23,6 +23,7 @@ interface SessionModalsProps {
   onTableUpdate: (table: TableData) => void;
   onAddTable?: (tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
   onAddTableButtonClick?: () => void;
+  onDeleteTable?: (tableId: string) => void;
   onDelete: () => void;
   onEndSession: () => void;
   onCashOutAmountChange: (amount: string) => void;
@@ -47,6 +48,7 @@ const SessionModals: React.FC<SessionModalsProps> = ({
   onTableUpdate,
   onAddTable,
   onAddTableButtonClick,
+  onDeleteTable,
   onDelete,
   onEndSession,
   onCashOutAmountChange,
@@ -61,6 +63,7 @@ const SessionModals: React.FC<SessionModalsProps> = ({
         tables={session.tables || []}
         onSelectTable={onTableSelect}
         onAddTable={onAddTableButtonClick}
+        onDeleteTable={onDeleteTable}
       />
 
       {/* Add Table Modal */}
