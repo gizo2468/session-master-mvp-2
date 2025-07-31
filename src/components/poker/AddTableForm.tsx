@@ -17,6 +17,7 @@ interface AddTableFormProps {
   onAddTable: (tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
   fixedFormat?: 'Cash' | 'Tournament';
   sessionFormat?: 'Cash' | 'Tournament'; // New prop to auto-select format
+  isCompletedSession?: boolean; // New prop to show payout field for completed sessions
 }
 
 const TOURNAMENT_TYPES = [
@@ -39,7 +40,8 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
   onOpenChange, 
   onAddTable, 
   fixedFormat,
-  sessionFormat 
+  sessionFormat,
+  isCompletedSession = false
 }) => {
   // Auto-select format based on session format or use fixedFormat
   const [format, setFormat] = useState<'Cash' | 'Tournament'>(
@@ -48,6 +50,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
   const [gameType, setGameType] = useState<'NLH' | 'PLO'>('NLH');
   const [tableName, setTableName] = useState(''); // Renamed from location
   const [buyIn, setBuyIn] = useState('');
+  const [payout, setPayout] = useState(''); // New payout field for completed sessions
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[smallBlindIndex]);
   const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[smallBlindIndex] * 2); // Always 2x small blind for cash
@@ -85,6 +88,11 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
       return false;
     }
     
+    if (isCompletedSession && !payout) {
+      setValidationError('Please enter a payout amount');
+      return false;
+    }
+    
     if (format === 'Tournament' && !tournamentType) {
       setValidationError('Please select a Tournament Type before continuing');
       return false;
@@ -107,6 +115,10 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
       location: tableName || `${format} Game`, // Use tableName or default to format
       buyIn: parseFloat(buyIn),
       initialBuyIn: parseFloat(buyIn),
+      ...(isCompletedSession && payout && {
+        endTime: new Date(), // Mark as completed
+        cashOut: parseFloat(payout),
+      }),
       ...(format === 'Cash' && {
         smallBlind: smallBlind,
         bigBlind: bigBlind,
@@ -130,6 +142,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
     setGameType('NLH');
     setTableName(''); // Reset tableName instead of location
     setBuyIn('');
+    setPayout(''); // Reset payout field
     setSmallBlindIndex(2);
     setSmallBlind(BLIND_PRESETS.smallBlind[2]);
     setBigBlind(BLIND_PRESETS.smallBlind[2] * 2); // Reset to 2x small blind
@@ -256,6 +269,23 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
               required
             />
           </div>
+
+          {isCompletedSession && (
+            <div className="space-y-2">
+              <Label htmlFor="payout">Payout / Cash-out Amount ($)</Label>
+              <Input
+                id="payout"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={payout}
+                onChange={(e) => setPayout(e.target.value)}
+                autoComplete="off"
+                required
+              />
+            </div>
+          )}
 
           {format === 'Tournament' && (
             <>

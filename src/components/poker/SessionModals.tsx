@@ -70,6 +70,7 @@ const SessionModals: React.FC<SessionModalsProps> = ({
           onOpenChange={onAddTableClose}
           onAddTable={onAddTable}
           sessionFormat={session.format === 'Tournament' || session.format?.includes('Tournament') ? 'Tournament' : 'Cash'}
+          isCompletedSession={!session.isActive}
         />
       )}
 
