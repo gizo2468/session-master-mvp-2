@@ -5,19 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TableData } from '@/types/poker';
 import { format } from 'date-fns';
+import { Plus } from 'lucide-react';
 
 interface TableSelectionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tables: TableData[];
   onSelectTable: (table: TableData) => void;
+  onAddTable?: () => void;
 }
 
 const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
   open,
   onOpenChange,
   tables,
-  onSelectTable
+  onSelectTable,
+  onAddTable
 }) => {
   const formatTableDetails = (table: TableData) => {
     let details = `${table.gameType} • ${table.format}`;
@@ -128,6 +131,19 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
             );
           })}
         </div>
+        
+        {onAddTable && (
+          <div className="mb-4">
+            <Button
+              variant="outline"
+              onClick={onAddTable}
+              className="w-full border-dashed border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Table
+            </Button>
+          </div>
+        )}
         
         <div className="flex justify-end">
           <Button variant="outline" onClick={() => onOpenChange(false)}>

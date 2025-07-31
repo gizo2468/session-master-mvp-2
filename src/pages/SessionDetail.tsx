@@ -17,7 +17,7 @@ import SessionModals from '@/components/poker/SessionModals';
 export default function SessionDetail() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const { updateSession, deleteSession, endSession } = useSessionContext();
+  const { updateSession, deleteSession, endSession, addTable } = useSessionContext();
   const { toast } = useToast();
   
   // Use the session loader hook to properly load sessions from database
@@ -29,6 +29,7 @@ export default function SessionDetail() {
   const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [showTableSelection, setShowTableSelection] = useState(false);
   const [showEditTable, setShowEditTable] = useState(false);
+  const [showAddTable, setShowAddTable] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [cashOutAmount, setCashOutAmount] = useState('');
   
@@ -236,6 +237,23 @@ export default function SessionDetail() {
       updateSession(updatedSession);
     }
   };
+
+  const handleAddTableButtonClick = () => {
+    setShowTableSelection(false);
+    setShowAddTable(true);
+  };
+
+  const handleAddTable = (tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => {
+    if (!session) return;
+    
+    addTable(session.id, tableData);
+    setShowAddTable(false);
+    
+    toast({
+      title: "Table Added",
+      description: "New table has been added to your session.",
+    });
+  };
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -311,14 +329,18 @@ export default function SessionDetail() {
           showEndSessionModal={showEndSessionModal}
           showTableSelection={showTableSelection}
           showEditTable={showEditTable}
+          showAddTable={showAddTable}
           selectedTable={selectedTable}
           cashOutAmount={cashOutAmount}
           onDeleteModalClose={() => setShowDeleteModal(false)}
           onEndSessionModalClose={() => setShowEndSessionModal(false)}
           onTableSelectionClose={() => setShowTableSelection(false)}
           onEditTableClose={() => setShowEditTable(false)}
+          onAddTableClose={() => setShowAddTable(false)}
           onTableSelect={handleTableSelect}
           onTableUpdate={handleTableUpdate}
+          onAddTable={handleAddTable}
+          onAddTableButtonClick={handleAddTableButtonClick}
           onDelete={handleDelete}
           onEndSession={handleEndSession}
           onCashOutAmountChange={setCashOutAmount}

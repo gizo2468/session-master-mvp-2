@@ -3,6 +3,7 @@ import React from 'react';
 import { PokerSession, TableData } from '@/types/poker';
 import TableSelectionModal from './TableSelectionModal';
 import EditTableForm from './EditTableForm';
+import AddTableForm from './AddTableForm';
 
 interface SessionModalsProps {
   session: PokerSession;
@@ -10,14 +11,18 @@ interface SessionModalsProps {
   showEndSessionModal: boolean;
   showTableSelection: boolean;
   showEditTable: boolean;
+  showAddTable?: boolean;
   selectedTable: TableData | null;
   cashOutAmount: string;
   onDeleteModalClose: () => void;
   onEndSessionModalClose: () => void;
   onTableSelectionClose: () => void;
   onEditTableClose: () => void;
+  onAddTableClose?: () => void;
   onTableSelect: (table: TableData) => void;
   onTableUpdate: (table: TableData) => void;
+  onAddTable?: (tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
+  onAddTableButtonClick?: () => void;
   onDelete: () => void;
   onEndSession: () => void;
   onCashOutAmountChange: (amount: string) => void;
@@ -30,14 +35,18 @@ const SessionModals: React.FC<SessionModalsProps> = ({
   showEndSessionModal,
   showTableSelection,
   showEditTable,
+  showAddTable,
   selectedTable,
   cashOutAmount,
   onDeleteModalClose,
   onEndSessionModalClose,
   onTableSelectionClose,
   onEditTableClose,
+  onAddTableClose,
   onTableSelect,
   onTableUpdate,
+  onAddTable,
+  onAddTableButtonClick,
   onDelete,
   onEndSession,
   onCashOutAmountChange,
@@ -51,7 +60,18 @@ const SessionModals: React.FC<SessionModalsProps> = ({
         onOpenChange={onTableSelectionClose}
         tables={session.tables || []}
         onSelectTable={onTableSelect}
+        onAddTable={onAddTableButtonClick}
       />
+
+      {/* Add Table Modal */}
+      {showAddTable && onAddTable && onAddTableClose && (
+        <AddTableForm
+          open={showAddTable}
+          onOpenChange={onAddTableClose}
+          onAddTable={onAddTable}
+          sessionFormat={session.format === 'Tournament' || session.format?.includes('Tournament') ? 'Tournament' : 'Cash'}
+        />
+      )}
 
       {/* Edit Table Modal */}
       {selectedTable && (
