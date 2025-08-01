@@ -568,12 +568,12 @@ const Signup: React.FC = () => {
                           Experience
                           <AdaptiveTooltip
                             content={
-                              <div className="space-y-2">
-                                <p className="font-medium">What to include here:</p>
-                                <p className="text-sm">
-                                  Briefly describe your coaching background. You can mention how many years of experience you have, the types of poker formats you specialize in, and any notable achievements or credentials (e.g., "6 years coaching online MTTs, WSOP bracelet winner, focus on exploitative play").
-                                </p>
-                              </div>
+                               <div className="space-y-2">
+                                 <p className="font-medium">What to include here:</p>
+                                 <p className="text-sm">
+                                   Write a short sentence about your coaching background, how many years you've been coaching\playing, what formats you specialize in, and any key achievements (e.g., "5 years coaching MTTs, focus on GTO and mental game").
+                                 </p>
+                               </div>
                             }
                           >
                             <Icon name="CircleHelp" className="h-4 w-4 text-muted-foreground cursor-pointer" />
