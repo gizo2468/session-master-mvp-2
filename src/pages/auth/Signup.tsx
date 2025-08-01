@@ -16,7 +16,6 @@ import { UserRole } from '@/types/poker';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import PrivacyPolicyModal from '@/components/legal/PrivacyPolicyModal';
@@ -566,16 +565,7 @@ const Signup: React.FC = () => {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
                           Experience
-                          <AdaptiveTooltip
-                            content={
-                              <div className="space-y-2">
-                                <p className="font-medium">What to include here:</p>
-                                <p>Briefly describe your coaching background. You can mention how many years of experience you have, the types of poker formats you specialize in, and any notable achievements or credentials (e.g., "6 years coaching online MTTs, WSOP bracelet winner, focus on exploitative play").</p>
-                              </div>
-                            }
-                          >
-                            <Icon name="HelpCircle" className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                          </AdaptiveTooltip>
+                          <Icon name="HelpCircle" className="h-4 w-4 text-muted-foreground" />
                         </FormLabel>
                         <FormControl>
                           <Textarea
