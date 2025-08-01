@@ -581,7 +581,7 @@ const Signup: React.FC = () => {
                         </FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="e.g., 5 years coaching MTTs and heads-up play"
+                            placeholder="e.g., 4 years coaching tournaments, 3x trophies, 2x bracelets"
                             className="resize-none"
                             {...field}
                           />
