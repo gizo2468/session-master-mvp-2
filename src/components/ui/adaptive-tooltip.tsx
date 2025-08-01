@@ -1,7 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -18,23 +17,52 @@ export const AdaptiveTooltip: React.FC<AdaptiveTooltipProps> = ({
   className,
 }) => {
   const isMobile = useIsMobile();
+  const [showTooltip, setShowTooltip] = useState(false);
   const [showMobileDialog, setShowMobileDialog] = useState(false);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
 
-  // For desktop: use regular tooltip
+  // Close tooltip when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target as Node) &&
+          triggerRef.current && !triggerRef.current.contains(event.target as Node)) {
+        setShowTooltip(false);
+      }
+    };
+
+    if (showTooltip) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showTooltip]);
+
+  // For desktop: use positioned tooltip that opens on click
   if (!isMobile) {
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className={`cursor-help ${className || ''}`}>
-              {children}
+      <div className="relative inline-block">
+        <div 
+          ref={triggerRef}
+          onClick={() => setShowTooltip(!showTooltip)}
+          className={`cursor-pointer ${className || ''}`}
+        >
+          {children}
+        </div>
+        
+        {showTooltip && (
+          <div
+            ref={tooltipRef}
+            className="absolute z-50 top-full left-1/2 transform -translate-x-1/2 mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg max-w-xs"
+            style={{ minWidth: '250px' }}
+          >
+            <div className="text-sm text-gray-900">
+              {content}
             </div>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs">
-            {content}
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+            {/* Arrow pointing up */}
+            <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white border-l border-t border-gray-200 rotate-45"></div>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -49,7 +77,7 @@ export const AdaptiveTooltip: React.FC<AdaptiveTooltipProps> = ({
       </div>
 
       <Dialog open={showMobileDialog} onOpenChange={setShowMobileDialog}>
-        <DialogContent className="max-w-[90vw] p-4 bg-white rounded-lg border border-gray-200">
+        <DialogContent className="max-w-[90vw] p-4 bg-white rounded-lg border border-gray-200 shadow-lg">
           <div className="relative">
             <Button 
               variant="ghost" 
