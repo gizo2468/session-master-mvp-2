@@ -49,7 +49,7 @@ export const AdaptiveTooltip: React.FC<AdaptiveTooltipProps> = ({
       </div>
 
       <Dialog open={showMobileDialog} onOpenChange={setShowMobileDialog}>
-        <DialogContent className="max-w-[90vw] p-4 bg-white rounded-lg border shadow-lg">
+        <DialogContent className="max-w-[90vw] p-4 bg-white rounded-lg border border-gray-200">
           <div className="relative">
             <Button 
               variant="ghost" 

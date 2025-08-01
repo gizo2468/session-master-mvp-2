@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { HelpCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -577,7 +576,7 @@ const Signup: React.FC = () => {
                               </div>
                             }
                           >
-                            <HelpCircle className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                            <Icon name="CircleHelp" className="h-4 w-4 text-muted-foreground cursor-pointer" />
                           </AdaptiveTooltip>
                         </FormLabel>
                         <FormControl>
