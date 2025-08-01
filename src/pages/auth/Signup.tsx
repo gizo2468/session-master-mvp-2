@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import PrivacyPolicyModal from '@/components/legal/PrivacyPolicyModal';
 import TermsOfUseModal from '@/components/legal/TermsOfUseModal';
+import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters long' }),
@@ -565,7 +566,18 @@ const Signup: React.FC = () => {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
                           Experience
-                          <Icon name="HelpCircle" className="h-4 w-4 text-muted-foreground" />
+                          <AdaptiveTooltip
+                            content={
+                              <div className="space-y-2">
+                                <p className="font-medium">What to include here:</p>
+                                <p className="text-sm">
+                                  Briefly describe your coaching background. You can mention how many years of experience you have, the types of poker formats you specialize in, and any notable achievements or credentials (e.g., "6 years coaching online MTTs, WSOP bracelet winner, focus on exploitative play").
+                                </p>
+                              </div>
+                            }
+                          >
+                            <Icon name="HelpCircle" className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                          </AdaptiveTooltip>
                         </FormLabel>
                         <FormControl>
                           <Textarea
