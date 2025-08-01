@@ -14,6 +14,8 @@ import Logo from '@/components/Logo';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { UserRole } from '@/types/poker';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import PrivacyPolicyModal from '@/components/legal/PrivacyPolicyModal';
@@ -29,6 +31,8 @@ const formSchema = z.object({
   password: z.string().min(6, { message: 'Password must be at least 6 characters long' }),
   confirmPassword: z.string(),
   role: z.enum(['student', 'coach'], { required_error: 'Please select a role' }),
+  coachingFocus: z.array(z.string()).optional(),
+  experience: z.string().optional(),
   agreeToTerms: z.literal(true, {
     errorMap: () => ({ message: "You must agree to the Terms of Use and Privacy Policy" })
   }),
@@ -62,6 +66,8 @@ const Signup: React.FC = () => {
       password: '',
       confirmPassword: '',
       role: 'student',
+      coachingFocus: [],
+      experience: '',
       agreeToTerms: false as unknown as true,
     },
   });
@@ -175,6 +181,8 @@ const Signup: React.FC = () => {
             fullName: values.fullName,
             username: values.username,
             role: values.role,
+            coachingFocus: values.coachingFocus,
+            experience: values.experience,
             hasAcceptedTerms: values.agreeToTerms
           },
           emailRedirectTo: `${window.location.origin}/`
@@ -298,6 +306,19 @@ const Signup: React.FC = () => {
       description: 'Help players improve their poker game with insights and feedback',
     },
   ];
+
+  const coachingFocusOptions = [
+    'Tournaments',
+    'Cash Games', 
+    'GTO Tools',
+    'Mental Game',
+    'Bankroll Management',
+    'Live Play Strategy',
+    'Online Strategy'
+  ];
+
+  const selectedRole = form.watch('role');
+  const selectedCoachingFocus = form.watch('coachingFocus') || [];
 
   // Show email confirmation screen
   if (showEmailConfirmation) {
@@ -503,6 +524,62 @@ const Signup: React.FC = () => {
                   </FormItem>
                 )}
               />
+
+              {selectedRole === 'coach' && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="coachingFocus"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Coaching Focus</FormLabel>
+                        <FormControl>
+                          <div className="flex flex-wrap gap-2">
+                            {coachingFocusOptions.map((option) => (
+                              <Badge
+                                key={option}
+                                variant={selectedCoachingFocus.includes(option) ? "default" : "outline"}
+                                className="cursor-pointer hover:bg-accent"
+                                onClick={() => {
+                                  const current = field.value || [];
+                                  const updated = current.includes(option)
+                                    ? current.filter(item => item !== option)
+                                    : [...current, option];
+                                  field.onChange(updated);
+                                }}
+                              >
+                                {option}
+                              </Badge>
+                            ))}
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="experience"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          Experience
+                          <Icon name="HelpCircle" className="h-4 w-4 text-muted-foreground" />
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="e.g., 5 years coaching MTTs and heads-up play"
+                            className="resize-none"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
 
               <FormField
                 control={form.control}
