@@ -576,7 +576,7 @@ const Signup: React.FC = () => {
                               </div>
                             }
                           >
-                            <Icon name="HelpCircle" className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                            <Icon name="CircleHelp" className="h-4 w-4 text-muted-foreground cursor-pointer" />
                           </AdaptiveTooltip>
                         </FormLabel>
                         <FormControl>
