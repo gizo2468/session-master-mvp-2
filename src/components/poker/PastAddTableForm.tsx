@@ -146,13 +146,13 @@ const PastAddTableForm: React.FC<PastAddTableFormProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] w-[95vw] sm:w-full flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Add Table</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={onFormSubmit} className="space-y-6" autoComplete="off">
+          <form onSubmit={onFormSubmit} className="flex-1 overflow-y-auto space-y-6" autoComplete="off">
             {/* Game & Format Section */}
             <div className="space-y-4">
               <h4 className="text-sm font-medium text-gray-900">Game & Format</h4>

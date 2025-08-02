@@ -74,13 +74,13 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Edit Table</DialogTitle>
         </DialogHeader>
 
         {!showDeleteConfirm ? (
-          <div className="space-y-4">
+          <div className="flex-1 overflow-y-auto space-y-4">
             <div>
               <Label htmlFor="tableName">Table Name / Location</Label>
               <Input
