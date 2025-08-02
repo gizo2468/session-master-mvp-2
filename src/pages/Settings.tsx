@@ -19,7 +19,7 @@ const Settings: React.FC = () => {
   const { user, logout, isLoading } = useAuth();
   const { toast } = useToast();
   const { defaultCurrency } = useDefaultCurrency();
-  const [profile, setProfile] = useState<{ username?: string; role?: string; default_currency?: string } | null>(null);
+  const [profile, setProfile] = useState<{ username?: string; role?: string; default_currency?: string; coaching_focus?: string[]; experience?: string } | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
   const handleLogout = async () => {
@@ -47,7 +47,7 @@ const Settings: React.FC = () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('username, role, default_currency')
+          .select('username, role, default_currency, coaching_focus, experience')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -182,6 +182,44 @@ const Settings: React.FC = () => {
                       <p className="text-sm text-gray-500">Role</p>
                     </div>
                   </div>
+                )}
+
+                {/* Coaching Fields - Only show for coach users */}
+                {profile?.role === 'coach' && (
+                  <>
+                    {/* Coaching Focus */}
+                    <div className="flex items-start gap-3">
+                      <Icon name="Target" className="h-5 w-5 text-gray-500 mt-0.5" />
+                      <div>
+                        <p className="font-medium">Coaching Focus</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {profile?.coaching_focus && profile.coaching_focus.length > 0 ? (
+                            profile.coaching_focus.map((focus, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                              >
+                                {focus}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-sm text-gray-500">No coaching focus areas set</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Experience */}
+                    <div className="flex items-start gap-3">
+                      <Icon name="Award" className="h-5 w-5 text-gray-500 mt-0.5" />
+                      <div>
+                        <p className="font-medium">Experience</p>
+                        <p className="text-sm text-gray-700 mt-1">
+                          {profile?.experience || "No experience information provided"}
+                        </p>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             </CardContent>
