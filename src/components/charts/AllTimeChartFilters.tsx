@@ -61,7 +61,7 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
           onClick={toggleWeeklyView}
           className="text-xs"
         >
-          Weekly
+          Daily
         </Button>
         <Button 
           variant="outline" 
