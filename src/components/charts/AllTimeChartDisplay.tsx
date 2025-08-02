@@ -97,10 +97,28 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
                   const sign = value >= 0 ? '+' : '−';
                   const colorClass = value >= 0 ? 'text-green-600' : 'text-red-600';
                   
+                  // Handle different date formats for different views
+                  let displayDate = label;
+                  if (isWeeklyView) {
+                    // Weekly view: label is already formatted as "MM/dd–MM/dd"
+                    displayDate = label;
+                  } else {
+                    // Other views: parse and format the date
+                    try {
+                      const date = new Date(label);
+                      if (!isNaN(date.getTime())) {
+                        displayDate = format(date, 'dd/MM/yyyy');
+                      }
+                    } catch (error) {
+                      // Fallback to original label if parsing fails
+                      displayDate = label;
+                    }
+                  }
+                  
                   return (
                     <div className="bg-background border border-border rounded-lg shadow-lg p-3">
                       <div className="text-center text-sm text-muted-foreground mb-1">
-                        {format(new Date(label), 'dd/MM/yyyy')}
+                        {displayDate}
                       </div>
                       <div className={`text-center font-semibold ${colorClass}`}>
                         {sign}₪{Math.abs(value).toFixed(2)}
