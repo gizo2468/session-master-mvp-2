@@ -78,18 +78,6 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
             </div>
           )}
           
-          {tablesWithoutResults.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-red-800 mb-2">
-                <AlertTriangle size={20} />
-                <span className="font-medium">Missing Table Results</span>
-              </div>
-              <p className="text-red-700 text-sm">
-                Some tables don't have results entered. Please end these tables properly first.
-              </p>
-            </div>
-          )}
-          
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
               <DollarSign size={20} className="text-gray-600" />
