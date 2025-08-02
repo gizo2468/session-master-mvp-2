@@ -75,14 +75,17 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
               tickFormatter={(value) => {
                 if (isMonthlyView) {
                   const date = new Date(value);
+                  if (isNaN(date.getTime())) return value;
                   return format(date, 'MMM');
                 } else if (isWeeklyView) {
                   return value; // Weekly data is already formatted as "WEEK 1", "WEEK 2", etc.
                 } else if (isDailyView) {
                   const date = new Date(value);
+                  if (isNaN(date.getTime())) return value;
                   return format(date, 'MM/dd');
                 }
                 const date = new Date(value);
+                if (isNaN(date.getTime())) return value;
                 return format(date, 'dd/MM');
               }}
             />
