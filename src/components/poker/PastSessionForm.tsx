@@ -613,7 +613,13 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          onSelect={field.onChange}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            // Auto-fill end date with the same date as start date
+                            if (date) {
+                              form.setValue('endDate', date);
+                            }
+                          }}
                           disabled={(date) => date > new Date()}
                           initialFocus
                           className={cn("p-3 pointer-events-auto")}
