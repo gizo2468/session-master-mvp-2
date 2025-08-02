@@ -62,15 +62,6 @@ export const processAllTimeData = (sessions: PokerSession[]): ChartDataPoint[] =
         cumulativeProfit: runningCumulative,
         sessionCount: dayProfit !== 0 ? 1 : 0
       });
-    } else {
-      // For future dates, add data point with null cumulative profit
-      // This will show on X-axis but not draw the line
-      allTimeData.push({
-        date: dateKey,
-        profit: 0,
-        cumulativeProfit: null as any, // Will be filtered out in chart
-        sessionCount: 0
-      });
     }
   }
   
