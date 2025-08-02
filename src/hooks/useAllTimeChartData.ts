@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchUserSessions } from '@/utils/database/sessionFetcher';
 import { PokerSession } from '@/types/poker';
-import { processAllTimeData, processMonthlyData, processWeeklyData, processDailyData } from '@/utils/allTimeChartUtils';
+import { processAllTimeData, processMonthlyData, processWeeklyData, processDailyData, processCurrentMonthData } from '@/utils/allTimeChartUtils';
 
 interface ChartDataPoint {
   date: string;
@@ -51,9 +51,9 @@ export const useAllTimeChartData = () => {
 
       setSessions(completedSessions);
       
-      // Process daily session data by default (All Time view)
-      const dailySessionData = processAllTimeData(completedSessions);
-      setChartData(dailySessionData);
+      // Process current month data by default (All Time view)
+      const currentMonthData = processCurrentMonthData(completedSessions);
+      setChartData(currentMonthData);
     } catch (error) {
       console.error('Error loading session data:', error);
     } finally {
@@ -65,9 +65,9 @@ export const useAllTimeChartData = () => {
     const hasDateFilter = dateRange.start || dateRange.end;
     
     if (!hasDateFilter) {
-      // No filter - show all time session data
-      const allTimeData = processAllTimeData(sessions);
-      setFilteredData(allTimeData);
+      // No filter - show current month data
+      const currentMonthData = processCurrentMonthData(sessions);
+      setFilteredData(currentMonthData);
       return;
     }
 
