@@ -266,9 +266,6 @@ export default function EditSession() {
                   <SelectContent>
                     <SelectItem value="NLH">No Limit Hold'em</SelectItem>
                     <SelectItem value="PLO">Pot Limit Omaha</SelectItem>
-                    <SelectItem value="PLO5">5-Card PLO</SelectItem>
-                    <SelectItem value="Stud">Seven Card Stud</SelectItem>
-                    <SelectItem value="Mixed">Mixed Games</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -287,7 +284,6 @@ export default function EditSession() {
                   <SelectContent>
                     <SelectItem value="Cash">Cash Game</SelectItem>
                     <SelectItem value="Tournament">Tournament</SelectItem>
-                    <SelectItem value="SNG">Sit & Go</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
