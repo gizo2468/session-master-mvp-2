@@ -126,7 +126,7 @@ export const processWeeklyData = (sessions: PokerSession[]): ChartDataPoint[] =>
     weeks.push({ start: weekStart, end: weekEnd });
   }
 
-  const weeklyData: ChartDataPoint[] = weeks.map(week => {
+  const weeklyData: ChartDataPoint[] = weeks.map((week, index) => {
     // Find all sessions in this week
     const weekSessions = sessions.filter(session => {
       const sessionDate = new Date(session.startTime);
@@ -139,7 +139,7 @@ export const processWeeklyData = (sessions: PokerSession[]): ChartDataPoint[] =>
     }, 0);
 
     return {
-      date: `${format(week.start, 'MM/dd')}–${format(week.end, 'MM/dd')}`,
+      date: `WEEK ${index + 1}`,
       profit: weekProfit,
       cumulativeProfit: weekProfit, // For weekly view, show weekly profit, not cumulative
       sessionCount: weekSessions.length

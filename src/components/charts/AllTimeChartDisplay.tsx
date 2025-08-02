@@ -77,7 +77,7 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
                   const date = new Date(value);
                   return format(date, 'MMM');
                 } else if (isWeeklyView) {
-                  return value; // Weekly data already formatted as MM/DD–MM/DD
+                  return value; // Weekly data is already formatted as "WEEK 1", "WEEK 2", etc.
                 } else if (isDailyView) {
                   const date = new Date(value);
                   return format(date, 'MM/dd');
@@ -100,8 +100,18 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
                   // Handle different date formats for different views
                   let displayDate = label;
                   if (isWeeklyView) {
-                    // Weekly view: label is already formatted as "MM/dd–MM/dd"
-                    displayDate = label;
+                    // For weekly view, generate the date range from the week number
+                    const weekMatch = label.match(/WEEK (\d+)/);
+                    if (weekMatch) {
+                      const weekIndex = parseInt(weekMatch[1]) - 1;
+                      const today = new Date();
+                      const weekStart = new Date(today);
+                      const daysToMonday = (weekStart.getDay() + 6) % 7;
+                      weekStart.setDate(weekStart.getDate() - daysToMonday - ((11 - weekIndex) * 7));
+                      const weekEnd = new Date(weekStart);
+                      weekEnd.setDate(weekStart.getDate() + 6);
+                      displayDate = `${format(weekStart, 'MM/dd')}–${format(weekEnd, 'MM/dd')}`;
+                    }
                   } else {
                     // Other views: parse and format the date
                     try {
