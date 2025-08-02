@@ -36,9 +36,14 @@ const AccountSettings: React.FC = () => {
   // Refresh user profile data when component mounts to ensure latest coaching data
   useEffect(() => {
     if (user?.role === 'coach') {
+      console.log("Coach user detected, refreshing profile data...", {
+        userId: user.id,
+        coachingFocus: user.coachingFocus,
+        experience: user.experience
+      });
       refreshUserProfile();
     }
-  }, []);
+  }, [user?.role, refreshUserProfile]);
   
   // Format last login date if available
   const lastLoginFormatted = user?.lastLoginAt 

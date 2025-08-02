@@ -325,7 +325,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Query the profiles table for complete user data including coaching fields
       const { data, error } = await supabase
         .from('profiles')
-        .select('*, coaching_focus, experience')
+        .select('*')
         .eq('id', supabaseUser.id)
         .single();
 
@@ -672,7 +672,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     try {
-      console.log("Refreshing user profile data...");
+      console.log("Refreshing user profile data for user:", session.user.id);
       await fetchAndSetUser(session.user, false);
     } catch (error) {
       console.error("Error refreshing user profile:", error);
