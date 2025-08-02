@@ -182,27 +182,36 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
                 </div>
 
                 <div>
-                  <Label>Tournament Types</Label>
+                  <Label>Tournament Type</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {tournamentTypes.map(type => (
-                      <Badge
-                        key={type}
-                        variant={formData.tournamentTypes?.includes(type) ? "default" : "outline"}
-                        className="cursor-pointer"
-                        onClick={() => {
-                          const current = formData.tournamentTypes || [];
-                          const updated = current.includes(type)
-                            ? current.filter(t => t !== type)
-                            : [...current, type];
-                          setFormData(prev => ({ ...prev, tournamentTypes: updated }));
-                        }}
-                      >
-                        {type}
-                        {formData.tournamentTypes?.includes(type) && (
-                          <X className="w-3 h-3 ml-1" />
-                        )}
-                      </Badge>
-                    ))}
+                    {tournamentTypes.map(type => {
+                      const isSelected = formData.tournamentTypes?.includes(type);
+                      const hasOtherSelection = formData.tournamentTypes && formData.tournamentTypes.length > 0 && !isSelected;
+                      
+                      return (
+                        <Badge
+                          key={type}
+                          variant={isSelected ? "default" : "outline"}
+                          className={`cursor-pointer ${
+                            hasOtherSelection ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
+                          onClick={() => {
+                            if (hasOtherSelection) return;
+                            
+                            const current = formData.tournamentTypes || [];
+                            const updated = current.includes(type)
+                              ? [] // Clear selection if clicking selected item
+                              : [type]; // Set single selection
+                            setFormData(prev => ({ ...prev, tournamentTypes: updated }));
+                          }}
+                        >
+                          {type}
+                          {isSelected && (
+                            <X className="w-3 h-3 ml-1" />
+                          )}
+                        </Badge>
+                      );
+                    })}
                   </div>
                 </div>
               </>
