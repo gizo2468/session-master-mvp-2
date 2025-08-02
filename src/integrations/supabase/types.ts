@@ -105,11 +105,13 @@ export type Database = {
         Row: {
           bio: string | null
           coach_tier: string | null
+          coaching_focus: string[] | null
           connection_code: string | null
           created_at: string
           default_currency: string | null
           deletion_requested: boolean | null
           email: string | null
+          experience: string | null
           full_name: string
           has_accepted_terms: boolean | null
           has_completed_tutorial: boolean | null
@@ -129,11 +131,13 @@ export type Database = {
         Insert: {
           bio?: string | null
           coach_tier?: string | null
+          coaching_focus?: string[] | null
           connection_code?: string | null
           created_at?: string
           default_currency?: string | null
           deletion_requested?: boolean | null
           email?: string | null
+          experience?: string | null
           full_name: string
           has_accepted_terms?: boolean | null
           has_completed_tutorial?: boolean | null
@@ -153,11 +157,13 @@ export type Database = {
         Update: {
           bio?: string | null
           coach_tier?: string | null
+          coaching_focus?: string[] | null
           connection_code?: string | null
           created_at?: string
           default_currency?: string | null
           deletion_requested?: boolean | null
           email?: string | null
+          experience?: string | null
           full_name?: string
           has_accepted_terms?: boolean | null
           has_completed_tutorial?: boolean | null
