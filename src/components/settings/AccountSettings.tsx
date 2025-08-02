@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, ChangeEvent } from 'react';
+import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -25,13 +25,20 @@ const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
 const AccountSettings: React.FC = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, refreshUserProfile } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileImage, setProfileImage] = useState<string | undefined>(user?.profilePicture);
   const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+  
+  // Refresh user profile data when component mounts to ensure latest coaching data
+  useEffect(() => {
+    if (user?.role === 'coach') {
+      refreshUserProfile();
+    }
+  }, []);
   
   // Format last login date if available
   const lastLoginFormatted = user?.lastLoginAt 

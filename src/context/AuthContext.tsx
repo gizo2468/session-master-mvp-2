@@ -40,6 +40,7 @@ interface AuthContextType {
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   upgradeCoachTier: (tier: CoachTier) => void;
   cancelCoachSubscription: () => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -321,10 +322,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   "Is new login:", isNewLogin,
                   "User metadata role:", supabaseUser.user_metadata?.role);
       
-      // Query the profiles table for complete user data
+      // Query the profiles table for complete user data including coaching fields
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, coaching_focus, experience')
         .eq('id', supabaseUser.id)
         .single();
 
@@ -663,6 +664,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Function to refresh user profile data
+  const refreshUserProfile = async (): Promise<void> => {
+    if (!session?.user) {
+      console.log("No session available for profile refresh");
+      return;
+    }
+    
+    try {
+      console.log("Refreshing user profile data...");
+      await fetchAndSetUser(session.user, false);
+    } catch (error) {
+      console.error("Error refreshing user profile:", error);
+    }
+  };
+
   // Don't show welcome toast on initial load or when just checking auth state
   useEffect(() => {
     if (user && authChecked && !isLoading && initialCheckComplete && isFreshLogin.current) {
@@ -683,6 +699,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     changePassword,
     upgradeCoachTier,
     cancelCoachSubscription,
+    refreshUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
