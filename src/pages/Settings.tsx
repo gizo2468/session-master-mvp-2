@@ -269,13 +269,13 @@ const Settings: React.FC = () => {
           {/* Account Section */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex items-start justify-between">
+                <div className="flex-1 pt-1">
                   <CardTitle>Account</CardTitle>
                   <CardDescription>Your account information</CardDescription>
                 </div>
                 {profile?.role === 'coach' && !profileLoading && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-2">
                     {isEditing ? (
                       <>
                         <Button
@@ -306,7 +306,7 @@ const Settings: React.FC = () => {
                         size="sm"
                         onClick={handleEditToggle}
                       >
-                        <Icon name="Edit2" className="h-4 w-4" />
+                        <Icon name="Pencil" className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
