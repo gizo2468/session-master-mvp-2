@@ -536,22 +536,35 @@ const Signup: React.FC = () => {
                         <FormLabel>Coaching Focus</FormLabel>
                         <FormControl>
                           <div className="flex flex-wrap gap-2">
-                            {coachingFocusOptions.map((option) => (
-                              <Badge
-                                key={option}
-                                variant={selectedCoachingFocus.includes(option) ? "default" : "outline"}
-                                className="cursor-pointer hover:bg-accent"
-                                onClick={() => {
-                                  const current = field.value || [];
-                                  const updated = current.includes(option)
-                                    ? current.filter(item => item !== option)
-                                    : [...current, option];
-                                  field.onChange(updated);
-                                }}
-                              >
-                                {option}
-                              </Badge>
-                            ))}
+                            {coachingFocusOptions.map((option) => {
+                              const isSelected = selectedCoachingFocus.includes(option);
+                              const isDisabled = !isSelected && selectedCoachingFocus.length >= 3;
+                              
+                              return (
+                                <Badge
+                                  key={option}
+                                  variant={isSelected ? "default" : "outline"}
+                                  className={`cursor-pointer hover:bg-accent ${
+                                    isDisabled 
+                                      ? "opacity-50 cursor-not-allowed bg-gray-50 hover:bg-gray-50" 
+                                      : ""
+                                  }`}
+                                  onClick={() => {
+                                    if (isDisabled) return;
+                                    
+                                    const current = field.value || [];
+                                    const updated = current.includes(option)
+                                      ? current.filter(item => item !== option)
+                                      : current.length < 3 
+                                        ? [...current, option]
+                                        : current;
+                                    field.onChange(updated);
+                                  }}
+                                >
+                                  {option}
+                                </Badge>
+                              );
+                            })}
                           </div>
                         </FormControl>
                         <FormMessage />

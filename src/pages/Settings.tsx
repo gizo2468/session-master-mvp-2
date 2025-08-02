@@ -109,13 +109,15 @@ const Settings: React.FC = () => {
     setIsEditing(!isEditing);
   };
 
-  // Handle coaching focus selection
+  // Handle coaching focus selection with 3-tag limit
   const handleCoachingFocusToggle = (focus: string) => {
     setEditForm(prev => ({
       ...prev,
       coaching_focus: prev.coaching_focus.includes(focus)
         ? prev.coaching_focus.filter(f => f !== focus)
-        : [...prev.coaching_focus, focus]
+        : prev.coaching_focus.length < 3 
+          ? [...prev.coaching_focus, focus]
+          : prev.coaching_focus
     }));
   };
 
@@ -383,20 +385,27 @@ const Settings: React.FC = () => {
                         {isEditing ? (
                           <div className="mt-2">
                             <div className="flex flex-wrap gap-2">
-                              {coachingFocusOptions.map((option) => (
-                                <Badge
-                                  key={option}
-                                  variant={editForm.coaching_focus.includes(option) ? "default" : "outline"}
-                                  className={`cursor-pointer transition-colors ${
-                                    editForm.coaching_focus.includes(option)
-                                      ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
-                                      : "hover:bg-gray-100"
-                                  }`}
-                                  onClick={() => handleCoachingFocusToggle(option)}
-                                >
-                                  {option}
-                                </Badge>
-                              ))}
+                              {coachingFocusOptions.map((option) => {
+                                const isSelected = editForm.coaching_focus.includes(option);
+                                const isDisabled = !isSelected && editForm.coaching_focus.length >= 3;
+                                
+                                return (
+                                  <Badge
+                                    key={option}
+                                    variant={isSelected ? "default" : "outline"}
+                                    className={`cursor-pointer transition-colors ${
+                                      isSelected
+                                        ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                                        : isDisabled
+                                        ? "opacity-50 cursor-not-allowed bg-gray-50"
+                                        : "hover:bg-gray-100"
+                                    }`}
+                                    onClick={() => !isDisabled && handleCoachingFocusToggle(option)}
+                                  >
+                                    {option}
+                                  </Badge>
+                                );
+                              })}
                             </div>
                           </div>
                         ) : (
