@@ -66,6 +66,8 @@ const PastSessionInfoStep: React.FC<PastSessionInfoStepProps> = ({
                 onDateChange={(date) => {
                   if (date) {
                     form.setValue('startTime', date);
+                    // Auto-fill end date with the same date as start date
+                    form.setValue('endTime', date);
                   }
                 }}
                 label="Start Time"
