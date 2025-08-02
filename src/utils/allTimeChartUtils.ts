@@ -51,20 +51,27 @@ export const processAllTimeData = (sessions: PokerSession[]): ChartDataPoint[] =
     const currentDate = new Date(currentYear, currentMonth, day);
     const dateKey = format(currentDate, 'yyyy-MM-dd');
     
-    // Only include data up to today
-    if (currentDate > today) {
-      break;
+    // For dates up to today, calculate cumulative profit
+    if (currentDate <= today) {
+      const dayProfit = sessionsByDate.get(dateKey) || 0;
+      runningCumulative += dayProfit;
+      
+      allTimeData.push({
+        date: dateKey,
+        profit: dayProfit,
+        cumulativeProfit: runningCumulative,
+        sessionCount: dayProfit !== 0 ? 1 : 0
+      });
+    } else {
+      // For future dates, add data point with null cumulative profit
+      // This will show on X-axis but not draw the line
+      allTimeData.push({
+        date: dateKey,
+        profit: 0,
+        cumulativeProfit: null as any, // Will be filtered out in chart
+        sessionCount: 0
+      });
     }
-    
-    const dayProfit = sessionsByDate.get(dateKey) || 0;
-    runningCumulative += dayProfit;
-    
-    allTimeData.push({
-      date: dateKey,
-      profit: dayProfit,
-      cumulativeProfit: runningCumulative,
-      sessionCount: dayProfit !== 0 ? 1 : 0
-    });
   }
   
   return allTimeData;
