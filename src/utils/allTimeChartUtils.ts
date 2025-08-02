@@ -83,9 +83,14 @@ export const processWeeklyData = (sessions: PokerSession[]): ChartDataPoint[] =>
     weekDays.push(day);
   }
 
+  // Filter sessions to only include completed sessions from the last 7 days
+  const completedSessions = sessions.filter(session => 
+    !session.isActive && session.endTime
+  );
+
   const weeklyData: ChartDataPoint[] = weekDays.map(day => {
     // Find all sessions on this day
-    const daySessions = sessions.filter(session => {
+    const daySessions = completedSessions.filter(session => {
       const sessionDate = new Date(session.startTime);
       return (
         sessionDate.getFullYear() === day.getFullYear() &&
@@ -94,7 +99,7 @@ export const processWeeklyData = (sessions: PokerSession[]): ChartDataPoint[] =>
       );
     });
 
-    // Calculate total profit for this day
+    // Calculate total profit/loss for this day (includes both wins and losses)
     const dayProfit = daySessions.reduce((total, session) => {
       return total + calculateSessionProfit(session);
     }, 0);
@@ -102,7 +107,7 @@ export const processWeeklyData = (sessions: PokerSession[]): ChartDataPoint[] =>
     return {
       date: format(day, 'yyyy-MM-dd'),
       profit: dayProfit,
-      cumulativeProfit: dayProfit, // For weekly view, show daily profit, not cumulative
+      cumulativeProfit: dayProfit, // For weekly view, show daily profit/loss, not cumulative
       sessionCount: daySessions.length
     };
   });

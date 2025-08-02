@@ -97,7 +97,7 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
                         {format(new Date(label), 'dd/MM/yyyy')}
                       </div>
                       <div className={`text-center font-semibold ${colorClass}`}>
-                        {sign}₪{Math.abs(value).toFixed(2)}
+                        {sign}$${Math.abs(value).toFixed(2)}
                       </div>
                     </div>
                   );
