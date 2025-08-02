@@ -1,6 +1,6 @@
 import { PokerSession } from '@/types/poker';
 import { calculateSessionProfit } from '@/utils/sessionCalculations';
-import { format, startOfMonth, endOfMonth, eachMonthOfInterval, isSameMonth, startOfYear, endOfYear, eachDayOfInterval } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachMonthOfInterval, isSameMonth, startOfYear, endOfYear } from 'date-fns';
 
 interface ChartDataPoint {
   date: string;
@@ -147,53 +147,4 @@ export const processWeeklyData = (sessions: PokerSession[]): ChartDataPoint[] =>
   });
 
   return weeklyData;
-};
-
-export const processCurrentMonthData = (sessions: PokerSession[]): ChartDataPoint[] => {
-  const today = new Date();
-  const monthStart = startOfMonth(today);
-  const monthEnd = today; // Use today as the end date, not end of month
-  
-  // Get all days from start of month to today
-  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
-  
-  // Calculate cumulative profit from all sessions before this month
-  const sessionsBeforeMonth = sessions.filter(session => {
-    const sessionDate = new Date(session.startTime);
-    return sessionDate < monthStart;
-  });
-  
-  let cumulativeProfit = sessionsBeforeMonth.reduce((total, session) => {
-    return total + calculateSessionProfit(session);
-  }, 0);
-  
-  // Process each day in the current month
-  const currentMonthData: ChartDataPoint[] = monthDays.map(day => {
-    // Find all sessions on this day
-    const daySessions = sessions.filter(session => {
-      const sessionDate = new Date(session.startTime);
-      return (
-        sessionDate.getFullYear() === day.getFullYear() &&
-        sessionDate.getMonth() === day.getMonth() &&
-        sessionDate.getDate() === day.getDate()
-      );
-    });
-
-    // Calculate profit for this day
-    const dayProfit = daySessions.reduce((total, session) => {
-      return total + calculateSessionProfit(session);
-    }, 0);
-
-    // Add day's profit to cumulative total
-    cumulativeProfit += dayProfit;
-
-    return {
-      date: format(day, 'yyyy-MM-dd'),
-      profit: dayProfit,
-      cumulativeProfit,
-      sessionCount: daySessions.length
-    };
-  });
-
-  return currentMonthData;
 };
