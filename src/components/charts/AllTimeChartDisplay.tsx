@@ -17,6 +17,7 @@ interface AllTimeChartDisplayProps {
   dateRange: { start: string; end: string };
   isMonthlyView: boolean;
   isWeeklyView: boolean;
+  isDailyView: boolean;
 }
 
 export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
@@ -25,7 +26,8 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
   filteredData,
   dateRange,
   isMonthlyView,
-  isWeeklyView
+  isWeeklyView,
+  isDailyView
 }) => {
   const chartConfig = {
     cumulativeProfit: {
@@ -44,7 +46,7 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
 
   // Determine what data to display
   const hasDateFilter = dateRange.start || dateRange.end;
-  const dataToDisplay = (isMonthlyView || isWeeklyView) ? filteredData : (hasDateFilter ? filteredData : chartData);
+  const dataToDisplay = (isMonthlyView || isWeeklyView || isDailyView) ? filteredData : (hasDateFilter ? filteredData : chartData);
 
   if (dataToDisplay.length === 0) {
     return (
@@ -58,7 +60,7 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
 
   return (
     <div className="overflow-x-auto">
-      <ChartContainer config={chartConfig} className={`h-64 w-full ${(isMonthlyView || isWeeklyView) ? 'min-w-[800px]' : dataToDisplay.length > 20 ? 'min-w-[1200px]' : dataToDisplay.length > 10 ? 'min-w-[600px]' : 'min-w-[300px]'}`}>
+      <ChartContainer config={chartConfig} className={`h-64 w-full ${(isMonthlyView || isWeeklyView || isDailyView) ? 'min-w-[800px]' : dataToDisplay.length > 20 ? 'min-w-[1200px]' : dataToDisplay.length > 10 ? 'min-w-[600px]' : 'min-w-[300px]'}`}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={dataToDisplay} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
             <XAxis 
@@ -71,12 +73,16 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
               textAnchor="middle"
               height={60}
               tickFormatter={(value) => {
-                const date = new Date(value);
                 if (isMonthlyView) {
+                  const date = new Date(value);
                   return format(date, 'MMM');
                 } else if (isWeeklyView) {
+                  return value; // Weekly data already formatted as MM/DD–MM/DD
+                } else if (isDailyView) {
+                  const date = new Date(value);
                   return format(date, 'MM/dd');
                 }
+                const date = new Date(value);
                 return format(date, 'dd/MM');
               }}
             />

@@ -72,7 +72,7 @@ export const processMonthlyData = (sessions: PokerSession[]): ChartDataPoint[] =
   return monthlyData;
 };
 
-export const processWeeklyData = (sessions: PokerSession[]): ChartDataPoint[] => {
+export const processDailyData = (sessions: PokerSession[]): ChartDataPoint[] => {
   const today = new Date();
   const weekDays = [];
   
@@ -83,7 +83,7 @@ export const processWeeklyData = (sessions: PokerSession[]): ChartDataPoint[] =>
     weekDays.push(day);
   }
 
-  const weeklyData: ChartDataPoint[] = weekDays.map(day => {
+  const dailyData: ChartDataPoint[] = weekDays.map(day => {
     // Find all sessions on this day
     const daySessions = sessions.filter(session => {
       const sessionDate = new Date(session.startTime);
@@ -102,8 +102,47 @@ export const processWeeklyData = (sessions: PokerSession[]): ChartDataPoint[] =>
     return {
       date: format(day, 'yyyy-MM-dd'),
       profit: dayProfit,
-      cumulativeProfit: dayProfit, // For weekly view, show daily profit, not cumulative
+      cumulativeProfit: dayProfit, // For daily view, show daily profit, not cumulative
       sessionCount: daySessions.length
+    };
+  });
+
+  return dailyData;
+};
+
+export const processWeeklyData = (sessions: PokerSession[]): ChartDataPoint[] => {
+  const today = new Date();
+  const weeks = [];
+  
+  // Generate last 12 weeks (Monday to Sunday)
+  for (let i = 11; i >= 0; i--) {
+    const weekStart = new Date(today);
+    const daysToMonday = (weekStart.getDay() + 6) % 7; // Get days since Monday
+    weekStart.setDate(weekStart.getDate() - daysToMonday - (i * 7));
+    
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    
+    weeks.push({ start: weekStart, end: weekEnd });
+  }
+
+  const weeklyData: ChartDataPoint[] = weeks.map(week => {
+    // Find all sessions in this week
+    const weekSessions = sessions.filter(session => {
+      const sessionDate = new Date(session.startTime);
+      return sessionDate >= week.start && sessionDate <= week.end;
+    });
+
+    // Calculate total profit for this week
+    const weekProfit = weekSessions.reduce((total, session) => {
+      return total + calculateSessionProfit(session);
+    }, 0);
+
+    return {
+      date: `${format(week.start, 'MM/dd')}–${format(week.end, 'MM/dd')}`,
+      profit: weekProfit,
+      cumulativeProfit: weekProfit, // For weekly view, show weekly profit, not cumulative
+      sessionCount: weekSessions.length
     };
   });
 

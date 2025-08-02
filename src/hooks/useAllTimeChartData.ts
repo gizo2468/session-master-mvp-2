@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchUserSessions } from '@/utils/database/sessionFetcher';
 import { PokerSession } from '@/types/poker';
-import { processAllTimeData, processMonthlyData, processWeeklyData } from '@/utils/allTimeChartUtils';
+import { processAllTimeData, processMonthlyData, processWeeklyData, processDailyData } from '@/utils/allTimeChartUtils';
 
 interface ChartDataPoint {
   date: string;
@@ -21,6 +21,7 @@ export const useAllTimeChartData = () => {
   const [filteredData, setFilteredData] = useState<ChartDataPoint[]>([]);
   const [isMonthlyView, setIsMonthlyView] = useState(false);
   const [isWeeklyView, setIsWeeklyView] = useState(false);
+  const [isDailyView, setIsDailyView] = useState(false);
 
   useEffect(() => {
     loadSessionData();
@@ -31,10 +32,12 @@ export const useAllTimeChartData = () => {
       displayWeeklyView();
     } else if (isMonthlyView) {
       displayMonthlyView();
+    } else if (isDailyView) {
+      displayDailyView();
     } else {
       filterDataByDateRange();
     }
-  }, [chartData, dateRange, isMonthlyView, isWeeklyView, sessions]);
+  }, [chartData, dateRange, isMonthlyView, isWeeklyView, isDailyView, sessions]);
 
   const loadSessionData = async () => {
     try {
@@ -107,15 +110,22 @@ export const useAllTimeChartData = () => {
     setFilteredData(weeklyData);
   };
 
+  const displayDailyView = () => {
+    const dailyData = processDailyData(sessions);
+    setFilteredData(dailyData);
+  };
+
   const resetDateRange = () => {
     setDateRange({ start: '', end: '' });
     setIsMonthlyView(false);
     setIsWeeklyView(false);
+    setIsDailyView(false);
   };
 
   const toggleMonthlyView = () => {
     setIsMonthlyView(!isMonthlyView);
     setIsWeeklyView(false);
+    setIsDailyView(false);
     // Clear date range when switching to monthly view
     if (!isMonthlyView) {
       setDateRange({ start: '', end: '' });
@@ -125,8 +135,19 @@ export const useAllTimeChartData = () => {
   const toggleWeeklyView = () => {
     setIsWeeklyView(!isWeeklyView);
     setIsMonthlyView(false);
+    setIsDailyView(false);
     // Clear date range when switching to weekly view
     if (!isWeeklyView) {
+      setDateRange({ start: '', end: '' });
+    }
+  };
+
+  const toggleDailyView = () => {
+    setIsDailyView(!isDailyView);
+    setIsMonthlyView(false);
+    setIsWeeklyView(false);
+    // Clear date range when switching to daily view
+    if (!isDailyView) {
       setDateRange({ start: '', end: '' });
     }
   };
@@ -140,8 +161,10 @@ export const useAllTimeChartData = () => {
     filteredData,
     isMonthlyView,
     isWeeklyView,
+    isDailyView,
     resetDateRange,
     toggleMonthlyView,
-    toggleWeeklyView
+    toggleWeeklyView,
+    toggleDailyView
   };
 };

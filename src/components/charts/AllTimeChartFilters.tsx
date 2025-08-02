@@ -8,9 +8,11 @@ interface AllTimeChartFiltersProps {
   setDateRange: (range: { start: string; end: string } | ((prev: { start: string; end: string }) => { start: string; end: string })) => void;
   isMonthlyView: boolean;
   isWeeklyView: boolean;
+  isDailyView: boolean;
   resetDateRange: () => void;
   toggleMonthlyView: () => void;
   toggleWeeklyView: () => void;
+  toggleDailyView: () => void;
 }
 
 export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
@@ -18,9 +20,11 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
   setDateRange,
   isMonthlyView,
   isWeeklyView,
+  isDailyView,
   resetDateRange,
   toggleMonthlyView,
-  toggleWeeklyView
+  toggleWeeklyView,
+  toggleDailyView
 }) => {
   return (
     <div className="flex flex-col gap-4 mt-4">
@@ -58,10 +62,18 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={toggleWeeklyView}
+          onClick={toggleDailyView}
           className="text-xs"
         >
           Daily
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={toggleWeeklyView}
+          className="text-xs"
+        >
+          Weekly
         </Button>
         <Button 
           variant="outline" 
