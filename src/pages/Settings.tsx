@@ -13,7 +13,6 @@ import Icon from '@/components/ui/Lucide';
 import { useToast } from '@/hooks/use-toast';
 import { useDefaultCurrency, CURRENCIES } from '@/hooks/useDefaultCurrency';
 import { supabase } from '@/integrations/supabase/client';
-import DonationCard from '@/components/DonationCard';
 import SupportSettings from '@/components/settings/SupportSettings';
 
 const Settings: React.FC = () => {
@@ -263,9 +262,6 @@ const Settings: React.FC = () => {
         </header>
         
         <div className="space-y-6">
-          {/* Support SessionMaster Section */}
-          <DonationCard />
-
           {/* Account Section */}
           <Card>
             <CardHeader>
