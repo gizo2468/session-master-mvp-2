@@ -20,6 +20,8 @@ interface CoachData {
   bio?: string;
   default_currency?: string;
   students_coached_count?: number;
+  coaching_focus?: string[];
+  experience?: string;
 }
 
 interface SharedSession {
@@ -73,7 +75,7 @@ const CoachProfile: React.FC = () => {
         // Load coach profile data
         const { data: coachProfile, error: profileError } = await supabase
           .from('profiles')
-          .select('id, full_name, username, profile_picture, bio, default_currency, students_coached_count')
+          .select('id, full_name, username, profile_picture, bio, default_currency, students_coached_count, coaching_focus, experience')
           .eq('id', coachId)
           .eq('role', 'coach')
           .single();
@@ -152,6 +154,40 @@ const CoachProfile: React.FC = () => {
     };
 
     loadCoachData();
+
+    // Set up real-time subscription for coach profile updates
+    if (coachId) {
+      const channel = supabase
+        .channel('coach-profile-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `id=eq.${coachId}`
+          },
+          (payload) => {
+            console.log('Coach profile updated:', payload);
+            // Update the coach state with new data
+            if (payload.new && payload.new.role === 'coach') {
+              setCoach(prev => prev ? {
+                ...prev,
+                coaching_focus: payload.new.coaching_focus,
+                experience: payload.new.experience,
+                full_name: payload.new.full_name,
+                bio: payload.new.bio,
+                profile_picture: payload.new.profile_picture
+              } : null);
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [coachId, user?.id, navigate]);
 
   const getCurrencySymbol = (currency?: string) => {

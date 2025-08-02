@@ -12,6 +12,8 @@ interface CoachProfileCardProps {
     profile_picture?: string;
     bio?: string;
     students_coached_count?: number;
+    coaching_focus?: string[];
+    experience?: string;
   };
 }
 
@@ -26,9 +28,6 @@ const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
       .slice(0, 2);
   };
 
-  // Mock data for now - these will be editable by the coach later
-  const mockCoachingFocus = ['Tournaments', 'Cash Games'];
-  const mockYearsExperience = 5;
 
   return (
     <Card>
@@ -61,22 +60,26 @@ const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
             <span className="font-medium text-sm">Coaching Focus</span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {mockCoachingFocus.map((focus) => (
-              <Badge key={focus} variant="secondary" className="text-xs">
-                {focus}
-              </Badge>
-            ))}
+            {coach.coaching_focus && coach.coaching_focus.length > 0 ? (
+              coach.coaching_focus.map((focus) => (
+                <Badge key={focus} variant="secondary" className="text-xs bg-green-100 text-green-800 hover:bg-green-200">
+                  {focus}
+                </Badge>
+              ))
+            ) : (
+              <span className="text-sm text-muted-foreground ml-6">No coaching focus areas set</span>
+            )}
           </div>
         </div>
 
-        {/* Years of Experience */}
+        {/* Experience */}
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Icon name="Award" className="h-4 w-4 text-primary" />
             <span className="font-medium text-sm">Experience</span>
           </div>
           <p className="text-sm text-muted-foreground ml-6">
-            {mockYearsExperience} years of coaching experience
+            {coach.experience || "No experience information provided"}
           </p>
         </div>
 
