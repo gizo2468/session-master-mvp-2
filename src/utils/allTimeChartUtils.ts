@@ -10,70 +10,36 @@ interface ChartDataPoint {
 }
 
 export const processAllTimeData = (sessions: PokerSession[]): ChartDataPoint[] => {
-  const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
-  
-  // Get first and last day of current month
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-  const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
-  
-  // Calculate cumulative profit from all sessions before current month
-  const sessionsBeforeMonth = sessions.filter(session => {
-    const sessionDate = new Date(session.startTime);
-    return sessionDate < firstDayOfMonth;
+  if (sessions.length === 0) return [];
+
+  // Create individual data points for each session
+  let cumulativeProfit = 0;
+  const allTimeData: ChartDataPoint[] = sessions.map(session => {
+    const sessionProfit = calculateSessionProfit(session);
+    cumulativeProfit += sessionProfit;
+
+    return {
+      date: format(new Date(session.startTime), 'yyyy-MM-dd'),
+      profit: sessionProfit,
+      cumulativeProfit,
+      sessionCount: 1
+    };
   });
+
+  // Always ensure the chart ends with today's date
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const lastDataPoint = allTimeData[allTimeData.length - 1];
   
-  let cumulativeProfitFromPreviousMonth = 0;
-  sessionsBeforeMonth.forEach(session => {
-    cumulativeProfitFromPreviousMonth += calculateSessionProfit(session);
-  });
-  
-  // Get sessions within current month
-  const currentMonthSessions = sessions.filter(session => {
-    const sessionDate = new Date(session.startTime);
-    return sessionDate >= firstDayOfMonth && sessionDate <= lastDayOfMonth;
-  });
-  
-  // Create map of session data by date
-  const sessionsByDate = new Map<string, number>();
-  currentMonthSessions.forEach(session => {
-    const dateKey = format(new Date(session.startTime), 'yyyy-MM-dd');
-    const existingProfit = sessionsByDate.get(dateKey) || 0;
-    sessionsByDate.set(dateKey, existingProfit + calculateSessionProfit(session));
-  });
-  
-  // Generate all days of the current month
-  const allTimeData: ChartDataPoint[] = [];
-  let runningCumulative = cumulativeProfitFromPreviousMonth;
-  
-  for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
-    const currentDate = new Date(currentYear, currentMonth, day);
-    const dateKey = format(currentDate, 'yyyy-MM-dd');
-    
-    // For dates up to today, calculate cumulative profit
-    if (currentDate <= today) {
-      const dayProfit = sessionsByDate.get(dateKey) || 0;
-      runningCumulative += dayProfit;
-      
-      allTimeData.push({
-        date: dateKey,
-        profit: dayProfit,
-        cumulativeProfit: runningCumulative,
-        sessionCount: dayProfit !== 0 ? 1 : 0
-      });
-    } else {
-      // For future dates, add data point with null cumulative profit
-      // This will show on X-axis but not draw the line
-      allTimeData.push({
-        date: dateKey,
-        profit: 0,
-        cumulativeProfit: null as any, // Will be filtered out in chart
-        sessionCount: 0
-      });
-    }
+  if (!lastDataPoint || lastDataPoint.date < today) {
+    // Add today's date as the final point to extend timeline
+    allTimeData.push({
+      date: today,
+      profit: 0, // No new profit for today if no session
+      cumulativeProfit: lastDataPoint ? lastDataPoint.cumulativeProfit : 0,
+      sessionCount: 0 // No sessions today if this is just a timeline extension
+    });
   }
-  
+
   return allTimeData;
 };
 
