@@ -68,10 +68,10 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
               tick={{ fontSize: 12 }}
               type="category"
               domain={['dataMin', 'dataMax']}
-              interval={0}
-              angle={0}
-              textAnchor="middle"
-              height={60}
+              interval={!isMonthlyView && !isWeeklyView && !isDailyView ? "preserveStartEnd" : 0}
+              angle={!isMonthlyView && !isWeeklyView && !isDailyView ? -45 : 0}
+              textAnchor={!isMonthlyView && !isWeeklyView && !isDailyView ? "end" : "middle"}
+              height={!isMonthlyView && !isWeeklyView && !isDailyView ? 80 : 60}
               tickFormatter={(value) => {
                 if (isMonthlyView) {
                   const date = new Date(value);
