@@ -50,15 +50,15 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[80vh]">
-        <SheetHeader className="text-center">
+      <SheetContent side="bottom" className="h-[80vh] flex flex-col">
+        <SheetHeader className="text-center flex-shrink-0">
           <SheetTitle>End Session</SheetTitle>
           <SheetDescription>
             Review your session details before ending
           </SheetDescription>
         </SheetHeader>
         
-        <div className="py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto py-6 space-y-6">
           {hasActiveTables && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-yellow-800 mb-2">
@@ -144,7 +144,7 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
           </div>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-shrink-0 pt-4 border-t border-gray-200">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
