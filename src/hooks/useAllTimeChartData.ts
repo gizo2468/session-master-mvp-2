@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchUserSessions } from '@/utils/database/sessionFetcher';
 import { PokerSession } from '@/types/poker';
-import { processAllTimeData, processMonthlyData } from '@/utils/allTimeChartUtils';
+import { processAllTimeData, processMonthlyData, processWeeklyData } from '@/utils/allTimeChartUtils';
 
 interface ChartDataPoint {
   date: string;
@@ -20,18 +20,21 @@ export const useAllTimeChartData = () => {
   });
   const [filteredData, setFilteredData] = useState<ChartDataPoint[]>([]);
   const [isMonthlyView, setIsMonthlyView] = useState(false);
+  const [isWeeklyView, setIsWeeklyView] = useState(false);
 
   useEffect(() => {
     loadSessionData();
   }, []);
 
   useEffect(() => {
-    if (isMonthlyView) {
+    if (isWeeklyView) {
+      displayWeeklyView();
+    } else if (isMonthlyView) {
       displayMonthlyView();
     } else {
       filterDataByDateRange();
     }
-  }, [chartData, dateRange, isMonthlyView, sessions]);
+  }, [chartData, dateRange, isMonthlyView, isWeeklyView, sessions]);
 
   const loadSessionData = async () => {
     try {
@@ -99,15 +102,31 @@ export const useAllTimeChartData = () => {
     setFilteredData(monthlyData);
   };
 
+  const displayWeeklyView = () => {
+    const weeklyData = processWeeklyData(sessions);
+    setFilteredData(weeklyData);
+  };
+
   const resetDateRange = () => {
     setDateRange({ start: '', end: '' });
     setIsMonthlyView(false);
+    setIsWeeklyView(false);
   };
 
   const toggleMonthlyView = () => {
     setIsMonthlyView(!isMonthlyView);
+    setIsWeeklyView(false);
     // Clear date range when switching to monthly view
     if (!isMonthlyView) {
+      setDateRange({ start: '', end: '' });
+    }
+  };
+
+  const toggleWeeklyView = () => {
+    setIsWeeklyView(!isWeeklyView);
+    setIsMonthlyView(false);
+    // Clear date range when switching to weekly view
+    if (!isWeeklyView) {
       setDateRange({ start: '', end: '' });
     }
   };
@@ -120,7 +139,9 @@ export const useAllTimeChartData = () => {
     setDateRange,
     filteredData,
     isMonthlyView,
+    isWeeklyView,
     resetDateRange,
-    toggleMonthlyView
+    toggleMonthlyView,
+    toggleWeeklyView
   };
 };

@@ -16,6 +16,7 @@ interface AllTimeChartDisplayProps {
   filteredData: ChartDataPoint[];
   dateRange: { start: string; end: string };
   isMonthlyView: boolean;
+  isWeeklyView: boolean;
 }
 
 export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
@@ -23,7 +24,8 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
   chartData,
   filteredData,
   dateRange,
-  isMonthlyView
+  isMonthlyView,
+  isWeeklyView
 }) => {
   const chartConfig = {
     cumulativeProfit: {
@@ -42,7 +44,7 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
 
   // Determine what data to display
   const hasDateFilter = dateRange.start || dateRange.end;
-  const dataToDisplay = isMonthlyView ? filteredData : (hasDateFilter ? filteredData : chartData);
+  const dataToDisplay = (isMonthlyView || isWeeklyView) ? filteredData : (hasDateFilter ? filteredData : chartData);
 
   if (dataToDisplay.length === 0) {
     return (
@@ -56,7 +58,7 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
 
   return (
     <div className="overflow-x-auto">
-      <ChartContainer config={chartConfig} className={`h-64 w-full ${isMonthlyView ? 'min-w-[800px]' : dataToDisplay.length > 20 ? 'min-w-[1200px]' : dataToDisplay.length > 10 ? 'min-w-[600px]' : 'min-w-[300px]'}`}>
+      <ChartContainer config={chartConfig} className={`h-64 w-full ${(isMonthlyView || isWeeklyView) ? 'min-w-[800px]' : dataToDisplay.length > 20 ? 'min-w-[1200px]' : dataToDisplay.length > 10 ? 'min-w-[600px]' : 'min-w-[300px]'}`}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={dataToDisplay} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
             <XAxis 
@@ -72,6 +74,8 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
                 const date = new Date(value);
                 if (isMonthlyView) {
                   return format(date, 'MMM');
+                } else if (isWeeklyView) {
+                  return format(date, 'MM/dd');
                 }
                 return format(date, 'dd/MM');
               }}
