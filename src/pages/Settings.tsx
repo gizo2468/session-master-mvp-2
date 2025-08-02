@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,6 +24,23 @@ const Settings: React.FC = () => {
   const { defaultCurrency } = useDefaultCurrency();
   const [profile, setProfile] = useState<{ username?: string; role?: string; default_currency?: string; coaching_focus?: string[]; experience?: string } | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    username: '',
+    coaching_focus: [] as string[],
+    experience: ''
+  });
+  const [isUsernameLoading, setIsUsernameLoading] = useState(false);
+
+  const coachingFocusOptions = [
+    'Tournaments',
+    'Cash Games', 
+    'GTO Tools',
+    'Mental Game',
+    'Bankroll Management',
+    'Live Play Strategy',
+    'Online Strategy'
+  ];
 
   const handleLogout = async () => {
     try {
@@ -65,6 +85,123 @@ const Settings: React.FC = () => {
 
     fetchProfile();
   }, [user?.id]);
+
+  // Initialize edit form when profile loads
+  useEffect(() => {
+    if (profile && profile.role === 'coach') {
+      setEditForm({
+        username: profile.username || '',
+        coaching_focus: profile.coaching_focus || [],
+        experience: profile.experience || ''
+      });
+    }
+  }, [profile]);
+
+  // Handle edit mode toggle
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Reset form to original values when canceling
+      setEditForm({
+        username: profile?.username || '',
+        coaching_focus: profile?.coaching_focus || [],
+        experience: profile?.experience || ''
+      });
+    }
+    setIsEditing(!isEditing);
+  };
+
+  // Handle coaching focus selection
+  const handleCoachingFocusToggle = (focus: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      coaching_focus: prev.coaching_focus.includes(focus)
+        ? prev.coaching_focus.filter(f => f !== focus)
+        : [...prev.coaching_focus, focus]
+    }));
+  };
+
+  // Validate username availability
+  const validateUsername = async (username: string): Promise<boolean> => {
+    if (!username || username === profile?.username) return true;
+    
+    setIsUsernameLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username)
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        // No rows returned - username is available
+        return true;
+      } else if (data) {
+        // Username exists
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error validating username:', error);
+      return false;
+    } finally {
+      setIsUsernameLoading(false);
+    }
+  };
+
+  // Handle save changes
+  const handleSaveChanges = async () => {
+    if (!user?.id || !profile) return;
+
+    // Validate username
+    const isUsernameValid = await validateUsername(editForm.username);
+    if (!isUsernameValid) {
+      toast({
+        title: "Username unavailable",
+        description: "This username is already taken. Please choose another.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          username: editForm.username,
+          coaching_focus: editForm.coaching_focus,
+          experience: editForm.experience
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error updating profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update profile. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        setProfile(prev => prev ? {
+          ...prev,
+          username: editForm.username,
+          coaching_focus: editForm.coaching_focus,
+          experience: editForm.experience
+        } : null);
+        setIsEditing(false);
+        toast({
+          title: "Success",
+          description: "Profile updated successfully.",
+        });
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Helper function to display role with proper formatting
   const getDisplayRole = (role?: string) => {
@@ -132,8 +269,49 @@ const Settings: React.FC = () => {
           {/* Account Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Account</CardTitle>
-              <CardDescription>Your account information</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Account</CardTitle>
+                  <CardDescription>Your account information</CardDescription>
+                </div>
+                {profile?.role === 'coach' && !profileLoading && (
+                  <div className="flex items-center gap-2">
+                    {isEditing ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleEditToggle}
+                          disabled={isUsernameLoading}
+                        >
+                          <Icon name="X" className="h-4 w-4 mr-1" />
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveChanges}
+                          disabled={isUsernameLoading}
+                        >
+                          {isUsernameLoading ? (
+                            <Icon name="Loader" className="h-4 w-4 mr-1 animate-spin" />
+                          ) : (
+                            <Icon name="Check" className="h-4 w-4 mr-1" />
+                          )}
+                          Save
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleEditToggle}
+                      >
+                        <Icon name="Edit2" className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -158,9 +336,23 @@ const Settings: React.FC = () => {
                 ) : (
                   <div className="flex items-center gap-3">
                     <Icon name="AtSign" className="h-5 w-5 text-gray-500" />
-                    <div>
-                      <p className="font-medium">@{profile?.username || 'Not set'}</p>
-                      <p className="text-sm text-gray-500">Username</p>
+                    <div className="flex-1">
+                      {isEditing && profile?.role === 'coach' ? (
+                        <div>
+                          <Input
+                            value={editForm.username}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
+                            placeholder="Enter username"
+                            className="max-w-[200px]"
+                          />
+                          <p className="text-sm text-gray-500 mt-1">Username</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="font-medium">@{profile?.username || 'Not set'}</p>
+                          <p className="text-sm text-gray-500">Username</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -190,33 +382,64 @@ const Settings: React.FC = () => {
                     {/* Coaching Focus */}
                     <div className="flex items-start gap-3">
                       <Icon name="Target" className="h-5 w-5 text-gray-500 mt-0.5" />
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium">Coaching Focus</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {profile?.coaching_focus && profile.coaching_focus.length > 0 ? (
-                            profile.coaching_focus.map((focus, index) => (
-                              <span
-                                key={index}
-                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                              >
-                                {focus}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-sm text-gray-500">No coaching focus areas set</span>
-                          )}
-                        </div>
+                        {isEditing ? (
+                          <div className="mt-2">
+                            <div className="flex flex-wrap gap-2">
+                              {coachingFocusOptions.map((option) => (
+                                <Badge
+                                  key={option}
+                                  variant={editForm.coaching_focus.includes(option) ? "default" : "outline"}
+                                  className={`cursor-pointer transition-colors ${
+                                    editForm.coaching_focus.includes(option)
+                                      ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                                      : "hover:bg-gray-100"
+                                  }`}
+                                  onClick={() => handleCoachingFocusToggle(option)}
+                                >
+                                  {option}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {profile?.coaching_focus && profile.coaching_focus.length > 0 ? (
+                              profile.coaching_focus.map((focus, index) => (
+                                <span
+                                  key={index}
+                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                >
+                                  {focus}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-sm text-gray-500">No coaching focus areas set</span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Experience */}
                     <div className="flex items-start gap-3">
                       <Icon name="Award" className="h-5 w-5 text-gray-500 mt-0.5" />
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium">Experience</p>
-                        <p className="text-sm text-gray-700 mt-1">
-                          {profile?.experience || "No experience information provided"}
-                        </p>
+                        {isEditing ? (
+                          <Textarea
+                            value={editForm.experience}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, experience: e.target.value }))}
+                            placeholder="Describe your coaching experience..."
+                            className="mt-1"
+                            rows={3}
+                          />
+                        ) : (
+                          <p className="text-sm text-gray-700 mt-1">
+                            {profile?.experience || "No experience information provided"}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </>
