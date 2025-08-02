@@ -20,6 +20,8 @@ export interface User {
   isActive?: boolean;
   hasSeenTutorial?: boolean;
   hasCompletedTutorial?: boolean;
+  coachingFocus?: string[];
+  experience?: string;
   notificationPreferences: {
     liveSessionStart: boolean;
     newFeedback: boolean;
@@ -153,6 +155,8 @@ const createUserFromProfile = (supabaseUser: SupabaseUser, profileData: any): Us
     isActive: Boolean(profileData.is_active ?? true),
     hasSeenTutorial: Boolean(profileData.has_seen_tutorial ?? false),
     hasCompletedTutorial: Boolean(profileData.has_completed_tutorial ?? false),
+    coachingFocus: profileData.coaching_focus || undefined,
+    experience: profileData.experience || undefined,
     notificationPreferences: parseNotificationPreferences(profileData.notification_preferences),
   };
 };

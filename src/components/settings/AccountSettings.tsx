@@ -224,6 +224,40 @@ const AccountSettings: React.FC = () => {
                   <p className="text-xs text-gray-500 mt-1">Last login: {lastLoginFormatted}</p>
                 </FormItem>
                 
+                {/* Coaching Fields - Only show for coach users */}
+                {user?.role === 'coach' && (
+                  <>
+                    <FormItem>
+                      <FormLabel>Coaching Focus</FormLabel>
+                      <div className="flex flex-wrap gap-2 p-3 min-h-[40px] bg-gray-50 border rounded-md">
+                        {user?.coachingFocus && user.coachingFocus.length > 0 ? (
+                          user.coachingFocus.map((focus, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-poker-blue text-white"
+                            >
+                              {focus}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-gray-500 text-sm">No coaching focus areas set</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Your coaching specialization areas</p>
+                    </FormItem>
+                    
+                    <FormItem>
+                      <FormLabel>Experience</FormLabel>
+                      <div className="p-3 min-h-[40px] bg-gray-50 border rounded-md">
+                        <p className="text-sm">
+                          {user?.experience || "No experience information provided"}
+                        </p>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Your coaching experience and achievements</p>
+                    </FormItem>
+                  </>
+                )}
+                
                 <div className="flex justify-end">
                   <Button type="submit" disabled={isSubmittingProfile}>
                     {isSubmittingProfile ? (
