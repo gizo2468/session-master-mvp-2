@@ -534,6 +534,7 @@ const Signup: React.FC = () => {
                     render={({ field }) => (
                       <FormItem className="space-y-3">
                         <FormLabel>Coaching Focus</FormLabel>
+                        <p className="text-xs text-gray-500">Select up to 3 focus areas</p>
                         <FormControl>
                           <div className="flex flex-wrap gap-2">
                             {coachingFocusOptions.map((option) => {
