@@ -73,14 +73,15 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
               interval={isTableMode ? (() => {
                 const totalTables = dataToDisplay.length;
                 if (totalTables <= 100) {
-                  // Under 100: show every 50th table (50, 100)
-                  return Math.max(0, Math.floor(totalTables / 50) - 1);
+                  // First 100 tables: show labels at 50 and 100
+                  // This means we show every 50th table starting from table 50
+                  return 49; // Show table 50 (index 49), table 100 (index 99)
                 } else if (totalTables <= 500) {
-                  // 100-500: show every 100th table (100, 200, 300, etc.)
-                  return Math.max(0, Math.floor(totalTables / 100) - 1);
+                  // 100-500 tables: show 100, 200, 300, 400, etc.
+                  return 99; // Show every 100th table
                 } else {
-                  // Over 500: show every 200th table (200, 400, 600, etc.)
-                  return Math.max(0, Math.floor(totalTables / 200) - 1);
+                  // Over 500 tables: show 200, 400, 600, 800, 1000, etc.
+                  return 199; // Show every 200th table
                 }
               })() : 0}
               angle={0}
