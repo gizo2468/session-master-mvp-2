@@ -70,7 +70,19 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
               tick={{ fontSize: 12 }}
               type="category"
               domain={['dataMin', 'dataMax']}
-              interval={isTableMode ? Math.max(1, Math.floor(dataToDisplay.length / 10)) : 0}
+              interval={isTableMode ? (() => {
+                const totalTables = dataToDisplay.length;
+                if (totalTables <= 100) {
+                  // Under 100: show every 50th table (50, 100)
+                  return Math.max(0, Math.floor(totalTables / 50) - 1);
+                } else if (totalTables <= 500) {
+                  // 100-500: show every 100th table (100, 200, 300, etc.)
+                  return Math.max(0, Math.floor(totalTables / 100) - 1);
+                } else {
+                  // Over 500: show every 200th table (200, 400, 600, etc.)
+                  return Math.max(0, Math.floor(totalTables / 200) - 1);
+                }
+              })() : 0}
               angle={0}
               textAnchor="middle"
               height={60}
