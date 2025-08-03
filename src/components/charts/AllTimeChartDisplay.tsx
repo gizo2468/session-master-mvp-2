@@ -8,6 +8,7 @@ interface ChartDataPoint {
   profit: number;
   cumulativeProfit: number;
   sessionCount: number;
+  tableCount?: number;
 }
 
 interface AllTimeChartDisplayProps {
@@ -44,9 +45,10 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
     );
   }
 
-  // Determine what data to display
+  // Determine what data to display and chart mode
   const hasDateFilter = dateRange.start || dateRange.end;
   const dataToDisplay = (isMonthlyView || isWeeklyView || isDailyView) ? filteredData : (hasDateFilter ? filteredData : chartData);
+  const isTableMode = !isMonthlyView && !isWeeklyView && !isDailyView && !hasDateFilter;
 
   if (dataToDisplay.length === 0) {
     return (
@@ -68,12 +70,15 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
               tick={{ fontSize: 12 }}
               type="category"
               domain={['dataMin', 'dataMax']}
-              interval={0}
+              interval={isTableMode ? Math.max(1, Math.floor(dataToDisplay.length / 10)) : 0}
               angle={0}
               textAnchor="middle"
               height={60}
               tickFormatter={(value) => {
-                if (isMonthlyView) {
+                if (isTableMode) {
+                  // For table mode, show table numbers
+                  return value.toString();
+                } else if (isMonthlyView) {
                   const date = new Date(value);
                   if (isNaN(date.getTime())) return value;
                   return format(date, 'MMM');
@@ -97,12 +102,17 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
               content={({ active, payload, label }) => {
                 if (active && payload && payload.length) {
                   const value = Number(payload[0].value);
+                  const profitValue = Number(payload[0].payload?.profit || 0);
                   const sign = value >= 0 ? '+' : '−';
                   const colorClass = value >= 0 ? 'text-green-600' : 'text-red-600';
+                  const profitSign = profitValue >= 0 ? '+' : '−';
+                  const profitColorClass = profitValue >= 0 ? 'text-green-600' : 'text-red-600';
                   
-                  // Handle different date formats for different views
-                  let displayDate = label;
-                  if (isWeeklyView) {
+                  // Handle different formats for different views
+                  let displayLabel = label;
+                  if (isTableMode) {
+                    displayLabel = `Table ${label}`;
+                  } else if (isWeeklyView) {
                     // For weekly view, generate the date range from the week number
                     const weekMatch = label.match(/WEEK (\d+)/);
                     if (weekMatch) {
@@ -113,28 +123,33 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
                       weekStart.setDate(weekStart.getDate() - daysToMonday - ((11 - weekIndex) * 7));
                       const weekEnd = new Date(weekStart);
                       weekEnd.setDate(weekStart.getDate() + 6);
-                      displayDate = `${format(weekStart, 'MM/dd')}–${format(weekEnd, 'MM/dd')}`;
+                      displayLabel = `${format(weekStart, 'MM/dd')}–${format(weekEnd, 'MM/dd')}`;
                     }
                   } else {
                     // Other views: parse and format the date
                     try {
                       const date = new Date(label);
                       if (!isNaN(date.getTime())) {
-                        displayDate = format(date, 'dd/MM/yyyy');
+                        displayLabel = format(date, 'dd/MM/yyyy');
                       }
                     } catch (error) {
                       // Fallback to original label if parsing fails
-                      displayDate = label;
+                      displayLabel = label;
                     }
                   }
                   
                   return (
                     <div className="bg-background border border-border rounded-lg shadow-lg p-3">
                       <div className="text-center text-sm text-muted-foreground mb-1">
-                        {displayDate}
+                        {displayLabel}
                       </div>
+                      {isTableMode && (
+                        <div className={`text-center text-sm mb-1 ${profitColorClass}`}>
+                          Table P&L: {profitSign}₪{Math.abs(profitValue).toFixed(2)}
+                        </div>
+                      )}
                       <div className={`text-center font-semibold ${colorClass}`}>
-                        {sign}₪{Math.abs(value).toFixed(2)}
+                        {isTableMode ? 'Net Worth: ' : ''}{sign}₪{Math.abs(value).toFixed(2)}
                       </div>
                     </div>
                   );

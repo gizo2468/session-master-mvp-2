@@ -7,6 +7,7 @@ interface ChartDataPoint {
   profit: number;
   cumulativeProfit: number;
   sessionCount: number;
+  tableCount?: number; // For table-based charts
 }
 
 export const processAllTimeData = (sessions: PokerSession[]): ChartDataPoint[] => {
@@ -147,4 +148,49 @@ export const processWeeklyData = (sessions: PokerSession[]): ChartDataPoint[] =>
   });
 
   return weeklyData;
+};
+
+export const processTableBasedData = (sessions: PokerSession[]): ChartDataPoint[] => {
+  if (sessions.length === 0) return [];
+
+  const tableData: ChartDataPoint[] = [];
+  let cumulativeProfit = 0;
+  let tableCount = 0;
+
+  // Process each session and its tables
+  sessions.forEach(session => {
+    if (session.tables && session.tables.length > 0) {
+      // For sessions with tables, process each table individually
+      session.tables.forEach(table => {
+        tableCount++;
+        const tableBuyIn = table.buyIn || 0;
+        const tableCashOut = table.cashOut !== undefined ? table.cashOut : 0;
+        const tableProfit = tableCashOut - tableBuyIn;
+        cumulativeProfit += tableProfit;
+
+        tableData.push({
+          date: tableCount.toString(), // Use table count as "date" for X-axis
+          profit: tableProfit,
+          cumulativeProfit,
+          sessionCount: 1,
+          tableCount
+        });
+      });
+    } else {
+      // For sessions without table data, treat the session as one table
+      tableCount++;
+      const sessionProfit = calculateSessionProfit(session);
+      cumulativeProfit += sessionProfit;
+
+      tableData.push({
+        date: tableCount.toString(),
+        profit: sessionProfit,
+        cumulativeProfit,
+        sessionCount: 1,
+        tableCount
+      });
+    }
+  });
+
+  return tableData;
 };
