@@ -70,42 +70,16 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
               tick={{ fontSize: 12 }}
               type="category"
               domain={['dataMin', 'dataMax']}
-              interval={isTableMode ? (() => {
-                const totalTables = dataToDisplay.length;
-                if (totalTables <= 50) {
-                  // Show every 25th table to get roughly 50 label
-                  return Math.max(Math.floor(totalTables / 2) - 1, 0);
-                } else if (totalTables <= 100) {
-                  // Show every 50th table to get 50 and 100 labels
-                  return 49;
-                } else {
-                  // Show every 50th table for larger datasets
-                  return 49;
-                }
-              })() : 0}
+              ticks={isTableMode ? ['50', '100', '200'] : undefined}
               angle={0}
               textAnchor="middle"
               height={60}
               tickFormatter={(value, index) => {
                 if (isTableMode) {
-                  // For table mode, show static scale labels
-                  const tableNumber = parseInt(value);
-                  const totalTables = dataToDisplay.length;
-                  
-                  // Always show these key milestones when they make sense
-                  if (tableNumber === 50 || tableNumber === 100 || tableNumber === 200) {
-                    return tableNumber.toString();
+                  // Always show the static labels 50, 100, 200
+                  if (value === '50' || value === '100' || value === '200') {
+                    return value;
                   }
-                  
-                  // For smaller datasets, show 50 and 100 if we're close
-                  if (totalTables <= 50 && tableNumber >= Math.floor(totalTables / 2)) {
-                    return '50';
-                  } else if (totalTables <= 100 && (tableNumber === 50 || tableNumber >= 100)) {
-                    return tableNumber <= 50 ? '50' : '100';
-                  } else if (totalTables > 100 && (tableNumber === 50 || tableNumber === 100 || tableNumber === 200)) {
-                    return tableNumber.toString();
-                  }
-                  
                   return '';
                 } else if (isMonthlyView) {
                   const date = new Date(value);
