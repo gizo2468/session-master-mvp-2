@@ -70,15 +70,30 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
               tick={{ fontSize: 12 }}
               type="category"
               domain={['dataMin', 'dataMax']}
-              ticks={isTableMode ? ['50', '100', '200'] : undefined}
+              interval={isTableMode ? 'preserveStartEnd' : 0}
               angle={0}
               textAnchor="middle"
               height={60}
+              axisLine={true}
+              tickLine={true}
               tickFormatter={(value, index) => {
                 if (isTableMode) {
-                  // Always show the static labels 50, 100, 200
-                  if (value === '50' || value === '100' || value === '200') {
-                    return value;
+                  const totalTables = dataToDisplay.length;
+                  const currentIndex = parseInt(value) || index + 1;
+                  
+                  // Show 50, 100, 200 based on data length and position
+                  if (totalTables <= 50) {
+                    if (currentIndex === Math.floor(totalTables * 0.5) || currentIndex === Math.ceil(totalTables * 0.5)) return '50';
+                    if (currentIndex === totalTables) return '100';
+                    if (currentIndex === Math.floor(totalTables * 0.25)) return '200';
+                  } else if (totalTables <= 100) {
+                    if (currentIndex === 50) return '50';
+                    if (currentIndex === totalTables || currentIndex === 100) return '100';
+                    if (currentIndex === Math.floor(totalTables * 0.25)) return '200';
+                  } else {
+                    if (currentIndex === 50) return '50';
+                    if (currentIndex === 100) return '100';
+                    if (currentIndex === 200 || currentIndex === totalTables) return '200';
                   }
                   return '';
                 } else if (isMonthlyView) {
