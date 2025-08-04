@@ -81,20 +81,11 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
                   const totalTables = dataToDisplay.length;
                   const currentIndex = parseInt(value) || index + 1;
                   
-                  // Show 50, 100, 200 based on data length and position
-                  if (totalTables <= 50) {
-                    if (currentIndex === Math.floor(totalTables * 0.5) || currentIndex === Math.ceil(totalTables * 0.5)) return '50';
-                    if (currentIndex === totalTables) return '100';
-                    if (currentIndex === Math.floor(totalTables * 0.25)) return '200';
-                  } else if (totalTables <= 100) {
-                    if (currentIndex === 50) return '50';
-                    if (currentIndex === totalTables || currentIndex === 100) return '100';
-                    if (currentIndex === Math.floor(totalTables * 0.25)) return '200';
-                  } else {
-                    if (currentIndex === 50) return '50';
-                    if (currentIndex === 100) return '100';
-                    if (currentIndex === 200 || currentIndex === totalTables) return '200';
-                  }
+                  // Show labels at correct positions to maintain left-to-right order (50 → 100 → 200)
+                  if (currentIndex === 50 || (totalTables < 50 && currentIndex === totalTables)) return '50';
+                  if (currentIndex === 100 || (totalTables < 100 && totalTables >= 50 && currentIndex === totalTables)) return '100';
+                  if (currentIndex === 200 || (totalTables >= 100 && currentIndex === totalTables)) return '200';
+                  
                   return '';
                 } else if (isMonthlyView) {
                   const date = new Date(value);
