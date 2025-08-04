@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
@@ -66,11 +67,11 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={dataToDisplay} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
             <XAxis 
-              dataKey="date" 
+              dataKey={isTableMode ? "tableCount" : "date"}
               tick={{ fontSize: 12 }}
-              type="category"
-              domain={['dataMin', 'dataMax']}
-              interval={isTableMode ? 'preserveStartEnd' : 0}
+              type={isTableMode ? "number" : "category"}
+              domain={isTableMode ? ['dataMin', 'dataMax'] : ['dataMin', 'dataMax']}
+              interval={isTableMode ? 'preserveEnd' : 0}
               angle={0}
               textAnchor="middle"
               height={60}
@@ -78,13 +79,21 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
               tickLine={true}
               tickFormatter={(value, index) => {
                 if (isTableMode) {
-                  const totalTables = dataToDisplay.length;
-                  const currentIndex = parseInt(value) || index + 1;
+                  const totalTables = dataToDisplay.length > 0 ? Math.max(...dataToDisplay.map(d => d.tableCount || 0)) : 0;
+                  const currentTable = Number(value);
                   
-                  // Show labels at correct positions to maintain left-to-right order (50 → 100 → 200)
-                  if (currentIndex === 50 || (totalTables < 50 && currentIndex === totalTables)) return '50';
-                  if (currentIndex === 100 || (totalTables < 100 && totalTables >= 50 && currentIndex === totalTables)) return '100';
-                  if (currentIndex === 200 || (totalTables >= 100 && currentIndex === totalTables)) return '200';
+                  // Show labels at milestone positions (50, 100, 200, etc.)
+                  if (currentTable === 50 && totalTables >= 50) return '50';
+                  if (currentTable === 100 && totalTables >= 100) return '100';
+                  if (currentTable === 200 && totalTables >= 200) return '200';
+                  if (currentTable === 300 && totalTables >= 300) return '300';
+                  if (currentTable === 400 && totalTables >= 400) return '400';
+                  if (currentTable === 500 && totalTables >= 500) return '500';
+                  
+                  // Show final table count if it's a round number or the maximum
+                  if (currentTable === totalTables && (totalTables % 10 === 0 || totalTables < 50)) {
+                    return totalTables.toString();
+                  }
                   
                   return '';
                 } else if (isMonthlyView) {
