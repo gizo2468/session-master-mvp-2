@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface AllTimeChartFiltersProps {
   dateRange: { start: string; end: string };
@@ -26,6 +27,31 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
   toggleWeeklyView,
   toggleDailyView
 }) => {
+  // Determine current view
+  const getCurrentView = () => {
+    if (isMonthlyView) return "monthly";
+    if (isWeeklyView) return "weekly";
+    if (isDailyView) return "daily";
+    return "all-time";
+  };
+
+  const handleViewChange = (value: string) => {
+    switch (value) {
+      case "all-time":
+        resetDateRange();
+        break;
+      case "daily":
+        toggleDailyView();
+        break;
+      case "weekly":
+        toggleWeeklyView();
+        break;
+      case "monthly":
+        toggleMonthlyView();
+        break;
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 mt-4">
       <div className="grid grid-cols-2 gap-2">
@@ -50,39 +76,18 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
           />
         </div>
       </div>
-      <div className="flex gap-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={resetDateRange}
-          className="text-xs"
-        >
-          All Time
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={toggleDailyView}
-          className="text-xs"
-        >
-          Daily
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={toggleWeeklyView}
-          className="text-xs"
-        >
-          Weekly
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={toggleMonthlyView}
-          className="text-xs"
-        >
-          Monthly
-        </Button>
+      <div className="flex justify-start">
+        <Select value={getCurrentView()} onValueChange={handleViewChange}>
+          <SelectTrigger className="w-32 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all-time">All Time</SelectItem>
+            <SelectItem value="daily">Daily</SelectItem>
+            <SelectItem value="weekly">Weekly</SelectItem>
+            <SelectItem value="monthly">Monthly</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
