@@ -83,8 +83,8 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all-time">All Time</SelectItem>
-            <SelectItem value="daily">Daily</SelectItem>
-            <SelectItem value="weekly">Weekly</SelectItem>
+            <SelectItem value="daily">Last 7 Days</SelectItem>
+            <SelectItem value="weekly">Last 3 Months</SelectItem>
             <SelectItem value="monthly">Monthly</SelectItem>
           </SelectContent>
         </Select>
