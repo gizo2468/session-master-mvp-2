@@ -1,5 +1,4 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -31,7 +30,6 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
   toggleDailyView,
   toggleLast30DaysView
 }) => {
-  // Determine current view
   const getCurrentView = () => {
     if (isMonthlyView) return "monthly";
     if (isWeeklyView) return "weekly";
