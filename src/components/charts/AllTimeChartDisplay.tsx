@@ -65,7 +65,7 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
 
   return (
     <div className="overflow-x-auto">
-      <ChartContainer config={chartConfig} className={`h-64 w-full ${isDailyView || isLast30DaysView ? 'min-w-[400px]' : isMonthlyView ? 'min-w-[500px]' : isWeeklyView ? 'min-w-[800px]' : dataToDisplay.length > 20 ? 'min-w-[1200px]' : dataToDisplay.length > 10 ? 'min-w-[600px]' : 'min-w-[300px]'}`}>
+      <ChartContainer config={chartConfig} className={`h-64 w-full ${isDailyView ? 'min-w-[400px]' : isLast30DaysView ? 'min-w-[900px]' : isMonthlyView ? 'min-w-[500px]' : isWeeklyView ? 'min-w-[800px]' : dataToDisplay.length > 20 ? 'min-w-[1200px]' : dataToDisplay.length > 10 ? 'min-w-[600px]' : 'min-w-[300px]'}`}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={dataToDisplay} margin={{ top: 5, right: 30, left: 5, bottom: 5 }}>
             <XAxis 
