@@ -111,6 +111,44 @@ export const processDailyData = (sessions: PokerSession[]): ChartDataPoint[] => 
   return dailyData;
 };
 
+export const processLast30DaysData = (sessions: PokerSession[]): ChartDataPoint[] => {
+  const today = new Date();
+  const thirtyDays = [];
+  
+  // Generate last 30 days
+  for (let i = 29; i >= 0; i--) {
+    const day = new Date(today);
+    day.setDate(today.getDate() - i);
+    thirtyDays.push(day);
+  }
+
+  const last30DaysData: ChartDataPoint[] = thirtyDays.map(day => {
+    // Find all sessions on this day
+    const daySessions = sessions.filter(session => {
+      const sessionDate = new Date(session.startTime);
+      return (
+        sessionDate.getFullYear() === day.getFullYear() &&
+        sessionDate.getMonth() === day.getMonth() &&
+        sessionDate.getDate() === day.getDate()
+      );
+    });
+
+    // Calculate total profit for this day
+    const dayProfit = daySessions.reduce((total, session) => {
+      return total + calculateSessionProfit(session);
+    }, 0);
+
+    return {
+      date: format(day, 'yyyy-MM-dd'),
+      profit: dayProfit,
+      cumulativeProfit: dayProfit, // For 30-day view, show daily profit, not cumulative
+      sessionCount: daySessions.length
+    };
+  });
+
+  return last30DaysData;
+};
+
 export const processWeeklyData = (sessions: PokerSession[]): ChartDataPoint[] => {
   const today = new Date();
   const weeks = [];

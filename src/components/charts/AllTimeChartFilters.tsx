@@ -10,10 +10,12 @@ interface AllTimeChartFiltersProps {
   isMonthlyView: boolean;
   isWeeklyView: boolean;
   isDailyView: boolean;
+  isLast30DaysView: boolean;
   resetDateRange: () => void;
   toggleMonthlyView: () => void;
   toggleWeeklyView: () => void;
   toggleDailyView: () => void;
+  toggleLast30DaysView: () => void;
 }
 
 export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
@@ -22,16 +24,19 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
   isMonthlyView,
   isWeeklyView,
   isDailyView,
+  isLast30DaysView,
   resetDateRange,
   toggleMonthlyView,
   toggleWeeklyView,
-  toggleDailyView
+  toggleDailyView,
+  toggleLast30DaysView
 }) => {
   // Determine current view
   const getCurrentView = () => {
     if (isMonthlyView) return "monthly";
     if (isWeeklyView) return "weekly";
     if (isDailyView) return "daily";
+    if (isLast30DaysView) return "last30days";
     return "all-time";
   };
 
@@ -42,6 +47,9 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
         break;
       case "daily":
         toggleDailyView();
+        break;
+      case "last30days":
+        toggleLast30DaysView();
         break;
       case "weekly":
         toggleWeeklyView();
@@ -84,6 +92,7 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
           <SelectContent>
             <SelectItem value="all-time">All Time</SelectItem>
             <SelectItem value="daily">Last 7 Days</SelectItem>
+            <SelectItem value="last30days">Last 30 Days</SelectItem>
             <SelectItem value="weekly">Last 3 Months</SelectItem>
             <SelectItem value="monthly">Monthly</SelectItem>
           </SelectContent>
