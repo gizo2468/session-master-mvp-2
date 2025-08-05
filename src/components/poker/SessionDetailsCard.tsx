@@ -191,7 +191,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
                     {table.nextDayStart && (
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-gray-600">Next day:</span>
-                        <span className="font-medium">{format(new Date(table.nextDayStart), 'MMM d, h:mm a')}</span>
+                        <span className="font-medium">{format(new Date(table.nextDayStart), 'd MMM, h:mm a')}</span>
                       </div>
                     )}
                     {table.notes && (

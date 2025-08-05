@@ -71,7 +71,7 @@ export default function SessionCard({ session, onClick, showActions = false }: S
       if (isNaN(startDate.getTime())) {
         return 'Invalid Date';
       }
-      return format(startDate, 'MMM d, yyyy');
+      return format(startDate, 'd MMM yyyy');
     } catch (error) {
       console.error('Error formatting date:', error);
       return 'Invalid Date';

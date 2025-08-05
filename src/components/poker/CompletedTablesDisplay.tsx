@@ -116,7 +116,7 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency }: 
                 <div className="flex flex-1 justify-center items-center">
                   <div className="text-center">
                     <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
-                    <div className="font-medium">{format(new Date(table.startTime), 'MMM d, h:mm a')}</div>
+                    <div className="font-medium">{format(new Date(table.startTime), 'd MMM, h:mm a')}</div>
                   </div>
                 </div>
                 
@@ -138,7 +138,7 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency }: 
                   <div className="flex-1 flex justify-center items-center">
                     <div className="text-center">
                       <div className="text-gray-500 font-medium text-xs uppercase mb-1">End</div>
-                      <div className="font-medium">{format(new Date(table.endTime), 'MMM d, h:mm a')}</div>
+                      <div className="font-medium">{format(new Date(table.endTime), 'd MMM, h:mm a')}</div>
                     </div>
                   </div>
                 )}
@@ -227,7 +227,7 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency }: 
                   {table.nextDayStart && (
                     <div className="flex justify-between text-sm mb-1.5">
                       <span className="text-gray-600">Next Day:</span>
-                      <span className="font-medium">{format(new Date(table.nextDayStart), 'MMM d, h:mm a')}</span>
+                      <span className="font-medium">{format(new Date(table.nextDayStart), 'd MMM, h:mm a')}</span>
                     </div>
                   )}
                   

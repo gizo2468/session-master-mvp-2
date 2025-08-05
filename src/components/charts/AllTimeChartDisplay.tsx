@@ -97,7 +97,7 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
                 } else if (isDailyView) {
                   const date = new Date(value);
                   if (isNaN(date.getTime())) return value;
-                  return format(date, 'MM/dd');
+                  return format(date, 'dd/MM');
                 }
                 const date = new Date(value);
                 if (isNaN(date.getTime())) return value;
@@ -133,7 +133,7 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
                       weekStart.setDate(weekStart.getDate() - daysToMonday - ((11 - weekIndex) * 7));
                       const weekEnd = new Date(weekStart);
                       weekEnd.setDate(weekStart.getDate() + 6);
-                      displayLabel = `${format(weekStart, 'MM/dd')}–${format(weekEnd, 'MM/dd')}`;
+                      displayLabel = `${format(weekStart, 'dd/MM')}–${format(weekEnd, 'dd/MM')}`;
                     }
                   } else {
                     // Other views: parse and format the date
