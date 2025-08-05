@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { format } from 'date-fns';
 
 interface ChartDataPoint {
@@ -167,6 +167,14 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
                 return null;
               }}
             />
+            {isTableMode && (
+              <ReferenceLine 
+                y={0} 
+                stroke="hsl(120, 60%, 30%)" 
+                strokeWidth={1.5}
+                strokeDasharray="none"
+              />
+            )}
             <Line
               type="monotone"
               dataKey="cumulativeProfit"
