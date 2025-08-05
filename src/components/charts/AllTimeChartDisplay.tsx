@@ -82,18 +82,9 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
                   const totalTables = dataToDisplay.length > 0 ? Math.max(...dataToDisplay.map(d => d.tableCount || 0)) : 0;
                   const currentTable = Number(value);
                   
-                  // Show labels at milestone positions (50, 100, 200, etc.)
-                  if (currentTable === 50 && totalTables >= 50) return '50';
-                  if (currentTable === 100 && totalTables >= 100) return '100';
-                  if (currentTable === 200 && totalTables >= 200) return '200';
-                  if (currentTable === 300 && totalTables >= 300) return '300';
-                  if (currentTable === 400 && totalTables >= 400) return '400';
-                  if (currentTable === 500 && totalTables >= 500) return '500';
-                  
-                  // Show final table count if it's a round number or the maximum
-                  if (currentTable === totalTables && (totalTables % 10 === 0 || totalTables < 50)) {
-                    return totalTables.toString();
-                  }
+                  // Show only fixed milestone labels: 50 and 100
+                  if (currentTable === 50) return '50';
+                  if (currentTable === 100) return '100';
                   
                   return '';
                 } else if (isMonthlyView) {
