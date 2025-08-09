@@ -432,9 +432,9 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
 
             {/* Table Management Section - Moved up after Format */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Table Management</h3>
-                <div className="text-sm text-gray-500">
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-poker-gold">Table Management</h3>
+                <div className="text-base text-muted-foreground text-center">
                   {tables.length} table{tables.length !== 1 ? 's' : ''} added
                 </div>
               </div>
@@ -540,7 +540,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               <Button 
                 type="button" 
                 onClick={addTable}
-                className="w-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center"
+                className="w-full bg-poker-gold hover:bg-poker-darkGold text-white flex items-center justify-center"
               >
                 <Icon name="Plus" className="h-4 w-4 mr-2" />
                 Add Table
