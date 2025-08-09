@@ -506,7 +506,6 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                             type="number" 
                             min="0" 
                             step="0.01" 
-                            placeholder="100.00" 
                             {...field} 
                           />
                         </FormControl>
@@ -525,13 +524,12 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                   <FormItem>
                     <FormLabel>Payout Amount</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        min="0" 
-                        step="0.01" 
-                        placeholder="0.00" 
-                        {...field} 
-                      />
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          step="0.01" 
+                          {...field} 
+                        />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
