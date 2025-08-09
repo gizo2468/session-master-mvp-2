@@ -237,35 +237,37 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
         </div>
       </div>
       
-      <div className="grid grid-cols-3 gap-4 text-center mb-4">
-        <div className="grid place-items-center gap-1">
-          <MobileStackTitle text="ITM %" />
-          <span className="text-base font-bold">{itmPercentage.toFixed(1)}%</span>
+{!showExtendedMetrics && (
+        <div className="grid grid-cols-3 gap-4 text-center mb-4">
+          <div className="grid place-items-center gap-1">
+            <MobileStackTitle text="ITM %" />
+            <span className="text-base font-bold">{itmPercentage.toFixed(1)}%</span>
+          </div>
+          
+          <div className="grid place-items-center gap-1">
+            <MobileStackTitle text="Total Hands" />
+            <span className="text-base font-bold">{totalHands}</span>
+          </div>
+          
+          <div className="grid place-items-center gap-1">
+            <MobileStackTitle text="Avg Duration" />
+            <span className="text-base font-bold">{averageHours.toFixed(1)}h</span>
+          </div>
         </div>
-        
-        <div className="grid place-items-center gap-1">
-          <MobileStackTitle text="Total Hands" />
-          <span className="text-base font-bold">{totalHands}</span>
-        </div>
-        
-        <div className="grid place-items-center gap-1">
-          <MobileStackTitle text="Avg Duration" />
-          <span className="text-base font-bold">{averageHours.toFixed(1)}h</span>
-        </div>
-      </div>
+      )}
       
-      {showExtendedMetrics && (
+{showExtendedMetrics && (
         <>
-          {/* Additional metrics - first row */}
+          {/* Row 2: Total Tables, ITM %, ROI % */}
           <div className="grid grid-cols-3 gap-4 text-center mb-4">
             <div className="grid place-items-center gap-1">
-              <MobileStackTitle text="Best Session" />
-              <span className="text-base font-bold">{completedSessions.length === 0 ? '—' : displayCurrency(normalizedBest)}</span>
+              <MobileStackTitle text="Total Tables" />
+              <span className="text-base font-bold">{totalTables}</span>
             </div>
             
             <div className="grid place-items-center gap-1">
-              <MobileStackTitle text="Avg Buy-in" />
-              <span className="text-base font-bold">{displayCurrency(Math.round(avgBuyIn))}</span>
+              <MobileStackTitle text="ITM %" />
+              <span className="text-base font-bold">{itmPercentage.toFixed(1)}%</span>
             </div>
             
             <div className="grid place-items-center gap-1">
@@ -274,11 +276,29 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
             </div>
           </div>
           
-          {/* Additional metrics - second row */}
+          {/* Row 3: Total Hands, Avg Buy-in, Avg Duration */}
+          <div className="grid grid-cols-3 gap-4 text-center mb-4">
+            <div className="grid place-items-center gap-1">
+              <MobileStackTitle text="Total Hands" />
+              <span className="text-base font-bold">{totalHands}</span>
+            </div>
+            
+            <div className="grid place-items-center gap-1">
+              <MobileStackTitle text="Avg Buy-in" />
+              <span className="text-base font-bold">{displayCurrency(Math.round(avgBuyIn))}</span>
+            </div>
+            
+            <div className="grid place-items-center gap-1">
+              <MobileStackTitle text="Avg Duration" />
+              <span className="text-base font-bold">{averageHours.toFixed(1)}h</span>
+            </div>
+          </div>
+          
+          {/* Row 4: Best Session, Cash Profit, Tournament Profit */}
           <div className="grid grid-cols-3 gap-4 text-center">
             <div className="grid place-items-center gap-1">
-              <MobileStackTitle text="Total Tables" />
-              <span className="text-base font-bold">{totalTables}</span>
+              <MobileStackTitle text="Best Session" />
+              <span className="text-base font-bold">{completedSessions.length === 0 ? '—' : displayCurrency(normalizedBest)}</span>
             </div>
             
             <div className="grid place-items-center gap-1">
