@@ -59,7 +59,7 @@ const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button aria-label="More options" className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted/50">
-                    <Icon name="MoreVertical" className="h-5 w-5" />
+                    <Icon name="EllipsisVertical" className="h-5 w-5" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
