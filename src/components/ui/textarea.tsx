@@ -34,9 +34,13 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps & { enableA
         autoCorrect={enableAutofill ? (autoCorrect as any) : 'off'}
         autoCapitalize={enableAutofill ? (autoCapitalize as any) : 'none'}
         spellCheck={enableAutofill ? (spellCheck as any) : false}
+        aria-autocomplete={enableAutofill ? undefined : 'none'}
+        inputMode={props.inputMode ?? 'text'}
         data-1p-ignore={enableAutofill ? undefined : true}
         data-lpignore={enableAutofill ? undefined : true}
         data-form-type={enableAutofill ? undefined : 'other'}
+        x-autocompletetype={enableAutofill ? undefined : 'off' as any}
+        data-autocompletetype={enableAutofill ? undefined : 'off'}
         {...props}
       />
     )
