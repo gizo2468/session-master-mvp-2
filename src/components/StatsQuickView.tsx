@@ -7,6 +7,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { calculateOverallResults, calculateSessionProfit } from '@/utils/sessionCalculations';
 import { getCurrencySymbol, useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 
+function MobileStackTitle({ text }: { text: string }) {
+  const [first, ...restParts] = text.split(' ');
+  const rest = restParts.join(' ');
+  return (
+    <span className="text-gray-500 text-sm leading-5 min-h-[2.5rem] sm:min-h-0">
+      <span>{first}</span>
+      {rest && <span className="block sm:inline">{' '}{rest}</span>}
+    </span>
+  );
+}
+
 export default function StatsQuickView({ showExtendedMetrics = false }: { showExtendedMetrics?: boolean }) {
   const { sessions, isLoading } = useSessionContext();
   const [showCurrencyBreakdown, setShowCurrencyBreakdown] = useState(false);
@@ -175,17 +186,17 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
       
       <div className="grid grid-cols-3 gap-4 text-center mb-4">
         <div className="grid place-items-center gap-1">
-          <span className="text-gray-500 text-sm whitespace-nowrap">Sessions</span>
+          <MobileStackTitle text="Sessions" />
           <span className="text-base font-bold">{totalSessions}</span>
         </div>
         
         <div className="grid place-items-center gap-1">
-          <span className="text-gray-500 text-sm whitespace-nowrap">Record</span>
+          <MobileStackTitle text="Record" />
           <span className="text-base font-bold">{wins}W - {losses}L</span>
         </div>
         
         <div className="grid place-items-center gap-1">
-          <span className="text-gray-500 text-sm whitespace-nowrap">Overall Results</span>
+          <MobileStackTitle text="Overall Results" />
           <div 
             className="cursor-pointer"
             onClick={() => setShowCurrencyBreakdown(true)}
@@ -204,17 +215,17 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
       
       <div className="grid grid-cols-3 gap-4 text-center mb-4">
         <div className="grid place-items-center gap-1">
-          <span className="text-gray-500 text-sm whitespace-nowrap">ITM %</span>
+          <MobileStackTitle text="ITM %" />
           <span className="text-base font-bold">{itmPercentage.toFixed(1)}%</span>
         </div>
         
         <div className="grid place-items-center gap-1">
-          <span className="text-gray-500 text-sm whitespace-nowrap">Total Hands</span>
+          <MobileStackTitle text="Total Hands" />
           <span className="text-base font-bold">{totalHands}</span>
         </div>
         
         <div className="grid place-items-center gap-1">
-          <span className="text-gray-500 text-sm whitespace-nowrap">Avg Duration</span>
+          <MobileStackTitle text="Avg Duration" />
           <span className="text-base font-bold">{averageHours.toFixed(1)}h</span>
         </div>
       </div>
@@ -224,17 +235,17 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
           {/* Additional metrics - first row */}
           <div className="grid grid-cols-3 gap-4 text-center mb-4">
             <div className="grid place-items-center gap-1">
-              <span className="text-gray-500 text-sm whitespace-nowrap">Best Session</span>
+              <MobileStackTitle text="Best Session" />
               <span className="text-base font-bold">{completedSessions.length === 0 ? '—' : displayCurrency(normalizedBest)}</span>
             </div>
             
             <div className="grid place-items-center gap-1">
-              <span className="text-gray-500 text-sm whitespace-nowrap">Avg Buy-in</span>
+              <MobileStackTitle text="Avg Buy-in" />
               <span className="text-base font-bold">{displayCurrency(Math.round(avgBuyIn))}</span>
             </div>
             
             <div className="grid place-items-center gap-1">
-              <span className="text-gray-500 text-sm whitespace-nowrap">ROI %</span>
+              <MobileStackTitle text="ROI %" />
               <span className="text-base font-bold">{roiPercent.toFixed(1)}%</span>
             </div>
           </div>
@@ -242,17 +253,17 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
           {/* Additional metrics - second row */}
           <div className="grid grid-cols-3 gap-4 text-center">
             <div className="grid place-items-center gap-1">
-              <span className="text-gray-500 text-sm whitespace-nowrap">Total Tables</span>
+              <MobileStackTitle text="Total Tables" />
               <span className="text-base font-bold">{totalTables}</span>
             </div>
             
             <div className="grid place-items-center gap-1">
-              <span className="text-gray-500 text-sm whitespace-nowrap">Cash Profit</span>
+              <MobileStackTitle text="Cash Profit" />
               <span className="text-base font-bold">{displayCurrency(cashGameProfit)}</span>
             </div>
             
             <div className="grid place-items-center gap-1">
-              <span className="text-gray-500 text-sm whitespace-nowrap">Tournament Profit</span>
+              <MobileStackTitle text="Tournament Profit" />
               <span className="text-base font-bold">{displayCurrency(tournamentProfit)}</span>
             </div>
           </div>
