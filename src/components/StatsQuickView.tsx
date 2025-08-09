@@ -8,12 +8,36 @@ import { calculateOverallResults, calculateSessionProfit } from '@/utils/session
 import { getCurrencySymbol, useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 
 function MobileStackTitle({ text }: { text: string }) {
+  const isPercentTitle = text.includes('%'); // e.g., "ITM %", "ROI %"
+
+  // Keep percentage titles on a single line on mobile; vertically center within two-line slot
+  if (isPercentTitle) {
+    return (
+      <span className="text-gray-500 text-sm leading-5 min-h-[2.5rem] sm:min-h-0 flex items-center justify-center sm:inline-flex sm:justify-start sm:items-baseline whitespace-nowrap">
+        {text}
+      </span>
+    );
+  }
+
   const [first, ...restParts] = text.split(' ');
   const rest = restParts.join(' ');
+
+  // Single-word titles: keep one line, vertically centered on mobile
+  if (!rest) {
+    return (
+      <span className="text-gray-500 text-sm leading-5 min-h-[2.5rem] sm:min-h-0 flex items-center justify-center sm:inline-flex sm:justify-start sm:items-baseline">
+        {first}
+      </span>
+    );
+  }
+
+  // Multi-word titles: stack words on mobile, single-line on tablet/desktop
   return (
-    <span className="text-gray-500 text-sm leading-5 min-h-[2.5rem] sm:min-h-0">
-      <span>{first}</span>
-      {rest && <span className="block sm:inline">{' '}{rest}</span>}
+    <span className="text-gray-500 text-sm leading-5 min-h-[2.5rem] sm:min-h-0 flex sm:inline">
+      <span className="flex flex-col justify-center">
+        <span>{first}</span>
+        <span className="block sm:inline">{' '}{rest}</span>
+      </span>
     </span>
   );
 }
