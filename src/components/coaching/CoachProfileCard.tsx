@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/Lucide';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useCoachStudent } from '@/context/CoachStudentContext';
 
 interface CoachProfileCardProps {
   coach: {
@@ -18,6 +21,7 @@ interface CoachProfileCardProps {
 }
 
 const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
+  const { disconnectFromCoach } = useCoachStudent();
 
   const getInitials = (name: string) => {
     return name
@@ -27,7 +31,6 @@ const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
       .toUpperCase()
       .slice(0, 2);
   };
-
 
   return (
     <Card>
@@ -50,6 +53,40 @@ const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
             <p className="text-sm text-muted-foreground">
               @{coach.username}
             </p>
+          </div>
+          <div className="ml-auto">
+            <AlertDialog>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button aria-label="More options" className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted/50">
+                    <Icon name="MoreVertical" className="h-5 w-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem className="text-destructive focus:text-destructive">
+                      <Icon name="UserMinus" className="mr-2 h-4 w-4" />
+                      Disconnect
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Disconnect?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will remove your connection. You can reconnect later.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => disconnectFromCoach(coach.id)}>
+                    Disconnect
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
 

@@ -440,17 +440,29 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setLoading(true);
     try {
-      // Connection system not implemented yet
-      toast({
-        title: "Feature Coming Soon",
-        description: "Coach-student connections will be available soon."
-      });
+      // Remove approved connection between this coach and the student
+      const { error } = await supabase
+        .from('coach_student_connections')
+        .delete()
+        .eq('coach_id', user.id)
+        .eq('student_id', studentId)
+        .eq('status', 'approved');
+
+      if (error) throw error;
+
+      // Optimistically update local state
+      setStudents((prev) => prev.filter((s) => s.id !== studentId));
+
+      toast({ title: 'Disconnected', description: 'The player has been removed from your connections.' });
+
+      // Trigger downstream reloads
+      await loadStudents();
     } catch (error) {
       console.error('❌ Error removing player:', error);
       toast({
-        title: "Error",
-        description: "Failed to remove player. Please try again.",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to disconnect from player. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -526,17 +538,27 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setLoading(true);
     try {
-      // Connection system not implemented yet
-      toast({
-        title: "Feature Coming Soon",
-        description: "Coach-student connections will be available soon."
-      });
+      const { error } = await supabase
+        .from('coach_student_connections')
+        .delete()
+        .eq('coach_id', coachId)
+        .eq('student_id', user.id)
+        .eq('status', 'approved');
+
+      if (error) throw error;
+
+      // Optimistically update local state
+      setConnectedCoaches((prev) => prev.filter((c) => c.id !== coachId));
+
+      toast({ title: 'Disconnected', description: 'You have been disconnected from this coach.' });
+
+      await loadConnectedCoaches();
     } catch (error) {
       console.error('❌ Error disconnecting from coach:', error);
       toast({
-        title: "Error",
-        description: "Failed to disconnect from coach. Please try again.",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to disconnect from coach. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);

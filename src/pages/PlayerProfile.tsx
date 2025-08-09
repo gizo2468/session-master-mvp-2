@@ -14,6 +14,9 @@ import { calculateSessionProfit } from '@/utils/sessionCalculations';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useCoachStudent } from '@/context/CoachStudentContext';
 
 interface PlayerProfile {
   id: string;
@@ -61,6 +64,7 @@ const PlayerProfile = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { removeStudent } = useCoachStudent();
 
   useEffect(() => {
     if (!playerId || !user?.id) return;
@@ -327,6 +331,42 @@ const PlayerProfile = () => {
               {player.bio && (
                 <p className="text-sm text-gray-600 mt-1">{player.bio}</p>
               )}
+            </div>
+            <div className="ml-auto">
+              <AlertDialog>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" aria-label="More options">
+                      <Icon name="MoreVertical" className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem className="text-destructive focus:text-destructive">
+                        <Icon name="UserMinus" className="mr-2 h-4 w-4" />
+                        Disconnect
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Disconnect?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will remove your connection. You can reconnect later.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => removeStudent(playerId!)}
+                    >
+                      Disconnect
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </header>
