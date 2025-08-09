@@ -40,6 +40,10 @@ const MyCoachingNetwork: React.FC = () => {
   const [coachUsername, setCoachUsername] = useState('');
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  // Coach -> Player connect dialog state
+  const [playerUsername, setPlayerUsername] = useState('');
+  const [connectPlayerDialogOpen, setConnectPlayerDialogOpen] = useState(false);
+  const [connectingPlayer, setConnectingPlayer] = useState(false);
   
   const isCoach = user?.role === 'coach';
   const isStudent = user?.role === 'student';
@@ -377,6 +381,111 @@ const MyCoachingNetwork: React.FC = () => {
     }
   };
 
+  // Coach sends connection request to a player by username
+  const handleConnectToPlayer = async () => {
+    if (!playerUsername.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a player username.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (playerUsername.trim() === user?.username) {
+      toast({
+        title: "Error",
+        description: "You cannot send a request to yourself.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setConnectingPlayer(true);
+    try {
+      // Search for player by username (role must be student)
+      const { data: playerProfile, error: searchError } = await supabase
+        .from('profiles')
+        .select('id, username, role')
+        .eq('username', playerUsername.trim())
+        .eq('role', 'student')
+        .single();
+
+      if (searchError || !playerProfile) {
+        toast({
+          title: "Player not found",
+          description: "No player found with that username.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if connection already exists for this pair
+      const { data: existingConnection, error: checkError } = await supabase
+        .from('coach_student_connections')
+        .select('id, status')
+        .eq('coach_id', user?.id)
+        .eq('student_id', playerProfile.id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking existing connection:', checkError);
+        toast({
+          title: "Error",
+          description: "Failed to check existing connections.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (existingConnection) {
+        toast({
+          title: "Request already exists",
+          description: `You already have a ${existingConnection.status} request with this player.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create pending connection request (coach -> player)
+      const { error: insertError } = await supabase
+        .from('coach_student_connections')
+        .insert({
+          coach_id: user?.id,
+          student_id: playerProfile.id,
+          status: 'pending',
+        });
+
+      if (insertError) {
+        console.error('Error creating connection:', insertError);
+        toast({
+          title: "Error",
+          description: "Failed to send connection request.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Request sent!",
+        description: `Request sent to ${playerUsername}.`,
+      });
+
+      setPlayerUsername('');
+      setConnectPlayerDialogOpen(false);
+      // No immediate change to connected list until approved
+    } catch (error) {
+      console.error('Error in handleConnectToPlayer:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setConnectingPlayer(false);
+    }
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -385,7 +494,6 @@ const MyCoachingNetwork: React.FC = () => {
       .toUpperCase()
       .slice(0, 2);
   };
-
   const renderConnections = () => {
     if (loading) {
       return (
@@ -539,6 +647,52 @@ const MyCoachingNetwork: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {isCoach && (
+          <div className="mb-4">
+            <Dialog open={connectPlayerDialogOpen} onOpenChange={setConnectPlayerDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <Icon name="UserPlus" className="h-4 w-4 mr-2" />
+                  Connect to Player
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Connect to Player</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Enter the player's username to request a connection.
+                  </p>
+                  <Input
+                    placeholder="Player username"
+                    value={playerUsername}
+                    onChange={(e) => setPlayerUsername(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !connectingPlayer) {
+                        handleConnectToPlayer();
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={handleConnectToPlayer}
+                    disabled={connectingPlayer || !playerUsername.trim()}
+                    className="w-full"
+                  >
+                    {connectingPlayer ? (
+                      <>
+                        <Icon name="Loader" className="h-4 w-4 mr-2 animate-spin" />
+                        Sending Request...
+                      </>
+                    ) : (
+                      'Send Request'
+                    )}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
         {isStudent && (
           <div className="mb-4">
             <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
