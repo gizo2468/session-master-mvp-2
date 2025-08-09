@@ -3,8 +3,8 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { useFocusScroll } from "@/hooks/useFocusScroll"
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, onFocus, onBlur, ...props }, ref) => {
+const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input"> & { enableAutofill?: boolean }>(
+  ({ className, type, onFocus, onBlur, enableAutofill = false, autoComplete, autoCorrect, autoCapitalize, spellCheck, ...props }, ref) => {
     const { handleFocus, handleBlur } = useFocusScroll();
 
     const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -27,6 +27,14 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         onFocus={handleInputFocus}
         onBlur={handleInputBlur}
         ref={ref}
+        // Autofill control: disabled by default across the app
+        autoComplete={enableAutofill ? autoComplete : 'off'}
+        autoCorrect={enableAutofill ? (autoCorrect as any) : 'off'}
+        autoCapitalize={enableAutofill ? (autoCapitalize as any) : 'none'}
+        spellCheck={enableAutofill ? (spellCheck as any) : false}
+        data-1p-ignore={enableAutofill ? undefined : true}
+        data-lpignore={enableAutofill ? undefined : true}
+        data-form-type={enableAutofill ? undefined : 'other'}
         {...props}
       />
     )

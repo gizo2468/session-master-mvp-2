@@ -404,6 +404,8 @@ const Signup: React.FC = () => {
                         <Input 
                           placeholder="" 
                           {...field} 
+                          enableAutofill
+                          autoComplete="username"
                           onChange={(e) => {
                             field.onChange(e);
                             if (e.target.value.length >= 3) {
@@ -427,7 +429,7 @@ const Signup: React.FC = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="your.email@example.com" {...field} />
+                      <Input placeholder="your.email@example.com" {...field} enableAutofill autoComplete="email" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -445,6 +447,8 @@ const Signup: React.FC = () => {
                           type={showPassword ? "text" : "password"} 
                           placeholder="••••••••" 
                           {...field} 
+                          enableAutofill
+                          autoComplete="new-password"
                         />
                         <Button
                           type="button"

@@ -6,8 +6,8 @@ import { useFocusScroll } from "@/hooks/useFocusScroll"
 export interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
 
-const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, onFocus, onBlur, ...props }, ref) => {
+const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps & { enableAutofill?: boolean }>(
+  ({ className, onFocus, onBlur, enableAutofill = false, autoComplete, autoCorrect, autoCapitalize, spellCheck, ...props }, ref) => {
     const { handleFocus, handleBlur } = useFocusScroll();
 
     const handleTextareaFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
@@ -29,6 +29,14 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         onFocus={handleTextareaFocus}
         onBlur={handleTextareaBlur}
         ref={ref}
+        // Autofill control: disabled by default across the app
+        autoComplete={enableAutofill ? autoComplete : 'off'}
+        autoCorrect={enableAutofill ? (autoCorrect as any) : 'off'}
+        autoCapitalize={enableAutofill ? (autoCapitalize as any) : 'none'}
+        spellCheck={enableAutofill ? (spellCheck as any) : false}
+        data-1p-ignore={enableAutofill ? undefined : true}
+        data-lpignore={enableAutofill ? undefined : true}
+        data-form-type={enableAutofill ? undefined : 'other'}
         {...props}
       />
     )

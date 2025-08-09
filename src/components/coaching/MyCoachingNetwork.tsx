@@ -668,6 +668,8 @@ const MyCoachingNetwork: React.FC = () => {
                     placeholder="Player username"
                     value={playerUsername}
                     onChange={(e) => setPlayerUsername(e.target.value)}
+                    name="search-player"
+                    inputMode="search"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !connectingPlayer) {
                         handleConnectToPlayer();
@@ -714,6 +716,8 @@ const MyCoachingNetwork: React.FC = () => {
                     placeholder="Coach username"
                     value={coachUsername}
                     onChange={(e) => setCoachUsername(e.target.value)}
+                    name="search-coach"
+                    inputMode="search"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !connecting) {
                         handleConnectToCoach();

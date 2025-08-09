@@ -157,6 +157,8 @@ const Login: React.FC = () => {
                 placeholder="Enter your email"
                 required
                 disabled={isLoading}
+                enableAutofill
+                autoComplete="email"
               />
             </div>
             
@@ -170,6 +172,8 @@ const Login: React.FC = () => {
                 placeholder="Enter your password"
                 required
                 disabled={isLoading}
+                enableAutofill
+                autoComplete="current-password"
               />
             </div>
             
