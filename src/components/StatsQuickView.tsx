@@ -21,6 +21,16 @@ export default function StatsQuickView() {
             <div className="h-12 bg-gray-200 rounded"></div>
             <div className="h-12 bg-gray-200 rounded"></div>
           </div>
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="h-12 bg-gray-200 rounded"></div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="h-12 bg-gray-200 rounded"></div>
+          </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="h-12 bg-gray-200 rounded"></div>
             <div className="h-12 bg-gray-200 rounded"></div>
@@ -152,7 +162,7 @@ export default function StatsQuickView() {
         </div>
       </div>
       
-      <div className="grid grid-cols-3 gap-4 text-center">
+      <div className="grid grid-cols-3 gap-4 text-center mb-4">
         <div className="flex flex-col items-center justify-center">
           <span className="text-gray-500 text-sm mb-1">ITM %</span>
           <span className="text-lg font-bold">{itmPercentage.toFixed(1)}%</span>
@@ -166,6 +176,42 @@ export default function StatsQuickView() {
         <div className="flex flex-col items-center justify-center">
           <span className="text-gray-500 text-sm mb-1">Avg Duration</span>
           <span className="text-lg font-bold">{averageHours.toFixed(1)}h</span>
+        </div>
+      </div>
+      
+      {/* Additional metrics - first row */}
+      <div className="grid grid-cols-3 gap-4 text-center mb-4">
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-gray-500 text-sm mb-1">Best Session</span>
+          <span className="text-lg font-bold">—</span>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-gray-500 text-sm mb-1">Avg Buy-in</span>
+          <span className="text-lg font-bold">$0</span>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-gray-500 text-sm mb-1">ROI %</span>
+          <span className="text-lg font-bold">0%</span>
+        </div>
+      </div>
+      
+      {/* Additional metrics - second row */}
+      <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-gray-500 text-sm mb-1">Total Tables</span>
+          <span className="text-lg font-bold">0</span>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-gray-500 text-sm mb-1">Cash Game Profit</span>
+          <span className="text-lg font-bold">$0</span>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-gray-500 text-sm mb-1">Tournament Profit</span>
+          <span className="text-lg font-bold">$0</span>
         </div>
       </div>
       
