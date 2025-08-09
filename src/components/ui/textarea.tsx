@@ -7,7 +7,7 @@ export interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps & { enableAutofill?: boolean }>(
-  ({ className, onFocus, onBlur, enableAutofill = false, autoComplete, autoCorrect, autoCapitalize, spellCheck, ...props }, ref) => {
+  ({ className, onFocus, onBlur, enableAutofill = false, autoComplete, autoCorrect, autoCapitalize, spellCheck, name, id, ...props }, ref) => {
     const { handleFocus, handleBlur } = useFocusScroll();
 
     const handleTextareaFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
@@ -29,7 +29,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps & { enableA
         onFocus={handleTextareaFocus}
         onBlur={handleTextareaBlur}
         ref={ref}
-        // Autofill control: disabled by default across the app
+        // Maximum autofill blocking - disabled by default across the app
         autoComplete={enableAutofill ? autoComplete : 'off'}
         autoCorrect={enableAutofill ? (autoCorrect as any) : 'off'}
         autoCapitalize={enableAutofill ? (autoCapitalize as any) : 'none'}
@@ -41,6 +41,10 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps & { enableA
         data-form-type={enableAutofill ? undefined : 'other'}
         x-autocompletetype={enableAutofill ? undefined : 'off' as any}
         data-autocompletetype={enableAutofill ? undefined : 'off'}
+        role={enableAutofill ? undefined : 'textbox'}
+        // Ensure we use random/meaningless names for autofill blocking
+        name={enableAutofill ? name : (name ? `field_${Math.random().toString(36).substr(2, 9)}` : undefined)}
+        id={enableAutofill ? id : (id ? `input_${Math.random().toString(36).substr(2, 9)}` : undefined)}
         {...props}
       />
     )

@@ -53,7 +53,7 @@ const PastSessionInfoStep: React.FC<PastSessionInfoStepProps> = ({
   };
 
   return (
-    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6" autoComplete="off">
       <Card>
         <CardHeader>
           <CardTitle>Session Information</CardTitle>

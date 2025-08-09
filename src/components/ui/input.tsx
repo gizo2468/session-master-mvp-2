@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 import { useFocusScroll } from "@/hooks/useFocusScroll"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input"> & { enableAutofill?: boolean }>(
-  ({ className, type, onFocus, onBlur, enableAutofill = false, autoComplete, autoCorrect, autoCapitalize, spellCheck, ...props }, ref) => {
+  ({ className, type, onFocus, onBlur, enableAutofill = false, autoComplete, autoCorrect, autoCapitalize, spellCheck, name, id, ...props }, ref) => {
     const { handleFocus, handleBlur } = useFocusScroll();
 
     const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -27,7 +27,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input"> &
         onFocus={handleInputFocus}
         onBlur={handleInputBlur}
         ref={ref}
-        // Autofill control: disabled by default across the app
+        // Maximum autofill blocking - disabled by default across the app
         autoComplete={enableAutofill ? autoComplete : 'off'}
         autoCorrect={enableAutofill ? (autoCorrect as any) : 'off'}
         autoCapitalize={enableAutofill ? (autoCapitalize as any) : 'none'}
@@ -39,6 +39,10 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input"> &
         data-form-type={enableAutofill ? undefined : 'other'}
         x-autocompletetype={enableAutofill ? undefined : 'off' as any}
         data-autocompletetype={enableAutofill ? undefined : 'off'}
+        role={enableAutofill ? undefined : 'textbox'}
+        // Ensure we use random/meaningless names for autofill blocking
+        name={enableAutofill ? name : (name ? `field_${Math.random().toString(36).substr(2, 9)}` : undefined)}
+        id={enableAutofill ? id : (id ? `input_${Math.random().toString(36).substr(2, 9)}` : undefined)}
         {...props}
       />
     )
