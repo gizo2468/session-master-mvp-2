@@ -433,7 +433,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
             {/* Table Management Section - Moved up after Format */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-poker-gold">Table Management</h3>
+                <h3 className="text-xl font-semibold text-poker-gold">Table Management</h3>
                 <div className="text-base text-muted-foreground text-center">
                   {tables.length} table{tables.length !== 1 ? 's' : ''} added
                 </div>
