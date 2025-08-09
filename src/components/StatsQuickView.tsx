@@ -104,35 +104,24 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
   // Get USD total for main display
   const usdTotal = resultsByCurrency['USD'] || 0;
 
-  // FIXED: Calculate ITM% per table instead of per session
-  let totalTournamentTables = 0;
-  let itmTables = 0;
-  
-  completedSessions.forEach(session => {
+  // ITM% across all ended sessions (cash + tournaments)
+  // payout = session-level cashOut or sum of completed table cashOuts; null treated as 0
+  const getSessionPayout = (session: any): number => {
     if (session.tables && session.tables.length > 0) {
-      // Count tournament tables only
-      const tournamentTables = session.tables.filter(table => 
-        table.format === 'Tournament' && !table.isActive
-      );
-      
-      totalTournamentTables += tournamentTables.length;
-      
-      // Count tables that cashed (cashOut > 0)
-      const cashedTables = tournamentTables.filter(table => 
-        table.cashOut !== undefined && table.cashOut > 0
-      );
-      
-      itmTables += cashedTables.length;
-    } else if (session.format === 'Tournament' || session.format === 'Live Tournament' || session.format === 'Online Tournament') {
-      // Handle sessions without separate tables (legacy format)
-      totalTournamentTables += 1;
-      if (session.cashOut !== undefined && session.cashOut > 0) {
-        itmTables += 1;
-      }
+      const completedTables = session.tables.filter((t: any) => !t.isActive);
+      return completedTables.reduce((sum: number, t: any) => sum + (t.cashOut ?? 0), 0);
     }
-  });
+    return session.cashOut ?? 0;
+  };
   
-  const itmPercentage = totalTournamentTables > 0 ? (itmTables / totalTournamentTables) * 100 : 0;
+  const endedCount = completedSessions.length;
+  const cashedCount = completedSessions.filter(s => (getSessionPayout(s) ?? 0) > 0).length;
+  
+  let itmPercentage = endedCount > 0 ? (cashedCount / endedCount) * 100 : 0;
+  // Clamp to [0, 100]
+  itmPercentage = Math.min(100, Math.max(0, itmPercentage));
+  
+  const itmDisplay = endedCount === 0 ? '—' : `${itmPercentage.toFixed(1)}%`;
   
   // Calculate total hands entered across all sessions
   const totalHands = completedSessions.reduce((total, session) => {
@@ -241,7 +230,7 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
         <div className="grid grid-cols-3 gap-4 text-center mb-4">
           <div className="grid place-items-center gap-1">
             <MobileStackTitle text="ITM %" />
-            <span className="text-xl font-bold">{itmPercentage.toFixed(1)}%</span>
+            <span className="text-xl font-bold">{itmDisplay}</span>
           </div>
           
           <div className="grid place-items-center gap-1">
@@ -267,7 +256,7 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
             
             <div className="grid place-items-center gap-1">
               <MobileStackTitle text="ITM %" />
-              <span className="text-base font-bold">{itmPercentage.toFixed(1)}%</span>
+              <span className="text-base font-bold">{itmDisplay}</span>
             </div>
             
             <div className="grid place-items-center gap-1">
