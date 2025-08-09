@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { calculateOverallResults, calculateSessionProfit } from '@/utils/sessionCalculations';
-import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
+import { getCurrencySymbol, useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 
 export default function StatsQuickView({ showExtendedMetrics = false }: { showExtendedMetrics?: boolean }) {
   const { sessions, isLoading } = useSessionContext();
   const [showCurrencyBreakdown, setShowCurrencyBreakdown] = useState(false);
-  
+  const { defaultCurrency } = useDefaultCurrency();
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-4 mb-6">
@@ -132,6 +132,42 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
   const formatCurrency = (amount: number): string => {
     return amount % 1 === 0 ? amount.toLocaleString() : amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
+
+  const currencySymbol = getCurrencySymbol(defaultCurrency);
+  const displayCurrency = (amount: number): string => {
+    const abs = Math.abs(amount);
+    const formatted = `${currencySymbol}${formatCurrency(abs)}`;
+    return amount < 0 ? `-${formatted}` : formatted;
+  };
+
+  // Extended metrics (reactive to sessions)
+  const totalBuyInsAll = completedSessions.reduce((sum, s) => {
+    const tablesBuyIn = s.tables && s.tables.length > 0 ? s.tables.reduce((tSum, t) => tSum + (t.buyIn || 0), 0) : 0;
+    const sessionBuyIn = !s.tables || s.tables.length === 0 ? (s.buyIn || 0) : 0;
+    return sum + tablesBuyIn + sessionBuyIn;
+  }, 0);
+
+  const totalProfitAll = completedSessions.reduce((sum, s) => sum + calculateSessionProfit(s), 0);
+  const avgBuyIn = completedSessions.length > 0 ? totalBuyInsAll / completedSessions.length : 0;
+  const bestSessionProfit = completedSessions.length > 0 ? completedSessions.reduce((max, s) => {
+    const p = calculateSessionProfit(s);
+    return p > max ? p : max;
+  }, -Infinity) : 0;
+  const normalizedBest = bestSessionProfit === -Infinity ? 0 : bestSessionProfit;
+
+  const totalTables = completedSessions.reduce((sum, s) => {
+    if (s.tables && s.tables.length > 0) return sum + s.tables.length;
+    if (s.tablesPlayed && s.tablesPlayed > 0) return sum + s.tablesPlayed;
+    return sum + 1;
+  }, 0);
+
+  const isCash = (f?: string) => !!f && (f.toLowerCase().includes('cash') || f.toLowerCase().includes('home'));
+  const isTournament = (f?: string) => !!f && f.toLowerCase().includes('tournament');
+
+  const cashGameProfit = completedSessions.reduce((sum, s) => isCash(s.format) ? sum + calculateSessionProfit(s) : sum, 0);
+  const tournamentProfit = completedSessions.reduce((sum, s) => isTournament(s.format) ? sum + calculateSessionProfit(s) : sum, 0);
+
+  const roiPercent = totalBuyInsAll > 0 ? (totalProfitAll / totalBuyInsAll) * 100 : 0;
   
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
@@ -189,17 +225,17 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
           <div className="grid grid-cols-3 gap-4 text-center mb-4">
             <div className="flex flex-col items-center justify-center">
               <span className="text-gray-500 text-sm mb-1">Best Session</span>
-              <span className="text-lg font-bold">—</span>
+              <span className="text-lg font-bold">{completedSessions.length === 0 ? '—' : displayCurrency(normalizedBest)}</span>
             </div>
             
             <div className="flex flex-col items-center justify-center">
               <span className="text-gray-500 text-sm mb-1">Avg Buy-in</span>
-              <span className="text-lg font-bold">$0</span>
+              <span className="text-lg font-bold">{displayCurrency(avgBuyIn)}</span>
             </div>
             
             <div className="flex flex-col items-center justify-center">
               <span className="text-gray-500 text-sm mb-1">ROI %</span>
-              <span className="text-lg font-bold">0%</span>
+              <span className="text-lg font-bold">{roiPercent.toFixed(1)}%</span>
             </div>
           </div>
           
@@ -207,17 +243,17 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
           <div className="grid grid-cols-3 gap-4 text-center">
             <div className="flex flex-col items-center justify-center">
               <span className="text-gray-500 text-sm mb-1">Total Tables</span>
-              <span className="text-lg font-bold">0</span>
+              <span className="text-lg font-bold">{totalTables}</span>
             </div>
             
             <div className="flex flex-col items-center justify-center">
               <span className="text-gray-500 text-sm mb-1">Cash Game Profit</span>
-              <span className="text-lg font-bold">$0</span>
+              <span className="text-lg font-bold">{displayCurrency(cashGameProfit)}</span>
             </div>
             
             <div className="flex flex-col items-center justify-center">
               <span className="text-gray-500 text-sm mb-1">Tournament Profit</span>
-              <span className="text-lg font-bold">$0</span>
+              <span className="text-lg font-bold">{displayCurrency(tournamentProfit)}</span>
             </div>
           </div>
         </>
