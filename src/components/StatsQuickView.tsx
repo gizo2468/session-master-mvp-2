@@ -211,12 +211,12 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
       <div className="grid grid-cols-3 gap-4 text-center mb-4">
         <div className="grid place-items-center gap-1">
           <MobileStackTitle text="Sessions" />
-          <span className="text-base font-bold">{totalSessions}</span>
+          <span className={showExtendedMetrics ? "text-base font-bold" : "text-xl font-bold"}>{totalSessions}</span>
         </div>
         
         <div className="grid place-items-center gap-1">
           <MobileStackTitle text="Record" />
-          <span className="text-base font-bold">{wins}W - {losses}L</span>
+          <span className={showExtendedMetrics ? "text-base font-bold" : "text-xl font-bold"}>{wins}W - {losses}L</span>
         </div>
         
         <div className="grid place-items-center gap-1">
@@ -241,17 +241,17 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
         <div className="grid grid-cols-3 gap-4 text-center mb-4">
           <div className="grid place-items-center gap-1">
             <MobileStackTitle text="ITM %" />
-            <span className="text-base font-bold">{itmPercentage.toFixed(1)}%</span>
+            <span className="text-xl font-bold">{itmPercentage.toFixed(1)}%</span>
           </div>
           
           <div className="grid place-items-center gap-1">
             <MobileStackTitle text="Total Hands" />
-            <span className="text-base font-bold">{totalHands}</span>
+            <span className="text-xl font-bold">{totalHands}</span>
           </div>
           
           <div className="grid place-items-center gap-1">
             <MobileStackTitle text="Avg Duration" />
-            <span className="text-base font-bold">{averageHours.toFixed(1)}h</span>
+            <span className="text-xl font-bold">{averageHours.toFixed(1)}h</span>
           </div>
         </div>
       )}
