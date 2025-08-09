@@ -72,16 +72,16 @@ const Dashboard: React.FC = () => {
             {user.role === 'coach' ? (
               <div className="space-y-6">
                 <p className="text-lg font-medium text-poker-feltGreen">Coach Dashboard</p>
-                <PlayerAllTimeChart />
-                <StatsQuickView showExtendedMetrics />
                 <MyCoachingNetwork />
+                <StatsQuickView showExtendedMetrics />
+                <PlayerAllTimeChart />
               </div>
             ) : (
               <div className="space-y-6">
                 <p className="text-lg font-medium text-poker-feltGreen">Player Dashboard</p>
-                <PlayerAllTimeChart />
-                <StatsQuickView showExtendedMetrics />
                 <MyCoachingNetwork />
+                <StatsQuickView showExtendedMetrics />
+                <PlayerAllTimeChart />
               </div>
             )}
           </div>
