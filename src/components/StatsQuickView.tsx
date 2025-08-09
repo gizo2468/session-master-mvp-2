@@ -176,12 +176,12 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
       <div className="grid grid-cols-3 gap-4 text-center mb-4">
         <div className="flex flex-col items-center justify-center">
           <span className="text-gray-500 text-sm mb-1">Sessions</span>
-          <span className="text-lg font-bold">{totalSessions}</span>
+          <span className="text-base font-bold">{totalSessions}</span>
         </div>
         
         <div className="flex flex-col items-center justify-center">
           <span className="text-gray-500 text-sm mb-1">Record</span>
-          <span className="text-lg font-bold">{wins}W - {losses}L</span>
+          <span className="text-base font-bold">{wins}W - {losses}L</span>
         </div>
         
         <div className="flex flex-col items-center justify-center">
@@ -205,17 +205,17 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
       <div className="grid grid-cols-3 gap-4 text-center mb-4">
         <div className="flex flex-col items-center justify-center">
           <span className="text-gray-500 text-sm mb-1">ITM %</span>
-          <span className="text-lg font-bold">{itmPercentage.toFixed(1)}%</span>
+          <span className="text-base font-bold">{itmPercentage.toFixed(1)}%</span>
         </div>
         
         <div className="flex flex-col items-center justify-center">
           <span className="text-gray-500 text-sm mb-1">Total Hands</span>
-          <span className="text-lg font-bold">{totalHands}</span>
+          <span className="text-base font-bold">{totalHands}</span>
         </div>
         
         <div className="flex flex-col items-center justify-center">
           <span className="text-gray-500 text-sm mb-1">Avg Duration</span>
-          <span className="text-lg font-bold">{averageHours.toFixed(1)}h</span>
+          <span className="text-base font-bold">{averageHours.toFixed(1)}h</span>
         </div>
       </div>
       
@@ -225,17 +225,17 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
           <div className="grid grid-cols-3 gap-4 text-center mb-4">
             <div className="flex flex-col items-center justify-center">
               <span className="text-gray-500 text-sm mb-1">Best Session</span>
-              <span className="text-lg font-bold">{completedSessions.length === 0 ? '—' : displayCurrency(normalizedBest)}</span>
+              <span className="text-base font-bold">{completedSessions.length === 0 ? '—' : displayCurrency(normalizedBest)}</span>
             </div>
             
             <div className="flex flex-col items-center justify-center">
               <span className="text-gray-500 text-sm mb-1">Avg Buy-in</span>
-              <span className="text-lg font-bold">{displayCurrency(avgBuyIn)}</span>
+              <span className="text-base font-bold">{displayCurrency(Math.round(avgBuyIn))}</span>
             </div>
             
             <div className="flex flex-col items-center justify-center">
               <span className="text-gray-500 text-sm mb-1">ROI %</span>
-              <span className="text-lg font-bold">{roiPercent.toFixed(1)}%</span>
+              <span className="text-base font-bold">{roiPercent.toFixed(1)}%</span>
             </div>
           </div>
           
@@ -243,17 +243,17 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
           <div className="grid grid-cols-3 gap-4 text-center">
             <div className="flex flex-col items-center justify-center">
               <span className="text-gray-500 text-sm mb-1">Total Tables</span>
-              <span className="text-lg font-bold">{totalTables}</span>
+              <span className="text-base font-bold">{totalTables}</span>
             </div>
             
             <div className="flex flex-col items-center justify-center">
-              <span className="text-gray-500 text-sm mb-1">Cash Game Profit</span>
-              <span className="text-lg font-bold">{displayCurrency(cashGameProfit)}</span>
+              <span className="text-gray-500 text-sm mb-1">Cash Profit</span>
+              <span className="text-base font-bold">{displayCurrency(cashGameProfit)}</span>
             </div>
             
             <div className="flex flex-col items-center justify-center">
               <span className="text-gray-500 text-sm mb-1">Tournament Profit</span>
-              <span className="text-lg font-bold">{displayCurrency(tournamentProfit)}</span>
+              <span className="text-base font-bold">{displayCurrency(tournamentProfit)}</span>
             </div>
           </div>
         </>
