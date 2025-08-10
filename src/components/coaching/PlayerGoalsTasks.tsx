@@ -11,6 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import Icon from '@/components/ui/Lucide';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 export type PlayerGoal = {
   id: string;
@@ -46,6 +47,7 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
   const [goals, setGoals] = useState<PlayerGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const { toast } = useToast();
 
   // New goal form (coach only)
   const [title, setTitle] = useState('');
@@ -134,6 +136,19 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!isCoach) return;
+    if (!window.confirm("Delete this item?")) return;
+    try {
+      const { error } = await supabase.from('player_goals').delete().eq('id', id);
+      if (error) throw error;
+      setGoals((prev) => prev.filter((g) => g.id !== id));
+    } catch (e: any) {
+      console.error('Failed to delete goal', e);
+      toast({ title: 'Delete failed', description: e?.message || 'Could not delete item.', variant: 'destructive' });
+    }
+  };
+
   return (
     <Card className="mb-6">
       <CardHeader>
@@ -205,12 +220,19 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
             ) : (
               <div className="space-y-2">
                 {goals.map((g) => (
-                   <div key={g.id} className="p-4 rounded-lg border bg-card/30">
-                     <div className="mb-1">
-                       <span className="font-semibold text-base text-primary">{toTitleCase(g.title)}</span>
+                   <div key={g.id} className={isCoach ? "flex items-start justify-between p-4 rounded-lg border bg-card/30" : "p-4 rounded-lg border bg-card/30"}>
+                     <div className={isCoach ? "pr-4" : ""}>
+                       <div className="mb-1">
+                         <span className="font-semibold text-base text-primary">{toTitleCase(g.title)}</span>
+                       </div>
+                       {g.details && (
+                         <div className="text-sm text-muted-foreground whitespace-pre-wrap">{g.details}</div>
+                       )}
                      </div>
-                     {g.details && (
-                       <div className="text-sm text-muted-foreground whitespace-pre-wrap">{g.details}</div>
+                     {isCoach && (
+                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleDelete(g.id)} aria-label="Delete item">
+                         <Icon name="Trash2" className="h-4 w-4" />
+                       </Button>
                      )}
                    </div>
                 ))}
