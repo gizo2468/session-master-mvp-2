@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -86,8 +86,9 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
   const [color, setColor] = useState<'red' | 'yellow' | 'orange' | 'green' | 'purple'>('yellow');
   const [imageFile, setImageFile] = useState<File | null>(null);
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isCoach = mode === 'coach';
-  const sectionTitle = isCoach ? 'Player Goals & Tasks' : 'Key Focus Points';
+  const sectionTitle = 'Key Focus Points';
 
   const filters = useMemo(() => ({
     student_id: studentId,
@@ -233,11 +234,17 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <Input
+                    <input
+                      ref={fileInputRef}
                       type="file"
                       accept="image/*"
                       onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                      className="sr-only"
+                      aria-label="Attach Picture"
                     />
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                      Attach Picture
+                    </Button>
                   </div>
                   <div>
                     <Select value={color} onValueChange={(v) => setColor(v as 'red' | 'yellow' | 'orange' | 'green' | 'purple')}>
