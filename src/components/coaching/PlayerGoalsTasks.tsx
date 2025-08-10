@@ -35,6 +35,12 @@ const statusLabel: Record<string, string> = {
   completed: 'Completed',
 };
 
+const toTitleCase = (str: string): string => {
+  return str.replace(/\w\S*/g, (txt) => 
+    txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+  );
+};
+
 export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksProps) {
   const { user } = useAuth();
   const [goals, setGoals] = useState<PlayerGoal[]>([]);
@@ -215,7 +221,7 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
                         </div>
                       ) : (
                         <div className="mb-1">
-                          <span className="font-semibold text-base text-primary">{g.title}</span>
+                          <span className="font-semibold text-base text-primary">{toTitleCase(g.title)}</span>
                         </div>
                       )}
                       {g.details && (
