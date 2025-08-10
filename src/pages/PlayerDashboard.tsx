@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import Icon from '@/components/ui/Lucide';
 import PlayerReviewForm from '@/components/coaching/PlayerReviewForm';
+import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
 
 interface PlayerReview {
   id: string;
@@ -65,6 +66,7 @@ const PlayerDashboard = () => {
         </header>
         
         <div className="grid grid-cols-1 gap-6 mb-6">
+          {user?.id && <PlayerGoalsTasks studentId={user.id} mode="player" />}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

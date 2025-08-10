@@ -17,6 +17,7 @@ import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useCoachStudent } from '@/context/CoachStudentContext';
+import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
 
 interface PlayerProfile {
   id: string;
@@ -471,6 +472,9 @@ const PlayerProfile = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Player Goals & Tasks */}
+        <PlayerGoalsTasks studentId={playerId!} mode="coach" />
 
         {/* Summary */}
         {summary && (
