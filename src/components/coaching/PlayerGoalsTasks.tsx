@@ -205,43 +205,14 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
             ) : (
               <div className="space-y-2">
                 {goals.map((g) => (
-                  <div key={g.id} className={isCoach ? "flex items-start justify-between p-4 rounded-lg border bg-card/30" : "p-4 rounded-lg border bg-card/30"}>
-                    <div className={isCoach ? "pr-4" : ""}>
-                      {isCoach ? (
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium">{g.title}</span>
-                          <Badge variant={g.status === 'completed' ? 'default' : 'outline'} className="text-xs">
-                            {statusLabel[g.status] || g.status}
-                          </Badge>
-                          {g.due_date && (
-                            <Badge variant="secondary" className="text-xs">
-                              Due {format(new Date(g.due_date), 'PP')}
-                            </Badge>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="mb-1">
-                          <span className="font-semibold text-base text-primary">{toTitleCase(g.title)}</span>
-                        </div>
-                      )}
-                      {g.details && (
-                        <div className="text-sm text-muted-foreground whitespace-pre-wrap">{g.details}</div>
-                      )}
-                    </div>
-                    {isCoach && (
-                      <div className="flex items-center gap-2">
-                        {g.status !== 'pending' && (
-                          <Button size="sm" variant="ghost" onClick={() => updateStatus(g.id, 'pending')}>Set Pending</Button>
-                        )}
-                        {g.status !== 'in_progress' && (
-                          <Button size="sm" variant="ghost" onClick={() => updateStatus(g.id, 'in_progress')}>In Progress</Button>
-                        )}
-                        {g.status !== 'completed' && (
-                          <Button size="sm" variant="outline" onClick={() => updateStatus(g.id, 'completed')}>Complete</Button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                   <div key={g.id} className="p-4 rounded-lg border bg-card/30">
+                     <div className="mb-1">
+                       <span className="font-semibold text-base text-primary">{toTitleCase(g.title)}</span>
+                     </div>
+                     {g.details && (
+                       <div className="text-sm text-muted-foreground whitespace-pre-wrap">{g.details}</div>
+                     )}
+                   </div>
                 ))}
               </div>
             )}
