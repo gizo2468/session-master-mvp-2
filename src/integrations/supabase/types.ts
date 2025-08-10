@@ -101,6 +101,42 @@ export type Database = {
         }
         Relationships: []
       }
+      player_goals: {
+        Row: {
+          coach_id: string
+          created_at: string
+          details: string | null
+          due_date: string | null
+          id: string
+          status: string
+          student_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          details?: string | null
+          due_date?: string | null
+          id?: string
+          status?: string
+          student_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          details?: string | null
+          due_date?: string | null
+          id?: string
+          status?: string
+          student_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           bio: string | null
