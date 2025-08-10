@@ -215,7 +215,7 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
                         </div>
                       ) : (
                         <div className="mb-1">
-                          <span className="font-semibold text-base">{g.title}</span>
+                          <span className="font-semibold text-base text-primary">{g.title}</span>
                         </div>
                       )}
                       {g.details && (
