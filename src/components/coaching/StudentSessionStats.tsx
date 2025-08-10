@@ -30,14 +30,21 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
       const { data: sessions, error } = await supabase
         .from('sessions')
         .select('*')
-        .eq('user_id', studentId);
+        .eq('user_id', studentId)
+        // Only include finished sessions (exclude live/ongoing)
+        .or('is_active.eq.false,status.eq.completed,current_status.eq.ended');
 
       if (error) {
         console.error('❌ Error loading session stats:', error);
         return;
       }
 
-      if (!sessions || sessions.length === 0) {
+      // Keep only finished sessions with a valid end_time
+      const finishedSessions = (sessions || []).filter((s: any) =>
+        (s.is_active === false || s.status === 'completed' || s.current_status === 'ended') && !!s.end_time
+      );
+
+      if (finishedSessions.length === 0) {
         setStats({
           totalSessions: 0,
           totalHours: 0,
@@ -48,32 +55,32 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
         return;
       }
 
-      // Calculate statistics
-      const totalSessions = sessions.length;
-      
-      const totalMinutes = sessions.reduce((sum, session) => {
+      // Calculate statistics from finished sessions only
+      const totalSessions = finishedSessions.length;
+
+      const totalMinutes = finishedSessions.reduce((sum: number, session: any) => {
         const start = new Date(session.start_time);
         const end = new Date(session.end_time);
-        const duration = Math.floor((end.getTime() - start.getTime()) / (1000 * 60));
-        return sum + duration;
+        const duration = Math.max(0, Math.floor((end.getTime() - start.getTime()) / (1000 * 60)));
+        return sum + (isFinite(duration) ? duration : 0);
       }, 0);
-      
+
       const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
       const averageSessionLength = Math.round(totalMinutes / totalSessions);
-      
-      const lastSession = sessions.sort((a, b) => 
-        new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
-      )[0];
-      
+
+      const lastSession = finishedSessions
+        .slice()
+        .sort((a: any, b: any) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())[0];
+
       // Find most played game type
-      const gameTypeCounts = sessions.reduce((acc, session) => {
+      const gameTypeCounts = finishedSessions.reduce((acc: Record<string, number>, session: any) => {
         const gameType = session.game_type || 'Unknown';
         acc[gameType] = (acc[gameType] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
-      
-      const mostPlayedGameType = Object.keys(gameTypeCounts).length > 0 
-        ? Object.entries(gameTypeCounts).sort(([,a], [,b]) => b - a)[0][0]
+
+      const mostPlayedGameType = Object.keys(gameTypeCounts).length > 0
+        ? Object.entries(gameTypeCounts).sort(([, a], [, b]) => b - a)[0][0]
         : null;
 
       setStats({
