@@ -21,6 +21,7 @@ export type PlayerGoal = {
   status: 'pending' | 'in_progress' | 'completed' | string;
   created_at: string;
   updated_at: string;
+  image_url?: string | null;
 };
 
 interface PlayerGoalsTasksProps {
@@ -83,6 +84,7 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   const [color, setColor] = useState<'red' | 'yellow' | 'orange' | 'green' | 'purple'>('yellow');
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const isCoach = mode === 'coach';
   const sectionTitle = isCoach ? 'Player Goals & Tasks' : 'Key Focus Points';
@@ -135,6 +137,20 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
     if (!user?.id || !title.trim()) return;
     setAdding(true);
     try {
+      // Upload image if provided
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        const ext = imageFile.name.split('.').pop() || 'jpg';
+        const safeName = imageFile.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+        const filePath = `player_goals_images/${user.id}/${Date.now()}_${safeName}`;
+        const { error: uploadError } = await supabase.storage
+          .from('tutorial_images')
+          .upload(filePath, imageFile, { upsert: true, contentType: imageFile.type });
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from('tutorial_images').getPublicUrl(filePath);
+        imageUrl = data.publicUrl || null;
+      }
+
       const payload = {
         coach_id: user.id,
         student_id: studentId,
@@ -142,15 +158,18 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
         details: details.trim() || null,
         status: 'pending',
         color,
-      };
+        image_url: imageUrl,
+      } as const;
       const { error } = await supabase.from('player_goals').insert(payload);
       if (error) throw error;
       setTitle("");
       setDetails("");
       setColor('yellow');
+      setImageFile(null);
       await loadGoals(false);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to add goal', e);
+      toast({ title: 'Upload failed', description: e?.message || 'Could not add goal.', variant: 'destructive' });
     } finally {
       setAdding(false);
     }
@@ -211,6 +230,13 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
                       placeholder="Details / Notes (optional)"
                       value={details}
                       onChange={(e) => setDetails(e.target.value)}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
                     />
                   </div>
                   <div>
@@ -275,10 +301,15 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
                 {goals.map((g) => (
                    <div key={g.id} className={isCoach ? "flex items-start justify-between p-4 rounded-lg border bg-card/30" : "p-4 rounded-lg border bg-card/30"}>
                      <div className={isCoach ? "pr-4" : ""}>
-                       <div className="mb-1 flex items-center gap-2">
-                         <span className={`h-2 w-2 rounded-full ${colorDotBgClass(g.color)}`} />
-                         <span className={`font-semibold text-base ${titleColorClass(g.color)}`}>{toTitleCase(g.title)}</span>
-                       </div>
+                        <div className="mb-1 flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full ${colorDotBgClass(g.color)}`} />
+                          <span className={`font-semibold text-base ${titleColorClass(g.color)}`}>{toTitleCase(g.title)}</span>
+                          {g.image_url && (
+                            <a href={g.image_url} target="_blank" rel="noopener noreferrer" aria-label="View attached image">
+                              <Icon name="Image" className="h-4 w-4" />
+                            </a>
+                          )}
+                        </div>
                        {g.details && (
                          <div className="text-sm text-muted-foreground whitespace-pre-wrap">{g.details}</div>
                        )}

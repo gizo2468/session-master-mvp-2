@@ -109,6 +109,7 @@ export type Database = {
           details: string | null
           due_date: string | null
           id: string
+          image_url: string | null
           status: string
           student_id: string
           title: string
@@ -121,6 +122,7 @@ export type Database = {
           details?: string | null
           due_date?: string | null
           id?: string
+          image_url?: string | null
           status?: string
           student_id: string
           title: string
@@ -133,6 +135,7 @@ export type Database = {
           details?: string | null
           due_date?: string | null
           id?: string
+          image_url?: string | null
           status?: string
           student_id?: string
           title?: string
