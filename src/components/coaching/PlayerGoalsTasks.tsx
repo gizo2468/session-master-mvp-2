@@ -56,6 +56,22 @@ const titleColorClass = (c?: string | null): string => {
   }
 };
 
+const colorDotBgClass = (c?: string | null): string => {
+  switch ((c || 'yellow').toLowerCase()) {
+    case 'red':
+      return 'bg-poker-red';
+    case 'orange':
+      return 'bg-poker-orange';
+    case 'green':
+      return 'bg-poker-green';
+    case 'purple':
+      return 'bg-poker-purple';
+    case 'yellow':
+    default:
+      return 'bg-primary';
+  }
+};
+
 export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksProps) {
   const { user } = useAuth();
   const [goals, setGoals] = useState<PlayerGoal[]>([]);
@@ -200,14 +216,42 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
                   <div>
                     <Select value={color} onValueChange={(v) => setColor(v as 'red' | 'yellow' | 'orange' | 'green' | 'purple')}>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select color" />
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2.5 w-2.5 rounded-full ${colorDotBgClass(color)}`} />
+                          <SelectValue placeholder="Select color" />
+                        </div>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="red">Red</SelectItem>
-                        <SelectItem value="yellow">Yellow</SelectItem>
-                        <SelectItem value="orange">Orange</SelectItem>
-                        <SelectItem value="green">Green</SelectItem>
-                        <SelectItem value="purple">Purple</SelectItem>
+                        <SelectItem value="red">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 rounded-full bg-poker-red" />
+                            <span>Red</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="yellow">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                            <span>Yellow</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="orange">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 rounded-full bg-poker-orange" />
+                            <span>Orange</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="green">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 rounded-full bg-poker-green" />
+                            <span>Green</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="purple">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 rounded-full bg-poker-purple" />
+                            <span>Purple</span>
+                          </div>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -231,7 +275,8 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
                 {goals.map((g) => (
                    <div key={g.id} className={isCoach ? "flex items-start justify-between p-4 rounded-lg border bg-card/30" : "p-4 rounded-lg border bg-card/30"}>
                      <div className={isCoach ? "pr-4" : ""}>
-                       <div className="mb-1">
+                       <div className="mb-1 flex items-center gap-2">
+                         <span className={`h-2 w-2 rounded-full ${colorDotBgClass(g.color)}`} />
                          <span className={`font-semibold text-base ${titleColorClass(g.color)}`}>{toTitleCase(g.title)}</span>
                        </div>
                        {g.details && (
