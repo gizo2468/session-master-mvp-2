@@ -6,11 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/Lucide';
-import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
 export type PlayerGoal = {
@@ -20,6 +17,7 @@ export type PlayerGoal = {
   title: string;
   details?: string | null;
   due_date?: string | null; // ISO date (yyyy-MM-dd)
+  color?: string | null;
   status: 'pending' | 'in_progress' | 'completed' | string;
   created_at: string;
   updated_at: string;
@@ -42,6 +40,22 @@ const toTitleCase = (str: string): string => {
   );
 };
 
+const titleColorClass = (c?: string | null): string => {
+  switch ((c || 'yellow').toLowerCase()) {
+    case 'red':
+      return 'text-poker-red';
+    case 'orange':
+      return 'text-poker-orange';
+    case 'green':
+      return 'text-poker-green';
+    case 'purple':
+      return 'text-poker-purple';
+    case 'yellow':
+    default:
+      return 'text-primary';
+  }
+};
+
 export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksProps) {
   const { user } = useAuth();
   const [goals, setGoals] = useState<PlayerGoal[]>([]);
@@ -50,9 +64,9 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
   const { toast } = useToast();
 
   // New goal form (coach only)
-  const [title, setTitle] = useState('');
-  const [details, setDetails] = useState('');
-  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [title, setTitle] = useState("");
+  const [details, setDetails] = useState("");
+  const [color, setColor] = useState<'red' | 'yellow' | 'orange' | 'green' | 'purple'>('yellow');
 
   const isCoach = mode === 'coach';
   const sectionTitle = isCoach ? 'Player Goals & Tasks' : 'Key Focus Points';
@@ -110,14 +124,14 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
         student_id: studentId,
         title: title.trim(),
         details: details.trim() || null,
-        due_date: dueDate ? format(dueDate, 'yyyy-MM-dd') : null,
         status: 'pending',
+        color,
       };
       const { error } = await supabase.from('player_goals').insert(payload);
       if (error) throw error;
-      setTitle('');
-      setDetails('');
-      setDueDate(undefined);
+      setTitle("");
+      setDetails("");
+      setColor('yellow');
       await loadGoals(false);
     } catch (e) {
       console.error('Failed to add goal', e);
@@ -184,23 +198,18 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
                     />
                   </div>
                   <div>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start font-normal">
-                          <Icon name="Calendar" className="mr-2 h-4 w-4" />
-                          {dueDate ? format(dueDate, 'PPP') : 'Due date (optional)'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={dueDate}
-                          onSelect={setDueDate}
-                          initialFocus
-                          className={cn('p-3 pointer-events-auto')}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <Select value={color} onValueChange={(v) => setColor(v as 'red' | 'yellow' | 'orange' | 'green' | 'purple')}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select color" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="red">Red</SelectItem>
+                        <SelectItem value="yellow">Yellow</SelectItem>
+                        <SelectItem value="orange">Orange</SelectItem>
+                        <SelectItem value="green">Green</SelectItem>
+                        <SelectItem value="purple">Purple</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="flex items-end justify-end">
                     <Button onClick={addGoal} disabled={adding || !title.trim()}>
@@ -223,7 +232,7 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
                    <div key={g.id} className={isCoach ? "flex items-start justify-between p-4 rounded-lg border bg-card/30" : "p-4 rounded-lg border bg-card/30"}>
                      <div className={isCoach ? "pr-4" : ""}>
                        <div className="mb-1">
-                         <span className="font-semibold text-base text-primary">{toTitleCase(g.title)}</span>
+                         <span className={`font-semibold text-base ${titleColorClass(g.color)}`}>{toTitleCase(g.title)}</span>
                        </div>
                        {g.details && (
                          <div className="text-sm text-muted-foreground whitespace-pre-wrap">{g.details}</div>

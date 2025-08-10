@@ -104,6 +104,7 @@ export type Database = {
       player_goals: {
         Row: {
           coach_id: string
+          color: string | null
           created_at: string
           details: string | null
           due_date: string | null
@@ -115,6 +116,7 @@ export type Database = {
         }
         Insert: {
           coach_id: string
+          color?: string | null
           created_at?: string
           details?: string | null
           due_date?: string | null
@@ -126,6 +128,7 @@ export type Database = {
         }
         Update: {
           coach_id?: string
+          color?: string | null
           created_at?: string
           details?: string | null
           due_date?: string | null
