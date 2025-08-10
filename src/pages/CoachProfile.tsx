@@ -11,6 +11,7 @@ import CoachProfileCard from '@/components/coaching/CoachProfileCard';
 import PageContainer from '@/components/ui/PageContainer';
 import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
+import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
 
 interface CoachData {
   id: string;
@@ -324,6 +325,9 @@ const CoachProfile: React.FC = () => {
           )}
           </CardContent>
         </Card>
+
+        {/* Coach Goals & Tasks */}
+        {user?.id && <PlayerGoalsTasks studentId={user.id} mode="player" />}
 
         {/* Session Modal */}
         {selectedSessionId && selectedPlayerId && (
