@@ -65,6 +65,7 @@ const PlayerProfile = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { removeStudent } = useCoachStudent();
+  const [unreadBySession, setUnreadBySession] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!playerId || !user?.id) return;
@@ -156,6 +157,9 @@ const PlayerProfile = () => {
       
       setSharedSessions(sortedSessions);
       
+      // Load unread flags for these sessions
+      await fetchUnreadForSessions(sortedSessions);
+      
       // Calculate summary
       calculateSummary(sessions);
 
@@ -223,8 +227,36 @@ const PlayerProfile = () => {
       mostPlayedFormat
     });
   };
+  
+  // Load unread flags for a list of sessions using RPC
+  const fetchUnreadForSessions = async (sessionsList: SharedSession[]) => {
+    if (!sessionsList.length) return;
+    try {
+      const entries = await Promise.all(
+        sessionsList.map(async (s) => {
+          const { data, error } = await (supabase as any).rpc('has_unread_for_session', { p_session_id: s.id });
+          if (error) {
+            console.warn('has_unread_for_session error', error);
+          }
+          return [s.id, data === true] as const;
+        })
+      );
+      const map: Record<string, boolean> = {};
+      entries.forEach(([id, flag]) => { map[id] = flag; });
+      setUnreadBySession(map);
+    } catch (e) {
+      console.warn('Failed loading unread flags', e);
+    }
+  };
 
-  const handleSessionClick = (sessionId: string) => {
+  // When opening a session, mark its unread as read via RPC
+  const handleSessionClick = async (sessionId: string) => {
+    try {
+      await (supabase as any).rpc('mark_unread_for_session', { p_session_id: sessionId });
+      setUnreadBySession((prev) => ({ ...prev, [sessionId]: false }));
+    } catch (e) {
+      console.warn('mark_unread_for_session failed', e);
+    }
     setSelectedSessionId(sessionId);
     setIsModalOpen(true);
   };
@@ -409,6 +441,9 @@ const PlayerProfile = () => {
                             <Badge variant="default" className="text-xs">
                               Live
                             </Badge>
+                          )}
+                          {unreadBySession[session.id] && (
+                            <span className="ml-1 inline-flex h-2 w-2 rounded-full bg-destructive" aria-label="Unread activity" />
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground">
