@@ -324,7 +324,7 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
                   <div className="flex items-end justify-end">
                     <Button onClick={addGoal} disabled={adding || !title.trim()}>
                       <Icon name="Plus" className="mr-2 h-4 w-4" />
-                      Add Goal
+                      Add
                     </Button>
                   </div>
                 </div>
