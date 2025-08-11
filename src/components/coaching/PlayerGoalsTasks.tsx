@@ -85,6 +85,7 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
   const [details, setDetails] = useState("");
   const [color, setColor] = useState<'red' | 'yellow' | 'orange' | 'green' | 'purple'>('yellow');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isCoach = mode === 'coach';
@@ -167,6 +168,9 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
       setDetails("");
       setColor('yellow');
       setImageFile(null);
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+      setImagePreview(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       await loadGoals(false);
     } catch (e: any) {
       console.error('Failed to add goal', e);
@@ -238,13 +242,42 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
                       ref={fileInputRef}
                       type="file"
                       accept="image/*"
-                      onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0] ?? null;
+                        if (imagePreview) URL.revokeObjectURL(imagePreview);
+                        setImageFile(f);
+                        setImagePreview(f ? URL.createObjectURL(f) : null);
+                      }}
                       className="sr-only"
                       aria-label="Attach Picture"
                     />
-                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                      Attach Picture
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                        Attach Picture
+                      </Button>
+                      {imagePreview && (
+                        <div className="flex items-center gap-1">
+                          <div className="h-6 w-6 overflow-hidden rounded-sm border">
+                            <img src={imagePreview} alt="Selected image preview" className="h-full w-full object-cover" />
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0"
+                            onClick={() => {
+                              if (imagePreview) URL.revokeObjectURL(imagePreview);
+                              setImagePreview(null);
+                              setImageFile(null);
+                              if (fileInputRef.current) fileInputRef.current.value = "";
+                            }}
+                            aria-label="Remove attached image"
+                          >
+                            <span aria-hidden>×</span>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <Select value={color} onValueChange={(v) => setColor(v as 'red' | 'yellow' | 'orange' | 'green' | 'purple')}>
