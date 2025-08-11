@@ -334,7 +334,7 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
             {goals.length === 0 ? (
               <div className="text-center py-6 text-muted-foreground">
                 <Icon name="Inbox" className="mx-auto mb-2 h-8 w-8" />
-                <p className="text-sm">No goals yet.</p>
+                <p className="text-sm">No key focus points.</p>
               </div>
             ) : (
               <div className="space-y-2">
