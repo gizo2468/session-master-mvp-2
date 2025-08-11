@@ -52,6 +52,11 @@ interface SessionSummary {
   totalHours: number;
   winRate: number;
   mostPlayedFormat: string;
+  // New metrics based only on shared sessions
+  averageBuyIn: number;
+  sessionFrequency: number; // average sessions per unit
+  sessionFrequencyUnit: 'wk' | 'mo';
+  bestSharedResult: number;
 }
 
 const PlayerProfile = () => {
@@ -172,62 +177,91 @@ const PlayerProfile = () => {
     }
   };
 
-  const calculateSummary = (sessions: SharedSession[]) => {
-    if (sessions.length === 0) {
-      setSummary({
-        totalSharedSessions: 0,
-        totalProfit: 0,
-        averageSessionLength: 0,
-        totalHours: 0,
-        winRate: 0,
-        mostPlayedFormat: 'N/A'
-      });
-      return;
-    }
-
-    const completedSessions = sessions.filter(s => !s.is_active && s.end_time);
-    
-    const totalProfit = completedSessions.reduce((sum, session) => {
-      const profit = (session.cash_out || 0) - session.buy_in;
-      return sum + profit;
-    }, 0);
-
-    const totalMinutes = completedSessions.reduce((sum, session) => {
-      if (!session.end_time) return sum;
-      const start = new Date(session.start_time);
-      const end = new Date(session.end_time);
-      return sum + Math.floor((end.getTime() - start.getTime()) / (1000 * 60));
-    }, 0);
-
-    const averageSessionLength = completedSessions.length > 0 
-      ? Math.round(totalMinutes / completedSessions.length) 
-      : 0;
-
-    const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
-
-    const winRate = completedSessions.length > 0 
-      ? Math.round((completedSessions.filter(s => (s.cash_out || 0) > s.buy_in).length / completedSessions.length) * 100)
-      : 0;
-
-    // Find most played format
-    const formatCounts = sessions.reduce((acc, session) => {
-      acc[session.format] = (acc[session.format] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const mostPlayedFormat = Object.keys(formatCounts).length > 0 
-      ? Object.entries(formatCounts).sort(([,a], [,b]) => b - a)[0][0]
-      : 'N/A';
-
+const calculateSummary = (sessions: SharedSession[]) => {
+  if (sessions.length === 0) {
     setSummary({
-      totalSharedSessions: sessions.length,
-      totalProfit,
-      averageSessionLength,
-      totalHours,
-      winRate,
-      mostPlayedFormat
+      totalSharedSessions: 0,
+      totalProfit: 0,
+      averageSessionLength: 0,
+      totalHours: 0,
+      winRate: 0,
+      mostPlayedFormat: 'N/A',
+      averageBuyIn: 0,
+      sessionFrequency: 0,
+      sessionFrequencyUnit: 'wk',
+      bestSharedResult: 0,
     });
-  };
+    return;
+  }
+
+  const completedSessions = sessions.filter(s => !s.is_active && s.end_time);
+  
+  const totalProfit = completedSessions.reduce((sum, session) => {
+    const profit = (session.cash_out || 0) - (session.buy_in || 0);
+    return sum + profit;
+  }, 0);
+
+  const totalMinutes = completedSessions.reduce((sum, session) => {
+    if (!session.end_time) return sum;
+    const start = new Date(session.start_time);
+    const end = new Date(session.end_time);
+    return sum + Math.floor((end.getTime() - start.getTime()) / (1000 * 60));
+  }, 0);
+
+  const averageSessionLength = completedSessions.length > 0 
+    ? Math.round(totalMinutes / completedSessions.length) 
+    : 0;
+
+  const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
+
+  const winRate = completedSessions.length > 0 
+    ? Math.round((completedSessions.filter(s => (s.cash_out || 0) > (s.buy_in || 0)).length / completedSessions.length) * 100)
+    : 0;
+
+  // Find most played format
+  const formatCounts = sessions.reduce((acc, session) => {
+    acc[session.format] = (acc[session.format] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const mostPlayedFormat = Object.keys(formatCounts).length > 0 
+    ? Object.entries(formatCounts).sort(([,a], [,b]) => b - a)[0][0]
+    : 'N/A';
+
+  // New metrics
+  const averageBuyIn = Math.round(
+    sessions.reduce((sum, s) => sum + (s.buy_in || 0), 0) / sessions.length
+  );
+
+  // Session Frequency
+  const sortedByStart = [...sessions].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+  const firstDate = new Date(sortedByStart[0].start_time);
+  const lastDate = new Date(sortedByStart[sortedByStart.length - 1].start_time);
+  const MS_PER_DAY = 1000 * 60 * 60 * 24;
+  const spanDays = Math.max(1, Math.round((lastDate.getTime() - firstDate.getTime()) / MS_PER_DAY) + 1);
+  const useMonthly = spanDays >= 56; // if span >= 8 weeks, show per month
+  const denom = useMonthly ? spanDays / 30 : spanDays / 7;
+  const sessionFrequency = Math.round((sessions.length / Math.max(1, denom)) * 10) / 10;
+  const sessionFrequencyUnit: 'wk' | 'mo' = useMonthly ? 'mo' : 'wk';
+
+  // Best single-session result
+  const bestSharedResult = completedSessions.length > 0
+    ? Math.max(...completedSessions.map(s => (s.cash_out || 0) - (s.buy_in || 0)))
+    : 0;
+
+  setSummary({
+    totalSharedSessions: sessions.length,
+    totalProfit,
+    averageSessionLength,
+    totalHours,
+    winRate,
+    mostPlayedFormat,
+    averageBuyIn,
+    sessionFrequency,
+    sessionFrequencyUnit,
+    bestSharedResult,
+  });
+};
   
   // Load unread flags for a list of sessions using RPC
   const fetchUnreadForSessions = async (sessionsList: SharedSession[]) => {
@@ -489,9 +523,9 @@ const PlayerProfile = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-poker-feltGreen">
-                    {summary.totalSharedSessions}
+                    {currencySymbol}{summary.averageBuyIn.toFixed(0)}
                   </div>
-                  <div className="text-xs text-gray-500">Shared Sessions</div>
+                  <div className="text-xs text-gray-500">Average Buy-in</div>
                 </div>
                 
                 <div className="text-center">
@@ -503,16 +537,16 @@ const PlayerProfile = () => {
                 
                 <div className="text-center">
                   <div className="text-2xl font-bold text-poker-feltGreen">
-                    {summary.totalHours}h
+                    {summary.sessionFrequency}{summary.sessionFrequencyUnit === 'wk' ? '/wk' : '/mo'}
                   </div>
-                  <div className="text-xs text-gray-500">Total Hours</div>
+                  <div className="text-xs text-gray-500">Session Frequency</div>
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-poker-feltGreen">
-                    {summary.averageSessionLength}m
+                  <div className={`text-2xl font-bold ${summary.bestSharedResult >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {summary.bestSharedResult >= 0 ? '+' : ''}{currencySymbol}{summary.bestSharedResult.toFixed(0)}
                   </div>
-                  <div className="text-xs text-gray-500">Avg Length</div>
+                  <div className="text-xs text-gray-500">Best Shared Result</div>
                 </div>
                 
                 <div className="text-center">
