@@ -79,18 +79,15 @@ const Signup: React.FC = () => {
     
     setIsCheckingUsername(true);
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username')
-        .ilike('username', username)
-        .limit(1);
+      const { data, error } = await (supabase as any)
+        .rpc('check_username_available', { p_username: username });
       
       if (error) {
         console.error('Error checking username:', error);
         return;
       }
       
-      if (data && data.length > 0) {
+      if (data === false) {
         form.setError('username', { message: 'Username is already taken' });
       } else {
         form.clearErrors('username');
@@ -108,18 +105,15 @@ const Signup: React.FC = () => {
     
     try {
       // Check if email exists in profiles table
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('email')
-        .ilike('email', email)
-        .limit(1);
+      const { data, error } = await (supabase as any)
+        .rpc('check_email_available', { p_email: email });
       
       if (error) {
         console.error('Error checking email availability:', error);
         return false;
       }
       
-      return data && data.length === 0; // true if email is available
+      return data === true; // true if email is available
     } catch (error) {
       console.error('Email check failed:', error);
       return false;
@@ -140,16 +134,13 @@ const Signup: React.FC = () => {
       
       // Final username availability check with proper error handling
       try {
-        const { data: existingUsers, error: checkError } = await supabase
-          .from('profiles')
-          .select('username')
-          .ilike('username', values.username)
-          .limit(1);
+        const { data: isAvailable, error: checkError } = await (supabase as any)
+          .rpc('check_username_available', { p_username: values.username });
         
         if (checkError) {
           // If username column doesn't exist yet, we'll handle it in the trigger
           console.warn("Username check failed (likely migration not applied):", checkError.message);
-        } else if (existingUsers && existingUsers.length > 0) {
+        } else if (isAvailable === false) {
           toast({
             title: "Username Unavailable",
             description: "The username you selected is already taken. Please choose a different one.",

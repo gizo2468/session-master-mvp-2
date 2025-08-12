@@ -778,6 +778,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_email_available: {
+        Args: { p_email: string }
+        Returns: boolean
+      }
+      check_username_available: {
+        Args: { p_username: string }
+        Returns: boolean
+      }
       end_session: {
         Args: {
           p_session_id: string
@@ -801,6 +809,22 @@ export type Database = {
       is_coach_for_student: {
         Args: { coach_user_id: string; student_user_id: string }
         Returns: boolean
+      }
+      search_coach_by_username: {
+        Args: { p_username: string }
+        Returns: {
+          id: string
+          username: string
+          role: string
+        }[]
+      }
+      search_student_by_username: {
+        Args: { p_username: string }
+        Returns: {
+          id: string
+          username: string
+          role: string
+        }[]
       }
       start_session: {
         Args: {

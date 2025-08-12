@@ -299,12 +299,9 @@ const MyCoachingNetwork: React.FC = () => {
     setConnecting(true);
     try {
       // Search for coach by username
-      const { data: coachProfile, error: searchError } = await supabase
-        .from('profiles')
-        .select('id, username, role')
-        .eq('username', coachUsername.trim())
-        .eq('role', 'coach')
-        .single();
+      const { data: coachProfile, error: searchError } = await (supabase as any)
+        .rpc('search_coach_by_username', { p_username: coachUsername.trim() })
+        .maybeSingle();
 
       if (searchError || !coachProfile) {
         toast({
@@ -404,12 +401,9 @@ const MyCoachingNetwork: React.FC = () => {
     setConnectingPlayer(true);
     try {
       // Search for player by username (role must be student)
-      const { data: playerProfile, error: searchError } = await supabase
-        .from('profiles')
-        .select('id, username, role')
-        .eq('username', playerUsername.trim())
-        .eq('role', 'student')
-        .single();
+      const { data: playerProfile, error: searchError } = await (supabase as any)
+        .rpc('search_student_by_username', { p_username: playerUsername.trim() })
+        .maybeSingle();
 
       if (searchError || !playerProfile) {
         toast({
