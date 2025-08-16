@@ -3,12 +3,14 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, ChevronDown, ChevronUp, Calendar, Plus } from 'lucide-react';
+import { Pencil, Trash2, ChevronDown, ChevronUp, Calendar, Plus, Hand } from 'lucide-react';
 import { TableData } from '@/types/poker';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import PastEditTableForm from './PastEditTableForm';
 import PastTableHandsPanel from './PastTableHandsPanel';
 import PastMultiDayEndDialog from './PastMultiDayEndDialog';
+import HandForm from './HandForm';
+import HandsList from './HandsList';
 
 interface PastTableCardProps {
   table: TableData;
@@ -20,7 +22,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
   const [isExpanded, setIsExpanded] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showMultiDayDialog, setShowMultiDayDialog] = useState(false);
-  const [showHandsPanel, setShowHandsPanel] = useState(false);
+  const [showAddHandForm, setShowAddHandForm] = useState(false);
 
   const isMultiDayTable = table.isMultiDay && table.format === 'Tournament';
   const isContinuing = table.dayEndedWithoutElimination;
@@ -143,14 +145,17 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                     )}
                     <Button
                       size="sm"
-                      variant="lightyellow"
+                      variant="ghost"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setShowHandsPanel(true);
+                        setShowAddHandForm(true);
                       }}
                       className="p-1"
                     >
-                      <Plus className="h-3 w-3 md:h-4 md:w-4" />
+                      <div className="flex items-center">
+                        <Plus className="h-3 w-3 md:h-4 md:w-4" />
+                        <Hand className="h-3 w-3 md:h-4 md:w-4 ml-0.5" />
+                      </div>
                     </Button>
                     <Button
                       size="sm"
@@ -244,13 +249,19 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                   </div>
                 )}
 
-                {/* Hands Management Panel - Only show when expanded */}
-                <div className="border-t pt-4">
-                  <PastTableHandsPanel
-                    table={table}
-                    onTableUpdate={handleTableUpdate}
-                  />
-                </div>
+                {/* Hands Display - Only show when expanded and has hands */}
+                {table.hands && table.hands.length > 0 && (
+                  <div className="border-t pt-4">
+                    <h4 className="text-sm font-medium mb-3 text-muted-foreground">Hands Played</h4>
+                    <HandsList
+                      hands={table.hands}
+                      onEditHand={() => {}} // Disable editing for now
+                      onDeleteHand={() => {}} // Disable deleting for now
+                      readOnly={true}
+                      tables={[table]}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </CollapsibleContent>
@@ -271,29 +282,25 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
         onComplete={handleMultiDayEnd}
       />
 
-      {/* Hands Management Modal */}
-      {showHandsPanel && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Manage Hands - {table.gameType} {table.format}</h2>
-                <Button
-                  variant="ghost"
-                  onClick={() => setShowHandsPanel(false)}
-                  className="p-2"
-                >
-                  ✕
-                </Button>
-              </div>
-              <PastTableHandsPanel
-                table={table}
-                onTableUpdate={handleTableUpdate}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Add Hand Form - Direct form without intermediate popup */}
+      <HandForm
+        open={showAddHandForm}
+        onOpenChange={setShowAddHandForm}
+        onSubmit={(handData) => {
+          const newHand = {
+            ...handData,
+            id: `${Date.now()}-${Math.random()}`,
+            createdAt: new Date(),
+            tableId: table.id,
+            currencyType: table.format === 'Cash' ? 'currency' : 'chips'
+          };
+          
+          const updatedHands = [...(table.hands || []), newHand];
+          handleTableUpdate(updatedHands);
+        }}
+        tableId={table.id}
+        tableFormat={table.format}
+      />
     </>
   );
 };
