@@ -210,9 +210,6 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                       <h4 className="font-medium text-center">
                         Table {index + 1} - {table.location}
                       </h4>
-                      <p className="text-sm text-gray-500 text-center">
-                        {formatTableDetails(table)} • {formattedStart}
-                      </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`font-bold ${profitClass}`}>
@@ -240,9 +237,9 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                     </div>
                   </div>
                   
-                  {/* Add Hand button on its own row */}
-                  {onAddHand && (
-                    <div className="flex justify-center mb-2">
+                  {/* Add Hand button and table details on same row */}
+                  <div className="flex justify-between items-center mb-2">
+                    {onAddHand && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -256,8 +253,11 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                           <span className="text-xs ml-1">Add Hand</span>
                         </div>
                       </Button>
-                    </div>
-                   )}
+                    )}
+                    <p className="text-sm text-gray-500">
+                      {formatTableDetails(table)} • {formattedStart}
+                    </p>
+                  </div>
                    
                    <div className="flex flex-wrap gap-2 justify-center">
                      {renderFinancialBadges(table)}
