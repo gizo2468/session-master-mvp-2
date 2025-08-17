@@ -10,6 +10,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
+import HandDetailsDialog from './HandDetailsDialog';
 
 interface HandsListProps {
   hands: HandData[];
@@ -18,9 +19,10 @@ interface HandsListProps {
   readOnly?: boolean; // Add readOnly prop
   sessionBuyIn?: number; // Buy-in amount for the session
   tables?: any[]; // Tables data to get table-specific buy-ins
+  onViewHand?: (hand: HandData) => void; // Optional prop for viewing hand details
 }
 
-const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, readOnly = false, sessionBuyIn, tables = [] }) => {
+const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, readOnly = false, sessionBuyIn, tables = [], onViewHand }) => {
   // Sort hands by createdAt date
   const sortedHands = [...hands].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -28,10 +30,21 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
 
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [handDetailsOpen, setHandDetailsOpen] = useState(false);
+  const [selectedHand, setSelectedHand] = useState<HandData | null>(null);
 
   const openImageModal = (imageData: string) => {
     setSelectedImage(imageData);
     setImageModalOpen(true);
+  };
+
+  const handleRowClick = (hand: HandData) => {
+    if (onViewHand) {
+      onViewHand(hand);
+    } else {
+      setSelectedHand(hand);
+      setHandDetailsOpen(true);
+    }
   };
 
   return (
@@ -53,14 +66,21 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
             </TableHeader>
             <TableBody>
               {sortedHands.map((hand) => (
-                <TableRow key={hand.id} className="group">
+                <TableRow 
+                  key={hand.id} 
+                  className="group cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleRowClick(hand)}
+                >
                   <TableCell className="py-3">
                     <div className="flex items-center gap-0.5">
                       <CardDisplay cards={hand.cards} size="sm" />
                       <div className="ml-1 flex items-center space-x-1">
                         {hand.image && (
                           <button
-                            onClick={() => openImageModal(hand.image as string)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openImageModal(hand.image as string);
+                            }}
                             className="text-blue-500 hover:text-blue-600" 
                             title="View hand image"
                           >
@@ -91,6 +111,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                             <Popover>
                               <PopoverTrigger asChild>
                                 <button
+                                  onClick={(e) => e.stopPropagation()}
                                   className="text-gray-500 hover:text-gray-700"
                                   aria-label="View hand notes"
                                 >
@@ -183,7 +204,10 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                         <Button 
                           size="sm" 
                           variant="ghost" 
-                          onClick={() => onEditHand(hand)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditHand(hand);
+                          }}
                           className="h-8 w-8 p-0 opacity-70 group-hover:opacity-100"
                           aria-label="Edit hand"
                         >
@@ -192,7 +216,10 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                         <Button 
                           size="sm" 
                           variant="ghost" 
-                          onClick={() => onDeleteHand(hand.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteHand(hand.id);
+                          }}
                           className="h-8 w-8 p-0 text-red-600 hover:text-red-800 opacity-70 group-hover:opacity-100"
                           aria-label="Delete hand"
                         >
@@ -229,6 +256,14 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
           </div>
         </DialogContent>
       </Dialog>
+
+      <HandDetailsDialog
+        open={handDetailsOpen}
+        onOpenChange={setHandDetailsOpen}
+        hand={selectedHand}
+        sessionBuyIn={sessionBuyIn}
+        tables={tables}
+      />
     </div>
   );
 };
