@@ -7,7 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { TableData, HandData } from '@/types/poker';
 import { format } from 'date-fns';
 import { Plus, Trash2, Hand } from 'lucide-react';
-import HandsList from './HandsList';
+import CardDisplay from './CardDisplay';
 import HandForm from './HandForm';
 
 interface TableSelectionModalProps {
@@ -166,12 +166,13 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Select Table to Edit</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-3 py-4">
+          <div className="max-h-[70vh] overflow-y-auto">
+            <div className="space-y-3 py-4">
             {tables.map((table, index) => {
               const profit = (table.cashOut || 0) - table.buyIn;
               const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
@@ -235,14 +236,49 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                           Hands ({table.hands.length})
                         </h5>
                       </div>
-                      <div className="max-h-40 overflow-y-auto">
-                        <HandsList
-                          hands={table.hands}
-                          onEditHand={handleEditHandClick}
-                          onDeleteHand={handleDeleteHandClick}
-                          sessionBuyIn={table.buyIn}
-                          tables={[table]}
-                        />
+                      <div className="max-h-32 overflow-y-auto overflow-x-hidden">
+                        <div className="min-w-0 w-full">
+                          {/* Compact hands list for modal */}
+                          <div className="space-y-1">
+                            {table.hands.map((hand, handIndex) => (
+                              <div
+                                key={hand.id}
+                                className="flex items-center justify-between p-2 bg-muted/30 rounded text-xs hover:bg-muted/50 transition-colors cursor-pointer"
+                                onClick={() => handleEditHandClick(hand)}
+                              >
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  <span className="font-mono font-medium shrink-0">
+                                    #{handIndex + 1}
+                                  </span>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <CardDisplay cards={hand.cards} size="sm" />
+                                  </div>
+                                  <span className="text-muted-foreground truncate">
+                                    {hand.position} • {hand.action}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {hand.resultAmount !== undefined && (
+                                    <span className={`font-medium ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                      {hand.resultAmount >= 0 ? '+' : ''}${hand.resultAmount.toFixed(0)}
+                                    </span>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteHandClick(hand.id);
+                                    }}
+                                    className="h-6 w-6 p-0 text-red-600 hover:text-red-800 opacity-70 hover:opacity-100"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -268,6 +304,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
