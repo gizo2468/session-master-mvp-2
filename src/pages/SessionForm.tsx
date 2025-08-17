@@ -300,7 +300,7 @@ export default function SessionForm() {
               name="gameType"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel className="text-base font-medium">Game Type</FormLabel>
+                  <FormLabel className="text-base font-medium">Game Type <span className="text-red-500 text-sm">*</span></FormLabel>
                   <FormControl>
                     <RadioGroup 
                       onValueChange={field.onChange} 
@@ -360,7 +360,7 @@ export default function SessionForm() {
               name="format"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel className="text-base font-medium">Format</FormLabel>
+                  <FormLabel className="text-base font-medium">Format <span className="text-red-500 text-sm">*</span></FormLabel>
                   <FormControl>
                     <RadioGroup 
                       onValueChange={field.onChange} 
@@ -461,7 +461,7 @@ export default function SessionForm() {
               name="currency"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">Currency</FormLabel>
+                  <FormLabel className="text-base font-medium">Currency <span className="text-red-500 text-sm">*</span></FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -504,7 +504,7 @@ export default function SessionForm() {
               name="buyIn"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">Buy-in Amount</FormLabel>
+                  <FormLabel className="text-base font-medium">Buy-in Amount <span className="text-red-500 text-sm">*</span></FormLabel>
                   <FormControl>
                     <div className="relative">
                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
