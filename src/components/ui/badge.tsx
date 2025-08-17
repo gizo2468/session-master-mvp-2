@@ -22,8 +22,8 @@ const badgeVariants = cva(
         poker: "border-transparent bg-green-600 text-white hover:bg-green-700",
         // New variants for session time badges
         timeStarted: "border-transparent bg-poker-cream text-poker-black rounded-xl",
-        timeDuration: "border-transparent bg-gray-100 text-poker-black rounded-xl",
-        timeEnded: "border-transparent bg-gray-200 text-poker-black rounded-xl",
+        timeDuration: "border-transparent bg-poker-cream text-poker-black rounded-xl",
+        timeEnded: "border-transparent bg-poker-cream text-poker-black rounded-xl",
         // Enhanced coach plan badge variants with modern styling
         planFree: "border-transparent bg-gray-600 text-white px-4 py-1 rounded-md shadow-sm hover:shadow-md transition-all",
         planStarter: "border-transparent bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-1 rounded-md shadow-sm hover:shadow-md transition-all",
