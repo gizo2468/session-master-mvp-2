@@ -4,9 +4,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { TableData } from '@/types/poker';
+import { TableData, HandData } from '@/types/poker';
 import { format } from 'date-fns';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Hand } from 'lucide-react';
+import HandsList from './HandsList';
+import HandForm from './HandForm';
 
 interface TableSelectionModalProps {
   open: boolean;
@@ -15,6 +17,9 @@ interface TableSelectionModalProps {
   onSelectTable: (table: TableData) => void;
   onAddTable?: () => void;
   onDeleteTable?: (tableId: string) => void;
+  onAddHand?: (tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => void;
+  onEditHand?: (tableId: string, hand: HandData) => void;
+  onDeleteHand?: (tableId: string, handId: string) => void;
 }
 
 const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
@@ -23,10 +28,16 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
   tables,
   onSelectTable,
   onAddTable,
-  onDeleteTable
+  onDeleteTable,
+  onAddHand,
+  onEditHand,
+  onDeleteHand
 }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tableToDelete, setTableToDelete] = useState<TableData | null>(null);
+  const [handFormOpen, setHandFormOpen] = useState(false);
+  const [selectedTableForHand, setSelectedTableForHand] = useState<TableData | null>(null);
+  const [editingHand, setEditingHand] = useState<HandData | null>(null);
 
   const handleDeleteClick = (e: React.MouseEvent, table: TableData) => {
     e.stopPropagation(); // Prevent triggering table selection
@@ -45,6 +56,43 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
   const handleCancelDelete = () => {
     setDeleteDialogOpen(false);
     setTableToDelete(null);
+  };
+
+  const handleAddHand = (e: React.MouseEvent, table: TableData) => {
+    e.stopPropagation();
+    setSelectedTableForHand(table);
+    setEditingHand(null);
+    setHandFormOpen(true);
+  };
+
+  const handleEditHandClick = (hand: HandData) => {
+    const table = tables.find(t => t.id === hand.tableId);
+    if (table) {
+      setSelectedTableForHand(table);
+      setEditingHand(hand);
+      setHandFormOpen(true);
+    }
+  };
+
+  const handleDeleteHandClick = (handId: string) => {
+    const hand = tables.flatMap(t => t.hands || []).find(h => h.id === handId);
+    if (hand && onDeleteHand) {
+      onDeleteHand(hand.tableId, handId);
+    }
+  };
+
+  const handleHandSubmit = (handData: Partial<HandData>) => {
+    if (!selectedTableForHand) return;
+    
+    if (editingHand && onEditHand) {
+      onEditHand(selectedTableForHand.id, { ...editingHand, ...handData });
+    } else if (onAddHand) {
+      onAddHand(selectedTableForHand.id, handData);
+    }
+    
+    setHandFormOpen(false);
+    setSelectedTableForHand(null);
+    setEditingHand(null);
   };
   const formatTableDetails = (table: TableData) => {
     let details = `${table.gameType} • ${table.format}`;
@@ -148,6 +196,20 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                       <span className={`font-bold ${profitClass}`}>
                         {profit >= 0 ? '+' : ''}${profit.toFixed(2)}
                       </span>
+                      {onAddHand && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => handleAddHand(e, table)}
+                          className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                          title="Add Hand"
+                        >
+                          <div className="flex items-center">
+                            <Plus className="h-3 w-3" />
+                            <Hand className="h-3 w-3 ml-0.5" />
+                          </div>
+                        </Button>
+                      )}
                       {onDeleteTable && (
                         <Button
                           variant="ghost"
@@ -164,6 +226,26 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                   <div className="flex flex-wrap gap-2 justify-center">
                     {renderFinancialBadges(table)}
                   </div>
+                  
+                  {/* Hands List */}
+                  {table.hands && table.hands.length > 0 && (
+                    <div className="mt-4 pt-3 border-t">
+                      <div className="mb-2">
+                        <h5 className="text-sm font-medium text-gray-700">
+                          Hands ({table.hands.length})
+                        </h5>
+                      </div>
+                      <div className="max-h-40 overflow-y-auto">
+                        <HandsList
+                          hands={table.hands}
+                          onEditHand={handleEditHandClick}
+                          onDeleteHand={handleDeleteHandClick}
+                          sessionBuyIn={table.buyIn}
+                          tables={[table]}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -207,6 +289,17 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Hand Form Dialog */}
+      <HandForm
+        open={handFormOpen}
+        onOpenChange={setHandFormOpen}
+        onSubmit={handleHandSubmit}
+        initialData={editingHand || {}}
+        isEditing={!!editingHand}
+        tableId={selectedTableForHand?.id}
+        tableFormat={selectedTableForHand?.format}
+      />
     </>
   );
 };

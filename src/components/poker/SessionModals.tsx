@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PokerSession, TableData } from '@/types/poker';
+import { PokerSession, TableData, HandData } from '@/types/poker';
 import TableSelectionModal from './TableSelectionModal';
 import EditTableForm from './EditTableForm';
 import AddTableForm from './AddTableForm';
@@ -28,6 +28,9 @@ interface SessionModalsProps {
   onEndSession: () => void;
   onCashOutAmountChange: (amount: string) => void;
   onNotesChange: (notes: string) => void;
+  onAddHand?: (tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => void;
+  onEditHand?: (tableId: string, hand: HandData) => void;
+  onDeleteHand?: (tableId: string, handId: string) => void;
 }
 
 const SessionModals: React.FC<SessionModalsProps> = ({
@@ -52,7 +55,10 @@ const SessionModals: React.FC<SessionModalsProps> = ({
   onDelete,
   onEndSession,
   onCashOutAmountChange,
-  onNotesChange
+  onNotesChange,
+  onAddHand,
+  onEditHand,
+  onDeleteHand
 }) => {
   return (
     <>
@@ -64,6 +70,9 @@ const SessionModals: React.FC<SessionModalsProps> = ({
         onSelectTable={onTableSelect}
         onAddTable={onAddTableButtonClick}
         onDeleteTable={onDeleteTable}
+        onAddHand={onAddHand}
+        onEditHand={onEditHand}
+        onDeleteHand={onDeleteHand}
       />
 
       {/* Add Table Modal */}

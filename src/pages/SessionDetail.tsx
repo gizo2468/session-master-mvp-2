@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import TableDetailsCard from '@/components/poker/TableDetailsCard';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { TableData } from '@/types/poker';
+import { TableData, HandData } from '@/types/poker';
 import SessionDetailHeader from '@/components/poker/SessionDetailHeader';
 import SessionStatusBadges from '@/components/poker/SessionStatusBadges';
 import SessionInfoDisplay from '@/components/poker/SessionInfoDisplay';
@@ -17,7 +17,7 @@ import SessionModals from '@/components/poker/SessionModals';
 export default function SessionDetail() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const { updateSession, deleteSession, endSession, addTable, deleteTable } = useSessionContext();
+  const { updateSession, deleteSession, endSession, addTable, deleteTable, addTableHand, updateTableHand, deleteTableHand } = useSessionContext();
   const { toast } = useToast();
   
   // Use the session loader hook to properly load sessions from database
@@ -272,6 +272,60 @@ export default function SessionDetail() {
       });
     }
   };
+
+  const handleAddHand = async (tableId: string, handData: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => {
+    if (!session) return;
+    
+    try {
+      await addTableHand(session.id, tableId, handData);
+      toast({
+        title: "Hand Added",
+        description: "Hand has been successfully added to the table.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add hand. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditHand = async (tableId: string, handData: HandData) => {
+    if (!session) return;
+    
+    try {
+      await updateTableHand(session.id, tableId, handData);
+      toast({
+        title: "Hand Updated",
+        description: "Hand has been successfully updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update hand. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteHand = async (tableId: string, handId: string) => {
+    if (!session) return;
+    
+    try {
+      await deleteTableHand(session.id, tableId, handId);
+      toast({
+        title: "Hand Deleted",
+        description: "Hand has been successfully deleted.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete hand. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -364,6 +418,9 @@ export default function SessionDetail() {
           onEndSession={handleEndSession}
           onCashOutAmountChange={setCashOutAmount}
           onNotesChange={handleNotesChange}
+          onAddHand={handleAddHand}
+          onEditHand={handleEditHand}
+          onDeleteHand={handleDeleteHand}
         />
       </div>
     </div>
