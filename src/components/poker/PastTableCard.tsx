@@ -11,7 +11,6 @@ import PastTableHandsPanel from './PastTableHandsPanel';
 import PastMultiDayEndDialog from './PastMultiDayEndDialog';
 import HandForm from './HandForm';
 import HandsList from './HandsList';
-import HandDetailsDialog from './HandDetailsDialog';
 
 interface PastTableCardProps {
   table: TableData;
@@ -24,8 +23,6 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
   const [showEditForm, setShowEditForm] = useState(false);
   const [showMultiDayDialog, setShowMultiDayDialog] = useState(false);
   const [showAddHandForm, setShowAddHandForm] = useState(false);
-  const [showHandDetails, setShowHandDetails] = useState(false);
-  const [selectedHand, setSelectedHand] = useState<any>(null);
 
   const isMultiDayTable = table.isMultiDay && table.format === 'Tournament';
   const isContinuing = table.dayEndedWithoutElimination;
@@ -260,10 +257,6 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                       hands={table.hands}
                       onEditHand={() => {}} // Disable editing for now
                       onDeleteHand={() => {}} // Disable deleting for now
-                      onViewHand={(hand) => {
-                        setSelectedHand(hand);
-                        setShowHandDetails(true);
-                      }}
                       readOnly={true}
                       tables={[table]}
                     />
@@ -307,13 +300,6 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
         }}
         tableId={table.id}
         tableFormat={table.format}
-      />
-
-      {/* Hand Details Dialog */}
-      <HandDetailsDialog
-        open={showHandDetails}
-        onOpenChange={setShowHandDetails}
-        hand={selectedHand}
       />
     </>
   );
