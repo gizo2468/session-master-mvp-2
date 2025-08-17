@@ -210,9 +210,26 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                       <h4 className="font-medium text-center">
                         Table {index + 1} - {table.location}
                       </h4>
-                      <p className="text-sm text-gray-500 text-center">
-                        {formatTableDetails(table)} • {formattedStart}
-                      </p>
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-gray-500">
+                          {formatTableDetails(table)} • {formattedStart}
+                        </p>
+                        {onAddHand && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => handleAddHand(e, table)}
+                            className="h-8 px-3 hover:bg-blue-50 hover:text-blue-600"
+                            title="Add Hand"
+                          >
+                            <div className="flex items-center gap-1">
+                              <Plus className="h-3 w-3" />
+                              <Hand className="h-3 w-3" />
+                              <span className="text-xs ml-1">Add Hand</span>
+                            </div>
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`font-bold ${profitClass}`}>
@@ -240,28 +257,9 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                     </div>
                   </div>
                   
-                  {/* Add Hand button on its own row */}
-                  {onAddHand && (
-                    <div className="flex justify-center mb-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => handleAddHand(e, table)}
-                        className="h-8 px-3 hover:bg-blue-50 hover:text-blue-600"
-                        title="Add Hand"
-                      >
-                        <div className="flex items-center gap-1">
-                          <Plus className="h-3 w-3" />
-                          <Hand className="h-3 w-3" />
-                          <span className="text-xs ml-1">Add Hand</span>
-                        </div>
-                      </Button>
-                    </div>
-                   )}
-                   
-                   <div className="flex flex-wrap gap-2 justify-center">
-                     {renderFinancialBadges(table)}
-                   </div>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {renderFinancialBadges(table)}
+                  </div>
                   
                   {/* Hands List */}
                   {table.hands && table.hands.length > 0 && expandedTables.has(table.id) && (
