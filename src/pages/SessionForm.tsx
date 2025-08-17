@@ -455,68 +455,6 @@ export default function SessionForm() {
               />
             )}
             
-            {format === 'Tournament' && (
-              <FormField
-                control={form.control}
-                name="isMultiDay"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Multi-Day Tournament</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        Check this for tournaments that span multiple days
-                      </p>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            )}
-            
-            <FormField
-              control={form.control}
-              name="isOnline"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Online Game</FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      Check this if you're playing online
-                    </p>
-                  </div>
-                </FormItem>
-              )}
-            />
-            
-            {isOnline && (
-              <FormField
-                control={form.control}
-                name="physicalLocation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-medium">Physical Location</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Where are you playing from?"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
             {/* Currency Dropdown */}
             <FormField
               control={form.control}
@@ -549,7 +487,7 @@ export default function SessionForm() {
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">Table Name</FormLabel>
+                  <FormLabel className="text-base font-medium">Table Name / Session Name</FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="Casino name or online site" 
@@ -643,6 +581,69 @@ export default function SessionForm() {
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            
+            <FormField
+              control={form.control}
+              name="isOnline"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Online Game</FormLabel>
+                    <p className="text-sm text-muted-foreground">
+                      Check this if you're playing online
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
+            
+            {isOnline && (
+              <FormField
+                control={form.control}
+                name="physicalLocation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium">Physical Location</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Where are you playing from?"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {format === 'Tournament' && (
+              <FormField
+                control={form.control}
+                name="isMultiDay"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Multi-Day Tournament</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Check this for tournaments that span multiple days
+                      </p>
+                    </div>
                   </FormItem>
                 )}
               />
