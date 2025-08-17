@@ -13,13 +13,13 @@ const SessionStatusBadges: React.FC<SessionStatusBadgesProps> = ({
   endTime
 }) => {
   const formattedDate = format(new Date(startTime), 'd MMM yyyy');
-  const formattedTime = format(new Date(startTime), 'h:mm a');
+  const formattedTime = format(new Date(startTime), 'HH:mm');
   
   const formattedEndDate = endTime 
     ? format(new Date(endTime), 'd MMM yyyy')
     : null;
   const formattedEndTime = endTime 
-    ? format(new Date(endTime), 'h:mm a')
+    ? format(new Date(endTime), 'HH:mm')
     : null;
     
   const calculateDuration = () => {

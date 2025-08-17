@@ -20,8 +20,8 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
   // Calculate profit based ONLY on the manually entered payout value
   const profit = manuallyEnteredPayout - (table.buyIn ?? 0);
   const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
-  const formattedStart = format(new Date(table.startTime), 'd MMM, h:mm a');
-  const formattedEnd = table.endTime ? format(new Date(table.endTime), 'd MMM, h:mm a') : null;
+  const formattedStart = format(new Date(table.startTime), 'd MMM, HH:mm');
+  const formattedEnd = table.endTime ? format(new Date(table.endTime), 'd MMM, HH:mm') : null;
   const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
   const isBountyTournament = table.tournamentTypes?.some(type => 
     ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
@@ -30,7 +30,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
   
   // Format next day start date if available
   const formattedNextDayStart = table.nextDayStart 
-    ? format(new Date(table.nextDayStart), 'd MMM, h:mm a') 
+    ? format(new Date(table.nextDayStart), 'd MMM, HH:mm') 
     : null;
   
   // Check if this is a multi-day tournament that ended a day without elimination

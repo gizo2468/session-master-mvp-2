@@ -64,7 +64,7 @@ export function DateTimePicker({
   }
 
   const formatDateForBadge = (date: Date) => {
-    return format(date, "dd MMM yyyy h:mm a")
+    return format(date, "dd MMM yyyy HH:mm")
   }
 
   return (

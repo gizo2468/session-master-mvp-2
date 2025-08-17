@@ -94,7 +94,7 @@ export default function SessionActionButtons({ session }: SessionActionButtonsPr
                 {session.gameType} • {session.format}
               </div>
               <div className="text-gray-500">
-                {new Date(session.startTime).toLocaleDateString()} at {new Date(session.startTime).toLocaleTimeString()}
+                {new Date(session.startTime).toLocaleDateString()} at {new Date(session.startTime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
           </div>

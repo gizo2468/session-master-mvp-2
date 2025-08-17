@@ -112,7 +112,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   };
   
   // Use the Date object for display formatting (this is fine for display purposes)
-  const formattedStartTime = dateFormat(startTime, 'h:mm a');
+  const formattedStartTime = dateFormat(startTime, 'HH:mm');
   const formattedDate = dateFormat(startTime, 'd MMM yyyy');
   
   // IMPORTANT: Only show blinds for Cash format - strict check to ensure it's never shown for Tournament

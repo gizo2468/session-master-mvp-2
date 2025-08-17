@@ -55,7 +55,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
   const safeStartTime = table.startTime && isValid(table.startTime) ? table.startTime : new Date();
   const safeEndTime = table.endTime && isValid(table.endTime) ? table.endTime : undefined;
   
-  const formattedStartTime = dateFormat(safeStartTime, 'h:mm a');
+  const formattedStartTime = dateFormat(safeStartTime, 'HH:mm');
   const formattedDate = dateFormat(safeStartTime, 'd MMM yyyy');
 
   const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
@@ -193,7 +193,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
             <div className="flex-1 flex justify-center items-center">
               <div className="text-center">
                 <div className="text-gray-500 font-medium text-xs uppercase mb-1">End</div>
-                <div className="font-medium">{dateFormat(safeEndTime, 'h:mm a')}</div>
+                <div className="font-medium">{dateFormat(safeEndTime, 'HH:mm')}</div>
               </div>
             </div>
           )}
@@ -205,7 +205,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               <div className="flex-1 flex justify-center items-center">
                 <div className="text-center">
                   <div className="text-green-600 font-medium text-xs uppercase mb-1">Next Day Starts</div>
-                  <div className="font-medium text-green-800">{dateFormat(new Date(table.nextDayStart), 'd MMM, h:mm a')}</div>
+                  <div className="font-medium text-green-800">{dateFormat(new Date(table.nextDayStart), 'd MMM, HH:mm')}</div>
                 </div>
               </div>
             )}
@@ -349,7 +349,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                     {table.nextDayStart && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Next Day Starts:</span>
-                        <span className="font-medium">{dateFormat(new Date(table.nextDayStart), 'd MMM yyyy h:mm a')}</span>
+                        <span className="font-medium">{dateFormat(new Date(table.nextDayStart), 'd MMM yyyy HH:mm')}</span>
                       </div>
                     )}
                   </>

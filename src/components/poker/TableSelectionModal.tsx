@@ -197,7 +197,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
             {tables.map((table, index) => {
               const profit = (table.cashOut || 0) - table.buyIn;
               const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
-              const formattedStart = format(new Date(table.startTime), 'd MMM, h:mm a');
+              const formattedStart = format(new Date(table.startTime), 'd MMM, HH:mm');
               
               return (
                 <div

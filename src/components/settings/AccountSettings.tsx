@@ -49,7 +49,8 @@ const AccountSettings: React.FC = () => {
   const lastLoginFormatted = user?.lastLoginAt 
     ? new Intl.DateTimeFormat('en-US', {
         dateStyle: 'medium',
-        timeStyle: 'short'
+        timeStyle: 'short',
+        hour12: false
       }).format(user.lastLoginAt)
     : 'No recent login';
   
