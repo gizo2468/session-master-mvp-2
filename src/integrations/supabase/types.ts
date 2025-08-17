@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -376,6 +376,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_session_hands_session_id"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_session_hands_table_id"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "session_tables"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "session_hands_new_session_id_fkey"
             columns: ["session_id"]
@@ -788,12 +802,12 @@ export type Database = {
       }
       end_session: {
         Args: {
-          p_session_id: string
           p_cash_out: number
+          p_itm_ratio_denominator?: number
+          p_itm_ratio_numerator?: number
           p_notes?: string
           p_roi?: number
-          p_itm_ratio_numerator?: number
-          p_itm_ratio_denominator?: number
+          p_session_id: string
           p_tables_played?: number
         }
         Returns: boolean
@@ -814,37 +828,37 @@ export type Database = {
         Args: { p_username: string }
         Returns: {
           id: string
-          username: string
           role: string
+          username: string
         }[]
       }
       search_student_by_username: {
         Args: { p_username: string }
         Returns: {
           id: string
-          username: string
           role: string
+          username: string
         }[]
       }
       start_session: {
         Args: {
-          p_game_type: string
+          p_big_blind?: number
+          p_buy_in?: number
           p_format: string
+          p_game_type: string
+          p_is_multi_day?: boolean
+          p_is_online?: boolean
           p_location: string
           p_physical_location?: string
-          p_table_name?: string
-          p_buy_in?: number
           p_small_blind?: number
-          p_big_blind?: number
-          p_is_online?: boolean
           p_starting_bb?: number
+          p_table_name?: string
           p_tournament_types?: string[]
-          p_is_multi_day?: boolean
         }
         Returns: string
       }
       update_terms_acceptance: {
-        Args: { user_id: string; accepted: boolean }
+        Args: { accepted: boolean; user_id: string }
         Returns: boolean
       }
     }
