@@ -4,12 +4,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TableData } from '@/types/poker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
+import { CURRENCIES, getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface AddTableFormProps {
   open: boolean;
@@ -18,6 +20,7 @@ interface AddTableFormProps {
   fixedFormat?: 'Cash' | 'Tournament';
   sessionFormat?: 'Cash' | 'Tournament'; // New prop to auto-select format
   isCompletedSession?: boolean; // New prop to show payout field for completed sessions
+  sessionCurrency?: string; // New prop for session currency
 }
 
 const TOURNAMENT_TYPES = [
@@ -41,7 +44,8 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
   onAddTable, 
   fixedFormat,
   sessionFormat,
-  isCompletedSession = false
+  isCompletedSession = false,
+  sessionCurrency = 'USD'
 }) => {
   // Auto-select format based on session format or use fixedFormat
   const [format, setFormat] = useState<'Cash' | 'Tournament'>(
@@ -51,6 +55,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
   const [tableName, setTableName] = useState(''); // Renamed from location
   const [buyIn, setBuyIn] = useState('');
   const [payout, setPayout] = useState(''); // New payout field for completed sessions
+  const [currency, setCurrency] = useState(sessionCurrency); // Currency field
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[smallBlindIndex]);
   const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[smallBlindIndex] * 2); // Always 2x small blind for cash
@@ -65,6 +70,11 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
       setFormat(sessionFormat);
     }
   }, [fixedFormat, sessionFormat]);
+
+  // Auto-sync currency when sessionCurrency changes
+  useEffect(() => {
+    setCurrency(sessionCurrency);
+  }, [sessionCurrency]);
 
   useEffect(() => {
     if (fixedFormat) {
@@ -115,6 +125,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
       location: tableName || `${format} Game`, // Use tableName or default to format
       buyIn: parseFloat(buyIn),
       initialBuyIn: parseFloat(buyIn),
+      currency, // Add currency to table data
       ...(isCompletedSession && payout && {
         endTime: new Date(), // Mark as completed
         cashOut: parseFloat(payout),
@@ -143,6 +154,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
     setTableName(''); // Reset tableName instead of location
     setBuyIn('');
     setPayout(''); // Reset payout field
+    setCurrency(sessionCurrency); // Reset currency to session currency
     setSmallBlindIndex(2);
     setSmallBlind(BLIND_PRESETS.smallBlind[2]);
     setBigBlind(BLIND_PRESETS.smallBlind[2] * 2); // Reset to 2x small blind
@@ -256,7 +268,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="buyIn">Buy-in Amount ($)</Label>
+            <Label htmlFor="buyIn">Buy-in Amount ({getCurrencySymbol(currency)})</Label>
             <Input
               id="buyIn"
               type="number"
@@ -272,7 +284,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
 
           {isCompletedSession && (
             <div className="space-y-2">
-              <Label htmlFor="payout">Payout / Cash-out Amount ($)</Label>
+              <Label htmlFor="payout">Payout / Cash-out Amount ({getCurrencySymbol(currency)})</Label>
               <Input
                 id="payout"
                 type="number"
@@ -329,7 +341,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <Label>Small Blind</Label>
-                    <span className="text-sm font-medium">${smallBlind}</span>
+                    <span className="text-sm font-medium">{getCurrencySymbol(currency)}{smallBlind}</span>
                   </div>
                   <Slider
                     defaultValue={[smallBlindIndex]}
@@ -342,7 +354,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <Label>Big Blind</Label>
-                    <span className="text-sm font-medium">${bigBlind}</span>
+                    <span className="text-sm font-medium">{getCurrencySymbol(currency)}{bigBlind}</span>
                   </div>
                   <div className="py-2 px-3 bg-gray-100 rounded-md border">
                     <div className="text-sm text-gray-600 text-center">

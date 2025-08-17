@@ -40,6 +40,7 @@ export interface TableData {
   location: string;
   buyIn: number;
   initialBuyIn?: number;
+  currency?: string; // Currency code (e.g., 'USD', 'EUR', 'ILS')
   smallBlind?: number;
   bigBlind?: number;
   startingBB?: number;

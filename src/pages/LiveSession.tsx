@@ -188,6 +188,7 @@ export default function LiveSession() {
         open={sessionActions.showAddTableForm}
         onOpenChange={sessionActions.setShowAddTableForm}
         sessionFormat={getTableFormat(currentSession.format)}
+        sessionCurrency={currentSession.currency}
         onAddTable={sessionActions.handleAddTable}
       />
     </div>
