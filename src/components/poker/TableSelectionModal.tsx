@@ -251,7 +251,6 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                         title="Add Hand"
                       >
                         <div className="flex items-center gap-1">
-                          <Plus className="h-3 w-3" />
                           <Hand className="h-3 w-3" />
                           <span className="text-xs ml-1">Add Hand</span>
                         </div>
