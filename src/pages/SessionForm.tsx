@@ -504,7 +504,7 @@ export default function SessionForm() {
               name="buyIn"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">First Table Buy-in <span className="text-red-500 text-sm">*</span></FormLabel>
+                  <FormLabel className="text-base font-medium">Buy-in Amount <span className="text-red-500 text-sm">*</span></FormLabel>
                   <FormControl>
                     <div className="relative">
                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
