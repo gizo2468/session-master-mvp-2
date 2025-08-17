@@ -39,6 +39,14 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
         <span className="font-medium">{session.format}</span>
       </div>
       
+      {/* Only show blinds for Cash game format */}
+      {shouldShowBlinds && (
+        <div className="flex justify-between py-2 border-b">
+          <span className="text-gray-500">Blinds:</span>
+          <span className="font-medium">{currencySymbol}{session.smallBlind || 0}/{currencySymbol}{session.bigBlind || 0}</span>
+        </div>
+      )}
+      
       <div className="flex justify-between py-2 border-b">
         <span className="text-gray-500">Buy-in:</span>
         <span className="font-medium">
@@ -79,13 +87,6 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
         </div>
       )}
       
-      {/* Only show blinds for Cash game format */}
-      {shouldShowBlinds && (
-        <div className="flex justify-between py-2 border-b">
-          <span className="text-gray-500">Blinds:</span>
-          <span className="font-medium">{currencySymbol}{session.smallBlind || 0}/{currencySymbol}{session.bigBlind || 0}</span>
-        </div>
-      )}
       
       {isCompleted && (
         <div className="flex flex-col items-center py-2">
