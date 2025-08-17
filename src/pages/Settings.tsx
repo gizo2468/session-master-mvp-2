@@ -270,7 +270,7 @@ const Settings: React.FC = () => {
               <div className="flex items-start justify-between">
                 <div className="flex-1 pt-1">
                   <CardTitle>Account</CardTitle>
-                  <CardDescription>Your account information</CardDescription>
+                  <CardDescription className="text-center">Your account information</CardDescription>
                 </div>
                 {profile?.role === 'coach' && !profileLoading && (
                   <div className="flex items-center gap-2 mt-2">
@@ -457,7 +457,7 @@ const Settings: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>General Settings</CardTitle>
-              <CardDescription>Customize your app preferences</CardDescription>
+              <CardDescription className="text-center">Customize your app preferences</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

@@ -23,7 +23,7 @@ const SupportSettings: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle>Support</CardTitle>
-            <CardDescription>
+            <CardDescription className="text-center">
               Review our terms and policies or get help
             </CardDescription>
           </CardHeader>
