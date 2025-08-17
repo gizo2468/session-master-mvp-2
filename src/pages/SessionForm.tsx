@@ -487,7 +487,7 @@ export default function SessionForm() {
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">Table Name / Session Name</FormLabel>
+                  <FormLabel className="text-base font-medium">Table / Session Name</FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="Casino name or online site" 
