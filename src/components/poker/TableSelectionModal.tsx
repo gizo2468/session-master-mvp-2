@@ -211,9 +211,6 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                         Table {index + 1} - {table.location}
                       </h4>
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-gray-500">
-                          {formatTableDetails(table)} • {formattedStart}
-                        </p>
                         {onAddHand && (
                           <Button
                             variant="ghost"
@@ -229,6 +226,9 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                             </div>
                           </Button>
                         )}
+                        <p className="text-sm text-gray-500">
+                          {formatTableDetails(table)} • {formattedStart}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
