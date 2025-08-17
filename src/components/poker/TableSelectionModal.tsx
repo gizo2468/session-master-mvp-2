@@ -87,8 +87,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
     onSelectTable(table);
   };
 
-  const toggleHandsExpansion = (e: React.MouseEvent, tableId: string) => {
-    e.stopPropagation();
+  const toggleHandsExpansion = (tableId: string) => {
     setExpandedTables(prev => {
       const newSet = new Set(prev);
       if (newSet.has(tableId)) {
@@ -200,7 +199,8 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
               return (
                 <div
                   key={table.id}
-                  className="border rounded-lg p-3 transition-colors relative"
+                  className="border rounded-lg p-3 transition-colors relative cursor-pointer hover:bg-gray-50"
+                  onClick={() => toggleHandsExpansion(table.id)}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1 text-center">
@@ -256,66 +256,51 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                   </div>
                   
                   {/* Hands List */}
-                  {table.hands && table.hands.length > 0 && (
+                  {table.hands && table.hands.length > 0 && expandedTables.has(table.id) && (
                     <div className="mt-4 pt-3 border-t">
-                      <div 
-                        className="mb-2 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded p-1 -m-1 transition-colors"
-                        onClick={(e) => toggleHandsExpansion(e, table.id)}
-                      >
-                        {expandedTables.has(table.id) ? (
-                          <ChevronDown className="h-4 w-4 text-gray-500" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4 text-gray-500" />
-                        )}
-                        <h5 className="text-sm font-medium text-gray-700">
-                          Hands ({table.hands.length})
-                        </h5>
-                      </div>
-                      {expandedTables.has(table.id) && (
-                        <div className="max-h-32 overflow-y-auto overflow-x-hidden">
-                          <div className="min-w-0 w-full">
-                            {/* Compact hands list for modal */}
-                            <div className="space-y-1">
-                              {table.hands.map((hand, handIndex) => (
-                                <div
-                                  key={hand.id}
-                                  className="flex items-center justify-between p-2 bg-muted/30 rounded text-xs transition-colors"
-                                >
-                                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                                    <span className="font-mono font-medium shrink-0">
-                                      #{handIndex + 1}
-                                    </span>
-                                    <div className="flex items-center gap-1 shrink-0">
-                                      <CardDisplay cards={hand.cards} size="sm" />
-                                    </div>
-                                    <span className="text-muted-foreground truncate">
-                                      {hand.position} • {hand.action}
-                                    </span>
-                                  </div>
+                      <div className="max-h-32 overflow-y-auto overflow-x-hidden">
+                        <div className="min-w-0 w-full">
+                          {/* Compact hands list for modal */}
+                          <div className="space-y-1">
+                            {table.hands.map((hand, handIndex) => (
+                              <div
+                                key={hand.id}
+                                className="flex items-center justify-between p-2 bg-muted/30 rounded text-xs transition-colors"
+                              >
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  <span className="font-mono font-medium shrink-0">
+                                    #{handIndex + 1}
+                                  </span>
                                   <div className="flex items-center gap-1 shrink-0">
-                                    {hand.resultAmount !== undefined && (
-                                      <span className={`font-medium ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                        {hand.resultAmount >= 0 ? '+' : ''}${hand.resultAmount.toFixed(0)}
-                                      </span>
-                                    )}
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteHandClick(hand.id);
-                                      }}
-                                      className="h-6 w-6 p-0 text-red-600 hover:text-red-800 opacity-70 hover:opacity-100"
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
+                                    <CardDisplay cards={hand.cards} size="sm" />
                                   </div>
+                                  <span className="text-muted-foreground truncate">
+                                    {hand.position} • {hand.action}
+                                  </span>
                                 </div>
-                              ))}
-                            </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {hand.resultAmount !== undefined && (
+                                    <span className={`font-medium ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                      {hand.resultAmount >= 0 ? '+' : ''}${hand.resultAmount.toFixed(0)}
+                                    </span>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteHandClick(hand.id);
+                                    }}
+                                    className="h-6 w-6 p-0 text-red-600 hover:text-red-800 opacity-70 hover:opacity-100"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      )}
+                      </div>
                     </div>
                   )}
                 </div>
