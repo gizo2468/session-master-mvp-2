@@ -15,12 +15,13 @@ interface HandsListProps {
   hands: HandData[];
   onEditHand: (hand: HandData) => void;
   onDeleteHand: (handId: string) => void;
+  onViewHand?: (hand: HandData) => void;
   readOnly?: boolean; // Add readOnly prop
   sessionBuyIn?: number; // Buy-in amount for the session
   tables?: any[]; // Tables data to get table-specific buy-ins
 }
 
-const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, readOnly = false, sessionBuyIn, tables = [] }) => {
+const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, onViewHand, readOnly = false, sessionBuyIn, tables = [] }) => {
   // Sort hands by createdAt date
   const sortedHands = [...hands].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -53,7 +54,11 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
             </TableHeader>
             <TableBody>
               {sortedHands.map((hand) => (
-                <TableRow key={hand.id} className="group">
+                <TableRow 
+                  key={hand.id} 
+                  className={`group ${onViewHand ? 'cursor-pointer hover:bg-muted/50' : ''}`}
+                  onClick={() => onViewHand?.(hand)}
+                >
                   <TableCell className="py-3">
                     <div className="flex items-center gap-0.5">
                       <CardDisplay cards={hand.cards} size="sm" />
