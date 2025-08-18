@@ -42,30 +42,50 @@ export const useSessionSharing = (sessionId: string) => {
   }, [sessionId, user?.id]);
 
   const shareSession = async (coachIds: string[]) => {
-    if (!user?.id || !sessionId || coachIds.length === 0) return false;
+    if (!user?.id || !sessionId) return false;
 
     setLoading(true);
     try {
-      // Remove existing shares first
-      await supabase
+      // Remove existing shares first to ensure clean state
+      const { error: deleteError } = await supabase
         .from('shared_sessions')
         .delete()
         .eq('session_id', sessionId)
         .eq('player_id', user.id);
 
-      // Insert new shares
+      if (deleteError) {
+        console.error('Error removing existing shares:', deleteError);
+        toast({
+          title: "Error",
+          description: "Failed to update session sharing.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // If no coaches selected, just update state and return
+      if (coachIds.length === 0) {
+        setSharedCoaches([]);
+        toast({
+          title: "Session Unshared",
+          description: "Session is no longer shared with any coaches."
+        });
+        return true;
+      }
+
+      // Insert new shares for selected coaches
       const insertData = coachIds.map(coachId => ({
         session_id: sessionId,
         player_id: user.id,
         coach_id: coachId
       }));
 
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('shared_sessions')
         .insert(insertData);
 
-      if (error) {
-        console.error('Error sharing session:', error);
+      if (insertError) {
+        console.error('Error sharing session:', insertError);
         toast({
           title: "Error",
           description: "Failed to share session with coaches.",
@@ -74,8 +94,20 @@ export const useSessionSharing = (sessionId: string) => {
         return false;
       }
 
-      setSharedCoaches(coachIds);
-      
+      // Verify the data was inserted correctly
+      const { data: verificationData, error: verificationError } = await supabase
+        .from('shared_sessions')
+        .select('coach_id')
+        .eq('session_id', sessionId)
+        .eq('player_id', user.id);
+
+      if (verificationError) {
+        console.error('Error verifying share data:', verificationError);
+      } else {
+        const verifiedCoachIds = verificationData?.map(item => item.coach_id) || [];
+        setSharedCoaches(verifiedCoachIds);
+      }
+
       toast({
         title: "Session Shared",
         description: `Session has been shared with ${coachIds.length} coach${coachIds.length > 1 ? 'es' : ''}.`

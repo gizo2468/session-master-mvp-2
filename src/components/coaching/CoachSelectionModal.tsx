@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { CoachProfile } from '@/types/poker';
 import Icon from '@/components/ui/Lucide';
 
@@ -55,10 +55,10 @@ const CoachSelectionModal: React.FC<CoachSelectionModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Icon name="Share" size={20} />
-            Share Session with Coach
+            Share Session with Coaches
           </DialogTitle>
           <DialogDescription>
-            Choose which coach you'd like to share this session with.
+            Use the toggles to control sharing with each coach. You can share with multiple coaches simultaneously.
           </DialogDescription>
         </DialogHeader>
         
@@ -90,11 +90,16 @@ const CoachSelectionModal: React.FC<CoachSelectionModalProps> = ({
                       )}
                     </div>
                   </div>
-                  <Checkbox
-                    checked={localSelected.includes(coach.id)}
-                    onCheckedChange={() => handleToggleCoach(coach.id)}
-                    disabled={loading}
-                  />
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-muted-foreground">
+                      {localSelected.includes(coach.id) ? 'Sharing' : 'Not sharing'}
+                    </span>
+                    <Switch
+                      checked={localSelected.includes(coach.id)}
+                      onCheckedChange={() => handleToggleCoach(coach.id)}
+                      disabled={loading}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -107,15 +112,18 @@ const CoachSelectionModal: React.FC<CoachSelectionModalProps> = ({
           </Button>
           <Button 
             onClick={handleSelectCoaches}
-            disabled={loading || localSelected.length === 0}
+            disabled={loading}
             className="flex items-center gap-1"
           >
             {loading ? (
               <Icon name="Loader2" size={14} className="animate-spin" />
             ) : (
-              <Icon name="Share" size={14} />
+              <Icon name={localSelected.length > 0 ? "Share" : "UserX"} size={14} />
             )}
-            Share with {localSelected.length} coach{localSelected.length !== 1 ? 'es' : ''}
+            {localSelected.length > 0 
+              ? `Share with ${localSelected.length} coach${localSelected.length !== 1 ? 'es' : ''}` 
+              : 'Unshare with all coaches'
+            }
           </Button>
         </div>
       </DialogContent>
