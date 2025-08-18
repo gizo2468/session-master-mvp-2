@@ -8,8 +8,7 @@ export const useSessionSharing = (sessionId: string) => {
   const { user } = useAuth();
   const { connectedCoaches } = useCoachStudent();
   const { toast } = useToast();
-  const [isShared, setIsShared] = useState(false);
-  const [sharedCoachId, setSharedCoachId] = useState<string | null>(null);
+  const [sharedCoaches, setSharedCoaches] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Check if session is already shared
@@ -22,20 +21,17 @@ export const useSessionSharing = (sessionId: string) => {
           .from('shared_sessions')
           .select('coach_id')
           .eq('session_id', sessionId)
-          .eq('player_id', user.id)
-          .single();
+          .eq('player_id', user.id);
 
-        if (error && error.code !== 'PGRST116') {
+        if (error) {
           console.error('Error checking sharing status:', error);
           return;
         }
 
-        if (data) {
-          setIsShared(true);
-          setSharedCoachId(data.coach_id);
+        if (data && data.length > 0) {
+          setSharedCoaches(data.map(item => item.coach_id));
         } else {
-          setIsShared(false);
-          setSharedCoachId(null);
+          setSharedCoaches([]);
         }
       } catch (error) {
         console.error('Error in checkSharingStatus:', error);
@@ -45,35 +41,44 @@ export const useSessionSharing = (sessionId: string) => {
     checkSharingStatus();
   }, [sessionId, user?.id]);
 
-  const shareSession = async (coachId: string) => {
-    if (!user?.id || !sessionId) return false;
+  const shareSession = async (coachIds: string[]) => {
+    if (!user?.id || !sessionId || coachIds.length === 0) return false;
 
     setLoading(true);
     try {
+      // Remove existing shares first
+      await supabase
+        .from('shared_sessions')
+        .delete()
+        .eq('session_id', sessionId)
+        .eq('player_id', user.id);
+
+      // Insert new shares
+      const insertData = coachIds.map(coachId => ({
+        session_id: sessionId,
+        player_id: user.id,
+        coach_id: coachId
+      }));
+
       const { error } = await supabase
         .from('shared_sessions')
-        .insert({
-          session_id: sessionId,
-          player_id: user.id,
-          coach_id: coachId
-        });
+        .insert(insertData);
 
       if (error) {
         console.error('Error sharing session:', error);
         toast({
           title: "Error",
-          description: "Failed to share session with coach.",
+          description: "Failed to share session with coaches.",
           variant: "destructive"
         });
         return false;
       }
 
-      setIsShared(true);
-      setSharedCoachId(coachId);
+      setSharedCoaches(coachIds);
       
       toast({
         title: "Session Shared",
-        description: "Session has been shared with your coach."
+        description: `Session has been shared with ${coachIds.length} coach${coachIds.length > 1 ? 'es' : ''}.`
       });
       
       return true;
@@ -81,7 +86,7 @@ export const useSessionSharing = (sessionId: string) => {
       console.error('Error in shareSession:', error);
       toast({
         title: "Error",
-        description: "Failed to share session with coach.",
+        description: "Failed to share session with coaches.",
         variant: "destructive"
       });
       return false;
@@ -111,12 +116,11 @@ export const useSessionSharing = (sessionId: string) => {
         return false;
       }
 
-      setIsShared(false);
-      setSharedCoachId(null);
+      setSharedCoaches([]);
       
       toast({
         title: "Session Unshared",
-        description: "Session is no longer shared with coach."
+        description: "Session is no longer shared with coaches."
       });
       
       return true;
@@ -134,8 +138,8 @@ export const useSessionSharing = (sessionId: string) => {
   };
 
   return {
-    isShared,
-    sharedCoachId,
+    isShared: sharedCoaches.length > 0,
+    sharedCoaches,
     connectedCoaches,
     loading,
     shareSession,

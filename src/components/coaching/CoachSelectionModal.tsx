@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CoachProfile } from '@/types/poker';
 import Icon from '@/components/ui/Lucide';
 
@@ -15,7 +16,8 @@ interface CoachSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   coaches: CoachProfile[];
-  onSelectCoach: (coachId: string) => void;
+  onSelectCoaches: (coachIds: string[]) => void;
+  selectedCoaches?: string[];
   loading?: boolean;
 }
 
@@ -23,11 +25,27 @@ const CoachSelectionModal: React.FC<CoachSelectionModalProps> = ({
   isOpen,
   onClose,
   coaches,
-  onSelectCoach,
+  onSelectCoaches,
+  selectedCoaches = [],
   loading = false
 }) => {
-  const handleSelectCoach = (coachId: string) => {
-    onSelectCoach(coachId);
+  const [localSelected, setLocalSelected] = useState<string[]>(selectedCoaches);
+
+  // Reset local selection when modal opens or selectedCoaches changes
+  React.useEffect(() => {
+    setLocalSelected(selectedCoaches);
+  }, [selectedCoaches, isOpen]);
+
+  const handleToggleCoach = (coachId: string) => {
+    setLocalSelected(prev => 
+      prev.includes(coachId) 
+        ? prev.filter(id => id !== coachId)
+        : [...prev, coachId]
+    );
+  };
+
+  const handleShare = () => {
+    onSelectCoaches(localSelected);
     onClose();
   };
 
@@ -72,19 +90,11 @@ const CoachSelectionModal: React.FC<CoachSelectionModalProps> = ({
                       )}
                     </div>
                   </div>
-                  <Button
-                    onClick={() => handleSelectCoach(coach.id)}
+                  <Checkbox
+                    checked={localSelected.includes(coach.id)}
+                    onCheckedChange={() => handleToggleCoach(coach.id)}
                     disabled={loading}
-                    size="sm"
-                    className="flex items-center gap-1"
-                  >
-                    {loading ? (
-                      <Icon name="Loader2" size={14} className="animate-spin" />
-                    ) : (
-                      <Icon name="Share" size={14} />
-                    )}
-                    Share
-                  </Button>
+                  />
                 </div>
               ))}
             </div>
@@ -94,6 +104,18 @@ const CoachSelectionModal: React.FC<CoachSelectionModalProps> = ({
         <div className="flex justify-end gap-2 pt-4 border-t">
           <Button variant="outline" onClick={onClose}>
             Cancel
+          </Button>
+          <Button 
+            onClick={handleShare}
+            disabled={loading || localSelected.length === 0}
+            className="flex items-center gap-1"
+          >
+            {loading ? (
+              <Icon name="Loader2" size={14} className="animate-spin" />
+            ) : (
+              <Icon name="Share" size={14} />
+            )}
+            Share with {localSelected.length} coach{localSelected.length !== 1 ? 'es' : ''}
           </Button>
         </div>
       </DialogContent>

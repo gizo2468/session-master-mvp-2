@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
 import { useAuth } from '@/context/AuthContext';
 import { useSessionSharing } from '@/hooks/useSessionSharing';
@@ -31,33 +29,19 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
   // Use the session sharing hook
   const {
     isShared,
+    sharedCoaches,
     connectedCoaches,
     loading: sharingLoading,
     shareSession,
     unshareSession
   } = useSessionSharing(sessionId);
 
-  const handleToggleShare = async () => {
-    if (isShared) {
-      // If already shared, unshare immediately
-      await unshareSession();
-    } else {
-      // If not shared, show coach selection modal
-      if (connectedCoaches.length === 0) {
-        // No coaches connected - could show a message or redirect to coach connection
-        return;
-      } else if (connectedCoaches.length === 1) {
-        // Only one coach - share directly
-        await shareSession(connectedCoaches[0].id);
-      } else {
-        // Multiple coaches - show selection modal
-        setShowCoachModal(true);
-      }
-    }
+  const handleOpenShareModal = () => {
+    setShowCoachModal(true);
   };
 
-  const handleSelectCoach = async (coachId: string) => {
-    await shareSession(coachId);
+  const handleSelectCoaches = async (coachIds: string[]) => {
+    await shareSession(coachIds);
   };
 
   return (
@@ -78,20 +62,20 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
               Session Summary
             </h1>
             {showShareToggle && (
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  id="share-coach" 
-                  checked={isShared}
-                  onCheckedChange={handleToggleShare}
-                  disabled={sharingLoading}
-                />
-                <Label htmlFor="share-coach" className="text-sm">
-                  Share with Coach
-                  {sharingLoading && (
-                    <Icon name="Loader2" size={12} className="ml-1 animate-spin inline" />
-                  )}
-                </Label>
-              </div>
+              <Button
+                onClick={handleOpenShareModal}
+                disabled={sharingLoading || connectedCoaches.length === 0}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                {sharingLoading ? (
+                  <Icon name="Loader2" size={14} className="animate-spin" />
+                ) : (
+                  <Icon name="Share" size={14} />
+                )}
+                {isShared ? `Shared with ${sharedCoaches.length} coach${sharedCoaches.length !== 1 ? 'es' : ''}` : 'Share with Coach'}
+              </Button>
             )}
           </div>
           <div className="flex gap-2">
@@ -119,7 +103,8 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
         isOpen={showCoachModal}
         onClose={() => setShowCoachModal(false)}
         coaches={connectedCoaches}
-        onSelectCoach={handleSelectCoach}
+        onSelectCoaches={handleSelectCoaches}
+        selectedCoaches={sharedCoaches}
         loading={sharingLoading}
       />
     </>
