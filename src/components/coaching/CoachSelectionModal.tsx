@@ -44,7 +44,7 @@ const CoachSelectionModal: React.FC<CoachSelectionModalProps> = ({
     );
   };
 
-  const handleShare = () => {
+  const handleSelectCoaches = () => {
     onSelectCoaches(localSelected);
     onClose();
   };
@@ -106,7 +106,7 @@ const CoachSelectionModal: React.FC<CoachSelectionModalProps> = ({
             Cancel
           </Button>
           <Button 
-            onClick={handleShare}
+            onClick={handleSelectCoaches}
             disabled={loading || localSelected.length === 0}
             className="flex items-center gap-1"
           >
