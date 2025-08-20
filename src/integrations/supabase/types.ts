@@ -727,6 +727,63 @@ export type Database = {
           },
         ]
       }
+      table_bb_stack_updates: {
+        Row: {
+          bb: number | null
+          big_blind: number | null
+          created_at: string
+          id: string
+          level: number | null
+          session_id: string
+          small_blind: number | null
+          stack: number | null
+          table_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bb?: number | null
+          big_blind?: number | null
+          created_at?: string
+          id?: string
+          level?: number | null
+          session_id: string
+          small_blind?: number | null
+          stack?: number | null
+          table_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bb?: number | null
+          big_blind?: number | null
+          created_at?: string
+          id?: string
+          level?: number | null
+          session_id?: string
+          small_blind?: number | null
+          stack?: number | null
+          table_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_session_id"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_table_id"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "session_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tutorial_steps: {
         Row: {
           created_at: string | null
