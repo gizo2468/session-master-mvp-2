@@ -5,6 +5,8 @@ import Icon from '@/components/ui/Lucide';
 import { format as dateFormat } from 'date-fns';
 import { useSessionContext } from '@/context/SessionContext';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
+import BBStackUpdateModal from './BBStackUpdateModal';
+import { TableData } from '@/types/poker';
 
 interface SessionTimerCardProps {
   startTime: Date;
@@ -16,6 +18,8 @@ interface SessionTimerCardProps {
   currency?: string; // Currency code
   onEndSession: () => void;
   onAddTable?: () => void;
+  onBBStackUpdate?: () => void;
+  activeTables?: TableData[];
 }
 
 const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
@@ -28,8 +32,11 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   currency,
   onEndSession,
   onAddTable,
+  onBBStackUpdate,
+  activeTables = []
 }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [showBBStackModal, setShowBBStackModal] = useState(false);
   const { updateSessionDuration, activeSession } = useSessionContext();
   const updateCounterRef = useRef(0);
   
@@ -140,6 +147,14 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       onAddTable();
     }
   };
+
+  const handleBBStackUpdate = (e: React.MouseEvent) => {
+    // Prevent event bubbling
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setShowBBStackModal(true);
+  };
   
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
@@ -165,23 +180,42 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         </div>
       </div>
       
-      <div className="flex justify-center gap-2">
-        {onAddTable && (
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-center gap-2">
+          {onAddTable && (
+            <Button
+              onClick={handleAddTable}
+              className="bg-poker-gold hover:bg-poker-darkGold text-white flex items-center gap-2"
+            >
+              <Icon name="Plus" size={16} /> Add Table
+            </Button>
+          )}
           <Button
-            onClick={handleAddTable}
-            className="bg-poker-gold hover:bg-poker-darkGold text-white flex items-center gap-2"
+            onClick={handleEndSession}
+            variant="destructive"
+            className="flex items-center gap-2"
           >
-            <Icon name="Plus" size={16} /> Add Table
+            <Icon name="CircleStop" size={16} /> End Session
           </Button>
-        )}
-        <Button
-          onClick={handleEndSession}
-          variant="destructive"
-          className="flex items-center gap-2"
-        >
-          <Icon name="CircleStop" size={16} /> End Session
-        </Button>
+        </div>
+        
+        {/* Centered BB/Stack Update button */}
+        <div className="flex justify-center">
+          <Button
+            onClick={handleBBStackUpdate}
+            className="bg-poker-gold hover:bg-poker-darkGold text-white flex items-center gap-2"
+            size="sm"
+          >
+            <Icon name="BarChart3" size={14} /> BB/Stack Update
+          </Button>
+        </div>
       </div>
+
+      <BBStackUpdateModal
+        isOpen={showBBStackModal}
+        onClose={() => setShowBBStackModal(false)}
+        tables={activeTables}
+      />
     </div>
   );
 };

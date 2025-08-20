@@ -125,6 +125,7 @@ export default function LiveSession() {
             currency={currentSession.currency}
             onEndSession={() => sessionActions.setShowEndSessionSheet(true)}
             onAddTable={() => sessionActions.setShowAddTableForm(true)}
+            activeTables={currentSession.tables?.filter(table => table.isActive) || []}
           />
           
           <SessionDetailsCard 
