@@ -5,6 +5,7 @@ import { TableData } from '@/types/poker';
 import { format as dateFormat, differenceInMinutes, isValid } from 'date-fns';
 import Icon from '@/components/ui/Lucide';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
+import { useSessionLiveState } from '@/hooks/useSessionLiveState';
 import { 
   Dialog,
   DialogContent,
@@ -32,6 +33,7 @@ interface TableCardProps {
 
 const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAddRebuy, sessionId }) => {
   const { updateTable, deleteTable } = useSessionContext();
+  const { liveState } = useSessionLiveState(sessionId);
   const currencySymbol = getCurrencySymbol(currency);
   const [showEndTableDialog, setShowEndTableDialog] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -258,10 +260,20 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
           )}
           
           {table.format === 'Tournament' && table.startingBB && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Starting BBs:</span>
-              <span className="font-medium">{table.startingBB}BB</span>
-            </div>
+            <>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Starting BBs:</span>
+                <span className="font-medium">{table.startingBB}BB</span>
+              </div>
+              {liveState.bbStackUpdates?.[table.id]?.bb && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">
+                    Lvl {liveState.bbStackUpdates[table.id].level || 1}:
+                  </span>
+                  <span className="font-medium">{liveState.bbStackUpdates[table.id].bb}BBs</span>
+                </div>
+              )}
+            </>
           )}
         </div>
 

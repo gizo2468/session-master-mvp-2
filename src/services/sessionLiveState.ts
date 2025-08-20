@@ -7,6 +7,17 @@ export interface SessionLiveStateData {
   filters?: any;
   modalStates?: Record<string, boolean>;
   formData?: any;
+  bbStackUpdates?: {
+    [tableId: string]: {
+      // Tournament fields
+      level?: number;
+      stack?: string;
+      bb?: string;
+      // Cash game fields
+      smallBlind?: number;
+      bigBlind?: number;
+    };
+  };
   [key: string]: any;
 }
 

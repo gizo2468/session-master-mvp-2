@@ -218,6 +218,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         tables={activeTables}
         sessionFormat={format}
         currency={currency}
+        sessionId={activeSession?.id || ''}
       />
     </div>
   );

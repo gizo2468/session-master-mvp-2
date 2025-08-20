@@ -8,6 +8,8 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { TableData } from '@/types/poker';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
+import { useSessionLiveState } from '@/hooks/useSessionLiveState';
+import { useToast } from '@/hooks/use-toast';
 
 interface BBStackUpdateModalProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ interface BBStackUpdateModalProps {
   tables: TableData[];
   sessionFormat: string;
   currency?: string;
+  sessionId: string;
 }
 
 interface TableUpdateData {
@@ -39,9 +42,12 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   onClose,
   tables,
   sessionFormat,
-  currency = 'USD'
+  currency = 'USD',
+  sessionId
 }) => {
   const [updateData, setUpdateData] = useState<TableUpdateData[]>([]);
+  const { liveState, updateLiveState } = useSessionLiveState(sessionId);
+  const { toast } = useToast();
 
   // Remove session-level format check - we'll check per table instead
   const currencySymbol = getCurrencySymbol(currency);
@@ -52,11 +58,12 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       setUpdateData(
         tables.map(table => {
           const isCashTable = table.format === 'Cash';
+          const savedData = liveState.bbStackUpdates?.[table.id];
           
           if (isCashTable) {
-            // For cash games, initialize with current table blinds or defaults
-            const smallBlindValue = table.smallBlind || 1;
-            const bigBlindValue = table.bigBlind || (smallBlindValue * 2);
+            // For cash games, use saved data or fall back to table defaults
+            const smallBlindValue = savedData?.smallBlind ?? table.smallBlind ?? 1;
+            const bigBlindValue = savedData?.bigBlind ?? table.bigBlind ?? (smallBlindValue * 2);
             
             return {
               tableId: table.id,
@@ -67,12 +74,12 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
               bigBlind: bigBlindValue
             };
           } else {
-            // For tournaments, initialize with current values or defaults
+            // For tournaments, use saved data or fall back to defaults
             return {
               tableId: table.id,
-              level: 1, // Default to 1 since currentLevel doesn't exist in TableData
-              stack: table.currentStack?.toString() || '',
-              bb: table.startingBB?.toString() || '',
+              level: savedData?.level ?? 1,
+              stack: savedData?.stack ?? table.currentStack?.toString() ?? '',
+              bb: savedData?.bb ?? table.startingBB?.toString() ?? '',
               smallBlind: 0, // Not used for tournaments
               bigBlind: 0 // Not used for tournaments
             };
@@ -80,7 +87,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
         })
       );
     }
-  }, [isOpen, tables]);
+  }, [isOpen, tables, liveState.bbStackUpdates]);
 
   const handleLevelChange = (tableId: string, level: string) => {
     setUpdateData(prev =>
@@ -164,7 +171,37 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       }
     }
     
-    console.log('BB/Stack Update Data (per table format):', updateData);
+    // Save the data to live state
+    const bbStackUpdates = { ...liveState.bbStackUpdates };
+    
+    updateData.forEach(data => {
+      const table = tables.find(t => t.id === data.tableId);
+      if (!table) return;
+      
+      const isCashTable = table.format === 'Cash';
+      
+      if (isCashTable) {
+        bbStackUpdates[data.tableId] = {
+          smallBlind: data.smallBlind,
+          bigBlind: data.bigBlind
+        };
+      } else {
+        bbStackUpdates[data.tableId] = {
+          level: data.level,
+          stack: data.stack,
+          bb: data.bb
+        };
+      }
+    });
+    
+    updateLiveState({ bbStackUpdates });
+    
+    toast({
+      title: "BB/Stack Updates Saved",
+      description: "Your table settings have been updated successfully.",
+    });
+    
+    console.log('BB/Stack Update Data saved to live state:', bbStackUpdates);
     onClose();
   };
 
