@@ -215,6 +215,8 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         isOpen={showBBStackModal}
         onClose={() => setShowBBStackModal(false)}
         tables={activeTables}
+        sessionFormat={format}
+        currency={currency}
       />
     </div>
   );
