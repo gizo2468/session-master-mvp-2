@@ -7,6 +7,7 @@ import { useSessionContext } from '@/context/SessionContext';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import BBStackUpdateModal from './BBStackUpdateModal';
 import { TableData } from '@/types/poker';
+import { useToast } from '@/hooks/use-toast';
 
 interface SessionTimerCardProps {
   startTime: Date;
@@ -37,7 +38,8 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
 }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showBBStackModal, setShowBBStackModal] = useState(false);
-  const { updateSessionDuration, activeSession } = useSessionContext();
+  const { updateSessionDuration, activeSession, updateTable } = useSessionContext();
+  const { toast } = useToast();
   const updateCounterRef = useRef(0);
   
   // CRITICAL FIX: Calculate duration from actual start time, not accumulated state
@@ -155,6 +157,21 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     
     setShowBBStackModal(true);
   };
+
+  const handleSaveUpdatedTables = async (updatedTables: TableData[]) => {
+    if (!activeSession) return;
+    
+    // Update each modified table in the session
+    for (const updatedTable of updatedTables) {
+      await updateTable(activeSession.id, updatedTable);
+    }
+    
+    // Show success toast
+    toast({
+      title: "BB/Stack Update",
+      description: "Values updated successfully and saved to your session.",
+    });
+  };
   
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
@@ -218,6 +235,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         tables={activeTables}
         sessionFormat={format}
         currency={currency}
+        onSave={handleSaveUpdatedTables}
       />
     </div>
   );
