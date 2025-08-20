@@ -203,10 +203,11 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         <div className="flex justify-center">
           <Button
             onClick={handleBBStackUpdate}
-            className="bg-poker-gold hover:bg-poker-darkGold text-white flex items-center gap-2"
+            variant="outline"
+            className="bg-white/50 border border-gray-200 text-gray-700 hover:bg-white hover:text-gray-900 flex items-center gap-2"
             size="sm"
           >
-            <Icon name="BarChart3" size={14} /> BB/Stack Update
+            <Icon name="CircleDot" size={14} /> BB/Stack Update
           </Button>
         </div>
       </div>
