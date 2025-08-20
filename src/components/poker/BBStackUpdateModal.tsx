@@ -43,7 +43,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
 }) => {
   const [updateData, setUpdateData] = useState<TableUpdateData[]>([]);
 
-  const isCashGame = sessionFormat === 'Cash';
+  // Remove session-level format check - we'll check per table instead
   const currencySymbol = getCurrencySymbol(currency);
 
   // Initialize state when modal opens or tables change
@@ -51,7 +51,9 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     if (isOpen && tables.length > 0) {
       setUpdateData(
         tables.map(table => {
-          if (isCashGame) {
+          const isCashTable = table.format === 'Cash';
+          
+          if (isCashTable) {
             // For cash games, initialize with current table blinds or defaults
             const smallBlindValue = table.smallBlind || 1;
             const bigBlindValue = table.bigBlind || (smallBlindValue * 2);
@@ -65,12 +67,12 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
               bigBlind: bigBlindValue
             };
           } else {
-            // For tournaments, initialize with empty values
+            // For tournaments, initialize with current values or defaults
             return {
               tableId: table.id,
-              level: 1,
-              stack: '',
-              bb: '',
+              level: 1, // Default to 1 since currentLevel doesn't exist in TableData
+              stack: table.currentStack?.toString() || '',
+              bb: table.startingBB?.toString() || '',
               smallBlind: 0, // Not used for tournaments
               bigBlind: 0 // Not used for tournaments
             };
@@ -78,7 +80,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
         })
       );
     }
-  }, [isOpen, tables, isCashGame]);
+  }, [isOpen, tables]);
 
   const handleLevelChange = (tableId: string, level: string) => {
     setUpdateData(prev =>
@@ -139,28 +141,30 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   };
 
   const handleSave = () => {
-    // Validation for cash games
-    if (isCashGame) {
-      const hasInvalidBlinds = updateData.some(data => data.smallBlind <= 0 || data.bigBlind <= 0);
-      if (hasInvalidBlinds) {
-        alert('Cash game blinds cannot be 0 or empty');
-        return;
+    // Validate per table based on its format
+    for (const data of updateData) {
+      const table = tables.find(t => t.id === data.tableId);
+      if (!table) continue;
+      
+      const isCashTable = table.format === 'Cash';
+      
+      if (isCashTable) {
+        // Validation for cash games
+        if (data.smallBlind <= 0 || data.bigBlind <= 0) {
+          alert('Cash game blinds cannot be 0 or empty');
+          return;
+        }
+      } else {
+        // For tournaments, validate numeric fields
+        if (data.stack !== '' && !/^\d+$/.test(data.stack) ||
+            data.bb !== '' && !/^\d+$/.test(data.bb)) {
+          alert('Tournament fields must contain only numbers');
+          return;
+        }
       }
     }
     
-    // For tournaments, validate numeric fields
-    if (!isCashGame) {
-      const hasInvalidFields = updateData.some(data => 
-        data.stack !== '' && !/^\d+$/.test(data.stack) ||
-        data.bb !== '' && !/^\d+$/.test(data.bb)
-      );
-      if (hasInvalidFields) {
-        alert('Tournament fields must contain only numbers');
-        return;
-      }
-    }
-    
-    console.log('BB/Stack Update Data:', updateData);
+    console.log('BB/Stack Update Data (per table format):', updateData);
     onClose();
   };
 
@@ -185,6 +189,8 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
             {tables.map((table, index) => {
               const tableData = updateData.find(data => data.tableId === table.id);
               if (!tableData) return null;
+              
+              const isCashTable = table.format === 'Cash';
 
               return (
                 <div key={table.id} className="border rounded-lg p-4 bg-gray-50">
@@ -195,7 +201,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
                     )}
                   </h4>
                   
-                  {isCashGame ? (
+                  {isCashTable ? (
                     // Cash Game UI - Show sliders for Small Blind and Big Blind
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
