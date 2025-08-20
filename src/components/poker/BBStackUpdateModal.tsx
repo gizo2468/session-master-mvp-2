@@ -15,7 +15,6 @@ interface BBStackUpdateModalProps {
   tables: TableData[];
   sessionFormat: string;
   currency?: string;
-  onSave?: (updatedTables: TableData[]) => void;
 }
 
 interface TableUpdateData {
@@ -40,8 +39,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   onClose,
   tables,
   sessionFormat,
-  currency = 'USD',
-  onSave
+  currency = 'USD'
 }) => {
   const [updateData, setUpdateData] = useState<TableUpdateData[]>([]);
 
@@ -166,44 +164,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       }
     }
     
-    // Create updated tables with new BB/Stack values
-    const updatedTables = tables.map(table => {
-      const tableUpdate = updateData.find(data => data.tableId === table.id);
-      if (!tableUpdate) return table;
-      
-      const isCashTable = table.format === 'Cash';
-      
-      if (isCashTable) {
-        // Update cash game blinds
-        return {
-          ...table,
-          smallBlind: tableUpdate.smallBlind,
-          bigBlind: tableUpdate.bigBlind
-        };
-      } else {
-        // Update tournament values
-        const updatedTable = { ...table };
-        
-        // Update startingBB if BB field has a value
-        if (tableUpdate.bb && tableUpdate.bb !== '') {
-          updatedTable.startingBB = parseInt(tableUpdate.bb);
-        }
-        
-        // Update currentStack if stack field has a value
-        if (tableUpdate.stack && tableUpdate.stack !== '') {
-          updatedTable.currentStack = parseInt(tableUpdate.stack);
-        }
-        
-        return updatedTable;
-      }
-    });
-    
-    // Call the onSave callback with updated tables
-    if (onSave) {
-      onSave(updatedTables);
-    }
-    
-    console.log('BB/Stack Update - Updated tables:', updatedTables);
+    console.log('BB/Stack Update Data (per table format):', updateData);
     onClose();
   };
 
