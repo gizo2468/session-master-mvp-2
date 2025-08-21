@@ -94,27 +94,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           
           {/* Center-aligned summary pills */}
           <div className="flex flex-row flex-wrap items-start justify-center gap-2 mt-1 mb-1">
-            <Badge
-              variant="outline"
-              className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
-            >
-              <span className="font-bold text-poker-gold">{currencySymbol}{totalInitialBuyin.toFixed(2)}</span>
-              <span className="ml-1 opacity-80 text-xs">
-                {tableCount > 0 ? `from ${tableCount} table${tableCount !== 1 ? "s" : ""}` : "buy-in"}
-              </span>
-            </Badge>
-            {totalRebuyAmount > 0 && (
-              <Badge
-                variant="outline"
-                className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800 px-3 py-1 font-normal text-sm"
-              >
-                <span className="font-bold text-poker-gold">+{currencySymbol}{totalRebuyAmount.toFixed(2)}</span>
-                <span className="ml-1 opacity-80 text-xs">
-                  from {rebuyCount} rebuy{rebuyCount !== 1 ? "s" : ""}
-                </span>
-              </Badge>
-            )}
-            
             {/* Total Buy-ins Badge */}
             <Badge
               variant="outline"
@@ -164,13 +143,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             </div>
           )}
           
-          {/* Only show blinds row if it's STRICTLY a Cash game format AND has valid blinds values */}
-          {shouldShowBlinds && (
-            <div className="flex justify-between">
-              <span className="text-gray-500">Blinds:</span>
-              <span className="font-medium">{currencySymbol}{session.smallBlind}/{currencySymbol}{session.bigBlind}</span>
-            </div>
-          )}
           
           {/* Multi-day tournaments details section */}
           {hasMultiDayTables && (
