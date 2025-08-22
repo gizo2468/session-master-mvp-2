@@ -222,6 +222,7 @@ export const convertDatabaseSessionToPokerSession = (
           bountyAmount: parseFloat(table.bounty_amount || '0'),
           finalPosition: table.final_position,
           notes: table.table_notes,
+          tournamentTypes: table.tournament_type ? [table.tournament_type] : undefined, // Load tournament type from database
           hands: tableHands // Properly assign hands with consistent IDs
         };
 

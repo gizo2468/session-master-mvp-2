@@ -519,6 +519,7 @@ export type Database = {
           table_name: string | null
           table_notes: string | null
           table_type: string | null
+          tournament_type: string | null
           updated_at: string | null
           user_id: string
         }
@@ -545,6 +546,7 @@ export type Database = {
           table_name?: string | null
           table_notes?: string | null
           table_type?: string | null
+          tournament_type?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -571,6 +573,7 @@ export type Database = {
           table_name?: string | null
           table_notes?: string | null
           table_type?: string | null
+          tournament_type?: string | null
           updated_at?: string | null
           user_id?: string
         }
