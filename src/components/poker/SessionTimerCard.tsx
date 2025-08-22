@@ -169,8 +169,8 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         </div>
         
         <div className="text-right">
-          <div className="text-sm text-gray-500">Active Tables</div>
-          <div className="font-medium">{activeSession?.tables?.filter(t => t.isActive).length || 0}</div>
+          <div className="text-sm text-gray-500">Total Tables</div>
+          <div className="font-medium">{activeSession?.tables?.length || 0}</div>
           <div className="text-xs text-gray-400 mt-1">
             <div className="text-sm text-gray-500">Hands Saved</div>
             <div className="font-medium text-gray-800">

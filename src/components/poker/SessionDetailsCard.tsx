@@ -92,6 +92,12 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             </div>
           )}
           
+          {/* Game Type */}
+          <div className="flex justify-between">
+            <span className="text-gray-500">Game Type:</span>
+            <span className="font-medium">{session.gameType}</span>
+          </div>
+          
           {/* Center-aligned summary pills */}
           <div className="flex flex-row flex-wrap items-start justify-center gap-2 mt-1 mb-1">
             {/* Total Buy-ins Badge */}
