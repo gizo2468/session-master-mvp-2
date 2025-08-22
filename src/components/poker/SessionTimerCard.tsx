@@ -6,6 +6,7 @@ import { format as dateFormat } from 'date-fns';
 import { useSessionContext } from '@/context/SessionContext';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import BBStackUpdateModal from './BBStackUpdateModal';
+import HandTableSelectionModal from './HandTableSelectionModal';
 import { TableData } from '@/types/poker';
 
 interface SessionTimerCardProps {
@@ -37,6 +38,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
 }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showBBStackModal, setShowBBStackModal] = useState(false);
+  const [showHandTableModal, setShowHandTableModal] = useState(false);
   const { updateSessionDuration, activeSession } = useSessionContext();
   const updateCounterRef = useRef(0);
   
@@ -155,6 +157,14 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
     
     setShowBBStackModal(true);
   };
+
+  const handleUploadHand = (e: React.MouseEvent) => {
+    // Prevent event bubbling
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setShowHandTableModal(true);
+  };
   
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
@@ -210,6 +220,18 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
             <Icon name="CircleDot" size={14} /> BB/Stack Update
           </Button>
         </div>
+        
+        {/* Centered Upload Hand button */}
+        <div className="flex justify-center">
+          <Button
+            onClick={handleUploadHand}
+            variant="outline"
+            className="bg-white/50 border border-gray-200 text-gray-700 hover:bg-white hover:text-gray-900 flex items-center gap-2"
+            size="sm"
+          >
+            <Icon name="Hand" size={14} /> Upload Hand
+          </Button>
+        </div>
       </div>
 
       <BBStackUpdateModal
@@ -218,6 +240,13 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         tables={activeTables}
         sessionFormat={format}
         currency={currency}
+        sessionId={activeSession?.id || ''}
+      />
+      
+      <HandTableSelectionModal
+        isOpen={showHandTableModal}
+        onClose={() => setShowHandTableModal(false)}
+        tables={activeTables}
         sessionId={activeSession?.id || ''}
       />
     </div>
