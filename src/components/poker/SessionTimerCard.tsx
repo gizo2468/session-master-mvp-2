@@ -161,28 +161,19 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       <div className="mb-2 text-sm text-gray-500">Session Time</div>
       <div className="text-5xl font-mono font-bold mb-3">{formatTime(elapsedTime)}</div>
       
-      <div className="mb-6">
-        {/* First row: Started only */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="text-left">
-            <div className="text-sm text-gray-500">Started</div>
-            <div className="font-medium">{formattedStartTime}</div>
-            <div className="text-xs text-gray-400">{formattedDate}</div>
-          </div>
-          
-          <div></div> {/* Empty right column */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="text-left">
+          <div className="text-sm text-gray-500">Started</div>
+          <div className="font-medium">{formattedStartTime}</div>
+          <div className="text-xs text-gray-400">{formattedDate}</div>
         </div>
         
-        {/* Second and third rows: Active Tables and Hands Saved */}
-        <div className="grid grid-cols-2 gap-4">
-          <div></div> {/* Empty left column */}
-          
-          <div className="text-right">
-            <div className="text-sm text-gray-500">Active Tables</div>
-            <div className="font-medium mb-2">{activeSession?.tables?.filter(t => t.isActive).length || 0}</div>
-            
+        <div className="text-right">
+          <div className="text-sm text-gray-500">Active Tables</div>
+          <div className="font-medium">{activeSession?.tables?.filter(t => t.isActive).length || 0}</div>
+          <div className="text-xs text-gray-400 mt-1">
             <div className="text-sm text-gray-500">Hands Saved</div>
-            <div className="font-medium">
+            <div className="font-medium text-gray-800">
               {activeSession?.tables?.reduce((total, table) => total + (table.hands?.length || 0), 0) || 0}
             </div>
           </div>
@@ -206,13 +197,6 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
           >
             <Icon name="CircleStop" size={16} /> End Session
           </Button>
-        </div>
-        
-        {/* Centered Game Type */}
-        <div className="flex justify-center">
-          <div className="text-sm text-gray-600 font-medium">
-            {gameType}
-          </div>
         </div>
         
         {/* Centered BB/Stack Update button */}
