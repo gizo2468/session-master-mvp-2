@@ -162,7 +162,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       <div className="text-5xl font-mono font-bold mb-3">{formatTime(elapsedTime)}</div>
       
       <div className="mb-6">
-        {/* First row: Started and Game Type */}
+        {/* First row: Started only */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="text-left">
             <div className="text-sm text-gray-500">Started</div>
@@ -170,10 +170,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
             <div className="text-xs text-gray-400">{formattedDate}</div>
           </div>
           
-          <div className="text-right">
-            <div className="text-sm text-gray-500">Game Type</div>
-            <div className="font-medium">{gameType}</div>
-          </div>
+          <div></div> {/* Empty right column */}
         </div>
         
         {/* Second and third rows: Active Tables and Hands Saved */}
@@ -209,6 +206,13 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
           >
             <Icon name="CircleStop" size={16} /> End Session
           </Button>
+        </div>
+        
+        {/* Centered Game Type */}
+        <div className="flex justify-center">
+          <div className="text-sm text-gray-600 font-medium">
+            {gameType}
+          </div>
         </div>
         
         {/* Centered BB/Stack Update button */}
