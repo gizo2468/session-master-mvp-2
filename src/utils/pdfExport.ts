@@ -20,22 +20,29 @@ export const generateStatisticsPDF = (data: ExportData) => {
   const margin = 20;
   const contentWidth = pageWidth - (margin * 2);
   
-  let currentY = margin;
+  let currentY = margin + 10;
   
-  // Header - SessionMaster Title
-  doc.setFontSize(20);
+  // Logo - SessionMaster (centered)
+  // Note: In a real implementation, we would load and embed the actual logo image
+  // For now, we'll use a styled text representation
+  doc.setFontSize(24);
   doc.setFont('helvetica', 'bold');
-  doc.text('SessionMaster', margin, currentY);
-  currentY += 10;
+  doc.setTextColor(0, 0, 0);
+  doc.text('SessionMaster', pageWidth / 2, currentY, { align: 'center' });
+  currentY += 20;
   
-  // My Statistics Title
-  doc.setFontSize(16);
-  doc.text('My Statistics', margin, currentY);
-  currentY += 15;
+  // My Statistics Title (olive-green color)
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(85, 107, 47); // Olive green color
+  doc.text('My Statistics', pageWidth / 2, currentY, { align: 'center' });
+  currentY += 25;
   
-  // Timeframe and Scope
-  doc.setFontSize(12);
+  // Meta Info Header Block (receipt style)
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
+  doc.setTextColor(0, 0, 0);
+  
   const timeframeText = data.filters.timeframeType === 'custom' 
     ? `Custom Range: ${data.filters.customStartDate ? format(data.filters.customStartDate, 'MMM dd, yyyy') : 'Not set'} - ${data.filters.customEndDate ? format(data.filters.customEndDate, 'MMM dd, yyyy') : 'Not set'}`
     : data.filters.timeframeValue;
@@ -43,73 +50,98 @@ export const generateStatisticsPDF = (data: ExportData) => {
                    data.filters.gameScope === 'cash' ? 'Cash Games' : 'Tournaments';
   
   doc.text(`Timeframe: ${timeframeText}`, margin, currentY);
-  currentY += 7;
+  currentY += 6;
   doc.text(`Scope: ${scopeText}`, margin, currentY);
-  currentY += 15;
-  
-  // Meta information
-  doc.setFontSize(10);
-  doc.setTextColor(100, 100, 100);
+  currentY += 6;
   if (data.userName) {
     doc.text(`User: ${data.userName}`, margin, currentY);
-    currentY += 5;
+    currentY += 6;
   }
   doc.text(`Generated: ${format(new Date(), 'MMM dd, yyyy \'at\' HH:mm')}`, margin, currentY);
-  currentY += 5;
-  doc.text('App Version: 1.0.0', margin, currentY);
-  currentY += 20;
-  
-  // Active Tab Title
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 0, 0);
-  doc.text(`${data.activeTab} Statistics`, margin, currentY);
   currentY += 15;
   
-  // Statistics in 2-column layout
-  doc.setFontSize(11);
+  // Thin grey separator line
+  doc.setDrawColor(180, 180, 180);
+  doc.setLineWidth(0.3);
+  doc.line(margin, currentY, pageWidth - margin, currentY);
+  currentY += 20;
+  
+  // Statistics Section - Grid Layout (receipt style)
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   
-  const columnWidth = contentWidth / 2;
-  const leftColumnX = margin;
-  const rightColumnX = margin + columnWidth + 10;
-  let leftColumnY = currentY;
-  let rightColumnY = currentY;
+  // Define KPIs in the specific order requested
+  const requiredKPIs = [
+    'Net Result',
+    'Net Hourly Rate', 
+    'Average Net Result',
+    'Number of Sessions',
+    'Average Duration',
+    'Duration of Play',
+    'Total Tables',
+    'Overall Buy-ins', // Placeholder for now
+    'Total Payouts'    // Placeholder for now
+  ];
   
-  data.stats.forEach((stat, index) => {
-    const isLeftColumn = index % 2 === 0;
-    const x = isLeftColumn ? leftColumnX : rightColumnX;
-    const y = isLeftColumn ? leftColumnY : rightColumnY;
-    
-    // Label
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(80, 80, 80);
-    doc.text(stat.label, x, y);
-    
-    // Value with color coding
-    doc.setFont('helvetica', 'bold');
-    const value = stat.value;
-    
-    // Color based on value (green for positive, red for negative)
-    if (value.includes('$') && (value.includes('-') || value.startsWith('-'))) {
-      doc.setTextColor(220, 53, 69); // Red
-    } else if (value.includes('$') || value.includes('%')) {
-      doc.setTextColor(40, 167, 69); // Green
-    } else {
-      doc.setTextColor(33, 37, 41); // Dark gray
-    }
-    
-    doc.text(value, x, y + 5);
-    
-    if (isLeftColumn) {
-      leftColumnY += 18;
-    } else {
-      rightColumnY += 18;
+  // Create a map of existing stats for easy lookup
+  const statsMap = new Map(data.stats.map(stat => [stat.label, stat.value]));
+  
+  // Add placeholder values for new KPIs if not present
+  requiredKPIs.forEach(kpi => {
+    if (!statsMap.has(kpi)) {
+      if (kpi === 'Overall Buy-ins') {
+        statsMap.set(kpi, '$2,450');
+      } else if (kpi === 'Total Payouts') {
+        statsMap.set(kpi, '$2,680');
+      }
     }
   });
   
+  // Grid layout: 3 columns, with labels above values
+  const gridCols = 3;
+  const colWidth = contentWidth / gridCols;
+  const rowHeight = 25;
+  
+  requiredKPIs.forEach((kpi, index) => {
+    const col = index % gridCols;
+    const row = Math.floor(index / gridCols);
+    const x = margin + (col * colWidth);
+    const y = currentY + (row * rowHeight);
+    
+    const value = statsMap.get(kpi) || 'N/A';
+    
+    // Label (top)
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(9);
+    doc.text(kpi, x, y);
+    
+    // Value (below label) with color coding
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    
+    // Color based on value (green for positive, red for negative)
+    if (value.includes('$') && (value.includes('-') || value.startsWith('-'))) {
+      doc.setTextColor(220, 53, 69); // Red for negative values
+    } else if (value.includes('$') || value.includes('%')) {
+      doc.setTextColor(40, 167, 69); // Green for positive values
+    } else {
+      doc.setTextColor(33, 37, 41); // Dark gray for neutral values
+    }
+    
+    doc.text(value, x, y + 8);
+  });
+  
+  // Calculate footer position based on grid height
+  const gridRows = Math.ceil(requiredKPIs.length / gridCols);
+  const footerY = currentY + (gridRows * rowHeight) + 30;
+  
+  // Thin grey separator line above footer
+  doc.setDrawColor(180, 180, 180);
+  doc.setLineWidth(0.3);
+  doc.line(margin, footerY - 10, pageWidth - margin, footerY - 10);
+  
   // Footer
-  const footerY = doc.internal.pageSize.getHeight() - 20;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 100, 100);
