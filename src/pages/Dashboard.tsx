@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
@@ -6,6 +6,7 @@ import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
 import PlayerAllTimeChart from '@/components/PlayerAllTimeChart';
 import StatsQuickView from '@/components/StatsQuickView';
 import MyCoachingNetwork from '@/components/coaching/MyCoachingNetwork';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Dashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -75,6 +76,81 @@ const Dashboard: React.FC = () => {
                 <MyCoachingNetwork />
                 <StatsQuickView showExtendedMetrics />
                 <PlayerAllTimeChart />
+                
+                {/* My Statistics Section */}
+                <div className="bg-white rounded-lg p-6 shadow-sm">
+                  <h3 className="text-xl font-bold mb-4 text-primary">My Statistics</h3>
+                  <Tabs defaultValue="sessions" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="sessions">Sessions</TabsTrigger>
+                      <TabsTrigger value="cash">Cash</TabsTrigger>
+                      <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="sessions" className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Sessions</p>
+                          <p className="text-2xl font-bold">24</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Win Rate</p>
+                          <p className="text-2xl font-bold text-green-600">67%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Avg Duration</p>
+                          <p className="text-2xl font-bold">4.5h</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Hands</p>
+                          <p className="text-2xl font-bold">1,247</p>
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="cash" className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Net Profit</p>
+                          <p className="text-2xl font-bold text-green-600">$2,350</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Hourly Rate</p>
+                          <p className="text-2xl font-bold">$15.50</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Sessions</p>
+                          <p className="text-2xl font-bold">18</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Best Session</p>
+                          <p className="text-2xl font-bold text-green-600">$445</p>
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="tournaments" className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Tournaments</p>
+                          <p className="text-2xl font-bold">6</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">ITM Rate</p>
+                          <p className="text-2xl font-bold">33%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Net Result</p>
+                          <p className="text-2xl font-bold text-red-600">-$1,235</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">ROI</p>
+                          <p className="text-2xl font-bold text-red-600">-18%</p>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
               </div>
             ) : (
               <div className="space-y-6">
@@ -82,6 +158,81 @@ const Dashboard: React.FC = () => {
                 <MyCoachingNetwork />
                 <StatsQuickView showExtendedMetrics />
                 <PlayerAllTimeChart />
+                
+                {/* My Statistics Section */}
+                <div className="bg-white rounded-lg p-6 shadow-sm">
+                  <h3 className="text-xl font-bold mb-4 text-primary">My Statistics</h3>
+                  <Tabs defaultValue="sessions" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="sessions">Sessions</TabsTrigger>
+                      <TabsTrigger value="cash">Cash</TabsTrigger>
+                      <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="sessions" className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Sessions</p>
+                          <p className="text-2xl font-bold">24</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Win Rate</p>
+                          <p className="text-2xl font-bold text-green-600">67%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Avg Duration</p>
+                          <p className="text-2xl font-bold">4.5h</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Hands</p>
+                          <p className="text-2xl font-bold">1,247</p>
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="cash" className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Net Profit</p>
+                          <p className="text-2xl font-bold text-green-600">$2,350</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Hourly Rate</p>
+                          <p className="text-2xl font-bold">$15.50</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Sessions</p>
+                          <p className="text-2xl font-bold">18</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Best Session</p>
+                          <p className="text-2xl font-bold text-green-600">$445</p>
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="tournaments" className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Tournaments</p>
+                          <p className="text-2xl font-bold">6</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">ITM Rate</p>
+                          <p className="text-2xl font-bold">33%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Net Result</p>
+                          <p className="text-2xl font-bold text-red-600">-$1,235</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">ROI</p>
+                          <p className="text-2xl font-bold text-red-600">-18%</p>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
               </div>
             )}
           </div>
