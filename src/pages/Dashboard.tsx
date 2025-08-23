@@ -90,20 +90,36 @@ const Dashboard: React.FC = () => {
                     <TabsContent value="sessions" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Sessions</p>
+                          <p className="text-sm text-gray-600">Net Result</p>
+                          <p className="text-2xl font-bold text-green-600">$2,450</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Net Hourly Rate</p>
+                          <p className="text-2xl font-bold">$18.50</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Average Net Result</p>
+                          <p className="text-2xl font-bold">$102</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Number of Sessions</p>
                           <p className="text-2xl font-bold">24</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Win Rate</p>
-                          <p className="text-2xl font-bold text-green-600">67%</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Avg Duration</p>
+                          <p className="text-sm text-gray-600">Average Duration</p>
                           <p className="text-2xl font-bold">4.5h</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Hands</p>
+                          <p className="text-sm text-gray-600">Duration of Play</p>
+                          <p className="text-2xl font-bold">108h</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Hands Count</p>
                           <p className="text-2xl font-bold">1,247</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Tables</p>
+                          <p className="text-2xl font-bold">45</p>
                         </div>
                       </div>
                     </TabsContent>
@@ -111,20 +127,32 @@ const Dashboard: React.FC = () => {
                     <TabsContent value="cash" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Profit</p>
+                          <p className="text-sm text-gray-600">Net Result</p>
                           <p className="text-2xl font-bold text-green-600">$2,350</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Hourly Rate</p>
+                          <p className="text-sm text-gray-600">Net Hourly Rate</p>
                           <p className="text-2xl font-bold">$15.50</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Sessions</p>
+                          <p className="text-sm text-gray-600">Hourly Rate in BB</p>
+                          <p className="text-2xl font-bold">8.2 BB/h</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Average Net Result</p>
+                          <p className="text-2xl font-bold">$130</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Win Ratio</p>
+                          <p className="text-2xl font-bold">72%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Number of Records</p>
                           <p className="text-2xl font-bold">18</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Best Session</p>
-                          <p className="text-2xl font-bold text-green-600">$445</p>
+                          <p className="text-sm text-gray-600">Total Tables</p>
+                          <p className="text-2xl font-bold">32</p>
                         </div>
                       </div>
                     </TabsContent>
@@ -132,20 +160,32 @@ const Dashboard: React.FC = () => {
                     <TabsContent value="tournaments" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Tournaments</p>
-                          <p className="text-2xl font-bold">6</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">ITM Rate</p>
-                          <p className="text-2xl font-bold">33%</p>
-                        </div>
-                        <div className="text-center">
                           <p className="text-sm text-gray-600">Net Result</p>
                           <p className="text-2xl font-bold text-red-600">-$1,235</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">ROI</p>
+                          <p className="text-sm text-gray-600">Net Hourly Rate</p>
+                          <p className="text-2xl font-bold text-red-600">-$8.20</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Return on Investment</p>
                           <p className="text-2xl font-bold text-red-600">-18%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">ITM Ratio</p>
+                          <p className="text-2xl font-bold">33%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Number of Records</p>
+                          <p className="text-2xl font-bold">6</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Average Buy-in</p>
+                          <p className="text-2xl font-bold">$115</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Tables</p>
+                          <p className="text-2xl font-bold">13</p>
                         </div>
                       </div>
                     </TabsContent>
@@ -172,20 +212,36 @@ const Dashboard: React.FC = () => {
                     <TabsContent value="sessions" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Sessions</p>
+                          <p className="text-sm text-gray-600">Net Result</p>
+                          <p className="text-2xl font-bold text-green-600">$2,450</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Net Hourly Rate</p>
+                          <p className="text-2xl font-bold">$18.50</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Average Net Result</p>
+                          <p className="text-2xl font-bold">$102</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Number of Sessions</p>
                           <p className="text-2xl font-bold">24</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Win Rate</p>
-                          <p className="text-2xl font-bold text-green-600">67%</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Avg Duration</p>
+                          <p className="text-sm text-gray-600">Average Duration</p>
                           <p className="text-2xl font-bold">4.5h</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Hands</p>
+                          <p className="text-sm text-gray-600">Duration of Play</p>
+                          <p className="text-2xl font-bold">108h</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Hands Count</p>
                           <p className="text-2xl font-bold">1,247</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Tables</p>
+                          <p className="text-2xl font-bold">45</p>
                         </div>
                       </div>
                     </TabsContent>
@@ -193,20 +249,32 @@ const Dashboard: React.FC = () => {
                     <TabsContent value="cash" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Profit</p>
+                          <p className="text-sm text-gray-600">Net Result</p>
                           <p className="text-2xl font-bold text-green-600">$2,350</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Hourly Rate</p>
+                          <p className="text-sm text-gray-600">Net Hourly Rate</p>
                           <p className="text-2xl font-bold">$15.50</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Sessions</p>
+                          <p className="text-sm text-gray-600">Hourly Rate in BB</p>
+                          <p className="text-2xl font-bold">8.2 BB/h</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Average Net Result</p>
+                          <p className="text-2xl font-bold">$130</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Win Ratio</p>
+                          <p className="text-2xl font-bold">72%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Number of Records</p>
                           <p className="text-2xl font-bold">18</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Best Session</p>
-                          <p className="text-2xl font-bold text-green-600">$445</p>
+                          <p className="text-sm text-gray-600">Total Tables</p>
+                          <p className="text-2xl font-bold">32</p>
                         </div>
                       </div>
                     </TabsContent>
@@ -214,20 +282,32 @@ const Dashboard: React.FC = () => {
                     <TabsContent value="tournaments" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Tournaments</p>
-                          <p className="text-2xl font-bold">6</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">ITM Rate</p>
-                          <p className="text-2xl font-bold">33%</p>
-                        </div>
-                        <div className="text-center">
                           <p className="text-sm text-gray-600">Net Result</p>
                           <p className="text-2xl font-bold text-red-600">-$1,235</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">ROI</p>
+                          <p className="text-sm text-gray-600">Net Hourly Rate</p>
+                          <p className="text-2xl font-bold text-red-600">-$8.20</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Return on Investment</p>
                           <p className="text-2xl font-bold text-red-600">-18%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">ITM Ratio</p>
+                          <p className="text-2xl font-bold">33%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Number of Records</p>
+                          <p className="text-2xl font-bold">6</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Average Buy-in</p>
+                          <p className="text-2xl font-bold">$115</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Tables</p>
+                          <p className="text-2xl font-bold">13</p>
                         </div>
                       </div>
                     </TabsContent>
