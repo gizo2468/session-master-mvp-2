@@ -7,16 +7,80 @@ import PlayerAllTimeChart from '@/components/PlayerAllTimeChart';
 import StatsQuickView from '@/components/StatsQuickView';
 import MyCoachingNetwork from '@/components/coaching/MyCoachingNetwork';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { StatisticsFilterModal, FilterOptions } from '@/components/StatisticsFilterModal';
+import { generateStatisticsPDF } from '@/utils/pdfExport';
+import { Plus } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
   const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('sessions');
+  const [filters, setFilters] = useState<FilterOptions>({
+    timeframeType: 'monthly',
+    timeframeValue: 'This Month',
+    gameScope: 'all',
+    gameTypes: [],
+    sessionFormat: [],
+  });
 
   // Helper function to display role with proper formatting
   const getDisplayRole = (role?: string) => {
     if (role === 'student') return 'Player';
     if (role === 'coach') return 'Coach';
     return role || 'Unknown';
+  };
+
+  // Get current stats based on active tab
+  const getCurrentStats = () => {
+    const statsData = {
+      sessions: [
+        { label: 'Net Result', value: '$2,450' },
+        { label: 'Net Hourly Rate', value: '$18.50' },
+        { label: 'Average Net Result', value: '$102' },
+        { label: 'Number of Sessions', value: '24' },
+        { label: 'Average Duration', value: '4.5h' },
+        { label: 'Duration of Play', value: '108h' },
+        { label: 'Hands Count', value: '1,247' },
+        { label: 'Total Tables', value: '45' },
+      ],
+      cash: [
+        { label: 'Net Result', value: '$2,350' },
+        { label: 'Net Hourly Rate', value: '$15.50' },
+        { label: 'Hourly Rate in BB', value: '8.2 BB/h' },
+        { label: 'Average Net Result', value: '$130' },
+        { label: 'Win Ratio', value: '72%' },
+        { label: 'Number of Records', value: '18' },
+        { label: 'Total Tables', value: '32' },
+      ],
+      tournaments: [
+        { label: 'Net Result', value: '-$1,235' },
+        { label: 'Net Hourly Rate', value: '-$8.20' },
+        { label: 'Return on Investment', value: '-18%' },
+        { label: 'ITM Ratio', value: '33%' },
+        { label: 'Number of Records', value: '6' },
+        { label: 'Average Buy-in', value: '$115' },
+        { label: 'Total Tables', value: '13' },
+      ],
+    };
+    return statsData[activeTab as keyof typeof statsData] || [];
+  };
+
+  const handleApplyFilters = () => {
+    // For now, this just closes the modal
+    // In the future, this will trigger data refetch with filters
+    console.log('Applying filters:', filters);
+  };
+
+  const handleExportPDF = () => {
+    const stats = getCurrentStats();
+    const exportData = {
+      activeTab: activeTab.charAt(0).toUpperCase() + activeTab.slice(1),
+      stats,
+      filters,
+      userName: user?.fullName || user?.username,
+    };
+    generateStatisticsPDF(exportData);
   };
 
   if (isLoading) {
@@ -80,12 +144,24 @@ const Dashboard: React.FC = () => {
                 {/* My Statistics Section */}
                 <div className="bg-white rounded-lg p-6 shadow-sm">
                   <h3 className="text-xl font-bold mb-4 text-primary">My Statistics</h3>
-                  <Tabs defaultValue="sessions" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="sessions">Sessions</TabsTrigger>
-                      <TabsTrigger value="cash">Cash</TabsTrigger>
-                      <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
-                    </TabsList>
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <div className="flex items-center gap-2">
+                      <TabsList className="grid grid-cols-3 flex-1">
+                        <TabsTrigger value="sessions">Sessions</TabsTrigger>
+                        <TabsTrigger value="cash">Cash</TabsTrigger>
+                        <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
+                      </TabsList>
+                      <div className="border-l border-border pl-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsFilterModalOpen(true)}
+                          className="h-10 w-10 p-0"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                     
                     <TabsContent value="sessions" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
@@ -202,12 +278,24 @@ const Dashboard: React.FC = () => {
                 {/* My Statistics Section */}
                 <div className="bg-white rounded-lg p-6 shadow-sm">
                   <h3 className="text-xl font-bold mb-4 text-primary">My Statistics</h3>
-                  <Tabs defaultValue="sessions" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="sessions">Sessions</TabsTrigger>
-                      <TabsTrigger value="cash">Cash</TabsTrigger>
-                      <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
-                    </TabsList>
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <div className="flex items-center gap-2">
+                      <TabsList className="grid grid-cols-3 flex-1">
+                        <TabsTrigger value="sessions">Sessions</TabsTrigger>
+                        <TabsTrigger value="cash">Cash</TabsTrigger>
+                        <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
+                      </TabsList>
+                      <div className="border-l border-border pl-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsFilterModalOpen(true)}
+                          className="h-10 w-10 p-0"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                     
                     <TabsContent value="sessions" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
@@ -318,6 +406,16 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Filter Modal */}
+      <StatisticsFilterModal
+        open={isFilterModalOpen}
+        onOpenChange={setIsFilterModalOpen}
+        filters={filters}
+        onFiltersChange={setFilters}
+        onApplyFilters={handleApplyFilters}
+        onExportPDF={handleExportPDF}
+      />
     </div>
   );
 };
