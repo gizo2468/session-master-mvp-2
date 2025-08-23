@@ -62,7 +62,7 @@ const Dashboard: React.FC = () => {
       <main className="container mx-auto max-w-md px-4 py-6">
         <div className="text-center space-y-4">
           <div className="bg-white rounded-lg p-6 shadow-sm">
-            <h2 className="text-2xl font-bold mb-2">
+            <h2 className="text-2xl font-bold mb-2 text-primary">
               Welcome, {user.fullName || user.username}!
             </h2>
             <p className="text-gray-600 mb-4">
