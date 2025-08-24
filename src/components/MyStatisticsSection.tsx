@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useSessionContext } from '@/context/SessionContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { calculateSessionStatistics, SessionFormat, formatCurrency, formatDuration, formatPercentage, formatRatio } from '@/utils/statisticsCalculator';
+import { formatCurrency, formatDuration, formatPercentage, formatRatio } from '@/utils/statisticsCalculator';
 import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
+import { useStatisticsData } from '@/hooks/useStatisticsData';
 
 interface StatCellProps {
   label: string;
@@ -45,39 +45,28 @@ interface MyStatisticsSectionProps {
 
 export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilterClick }) => {
   const [activeTab, setActiveTab] = useState('sessions');
-  const { sessions, isLoading } = useSessionContext();
   const { defaultCurrency } = useDefaultCurrency();
-
-  // Calculate statistics for each tab
-  const allStats = calculateSessionStatistics(sessions, 'all');
-  const cashStats = calculateSessionStatistics(sessions, 'cash');
-  const tournamentStats = calculateSessionStatistics(sessions, 'tournament');
+  
+  // Get statistics from Supabase
+  const { statisticsData, isLoading, error } = useStatisticsData();
 
   // Helper function to get stats based on active tab
   const getStats = () => {
+    if (!statisticsData.all) return null;
+    
     switch (activeTab) {
       case 'cash':
-        return cashStats;
+        return statisticsData.cash;
       case 'tournaments':
-        return tournamentStats;
+        return statisticsData.tournaments;
       default:
-        return allStats;
+        return statisticsData.all;
     }
   };
 
   const currentStats = getStats();
 
-  // Format values for display
-  const netResultDisplay = formatCurrency(currentStats.netResult, defaultCurrency);
-  const netHourlyDisplay = formatCurrency(currentStats.netHourlyRate, defaultCurrency);
-  const avgNetResultDisplay = formatCurrency(currentStats.averageNetResult, defaultCurrency);
-  const totalBuyInsDisplay = formatCurrency(currentStats.totalBuyIns, defaultCurrency);
-  const avgDurationDisplay = formatDuration(currentStats.averageDuration);
-  const totalDurationDisplay = formatDuration(currentStats.totalDuration);
-  const winRatioDisplay = formatPercentage(currentStats.winRatio);
-  const profitLossRatioDisplay = formatRatio(currentStats.profitLossRatio);
-
-  if (isLoading) {
+  if (isLoading || !currentStats) {
     return (
       <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
         <h3 className="text-lg sm:text-xl font-bold mb-4 text-primary text-center">My Statistics</h3>
@@ -92,6 +81,27 @@ export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilt
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
+        <h3 className="text-lg sm:text-xl font-bold mb-4 text-primary text-center">My Statistics</h3>
+        <div className="text-center text-red-500 p-4">
+          Failed to load statistics: {error}
+        </div>
+      </div>
+    );
+  }
+
+  // Format values for display
+  const netResultDisplay = formatCurrency(currentStats.netResult, defaultCurrency);
+  const netHourlyDisplay = formatCurrency(currentStats.netHourlyRate, defaultCurrency);
+  const avgNetResultDisplay = formatCurrency(currentStats.averageNetResult, defaultCurrency);
+  const totalBuyInsDisplay = formatCurrency(currentStats.totalBuyIns, defaultCurrency);
+  const avgDurationDisplay = formatDuration(currentStats.averageDuration);
+  const totalDurationDisplay = formatDuration(currentStats.totalDuration);
+  const winRatioDisplay = formatPercentage(currentStats.winRatio);
+  const profitLossRatioDisplay = formatRatio(currentStats.profitLossRatio);
 
   return (
     <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
@@ -117,10 +127,10 @@ export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilt
         
         <TabsContent value="sessions" className="mt-0">
           <div className="grid grid-cols-2 grid-rows-5 gap-3 sm:gap-4">
-            <StatCell label="Net Result" value={netResultDisplay} isPositive={allStats.netResult >= 0} />
-            <StatCell label="Net Hourly Rate" value={netHourlyDisplay} isPositive={allStats.netHourlyRate >= 0} />
+            <StatCell label="Net Result" value={netResultDisplay} isPositive={statisticsData.all?.netResult >= 0} />
+            <StatCell label="Net Hourly Rate" value={netHourlyDisplay} isPositive={statisticsData.all?.netHourlyRate >= 0} />
             
-            <StatCell label="Average Net Result" value={avgNetResultDisplay} isPositive={allStats.averageNetResult >= 0} />
+            <StatCell label="Average Net Result" value={avgNetResultDisplay} isPositive={statisticsData.all?.averageNetResult >= 0} />
             <StatCell label="Total Buy-ins" value={totalBuyInsDisplay} />
             
             <StatCell label="Average Duration" value={avgDurationDisplay} />
@@ -129,51 +139,51 @@ export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilt
             <StatCell label="Win Ratio" value={winRatioDisplay} />
             <StatCell label="Profit/Loss Ratio" value={profitLossRatioDisplay} />
             
-            <StatCell label="Total Tables" value={allStats.totalTables.toString()} />
-            <StatCell label="Number of Sessions" value={allStats.numberOfSessions.toString()} />
+            <StatCell label="Total Tables" value={statisticsData.all?.totalTables.toString() || '0'} />
+            <StatCell label="Number of Sessions" value={statisticsData.all?.numberOfSessions.toString() || '0'} />
           </div>
         </TabsContent>
         
         <TabsContent value="cash" className="mt-0">
           <div className="grid grid-cols-2 grid-rows-6 gap-3 sm:gap-4">
-            <StatCell label="Net Result" value={formatCurrency(cashStats.netResult, defaultCurrency)} isPositive={cashStats.netResult >= 0} />
-            <StatCell label="Net Hourly Rate" value={formatCurrency(cashStats.netHourlyRate, defaultCurrency)} isPositive={cashStats.netHourlyRate >= 0} />
+            <StatCell label="Net Result" value={formatCurrency(statisticsData.cash?.netResult || 0, defaultCurrency)} isPositive={statisticsData.cash?.netResult >= 0} />
+            <StatCell label="Net Hourly Rate" value={formatCurrency(statisticsData.cash?.netHourlyRate || 0, defaultCurrency)} isPositive={statisticsData.cash?.netHourlyRate >= 0} />
             
-            <StatCell label="Average Net Result" value={formatCurrency(cashStats.averageNetResult, defaultCurrency)} isPositive={cashStats.averageNetResult >= 0} />
-            <StatCell label="Total Buy-ins" value={formatCurrency(cashStats.totalBuyIns, defaultCurrency)} />
+            <StatCell label="Average Net Result" value={formatCurrency(statisticsData.cash?.averageNetResult || 0, defaultCurrency)} isPositive={statisticsData.cash?.averageNetResult >= 0} />
+            <StatCell label="Total Buy-ins" value={formatCurrency(statisticsData.cash?.totalBuyIns || 0, defaultCurrency)} />
             
-            <StatCell label="Average Duration" value={formatDuration(cashStats.averageDuration)} />
-            <StatCell label="Total Duration" value={formatDuration(cashStats.totalDuration)} />
+            <StatCell label="Average Duration" value={formatDuration(statisticsData.cash?.averageDuration || 0)} />
+            <StatCell label="Total Duration" value={formatDuration(statisticsData.cash?.totalDuration || 0)} />
             
-            <StatCell label="Average BB/100" value={cashStats.averageBB100?.toFixed(1) || '0.0'} isPositive={cashStats.averageBB100 ? cashStats.averageBB100 >= 0 : null} />
-            <StatCell label="Profit/Loss Ratio" value={formatRatio(cashStats.profitLossRatio)} />
+            <StatCell label="Average BB/100" value={statisticsData.cash?.averageBB100?.toFixed(1) || '0.0'} isPositive={statisticsData.cash?.averageBB100 ? statisticsData.cash.averageBB100 >= 0 : null} />
+            <StatCell label="Profit/Loss Ratio" value={formatRatio(statisticsData.cash?.profitLossRatio || 0)} />
             
-            <StatCell label="Total Tables" value={cashStats.totalTables.toString()} />
-            <StatCell label="Hands Count" value={cashStats.handsCount.toLocaleString()} />
+            <StatCell label="Total Tables" value={statisticsData.cash?.totalTables.toString() || '0'} />
+            <StatCell label="Hands Count" value={statisticsData.cash?.handsCount.toLocaleString() || '0'} />
             
-            <StatCell label="Number of Sessions" value={cashStats.numberOfSessions.toString()} />
+            <StatCell label="Number of Sessions" value={statisticsData.cash?.numberOfSessions.toString() || '0'} />
             <StatCell label="" value="" isEmpty />
           </div>
         </TabsContent>
         
         <TabsContent value="tournaments" className="mt-0">
           <div className="grid grid-cols-2 grid-rows-6 gap-3 sm:gap-4">
-            <StatCell label="Net Result" value={formatCurrency(tournamentStats.netResult, defaultCurrency)} isPositive={tournamentStats.netResult >= 0} />
-            <StatCell label="Net Hourly Rate" value={formatCurrency(tournamentStats.netHourlyRate, defaultCurrency)} isPositive={tournamentStats.netHourlyRate >= 0} />
+            <StatCell label="Net Result" value={formatCurrency(statisticsData.tournaments?.netResult || 0, defaultCurrency)} isPositive={statisticsData.tournaments?.netResult >= 0} />
+            <StatCell label="Net Hourly Rate" value={formatCurrency(statisticsData.tournaments?.netHourlyRate || 0, defaultCurrency)} isPositive={statisticsData.tournaments?.netHourlyRate >= 0} />
             
-            <StatCell label="Average Net Result" value={formatCurrency(tournamentStats.averageNetResult, defaultCurrency)} isPositive={tournamentStats.averageNetResult >= 0} />
-            <StatCell label="Total Buy-ins" value={formatCurrency(tournamentStats.totalBuyIns, defaultCurrency)} />
+            <StatCell label="Average Net Result" value={formatCurrency(statisticsData.tournaments?.averageNetResult || 0, defaultCurrency)} isPositive={statisticsData.tournaments?.averageNetResult >= 0} />
+            <StatCell label="Total Buy-ins" value={formatCurrency(statisticsData.tournaments?.totalBuyIns || 0, defaultCurrency)} />
             
-            <StatCell label="Average Duration" value={formatDuration(tournamentStats.averageDuration)} />
-            <StatCell label="Total Duration" value={formatDuration(tournamentStats.totalDuration)} />
+            <StatCell label="Average Duration" value={formatDuration(statisticsData.tournaments?.averageDuration || 0)} />
+            <StatCell label="Total Duration" value={formatDuration(statisticsData.tournaments?.totalDuration || 0)} />
             
-            <StatCell label="Final Tables" value={tournamentStats.finalTables?.toString() || '0'} />
-            <StatCell label="First Place Finish" value={tournamentStats.firstPlaceFinish?.toString() || '0'} />
+            <StatCell label="Final Tables" value={statisticsData.tournaments?.finalTables?.toString() || '0'} />
+            <StatCell label="First Place Finish" value={statisticsData.tournaments?.firstPlaceFinish?.toString() || '0'} />
             
-            <StatCell label="Total Tables" value={tournamentStats.totalTables.toString()} />
-            <StatCell label="Hands Count" value={tournamentStats.handsCount.toLocaleString()} />
+            <StatCell label="Total Tables" value={statisticsData.tournaments?.totalTables.toString() || '0'} />
+            <StatCell label="Hands Count" value={statisticsData.tournaments?.handsCount.toLocaleString() || '0'} />
             
-            <StatCell label="Number of Sessions" value={tournamentStats.numberOfSessions.toString()} />
+            <StatCell label="Number of Sessions" value={statisticsData.tournaments?.numberOfSessions.toString() || '0'} />
             <StatCell label="" value="" isEmpty />
           </div>
         </TabsContent>

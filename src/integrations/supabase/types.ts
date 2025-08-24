@@ -880,6 +880,32 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_user_session_statistics: {
+        Args: {
+          p_end_date?: string
+          p_start_date?: string
+          p_timeframe?: string
+          p_user_id: string
+        }
+        Returns: {
+          average_bb100: number
+          average_duration: number
+          average_net_result: number
+          final_tables: number
+          first_place_finish: number
+          hands_count: number
+          net_hourly_rate: number
+          net_result: number
+          number_of_sessions: number
+          profit_loss_ratio: number
+          scope: string
+          total_buy_ins: number
+          total_duration: number
+          total_payouts: number
+          total_tables: number
+          win_ratio: number
+        }[]
+      }
       is_coach_for_student: {
         Args: { coach_user_id: string; student_user_id: string }
         Returns: boolean

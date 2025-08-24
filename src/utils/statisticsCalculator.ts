@@ -1,5 +1,6 @@
 import { PokerSession } from "@/types/poker";
 import { calculateSessionProfit } from "./sessionCalculations";
+import { supabase } from "@/integrations/supabase/client";
 
 export type SessionFormat = 'all' | 'cash' | 'tournament';
 
@@ -8,6 +9,7 @@ export interface SessionStats {
   netHourlyRate: number;
   averageNetResult: number;
   totalBuyIns: number;
+  totalPayouts: number;
   averageDuration: number;
   totalDuration: number;
   winRatio: number;
@@ -20,6 +22,103 @@ export interface SessionStats {
   // Tournament-specific
   finalTables?: number;
   firstPlaceFinish?: number;
+}
+
+/**
+ * Calculate statistics using Supabase backend function
+ */
+export const calculateSessionStatisticsFromDB = async (
+  format: SessionFormat, 
+  timeframe: string = 'all-time',
+  startDate?: Date,
+  endDate?: Date
+): Promise<SessionStats> => {
+  try {
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) {
+      throw new Error('User not authenticated');
+    }
+
+    const { data, error } = await supabase.rpc('get_user_session_statistics', {
+      p_user_id: user.user.id,
+      p_timeframe: timeframe,
+      p_start_date: startDate?.toISOString(),
+      p_end_date: endDate?.toISOString()
+    });
+
+    if (error) {
+      console.error('Error fetching statistics:', error);
+      throw error;
+    }
+
+    // Find the stats for the requested format
+    const scopeMap: Record<SessionFormat, string> = {
+      'all': 'all',
+      'cash': 'cash',
+      'tournament': 'tournaments'
+    };
+
+    const stats = data?.find((row: any) => row.scope === scopeMap[format]);
+    
+    if (!stats) {
+      // Return default values if no data found
+      return {
+        netResult: 0,
+        netHourlyRate: 0,
+        averageNetResult: 0,
+        totalBuyIns: 0,
+        totalPayouts: 0,
+        averageDuration: 0,
+        totalDuration: 0,
+        winRatio: 0,
+        profitLossRatio: 0,
+        totalTables: 0,
+        handsCount: 0,
+        numberOfSessions: 0,
+        averageBB100: 0,
+        finalTables: 0,
+        firstPlaceFinish: 0,
+      };
+    }
+
+    return {
+      netResult: Number(stats.net_result || 0),
+      netHourlyRate: Number(stats.net_hourly_rate || 0),
+      averageNetResult: Number(stats.average_net_result || 0),
+      totalBuyIns: Number(stats.total_buy_ins || 0),
+      totalPayouts: Number(stats.total_payouts || 0),
+      averageDuration: Number(stats.average_duration || 0),
+      totalDuration: Number(stats.total_duration || 0),
+      winRatio: Number(stats.win_ratio || 0),
+      profitLossRatio: Number(stats.profit_loss_ratio || 0),
+      totalTables: Number(stats.total_tables || 0),
+      handsCount: Number(stats.hands_count || 0),
+      numberOfSessions: Number(stats.number_of_sessions || 0),
+      averageBB100: Number(stats.average_bb100 || 0),
+      finalTables: Number(stats.final_tables || 0),
+      firstPlaceFinish: Number(stats.first_place_finish || 0),
+    };
+  } catch (error) {
+    console.error('Failed to calculate statistics from DB:', error);
+    // Fallback to local calculation if DB fails
+    return {
+      netResult: 0,
+      netHourlyRate: 0,
+      averageNetResult: 0,
+      totalBuyIns: 0,
+      totalPayouts: 0,
+      averageDuration: 0,
+      totalDuration: 0,
+      winRatio: 0,
+      profitLossRatio: 0,
+      totalTables: 0,
+      handsCount: 0,
+      numberOfSessions: 0,
+      averageBB100: 0,
+      finalTables: 0,
+      firstPlaceFinish: 0,
+    };
+  }
 }
 
 /**
@@ -59,6 +158,7 @@ export const calculateSessionStatistics = (sessions: PokerSession[], format: Ses
       netHourlyRate: 0,
       averageNetResult: 0,
       totalBuyIns: 0,
+      totalPayouts: 0,
       averageDuration: 0,
       totalDuration: 0,
       winRatio: 0,
@@ -183,11 +283,22 @@ export const calculateSessionStatistics = (sessions: PokerSession[], format: Ses
     }, 0);
   }
 
+  // Calculate total payouts (cashouts)
+  const totalPayouts = completedSessions.reduce((sum, session) => {
+    if (session.tables && session.tables.length > 0) {
+      return sum + session.tables.reduce((tableSum, table) => {
+        return tableSum + (table.cashOut || 0);
+      }, 0);
+    }
+    return sum + (session.cashOut || 0);
+  }, 0);
+
   return {
     netResult,
     netHourlyRate,
     averageNetResult,
     totalBuyIns,
+    totalPayouts,
     averageDuration,
     totalDuration,
     winRatio,

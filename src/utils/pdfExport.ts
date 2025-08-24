@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { format } from 'date-fns';
 import type { FilterOptions } from '@/components/StatisticsFilterModal';
+import { calculateSessionStatisticsFromDB, formatCurrency, formatDuration, formatPercentage, formatRatio } from './statisticsCalculator';
 
 interface StatData {
   label: string;
@@ -14,7 +15,76 @@ interface ExportData {
   userName?: string;
 }
 
-export const generateStatisticsPDF = (data: ExportData) => {
+export const generateStatisticsPDFFromDB = async (data: ExportData) => {
+  try {
+    // Fetch fresh data from Supabase
+    const formatMap = { sessions: 'all', cash: 'cash', tournaments: 'tournament' } as const;
+    const format = formatMap[data.activeTab as keyof typeof formatMap] || 'all';
+    
+    // Convert timeframe to backend format
+    const timeframe = data.filters.timeframeType === 'custom' ? 'custom' :
+                     data.filters.timeframeValue === 'This Month' ? 'this-month' : 'all-time';
+    
+    const stats = await calculateSessionStatisticsFromDB(
+      format,
+      timeframe,
+      data.filters.customStartDate,
+      data.filters.customEndDate
+    );
+
+    // Generate PDF with fresh data
+    generateStatisticsPDFWithData({
+      ...data,
+      stats: formatStatsForPDF(stats, data.activeTab)
+    });
+
+  } catch (error) {
+    console.error('Failed to generate PDF with fresh data:', error);
+    // Fallback to provided data
+    generateStatisticsPDFWithData(data);
+  }
+};
+
+const formatStatsForPDF = (stats: any, activeTab: string): StatData[] => {
+  const currency = 'USD'; // TODO: get from user preferences
+  
+  const baseStats = [
+    { label: 'Net Result', value: formatCurrency(stats.netResult, currency) },
+    { label: 'Net Hourly Rate', value: formatCurrency(stats.netHourlyRate, currency) },
+    { label: 'Average Net Result', value: formatCurrency(stats.averageNetResult, currency) },
+    { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns, currency) },
+    { label: 'Average Duration', value: formatDuration(stats.averageDuration) },
+    { label: 'Total Duration', value: formatDuration(stats.totalDuration) },
+    { label: 'Total Tables', value: stats.totalTables.toString() },
+    { label: 'Number of Sessions', value: stats.numberOfSessions.toString() },
+  ];
+
+  if (activeTab === 'sessions') {
+    return [
+      ...baseStats,
+      { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
+      { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
+    ];
+  } else if (activeTab === 'cash') {
+    return [
+      ...baseStats,
+      { label: 'Average BB/100', value: stats.averageBB100.toFixed(2) },
+      { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
+      { label: 'Hands Count', value: stats.handsCount.toString() },
+    ];
+  } else if (activeTab === 'tournaments') {
+    return [
+      ...baseStats,
+      { label: 'Final Tables', value: stats.finalTables.toString() },
+      { label: 'First Place Finish', value: stats.firstPlaceFinish.toString() },
+      { label: 'Hands Count', value: stats.handsCount.toString() },
+    ];
+  }
+
+  return baseStats;
+};
+
+const generateStatisticsPDFWithData = (data: ExportData) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
@@ -235,3 +305,6 @@ export const generateStatisticsPDF = (data: ExportData) => {
   // Save the PDF
   doc.save(filename);
 };
+
+// Keep the original function for backward compatibility
+export const generateStatisticsPDF = generateStatisticsPDFFromDB;
