@@ -144,146 +144,146 @@ const Dashboard: React.FC = () => {
                 <PlayerAllTimeChart />
                 
                 {/* My Statistics Section */}
-                <div className="bg-white rounded-lg p-6 shadow-sm">
-                  <h3 className="text-xl font-bold mb-4 text-primary">My Statistics</h3>
+                <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
+                  <h3 className="text-lg sm:text-xl font-bold mb-4 text-primary text-center">My Statistics</h3>
                   <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <div className="flex items-center gap-2">
-                      <TabsList className="grid grid-cols-3 flex-1">
-                        <TabsTrigger value="sessions">Sessions</TabsTrigger>
-                        <TabsTrigger value="cash">Cash</TabsTrigger>
-                        <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
+                    <div className="flex items-center gap-1 sm:gap-2 mb-4">
+                      <TabsList className="grid grid-cols-3 flex-1 h-9 sm:h-10">
+                        <TabsTrigger value="sessions" className="text-xs sm:text-sm px-1 sm:px-3">Sessions</TabsTrigger>
+                        <TabsTrigger value="cash" className="text-xs sm:text-sm px-1 sm:px-3">Cash</TabsTrigger>
+                        <TabsTrigger value="tournaments" className="text-xs sm:text-sm px-1 sm:px-3">Tournaments</TabsTrigger>
                       </TabsList>
-                      <div className="border-l border-border pl-2">
+                      <div className="border-l border-border pl-1 sm:pl-2">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setIsFilterModalOpen(true)}
-                          className="h-10 w-10 p-0"
+                          className="h-9 w-9 sm:h-10 sm:w-10 p-0"
                         >
-                          <Plus className="h-4 w-4" />
+                          <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </div>
                     </div>
                     
-                    <TabsContent value="sessions" className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                    <TabsContent value="sessions" className="mt-0">
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         {/* Row 1: Net Result, Net Hourly Rate */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Result</p>
-                          <p className="text-2xl font-bold text-green-600">$2,450</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Net Result</p>
+                          <p className="text-lg sm:text-2xl font-bold text-green-600">$2,450</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Hourly Rate</p>
-                          <p className="text-2xl font-bold">$18.50</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Net Hourly Rate</p>
+                          <p className="text-lg sm:text-2xl font-bold">$18.50</p>
                         </div>
                         {/* Row 2: Average Net Result, Average Duration */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Net Result</p>
-                          <p className="text-2xl font-bold">$102</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Average Net Result</p>
+                          <p className="text-lg sm:text-2xl font-bold">$102</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Duration</p>
-                          <p className="text-2xl font-bold">4.5h</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Average Duration</p>
+                          <p className="text-lg sm:text-2xl font-bold">4.5h</p>
                         </div>
                         {/* Row 3: Total Tables, Duration of Play */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Tables</p>
-                          <p className="text-2xl font-bold">45</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Total Tables</p>
+                          <p className="text-lg sm:text-2xl font-bold">45</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Duration of Play</p>
-                          <p className="text-2xl font-bold">108h</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Duration of Play</p>
+                          <p className="text-lg sm:text-2xl font-bold">108h</p>
                         </div>
                         {/* Row 4: Number of Sessions, Hands Count */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Number of Sessions</p>
-                          <p className="text-2xl font-bold">24</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Number of Sessions</p>
+                          <p className="text-lg sm:text-2xl font-bold">24</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Hands Count</p>
-                          <p className="text-2xl font-bold">1,247</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Hands Count</p>
+                          <p className="text-lg sm:text-2xl font-bold">1,247</p>
                         </div>
                       </div>
                     </TabsContent>
                     
-                    <TabsContent value="cash" className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                    <TabsContent value="cash" className="mt-0">
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         {/* Row 1: Net Result, Net Hourly Rate */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Result</p>
-                          <p className="text-2xl font-bold text-green-600">$2,350</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Net Result</p>
+                          <p className="text-lg sm:text-2xl font-bold text-green-600">$2,350</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Hourly Rate</p>
-                          <p className="text-2xl font-bold">$15.50</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Net Hourly Rate</p>
+                          <p className="text-lg sm:text-2xl font-bold">$15.50</p>
                         </div>
                         {/* Row 2: Average Net Result, Average Duration */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Net Result</p>
-                          <p className="text-2xl font-bold">$130</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Average Net Result</p>
+                          <p className="text-lg sm:text-2xl font-bold">$130</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Duration</p>
-                          <p className="text-2xl font-bold">4.2h</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Average Duration</p>
+                          <p className="text-lg sm:text-2xl font-bold">4.2h</p>
                         </div>
                         {/* Row 3: Total Tables, Duration of Play */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Tables</p>
-                          <p className="text-2xl font-bold">32</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Total Tables</p>
+                          <p className="text-lg sm:text-2xl font-bold">32</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Duration of Play</p>
-                          <p className="text-2xl font-bold">75h</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Duration of Play</p>
+                          <p className="text-lg sm:text-2xl font-bold">75h</p>
                         </div>
                         {/* Row 4: Number of Records, Win Ratio */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Number of Records</p>
-                          <p className="text-2xl font-bold">18</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Number of Records</p>
+                          <p className="text-lg sm:text-2xl font-bold">18</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Win Ratio</p>
-                          <p className="text-2xl font-bold">72%</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Win Ratio</p>
+                          <p className="text-lg sm:text-2xl font-bold">72%</p>
                         </div>
                       </div>
                     </TabsContent>
                     
-                    <TabsContent value="tournaments" className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                    <TabsContent value="tournaments" className="mt-0">
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         {/* Row 1: Net Result, Net Hourly Rate */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Result</p>
-                          <p className="text-2xl font-bold text-red-600">-$1,235</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Net Result</p>
+                          <p className="text-lg sm:text-2xl font-bold text-red-600">-$1,235</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Hourly Rate</p>
-                          <p className="text-2xl font-bold text-red-600">-$8.20</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Net Hourly Rate</p>
+                          <p className="text-lg sm:text-2xl font-bold text-red-600">-$8.20</p>
                         </div>
                         {/* Row 2: Average Net Result, Average Duration */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Net Result</p>
-                          <p className="text-2xl font-bold text-red-600">-$206</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Average Net Result</p>
+                          <p className="text-lg sm:text-2xl font-bold text-red-600">-$206</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Duration</p>
-                          <p className="text-2xl font-bold">2.5h</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Average Duration</p>
+                          <p className="text-lg sm:text-2xl font-bold">2.5h</p>
                         </div>
                         {/* Row 3: Total Tables, Duration of Play */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Tables</p>
-                          <p className="text-2xl font-bold">13</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Total Tables</p>
+                          <p className="text-lg sm:text-2xl font-bold">13</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Duration of Play</p>
-                          <p className="text-2xl font-bold">15h</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Duration of Play</p>
+                          <p className="text-lg sm:text-2xl font-bold">15h</p>
                         </div>
                         {/* Row 4: Number of Records, ITM Ratio */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Number of Records</p>
-                          <p className="text-2xl font-bold">6</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Number of Records</p>
+                          <p className="text-lg sm:text-2xl font-bold">6</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">ITM Ratio</p>
-                          <p className="text-2xl font-bold">33%</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">ITM Ratio</p>
+                          <p className="text-lg sm:text-2xl font-bold">33%</p>
                         </div>
                       </div>
                     </TabsContent>
@@ -298,146 +298,146 @@ const Dashboard: React.FC = () => {
                 <PlayerAllTimeChart />
                 
                 {/* My Statistics Section */}
-                <div className="bg-white rounded-lg p-6 shadow-sm">
-                  <h3 className="text-xl font-bold mb-4 text-primary">My Statistics</h3>
+                <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
+                  <h3 className="text-lg sm:text-xl font-bold mb-4 text-primary text-center">My Statistics</h3>
                   <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <div className="flex items-center gap-2">
-                      <TabsList className="grid grid-cols-3 flex-1">
-                        <TabsTrigger value="sessions">Sessions</TabsTrigger>
-                        <TabsTrigger value="cash">Cash</TabsTrigger>
-                        <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
+                    <div className="flex items-center gap-1 sm:gap-2 mb-4">
+                      <TabsList className="grid grid-cols-3 flex-1 h-9 sm:h-10">
+                        <TabsTrigger value="sessions" className="text-xs sm:text-sm px-1 sm:px-3">Sessions</TabsTrigger>
+                        <TabsTrigger value="cash" className="text-xs sm:text-sm px-1 sm:px-3">Cash</TabsTrigger>
+                        <TabsTrigger value="tournaments" className="text-xs sm:text-sm px-1 sm:px-3">Tournaments</TabsTrigger>
                       </TabsList>
-                      <div className="border-l border-border pl-2">
+                      <div className="border-l border-border pl-1 sm:pl-2">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setIsFilterModalOpen(true)}
-                          className="h-10 w-10 p-0"
+                          className="h-9 w-9 sm:h-10 sm:w-10 p-0"
                         >
-                          <Plus className="h-4 w-4" />
+                          <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </div>
                     </div>
                     
-                    <TabsContent value="sessions" className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                    <TabsContent value="sessions" className="mt-0">
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         {/* Row 1: Net Result, Net Hourly Rate */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Result</p>
-                          <p className="text-2xl font-bold text-green-600">$2,450</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Net Result</p>
+                          <p className="text-lg sm:text-2xl font-bold text-green-600">$2,450</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Hourly Rate</p>
-                          <p className="text-2xl font-bold">$18.50</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Net Hourly Rate</p>
+                          <p className="text-lg sm:text-2xl font-bold">$18.50</p>
                         </div>
                         {/* Row 2: Average Net Result, Average Duration */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Net Result</p>
-                          <p className="text-2xl font-bold">$102</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Average Net Result</p>
+                          <p className="text-lg sm:text-2xl font-bold">$102</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Duration</p>
-                          <p className="text-2xl font-bold">4.5h</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Average Duration</p>
+                          <p className="text-lg sm:text-2xl font-bold">4.5h</p>
                         </div>
                         {/* Row 3: Total Tables, Duration of Play */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Tables</p>
-                          <p className="text-2xl font-bold">45</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Total Tables</p>
+                          <p className="text-lg sm:text-2xl font-bold">45</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Duration of Play</p>
-                          <p className="text-2xl font-bold">108h</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Duration of Play</p>
+                          <p className="text-lg sm:text-2xl font-bold">108h</p>
                         </div>
                         {/* Row 4: Number of Sessions, Hands Count */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Number of Sessions</p>
-                          <p className="text-2xl font-bold">24</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Number of Sessions</p>
+                          <p className="text-lg sm:text-2xl font-bold">24</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Hands Count</p>
-                          <p className="text-2xl font-bold">1,247</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Hands Count</p>
+                          <p className="text-lg sm:text-2xl font-bold">1,247</p>
                         </div>
                       </div>
                     </TabsContent>
                     
-                    <TabsContent value="cash" className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                    <TabsContent value="cash" className="mt-0">
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         {/* Row 1: Net Result, Net Hourly Rate */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Result</p>
-                          <p className="text-2xl font-bold text-green-600">$2,350</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Net Result</p>
+                          <p className="text-lg sm:text-2xl font-bold text-green-600">$2,350</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Hourly Rate</p>
-                          <p className="text-2xl font-bold">$15.50</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Net Hourly Rate</p>
+                          <p className="text-lg sm:text-2xl font-bold">$15.50</p>
                         </div>
                         {/* Row 2: Average Net Result, Average Duration */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Net Result</p>
-                          <p className="text-2xl font-bold">$130</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Average Net Result</p>
+                          <p className="text-lg sm:text-2xl font-bold">$130</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Duration</p>
-                          <p className="text-2xl font-bold">4.2h</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Average Duration</p>
+                          <p className="text-lg sm:text-2xl font-bold">4.2h</p>
                         </div>
                         {/* Row 3: Total Tables, Duration of Play */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Tables</p>
-                          <p className="text-2xl font-bold">32</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Total Tables</p>
+                          <p className="text-lg sm:text-2xl font-bold">32</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Duration of Play</p>
-                          <p className="text-2xl font-bold">75h</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Duration of Play</p>
+                          <p className="text-lg sm:text-2xl font-bold">75h</p>
                         </div>
                         {/* Row 4: Number of Records, Win Ratio */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Number of Records</p>
-                          <p className="text-2xl font-bold">18</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Number of Records</p>
+                          <p className="text-lg sm:text-2xl font-bold">18</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Win Ratio</p>
-                          <p className="text-2xl font-bold">72%</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Win Ratio</p>
+                          <p className="text-lg sm:text-2xl font-bold">72%</p>
                         </div>
                       </div>
                     </TabsContent>
                     
-                    <TabsContent value="tournaments" className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                    <TabsContent value="tournaments" className="mt-0">
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         {/* Row 1: Net Result, Net Hourly Rate */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Result</p>
-                          <p className="text-2xl font-bold text-red-600">-$1,235</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Net Result</p>
+                          <p className="text-lg sm:text-2xl font-bold text-red-600">-$1,235</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Net Hourly Rate</p>
-                          <p className="text-2xl font-bold text-red-600">-$8.20</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Net Hourly Rate</p>
+                          <p className="text-lg sm:text-2xl font-bold text-red-600">-$8.20</p>
                         </div>
                         {/* Row 2: Average Net Result, Average Duration */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Net Result</p>
-                          <p className="text-2xl font-bold text-red-600">-$206</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Average Net Result</p>
+                          <p className="text-lg sm:text-2xl font-bold text-red-600">-$206</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Duration</p>
-                          <p className="text-2xl font-bold">2.5h</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Average Duration</p>
+                          <p className="text-lg sm:text-2xl font-bold">2.5h</p>
                         </div>
                         {/* Row 3: Total Tables, Duration of Play */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Tables</p>
-                          <p className="text-2xl font-bold">13</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Total Tables</p>
+                          <p className="text-lg sm:text-2xl font-bold">13</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Duration of Play</p>
-                          <p className="text-2xl font-bold">15h</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Duration of Play</p>
+                          <p className="text-lg sm:text-2xl font-bold">15h</p>
                         </div>
                         {/* Row 4: Number of Records, ITM Ratio */}
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Number of Records</p>
-                          <p className="text-2xl font-bold">6</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">Number of Records</p>
+                          <p className="text-lg sm:text-2xl font-bold">6</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">ITM Ratio</p>
-                          <p className="text-2xl font-bold">33%</p>
+                        <div className="text-center p-2 sm:p-3">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight">ITM Ratio</p>
+                          <p className="text-lg sm:text-2xl font-bold">33%</p>
                         </div>
                       </div>
                     </TabsContent>
