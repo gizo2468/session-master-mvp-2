@@ -166,7 +166,7 @@ const Dashboard: React.FC = () => {
                     </div>
                     
                     <TabsContent value="sessions" className="mt-0">
-                      <div className="grid grid-cols-2 grid-rows-5 gap-3 sm:gap-4">
+                      <div className="grid grid-cols-2 grid-rows-4 gap-3 sm:gap-4">
                         {/* Row 1: Net Result, Net Hourly Rate */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Net Result</p>
@@ -176,47 +176,38 @@ const Dashboard: React.FC = () => {
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Net Hourly Rate</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">$18.50</p>
                         </div>
-                        {/* Row 2: Average Net Result, Total Buy-ins */}
+                        {/* Row 2: Average Net Result, Average Duration */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Average Net Result</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">$102</p>
                         </div>
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Total Buy-ins</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">$4,800</p>
-                        </div>
-                        {/* Row 3: Average Duration, Total Duration */}
-                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Average Duration</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">4.5h</p>
                         </div>
-                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Total Duration</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">108h</p>
-                        </div>
-                        {/* Row 4: Win Ratio, Profit/Loss Ratio */}
-                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Win Ratio</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">72%</p>
-                        </div>
-                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Profit/Loss Ratio</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">2.1:1</p>
-                        </div>
-                        {/* Row 5: Total Tables, Number of Sessions */}
+                        {/* Row 3: Total Tables, Duration of Play */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Total Tables</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">45</p>
                         </div>
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Duration of Play</p>
+                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">108h</p>
+                        </div>
+                        {/* Row 4: Number of Sessions, Hands Count */}
+                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Number of Sessions</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">24</p>
+                        </div>
+                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Hands Count</p>
+                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">1,247</p>
                         </div>
                       </div>
                     </TabsContent>
                     
                     <TabsContent value="cash" className="mt-0">
-                      <div className="grid grid-cols-2 grid-rows-6 gap-3 sm:gap-4">
+                      <div className="grid grid-cols-2 grid-rows-4 gap-3 sm:gap-4">
                         {/* Row 1: Net Result, Net Hourly Rate */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Net Result</p>
@@ -226,56 +217,38 @@ const Dashboard: React.FC = () => {
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Net Hourly Rate</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">$15.50</p>
                         </div>
-                        {/* Row 2: Average Net Result, Total Buy-ins */}
+                        {/* Row 2: Average Net Result, Average Duration */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Average Net Result</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">$130</p>
                         </div>
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Total Buy-ins</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">$3,200</p>
-                        </div>
-                        {/* Row 3: Average Duration, Total Duration */}
-                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Average Duration</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">4.2h</p>
                         </div>
-                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Total Duration</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">75h</p>
-                        </div>
-                        {/* Row 4: Average BB/100, Profit/Loss Ratio */}
-                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Average BB/100</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">+12.5</p>
-                        </div>
-                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Profit/Loss Ratio</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">2.8:1</p>
-                        </div>
-                        {/* Row 5: Total Tables, Hands Count */}
+                        {/* Row 3: Total Tables, Duration of Play */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Total Tables</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">32</p>
                         </div>
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Hands Count</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">2,456</p>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Duration of Play</p>
+                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">75h</p>
                         </div>
-                        {/* Row 6: Number of Sessions, Empty */}
+                        {/* Row 4: Number of Sessions, Win Ratio */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Number of Sessions</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">18</p>
                         </div>
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center invisible">Empty</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center invisible">-</p>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Win Ratio</p>
+                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">72%</p>
                         </div>
                       </div>
                     </TabsContent>
                     
                     <TabsContent value="tournaments" className="mt-0">
-                      <div className="grid grid-cols-2 grid-rows-6 gap-3 sm:gap-4">
+                      <div className="grid grid-cols-2 grid-rows-4 gap-3 sm:gap-4">
                         {/* Row 1: Net Result, Net Hourly Rate */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Net Result</p>
@@ -285,50 +258,32 @@ const Dashboard: React.FC = () => {
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Net Hourly Rate</p>
                           <p className="text-lg sm:text-2xl font-bold text-red-600 flex items-center justify-center">-$8.20</p>
                         </div>
-                        {/* Row 2: Average Net Result, Total Buy-ins */}
+                        {/* Row 2: Average Net Result, Average Duration */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Average Net Result</p>
                           <p className="text-lg sm:text-2xl font-bold text-red-600 flex items-center justify-center">-$206</p>
                         </div>
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Total Buy-ins</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">$1,950</p>
-                        </div>
-                        {/* Row 3: Average Duration, Total Duration */}
-                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Average Duration</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">2.5h</p>
                         </div>
-                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Total Duration</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">15h</p>
-                        </div>
-                        {/* Row 4: Final Tables, First Place Finish */}
-                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Final Tables</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">2</p>
-                        </div>
-                        <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">First Place Finish</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">1</p>
-                        </div>
-                        {/* Row 5: Total Tables, Hands Count */}
+                        {/* Row 3: Total Tables, Duration of Play */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Total Tables</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">13</p>
                         </div>
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Hands Count</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">324</p>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Duration of Play</p>
+                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">15h</p>
                         </div>
-                        {/* Row 6: Number of Sessions, Empty */}
+                        {/* Row 4: Number of Sessions, ITM Ratio */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Number of Sessions</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">6</p>
                         </div>
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center invisible">Empty</p>
-                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center invisible">-</p>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">ITM Ratio</p>
+                          <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">33%</p>
                         </div>
                       </div>
                     </TabsContent>
