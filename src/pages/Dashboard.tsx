@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
         { label: 'Average Duration', value: '4.2h' },
         { label: 'Total Tables', value: '32' },
         { label: 'Duration of Play', value: '75h' },
-        { label: 'Number of Records', value: '18' },
+        { label: 'Number of Sessions', value: '18' },
         { label: 'Win Ratio', value: '72%' },
       ],
       tournaments: [
@@ -61,7 +61,7 @@ const Dashboard: React.FC = () => {
         { label: 'Average Duration', value: '2.5h' },
         { label: 'Total Tables', value: '13' },
         { label: 'Duration of Play', value: '15h' },
-        { label: 'Number of Records', value: '6' },
+        { label: 'Number of Sessions', value: '6' },
         { label: 'ITM Ratio', value: '33%' },
       ],
     };
@@ -235,9 +235,9 @@ const Dashboard: React.FC = () => {
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Duration of Play</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">75h</p>
                         </div>
-                        {/* Row 4: Number of Records, Win Ratio */}
+                        {/* Row 4: Number of Sessions, Win Ratio */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Number of Records</p>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Number of Sessions</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">18</p>
                         </div>
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
@@ -276,9 +276,9 @@ const Dashboard: React.FC = () => {
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Duration of Play</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">15h</p>
                         </div>
-                        {/* Row 4: Number of Records, ITM Ratio */}
+                        {/* Row 4: Number of Sessions, ITM Ratio */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Number of Records</p>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Number of Sessions</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">6</p>
                         </div>
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
@@ -389,9 +389,9 @@ const Dashboard: React.FC = () => {
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Duration of Play</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">75h</p>
                         </div>
-                        {/* Row 4: Number of Records, Win Ratio */}
+                        {/* Row 4: Number of Sessions, Win Ratio */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Number of Records</p>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Number of Sessions</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">18</p>
                         </div>
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
@@ -430,9 +430,9 @@ const Dashboard: React.FC = () => {
                           <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Duration of Play</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">15h</p>
                         </div>
-                        {/* Row 4: Number of Records, ITM Ratio */}
+                        {/* Row 4: Number of Sessions, ITM Ratio */}
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Number of Records</p>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">Number of Sessions</p>
                           <p className="text-lg sm:text-2xl font-bold flex items-center justify-center">6</p>
                         </div>
                         <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
