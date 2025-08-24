@@ -1,0 +1,249 @@
+import { PokerSession } from "@/types/poker";
+import { calculateSessionProfit } from "./sessionCalculations";
+
+export type SessionFormat = 'all' | 'cash' | 'tournament';
+
+export interface SessionStats {
+  netResult: number;
+  netHourlyRate: number;
+  averageNetResult: number;
+  totalBuyIns: number;
+  averageDuration: number;
+  totalDuration: number;
+  winRatio: number;
+  profitLossRatio: number;
+  totalTables: number;
+  handsCount: number;
+  numberOfSessions: number;
+  // Cash-specific
+  averageBB100?: number;
+  // Tournament-specific
+  finalTables?: number;
+  firstPlaceFinish?: number;
+}
+
+/**
+ * Filter sessions based on format
+ */
+export const filterSessionsByFormat = (sessions: PokerSession[], format: SessionFormat): PokerSession[] => {
+  if (format === 'all') return sessions;
+  
+  return sessions.filter(session => {
+    const sessionFormat = session.format?.toLowerCase() || '';
+    
+    if (format === 'cash') {
+      return sessionFormat.includes('cash') || sessionFormat.includes('home');
+    }
+    
+    if (format === 'tournament') {
+      return sessionFormat.includes('tournament');
+    }
+    
+    return false;
+  });
+};
+
+/**
+ * Calculate comprehensive statistics for sessions
+ */
+export const calculateSessionStatistics = (sessions: PokerSession[], format: SessionFormat): SessionStats => {
+  // Filter sessions based on format and exclude active sessions
+  const completedSessions = filterSessionsByFormat(sessions, format)
+    .filter(s => !s.isActive && (s.currentStatus === 'ended' || s.status === 'completed' || !s.status));
+  
+  const numberOfSessions = completedSessions.length;
+  
+  if (numberOfSessions === 0) {
+    return {
+      netResult: 0,
+      netHourlyRate: 0,
+      averageNetResult: 0,
+      totalBuyIns: 0,
+      averageDuration: 0,
+      totalDuration: 0,
+      winRatio: 0,
+      profitLossRatio: 0,
+      totalTables: 0,
+      handsCount: 0,
+      numberOfSessions: 0,
+      averageBB100: 0,
+      finalTables: 0,
+      firstPlaceFinish: 0,
+    };
+  }
+
+  // Calculate net result
+  const netResult = completedSessions.reduce((sum, session) => sum + calculateSessionProfit(session), 0);
+  
+  // Calculate total buy-ins
+  const totalBuyIns = completedSessions.reduce((sum, session) => {
+    if (session.tables && session.tables.length > 0) {
+      return sum + session.tables.reduce((tableSum, table) => {
+        const buyIn = table.buyIn || 0;
+        const rebuys = table.rebuyAmount || 0;
+        return tableSum + buyIn + rebuys;
+      }, 0);
+    }
+    const buyIn = session.buyIn || 0;
+    const rebuys = session.rebuyAmount || 0;
+    return sum + buyIn + rebuys;
+  }, 0);
+
+  // Calculate total tables
+  const totalTables = completedSessions.reduce((sum, session) => {
+    if (session.tables && session.tables.length > 0) {
+      return sum + session.tables.length;
+    }
+    if (session.tablesPlayed && session.tablesPlayed > 0) {
+      return sum + session.tablesPlayed;
+    }
+    return sum + 1; // Default to 1 table per session
+  }, 0);
+
+  // Calculate hands count
+  const handsCount = completedSessions.reduce((total, session) => {
+    let sessionHands = (session.hands?.length || 0);
+    
+    // Add hands from tables
+    if (session.tables) {
+      sessionHands += session.tables.reduce((tableTotal, table) => {
+        return tableTotal + (table.hands?.length || 0);
+      }, 0);
+    }
+    
+    return total + sessionHands;
+  }, 0);
+
+  // Calculate duration statistics
+  const sessionsWithDuration = completedSessions.filter(s => 
+    s.startTime && s.endTime && s.endTime > s.startTime
+  );
+  
+  const totalDurationMs = sessionsWithDuration.reduce((total, session) => {
+    const duration = session.endTime!.getTime() - session.startTime.getTime();
+    return total + duration;
+  }, 0);
+  
+  const totalDuration = totalDurationMs / (1000 * 60 * 60); // Convert to hours
+  const averageDuration = sessionsWithDuration.length > 0 ? totalDuration / sessionsWithDuration.length : 0;
+
+  // Calculate net hourly rate
+  const netHourlyRate = totalDuration > 0 ? netResult / totalDuration : 0;
+
+  // Calculate average net result
+  const averageNetResult = numberOfSessions > 0 ? netResult / numberOfSessions : 0;
+
+  // Calculate win ratio
+  const wins = completedSessions.filter(s => calculateSessionProfit(s) > 0).length;
+  const winRatio = numberOfSessions > 0 ? (wins / numberOfSessions) * 100 : 0;
+
+  // Calculate profit/loss ratio
+  const profits = completedSessions.filter(s => calculateSessionProfit(s) > 0);
+  const losses = completedSessions.filter(s => calculateSessionProfit(s) < 0);
+  
+  const totalProfits = profits.reduce((sum, s) => sum + calculateSessionProfit(s), 0);
+  const totalLosses = Math.abs(losses.reduce((sum, s) => sum + calculateSessionProfit(s), 0));
+  
+  const profitLossRatio = totalLosses > 0 ? totalProfits / totalLosses : totalProfits > 0 ? 999 : 0;
+
+  // Cash-specific: Calculate Average BB/100
+  let averageBB100 = 0;
+  if (format === 'cash' && handsCount > 0) {
+    const totalBigBlinds = completedSessions.reduce((sum, session) => {
+      const bigBlind = session.bigBlind || 1;
+      const profit = calculateSessionProfit(session);
+      return sum + (profit / bigBlind);
+    }, 0);
+    averageBB100 = (totalBigBlinds / handsCount) * 100;
+  }
+
+  // Tournament-specific statistics
+  let finalTables = 0;
+  let firstPlaceFinish = 0;
+  
+  if (format === 'tournament') {
+    finalTables = completedSessions.reduce((count, session) => {
+      if (session.tables && session.tables.length > 0) {
+        return count + session.tables.filter(table => 
+          table.finalPosition && table.finalPosition <= 9 // Assuming final table is top 9
+        ).length;
+      }
+      // Check session-level final position if available
+      return count;
+    }, 0);
+
+    firstPlaceFinish = completedSessions.reduce((count, session) => {
+      if (session.tables && session.tables.length > 0) {
+        return count + session.tables.filter(table => 
+          table.finalPosition === 1
+        ).length;
+      }
+      // Check session-level final position if available
+      return count;
+    }, 0);
+  }
+
+  return {
+    netResult,
+    netHourlyRate,
+    averageNetResult,
+    totalBuyIns,
+    averageDuration,
+    totalDuration,
+    winRatio,
+    profitLossRatio,
+    totalTables,
+    handsCount,
+    numberOfSessions,
+    averageBB100,
+    finalTables,
+    firstPlaceFinish,
+  };
+};
+
+/**
+ * Format currency display
+ */
+export const formatCurrency = (amount: number, currency = 'USD'): string => {
+  const getCurrencySymbol = (curr: string) => {
+    switch (curr) {
+      case 'USD': return '$';
+      case 'EUR': return '€';
+      case 'GBP': return '£';
+      case 'ILS': return '₪';
+      default: return '$';
+    }
+  };
+
+  const symbol = getCurrencySymbol(currency);
+  const abs = Math.abs(amount);
+  const formatted = abs % 1 === 0 ? abs.toLocaleString() : abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return amount < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
+};
+
+/**
+ * Format duration in hours
+ */
+export const formatDuration = (hours: number): string => {
+  if (hours < 1) {
+    const minutes = Math.round(hours * 60);
+    return `${minutes}m`;
+  }
+  return `${hours.toFixed(1)}h`;
+};
+
+/**
+ * Format percentage
+ */
+export const formatPercentage = (value: number, decimals = 1): string => {
+  return `${value.toFixed(decimals)}%`;
+};
+
+/**
+ * Format ratio (e.g., 2.5:1)
+ */
+export const formatRatio = (ratio: number): string => {
+  if (ratio === 0) return '0:1';
+  if (ratio >= 999) return '∞:1';
+  return `${ratio.toFixed(1)}:1`;
+};
