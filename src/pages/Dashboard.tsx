@@ -38,29 +38,31 @@ const Dashboard: React.FC = () => {
         { label: 'Net Result', value: '$2,450' },
         { label: 'Net Hourly Rate', value: '$18.50' },
         { label: 'Average Net Result', value: '$102' },
-        { label: 'Number of Sessions', value: '24' },
         { label: 'Average Duration', value: '4.5h' },
-        { label: 'Duration of Play', value: '108h' },
-        { label: 'Hands Count', value: '1,247' },
         { label: 'Total Tables', value: '45' },
+        { label: 'Duration of Play', value: '108h' },
+        { label: 'Number of Sessions', value: '24' },
+        { label: 'Hands Count', value: '1,247' },
       ],
       cash: [
         { label: 'Net Result', value: '$2,350' },
         { label: 'Net Hourly Rate', value: '$15.50' },
-        { label: 'Hourly Rate in BB', value: '8.2 BB/h' },
         { label: 'Average Net Result', value: '$130' },
-        { label: 'Win Ratio', value: '72%' },
-        { label: 'Number of Records', value: '18' },
+        { label: 'Average Duration', value: '4.2h' },
         { label: 'Total Tables', value: '32' },
+        { label: 'Duration of Play', value: '75h' },
+        { label: 'Number of Records', value: '18' },
+        { label: 'Win Ratio', value: '72%' },
       ],
       tournaments: [
         { label: 'Net Result', value: '-$1,235' },
         { label: 'Net Hourly Rate', value: '-$8.20' },
-        { label: 'Return on Investment', value: '-18%' },
-        { label: 'ITM Ratio', value: '33%' },
-        { label: 'Number of Records', value: '6' },
-        { label: 'Average Buy-in', value: '$115' },
+        { label: 'Average Net Result', value: '-$206' },
+        { label: 'Average Duration', value: '2.5h' },
         { label: 'Total Tables', value: '13' },
+        { label: 'Duration of Play', value: '15h' },
+        { label: 'Number of Records', value: '6' },
+        { label: 'ITM Ratio', value: '33%' },
       ],
     };
     return statsData[activeTab as keyof typeof statsData] || [];
@@ -165,6 +167,7 @@ const Dashboard: React.FC = () => {
                     
                     <TabsContent value="sessions" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
+                        {/* Row 1: Net Result, Net Hourly Rate */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Net Result</p>
                           <p className="text-2xl font-bold text-green-600">$2,450</p>
@@ -173,35 +176,39 @@ const Dashboard: React.FC = () => {
                           <p className="text-sm text-gray-600">Net Hourly Rate</p>
                           <p className="text-2xl font-bold">$18.50</p>
                         </div>
+                        {/* Row 2: Average Net Result, Average Duration */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Average Net Result</p>
                           <p className="text-2xl font-bold">$102</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Number of Sessions</p>
-                          <p className="text-2xl font-bold">24</p>
-                        </div>
-                        <div className="text-center">
                           <p className="text-sm text-gray-600">Average Duration</p>
                           <p className="text-2xl font-bold">4.5h</p>
+                        </div>
+                        {/* Row 3: Total Tables, Duration of Play */}
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Tables</p>
+                          <p className="text-2xl font-bold">45</p>
                         </div>
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Duration of Play</p>
                           <p className="text-2xl font-bold">108h</p>
                         </div>
+                        {/* Row 4: Number of Sessions, Hands Count */}
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Number of Sessions</p>
+                          <p className="text-2xl font-bold">24</p>
+                        </div>
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Hands Count</p>
                           <p className="text-2xl font-bold">1,247</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Tables</p>
-                          <p className="text-2xl font-bold">45</p>
                         </div>
                       </div>
                     </TabsContent>
                     
                     <TabsContent value="cash" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
+                        {/* Row 1: Net Result, Net Hourly Rate */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Net Result</p>
                           <p className="text-2xl font-bold text-green-600">$2,350</p>
@@ -210,31 +217,39 @@ const Dashboard: React.FC = () => {
                           <p className="text-sm text-gray-600">Net Hourly Rate</p>
                           <p className="text-2xl font-bold">$15.50</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Hourly Rate in BB</p>
-                          <p className="text-2xl font-bold">8.2 BB/h</p>
-                        </div>
+                        {/* Row 2: Average Net Result, Average Duration */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Average Net Result</p>
                           <p className="text-2xl font-bold">$130</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Win Ratio</p>
-                          <p className="text-2xl font-bold">72%</p>
+                          <p className="text-sm text-gray-600">Average Duration</p>
+                          <p className="text-2xl font-bold">4.2h</p>
                         </div>
+                        {/* Row 3: Total Tables, Duration of Play */}
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Tables</p>
+                          <p className="text-2xl font-bold">32</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Duration of Play</p>
+                          <p className="text-2xl font-bold">75h</p>
+                        </div>
+                        {/* Row 4: Number of Records, Win Ratio */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Number of Records</p>
                           <p className="text-2xl font-bold">18</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Tables</p>
-                          <p className="text-2xl font-bold">32</p>
+                          <p className="text-sm text-gray-600">Win Ratio</p>
+                          <p className="text-2xl font-bold">72%</p>
                         </div>
                       </div>
                     </TabsContent>
                     
                     <TabsContent value="tournaments" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
+                        {/* Row 1: Net Result, Net Hourly Rate */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Net Result</p>
                           <p className="text-2xl font-bold text-red-600">-$1,235</p>
@@ -243,25 +258,32 @@ const Dashboard: React.FC = () => {
                           <p className="text-sm text-gray-600">Net Hourly Rate</p>
                           <p className="text-2xl font-bold text-red-600">-$8.20</p>
                         </div>
+                        {/* Row 2: Average Net Result, Average Duration */}
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Return on Investment</p>
-                          <p className="text-2xl font-bold text-red-600">-18%</p>
+                          <p className="text-sm text-gray-600">Average Net Result</p>
+                          <p className="text-2xl font-bold text-red-600">-$206</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">ITM Ratio</p>
-                          <p className="text-2xl font-bold">33%</p>
+                          <p className="text-sm text-gray-600">Average Duration</p>
+                          <p className="text-2xl font-bold">2.5h</p>
                         </div>
+                        {/* Row 3: Total Tables, Duration of Play */}
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Tables</p>
+                          <p className="text-2xl font-bold">13</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Duration of Play</p>
+                          <p className="text-2xl font-bold">15h</p>
+                        </div>
+                        {/* Row 4: Number of Records, ITM Ratio */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Number of Records</p>
                           <p className="text-2xl font-bold">6</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Buy-in</p>
-                          <p className="text-2xl font-bold">$115</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Tables</p>
-                          <p className="text-2xl font-bold">13</p>
+                          <p className="text-sm text-gray-600">ITM Ratio</p>
+                          <p className="text-2xl font-bold">33%</p>
                         </div>
                       </div>
                     </TabsContent>
@@ -299,6 +321,7 @@ const Dashboard: React.FC = () => {
                     
                     <TabsContent value="sessions" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
+                        {/* Row 1: Net Result, Net Hourly Rate */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Net Result</p>
                           <p className="text-2xl font-bold text-green-600">$2,450</p>
@@ -307,35 +330,39 @@ const Dashboard: React.FC = () => {
                           <p className="text-sm text-gray-600">Net Hourly Rate</p>
                           <p className="text-2xl font-bold">$18.50</p>
                         </div>
+                        {/* Row 2: Average Net Result, Average Duration */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Average Net Result</p>
                           <p className="text-2xl font-bold">$102</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Number of Sessions</p>
-                          <p className="text-2xl font-bold">24</p>
-                        </div>
-                        <div className="text-center">
                           <p className="text-sm text-gray-600">Average Duration</p>
                           <p className="text-2xl font-bold">4.5h</p>
+                        </div>
+                        {/* Row 3: Total Tables, Duration of Play */}
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Tables</p>
+                          <p className="text-2xl font-bold">45</p>
                         </div>
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Duration of Play</p>
                           <p className="text-2xl font-bold">108h</p>
                         </div>
+                        {/* Row 4: Number of Sessions, Hands Count */}
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Number of Sessions</p>
+                          <p className="text-2xl font-bold">24</p>
+                        </div>
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Hands Count</p>
                           <p className="text-2xl font-bold">1,247</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Tables</p>
-                          <p className="text-2xl font-bold">45</p>
                         </div>
                       </div>
                     </TabsContent>
                     
                     <TabsContent value="cash" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
+                        {/* Row 1: Net Result, Net Hourly Rate */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Net Result</p>
                           <p className="text-2xl font-bold text-green-600">$2,350</p>
@@ -344,31 +371,39 @@ const Dashboard: React.FC = () => {
                           <p className="text-sm text-gray-600">Net Hourly Rate</p>
                           <p className="text-2xl font-bold">$15.50</p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Hourly Rate in BB</p>
-                          <p className="text-2xl font-bold">8.2 BB/h</p>
-                        </div>
+                        {/* Row 2: Average Net Result, Average Duration */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Average Net Result</p>
                           <p className="text-2xl font-bold">$130</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Win Ratio</p>
-                          <p className="text-2xl font-bold">72%</p>
+                          <p className="text-sm text-gray-600">Average Duration</p>
+                          <p className="text-2xl font-bold">4.2h</p>
                         </div>
+                        {/* Row 3: Total Tables, Duration of Play */}
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Tables</p>
+                          <p className="text-2xl font-bold">32</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Duration of Play</p>
+                          <p className="text-2xl font-bold">75h</p>
+                        </div>
+                        {/* Row 4: Number of Records, Win Ratio */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Number of Records</p>
                           <p className="text-2xl font-bold">18</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Tables</p>
-                          <p className="text-2xl font-bold">32</p>
+                          <p className="text-sm text-gray-600">Win Ratio</p>
+                          <p className="text-2xl font-bold">72%</p>
                         </div>
                       </div>
                     </TabsContent>
                     
                     <TabsContent value="tournaments" className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
+                        {/* Row 1: Net Result, Net Hourly Rate */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Net Result</p>
                           <p className="text-2xl font-bold text-red-600">-$1,235</p>
@@ -377,25 +412,32 @@ const Dashboard: React.FC = () => {
                           <p className="text-sm text-gray-600">Net Hourly Rate</p>
                           <p className="text-2xl font-bold text-red-600">-$8.20</p>
                         </div>
+                        {/* Row 2: Average Net Result, Average Duration */}
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Return on Investment</p>
-                          <p className="text-2xl font-bold text-red-600">-18%</p>
+                          <p className="text-sm text-gray-600">Average Net Result</p>
+                          <p className="text-2xl font-bold text-red-600">-$206</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">ITM Ratio</p>
-                          <p className="text-2xl font-bold">33%</p>
+                          <p className="text-sm text-gray-600">Average Duration</p>
+                          <p className="text-2xl font-bold">2.5h</p>
                         </div>
+                        {/* Row 3: Total Tables, Duration of Play */}
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Total Tables</p>
+                          <p className="text-2xl font-bold">13</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Duration of Play</p>
+                          <p className="text-2xl font-bold">15h</p>
+                        </div>
+                        {/* Row 4: Number of Records, ITM Ratio */}
                         <div className="text-center">
                           <p className="text-sm text-gray-600">Number of Records</p>
                           <p className="text-2xl font-bold">6</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-gray-600">Average Buy-in</p>
-                          <p className="text-2xl font-bold">$115</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600">Total Tables</p>
-                          <p className="text-2xl font-bold">13</p>
+                          <p className="text-sm text-gray-600">ITM Ratio</p>
+                          <p className="text-2xl font-bold">33%</p>
                         </div>
                       </div>
                     </TabsContent>
