@@ -23,13 +23,25 @@ export const generateStatisticsPDF = (data: ExportData) => {
   let currentY = margin + 10;
   
   // Logo - SessionMaster (centered)
-  // Note: In a real implementation, we would load and embed the actual logo image
-  // For now, we'll use a styled text representation
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 0, 0);
-  doc.text('SessionMaster', pageWidth / 2, currentY, { align: 'center' });
-  currentY += 20;
+  try {
+    // For jsPDF, we need to use the image as data URL
+    // In a production app, you'd convert the logo to base64 at build time
+    // For now, we'll use the public path and let jsPDF handle it
+    const logoWidth = 60; // Fixed width to prevent stretching
+    const logoHeight = 30; // Approximate height maintaining aspect ratio
+    const logoX = (pageWidth - logoWidth) / 2; // Center horizontally
+    
+    // Use the public path for the logo
+    doc.addImage('/lovable-uploads/581036dd-5e21-436f-bfa4-32e97f6a4be4.png', 'PNG', logoX, currentY, logoWidth, logoHeight);
+    currentY += logoHeight + 10;
+  } catch (error) {
+    // Fallback to text if image loading fails
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('SessionMaster', pageWidth / 2, currentY, { align: 'center' });
+    currentY += 20;
+  }
   
   // My Statistics Title (olive-green color)
   doc.setFontSize(18);
@@ -97,8 +109,8 @@ export const generateStatisticsPDF = (data: ExportData) => {
     }
   });
   
-  // Grid layout: 3 columns, with labels above values
-  const gridCols = 3;
+  // Grid layout: 2 columns, with labels above values
+  const gridCols = 2;
   const colWidth = contentWidth / gridCols;
   const rowHeight = 25;
   
