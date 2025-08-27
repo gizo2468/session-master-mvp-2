@@ -18,8 +18,6 @@ export interface User {
   hasAcceptedTerms?: boolean;
   lastLoginAt?: Date;
   isActive?: boolean;
-  hasSeenTutorial?: boolean;
-  hasCompletedTutorial?: boolean;
   coachingFocus?: string[];
   experience?: string;
   notificationPreferences: {
@@ -88,8 +86,6 @@ const createUserFromSupabaseUser = (supabaseUser: SupabaseUser, role: UserRole =
       : 'en',
     hasAcceptedTerms: Boolean(supabaseUser.user_metadata?.hasAcceptedTerms),
     isActive: true,
-    hasSeenTutorial: false,
-    hasCompletedTutorial: false,
     notificationPreferences: supabaseUser.user_metadata?.notificationPreferences || {
       liveSessionStart: true,
       newFeedback: true,
@@ -154,8 +150,6 @@ const createUserFromProfile = (supabaseUser: SupabaseUser, profileData: any): Us
     hasAcceptedTerms: Boolean(profileData.has_accepted_terms),
     lastLoginAt: profileData.last_login_at ? new Date(profileData.last_login_at) : undefined,
     isActive: Boolean(profileData.is_active ?? true),
-    hasSeenTutorial: Boolean(profileData.has_seen_tutorial ?? false),
-    hasCompletedTutorial: Boolean(profileData.has_completed_tutorial ?? false),
     coachingFocus: profileData.coaching_focus || undefined,
     experience: profileData.experience || undefined,
     notificationPreferences: parseNotificationPreferences(profileData.notification_preferences),
@@ -344,7 +338,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log("Fetched user profile from database - Role:", data.role, "Full data:", data);
         
         const appUser = createUserFromProfile(supabaseUser, data);
-        console.log("Final user object created with role:", appUser.role, "Tutorial seen:", appUser.hasSeenTutorial);
+        console.log("Final user object created with role:", appUser.role);
         setUser(appUser);
 
         // Update last login time when fetching user data after login
@@ -549,8 +543,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           notification_preferences: optimizedUserData.notificationPreferences || user.notificationPreferences,
           has_accepted_terms: optimizedUserData.hasAcceptedTerms !== undefined ? optimizedUserData.hasAcceptedTerms : user.hasAcceptedTerms,
           is_active: optimizedUserData.isActive !== undefined ? optimizedUserData.isActive : user.isActive,
-          has_seen_tutorial: optimizedUserData.hasSeenTutorial !== undefined ? optimizedUserData.hasSeenTutorial : user.hasSeenTutorial,
-          has_completed_tutorial: optimizedUserData.hasCompletedTutorial !== undefined ? optimizedUserData.hasCompletedTutorial : user.hasCompletedTutorial,
         })
         .eq('id', user.id); // Explicitly match on user ID to satisfy RLS policy
 
