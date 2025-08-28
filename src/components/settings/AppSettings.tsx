@@ -56,6 +56,5 @@ const AppSettings = () => {
     </Card>
   );
 };
-};
 
 export default AppSettings;
