@@ -811,36 +811,6 @@ export type Database = {
           },
         ]
       }
-      tutorial_steps: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: number
-          image_path: string | null
-          step_order: number
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: number
-          image_path?: string | null
-          step_order: number
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: number
-          image_path?: string | null
-          step_order?: number
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       ui_state: {
         Row: {
           created_at: string
