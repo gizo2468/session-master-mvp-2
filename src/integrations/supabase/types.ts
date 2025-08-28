@@ -152,9 +152,7 @@ export type Database = {
           created_at: string
           default_currency: string | null
           deletion_requested: boolean | null
-          email: string | null
           experience: string | null
-          full_name: string
           has_accepted_terms: boolean | null
           id: string
           is_active: boolean | null
@@ -162,7 +160,6 @@ export type Database = {
           last_login_at: string | null
           notification_preferences: Json
           online_nickname: string | null
-          profile_picture: string | null
           role: string
           students_coached_count: number
           updated_at: string
@@ -176,9 +173,7 @@ export type Database = {
           created_at?: string
           default_currency?: string | null
           deletion_requested?: boolean | null
-          email?: string | null
           experience?: string | null
-          full_name: string
           has_accepted_terms?: boolean | null
           id: string
           is_active?: boolean | null
@@ -186,7 +181,6 @@ export type Database = {
           last_login_at?: string | null
           notification_preferences?: Json
           online_nickname?: string | null
-          profile_picture?: string | null
           role?: string
           students_coached_count?: number
           updated_at?: string
@@ -200,9 +194,7 @@ export type Database = {
           created_at?: string
           default_currency?: string | null
           deletion_requested?: boolean | null
-          email?: string | null
           experience?: string | null
-          full_name?: string
           has_accepted_terms?: boolean | null
           id?: string
           is_active?: boolean | null
@@ -210,7 +202,6 @@ export type Database = {
           last_login_at?: string | null
           notification_preferences?: Json
           online_nickname?: string | null
-          profile_picture?: string | null
           role?: string
           students_coached_count?: number
           updated_at?: string
@@ -880,6 +871,50 @@ export type Database = {
         }
         Relationships: []
       }
+      user_private_data: {
+        Row: {
+          address: Json | null
+          created_at: string | null
+          date_of_birth: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          phone_number: string | null
+          profile_picture: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: Json | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          phone_number?: string | null
+          profile_picture?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: Json | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone_number?: string | null
+          profile_picture?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_private_data_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -912,6 +947,21 @@ export type Database = {
       get_current_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_safe_profile_data: {
+        Args: { profile_user_id: string }
+        Returns: {
+          bio: string
+          coach_tier: string
+          coaching_focus: string[]
+          experience: string
+          id: string
+          is_active: boolean
+          online_nickname: string
+          role: string
+          students_coached_count: number
+          username: string
+        }[]
       }
       get_user_session_statistics: {
         Args: {
