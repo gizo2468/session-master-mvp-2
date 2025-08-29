@@ -68,20 +68,27 @@ const formatStatsForPDF = (stats: any, activeTab: string): StatData[] => {
   } else if (activeTab === 'cash') {
     return [
       ...baseStats,
-      { label: 'Average BB/100', value: stats.averageBB100.toFixed(2) },
+      { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
       { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
+      { label: 'Average BB/100', value: stats.averageBB100.toFixed(2) },
       { label: 'Hands Count', value: stats.handsCount.toString() },
     ];
   } else if (activeTab === 'tournaments') {
     return [
       ...baseStats,
+      { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
+      { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
       { label: 'Final Tables', value: stats.finalTables.toString() },
       { label: 'First Place Finish', value: stats.firstPlaceFinish.toString() },
       { label: 'Hands Count', value: stats.handsCount.toString() },
     ];
   }
 
-  return baseStats;
+  return [
+    ...baseStats,
+    { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
+    { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
+  ];
 };
 
 const generateStatisticsPDFWithData = (data: ExportData) => {
@@ -217,45 +224,21 @@ const generateStatisticsPDFWithData = (data: ExportData) => {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   
-  // Define KPIs in the specific order requested
-  const requiredKPIs = [
-    'Net Result',
-    'Net Hourly Rate', 
-    'Average Net Result',
-    'Number of Sessions',
-    'Average Duration',
-    'Duration of Play',
-    'Total Tables',
-    'Overall Buy-ins', // Placeholder for now
-    'Total Payouts'    // Placeholder for now
-  ];
-  
-  // Create a map of existing stats for easy lookup
-  const statsMap = new Map(data.stats.map(stat => [stat.label, stat.value]));
-  
-  // Add placeholder values for new KPIs if not present
-  requiredKPIs.forEach(kpi => {
-    if (!statsMap.has(kpi)) {
-      if (kpi === 'Overall Buy-ins') {
-        statsMap.set(kpi, '$2,450');
-      } else if (kpi === 'Total Payouts') {
-        statsMap.set(kpi, '$2,680');
-      }
-    }
-  });
+  // Use the actual stats from the formatted data - no hardcoded field names
+  const statsToDisplay = data.stats;
   
   // Grid layout: 2 columns, with labels above values
   const gridCols = 2;
   const colWidth = contentWidth / gridCols;
   const rowHeight = 25;
   
-  requiredKPIs.forEach((kpi, index) => {
+  statsToDisplay.forEach((stat, index) => {
     const col = index % gridCols;
     const row = Math.floor(index / gridCols);
     const x = margin + (col * colWidth);
     const y = currentY + (row * rowHeight);
     
-    const value = statsMap.get(kpi) || 'N/A';
+    const { label: kpi, value } = stat;
     
     // Label (top)
     doc.setFont('helvetica', 'normal');
@@ -280,7 +263,7 @@ const generateStatisticsPDFWithData = (data: ExportData) => {
   });
   
   // Calculate footer position based on grid height
-  const gridRows = Math.ceil(requiredKPIs.length / gridCols);
+  const gridRows = Math.ceil(statsToDisplay.length / gridCols);
   const footerY = currentY + (gridRows * rowHeight) + 30;
   
   // Thin grey separator line above footer
