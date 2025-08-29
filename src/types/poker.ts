@@ -158,8 +158,9 @@ export interface ConnectionRequest {
   id: string;
   coachId: string;
   studentId: string;
-  status: 'pending' | 'approved' | 'declined';
+  status: 'pending' | 'approved' | 'rejected';
   createdAt: Date;
+  updatedAt: Date;
   studentName?: string; // Added to show student name in requests
 }
 

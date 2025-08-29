@@ -174,46 +174,24 @@ const MyCoachingNetwork: React.FC = () => {
     
     setPendingLoading(true);
     try {
-      // Load both incoming and outgoing requests
-      const [incomingData, outgoingData] = await Promise.all([
-        // Incoming requests (where current user is the recipient)
-        supabase
-          .from('coach_student_connections')
-          .select(`
-            id, coach_id, student_id, created_at, status,
-            coach_profiles:coach_id(id, username, role),
-            student_profiles:student_id(id, username, role)
-          `)
-          .eq(isCoach ? 'coach_id' : 'student_id', user.id)
-          .eq('status', 'pending')
-          .order('created_at', { ascending: false }),
-        
-        // Outgoing requests (where current user is the sender)
-        supabase
-          .from('coach_student_connections')
-          .select(`
-            id, coach_id, student_id, created_at, status,
-            coach_profiles:coach_id(id, username, role),
-            student_profiles:student_id(id, username, role)
-          `)
-          .eq(isCoach ? 'coach_id' : 'student_id', user.id)
-          .eq('status', 'pending')
-          .order('created_at', { ascending: false })
-      ]);
+      // Load all pending requests involving the current user
+      const { data: allRequests, error } = await supabase
+        .from('coach_student_connections')
+        .select(`
+          id, coach_id, student_id, created_at, status
+        `)
+        .or(`coach_id.eq.${user.id},student_id.eq.${user.id}`)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
 
-      if (incomingData.error) {
-        console.error('Error loading incoming requests:', incomingData.error);
-        return;
-      }
-      if (outgoingData.error) {
-        console.error('Error loading outgoing requests:', outgoingData.error);
+      if (error) {
+        console.error('Error loading pending requests:', error);
         return;
       }
 
       // Get all user IDs we need profiles for
-      const allConnections = [...(incomingData.data || []), ...(outgoingData.data || [])];
       const userIds = new Set<string>();
-      allConnections.forEach(conn => {
+      (allRequests || []).forEach(conn => {
         userIds.add(conn.coach_id);
         userIds.add(conn.student_id);
       });
@@ -237,55 +215,54 @@ const MyCoachingNetwork: React.FC = () => {
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
       const privateMap = new Map(privateData?.map(p => [p.id, p]) || []);
 
-      // Process incoming requests (requests where current user is recipient)
-      const incoming = (incomingData.data || [])
-        .filter(conn => isCoach ? conn.coach_id === user.id : conn.student_id === user.id)
-        .map(conn => {
-          const otherUserId = isCoach ? conn.student_id : conn.coach_id;
-          const profile = profileMap.get(otherUserId);
-          const privateInfo = privateMap.get(otherUserId);
-          
-          return {
-            id: conn.id,
-            coach_id: conn.coach_id,
-            student_id: conn.student_id,
-            created_at: conn.created_at,
-            status: conn.status,
-            direction: 'incoming' as const,
-            otherUser: {
-              id: otherUserId,
-              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
-              username: profile?.username || 'unknown',
-              profile_picture: privateInfo?.profile_picture,
-              role: profile?.role || (isCoach ? 'student' : 'coach')
-            }
-          };
-        });
+      // Separate incoming and outgoing requests
+      const incoming: PendingRequest[] = [];
+      const outgoing: PendingRequest[] = [];
 
-      // Process outgoing requests (requests where current user is sender) 
-      const outgoing = (outgoingData.data || [])
-        .filter(conn => isCoach ? conn.coach_id === user.id : conn.student_id === user.id)
-        .map(conn => {
-          const otherUserId = isCoach ? conn.student_id : conn.coach_id;
-          const profile = profileMap.get(otherUserId);
-          const privateInfo = privateMap.get(otherUserId);
-          
-          return {
-            id: conn.id,
-            coach_id: conn.coach_id,
-            student_id: conn.student_id,
-            created_at: conn.created_at,
-            status: conn.status,
-            direction: 'outgoing' as const,
-            otherUser: {
-              id: otherUserId,
-              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
-              username: profile?.username || 'unknown',
-              profile_picture: privateInfo?.profile_picture,
-              role: profile?.role || (isCoach ? 'student' : 'coach')
-            }
-          };
-        });
+      (allRequests || []).forEach(conn => {
+        const otherUserId = isCoach ? conn.student_id : conn.coach_id;
+        const profile = profileMap.get(otherUserId);
+        const privateInfo = privateMap.get(otherUserId);
+        
+        const request: PendingRequest = {
+          id: conn.id,
+          coach_id: conn.coach_id,
+          student_id: conn.student_id,
+          created_at: conn.created_at,
+          status: conn.status,
+          direction: 'incoming',
+          otherUser: {
+            id: otherUserId,
+            full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+            username: profile?.username || 'unknown',
+            profile_picture: privateInfo?.profile_picture,
+            role: profile?.role || (isCoach ? 'student' : 'coach')
+          }
+        };
+
+        // Determine if this is incoming or outgoing based on who initiated
+        // Students initiate requests to coaches, so:
+        // - For students: outgoing when student_id = user.id, incoming when coach_id = user.id (shouldn't happen normally)
+        // - For coaches: incoming when coach_id = user.id, outgoing when student_id = user.id (shouldn't happen normally)
+        
+        if (isStudent) {
+          if (conn.student_id === user.id) {
+            request.direction = 'outgoing';
+            outgoing.push(request);
+          } else if (conn.coach_id === user.id) {
+            request.direction = 'incoming';
+            incoming.push(request);
+          }
+        } else if (isCoach) {
+          if (conn.coach_id === user.id) {
+            request.direction = 'incoming';
+            incoming.push(request);
+          } else if (conn.student_id === user.id) {
+            request.direction = 'outgoing';
+            outgoing.push(request);
+          }
+        }
+      });
 
       setIncomingRequests(incoming);
       setOutgoingRequests(outgoing);
@@ -462,7 +439,9 @@ const MyCoachingNetwork: React.FC = () => {
 
       setCoachUsername('');
       setConnectDialogOpen(false);
-      loadConnectedUsers(); // Refresh the list
+      // Refresh both lists
+      loadConnectedUsers();
+      loadPendingRequests();
     } catch (error) {
       console.error('Error in handleConnectToCoach:', error);
       toast({
@@ -564,7 +543,9 @@ const MyCoachingNetwork: React.FC = () => {
 
       setPlayerUsername('');
       setConnectPlayerDialogOpen(false);
-      // No immediate change to connected list until approved
+      // Refresh both lists
+      loadConnectedUsers();
+      loadPendingRequests();
     } catch (error) {
       console.error('Error in handleConnectToPlayer:', error);
       toast({

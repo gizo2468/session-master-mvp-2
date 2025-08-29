@@ -181,10 +181,34 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setRequestsLoading(true);
     try {
-      // Coach connection system not implemented yet
-      setPendingRequests([]);
+      // Load pending requests where the current user is involved
+      const { data: requests, error } = await supabase
+        .from('coach_student_connections')
+        .select('*')
+        .or(`coach_id.eq.${user.id},student_id.eq.${user.id}`)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading pending requests:', error);
+        setPendingRequests([]);
+        return;
+      }
+
+      // Convert to ConnectionRequest format
+      const connectionRequests = (requests || []).map(req => ({
+        id: req.id,
+        coachId: req.coach_id,
+        studentId: req.student_id,
+        status: req.status as 'pending' | 'approved' | 'rejected',
+        createdAt: new Date(req.created_at),
+        updatedAt: new Date(req.updated_at),
+      }));
+
+      setPendingRequests(connectionRequests);
     } catch (error) {
       console.error('Error in loadPendingRequests:', error);
+      setPendingRequests([]);
     } finally {
       setRequestsLoading(false);
     }
