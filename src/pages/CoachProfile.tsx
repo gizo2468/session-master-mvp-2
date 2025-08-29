@@ -13,6 +13,7 @@ import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
 import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
 import HandDetailsDialog from '@/components/poker/HandDetailsDialog';
+import CardDisplay from '@/components/poker/CardDisplay';
 import { HandData } from '@/types/poker';
 
 interface CoachData {
@@ -567,22 +568,35 @@ const CoachProfile: React.FC = () => {
                     onClick={() => handleHandClick(hand)}
                   >
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">
-                          {hand.hand_number ? `Hand #${hand.hand_number}` : `Hand ${hand.id.slice(0, 8)}`}
-                        </span>
-                        <Badge variant="outline" className="text-xs">
-                          {hand.game_type}
-                        </Badge>
-                        {hand.position && (
-                          <Badge variant="secondary" className="text-xs">
-                            {hand.position}
-                          </Badge>
+                      <div className="flex items-center gap-3 mb-2">
+                        {hand.hole_cards && (
+                          <div 
+                            className="flex-shrink-0"
+                            title={`Cards: ${hand.hole_cards.replace(/([hdsc])/gi, match => 
+                              match.toLowerCase() === 'h' ? ' hearts' :
+                              match.toLowerCase() === 'd' ? ' diamonds' :
+                              match.toLowerCase() === 's' ? ' spades' : ' clubs'
+                            )}`}
+                          >
+                            <CardDisplay cards={hand.hole_cards} size="sm" />
+                          </div>
                         )}
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">
+                            {hand.hand_number ? `Hand #${hand.hand_number}` : `Hand ${hand.id.slice(0, 8)}`}
+                          </span>
+                          <Badge variant="outline" className="text-xs">
+                            {hand.game_type}
+                          </Badge>
+                          {hand.position && (
+                            <Badge variant="secondary" className="text-xs">
+                              {hand.position}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <div className="text-sm text-muted-foreground">
                         <span>{formatSessionDateTime(hand.created_at)}</span>
-                        {hand.hole_cards && <span> • {hand.hole_cards}</span>}
                         {hand.amount_won !== undefined && hand.amount_won !== 0 && (
                           <span className={hand.amount_won > 0 ? 'text-green-600' : 'text-red-600'}>
                             {' • '}
