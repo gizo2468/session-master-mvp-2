@@ -20,13 +20,17 @@ interface ConnectedUser {
 
 interface PendingRequest {
   id: string;
+  coach_id: string;
   student_id: string;
   created_at: string;
-  profiles: {
+  status: string;
+  direction: 'incoming' | 'outgoing';
+  otherUser: {
     id: string;
     full_name: string;
     username: string;
     profile_picture?: string;
+    role: string;
   };
 }
 
@@ -34,7 +38,8 @@ const MyCoachingNetwork: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [incomingRequests, setIncomingRequests] = useState<PendingRequest[]>([]);
+  const [outgoingRequests, setOutgoingRequests] = useState<PendingRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [pendingLoading, setPendingLoading] = useState(false);
   const [coachUsername, setCoachUsername] = useState('');
@@ -68,22 +73,37 @@ const MyCoachingNetwork: React.FC = () => {
 
         if (connections && connections.length > 0) {
           const studentIds = connections.map(c => c.student_id);
-          const { data: profiles, error: profilesError } = await supabase
-            .from('profiles')
-            .select('id, full_name, username, profile_picture')
-            .in('id', studentIds);
+          
+          // Get profiles and private data
+          const [profilesResult, privateResult] = await Promise.all([
+            supabase
+              .from('profiles')
+              .select('id, username')
+              .in('id', studentIds),
+            supabase
+              .from('user_private_data')
+              .select('id, full_name, profile_picture')
+              .in('id', studentIds)
+          ]);
 
-          if (profilesError) {
-            console.error('Error loading student profiles:', profilesError);
+          if (profilesResult.error) {
+            console.error('Error loading student profiles:', profilesResult.error);
             return;
           }
 
-          const users = profiles?.map(profile => ({
-            id: profile.id,
-            full_name: profile.full_name || '',
-            username: profile.username || '',
-            profile_picture: profile.profile_picture
-          })) || [];
+          const profileMap = new Map(profilesResult.data?.map(p => [p.id, p]) || []);
+          const privateMap = new Map(privateResult.data?.map(p => [p.id, p]) || []);
+
+          const users = studentIds.map(id => {
+            const profile = profileMap.get(id);
+            const privateInfo = privateMap.get(id);
+            return {
+              id,
+              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+              username: profile?.username || 'unknown',
+              profile_picture: privateInfo?.profile_picture
+            };
+          });
 
           setConnectedUsers(users);
         } else {
@@ -104,23 +124,38 @@ const MyCoachingNetwork: React.FC = () => {
 
         if (connections && connections.length > 0) {
           const coachIds = connections.map(c => c.coach_id);
-          const { data: profiles, error: profilesError } = await supabase
-            .from('profiles')
-            .select('id, full_name, username, profile_picture, bio')
-            .in('id', coachIds);
+          
+          // Get profiles and private data
+          const [profilesResult, privateResult] = await Promise.all([
+            supabase
+              .from('profiles')
+              .select('id, username, bio')
+              .in('id', coachIds),
+            supabase
+              .from('user_private_data')
+              .select('id, full_name, profile_picture')
+              .in('id', coachIds)
+          ]);
 
-          if (profilesError) {
-            console.error('Error loading coach profiles:', profilesError);
+          if (profilesResult.error) {
+            console.error('Error loading coach profiles:', profilesResult.error);
             return;
           }
 
-          const users = profiles?.map(profile => ({
-            id: profile.id,
-            full_name: profile.full_name || '',
-            username: profile.username || '',
-            profile_picture: profile.profile_picture,
-            bio: profile.bio
-          })) || [];
+          const profileMap = new Map(profilesResult.data?.map(p => [p.id, p]) || []);
+          const privateMap = new Map(privateResult.data?.map(p => [p.id, p]) || []);
+
+          const users = coachIds.map(id => {
+            const profile = profileMap.get(id);
+            const privateInfo = privateMap.get(id);
+            return {
+              id,
+              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+              username: profile?.username || 'unknown',
+              profile_picture: privateInfo?.profile_picture,
+              bio: profile?.bio
+            };
+          });
 
           setConnectedUsers(users);
         } else {
@@ -135,61 +170,125 @@ const MyCoachingNetwork: React.FC = () => {
   };
 
   const loadPendingRequests = async () => {
-    if (!user?.id || !isCoach) return;
+    if (!user?.id) return;
     
     setPendingLoading(true);
     try {
-      // First get the pending connections
-      const { data: connections, error: connectionsError } = await supabase
-        .from('coach_student_connections')
-        .select('id, student_id, created_at')
-        .eq('coach_id', user.id)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+      // Load both incoming and outgoing requests
+      const [incomingData, outgoingData] = await Promise.all([
+        // Incoming requests (where current user is the recipient)
+        supabase
+          .from('coach_student_connections')
+          .select(`
+            id, coach_id, student_id, created_at, status,
+            coach_profiles:coach_id(id, username, role),
+            student_profiles:student_id(id, username, role)
+          `)
+          .eq(isCoach ? 'coach_id' : 'student_id', user.id)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false }),
+        
+        // Outgoing requests (where current user is the sender)
+        supabase
+          .from('coach_student_connections')
+          .select(`
+            id, coach_id, student_id, created_at, status,
+            coach_profiles:coach_id(id, username, role),
+            student_profiles:student_id(id, username, role)
+          `)
+          .eq(isCoach ? 'coach_id' : 'student_id', user.id)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+      ]);
 
-      if (connectionsError) {
-        console.error('Error loading pending connections:', connectionsError);
+      if (incomingData.error) {
+        console.error('Error loading incoming requests:', incomingData.error);
+        return;
+      }
+      if (outgoingData.error) {
+        console.error('Error loading outgoing requests:', outgoingData.error);
         return;
       }
 
-      if (connections && connections.length > 0) {
-        // Then get the student profiles
-        const studentIds = connections.map(c => c.student_id);
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name, username, profile_picture')
-          .in('id', studentIds);
+      // Get all user IDs we need profiles for
+      const allConnections = [...(incomingData.data || []), ...(outgoingData.data || [])];
+      const userIds = new Set<string>();
+      allConnections.forEach(conn => {
+        userIds.add(conn.coach_id);
+        userIds.add(conn.student_id);
+      });
 
-        if (profilesError) {
-          console.error('Error loading student profiles:', profilesError);
-          return;
-        }
+      // Load full profiles for all users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, role')
+        .in('id', Array.from(userIds));
 
-        // Combine the data
-        const requests = connections.map(connection => {
-          const profile = profiles?.find(p => p.id === connection.student_id);
+      // Load private data for user display names
+      const { data: privateData, error: privateError } = await supabase
+        .from('user_private_data')
+        .select('id, full_name, profile_picture')
+        .in('id', Array.from(userIds));
+
+      if (profilesError) {
+        console.error('Error loading user profiles:', profilesError);
+      }
+
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const privateMap = new Map(privateData?.map(p => [p.id, p]) || []);
+
+      // Process incoming requests (requests where current user is recipient)
+      const incoming = (incomingData.data || [])
+        .filter(conn => isCoach ? conn.coach_id === user.id : conn.student_id === user.id)
+        .map(conn => {
+          const otherUserId = isCoach ? conn.student_id : conn.coach_id;
+          const profile = profileMap.get(otherUserId);
+          const privateInfo = privateMap.get(otherUserId);
+          
           return {
-            id: connection.id,
-            student_id: connection.student_id,
-            created_at: connection.created_at,
-            profiles: profile ? {
-              id: profile.id,
-              full_name: profile.full_name || '',
-              username: profile.username || '',
-              profile_picture: profile.profile_picture
-            } : {
-              id: connection.student_id,
-              full_name: '',
-              username: 'Unknown Student',
-              profile_picture: undefined
+            id: conn.id,
+            coach_id: conn.coach_id,
+            student_id: conn.student_id,
+            created_at: conn.created_at,
+            status: conn.status,
+            direction: 'incoming' as const,
+            otherUser: {
+              id: otherUserId,
+              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+              username: profile?.username || 'unknown',
+              profile_picture: privateInfo?.profile_picture,
+              role: profile?.role || (isCoach ? 'student' : 'coach')
             }
           };
         });
 
-        setPendingRequests(requests);
-      } else {
-        setPendingRequests([]);
-      }
+      // Process outgoing requests (requests where current user is sender) 
+      const outgoing = (outgoingData.data || [])
+        .filter(conn => isCoach ? conn.coach_id === user.id : conn.student_id === user.id)
+        .map(conn => {
+          const otherUserId = isCoach ? conn.student_id : conn.coach_id;
+          const profile = profileMap.get(otherUserId);
+          const privateInfo = privateMap.get(otherUserId);
+          
+          return {
+            id: conn.id,
+            coach_id: conn.coach_id,
+            student_id: conn.student_id,
+            created_at: conn.created_at,
+            status: conn.status,
+            direction: 'outgoing' as const,
+            otherUser: {
+              id: otherUserId,
+              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+              username: profile?.username || 'unknown',
+              profile_picture: privateInfo?.profile_picture,
+              role: profile?.role || (isCoach ? 'student' : 'coach')
+            }
+          };
+        });
+
+      setIncomingRequests(incoming);
+      setOutgoingRequests(outgoing);
     } catch (error) {
       console.error('Error in loadPendingRequests:', error);
     } finally {
@@ -201,9 +300,7 @@ const MyCoachingNetwork: React.FC = () => {
   useEffect(() => {
     if (user?.id && (isCoach || isStudent)) {
       loadConnectedUsers();
-      if (isCoach) {
-        loadPendingRequests();
-      }
+      loadPendingRequests(); // Load for both coaches and students now
     }
   }, [user?.id, isCoach, isStudent]);
 
@@ -561,7 +658,7 @@ const MyCoachingNetwork: React.FC = () => {
     );
   };
 
-  const renderPendingRequests = () => {
+  const renderIncomingRequests = () => {
     if (pendingLoading) {
       return (
         <div className="flex items-center justify-center py-4">
@@ -571,36 +668,36 @@ const MyCoachingNetwork: React.FC = () => {
       );
     }
 
-    if (pendingRequests.length === 0) {
+    if (incomingRequests.length === 0) {
       return (
         <div className="text-center py-4 text-muted-foreground">
           <Icon name="Clock" className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">No pending requests.</p>
+          <p className="text-sm">No incoming requests.</p>
         </div>
       );
     }
 
     return (
       <div className="space-y-3">
-        {pendingRequests.map((request) => (
+        {incomingRequests.map((request) => (
           <div
             key={request.id}
             className="flex flex-col p-4 rounded-lg border bg-card/30 space-y-3"
           >
-            {/* Player Info Row */}
+            {/* User Info Row */}
             <div className="flex items-center space-x-3">
               <Avatar className="h-10 w-10 shrink-0">
-                <AvatarImage src={request.profiles.profile_picture || ''} />
+                <AvatarImage src={request.otherUser.profile_picture || ''} />
                 <AvatarFallback className="bg-primary/10 text-primary">
-                  {getInitials(request.profiles.full_name || request.profiles.username || 'Player')}
+                  {getInitials(request.otherUser.full_name || request.otherUser.username)}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm">
-                  {request.profiles.full_name || request.profiles.username || 'Player'}
+                  {request.otherUser.full_name || request.otherUser.username}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {new Date(request.created_at).toLocaleDateString()}
+                  {isCoach ? 'Player' : 'Coach'} • {new Date(request.created_at).toLocaleDateString()}
                 </p>
               </div>
             </div>
@@ -610,7 +707,7 @@ const MyCoachingNetwork: React.FC = () => {
               <Button
                 size="sm"
                 variant="default"
-                onClick={() => handleApproveRequest(request.id, request.profiles.username || request.profiles.full_name || 'Player')}
+                onClick={() => handleApproveRequest(request.id, request.otherUser.username)}
                 className="h-8 px-3 text-xs"
               >
                 <Icon name="Check" className="h-3 w-3 mr-1" />
@@ -619,12 +716,48 @@ const MyCoachingNetwork: React.FC = () => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => handleRejectRequest(request.id, request.profiles.username || request.profiles.full_name || 'Player')}
+                onClick={() => handleRejectRequest(request.id, request.otherUser.username)}
                 className="h-8 px-3 text-xs"
               >
                 <Icon name="X" className="h-3 w-3 mr-1" />
                 Reject
               </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderOutgoingRequests = () => {
+    if (outgoingRequests.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="space-y-3">
+        {outgoingRequests.map((request) => (
+          <div
+            key={request.id}
+            className="flex items-center p-3 rounded-lg border bg-card/20 space-x-3"
+          >
+            <Avatar className="h-8 w-8 shrink-0">
+              <AvatarImage src={request.otherUser.profile_picture || ''} />
+              <AvatarFallback className="bg-muted text-muted-foreground">
+                {getInitials(request.otherUser.full_name || request.otherUser.username)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm">
+                {request.otherUser.full_name || request.otherUser.username}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Sent {new Date(request.created_at).toLocaleDateString()}
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Icon name="Clock" className="h-4 w-4 text-amber-500" />
+              <span className="text-xs text-amber-600">Pending</span>
             </div>
           </div>
         ))}
@@ -738,13 +871,25 @@ const MyCoachingNetwork: React.FC = () => {
           </div>
         )}
         
-        {isCoach && pendingRequests.length > 0 && (
+        {/* Incoming Requests (for approval) */}
+        {incomingRequests.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3 flex items-center space-x-2">
+              <Icon name="UserCheck" className="h-4 w-4" />
+              <span>Incoming Requests ({incomingRequests.length})</span>
+            </h3>
+            {renderIncomingRequests()}
+          </div>
+        )}
+
+        {/* Outgoing Requests (pending status) */}
+        {outgoingRequests.length > 0 && (
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-3 flex items-center space-x-2">
               <Icon name="Clock" className="h-4 w-4" />
-              <span>Pending Requests</span>
+              <span>Sent Requests ({outgoingRequests.length})</span>
             </h3>
-            {renderPendingRequests()}
+            {renderOutgoingRequests()}
           </div>
         )}
         

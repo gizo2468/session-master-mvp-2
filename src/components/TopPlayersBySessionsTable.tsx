@@ -38,22 +38,32 @@ const TopPlayersBySessionsTable: React.FC = () => {
         // Get unique user IDs
         const userIds = [...new Set(sessionsData?.map(session => session.user_id) || [])];
 
-        // Fetch profiles for these users
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .in('id', userIds);
+        // Fetch profiles and private data for these users
+        const [profilesResult, privateResult] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('id, username')
+            .in('id', userIds),
+          supabase
+            .from('user_private_data')
+            .select('id, full_name')
+            .in('id', userIds)
+        ]);
 
-        if (profilesError) throw profilesError;
+        if (profilesResult.error) throw profilesResult.error;
+
+        const profileMap = new Map(profilesResult.data?.map(p => [p.id, p]) || []);
+        const privateMap = new Map(privateResult.data?.map(p => [p.id, p]) || []);
 
         // Calculate session statistics for each user
         const playerStats: PlayerSessionSummary[] = [];
         
         userIds.forEach(userId => {
           const userSessions = sessionsData?.filter(session => session.user_id === userId) || [];
-          const userProfile = profilesData?.find(profile => profile.id === userId);
+          const userProfile = profileMap.get(userId);
+          const privateInfo = privateMap.get(userId);
           
-          if (userProfile && userSessions.length > 0) {
+          if (userSessions.length > 0) {
             const totalMinutes = userSessions.reduce((total, session) => {
               if (session.start_time && session.end_time) {
                 const startTime = new Date(session.start_time);
@@ -67,7 +77,7 @@ const TopPlayersBySessionsTable: React.FC = () => {
 
             playerStats.push({
               user_id: userId,
-              full_name: userProfile.full_name,
+              full_name: privateInfo?.full_name || userProfile?.username || 'Unknown Player',
               session_count: userSessions.length,
               total_minutes_played: totalMinutes,
               total_hours_played: Math.round((totalMinutes / 60) * 10) / 10

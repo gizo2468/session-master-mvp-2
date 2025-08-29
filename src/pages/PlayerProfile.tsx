@@ -99,23 +99,36 @@ const PlayerProfile = () => {
         return;
       }
 
-      // Load player profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, full_name, username, profile_picture, email, bio, default_currency')
-        .eq('id', playerId)
-        .single();
+      // Load player profile with both public and private data
+      const [profileResult, privateResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, username, bio, default_currency')
+          .eq('id', playerId)
+          .single(),
+        supabase
+          .from('user_private_data')
+          .select('full_name, profile_picture, email')
+          .eq('id', playerId)
+          .single()
+      ]);
 
-      if (profileError) {
-        console.error('Error loading player profile:', profileError);
+      if (profileResult.error || !profileResult.data) {
+        console.error('Error loading player profile:', profileResult.error);
         setError('Failed to load player profile.');
         return;
       }
 
-      setPlayer({
-        ...profileData,
-        default_currency: profileData.default_currency || 'USD'
-      });
+      // Combine the data
+      const playerData = {
+        ...profileResult.data,
+        full_name: privateResult.data?.full_name || profileResult.data.username,
+        profile_picture: privateResult.data?.profile_picture,
+        email: privateResult.data?.email,
+        default_currency: profileResult.data.default_currency || 'USD'
+      };
+
+      setPlayer(playerData);
 
       // Load shared sessions
       const { data: sharedSessionsData, error: sharedError } = await supabase

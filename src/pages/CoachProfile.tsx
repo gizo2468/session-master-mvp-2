@@ -73,16 +73,23 @@ const CoachProfile: React.FC = () => {
           return;
         }
 
-        // Load coach profile data
-        const { data: coachProfile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, full_name, username, profile_picture, bio, default_currency, students_coached_count, coaching_focus, experience')
-          .eq('id', coachId)
-          .eq('role', 'coach')
-          .single();
+        // Load coach profile data with both public and private data
+        const [profileResult, privateResult] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('id, username, bio, default_currency, students_coached_count, coaching_focus, experience')
+            .eq('id', coachId)
+            .eq('role', 'coach')
+            .single(),
+          supabase
+            .from('user_private_data')
+            .select('full_name, profile_picture')
+            .eq('id', coachId)
+            .single()
+        ]);
 
-        if (profileError || !coachProfile) {
-          console.error('Error loading coach profile:', profileError);
+        if (profileResult.error || !profileResult.data) {
+          console.error('Error loading coach profile:', profileResult.error);
           toast({
             title: "Error",
             description: "Failed to load coach profile.",
@@ -91,6 +98,13 @@ const CoachProfile: React.FC = () => {
           navigate('/dashboard');
           return;
         }
+
+        // Combine the data
+        const coachProfile = {
+          ...profileResult.data,
+          full_name: privateResult.data?.full_name || profileResult.data.username,
+          profile_picture: privateResult.data?.profile_picture
+        };
 
         setCoach(coachProfile);
 

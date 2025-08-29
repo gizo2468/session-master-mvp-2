@@ -227,25 +227,40 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       // Get coach profiles
       const coachIds = connections.map(conn => conn.coach_id);
-      const { data: coachProfiles, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, full_name, online_nickname')
-        .in('id', coachIds);
+      // Get profiles and private data
+      const [profilesResult, privateResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, username, online_nickname')
+          .in('id', coachIds),
+        supabase
+          .from('user_private_data')
+          .select('id, full_name')
+          .in('id', coachIds)
+      ]);
 
-      if (profileError) {
-        console.error('Error loading coach profiles:', profileError);
+      if (profilesResult.error) {
+        console.error('Error loading coach profiles:', profilesResult.error);
         return;
       }
 
-      const coaches: CoachProfile[] = (coachProfiles || []).map(profile => ({
-        id: profile.id,
-        userId: profile.id,
-        displayName: profile.full_name || 'Unknown Coach',
-        bio: profile.online_nickname,
-        students: [],
-        comments: [],
-        createdAt: new Date(),
-      }));
+      const profileMap = new Map(profilesResult.data?.map(p => [p.id, p]) || []);
+      const privateMap = new Map(privateResult.data?.map(p => [p.id, p]) || []);
+
+      const coaches: CoachProfile[] = coachIds.map(id => {
+        const profile = profileMap.get(id);
+        const privateInfo = privateMap.get(id);
+        
+        return {
+          id,
+          userId: id,
+          displayName: privateInfo?.full_name || profile?.username || 'Unknown Coach',
+          bio: profile?.online_nickname || '',
+          students: [],
+          comments: [],
+          createdAt: new Date(),
+        };
+      });
 
       setConnectedCoaches(coaches);
     } catch (error) {
