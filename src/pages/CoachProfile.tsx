@@ -581,10 +581,7 @@ const CoachProfile: React.FC = () => {
                             <CardDisplay cards={hand.hole_cards} size="sm" />
                           </div>
                         )}
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">
-                            {hand.hand_number ? `Hand #${hand.hand_number}` : `Hand ${hand.id.slice(0, 8)}`}
-                          </span>
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="outline" className="text-xs">
                             {hand.game_type}
                           </Badge>
@@ -593,6 +590,9 @@ const CoachProfile: React.FC = () => {
                               {hand.position}
                             </Badge>
                           )}
+                          <Badge variant="outline" className="text-xs bg-background">
+                            Feedbacks: {hand.feedback_count}
+                          </Badge>
                         </div>
                       </div>
                       <div className="text-sm text-muted-foreground">
@@ -606,11 +606,6 @@ const CoachProfile: React.FC = () => {
                           </span>
                         )}
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant="default" className="text-xs">
-                        Feedback: {hand.feedback_count}
-                      </Badge>
                     </div>
                   </div>
                 ))}
