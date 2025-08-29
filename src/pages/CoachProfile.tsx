@@ -12,6 +12,8 @@ import PageContainer from '@/components/ui/PageContainer';
 import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
 import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
+import HandDetailsDialog from '@/components/poker/HandDetailsDialog';
+import { HandData } from '@/types/poker';
 
 interface CoachData {
   id: string;
@@ -38,6 +40,22 @@ interface SharedSession {
   currency?: string;
 }
 
+interface CoachReviewedHand {
+  id: string;
+  hand_number?: number;
+  session_id: string;
+  table_id?: string;
+  game_type: string;
+  created_at: string;
+  feedback_count: number;
+  last_feedback_at: string;
+  position?: string;
+  hole_cards?: string;
+  amount_won?: number;
+  pot_size?: number;
+  currency_type?: string;
+}
+
 
 const CoachProfile: React.FC = () => {
   const { coachId } = useParams<{ coachId: string }>();
@@ -45,9 +63,15 @@ const CoachProfile: React.FC = () => {
   const { user } = useAuth();
   const [coach, setCoach] = useState<CoachData | null>(null);
   const [sharedSessions, setSharedSessions] = useState<SharedSession[]>([]);
+  const [reviewedHands, setReviewedHands] = useState<CoachReviewedHand[]>([]);
+  const [reviewedHandsLoading, setReviewedHandsLoading] = useState(false);
+  const [reviewedHandsOffset, setReviewedHandsOffset] = useState(0);
+  const [hasMoreReviewedHands, setHasMoreReviewedHands] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [selectedHand, setSelectedHand] = useState<HandData | null>(null);
+  const [handDialogOpen, setHandDialogOpen] = useState(false);
 
   useEffect(() => {
     const loadCoachData = async () => {
@@ -225,6 +249,164 @@ const CoachProfile: React.FC = () => {
     });
   };
 
+  const loadReviewedHands = async (offset = 0, reset = false) => {
+    if (!coachId || !user?.id) return;
+
+    setReviewedHandsLoading(true);
+    try {
+      // First get hand IDs that have feedback from this coach for this student
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from('hand_feedback')
+        .select('hand_id')
+        .eq('coach_id', coachId)
+        .eq('student_id', user.id);
+
+      if (feedbackError || !feedbackData || feedbackData.length === 0) {
+        console.error('Error loading feedback or no feedback found:', feedbackError);
+        setReviewedHands([]);
+        setHasMoreReviewedHands(false);
+        setReviewedHandsLoading(false);
+        return;
+      }
+
+      const handIds = feedbackData.map(f => f.hand_id);
+
+      // Get hands and session data
+      const { data: handsData, error: handsError } = await supabase
+        .from('session_hands_new')
+        .select(`
+          id,
+          hand_number,
+          session_id,
+          table_id,
+          created_at,
+          position,
+          hole_cards,
+          amount_won,
+          pot_size,
+          currency_type,
+          sessions!session_hands_new_session_id_fkey(game_type)
+        `)
+        .eq('user_id', user.id)
+        .in('id', handIds)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + 9);
+
+      if (handsError) {
+        console.error('Error loading hands:', handsError);
+        setReviewedHandsLoading(false);
+        return;
+      }
+
+      if (handsData && Array.isArray(handsData)) {
+        // Get feedback counts for each hand
+        const { data: feedbackCounts } = await supabase
+          .from('hand_feedback')
+          .select('hand_id')
+          .eq('coach_id', coachId)
+          .in('hand_id', handsData.map(h => h.id));
+
+        const feedbackCountMap = feedbackCounts?.reduce((acc, f) => {
+          acc[f.hand_id] = (acc[f.hand_id] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>) || {};
+
+        const reviewedHandsData: CoachReviewedHand[] = handsData.map(item => ({
+          id: item.id,
+          hand_number: item.hand_number,
+          session_id: item.session_id,
+          table_id: item.table_id,
+          game_type: (item.sessions as any)?.game_type || 'NLH',
+          created_at: item.created_at,
+          feedback_count: feedbackCountMap[item.id] || 0,
+          last_feedback_at: item.created_at, // Use hand created_at as fallback
+          position: item.position,
+          hole_cards: item.hole_cards,
+          amount_won: item.amount_won,
+          pot_size: item.pot_size,
+          currency_type: item.currency_type
+        }));
+
+        if (reset) {
+          setReviewedHands(reviewedHandsData);
+        } else {
+          setReviewedHands(prev => [...prev, ...reviewedHandsData]);
+        }
+
+        setHasMoreReviewedHands(reviewedHandsData.length === 10);
+        setReviewedHandsOffset(offset + 10);
+      }
+    } catch (error) {
+      console.error('Error in loadReviewedHands:', error);
+    } finally {
+      setReviewedHandsLoading(false);
+    }
+  };
+
+  const handleHandClick = async (reviewedHand: CoachReviewedHand) => {
+    try {
+      // Fetch full hand data for the dialog
+      const { data: handData, error } = await supabase
+        .from('session_hands_new')
+        .select('*')
+        .eq('id', reviewedHand.id)
+        .single();
+
+      if (error || !handData) {
+        console.error('Error loading hand details:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load hand details.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Convert to HandData format
+      const handForDialog: HandData = {
+        id: handData.id,
+        sessionId: handData.session_id,
+        tableId: handData.table_id,
+        handNumber: handData.hand_number,
+        position: handData.position,
+        cards: handData.hole_cards,
+        holeCards: handData.hole_cards ? handData.hole_cards.split(',') : undefined,
+        preflopAction: handData.preflop_action,
+        flopCards: handData.flop_cards ? handData.flop_cards.split(',') : undefined,
+        flopAction: handData.flop_action,
+        turnCard: handData.turn_card,
+        turnAction: handData.turn_action,
+        riverCard: handData.river_card,
+        riverAction: handData.river_action,
+        showdownResult: handData.showdown_result,
+        resultAmount: handData.amount_won,
+        potSize: handData.pot_size,
+        amountInvested: handData.amount_invested,
+        amountWon: handData.amount_won,
+        notes: handData.hand_notes,
+        handImage: handData.hand_image,
+        currencyType: handData.currency_type as 'currency' | 'chips',
+        createdAt: new Date(handData.created_at)
+      };
+
+      setSelectedHand(handForDialog);
+      setHandDialogOpen(true);
+    } catch (error) {
+      console.error('Error in handleHandClick:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong loading the hand.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (coachId && user?.id && !loading) {
+      loadReviewedHands(0, true);
+    }
+  }, [coachId, user?.id, loading]);
+
   if (loading) {
     return (
       <PageContainer>
@@ -356,22 +538,99 @@ const CoachProfile: React.FC = () => {
           />
         )}
 
-        {/* Placeholder sections for future content */}
-      <div className="space-y-6">
-
-        {/* Placeholder: Learning Progress */}
+        {/* Coach Reviewed Hands */}
         <Card>
-          <CardContent className="p-8">
-            <div className="text-center text-muted-foreground">
-              <Icon name="TrendingUp" className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium mb-2">Learning Progress</h3>
-              <p className="text-sm">
-                Your progress tracking and improvement insights will be shown here.
-              </p>
-            </div>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Icon name="MessageSquareMore" size={18} />
+              <span>Coach Reviewed Hands</span>
+              <Badge variant="secondary">{reviewedHands.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {reviewedHandsLoading && reviewedHands.length === 0 ? (
+              <div className="flex items-center justify-center py-8">
+                <Icon name="Loader" className="h-6 w-6 animate-spin text-muted-foreground mr-2" />
+                <span className="text-muted-foreground">Loading reviewed hands...</span>
+              </div>
+            ) : reviewedHands.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Icon name="MessageSquare" className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No hands reviewed by this coach yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {reviewedHands.map((hand) => (
+                  <div
+                    key={hand.id}
+                    className="flex items-center justify-between p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors cursor-pointer"
+                    onClick={() => handleHandClick(hand)}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium">
+                          {hand.hand_number ? `Hand #${hand.hand_number}` : `Hand ${hand.id.slice(0, 8)}`}
+                        </span>
+                        <Badge variant="outline" className="text-xs">
+                          {hand.game_type}
+                        </Badge>
+                        {hand.position && (
+                          <Badge variant="secondary" className="text-xs">
+                            {hand.position}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        <span>{formatSessionDateTime(hand.created_at)}</span>
+                        {hand.hole_cards && <span> • {hand.hole_cards}</span>}
+                        {hand.amount_won !== undefined && hand.amount_won !== 0 && (
+                          <span className={hand.amount_won > 0 ? 'text-green-600' : 'text-red-600'}>
+                            {' • '}
+                            {hand.amount_won > 0 ? '+' : ''}
+                            {hand.currency_type === 'currency' ? '$' : ''}
+                            {Math.abs(hand.amount_won).toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant="default" className="text-xs">
+                        Feedback: {hand.feedback_count}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+                
+                {hasMoreReviewedHands && (
+                  <div className="flex justify-center pt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => loadReviewedHands(reviewedHandsOffset, false)}
+                      disabled={reviewedHandsLoading}
+                    >
+                      {reviewedHandsLoading ? (
+                        <>
+                          <Icon name="Loader" className="h-4 w-4 mr-2 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        'View more'
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
-      </div>
+
+        {/* Hand Details Dialog */}
+        <HandDetailsDialog
+          open={handDialogOpen}
+          onOpenChange={setHandDialogOpen}
+          hand={selectedHand}
+        />
     </PageContainer>
   );
 };
