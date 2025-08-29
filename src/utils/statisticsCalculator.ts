@@ -36,8 +36,11 @@ export const calculateSessionStatisticsFromDB = async (
   try {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
+      console.error('User not authenticated');
       throw new Error('User not authenticated');
     }
+
+    console.log('Fetching statistics for user:', user.user.id, 'format:', format, 'timeframe:', timeframe);
 
     const { data, error } = await supabase.rpc('get_user_session_statistics', {
       p_user_id: user.user.id,
@@ -51,6 +54,8 @@ export const calculateSessionStatisticsFromDB = async (
       throw error;
     }
 
+    console.log('Raw statistics data from DB:', data);
+
     // Find the stats for the requested format
     const scopeMap: Record<SessionFormat, string> = {
       'all': 'all',
@@ -60,7 +65,10 @@ export const calculateSessionStatisticsFromDB = async (
 
     const stats = data?.find((row: any) => row.scope === scopeMap[format]);
     
+    console.log('Stats for format', format, ':', stats);
+    
     if (!stats) {
+      console.log('No stats found for format:', format, 'returning defaults');
       // Return default values if no data found
       return {
         netResult: 0,
@@ -81,7 +89,7 @@ export const calculateSessionStatisticsFromDB = async (
       };
     }
 
-    return {
+    const result = {
       netResult: Number(stats.net_result || 0),
       netHourlyRate: Number(stats.net_hourly_rate || 0),
       averageNetResult: Number(stats.average_net_result || 0),
@@ -98,6 +106,9 @@ export const calculateSessionStatisticsFromDB = async (
       finalTables: Number(stats.final_tables || 0),
       firstPlaceFinish: Number(stats.first_place_finish || 0),
     };
+
+    console.log('Processed statistics result:', result);
+    return result;
   } catch (error) {
     console.error('Failed to calculate statistics from DB:', error);
     // Fallback to local calculation if DB fails

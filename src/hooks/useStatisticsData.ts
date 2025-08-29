@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { calculateSessionStatisticsFromDB, SessionFormat } from '@/utils/statisticsCalculator';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Hook to provide calculated statistics data for all session formats using Supabase
@@ -24,11 +25,17 @@ export const useStatisticsData = (
         setIsLoading(true);
         setError(null);
 
+        // Debug: Check authentication status
+        const { data: authData } = await supabase.auth.getUser();
+        console.log('Current authenticated user:', authData.user?.id);
+
         const [allStats, cashStats, tournamentStats] = await Promise.all([
           calculateSessionStatisticsFromDB('all', timeframe, startDate, endDate),
           calculateSessionStatisticsFromDB('cash', timeframe, startDate, endDate),
           calculateSessionStatisticsFromDB('tournament', timeframe, startDate, endDate),
         ]);
+
+        console.log('Statistics fetched:', { allStats, cashStats, tournamentStats });
 
         setStatisticsData({
           all: allStats,
