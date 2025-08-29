@@ -898,6 +898,10 @@ export type Database = {
         Args: { p_username: string }
         Returns: boolean
       }
+      connection_exists: {
+        Args: { p_coach_id: string; p_student_id: string }
+        Returns: boolean
+      }
       end_session: {
         Args: {
           p_cash_out: number
@@ -932,6 +936,10 @@ export type Database = {
           students_coached_count: number
           username: string
         }[]
+      }
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: string
       }
       get_user_session_statistics: {
         Args: {
