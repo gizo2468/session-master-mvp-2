@@ -524,7 +524,7 @@ const CoachProfile: React.FC = () => {
         </Card>
 
         {/* Coach Goals & Tasks */}
-        {user?.id && <PlayerGoalsTasks studentId={user.id} mode="player" />}
+        {user?.id && coachId && <PlayerGoalsTasks studentId={user.id} mode="player" coachId={coachId} />}
 
         {/* Session Modal */}
         {selectedSessionId && selectedPlayerId && (

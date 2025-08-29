@@ -27,6 +27,7 @@ export type PlayerGoal = {
 interface PlayerGoalsTasksProps {
   studentId: string;
   mode: 'coach' | 'player';
+  coachId?: string; // Optional: specify which coach's focus points to show
 }
 
 const statusLabel: Record<string, string> = {
@@ -73,7 +74,7 @@ const colorDotBgClass = (c?: string | null): string => {
   }
 };
 
-export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksProps) {
+export default function PlayerGoalsTasks({ studentId, mode, coachId }: PlayerGoalsTasksProps) {
   const { user } = useAuth();
   const [goals, setGoals] = useState<PlayerGoal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,8 +94,9 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
 
   const filters = useMemo(() => ({
     student_id: studentId,
-    coach_id: isCoach ? user?.id : undefined,
-  }), [studentId, isCoach, user?.id]);
+    // Use explicit coachId if provided, otherwise fall back to current user (for coach mode)
+    coach_id: coachId || (isCoach ? user?.id : undefined),
+  }), [studentId, isCoach, user?.id, coachId]);
 
   useEffect(() => {
     if (!user?.id || !studentId) return;
@@ -102,12 +104,13 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
 
     // Realtime subscription
     const channel = supabase
-      .channel(`player-goals-${studentId}`)
+      .channel(`player-goals-${studentId}-${filters.coach_id || 'all'}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'player_goals' }, (payload) => {
         const row: any = payload.new || payload.old;
         if (!row) return;
         if (row.student_id !== studentId) return;
-        if (isCoach && row.coach_id !== user.id) return;
+        // Only show updates for the specific coach we're filtering by
+        if (filters.coach_id && row.coach_id !== filters.coach_id) return;
         // For simplicity refresh list
         loadGoals(false);
       })
@@ -117,7 +120,7 @@ export default function PlayerGoalsTasks({ studentId, mode }: PlayerGoalsTasksPr
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studentId, user?.id, isCoach]);
+  }, [studentId, user?.id, isCoach, coachId]);
 
   const loadGoals = async (setIsLoading: boolean = true) => {
     if (!user?.id) return;
