@@ -10,6 +10,7 @@ import { TableData } from '@/types/poker';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useSessionLiveState } from '@/hooks/useSessionLiveState';
 import { useToast } from '@/hooks/use-toast';
+import { BBStackUpdateService } from '@/services/bbStackUpdateService';
 
 interface BBStackUpdateModalProps {
   isOpen: boolean;
@@ -147,62 +148,96 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     );
   };
 
-  const handleSave = () => {
-    // Validate per table based on its format
-    for (const data of updateData) {
-      const table = tables.find(t => t.id === data.tableId);
-      if (!table) continue;
-      
-      const isCashTable = table.format === 'Cash';
-      
-      if (isCashTable) {
-        // Validation for cash games
-        if (data.smallBlind <= 0 || data.bigBlind <= 0) {
-          alert('Cash game blinds cannot be 0 or empty');
-          return;
-        }
-      } else {
-        // For tournaments, validate numeric fields
-        if (data.stack !== '' && !/^\d+$/.test(data.stack) ||
-            data.bb !== '' && !/^\d+$/.test(data.bb)) {
-          alert('Tournament fields must contain only numbers');
-          return;
+  const handleSave = async () => {
+    try {
+      // Validate per table based on its format
+      for (const data of updateData) {
+        const table = tables.find(t => t.id === data.tableId);
+        if (!table) continue;
+        
+        const isCashTable = table.format === 'Cash';
+        
+        if (isCashTable) {
+          // Validation for cash games
+          if (data.smallBlind <= 0 || data.bigBlind <= 0) {
+            alert('Cash game blinds cannot be 0 or empty');
+            return;
+          }
+        } else {
+          // For tournaments, validate numeric fields
+          if (data.stack !== '' && !/^\d+$/.test(data.stack) ||
+              data.bb !== '' && !/^\d+$/.test(data.bb)) {
+            alert('Tournament fields must contain only numbers');
+            return;
+          }
         }
       }
+      
+      // Save to database first
+      for (const data of updateData) {
+        const table = tables.find(t => t.id === data.tableId);
+        if (!table) continue;
+        
+        const isCashTable = table.format === 'Cash';
+        
+        if (isCashTable) {
+          await BBStackUpdateService.saveBBStackUpdate({
+            sessionId,
+            tableId: data.tableId,
+            smallBlind: data.smallBlind,
+            bigBlind: data.bigBlind
+          });
+        } else {
+          await BBStackUpdateService.saveBBStackUpdate({
+            sessionId,
+            tableId: data.tableId,
+            level: data.level,
+            stack: data.stack,
+            bb: data.bb
+          });
+        }
+      }
+      
+      // Save the data to live state
+      const bbStackUpdates = { ...liveState.bbStackUpdates };
+      
+      updateData.forEach(data => {
+        const table = tables.find(t => t.id === data.tableId);
+        if (!table) return;
+        
+        const isCashTable = table.format === 'Cash';
+        
+        if (isCashTable) {
+          bbStackUpdates[data.tableId] = {
+            smallBlind: data.smallBlind,
+            bigBlind: data.bigBlind
+          };
+        } else {
+          bbStackUpdates[data.tableId] = {
+            level: data.level,
+            stack: data.stack,
+            bb: data.bb
+          };
+        }
+      });
+      
+      updateLiveState({ bbStackUpdates });
+      
+      toast({
+        title: "BB/Stack Updates Saved",
+        description: "Your table settings have been updated successfully.",
+      });
+      
+      console.log('BB/Stack Update Data saved to database and live state');
+      onClose();
+    } catch (error) {
+      console.error('Error saving BB/Stack updates:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save BB/Stack updates. Please try again.",
+        variant: "destructive"
+      });
     }
-    
-    // Save the data to live state
-    const bbStackUpdates = { ...liveState.bbStackUpdates };
-    
-    updateData.forEach(data => {
-      const table = tables.find(t => t.id === data.tableId);
-      if (!table) return;
-      
-      const isCashTable = table.format === 'Cash';
-      
-      if (isCashTable) {
-        bbStackUpdates[data.tableId] = {
-          smallBlind: data.smallBlind,
-          bigBlind: data.bigBlind
-        };
-      } else {
-        bbStackUpdates[data.tableId] = {
-          level: data.level,
-          stack: data.stack,
-          bb: data.bb
-        };
-      }
-    });
-    
-    updateLiveState({ bbStackUpdates });
-    
-    toast({
-      title: "BB/Stack Updates Saved",
-      description: "Your table settings have been updated successfully.",
-    });
-    
-    console.log('BB/Stack Update Data saved to live state:', bbStackUpdates);
-    onClose();
   };
 
   const handleCancel = () => {

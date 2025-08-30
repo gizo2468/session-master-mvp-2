@@ -22,6 +22,9 @@ import HandManagementPanel from './HandManagementPanel';
 import { useSessionContext } from '@/context/SessionContext';
 import { Plus, Pencil } from 'lucide-react';
 import EditTableForm from './EditTableForm';
+import { useBBStackHistory } from '@/hooks/useBBStackHistory';
+import BlindHistoryModal from './BlindHistoryModal';
+import { BBStackUpdateService } from '@/services/bbStackUpdateService';
 
 interface TableCardProps {
   table: TableData;
@@ -34,9 +37,11 @@ interface TableCardProps {
 const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAddRebuy, sessionId }) => {
   const { updateTable, deleteTable } = useSessionContext();
   const { liveState } = useSessionLiveState(sessionId);
+  const { history: blindHistory, refreshHistory } = useBBStackHistory(table.id);
   const currencySymbol = getCurrencySymbol(currency);
   const [showEndTableDialog, setShowEndTableDialog] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showBlindHistory, setShowBlindHistory] = useState(false);
   const [cashOutAmount, setCashOutAmount] = useState('');
   const [tableNotes, setTableNotes] = useState(table.notes || '');
   const [showRebuyDialog, setShowRebuyDialog] = useState(false);
@@ -253,18 +258,43 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
           </div>
           
           {table.format === 'Cash' && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Blinds:</span>
-              <span className="font-medium">{currencySymbol}{table.smallBlind}/{currencySymbol}{table.bigBlind}</span>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Blinds:</span>
+                <span className="font-medium">{currencySymbol}{table.smallBlind}/{currencySymbol}{table.bigBlind}</span>
+              </div>
+              {/* Show blind history */}
+              {blindHistory.length > 0 && (
+                <div className="space-y-1">
+                  {blindHistory.slice(-3).map((update, index) => (
+                    <div key={update.id || index} className="flex justify-between text-sm">
+                      <span className="text-gray-500">Update {blindHistory.length - (3 - index - 1)}:</span>
+                      <span className="font-medium text-gray-700">
+                        {BBStackUpdateService.formatHistoryLine(update)}
+                      </span>
+                    </div>
+                  ))}
+                  {blindHistory.length > 3 && (
+                    <button
+                      onClick={() => setShowBlindHistory(true)}
+                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                    >
+                      View All ({blindHistory.length} updates)
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
           
-          {table.format === 'Tournament' && table.startingBB && (
-            <>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Starting BBs:</span>
-                <span className="font-medium">{table.startingBB}BB</span>
-              </div>
+          {table.format === 'Tournament' && (
+            <div className="space-y-2">
+              {table.startingBB && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Starting BBs:</span>
+                  <span className="font-medium">{table.startingBB}BB</span>
+                </div>
+              )}
               {liveState.bbStackUpdates?.[table.id]?.bb && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">
@@ -273,7 +303,28 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                   <span className="font-medium">{liveState.bbStackUpdates[table.id].bb}BBs</span>
                 </div>
               )}
-            </>
+              {/* Show blind history for tournaments */}
+              {blindHistory.length > 0 && (
+                <div className="space-y-1">
+                  {blindHistory.slice(-3).map((update, index) => (
+                    <div key={update.id || index} className="flex justify-between text-sm">
+                      <span className="text-gray-500">Update {blindHistory.length - (3 - index - 1)}:</span>
+                      <span className="font-medium text-gray-700">
+                        {BBStackUpdateService.formatHistoryLine(update, index === blindHistory.slice(-3).length - 1)}
+                      </span>
+                    </div>
+                  ))}
+                  {blindHistory.length > 3 && (
+                    <button
+                      onClick={() => setShowBlindHistory(true)}
+                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                    >
+                      View All ({blindHistory.length} updates)
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -399,6 +450,14 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
           />
         </div>
       </Card>
+
+      {/* Blind History Modal */}
+      <BlindHistoryModal
+        isOpen={showBlindHistory}
+        onClose={() => setShowBlindHistory(false)}
+        history={blindHistory}
+        tableFormat={table.format}
+      />
 
       {/* Edit Table Form */}
       <EditTableForm
