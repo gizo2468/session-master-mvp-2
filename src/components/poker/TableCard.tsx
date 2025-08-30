@@ -6,6 +6,7 @@ import { format as dateFormat, differenceInMinutes, isValid } from 'date-fns';
 import Icon from '@/components/ui/Lucide';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useSessionLiveState } from '@/hooks/useSessionLiveState';
+import { useBBStackHistory } from '@/hooks/useBBStackHistory';
 import { 
   Dialog,
   DialogContent,
@@ -22,6 +23,7 @@ import HandManagementPanel from './HandManagementPanel';
 import { useSessionContext } from '@/context/SessionContext';
 import { Plus, Pencil } from 'lucide-react';
 import EditTableForm from './EditTableForm';
+import BlindHistoryModal from './BlindHistoryModal';
 
 interface TableCardProps {
   table: TableData;
@@ -34,9 +36,11 @@ interface TableCardProps {
 const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAddRebuy, sessionId }) => {
   const { updateTable, deleteTable } = useSessionContext();
   const { liveState } = useSessionLiveState(sessionId);
+  const { getTableHistory, getLatestUpdate } = useBBStackHistory(sessionId);
   const currencySymbol = getCurrencySymbol(currency);
   const [showEndTableDialog, setShowEndTableDialog] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showBlindHistory, setShowBlindHistory] = useState(false);
   const [cashOutAmount, setCashOutAmount] = useState('');
   const [tableNotes, setTableNotes] = useState(table.notes || '');
   const [showRebuyDialog, setShowRebuyDialog] = useState(false);
@@ -252,27 +256,132 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
             })()}
           </div>
           
-          {table.format === 'Cash' && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Blinds:</span>
-              <span className="font-medium">{currencySymbol}{table.smallBlind}/{currencySymbol}{table.bigBlind}</span>
-            </div>
-          )}
-          
           {table.format === 'Tournament' && table.startingBB && (
             <>
               <div className="flex justify-between">
                 <span className="text-gray-600">Starting BBs:</span>
                 <span className="font-medium">{table.startingBB}BB</span>
               </div>
-              {liveState.bbStackUpdates?.[table.id]?.bb && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    Lvl {liveState.bbStackUpdates[table.id].level || 1}:
-                  </span>
-                  <span className="font-medium">{liveState.bbStackUpdates[table.id].bb}BBs</span>
-                </div>
-              )}
+              {(() => {
+                const history = getTableHistory(table.id);
+                const latestLiveState = liveState.bbStackUpdates?.[table.id];
+                
+                // Show live state if it exists and is different from the latest database record
+                const latestDbRecord = history[history.length - 1];
+                const shouldShowLiveState = latestLiveState?.bb && (
+                  !latestDbRecord || 
+                  latestLiveState.level !== latestDbRecord.level ||
+                  latestLiveState.bb !== latestDbRecord.bb?.toString()
+                );
+                
+                // Show last 3 entries max with "View All" if more exist
+                const visibleHistory = history.slice(-3);
+                const hasMore = history.length > 3;
+                
+                return (
+                  <div className="space-y-1">
+                    {/* Show historical blinds */}
+                    {visibleHistory.map((update, index) => (
+                      <div key={update.id} className="flex justify-between text-sm">
+                        <span className="text-gray-600">
+                          Lvl {update.level || 1}:
+                        </span>
+                        <span className="font-medium">
+                          {update.bb}BB{update.stack ? ` (${update.stack} chips)` : ''}
+                        </span>
+                      </div>
+                    ))}
+                    
+                    {/* Show "View All" button if there are more than 3 entries */}
+                    {hasMore && (
+                      <button
+                        onClick={() => setShowBlindHistory(true)}
+                        className="text-xs text-blue-600 hover:text-blue-800 underline"
+                      >
+                        View all {history.length} updates
+                      </button>
+                    )}
+                    
+                    {/* Show live state if different from latest database record */}
+                    {shouldShowLiveState && (
+                      <div className="flex justify-between text-sm opacity-75 italic">
+                        <span className="text-gray-600">
+                          Lvl {latestLiveState.level || 1}:
+                        </span>
+                        <span className="font-medium">
+                          {latestLiveState.bb}BB{latestLiveState.stack ? ` (${latestLiveState.stack} chips)` : ''}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </>
+          )}
+          
+          {table.format === 'Cash' && (
+            <>
+              {(() => {
+                const history = getTableHistory(table.id);
+                const latestLiveState = liveState.bbStackUpdates?.[table.id];
+                
+                // Show live state if it exists and is different from the latest database record
+                const latestDbRecord = history[history.length - 1];
+                const shouldShowLiveState = latestLiveState?.smallBlind && (
+                  !latestDbRecord || 
+                  latestLiveState.smallBlind !== latestDbRecord.small_blind ||
+                  latestLiveState.bigBlind !== latestDbRecord.big_blind
+                );
+                
+                // Show last 3 entries max with "View All" if more exist
+                const visibleHistory = history.slice(-3);
+                const hasMore = history.length > 3;
+                
+                // Show initial blinds if no history
+                const showInitialBlinds = history.length === 0;
+                
+                return (
+                  <div className="space-y-1">
+                    {/* Show initial blinds if no history */}
+                    {showInitialBlinds && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Blinds:</span>
+                        <span className="font-medium">{currencySymbol}{table.smallBlind}/{currencySymbol}{table.bigBlind}</span>
+                      </div>
+                    )}
+                    
+                    {/* Show historical blinds */}
+                    {visibleHistory.map((update, index) => (
+                      <div key={update.id} className="flex justify-between text-sm">
+                        <span className="text-gray-600">Blinds:</span>
+                        <span className="font-medium">
+                          {currencySymbol}{update.small_blind}/{currencySymbol}{update.big_blind}
+                        </span>
+                      </div>
+                    ))}
+                    
+                    {/* Show "View All" button if there are more than 3 entries */}
+                    {hasMore && (
+                      <button
+                        onClick={() => setShowBlindHistory(true)}
+                        className="text-xs text-blue-600 hover:text-blue-800 underline"
+                      >
+                        View all {history.length} updates
+                      </button>
+                    )}
+                    
+                    {/* Show live state if different from latest database record */}
+                    {shouldShowLiveState && (
+                      <div className="flex justify-between text-sm opacity-75 italic">
+                        <span className="text-gray-600">Blinds:</span>
+                        <span className="font-medium">
+                          {currencySymbol}{latestLiveState.smallBlind}/{currencySymbol}{latestLiveState.bigBlind}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </>
           )}
         </div>
@@ -714,6 +823,16 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
           )}
         </DialogContent>
       </Dialog>
+      
+      {/* Blind History Modal */}
+      <BlindHistoryModal
+        isOpen={showBlindHistory}
+        onClose={() => setShowBlindHistory(false)}
+        history={getTableHistory(table.id)}
+        currency={currency}
+        tableFormat={table.format}
+        tableName={`${table.location} - ${table.gameType}`}
+      />
     </>
   );
 };
