@@ -2,6 +2,7 @@ import { jsPDF } from 'jspdf';
 import { format } from 'date-fns';
 import type { FilterOptions } from '@/components/StatisticsFilterModal';
 import { calculateSessionStatisticsFromDB, formatCurrency, formatDuration, formatPercentage, formatRatio } from './statisticsCalculator';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StatData {
   label: string;
@@ -78,16 +79,16 @@ export const generateStatisticsPDFFromDB = async (data: ExportData) => {
       startDate = new Date(now);
       startDate.setDate(now.getDate() - 89);
       endDate = now;
-    } else if (data.filters.timeframeValue === 'This Year') {
-      timeframe = 'custom';
-      const now = new Date();
-      startDate = new Date(now.getFullYear(), 0, 1);
-      endDate = new Date(now.getFullYear(), 11, 31);
     } else if (data.filters.timeframeValue === 'Last Year') {
       timeframe = 'custom';
       const now = new Date();
       startDate = new Date(now.getFullYear() - 1, 0, 1);
       endDate = new Date(now.getFullYear() - 1, 11, 31);
+    } else if (data.filters.timeframeValue === 'This Year') {
+      timeframe = 'custom';
+      const now = new Date();
+      startDate = new Date(now.getFullYear(), 0, 1);
+      endDate = new Date(now.getFullYear(), 11, 31);
     }
     
     const stats = await calculateSessionStatisticsFromDB(
@@ -97,10 +98,13 @@ export const generateStatisticsPDFFromDB = async (data: ExportData) => {
       endDate
     );
 
+    // Calculate best session result from sessions with same filters
+    const bestSessionResult = await calculateBestSessionResult(format, startDate, endDate);
+
     // Generate PDF with fresh data
     generateStatisticsPDFWithData({
       ...data,
-      stats: formatStatsForPDF(stats, data.activeTab)
+      stats: formatStatsForPDF(stats, data.activeTab, bestSessionResult)
     });
 
   } catch (error) {
@@ -110,53 +114,97 @@ export const generateStatisticsPDFFromDB = async (data: ExportData) => {
   }
 };
 
-const formatStatsForPDF = (stats: any, activeTab: string): StatData[] => {
+const calculateBestSessionResult = async (format: string, startDate?: Date, endDate?: Date): Promise<number> => {
+  try {
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) return 0;
+
+    let query = supabase
+      .from('sessions')
+      .select('cash_out, buy_in')
+      .eq('user_id', user.user.id)
+      .not('end_time', 'is', null); // Only completed sessions
+
+    // Apply format filter
+    if (format === 'cash') {
+      query = query.eq('format', 'Cash');
+    } else if (format === 'tournament') {
+      query = query.eq('format', 'Tournament');
+    }
+
+    // Apply date filters
+    if (startDate) {
+      query = query.gte('start_time', startDate.toISOString());
+    }
+    if (endDate) {
+      query = query.lte('start_time', endDate.toISOString());
+    }
+
+    const { data: sessions, error } = await query;
+    
+    if (error || !sessions || sessions.length === 0) {
+      return 0;
+    }
+
+    // Calculate the best (highest) session result
+    const sessionResults = sessions.map(session => 
+      (session.cash_out || 0) - (session.buy_in || 0)
+    );
+
+    return Math.max(...sessionResults);
+  } catch (error) {
+    console.error('Error calculating best session result:', error);
+    return 0;
+  }
+};
+
+const formatStatsForPDF = (stats: any, activeTab: string, bestSessionResult: number): StatData[] => {
   const currency = 'USD'; // TODO: get from user preferences
   
+  // Base stats without the removed fields (Average Net Result, Average Duration, Profit/Loss Ratio)
   const baseStats = [
     { label: 'Net Result', value: formatCurrency(stats.netResult, currency) },
     { label: 'Net Hourly Rate', value: formatCurrency(stats.netHourlyRate, currency) },
-    { label: 'Average Net Result', value: formatCurrency(stats.averageNetResult, currency) },
     { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns, currency) },
-    { label: 'Average Duration', value: formatDuration(stats.averageDuration) },
     { label: 'Total Duration', value: formatDuration(stats.totalDuration) },
     { label: 'Total Tables', value: stats.totalTables.toString() },
     { label: 'Number of Sessions', value: stats.numberOfSessions.toString() },
-    { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
+    { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currency) },
   ];
 
   if (activeTab === 'sessions') {
     return [
-      ...baseStats.slice(0, 8), // All stats except Total Payouts for sessions tab
-      { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
-      { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
+      ...baseStats.slice(0, 6), // All stats up to Number of Sessions
       { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
+      { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currency) },
+      { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
     ];
   } else if (activeTab === 'cash') {
     return [
-      ...baseStats.slice(0, 8), // All stats except Total Payouts initially
+      ...baseStats.slice(0, 5), // All stats up to Total Tables
+      { label: 'Number of Sessions', value: stats.numberOfSessions.toString() },
+      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
+      { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currency) },
       { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
-      { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
       { label: 'Average BB/100', value: stats.averageBB100.toFixed(2) },
       { label: 'Hands Count', value: stats.handsCount.toString() },
-      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
     ];
   } else if (activeTab === 'tournaments') {
     return [
-      ...baseStats.slice(0, 8), // All stats except Total Payouts initially
+      ...baseStats.slice(0, 5), // All stats up to Total Tables
+      { label: 'Number of Sessions', value: stats.numberOfSessions.toString() },
+      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
+      { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currency) },
       { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
-      { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
       { label: 'Final Tables', value: stats.finalTables.toString() },
       { label: 'First Place Finish', value: stats.firstPlaceFinish.toString() },
       { label: 'Hands Count', value: stats.handsCount.toString() },
-      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
     ];
   }
 
   return [
     ...baseStats,
     { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
-    { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
   ];
 };
 
@@ -315,16 +363,25 @@ const generateStatisticsPDFWithData = (data: ExportData) => {
     doc.setFontSize(9);
     doc.text(kpi, x, y);
     
-    // Value (below label) with color coding
-    doc.setFont('helvetica', 'bold');
+    // Value (below label) with specific styling rules
     doc.setFontSize(11);
     
-    // Color based on value (green for positive, red for negative)
-    if (value.includes('$') && (value.includes('-') || value.startsWith('-'))) {
-      doc.setTextColor(220, 53, 69); // Red for negative values
-    } else if (value.includes('$') || value.includes('%')) {
-      doc.setTextColor(40, 167, 69); // Green for positive values
+    // Apply specific styling based on field
+    if (kpi === 'Total Payouts') {
+      // Total Payouts: green/red based on positive/negative value
+      doc.setFont('helvetica', 'bold');
+      if (value.includes('$') && (value.includes('-') || value.startsWith('-'))) {
+        doc.setTextColor(220, 53, 69); // Red for negative payouts
+      } else {
+        doc.setTextColor(40, 167, 69); // Green for positive payouts
+      }
+    } else if (kpi === 'Total Buy-ins') {
+      // Total Buy-ins: always bold, default color
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(33, 37, 41); // Dark gray
     } else {
+      // All other fields: regular styling
+      doc.setFont('helvetica', 'bold');
       doc.setTextColor(33, 37, 41); // Dark gray for neutral values
     }
     
