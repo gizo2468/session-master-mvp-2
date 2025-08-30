@@ -21,15 +21,80 @@ export const generateStatisticsPDFFromDB = async (data: ExportData) => {
     const formatMap = { sessions: 'all', cash: 'cash', tournaments: 'tournament' } as const;
     const format = formatMap[data.activeTab as keyof typeof formatMap] || 'all';
     
-    // Convert timeframe to backend format
-    const timeframe = data.filters.timeframeType === 'custom' ? 'custom' :
-                     data.filters.timeframeValue === 'This Month' ? 'this-month' : 'all-time';
+    // Convert timeframe to backend format - handle all timeframe values
+    let timeframe = 'all-time';
+    let startDate = data.filters.customStartDate;
+    let endDate = data.filters.customEndDate;
+    
+    if (data.filters.timeframeType === 'custom') {
+      timeframe = 'custom';
+    } else if (data.filters.timeframeValue === 'This Month') {
+      timeframe = 'this-month';
+      // Set current month dates
+      const now = new Date();
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    } else if (data.filters.timeframeValue === 'Last Month') {
+      timeframe = 'custom';
+      const now = new Date();
+      startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+    } else if (data.filters.timeframeValue === 'Last 3 Months') {
+      timeframe = 'custom';
+      const now = new Date();
+      startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    } else if (data.filters.timeframeValue === 'This Week') {
+      timeframe = 'custom';
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - dayOfWeek);
+      endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+    } else if (data.filters.timeframeValue === 'Last Week') {
+      timeframe = 'custom';
+      const now = new Date();
+      const lastWeekStart = new Date(now);
+      lastWeekStart.setDate(now.getDate() - now.getDay() - 7);
+      startDate = lastWeekStart;
+      endDate = new Date(lastWeekStart);
+      endDate.setDate(lastWeekStart.getDate() + 6);
+    } else if (data.filters.timeframeValue === 'Last 7 Days') {
+      timeframe = 'custom';
+      const now = new Date();
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 6);
+      endDate = now;
+    } else if (data.filters.timeframeValue === 'Last 30 Days') {
+      timeframe = 'custom';
+      const now = new Date();
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 29);
+      endDate = now;
+    } else if (data.filters.timeframeValue === 'Last 90 Days') {
+      timeframe = 'custom';
+      const now = new Date();
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 89);
+      endDate = now;
+    } else if (data.filters.timeframeValue === 'This Year') {
+      timeframe = 'custom';
+      const now = new Date();
+      startDate = new Date(now.getFullYear(), 0, 1);
+      endDate = new Date(now.getFullYear(), 11, 31);
+    } else if (data.filters.timeframeValue === 'Last Year') {
+      timeframe = 'custom';
+      const now = new Date();
+      startDate = new Date(now.getFullYear() - 1, 0, 1);
+      endDate = new Date(now.getFullYear() - 1, 11, 31);
+    }
     
     const stats = await calculateSessionStatisticsFromDB(
       format,
       timeframe,
-      data.filters.customStartDate,
-      data.filters.customEndDate
+      startDate,
+      endDate
     );
 
     // Generate PDF with fresh data
@@ -57,30 +122,34 @@ const formatStatsForPDF = (stats: any, activeTab: string): StatData[] => {
     { label: 'Total Duration', value: formatDuration(stats.totalDuration) },
     { label: 'Total Tables', value: stats.totalTables.toString() },
     { label: 'Number of Sessions', value: stats.numberOfSessions.toString() },
+    { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
   ];
 
   if (activeTab === 'sessions') {
     return [
-      ...baseStats,
+      ...baseStats.slice(0, 8), // All stats except Total Payouts for sessions tab
       { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
       { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
+      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
     ];
   } else if (activeTab === 'cash') {
     return [
-      ...baseStats,
+      ...baseStats.slice(0, 8), // All stats except Total Payouts initially
       { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
       { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
       { label: 'Average BB/100', value: stats.averageBB100.toFixed(2) },
       { label: 'Hands Count', value: stats.handsCount.toString() },
+      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
     ];
   } else if (activeTab === 'tournaments') {
     return [
-      ...baseStats,
+      ...baseStats.slice(0, 8), // All stats except Total Payouts initially
       { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
       { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
       { label: 'Final Tables', value: stats.finalTables.toString() },
       { label: 'First Place Finish', value: stats.firstPlaceFinish.toString() },
       { label: 'Hands Count', value: stats.handsCount.toString() },
+      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
     ];
   }
 
