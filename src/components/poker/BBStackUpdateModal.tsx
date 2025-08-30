@@ -49,7 +49,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
 }) => {
   const [updateData, setUpdateData] = useState<TableUpdateData[]>([]);
   const { liveState, updateLiveState } = useSessionLiveState(sessionId);
-  const { addUpdate } = useBBStackHistory(sessionId);
+  const { addUpdate, refreshHistory } = useBBStackHistory(sessionId);
   const currencySymbol = getCurrencySymbol(currency);
   const { toast } = useToast();
 
@@ -221,6 +221,9 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
         });
         
         updateLiveState({ bbStackUpdates });
+        
+        // Refresh the blind history to show the new updates
+        refreshHistory();
         
         toast({
           title: "BB/Stack Updates Saved",
