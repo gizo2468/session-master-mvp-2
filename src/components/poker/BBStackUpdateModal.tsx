@@ -9,8 +9,6 @@ import { Label } from '@/components/ui/label';
 import { TableData } from '@/types/poker';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useSessionLiveState } from '@/hooks/useSessionLiveState';
-import { BBStackUpdateService } from '@/services/bbStackUpdateService';
-import { useBBStackHistory } from '@/hooks/useBBStackHistory';
 import { useToast } from '@/hooks/use-toast';
 
 interface BBStackUpdateModalProps {
@@ -49,9 +47,10 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
 }) => {
   const [updateData, setUpdateData] = useState<TableUpdateData[]>([]);
   const { liveState, updateLiveState } = useSessionLiveState(sessionId);
-  const { addUpdate, refreshHistory } = useBBStackHistory(sessionId);
-  const currencySymbol = getCurrencySymbol(currency);
   const { toast } = useToast();
+
+  // Remove session-level format check - we'll check per table instead
+  const currencySymbol = getCurrencySymbol(currency);
 
   // Initialize state when modal opens or tables change
   useEffect(() => {
@@ -148,7 +147,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     );
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     // Validate per table based on its format
     for (const data of updateData) {
       const table = tables.find(t => t.id === data.tableId);
@@ -172,81 +171,38 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       }
     }
     
-    // Save each update as a separate database record
-    const savePromises = updateData.map(async (data) => {
+    // Save the data to live state
+    const bbStackUpdates = { ...liveState.bbStackUpdates };
+    
+    updateData.forEach(data => {
       const table = tables.find(t => t.id === data.tableId);
-      if (!table) return false;
+      if (!table) return;
       
       const isCashTable = table.format === 'Cash';
       
-      const updateData = {
-        sessionId: sessionId,
-        tableId: data.tableId,
-        level: isCashTable ? undefined : data.level,
-        bb: isCashTable ? undefined : (data.bb ? parseInt(data.bb) : undefined),
-        stack: isCashTable ? undefined : (data.stack ? parseInt(data.stack) : undefined),
-        smallBlind: isCashTable ? data.smallBlind : undefined,
-        bigBlind: isCashTable ? data.bigBlind : undefined,
-      };
-      
-      return await BBStackUpdateService.createUpdate(updateData);
+      if (isCashTable) {
+        bbStackUpdates[data.tableId] = {
+          smallBlind: data.smallBlind,
+          bigBlind: data.bigBlind
+        };
+      } else {
+        bbStackUpdates[data.tableId] = {
+          level: data.level,
+          stack: data.stack,
+          bb: data.bb
+        };
+      }
     });
     
-    try {
-      const results = await Promise.all(savePromises);
-      const allSuccessful = results.every(result => result);
-      
-      if (allSuccessful) {
-        // Save the latest data to live state for immediate UI updates
-        const bbStackUpdates = { ...liveState.bbStackUpdates };
-        
-        updateData.forEach(data => {
-          const table = tables.find(t => t.id === data.tableId);
-          if (!table) return;
-          
-          const isCashTable = table.format === 'Cash';
-          
-          if (isCashTable) {
-            bbStackUpdates[data.tableId] = {
-              smallBlind: data.smallBlind,
-              bigBlind: data.bigBlind
-            };
-          } else {
-            bbStackUpdates[data.tableId] = {
-              level: data.level,
-              stack: data.stack,
-              bb: data.bb
-            };
-          }
-        });
-        
-        updateLiveState({ bbStackUpdates });
-        
-        // Refresh the blind history to show the new updates
-        refreshHistory();
-        
-        toast({
-          title: "BB/Stack Updates Saved",
-          description: "Your table settings have been updated successfully.",
-        });
-        
-        console.log('BB/Stack Update Data saved to database and live state');
-        onClose();
-      } else {
-        toast({
-          title: "Error Saving Updates",
-          description: "Some updates could not be saved. Please try again.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Error saving BB/Stack updates:', error);
-      toast({
-        title: "Error Saving Updates",
-        description: "An error occurred while saving. Please try again.",
-        variant: "destructive"
-      });
-    }
+    updateLiveState({ bbStackUpdates });
+    
+    toast({
+      title: "BB/Stack Updates Saved",
+      description: "Your table settings have been updated successfully.",
+    });
+    
+    console.log('BB/Stack Update Data saved to live state:', bbStackUpdates);
+    onClose();
   };
 
   const handleCancel = () => {
