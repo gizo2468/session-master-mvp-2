@@ -268,7 +268,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                 <div className="space-y-1">
                   {blindHistory.slice(-3).map((update, index) => (
                     <div key={update.id || index} className="flex justify-between text-sm">
-                      <span className="text-gray-500">Update {blindHistory.length - (3 - index - 1)}:</span>
                       <span className="font-medium text-gray-700">
                         {BBStackUpdateService.formatHistoryLine(update)}
                       </span>
@@ -277,7 +276,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                   {blindHistory.length > 3 && (
                     <button
                       onClick={() => setShowBlindHistory(true)}
-                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                      className="text-xs text-gray-900 hover:text-gray-700"
                     >
                       View All ({blindHistory.length} updates)
                     </button>
@@ -308,16 +307,15 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                 <div className="space-y-1">
                   {blindHistory.slice(-3).map((update, index) => (
                     <div key={update.id || index} className="flex justify-between text-sm">
-                      <span className="text-gray-500">Update {blindHistory.length - (3 - index - 1)}:</span>
                       <span className="font-medium text-gray-700">
-                        {BBStackUpdateService.formatHistoryLine(update, index === blindHistory.slice(-3).length - 1)}
+                        {BBStackUpdateService.formatHistoryLine(update)}
                       </span>
                     </div>
                   ))}
                   {blindHistory.length > 3 && (
                     <button
                       onClick={() => setShowBlindHistory(true)}
-                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                      className="text-xs text-gray-900 hover:text-gray-700"
                     >
                       View All ({blindHistory.length} updates)
                     </button>

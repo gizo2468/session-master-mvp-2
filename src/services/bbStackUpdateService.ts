@@ -99,14 +99,14 @@ export class BBStackUpdateService {
     
     // For tournaments
     let line = '';
-    if (update.level) line += `Lvl ${update.level}`;
+    if (update.level) line += `Level ${update.level}`;
     if (update.bb) {
       line += line ? ` — BB ${update.bb}` : `BB ${update.bb}`;
     }
-    if (update.stack && isLastUpdate) {
-      line += ` (Stack: ${update.stack})`;
+    if (update.stack) {
+      line += line ? ` — Stack ${update.stack}` : `Stack ${update.stack}`;
     }
     
-    return line || 'Update';
+    return line || 'No data';
   }
 }
