@@ -98,6 +98,7 @@ export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilt
   const netHourlyDisplay = formatCurrency(currentStats.netHourlyRate, defaultCurrency);
   const avgNetResultDisplay = formatCurrency(currentStats.averageNetResult, defaultCurrency);
   const totalBuyInsDisplay = formatCurrency(currentStats.totalBuyIns, defaultCurrency);
+  const totalPayoutsDisplay = formatCurrency(currentStats.totalPayouts, defaultCurrency);
   const avgDurationDisplay = formatDuration(currentStats.averageDuration);
   const totalDurationDisplay = formatDuration(currentStats.totalDuration);
   const winRatioDisplay = formatPercentage(currentStats.winRatio);
@@ -126,7 +127,7 @@ export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilt
         </div>
         
         <TabsContent value="sessions" className="mt-0">
-          <div className="grid grid-cols-2 grid-rows-5 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 grid-rows-6 gap-3 sm:gap-4">
             <StatCell label="Net Result" value={netResultDisplay} isPositive={statisticsData.all?.netResult >= 0} />
             <StatCell label="Net Hourly Rate" value={netHourlyDisplay} isPositive={statisticsData.all?.netHourlyRate >= 0} />
             
@@ -141,6 +142,9 @@ export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilt
             
             <StatCell label="Total Tables" value={statisticsData.all?.totalTables.toString() || '0'} />
             <StatCell label="Number of Sessions" value={statisticsData.all?.numberOfSessions.toString() || '0'} />
+            
+            <StatCell label="Total Payouts" value={formatCurrency(statisticsData.all?.totalPayouts || 0, defaultCurrency)} />
+            <StatCell label="" value="" isEmpty />
           </div>
         </TabsContent>
         
@@ -162,7 +166,7 @@ export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilt
             <StatCell label="Hands Count" value={statisticsData.cash?.handsCount.toLocaleString() || '0'} />
             
             <StatCell label="Number of Sessions" value={statisticsData.cash?.numberOfSessions.toString() || '0'} />
-            <StatCell label="" value="" isEmpty />
+            <StatCell label="Total Payouts" value={formatCurrency(statisticsData.cash?.totalPayouts || 0, defaultCurrency)} />
           </div>
         </TabsContent>
         
@@ -184,7 +188,7 @@ export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilt
             <StatCell label="Hands Count" value={statisticsData.tournaments?.handsCount.toLocaleString() || '0'} />
             
             <StatCell label="Number of Sessions" value={statisticsData.tournaments?.numberOfSessions.toString() || '0'} />
-            <StatCell label="" value="" isEmpty />
+            <StatCell label="Total Payouts" value={formatCurrency(statisticsData.tournaments?.totalPayouts || 0, defaultCurrency)} />
           </div>
         </TabsContent>
       </Tabs>
