@@ -6,6 +6,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -48,6 +58,7 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
 }) => {
   const [gameTypeExpanded, setGameTypeExpanded] = useState(false);
   const [sessionFormatExpanded, setSessionFormatExpanded] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const timeframeOptions = {
     monthly: ['This Month', 'Last Month', 'Last 3 Months'],
@@ -92,8 +103,46 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
   };
 
   const handleApply = () => {
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmExport = () => {
     onApplyFilters();
+    onExportPDF();
+    setShowConfirmation(false);
     onOpenChange(false);
+  };
+
+  const handleCancelConfirmation = () => {
+    setShowConfirmation(false);
+  };
+
+  const getFilterSummary = () => {
+    const summary = [];
+    
+    // Timeframe
+    if (filters.timeframeType === 'custom') {
+      const start = filters.customStartDate ? format(filters.customStartDate, 'MMM dd, yyyy') : 'Start';
+      const end = filters.customEndDate ? format(filters.customEndDate, 'MMM dd, yyyy') : 'End';
+      summary.push(`Timeframe: ${start} - ${end}`);
+    } else {
+      summary.push(`Timeframe: ${filters.timeframeValue}`);
+    }
+    
+    // Game Scope
+    summary.push(`Game Scope: ${filters.gameScope === 'all' ? 'All' : filters.gameScope.charAt(0).toUpperCase() + filters.gameScope.slice(1)}`);
+    
+    // Game Types
+    if (filters.gameTypes.length > 0) {
+      summary.push(`Game Types: ${filters.gameTypes.join(', ')}`);
+    }
+    
+    // Session Format
+    if (filters.sessionFormat.length > 0) {
+      summary.push(`Session Format: ${filters.sessionFormat.join(', ')}`);
+    }
+    
+    return summary;
   };
 
   return (
@@ -258,6 +307,33 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
           </Button>
         </DialogFooter>
       </DialogContent>
+      
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Export filtered stats to PDF?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <div className="text-sm">
+                <p className="font-medium mb-2">Applied filters:</p>
+                <ul className="space-y-1">
+                  {getFilterSummary().map((filter, index) => (
+                    <li key={index} className="text-muted-foreground">• {filter}</li>
+                  ))}
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelConfirmation}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmExport}>
+              Export to PDF
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
