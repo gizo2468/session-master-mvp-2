@@ -9,6 +9,8 @@ interface ChartDataPoint {
   cumulativeProfit: number;
   sessionCount: number;
   tableCount?: number;
+  currency?: string;
+  tableName?: string;
 }
 
 export const useAllTimeChartData = () => {
@@ -96,7 +98,8 @@ export const useAllTimeChartData = () => {
           date: endDateString,
           profit: 0,
           cumulativeProfit: lastPoint ? lastPoint.cumulativeProfit : 0,
-          sessionCount: 0
+          sessionCount: 0,
+          currency: lastPoint ? lastPoint.currency : 'USD'
         });
       }
     }

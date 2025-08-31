@@ -8,6 +8,8 @@ interface ChartDataPoint {
   cumulativeProfit: number;
   sessionCount: number;
   tableCount?: number; // For table-based charts
+  currency?: string; // Currency for this data point
+  tableName?: string; // Table name for tooltip display
 }
 
 export const processAllTimeData = (sessions: PokerSession[]): ChartDataPoint[] => {
@@ -23,7 +25,8 @@ export const processAllTimeData = (sessions: PokerSession[]): ChartDataPoint[] =
       date: format(new Date(session.startTime), 'yyyy-MM-dd'),
       profit: sessionProfit,
       cumulativeProfit,
-      sessionCount: 1
+      sessionCount: 1,
+      currency: session.currency || 'USD'
     };
   });
 
@@ -37,7 +40,8 @@ export const processAllTimeData = (sessions: PokerSession[]): ChartDataPoint[] =
       date: today,
       profit: 0, // No new profit for today if no session
       cumulativeProfit: lastDataPoint ? lastDataPoint.cumulativeProfit : 0,
-      sessionCount: 0 // No sessions today if this is just a timeline extension
+      sessionCount: 0, // No sessions today if this is just a timeline extension
+      currency: lastDataPoint ? lastDataPoint.currency : 'USD'
     });
   }
 
@@ -62,11 +66,18 @@ export const processMonthlyData = (sessions: PokerSession[]): ChartDataPoint[] =
       return total + calculateSessionProfit(session);
     }, 0);
 
+    // Determine the most common currency for this month
+    const currencies = monthSessions.map(session => session.currency || 'USD');
+    const mostCommonCurrency = currencies.length > 0 ? currencies.sort((a,b) =>
+      currencies.filter(v => v === a).length - currencies.filter(v => v === b).length
+    ).pop() : 'USD';
+
     return {
       date: format(month, 'yyyy-MM-dd'),
       profit: monthProfit,
       cumulativeProfit: monthProfit, // For monthly view, show monthly profit, not cumulative
-      sessionCount: monthSessions.length
+      sessionCount: monthSessions.length,
+      currency: mostCommonCurrency
     };
   });
 
@@ -100,11 +111,18 @@ export const processDailyData = (sessions: PokerSession[]): ChartDataPoint[] => 
       return total + calculateSessionProfit(session);
     }, 0);
 
+    // Determine the most common currency for this day
+    const currencies = daySessions.map(session => session.currency || 'USD');
+    const mostCommonCurrency = currencies.length > 0 ? currencies.sort((a,b) =>
+      currencies.filter(v => v === a).length - currencies.filter(v => v === b).length
+    ).pop() : 'USD';
+
     return {
       date: format(day, 'yyyy-MM-dd'),
       profit: dayProfit,
       cumulativeProfit: dayProfit, // For daily view, show daily profit, not cumulative
-      sessionCount: daySessions.length
+      sessionCount: daySessions.length,
+      currency: mostCommonCurrency
     };
   });
 
@@ -138,11 +156,18 @@ export const processLast30DaysData = (sessions: PokerSession[]): ChartDataPoint[
       return total + calculateSessionProfit(session);
     }, 0);
 
+    // Determine the most common currency for this day
+    const currencies = daySessions.map(session => session.currency || 'USD');
+    const mostCommonCurrency = currencies.length > 0 ? currencies.sort((a,b) =>
+      currencies.filter(v => v === a).length - currencies.filter(v => v === b).length
+    ).pop() : 'USD';
+
     return {
       date: format(day, 'yyyy-MM-dd'),
       profit: dayProfit,
       cumulativeProfit: dayProfit, // For 30-day view, show daily profit, not cumulative
-      sessionCount: daySessions.length
+      sessionCount: daySessions.length,
+      currency: mostCommonCurrency
     };
   });
 
@@ -177,11 +202,18 @@ export const processWeeklyData = (sessions: PokerSession[]): ChartDataPoint[] =>
       return total + calculateSessionProfit(session);
     }, 0);
 
+    // Determine the most common currency for this week
+    const currencies = weekSessions.map(session => session.currency || 'USD');
+    const mostCommonCurrency = currencies.length > 0 ? currencies.sort((a,b) =>
+      currencies.filter(v => v === a).length - currencies.filter(v => v === b).length
+    ).pop() : 'USD';
+
     return {
       date: `WEEK ${index + 1}`,
       profit: weekProfit,
       cumulativeProfit: weekProfit, // For weekly view, show weekly profit, not cumulative
-      sessionCount: weekSessions.length
+      sessionCount: weekSessions.length,
+      currency: mostCommonCurrency
     };
   });
 
@@ -211,7 +243,9 @@ export const processTableBasedData = (sessions: PokerSession[]): ChartDataPoint[
           profit: tableProfit,
           cumulativeProfit,
           sessionCount: 1,
-          tableCount
+          tableCount,
+          currency: table.currency || session.currency || 'USD',
+          tableName: table.name || table.location || `Table ${tableCount}`
         });
       });
     } else {
@@ -225,7 +259,9 @@ export const processTableBasedData = (sessions: PokerSession[]): ChartDataPoint[
         profit: sessionProfit,
         cumulativeProfit,
         sessionCount: 1,
-        tableCount
+        tableCount,
+        currency: session.currency || 'USD',
+        tableName: session.tableName || session.location || `Session ${tableCount}`
       });
     }
   });

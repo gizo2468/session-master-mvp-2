@@ -3,6 +3,7 @@ import React from 'react';
 import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { format } from 'date-fns';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface ChartDataPoint {
   date: string;
@@ -10,6 +11,8 @@ interface ChartDataPoint {
   cumulativeProfit: number;
   sessionCount: number;
   tableCount?: number;
+  currency?: string;
+  tableName?: string;
 }
 
 interface AllTimeChartDisplayProps {
@@ -108,13 +111,25 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
             />
             <YAxis 
               tick={{ fontSize: 12 }}
-              tickFormatter={(value) => `$${value}`}
+              tickFormatter={(value) => {
+                // Use the most common currency in the dataset for Y-axis
+                const currencies = dataToDisplay.map(d => d.currency).filter(Boolean);
+                const mostCommonCurrency = currencies.length > 0 ? currencies.sort((a,b) =>
+                  currencies.filter(v => v === a).length - currencies.filter(v => v === b).length
+                ).pop() : 'USD';
+                const symbol = getCurrencySymbol(mostCommonCurrency);
+                return `${symbol}${value}`;
+              }}
             />
             <ChartTooltip 
               content={({ active, payload, label }) => {
                 if (active && payload && payload.length) {
                   const value = Number(payload[0].value);
                   const profitValue = Number(payload[0].payload?.profit || 0);
+                  const currency = payload[0].payload?.currency || 'USD';
+                  const tableName = payload[0].payload?.tableName;
+                  const currencySymbol = getCurrencySymbol(currency);
+                  
                   const sign = value >= 0 ? '+' : '−';
                   const colorClass = value >= 0 ? 'text-green-600' : 'text-red-600';
                   const profitSign = profitValue >= 0 ? '+' : '−';
@@ -123,7 +138,7 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
                   // Handle different formats for different views
                   let displayLabel = label;
                   if (isTableMode) {
-                    displayLabel = `Table ${label}`;
+                    displayLabel = tableName || `Table ${label}`;
                   } else if (isWeeklyView) {
                     // For weekly view, generate the date range from the week number
                     const weekMatch = label.match(/WEEK (\d+)/);
@@ -157,11 +172,11 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
                       </div>
                       {isTableMode && (
                         <div className={`text-center text-sm mb-1 ${profitColorClass}`}>
-                          Table P&L: {profitSign}₪{Math.abs(profitValue).toFixed(2)}
+                          Table P&L: {profitSign}{currencySymbol}{Math.abs(profitValue).toFixed(2)}
                         </div>
                       )}
                       <div className={`text-center font-semibold ${colorClass}`}>
-                        {isTableMode ? 'Net Worth: ' : ''}{sign}₪{Math.abs(value).toFixed(2)}
+                        {isTableMode ? 'Net Worth: ' : ''}{sign}{currencySymbol}{Math.abs(value).toFixed(2)}
                       </div>
                     </div>
                   );

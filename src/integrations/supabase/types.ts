@@ -525,6 +525,7 @@ export type Database = {
           buy_in: number | null
           cashout: number | null
           created_at: string | null
+          currency: string | null
           current_stack: number | null
           end_time: string | null
           end_time_utc: number | null
@@ -552,6 +553,7 @@ export type Database = {
           buy_in?: number | null
           cashout?: number | null
           created_at?: string | null
+          currency?: string | null
           current_stack?: number | null
           end_time?: string | null
           end_time_utc?: number | null
@@ -579,6 +581,7 @@ export type Database = {
           buy_in?: number | null
           cashout?: number | null
           created_at?: string | null
+          currency?: string | null
           current_stack?: number | null
           end_time?: string | null
           end_time_utc?: number | null

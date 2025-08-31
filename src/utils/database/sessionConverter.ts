@@ -207,6 +207,7 @@ export const convertDatabaseSessionToPokerSession = (
           location: sessionData.location || 'Unknown',
           buyIn: parseFloat(table.buy_in || '0'),
           initialBuyIn: parseFloat(table.buy_in || '0'),
+          currency: table.currency || sessionData.currency || 'USD', // Load currency from table or session
           smallBlind: table.stakes ? parseFloat(table.stakes.split('/')[0]) : undefined,
           bigBlind: table.stakes ? parseFloat(table.stakes.split('/')[1]) : undefined,
           startingBB: table.starting_stack,

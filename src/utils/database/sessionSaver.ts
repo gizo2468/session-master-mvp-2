@@ -115,6 +115,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           table_type: table.format,
           game_format: table.gameType,
           buy_in: table.buyIn,
+          currency: table.currency || session.currency || 'USD', // Add currency field
           stakes: table.smallBlind && table.bigBlind ? `${table.smallBlind}/${table.bigBlind}` : undefined,
           starting_stack: table.startingBB,
           current_stack: table.currentStack,
