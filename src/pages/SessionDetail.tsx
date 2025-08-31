@@ -376,7 +376,7 @@ export default function SessionDetail() {
             <h2 className="text-lg font-bold mb-4">Tables Played</h2>
             {session.tables.map(table => {
               return (
-                <TableDetailsCard key={table.id} table={table} />
+                <TableDetailsCard key={table.id} table={table} sessionCurrency={session.currency} />
               );
             })}
           </div>

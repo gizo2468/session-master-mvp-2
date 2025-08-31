@@ -7,18 +7,21 @@ import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Separator } from '@/components/ui/separator';
 import TableTimerDisplay from './TableTimerDisplay';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface TableDetailsCardProps {
   table: TableData;
+  sessionCurrency?: string;
 }
 
-export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => {
+export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessionCurrency }) => {
   // COMPLETELY REWRITTEN: Use ONLY the raw cashOut value as manually entered
   // No calculations, no additions, no derivations - just the pure entered value
   const manuallyEnteredPayout = table.cashOut ?? 0;
   
   // Calculate profit based ONLY on the manually entered payout value
   const profit = manuallyEnteredPayout - (table.buyIn ?? 0);
+  const currencySymbol = getCurrencySymbol(sessionCurrency);
   const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
   const formattedStart = format(new Date(table.startTime), 'd MMM, HH:mm');
   const formattedEnd = table.endTime ? format(new Date(table.endTime), 'd MMM, HH:mm') : null;
@@ -57,7 +60,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
             ) : (
               <ArrowDown className="w-4 h-4 inline mr-1" />
             )}
-            ${Math.abs(profit).toFixed(2)}
+            {currencySymbol}{Math.abs(profit).toFixed(2)}
           </span>
         </CardTitle>
       </CardHeader>
@@ -123,14 +126,14 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           <div className="text-center">
             <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
             <span className="font-bold text-2xl">
-              ${table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
+              {currencySymbol}{table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
             </span>
           </div>
           {rebuyAmount > 0 && (
             <div className="text-center">
               <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
               <span className="font-bold text-2xl text-red-600">
-                +${rebuyAmount.toFixed(2)}
+                +{currencySymbol}{rebuyAmount.toFixed(2)}
               </span>
             </div>
           )}
@@ -176,7 +179,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
             {table.bountyAmount !== undefined && table.bountyAmount > 0 && (
               <div>
                 <span className="text-gray-500">Bounty Collected (info only):</span>
-                <div className="text-gray-600 font-medium">${table.bountyAmount.toFixed(2)}</div>
+                <div className="text-gray-600 font-medium">{currencySymbol}{table.bountyAmount.toFixed(2)}</div>
               </div>
             )}
           </div>
@@ -202,7 +205,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table }) => 
           <div className="flex flex-col items-center justify-center mt-4 mb-2">
             <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
             <span className="font-bold text-2xl text-poker-gold">
-              ${manuallyEnteredPayout.toFixed(2)}
+              {currencySymbol}{manuallyEnteredPayout.toFixed(2)}
             </span>
           </div>
         )}
