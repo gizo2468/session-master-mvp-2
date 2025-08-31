@@ -2,9 +2,17 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { formatCurrency, formatDuration, formatPercentage, formatRatio } from '@/utils/statisticsCalculator';
-import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
+import { formatDuration, formatPercentage, formatRatio } from '@/utils/statisticsCalculator';
+import { useDefaultCurrency, getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useStatisticsData } from '@/hooks/useStatisticsData';
+
+// Local currency formatter to avoid import issues
+const formatCurrency = (amount: number, currency = 'USD'): string => {
+  const symbol = getCurrencySymbol(currency);
+  const abs = Math.abs(amount);
+  const formatted = abs % 1 === 0 ? abs.toLocaleString() : abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return amount < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
+};
 
 interface StatCellProps {
   label: string;
