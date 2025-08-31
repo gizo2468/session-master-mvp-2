@@ -102,20 +102,18 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
             <SelectItem value="monthly">Monthly</SelectItem>
           </SelectContent>
         </Select>
-        {availableCurrencies && availableCurrencies.length > 0 && (
-          <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
-            <SelectTrigger className="w-32 text-sm">
-              <SelectValue placeholder="Currency" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableCurrencies.map(currency => (
-                <SelectItem key={currency} value={currency}>
-                  {getCurrencySymbol(currency)} {currency}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
+          <SelectTrigger className="w-32 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(availableCurrencies || []).map(currency => (
+              <SelectItem key={currency} value={currency}>
+                {getCurrencySymbol(currency)} {currency}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
