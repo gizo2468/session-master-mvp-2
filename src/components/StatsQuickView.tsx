@@ -80,14 +80,30 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
     );
   }
 
-  // Calculate stats from database sessions
-  const completedSessions = sessions.filter(s => !s.isActive && (s.currentStatus === 'ended' || s.status === 'completed' || !s.status));
+  // Calculate stats from database sessions - filter by user's default currency
+  const allCompletedSessions = sessions.filter(s => !s.isActive && (s.currentStatus === 'ended' || s.status === 'completed' || !s.status));
+  
+  // Filter sessions to only include those in the user's default currency
+  const completedSessions = allCompletedSessions.filter(s => (s.currency || 'USD') === defaultCurrency);
   const totalSessions = completedSessions.length;
   
   // Calculate wins and losses using the same logic as Overall Results
   const wins = completedSessions.filter(s => calculateSessionProfit(s) > 0).length;
   const losses = completedSessions.filter(s => calculateSessionProfit(s) <= 0).length;
   
+  // Group sessions by currency and calculate results for each (for currency breakdown dialog)
+  const allResultsByCurrency = allCompletedSessions.reduce((acc, session) => {
+    const currency = session.currency || 'USD';
+    const profit = calculateSessionProfit(session);
+    
+    if (!acc[currency]) {
+      acc[currency] = 0;
+    }
+    acc[currency] += profit;
+    
+    return acc;
+  }, {} as Record<string, number>);
+
   // Group sessions by currency and calculate results for each
   const resultsByCurrency = completedSessions.reduce((acc, session) => {
     const currency = session.currency || 'USD';
@@ -310,12 +326,12 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
             <DialogTitle>Currency Breakdown</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            {Object.keys(resultsByCurrency).length === 0 ? (
+            {Object.keys(allResultsByCurrency).length === 0 ? (
               <div className="text-center text-gray-500 py-4">
                 No sessions with results found
               </div>
             ) : (
-              Object.entries(resultsByCurrency)
+              Object.entries(allResultsByCurrency)
                 .sort(([currencyA], [currencyB]) => {
                   if (currencyA === 'USD') return -1;
                   if (currencyB === 'USD') return 1;
