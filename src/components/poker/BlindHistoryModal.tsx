@@ -55,7 +55,11 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                 >
                   <div className="flex justify-between items-center">
                     <span className="font-medium">
-                      {BBStackUpdateService.formatHistoryLine(update)}
+                      {isCashGame ? (
+                        `${update.small_blind}/${update.big_blind}`
+                      ) : (
+                        `Level ${update.level || 'N/A'}`
+                      )}
                     </span>
                     {update.created_at && (
                       <span className="text-xs text-gray-500">
@@ -66,21 +70,12 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                   
                   {!isCashGame && (
                     <div className="text-xs text-gray-600 mt-1 space-y-1">
-                      {update.level && (
-                        <div>Level: {update.level}</div>
-                      )}
                       {update.bb && (
                         <div>Big Blind: {update.bb}</div>
                       )}
                       {update.stack && (
                         <div>Stack: {update.stack}</div>
                       )}
-                    </div>
-                  )}
-                  
-                  {isCashGame && (
-                    <div className="text-xs text-gray-600 mt-1">
-                      Small Blind: {update.small_blind} • Big Blind: {update.big_blind}
                     </div>
                   )}
                 </div>

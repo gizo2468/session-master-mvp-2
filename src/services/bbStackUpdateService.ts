@@ -97,16 +97,16 @@ export class BBStackUpdateService {
       return `${update.small_blind}/${update.big_blind}`;
     }
     
-    // For tournaments
-    let line = '';
-    if (update.level) line += `Level ${update.level}`;
-    if (update.bb) {
-      line += line ? ` — BB ${update.bb}` : `BB ${update.bb}`;
-    }
-    if (update.stack) {
-      line += line ? ` — Stack ${update.stack}` : `Stack ${update.stack}`;
+    // For tournaments - show Level X — BB Y format
+    if (update.level && update.bb) {
+      return `Level ${update.level} — BB ${update.bb}`;
     }
     
-    return line || 'No data';
+    // If only level is available
+    if (update.level) {
+      return `Level ${update.level}`;
+    }
+    
+    return '';
   }
 }

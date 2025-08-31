@@ -266,7 +266,10 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               {/* Show blind history */}
               {blindHistory.length > 0 && (
                 <div className="space-y-1">
-                  {blindHistory.slice(-1).map((update, index) => (
+                  {blindHistory.slice(-1).filter(update => {
+                    const formatted = BBStackUpdateService.formatHistoryLine(update);
+                    return formatted && formatted.trim() !== '';
+                  }).map((update, index) => (
                     <div key={update.id || index} className="flex justify-between text-sm">
                       <span className="font-medium text-gray-700">
                         {BBStackUpdateService.formatHistoryLine(update)}
@@ -305,7 +308,10 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               {/* Show blind history for tournaments */}
               {blindHistory.length > 0 && (
                 <div className="space-y-1">
-                  {blindHistory.slice(-1).map((update, index) => (
+                  {blindHistory.slice(-1).filter(update => {
+                    const formatted = BBStackUpdateService.formatHistoryLine(update);
+                    return formatted && formatted.trim() !== '';
+                  }).map((update, index) => (
                     <div key={update.id || index} className="flex justify-between text-sm">
                       <span className="font-medium text-gray-700">
                         {BBStackUpdateService.formatHistoryLine(update)}
