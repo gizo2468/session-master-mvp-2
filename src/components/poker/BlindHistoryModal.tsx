@@ -99,7 +99,7 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pr-8">
             <DialogTitle>
               {isCashGame ? 'Blinds History' : 'BB/Stack History'}
             </DialogTitle>
@@ -108,7 +108,7 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsEditMode(!isEditMode)}
-                className="p-1 h-8 w-8"
+                className="p-1 h-8 w-8 -mr-2"
               >
                 <Pencil className="h-4 w-4" />
               </Button>
