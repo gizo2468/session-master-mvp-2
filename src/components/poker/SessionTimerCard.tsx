@@ -241,6 +241,12 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         sessionFormat={format}
         currency={currency}
         sessionId={activeSession?.id || ''}
+        onDataSaved={() => {
+          // Trigger any refresh callbacks passed from parent
+          if (onBBStackUpdate) {
+            onBBStackUpdate();
+          }
+        }}
       />
       
       <HandTableSelectionModal

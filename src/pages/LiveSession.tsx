@@ -125,6 +125,10 @@ export default function LiveSession() {
             currency={currentSession.currency}
             onEndSession={() => sessionActions.setShowEndSessionSheet(true)}
             onAddTable={() => sessionActions.setShowAddTableForm(true)}
+            onBBStackUpdate={() => {
+              // Force re-render of table cards to refresh blind history
+              window.dispatchEvent(new CustomEvent('refreshBlindHistory'));
+            }}
             activeTables={currentSession.tables?.filter(table => table.isActive) || []}
           />
           

@@ -87,34 +87,50 @@ export class BBStackUpdateService {
       if (!data) return [];
 
       // For cash games, return all entries (blinds can change multiple times)
-      // For tournaments, deduplicate by level - keep only the latest entry per level
-      const deduplicatedData: BBStackUpdate[] = [];
-      const levelMap = new Map<number, BBStackUpdate>();
+      // For tournaments, group by level and keep all sub-entries for each level
+      const processedData: BBStackUpdate[] = [];
 
       data.forEach(update => {
         // If it's a cash game (has small_blind/big_blind), keep all entries
         if (update.small_blind !== null && update.big_blind !== null) {
-          deduplicatedData.push(update);
+          processedData.push(update);
         } 
-        // If it's a tournament (has level), deduplicate by level
+        // If it's a tournament (has level), keep all entries but organize by level
         else if (update.level !== null) {
-          const existingUpdate = levelMap.get(update.level);
-          if (!existingUpdate || new Date(update.created_at) > new Date(existingUpdate.created_at)) {
-            levelMap.set(update.level, update);
-          }
+          processedData.push(update);
         }
       });
 
-      // Add deduplicated tournament entries back to the array
-      levelMap.forEach(update => deduplicatedData.push(update));
-
-      // Sort by created_at to maintain chronological order
-      return deduplicatedData.sort((a, b) => 
-        new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime()
-      );
+      return processedData;
     } catch (error) {
       console.error('BBStackUpdateService.getBBStackHistory error:', error);
       throw error;
+    }
+  }
+
+  static async getHighestLevel(tableId: string): Promise<number> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('table_bb_stack_updates')
+        .select('level')
+        .eq('table_id', tableId)
+        .eq('user_id', user.id)
+        .not('level', 'is', null)
+        .order('level', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Error fetching highest level:', error);
+        throw error;
+      }
+
+      return data?.[0]?.level || 0;
+    } catch (error) {
+      console.error('BBStackUpdateService.getHighestLevel error:', error);
+      return 0;
     }
   }
 

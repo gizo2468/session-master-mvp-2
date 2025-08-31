@@ -40,6 +40,18 @@ export const useBBStackHistory = (tableId: string) => {
     loadHistory();
   }, [tableId]);
 
+  // Listen for global refresh events
+  useEffect(() => {
+    const handleRefresh = () => {
+      refreshHistory();
+    };
+
+    window.addEventListener('refreshBlindHistory', handleRefresh);
+    return () => {
+      window.removeEventListener('refreshBlindHistory', handleRefresh);
+    };
+  }, []);
+
   return {
     history,
     isLoading,

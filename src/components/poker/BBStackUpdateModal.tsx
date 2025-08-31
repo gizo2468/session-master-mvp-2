@@ -11,6 +11,7 @@ import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useSessionLiveState } from '@/hooks/useSessionLiveState';
 import { useToast } from '@/hooks/use-toast';
 import { BBStackUpdateService } from '@/services/bbStackUpdateService';
+import { useBBStackHistory } from '@/hooks/useBBStackHistory';
 
 interface BBStackUpdateModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ interface BBStackUpdateModalProps {
   sessionFormat: string;
   currency?: string;
   sessionId: string;
+  onDataSaved?: () => void; // Callback to refresh data after save
 }
 
 interface TableUpdateData {
@@ -44,9 +46,12 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   tables,
   sessionFormat,
   currency = 'USD',
-  sessionId
+  sessionId,
+  onDataSaved
 }) => {
   const [updateData, setUpdateData] = useState<TableUpdateData[]>([]);
+  const [highestLevels, setHighestLevels] = useState<Record<string, number>>({});
+  const [validationError, setValidationError] = useState<string>('');
   const { liveState, updateLiveState } = useSessionLiveState(sessionId);
   const { toast } = useToast();
 
@@ -55,46 +60,77 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
 
   // Initialize state when modal opens or tables change
   useEffect(() => {
-    if (isOpen && tables.length > 0) {
-      setUpdateData(
-        tables.map(table => {
-          const isCashTable = table.format === 'Cash';
-          const savedData = liveState.bbStackUpdates?.[table.id];
-          
-          if (isCashTable) {
-            // For cash games, use saved data or fall back to table defaults
-            const smallBlindValue = savedData?.smallBlind ?? table.smallBlind ?? 1;
-            const bigBlindValue = savedData?.bigBlind ?? table.bigBlind ?? (smallBlindValue * 2);
-            
-            return {
-              tableId: table.id,
-              level: 1, // Not used for cash games
-              stack: '', // Not used for cash games  
-              bb: '', // Not used for cash games
-              smallBlind: smallBlindValue,
-              bigBlind: bigBlindValue
-            };
-          } else {
-            // For tournaments, use saved data or fall back to defaults
-            return {
-              tableId: table.id,
-              level: savedData?.level ?? 1,
-              stack: savedData?.stack ?? table.currentStack?.toString() ?? '',
-              bb: savedData?.bb ?? table.startingBB?.toString() ?? '',
-              smallBlind: 0, // Not used for tournaments
-              bigBlind: 0 // Not used for tournaments
-            };
+    const loadHighestLevels = async () => {
+      if (isOpen && tables.length > 0) {
+        const levels: Record<string, number> = {};
+        
+        for (const table of tables) {
+          if (table.format !== 'Cash') {
+            levels[table.id] = await BBStackUpdateService.getHighestLevel(table.id);
           }
-        })
-      );
+        }
+        
+        setHighestLevels(levels);
+        
+        setUpdateData(
+          tables.map(table => {
+            const isCashTable = table.format === 'Cash';
+            const savedData = liveState.bbStackUpdates?.[table.id];
+            
+            if (isCashTable) {
+              // For cash games, use saved data or fall back to table defaults
+              const smallBlindValue = savedData?.smallBlind ?? table.smallBlind ?? 1;
+              const bigBlindValue = savedData?.bigBlind ?? table.bigBlind ?? (smallBlindValue * 2);
+              
+              return {
+                tableId: table.id,
+                level: 1, // Not used for cash games
+                stack: '', // Not used for cash games  
+                bb: '', // Not used for cash games
+                smallBlind: smallBlindValue,
+                bigBlind: bigBlindValue
+              };
+            } else {
+              // For tournaments, use highest level + 1 as default, or 1 if no history
+              const highestLevel = levels[table.id] || 0;
+              const defaultLevel = highestLevel > 0 ? highestLevel : 1;
+              
+              return {
+                tableId: table.id,
+                level: savedData?.level ?? defaultLevel,
+                stack: savedData?.stack ?? table.currentStack?.toString() ?? '',
+                bb: savedData?.bb ?? table.startingBB?.toString() ?? '',
+                smallBlind: 0, // Not used for tournaments
+                bigBlind: 0 // Not used for tournaments
+              };
+            }
+          })
+        );
+      }
+    };
+
+    if (isOpen) {
+      loadHighestLevels();
+      setValidationError('');
     }
   }, [isOpen, tables, liveState.bbStackUpdates]);
 
   const handleLevelChange = (tableId: string, level: string) => {
+    const newLevel = parseInt(level);
+    const highestLevel = highestLevels[tableId] || 0;
+    
+    // Validate level - cannot go below highest existing level
+    if (newLevel < highestLevel) {
+      setValidationError(`Cannot select Level ${newLevel}. Current highest level is ${highestLevel}.`);
+      setTimeout(() => setValidationError(''), 3000);
+      return;
+    }
+    
+    setValidationError('');
     setUpdateData(prev =>
       prev.map(data =>
         data.tableId === tableId
-          ? { ...data, level: parseInt(level) }
+          ? { ...data, level: newLevel }
           : data
       )
     );
@@ -188,12 +224,21 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
             bigBlind: data.bigBlind
           });
         } else {
+          // Get the latest values for inheritance if empty
+          const history = await BBStackUpdateService.getBBStackHistory(data.tableId);
+          const latestEntry = history
+            .filter(h => h.level !== null)
+            .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())[0];
+          
+          const inheritedStack = data.stack || latestEntry?.stack?.toString() || '';
+          const inheritedBB = data.bb || latestEntry?.bb?.toString() || '';
+          
           await BBStackUpdateService.saveBBStackUpdate({
             sessionId,
             tableId: data.tableId,
             level: data.level,
-            stack: data.stack,
-            bb: data.bb
+            stack: inheritedStack,
+            bb: inheritedBB
           });
         }
       }
@@ -229,6 +274,12 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       });
       
       console.log('BB/Stack Update Data saved to database and live state');
+      
+      // Call refresh callback if provided
+      if (onDataSaved) {
+        onDataSaved();
+      }
+      
       onClose();
     } catch (error) {
       console.error('Error saving BB/Stack updates:', error);
@@ -254,6 +305,11 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       <DialogContent className="max-w-md w-full max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>BB / Stack Update</DialogTitle>
+          {validationError && (
+            <div className="text-sm text-red-600 mt-2 p-2 bg-red-50 rounded">
+              {validationError}
+            </div>
+          )}
         </DialogHeader>
         
         <ScrollArea className="flex-1 pr-4">
@@ -319,7 +375,14 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
                     // Tournament UI - Keep existing design
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Level</label>
+                        <label className="text-xs text-gray-500 mb-1 block">
+                          Level
+                          {highestLevels[table.id] > 0 && (
+                            <span className="text-xs text-gray-400 ml-1">
+                              (min: {highestLevels[table.id]})
+                            </span>
+                          )}
+                        </label>
                         <Select
                           value={tableData.level.toString()}
                           onValueChange={(value) => handleLevelChange(table.id, value)}
@@ -328,11 +391,13 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="max-h-60">
-                            {levelOptions.map(level => (
-                              <SelectItem key={level} value={level.toString()}>
-                                Lvl {level}
-                              </SelectItem>
-                            ))}
+                            {levelOptions
+                              .filter(level => level >= (highestLevels[table.id] || 1))
+                              .map(level => (
+                                <SelectItem key={level} value={level.toString()}>
+                                  Lvl {level}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                       </div>
