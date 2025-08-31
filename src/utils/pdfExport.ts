@@ -95,26 +95,16 @@ export const generateStatisticsPDFFromDB = async (data: ExportData) => {
       format,
       timeframe,
       startDate,
-      endDate,
-      data.filters.currency !== 'all' ? data.filters.currency : undefined
+      endDate
     );
 
-    // If currency is "all", we need to get stats for each currency and combine them
-    let formattedStats;
-    if (data.filters.currency === 'all') {
-      // Get stats for each currency separately
-      const currencyStats = await getCurrencySpecificStats(format, timeframe, startDate, endDate);
-      formattedStats = formatMultiCurrencyStatsForPDF(currencyStats, data.activeTab);
-    } else {
-      // Calculate best session result from sessions with same filters  
-      const bestSessionResult = await calculateBestSessionResult(format, startDate, endDate, data.filters.currency);
-      formattedStats = formatStatsForPDF(stats, data.activeTab, bestSessionResult, data.filters.currency);
-    }
+    // Calculate best session result from sessions with same filters
+    const bestSessionResult = await calculateBestSessionResult(format, startDate, endDate);
 
     // Generate PDF with fresh data
     generateStatisticsPDFWithData({
       ...data,
-      stats: formattedStats
+      stats: formatStatsForPDF(stats, data.activeTab, bestSessionResult)
     });
 
   } catch (error) {
@@ -124,7 +114,7 @@ export const generateStatisticsPDFFromDB = async (data: ExportData) => {
   }
 };
 
-const calculateBestSessionResult = async (format: string, startDate?: Date, endDate?: Date, currency?: string): Promise<number> => {
+const calculateBestSessionResult = async (format: string, startDate?: Date, endDate?: Date): Promise<number> => {
   try {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return 0;
@@ -150,11 +140,6 @@ const calculateBestSessionResult = async (format: string, startDate?: Date, endD
       query = query.lte('start_time', endDate.toISOString());
     }
 
-    // Apply currency filter if specified
-    if (currency) {
-      query = query.eq('currency', currency);
-    }
-
     const { data: sessions, error } = await query;
     
     if (error || !sessions || sessions.length === 0) {
@@ -173,127 +158,33 @@ const calculateBestSessionResult = async (format: string, startDate?: Date, endD
   }
 };
 
-// Helper function to get currency-specific stats for multi-currency export
-const getCurrencySpecificStats = async (format: string, timeframe: string, startDate?: Date, endDate?: Date) => {
-  try {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) return [];
-
-    // First, get all currencies used by this user
-    let currencyQuery = supabase
-      .from('sessions')
-      .select('currency')
-      .eq('user_id', user.user.id)
-      .not('currency', 'is', null)
-      .not('end_time', 'is', null);
-
-    // Apply date filters to currency query too
-    if (startDate) {
-      currencyQuery = currencyQuery.gte('start_time', startDate.toISOString());
-    }
-    if (endDate) {
-      currencyQuery = currencyQuery.lte('start_time', endDate.toISOString());
-    }
-
-    const { data: currencyData, error: currencyError } = await currencyQuery;
-    if (currencyError || !currencyData) {
-      console.error('Error fetching currencies:', currencyError);
-      return [];
-    }
-
-    // Get unique currencies
-    const uniqueCurrencies = [...new Set(currencyData.map(s => s.currency).filter(Boolean))];
-
-    // Get stats for each currency
-    const currencyStats = await Promise.all(
-      uniqueCurrencies.map(async (currency) => {
-        const stats = await calculateSessionStatisticsFromDB(format as any, timeframe, startDate, endDate, currency);
-        const bestSession = await calculateBestSessionResult(format, startDate, endDate, currency);
-        return {
-          currency: currency!,
-          stats,
-          bestSession
-        };
-      })
-    );
-
-    return currencyStats.filter(cs => cs.stats.numberOfSessions > 0);
-  } catch (error) {
-    console.error('Error getting currency-specific stats:', error);
-    return [];
-  }
-};
-
-// Format multi-currency stats for PDF display  
-const formatMultiCurrencyStatsForPDF = (currencyStats: any[], activeTab: string): StatData[] => {
-  if (currencyStats.length === 0) {
-    return [{ label: 'No Data', value: 'No sessions found for the selected filters' }];
-  }
-
-  const result: StatData[] = [];
-
-  // Helper to format stat for multiple currencies
-  const formatMultiCurrencyStat = (label: string, getValue: (stats: any, currency: string, bestSession?: number) => string) => {
-    result.push({ label, value: '' }); // Header row
-    currencyStats.forEach(({ currency, stats, bestSession }) => {
-      const value = getValue(stats, currency, bestSession);
-      result.push({ label: `  ${currency}`, value });
-    });
-  };
-
-  // Format each stat type with currency breakdown
-  formatMultiCurrencyStat('Net Result', (stats, currency) => formatCurrency(stats.netResult, currency));
-  formatMultiCurrencyStat('Net Hourly Rate', (stats, currency) => formatCurrency(stats.netHourlyRate, currency));
-  formatMultiCurrencyStat('Total Buy-ins', (stats, currency) => formatCurrency(stats.totalBuyIns, currency));
-  formatMultiCurrencyStat('Total Duration', (stats) => formatDuration(stats.totalDuration));
-  formatMultiCurrencyStat('Total Tables', (stats) => stats.totalTables.toString());
-  formatMultiCurrencyStat('Number of Sessions', (stats) => stats.numberOfSessions.toString());
-  formatMultiCurrencyStat('Best Session Result', (stats, currency, bestSession) => formatCurrency(bestSession || 0, currency));
-
-  if (activeTab === 'sessions') {
-    formatMultiCurrencyStat('Total Payouts', (stats, currency) => formatCurrency(stats.totalPayouts, currency));
-    formatMultiCurrencyStat('Win Ratio', (stats) => formatPercentage(stats.winRatio));
-  } else if (activeTab === 'cash') {
-    formatMultiCurrencyStat('Total Payouts', (stats, currency) => formatCurrency(stats.totalPayouts, currency));
-    formatMultiCurrencyStat('Win Ratio', (stats) => formatPercentage(stats.winRatio));
-    formatMultiCurrencyStat('Average BB/100', (stats) => stats.averageBB100.toFixed(2));
-    formatMultiCurrencyStat('Hands Count', (stats) => stats.handsCount.toString());
-  } else if (activeTab === 'tournaments') {
-    formatMultiCurrencyStat('Total Payouts', (stats, currency) => formatCurrency(stats.totalPayouts, currency));
-    formatMultiCurrencyStat('Win Ratio', (stats) => formatPercentage(stats.winRatio));
-    formatMultiCurrencyStat('Final Tables', (stats) => stats.finalTables.toString());
-    formatMultiCurrencyStat('First Place Finish', (stats) => stats.firstPlaceFinish.toString());
-    formatMultiCurrencyStat('Hands Count', (stats) => stats.handsCount.toString());
-  }
-
-  return result;
-};
-
-const formatStatsForPDF = (stats: any, activeTab: string, bestSessionResult: number, currencyCode: string = 'USD'): StatData[] => {
+const formatStatsForPDF = (stats: any, activeTab: string, bestSessionResult: number): StatData[] => {
+  const currency = 'USD'; // TODO: get from user preferences
+  
   // Base stats without the removed fields (Average Net Result, Average Duration, Profit/Loss Ratio)
   const baseStats = [
-    { label: 'Net Result', value: formatCurrency(stats.netResult, currencyCode) },
-    { label: 'Net Hourly Rate', value: formatCurrency(stats.netHourlyRate, currencyCode) },
-    { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns, currencyCode) },
+    { label: 'Net Result', value: formatCurrency(stats.netResult, currency) },
+    { label: 'Net Hourly Rate', value: formatCurrency(stats.netHourlyRate, currency) },
+    { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns, currency) },
     { label: 'Total Duration', value: formatDuration(stats.totalDuration) },
     { label: 'Total Tables', value: stats.totalTables.toString() },
     { label: 'Number of Sessions', value: stats.numberOfSessions.toString() },
-    { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currencyCode) },
+    { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currency) },
   ];
 
   if (activeTab === 'sessions') {
     return [
       ...baseStats.slice(0, 6), // All stats up to Number of Sessions
-      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currencyCode) },
-      { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currencyCode) },
+      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
+      { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currency) },
       { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
     ];
   } else if (activeTab === 'cash') {
     return [
       ...baseStats.slice(0, 5), // All stats up to Total Tables
       { label: 'Number of Sessions', value: stats.numberOfSessions.toString() },
-      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currencyCode) },
-      { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currencyCode) },
+      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
+      { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currency) },
       { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
       { label: 'Average BB/100', value: stats.averageBB100.toFixed(2) },
       { label: 'Hands Count', value: stats.handsCount.toString() },
@@ -302,8 +193,8 @@ const formatStatsForPDF = (stats: any, activeTab: string, bestSessionResult: num
     return [
       ...baseStats.slice(0, 5), // All stats up to Total Tables
       { label: 'Number of Sessions', value: stats.numberOfSessions.toString() },
-      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currencyCode) },
-      { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currencyCode) },
+      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
+      { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currency) },
       { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
       { label: 'Final Tables', value: stats.finalTables.toString() },
       { label: 'First Place Finish', value: stats.firstPlaceFinish.toString() },

@@ -28,7 +28,6 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { FilterChip } from './FilterChip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useUserCurrencies } from '@/hooks/useUserCurrencies';
 
 export interface FilterOptions {
   timeframeType: 'monthly' | 'weekly' | 'quick' | 'yearly' | 'custom';
@@ -36,7 +35,6 @@ export interface FilterOptions {
   gameScope: 'all' | 'cash' | 'tournaments';
   gameTypes: string[];
   sessionFormat: string[];
-  currency: string; // 'all' or specific currency code
   customStartDate?: Date;
   customEndDate?: Date;
 }
@@ -61,7 +59,6 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
   const [gameTypeExpanded, setGameTypeExpanded] = useState(false);
   const [sessionFormatExpanded, setSessionFormatExpanded] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const { currencies, isLoading: currenciesLoading } = useUserCurrencies();
 
   const timeframeOptions = {
     monthly: ['This Month', 'Last Month', 'Last 3 Months'],
@@ -143,11 +140,6 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
     // Session Format
     if (filters.sessionFormat.length > 0) {
       summary.push(`Session Format: ${filters.sessionFormat.join(', ')}`);
-    }
-    
-    // Currency
-    if (filters.currency !== 'all') {
-      summary.push(`Currency: ${filters.currency}`);
     }
     
     return summary;
@@ -304,29 +296,6 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
               </div>
             </CollapsibleContent>
           </Collapsible>
-
-          {/* Currency Selection */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">Currency</h4>
-            <div className="flex flex-wrap gap-2">
-              <FilterChip
-                label="All"
-                selected={filters.currency === 'all'}
-                onClick={() => onFiltersChange({ ...filters, currency: 'all' })}
-              />
-              {!currenciesLoading && currencies.map(currency => (
-                <FilterChip
-                  key={currency.code}
-                  label={`${currency.code} (${currency.sessionsCount})`}
-                  selected={filters.currency === currency.code}
-                  onClick={() => onFiltersChange({ ...filters, currency: currency.code })}
-                />
-              ))}
-              {currenciesLoading && (
-                <div className="text-xs text-muted-foreground py-2">Loading currencies...</div>
-              )}
-            </div>
-          </div>
         </div>
 
         <DialogFooter className="flex gap-2 sm:gap-2">
