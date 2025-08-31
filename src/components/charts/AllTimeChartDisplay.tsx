@@ -112,12 +112,9 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
             <YAxis 
               tick={{ fontSize: 12 }}
               tickFormatter={(value) => {
-                // Use the most common currency in the dataset for Y-axis
-                const currencies = dataToDisplay.map(d => d.currency).filter(Boolean);
-                const mostCommonCurrency = currencies.length > 0 ? currencies.sort((a,b) =>
-                  currencies.filter(v => v === a).length - currencies.filter(v => v === b).length
-                ).pop() : 'USD';
-                const symbol = getCurrencySymbol(mostCommonCurrency);
+                // Since we now filter by currency, all data points have the same currency
+                const currency = dataToDisplay.length > 0 ? dataToDisplay[0].currency : 'USD';
+                const symbol = getCurrencySymbol(currency);
                 return `${symbol}${value}`;
               }}
             />

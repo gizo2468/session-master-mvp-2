@@ -15,22 +15,17 @@ interface ChartDataPoint {
 export const processAllTimeData = (sessions: PokerSession[]): ChartDataPoint[] => {
   if (sessions.length === 0) return [];
 
-  // Track cumulative profit per currency separately
-  const cumulativeProfitByCurrency: Record<string, number> = {};
+  // Since we're now filtering by currency before this function, we can simplify the logic
+  let cumulativeProfit = 0;
   const allTimeData: ChartDataPoint[] = sessions.map(session => {
     const sessionProfit = calculateSessionProfit(session);
     const currency = session.currency || 'USD';
-    
-    // Update cumulative profit for this specific currency
-    if (!cumulativeProfitByCurrency[currency]) {
-      cumulativeProfitByCurrency[currency] = 0;
-    }
-    cumulativeProfitByCurrency[currency] += sessionProfit;
+    cumulativeProfit += sessionProfit;
 
     return {
       date: format(new Date(session.startTime), 'yyyy-MM-dd'),
       profit: sessionProfit,
-      cumulativeProfit: cumulativeProfitByCurrency[currency],
+      cumulativeProfit,
       sessionCount: 1,
       currency
     };
@@ -230,8 +225,8 @@ export const processTableBasedData = (sessions: PokerSession[]): ChartDataPoint[
   if (sessions.length === 0) return [];
 
   const tableData: ChartDataPoint[] = [];
-  // Track cumulative profit per currency separately
-  const cumulativeProfitByCurrency: Record<string, number> = {};
+  // Since we filter by currency before processing, we can use a simple cumulative counter
+  let cumulativeProfit = 0;
   let tableCount = 0;
 
   // Process each session and its tables
@@ -244,17 +239,12 @@ export const processTableBasedData = (sessions: PokerSession[]): ChartDataPoint[
         const tableCashOut = table.cashOut !== undefined ? table.cashOut : 0;
         const tableProfit = tableCashOut - tableBuyIn;
         const currency = table.currency || session.currency || 'USD';
-        
-        // Update cumulative profit for this specific currency
-        if (!cumulativeProfitByCurrency[currency]) {
-          cumulativeProfitByCurrency[currency] = 0;
-        }
-        cumulativeProfitByCurrency[currency] += tableProfit;
+        cumulativeProfit += tableProfit;
 
         tableData.push({
           date: tableCount.toString(), // Use table count as "date" for X-axis
           profit: tableProfit,
-          cumulativeProfit: cumulativeProfitByCurrency[currency],
+          cumulativeProfit,
           sessionCount: 1,
           tableCount,
           currency,
@@ -266,17 +256,12 @@ export const processTableBasedData = (sessions: PokerSession[]): ChartDataPoint[
       tableCount++;
       const sessionProfit = calculateSessionProfit(session);
       const currency = session.currency || 'USD';
-      
-      // Update cumulative profit for this specific currency
-      if (!cumulativeProfitByCurrency[currency]) {
-        cumulativeProfitByCurrency[currency] = 0;
-      }
-      cumulativeProfitByCurrency[currency] += sessionProfit;
+      cumulativeProfit += sessionProfit;
 
       tableData.push({
         date: tableCount.toString(),
         profit: sessionProfit,
-        cumulativeProfit: cumulativeProfitByCurrency[currency],
+        cumulativeProfit,
         sessionCount: 1,
         tableCount,
         currency,

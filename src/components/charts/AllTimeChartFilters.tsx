@@ -2,6 +2,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CURRENCIES, getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface AllTimeChartFiltersProps {
   dateRange: { start: string; end: string };
@@ -10,11 +11,14 @@ interface AllTimeChartFiltersProps {
   isWeeklyView: boolean;
   isDailyView: boolean;
   isLast30DaysView: boolean;
+  selectedCurrency: string;
+  availableCurrencies: string[];
   resetDateRange: () => void;
   toggleMonthlyView: () => void;
   toggleWeeklyView: () => void;
   toggleDailyView: () => void;
   toggleLast30DaysView: () => void;
+  onCurrencyChange: (currency: string) => void;
 }
 
 export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
@@ -24,11 +28,14 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
   isWeeklyView,
   isDailyView,
   isLast30DaysView,
+  selectedCurrency,
+  availableCurrencies,
   resetDateRange,
   toggleMonthlyView,
   toggleWeeklyView,
   toggleDailyView,
-  toggleLast30DaysView
+  toggleLast30DaysView,
+  onCurrencyChange
 }) => {
   const getCurrentView = () => {
     if (isMonthlyView) return "monthly";
@@ -82,7 +89,7 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
           />
         </div>
       </div>
-      <div className="flex justify-start">
+      <div className="flex justify-start gap-4">
         <Select value={getCurrentView()} onValueChange={handleViewChange}>
           <SelectTrigger className="w-32 text-sm">
             <SelectValue />
@@ -93,6 +100,18 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
             <SelectItem value="last30days">Last 30 Days</SelectItem>
             <SelectItem value="weekly">Last 3 Months</SelectItem>
             <SelectItem value="monthly">Monthly</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
+          <SelectTrigger className="w-32 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {availableCurrencies.map(currency => (
+              <SelectItem key={currency} value={currency}>
+                {getCurrencySymbol(currency)} {currency}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

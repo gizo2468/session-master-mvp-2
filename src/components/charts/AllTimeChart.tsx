@@ -15,11 +15,14 @@ const AllTimeChart: React.FC = () => {
     isWeeklyView,
     isDailyView,
     isLast30DaysView,
+    selectedCurrency,
+    availableCurrencies,
     resetDateRange,
     toggleMonthlyView,
     toggleWeeklyView,
     toggleDailyView,
-    toggleLast30DaysView
+    toggleLast30DaysView,
+    onCurrencyChange
   } = useAllTimeChartData();
 
   return (
@@ -33,11 +36,14 @@ const AllTimeChart: React.FC = () => {
           isWeeklyView={isWeeklyView}
           isDailyView={isDailyView}
           isLast30DaysView={isLast30DaysView}
+          selectedCurrency={selectedCurrency}
+          availableCurrencies={availableCurrencies}
           resetDateRange={resetDateRange}
           toggleMonthlyView={toggleMonthlyView}
           toggleWeeklyView={toggleWeeklyView}
           toggleDailyView={toggleDailyView}
           toggleLast30DaysView={toggleLast30DaysView}
+          onCurrencyChange={onCurrencyChange}
         />
       </CardHeader>
       <CardContent>
