@@ -266,14 +266,14 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               {/* Show blind history */}
               {blindHistory.length > 0 && (
                 <div className="space-y-1">
-                  {blindHistory.slice(-3).map((update, index) => (
+                  {blindHistory.slice(-1).map((update, index) => (
                     <div key={update.id || index} className="flex justify-between text-sm">
                       <span className="font-medium text-gray-700">
                         {BBStackUpdateService.formatHistoryLine(update)}
                       </span>
                     </div>
                   ))}
-                  {blindHistory.length > 3 && (
+                  {blindHistory.length > 1 && (
                     <button
                       onClick={() => setShowBlindHistory(true)}
                       className="text-xs text-gray-900 hover:text-gray-700"
@@ -305,14 +305,14 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               {/* Show blind history for tournaments */}
               {blindHistory.length > 0 && (
                 <div className="space-y-1">
-                  {blindHistory.slice(-3).map((update, index) => (
+                  {blindHistory.slice(-1).map((update, index) => (
                     <div key={update.id || index} className="flex justify-between text-sm">
                       <span className="font-medium text-gray-700">
                         {BBStackUpdateService.formatHistoryLine(update)}
                       </span>
                     </div>
                   ))}
-                  {blindHistory.length > 3 && (
+                  {blindHistory.length > 1 && (
                     <button
                       onClick={() => setShowBlindHistory(true)}
                       className="text-xs text-gray-900 hover:text-gray-700"
