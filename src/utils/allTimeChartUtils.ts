@@ -15,18 +15,24 @@ interface ChartDataPoint {
 export const processAllTimeData = (sessions: PokerSession[]): ChartDataPoint[] => {
   if (sessions.length === 0) return [];
 
-  // Create individual data points for each session
-  let cumulativeProfit = 0;
+  // Track cumulative profit per currency separately
+  const cumulativeProfitByCurrency: Record<string, number> = {};
   const allTimeData: ChartDataPoint[] = sessions.map(session => {
     const sessionProfit = calculateSessionProfit(session);
-    cumulativeProfit += sessionProfit;
+    const currency = session.currency || 'USD';
+    
+    // Update cumulative profit for this specific currency
+    if (!cumulativeProfitByCurrency[currency]) {
+      cumulativeProfitByCurrency[currency] = 0;
+    }
+    cumulativeProfitByCurrency[currency] += sessionProfit;
 
     return {
       date: format(new Date(session.startTime), 'yyyy-MM-dd'),
       profit: sessionProfit,
-      cumulativeProfit,
+      cumulativeProfit: cumulativeProfitByCurrency[currency],
       sessionCount: 1,
-      currency: session.currency || 'USD'
+      currency
     };
   });
 
@@ -224,7 +230,8 @@ export const processTableBasedData = (sessions: PokerSession[]): ChartDataPoint[
   if (sessions.length === 0) return [];
 
   const tableData: ChartDataPoint[] = [];
-  let cumulativeProfit = 0;
+  // Track cumulative profit per currency separately
+  const cumulativeProfitByCurrency: Record<string, number> = {};
   let tableCount = 0;
 
   // Process each session and its tables
@@ -236,15 +243,21 @@ export const processTableBasedData = (sessions: PokerSession[]): ChartDataPoint[
         const tableBuyIn = table.buyIn || 0;
         const tableCashOut = table.cashOut !== undefined ? table.cashOut : 0;
         const tableProfit = tableCashOut - tableBuyIn;
-        cumulativeProfit += tableProfit;
+        const currency = table.currency || session.currency || 'USD';
+        
+        // Update cumulative profit for this specific currency
+        if (!cumulativeProfitByCurrency[currency]) {
+          cumulativeProfitByCurrency[currency] = 0;
+        }
+        cumulativeProfitByCurrency[currency] += tableProfit;
 
         tableData.push({
           date: tableCount.toString(), // Use table count as "date" for X-axis
           profit: tableProfit,
-          cumulativeProfit,
+          cumulativeProfit: cumulativeProfitByCurrency[currency],
           sessionCount: 1,
           tableCount,
-          currency: table.currency || session.currency || 'USD',
+          currency,
           tableName: table.name || table.location || `Table ${tableCount}`
         });
       });
@@ -252,15 +265,21 @@ export const processTableBasedData = (sessions: PokerSession[]): ChartDataPoint[
       // For sessions without table data, treat the session as one table
       tableCount++;
       const sessionProfit = calculateSessionProfit(session);
-      cumulativeProfit += sessionProfit;
+      const currency = session.currency || 'USD';
+      
+      // Update cumulative profit for this specific currency
+      if (!cumulativeProfitByCurrency[currency]) {
+        cumulativeProfitByCurrency[currency] = 0;
+      }
+      cumulativeProfitByCurrency[currency] += sessionProfit;
 
       tableData.push({
         date: tableCount.toString(),
         profit: sessionProfit,
-        cumulativeProfit,
+        cumulativeProfit: cumulativeProfitByCurrency[currency],
         sessionCount: 1,
         tableCount,
-        currency: session.currency || 'USD',
+        currency,
         tableName: session.tableName || session.location || `Session ${tableCount}`
       });
     }
