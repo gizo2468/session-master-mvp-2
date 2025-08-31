@@ -331,7 +331,11 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                 <div className="space-y-1">
                   {blindHistory.slice(-1).filter(update => {
                     const formatted = BBStackUpdateService.formatHistoryLine(update);
-                    return formatted && formatted.trim() !== '';
+                    // Filter out empty strings, null/null, and any invalid entries
+                    return formatted && 
+                           formatted.trim() !== '' && 
+                           !formatted.includes('null') &&
+                           !formatted.includes('undefined');
                   }).map((update, index) => (
                     <div key={update.id || index} className="flex justify-between text-sm">
                       <span className="font-medium text-gray-700">
