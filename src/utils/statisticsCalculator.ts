@@ -1,6 +1,7 @@
 import { PokerSession } from "@/types/poker";
 import { calculateSessionProfit } from "./sessionCalculations";
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrencySymbol } from "@/hooks/useDefaultCurrency";
 
 export type SessionFormat = 'all' | 'cash' | 'tournament';
 
@@ -329,9 +330,6 @@ export const calculateSessionStatistics = (sessions: PokerSession[], format: Ses
  * Format currency display - now uses the centralized currency symbols from useDefaultCurrency
  */
 export const formatCurrency = (amount: number, currency = 'USD'): string => {
-  // Import getCurrencySymbol function to avoid duplication
-  const { getCurrencySymbol } = require('@/hooks/useDefaultCurrency');
-  
   const symbol = getCurrencySymbol(currency);
   const abs = Math.abs(amount);
   const formatted = abs % 1 === 0 ? abs.toLocaleString() : abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
