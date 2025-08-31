@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 import { BBStackUpdateService } from '@/services/bbStackUpdateService';
 import { format } from 'date-fns';
+import { Pencil } from 'lucide-react';
 
 interface BBStackUpdate {
   id?: string;
@@ -22,14 +24,17 @@ interface BlindHistoryModalProps {
   onClose: () => void;
   history: BBStackUpdate[];
   tableFormat: string;
+  onEditLevel?: (level: number, currentBB?: number, currentStack?: number) => void;
 }
 
 const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
   isOpen,
   onClose,
   history,
-  tableFormat
+  tableFormat,
+  onEditLevel
 }) => {
+  const [isEditMode, setIsEditMode] = useState(false);
   const isCashGame = tableFormat === 'Cash';
 
   // Group tournament entries by level for display with continuous levels
@@ -94,9 +99,26 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {isCashGame ? 'Blinds History' : 'BB/Stack History'}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>
+              {isCashGame ? 'Blinds History' : 'BB/Stack History'}
+            </DialogTitle>
+            {!isCashGame && onEditLevel && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditMode(!isEditMode)}
+                className="p-1 h-8 w-8"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          {isEditMode && !isCashGame && (
+            <p className="text-sm text-muted-foreground">
+              Click on a level to edit its values
+            </p>
+          )}
         </DialogHeader>
         
         <ScrollArea className="max-h-96 pr-4">
@@ -110,8 +132,30 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                 <div key={groupIndex} className="space-y-2">
                   {/* Level Header for tournaments */}
                   {group.level !== null && (
-                    <h4 className="font-semibold text-sm border-b pb-1">
+                    <h4 
+                      className={`font-semibold text-sm border-b pb-1 ${
+                        isEditMode && onEditLevel ? 'cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-t' : ''
+                      }`}
+                      onClick={() => {
+                        if (isEditMode && onEditLevel) {
+                          // Get the latest values for this level
+                          const latestUpdate = group.updates
+                            .filter(u => u.created_at) // Only actual entries, not inherited
+                            .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())[0];
+                          
+                          const currentBB = latestUpdate?.bb || group.updates[0]?.bb;
+                          const currentStack = latestUpdate?.stack || group.updates[0]?.stack;
+                          
+                          onEditLevel(group.level!, currentBB, currentStack);
+                          setIsEditMode(false);
+                          onClose();
+                        }
+                      }}
+                    >
                       Level {group.level}
+                      {isEditMode && onEditLevel && (
+                        <span className="ml-2 text-xs text-muted-foreground">(click to edit)</span>
+                      )}
                     </h4>
                   )}
                   

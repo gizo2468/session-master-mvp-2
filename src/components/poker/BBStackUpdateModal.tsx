@@ -21,6 +21,9 @@ interface BBStackUpdateModalProps {
   currency?: string;
   sessionId: string;
   onDataSaved?: () => void; // Callback to refresh data after save
+  editingLevel?: number; // Level being edited (for edit mode)
+  initialBB?: number; // Pre-filled BB value for editing
+  initialStack?: number; // Pre-filled Stack value for editing
 }
 
 interface TableUpdateData {
@@ -47,7 +50,10 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   sessionFormat,
   currency = 'USD',
   sessionId,
-  onDataSaved
+  onDataSaved,
+  editingLevel,
+  initialBB,
+  initialStack
 }) => {
   const [updateData, setUpdateData] = useState<TableUpdateData[]>([]);
   const [highestLevels, setHighestLevels] = useState<Record<string, number>>({});
@@ -91,18 +97,30 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
                 bigBlind: bigBlindValue
               };
             } else {
-              // For tournaments, use highest level + 1 as default, or 1 if no history
-              const highestLevel = levels[table.id] || 0;
-              const defaultLevel = highestLevel > 0 ? highestLevel : 1;
-              
-              return {
-                tableId: table.id,
-                level: savedData?.level ?? defaultLevel,
-                stack: savedData?.stack ?? table.currentStack?.toString() ?? '',
-                bb: savedData?.bb ?? table.startingBB?.toString() ?? '',
-                smallBlind: 0, // Not used for tournaments
-                bigBlind: 0 // Not used for tournaments
-              };
+              // For tournaments, check if we're editing a specific level
+              if (editingLevel) {
+                return {
+                  tableId: table.id,
+                  level: editingLevel,
+                  stack: initialStack?.toString() ?? '',
+                  bb: initialBB?.toString() ?? '',
+                  smallBlind: 0, // Not used for tournaments
+                  bigBlind: 0 // Not used for tournaments
+                };
+              } else {
+                // Use highest level + 1 as default, or 1 if no history
+                const highestLevel = levels[table.id] || 0;
+                const defaultLevel = highestLevel > 0 ? highestLevel : 1;
+                
+                return {
+                  tableId: table.id,
+                  level: savedData?.level ?? defaultLevel,
+                  stack: savedData?.stack ?? table.currentStack?.toString() ?? '',
+                  bb: savedData?.bb ?? table.startingBB?.toString() ?? '',
+                  smallBlind: 0, // Not used for tournaments
+                  bigBlind: 0 // Not used for tournaments
+                };
+              }
             }
           })
         );
@@ -113,15 +131,18 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       loadHighestLevels();
       setValidationError('');
     }
-  }, [isOpen, tables, liveState.bbStackUpdates]);
+  }, [isOpen, tables, liveState.bbStackUpdates, editingLevel, initialBB, initialStack]);
 
   const handleLevelChange = (tableId: string, level: string) => {
     const newLevel = parseInt(level);
     const highestLevel = highestLevels[tableId] || 0;
     
-    // Validate level - cannot go below highest existing level
-    if (newLevel < highestLevel) {
-      setValidationError(`Cannot select Level ${newLevel}. Current highest level is ${highestLevel}.`);
+    // When editing a specific level, allow selecting that level even if it's not the highest
+    const minAllowedLevel = editingLevel ? Math.min(editingLevel, highestLevel || 1) : highestLevel;
+    
+    // Validate level - cannot go below highest existing level (unless editing)
+    if (newLevel < minAllowedLevel) {
+      setValidationError(`Cannot select Level ${newLevel}. ${editingLevel ? 'Editing level' : 'Current highest level'} is ${editingLevel || highestLevel}.`);
       setTimeout(() => setValidationError(''), 3000);
       return;
     }
@@ -334,7 +355,9 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md w-full max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>BB / Stack Update</DialogTitle>
+          <DialogTitle>
+            {editingLevel ? `Edit Level ${editingLevel}` : 'BB / Stack Update'}
+          </DialogTitle>
           {validationError && (
             <div className="text-sm text-red-600 mt-2 p-2 bg-red-50 rounded">
               {validationError}
@@ -407,7 +430,12 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
                       <div>
                         <label className="text-xs text-gray-500 mb-1 block">
                           Level
-                          {highestLevels[table.id] > 0 && (
+                          {editingLevel && (
+                            <span className="text-xs text-gray-400 ml-1">
+                              (editing)
+                            </span>
+                          )}
+                          {!editingLevel && highestLevels[table.id] > 0 && (
                             <span className="text-xs text-gray-400 ml-1">
                               (min: {highestLevels[table.id]})
                             </span>
@@ -416,13 +444,19 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
                         <Select
                           value={tableData.level.toString()}
                           onValueChange={(value) => handleLevelChange(table.id, value)}
+                          disabled={!!editingLevel} // Disable level selection when editing
                         >
                           <SelectTrigger className="h-10">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="max-h-60">
                             {levelOptions
-                              .filter(level => level >= (highestLevels[table.id] || 1))
+                              .filter(level => {
+                                if (editingLevel) {
+                                  return level === editingLevel; // Only show the editing level
+                                }
+                                return level >= (highestLevels[table.id] || 1);
+                              })
                               .map(level => (
                                 <SelectItem key={level} value={level.toString()}>
                                   Lvl {level}

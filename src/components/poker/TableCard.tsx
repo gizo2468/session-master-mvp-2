@@ -24,6 +24,7 @@ import { Plus, Pencil } from 'lucide-react';
 import EditTableForm from './EditTableForm';
 import { useBBStackHistory } from '@/hooks/useBBStackHistory';
 import BlindHistoryModal from './BlindHistoryModal';
+import BBStackUpdateModal from './BBStackUpdateModal';
 import { BBStackUpdateService } from '@/services/bbStackUpdateService';
 
 interface TableCardProps {
@@ -42,6 +43,10 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
   const [showEndTableDialog, setShowEndTableDialog] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showBlindHistory, setShowBlindHistory] = useState(false);
+  const [showBBStackUpdateModal, setShowBBStackUpdateModal] = useState(false);
+  const [editingLevel, setEditingLevel] = useState<number | undefined>();
+  const [editingBB, setEditingBB] = useState<number | undefined>();
+  const [editingStack, setEditingStack] = useState<number | undefined>();
   const [cashOutAmount, setCashOutAmount] = useState('');
   const [tableNotes, setTableNotes] = useState(table.notes || '');
   const [showRebuyDialog, setShowRebuyDialog] = useState(false);
@@ -84,6 +89,22 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
     if (deleteTable) {
       deleteTable(sessionId, tableId);
     }
+  };
+
+  const handleEditLevel = (level: number, currentBB?: number, currentStack?: number) => {
+    setEditingLevel(level);
+    setEditingBB(currentBB);
+    setEditingStack(currentStack);
+    setShowBBStackUpdateModal(true);
+  };
+
+  const handleBBStackUpdateSaved = () => {
+    // Reset editing state
+    setEditingLevel(undefined);
+    setEditingBB(undefined);
+    setEditingStack(undefined);
+    // Refresh the blind history
+    refreshHistory();
   };
 
   const handleEndTable = () => {
@@ -461,6 +482,26 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
         onClose={() => setShowBlindHistory(false)}
         history={blindHistory}
         tableFormat={table.format}
+        onEditLevel={handleEditLevel}
+      />
+
+      {/* BB/Stack Update Modal for Editing */}
+      <BBStackUpdateModal
+        isOpen={showBBStackUpdateModal}
+        onClose={() => {
+          setShowBBStackUpdateModal(false);
+          setEditingLevel(undefined);
+          setEditingBB(undefined);
+          setEditingStack(undefined);
+        }}
+        tables={[table]}
+        sessionFormat={table.format}
+        currency={currency}
+        sessionId={sessionId}
+        onDataSaved={handleBBStackUpdateSaved}
+        editingLevel={editingLevel}
+        initialBB={editingBB}
+        initialStack={editingStack}
       />
 
       {/* Edit Table Form */}
