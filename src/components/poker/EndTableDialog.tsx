@@ -169,8 +169,8 @@ export default function EndTableDialog({
                     <label htmlFor="bountyAmount" className="block text-sm font-medium mb-1">
                       Total Bounty Collected (Optional)
                     </label>
-                    <div className="flex">
-                      <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                    <div className="flex rounded-md shadow-sm">
+                      <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
                         $
                       </span>
                       <input
@@ -178,7 +178,7 @@ export default function EndTableDialog({
                         type="number"
                         min="0"
                         step="0.01"
-                        className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none"
+                        className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none"
                         placeholder="0.00"
                         value={bountyAmount}
                         onChange={(e) => onBountyAmountChange(e.target.value)}

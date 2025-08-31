@@ -611,23 +611,23 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                       <label htmlFor="bountyAmount" className="block text-sm font-medium mb-1">
                         Total Bounty Collected (Optional)
                       </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <span className="text-gray-500">$</span>
-                        </div>
+                      <div className="flex rounded-md shadow-sm">
+                        <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                          $
+                        </span>
                         <input
                           id="bountyAmount"
                           type="number"
                           min="0"
                           step="0.01"
-                          className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                          className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none"
                           placeholder="0.00"
                           value={bountyAmount}
                           onChange={(e) => setBountyAmount(e.target.value)}
                         />
-                        <p className="text-xs text-gray-500 mt-1">For tracking only - should already be included in Total Payout above</p>
-                      </div>
-                    </div>
+                       </div>
+                       <p className="text-xs text-gray-500 mt-1">For tracking only - should already be included in Total Payout above</p>
+                     </div>
                   </>
                 )}
                 
