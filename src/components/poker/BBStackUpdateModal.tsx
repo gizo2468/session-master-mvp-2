@@ -216,12 +216,21 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
             .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())[0];
           
           if (lastEntryForLevel) {
-            const currentStack = data.stack || '0';
-            const currentBB = data.bb || '0';
-            const lastStack = lastEntryForLevel.stack?.toString() || '0';
-            const lastBB = lastEntryForLevel.bb?.toString() || '0';
+            // Get inherited values if current inputs are empty
+            const inheritedHistory = history
+              .filter(h => h.level !== null && h.level < data.level)
+              .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())[0];
             
-            if (currentStack === lastStack && currentBB === lastBB) {
+            const currentStack = data.stack || inheritedHistory?.stack?.toString() || '';
+            const currentBB = data.bb || inheritedHistory?.bb?.toString() || '';
+            const lastStack = lastEntryForLevel.stack?.toString() || '';
+            const lastBB = lastEntryForLevel.bb?.toString() || '';
+            
+            // Only compare if both have values (ignore empty comparisons)
+            const hasCurrentValues = currentStack !== '' || currentBB !== '';
+            const hasLastValues = lastStack !== '' || lastBB !== '';
+            
+            if (hasCurrentValues && hasLastValues && currentStack === lastStack && currentBB === lastBB) {
               setValidationError(`Level ${data.level} already has identical BB/Stack values. Please change at least one value.`);
               setTimeout(() => setValidationError(''), 3000);
               return;

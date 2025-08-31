@@ -87,7 +87,7 @@ export class BBStackUpdateService {
       if (!data) return [];
 
       // For cash games, return all entries (blinds can change multiple times)
-      // For tournaments, group by level and keep all sub-entries for each level
+      // For tournaments, deduplicate identical entries within the same level
       const processedData: BBStackUpdate[] = [];
 
       data.forEach(update => {
@@ -95,9 +95,29 @@ export class BBStackUpdateService {
         if (update.small_blind !== null && update.big_blind !== null) {
           processedData.push(update);
         } 
-        // If it's a tournament (has level), keep all entries but organize by level
+        // If it's a tournament (has level), check for duplicates
         else if (update.level !== null) {
-          processedData.push(update);
+          // Check if we already have an identical entry for this level
+          const existingEntry = processedData.find(existing => 
+            existing.level === update.level &&
+            existing.bb === update.bb &&
+            existing.stack === update.stack
+          );
+          
+          // Only add if no identical entry exists, or if this is more recent
+          if (!existingEntry) {
+            processedData.push(update);
+          } else {
+            // If identical entry exists, keep the more recent one
+            const updateTime = new Date(update.created_at!).getTime();
+            const existingTime = new Date(existingEntry.created_at!).getTime();
+            
+            if (updateTime > existingTime) {
+              // Replace the existing entry with the newer one
+              const index = processedData.indexOf(existingEntry);
+              processedData[index] = update;
+            }
+          }
         }
       });
 
