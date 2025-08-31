@@ -101,8 +101,8 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
     return acc;
   }, {} as Record<string, number>);
 
-  // Get USD total for main display
-  const usdTotal = resultsByCurrency['USD'] || 0;
+  // Get total for main display in user's default currency
+  const defaultCurrencyTotal = resultsByCurrency[defaultCurrency] || 0;
 
   // ITM% across all ended sessions (cash + tournaments)
   // payout = session-level cashOut or sum of completed table cashOuts; null treated as 0
@@ -216,10 +216,10 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
             title="Click to view currency breakdown"
           >
             {Object.keys(resultsByCurrency).length === 0 ? (
-              <span className="text-lg font-bold text-gray-400">$0.00</span>
+              <span className="text-lg font-bold text-gray-400">{displayCurrency(0)}</span>
             ) : (
-              <span className={`text-xl font-bold ${usdTotal >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                ${usdTotal >= 0 ? formatCurrency(usdTotal) : `-${formatCurrency(Math.abs(usdTotal))}`}
+              <span className={`text-xl font-bold ${defaultCurrencyTotal >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {displayCurrency(defaultCurrencyTotal)}
               </span>
             )}
           </div>
