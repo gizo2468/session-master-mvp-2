@@ -39,20 +39,35 @@ export const useAllTimeChartData = () => {
   }, [dateRange, isMonthlyView, isWeeklyView, isDailyView, isLast30DaysView, selectedCurrency, availableCurrencies]);
 
   const processInitialData = async (sessions: any[], currency: string) => {
+    console.log(`=== CURRENCY FILTERING FOR ${currency} ===`);
+    console.log('All sessions before currency filter:', sessions.length);
+    
+    // Log each session's currency for debugging
+    sessions.forEach((session, index) => {
+      console.log(`Session ${index + 1} currency check:`, {
+        sessionCurrency: session.currency,
+        targetCurrency: currency,
+        matches: (session.currency || 'USD') === currency
+      });
+    });
+    
     // Filter sessions by selected currency
     const currencyFilteredSessions = sessions.filter(session => 
       (session.currency || 'USD') === currency
     );
     
+    console.log(`Sessions after ${currency} filter:`, currencyFilteredSessions.length);
+    
     const sortedSessions = currencyFilteredSessions.sort((a, b) => 
       new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
     );
 
-    console.log(`Sessions for currency ${currency}:`, sortedSessions);
+    console.log(`=== PROCESSING ${currency} SESSIONS ===`);
+    console.log(`Sorted sessions for currency ${currency}:`, sortedSessions.length);
 
     // Default to all-time view - use table-based for detailed view
     const tableBasedData = processTableBasedData(sortedSessions);
-    console.log('Processed table-based data:', tableBasedData);
+    console.log(`Processed table-based data for ${currency}:`, tableBasedData.length, 'data points');
     setFilteredData(tableBasedData);
   };
 
@@ -60,7 +75,8 @@ export const useAllTimeChartData = () => {
     try {
       setLoading(true);
       const userSessions = await fetchUserSessions();
-      const completedSessions = userSessions.filter(session => session.status === 'completed');
+      // For charts, we want sessions that are not currently active (ended sessions)
+      const completedSessions = userSessions.filter(session => !session.isActive && session.cashOut !== undefined);
       
       // Filter sessions by selected currency
       const currencyFilteredSessions = completedSessions.filter(session => 
@@ -104,14 +120,41 @@ export const useAllTimeChartData = () => {
     try {
       setLoading(true);
       const userSessions = await fetchUserSessions();
-      console.log('Fetched user sessions:', userSessions);
+      console.log('=== ALL FETCHED SESSIONS ===');
+      console.log('Total sessions fetched:', userSessions.length);
       
-      const completedSessions = userSessions.filter(session => session.status === 'completed');
-      console.log('Completed sessions:', completedSessions);
+      // Log detailed currency information for each session
+      userSessions.forEach((session, index) => {
+        console.log(`Session ${index + 1}:`, {
+          id: session.id,
+          status: session.currentStatus,
+          isActive: session.isActive,
+          currency: session.currency,
+          currencyType: typeof session.currency,
+          startTime: session.startTime,
+          buyIn: session.buyIn,
+          cashOut: session.cashOut
+        });
+      });
+      
+      // For charts, we want sessions that are not currently active (ended sessions)  
+      const completedSessions = userSessions.filter(session => !session.isActive && session.cashOut !== undefined);
+      console.log('=== COMPLETED SESSIONS FILTER ===');
+      console.log('Completed sessions after filter:', completedSessions.length);
+      
+      completedSessions.forEach((session, index) => {
+        console.log(`Completed session ${index + 1}:`, {
+          id: session.id,
+          currency: session.currency,
+          status: session.currentStatus
+        });
+      });
       
       // Extract available currencies from sessions
       const currencies = [...new Set(completedSessions.map(session => session.currency || 'USD'))].sort();
-      console.log('Available currencies found:', currencies);
+      console.log('=== CURRENCY EXTRACTION ===');
+      console.log('Raw currencies from sessions:', completedSessions.map(s => s.currency));
+      console.log('Unique currencies found:', currencies);
       
       setAvailableCurrencies(currencies.length > 0 ? currencies : ['USD']);
       
@@ -119,11 +162,13 @@ export const useAllTimeChartData = () => {
       const defaultCurrency = currencies.length > 0 ? 
         (currencies.includes('USD') ? 'USD' : currencies[0]) : 'USD';
       
+      console.log('=== CURRENCY SELECTION ===');
       console.log('Setting default currency to:', defaultCurrency);
       setSelectedCurrency(defaultCurrency);
       
       // If we have sessions, trigger initial data processing
       if (completedSessions.length > 0) {
+        console.log('=== INITIAL DATA PROCESSING ===');
         console.log('Processing initial data for currency:', defaultCurrency);
         await processInitialData(completedSessions, defaultCurrency);
       } else {
