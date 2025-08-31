@@ -13,7 +13,7 @@ export const useStatisticsData = (
   startDate?: Date,
   endDate?: Date
 ) => {
-  const { defaultCurrency } = useDefaultCurrency();
+  const { defaultCurrency, isLoading: currencyLoading } = useDefaultCurrency();
   const [statisticsData, setStatisticsData] = useState({
     all: null,
     cash: null,
@@ -24,6 +24,11 @@ export const useStatisticsData = (
 
   useEffect(() => {
     const fetchStatistics = async () => {
+      // Don't fetch statistics until currency is loaded
+      if (currencyLoading) {
+        return;
+      }
+      
       try {
         setIsLoading(true);
         setError(null);
@@ -31,6 +36,7 @@ export const useStatisticsData = (
         // Debug: Check authentication status
         const { data: authData } = await supabase.auth.getUser();
         console.log('Current authenticated user:', authData.user?.id);
+        console.log('Fetching statistics with currency:', defaultCurrency);
 
         // Pass user's default currency to ensure proper filtering at database level
         const [allStats, cashStats, tournamentStats] = await Promise.all([
@@ -39,7 +45,7 @@ export const useStatisticsData = (
           calculateSessionStatisticsFromDB('tournament', timeframe, startDate, endDate, defaultCurrency),
         ]);
 
-        console.log('Statistics fetched:', { allStats, cashStats, tournamentStats });
+        console.log('Statistics fetched with currency filter:', { allStats, cashStats, tournamentStats, currency: defaultCurrency });
 
         setStatisticsData({
           all: allStats,
@@ -55,7 +61,7 @@ export const useStatisticsData = (
     };
 
     fetchStatistics();
-  }, [timeframe, startDate, endDate, defaultCurrency]); // Add defaultCurrency as dependency
+  }, [timeframe, startDate, endDate, defaultCurrency, currencyLoading]); // Add currencyLoading as dependency
 
   return {
     statisticsData,
