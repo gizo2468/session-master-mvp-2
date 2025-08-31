@@ -170,8 +170,8 @@ export default function EndTableDialog({
                       Total Bounty Collected (Optional)
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <span className="text-gray-500 text-sm">$</span>
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500">$</span>
                       </div>
                       <input
                         id="bountyAmount"
