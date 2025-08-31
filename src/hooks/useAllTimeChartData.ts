@@ -32,9 +32,29 @@ export const useAllTimeChartData = () => {
 
   // Effect to process data based on view/date range changes and currency filter
   useEffect(() => {
-    // Process data whenever filters change
-    processDataWithCurrentFilters();
-  }, [dateRange, isMonthlyView, isWeeklyView, isDailyView, isLast30DaysView, selectedCurrency]);
+    // Only process data if we have a selected currency (indicating data has been loaded)
+    if (selectedCurrency && availableCurrencies.length > 0) {
+      processDataWithCurrentFilters();
+    }
+  }, [dateRange, isMonthlyView, isWeeklyView, isDailyView, isLast30DaysView, selectedCurrency, availableCurrencies]);
+
+  const processInitialData = async (sessions: any[], currency: string) => {
+    // Filter sessions by selected currency
+    const currencyFilteredSessions = sessions.filter(session => 
+      (session.currency || 'USD') === currency
+    );
+    
+    const sortedSessions = currencyFilteredSessions.sort((a, b) => 
+      new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+    );
+
+    console.log(`Sessions for currency ${currency}:`, sortedSessions);
+
+    // Default to all-time view - use table-based for detailed view
+    const tableBasedData = processTableBasedData(sortedSessions);
+    console.log('Processed table-based data:', tableBasedData);
+    setFilteredData(tableBasedData);
+  };
 
   const processDataWithCurrentFilters = async () => {
     try {
@@ -50,6 +70,8 @@ export const useAllTimeChartData = () => {
       const sortedSessions = currencyFilteredSessions.sort((a, b) => 
         new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
       );
+
+      console.log(`Processing data for currency ${selectedCurrency}:`, sortedSessions);
 
       if (dateRange.start && dateRange.end) {
         filterDataByDateRange(sortedSessions);
@@ -72,6 +94,7 @@ export const useAllTimeChartData = () => {
       }
     } catch (error) {
       console.error('Error processing chart data:', error);
+      setFilteredData([]);
     } finally {
       setLoading(false);
     }
@@ -81,23 +104,35 @@ export const useAllTimeChartData = () => {
     try {
       setLoading(true);
       const userSessions = await fetchUserSessions();
+      console.log('Fetched user sessions:', userSessions);
+      
       const completedSessions = userSessions.filter(session => session.status === 'completed');
+      console.log('Completed sessions:', completedSessions);
       
       // Extract available currencies from sessions
       const currencies = [...new Set(completedSessions.map(session => session.currency || 'USD'))].sort();
+      console.log('Available currencies found:', currencies);
+      
       setAvailableCurrencies(currencies.length > 0 ? currencies : ['USD']);
       
       // Set default currency to USD if available, otherwise first available currency
-      if (currencies.length > 0) {
-        const defaultCurrency = currencies.includes('USD') ? 'USD' : currencies[0];
-        setSelectedCurrency(defaultCurrency);
-      } else {
-        setSelectedCurrency('USD');
-      }
+      const defaultCurrency = currencies.length > 0 ? 
+        (currencies.includes('USD') ? 'USD' : currencies[0]) : 'USD';
       
-      console.log('Available currencies:', currencies);
+      console.log('Setting default currency to:', defaultCurrency);
+      setSelectedCurrency(defaultCurrency);
+      
+      // If we have sessions, trigger initial data processing
+      if (completedSessions.length > 0) {
+        console.log('Processing initial data for currency:', defaultCurrency);
+        await processInitialData(completedSessions, defaultCurrency);
+      } else {
+        console.log('No completed sessions found');
+        setFilteredData([]);
+      }
     } catch (error) {
       console.error('Error loading session data:', error);
+      setFilteredData([]);
     } finally {
       setLoading(false);
     }
