@@ -22,7 +22,6 @@ const Dashboard: React.FC = () => {
     gameScope: 'all',
     gameTypes: [],
     sessionFormat: [],
-    currency: 'all',
   });
 
   // Helper function to display role with proper formatting

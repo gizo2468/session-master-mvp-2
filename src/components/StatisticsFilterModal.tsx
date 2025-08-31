@@ -28,7 +28,6 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { FilterChip } from './FilterChip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useUserCurrencies } from '@/hooks/useUserCurrencies';
 
 export interface FilterOptions {
   timeframeType: 'monthly' | 'weekly' | 'quick' | 'yearly' | 'custom';
@@ -36,7 +35,6 @@ export interface FilterOptions {
   gameScope: 'all' | 'cash' | 'tournaments';
   gameTypes: string[];
   sessionFormat: string[];
-  currency: 'all' | string;
   customStartDate?: Date;
   customEndDate?: Date;
 }
@@ -60,10 +58,7 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
 }) => {
   const [gameTypeExpanded, setGameTypeExpanded] = useState(false);
   const [sessionFormatExpanded, setSessionFormatExpanded] = useState(false);
-  const [currencyExpanded, setCurrencyExpanded] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  
-  const { currencies } = useUserCurrencies();
 
   const timeframeOptions = {
     monthly: ['This Month', 'Last Month', 'Last 3 Months'],
@@ -145,11 +140,6 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
     // Session Format
     if (filters.sessionFormat.length > 0) {
       summary.push(`Session Format: ${filters.sessionFormat.join(', ')}`);
-    }
-    
-    // Currency
-    if (filters.currency !== 'all') {
-      summary.push(`Currency: ${filters.currency}`);
     }
     
     return summary;
@@ -301,32 +291,6 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
                     label={format}
                     selected={filters.sessionFormat.includes(format)}
                     onClick={() => handleSessionFormatToggle(format)}
-                  />
-                ))}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-
-          {/* Currency Filter (Collapsible) */}
-          <Collapsible open={currencyExpanded} onOpenChange={setCurrencyExpanded}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-              <h4 className="text-sm font-medium">Currency</h4>
-              <ChevronDown className={cn('h-4 w-4 transition-transform', currencyExpanded && 'rotate-180')} />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-2 mt-3">
-              <div className="flex flex-wrap gap-2">
-                <FilterChip
-                  key="all"
-                  label="All"
-                  selected={filters.currency === 'all'}
-                  onClick={() => onFiltersChange({ ...filters, currency: 'all' })}
-                />
-                {currencies.map(({ currency, sessionCount }) => (
-                  <FilterChip
-                    key={currency}
-                    label={`${currency} (${sessionCount})`}
-                    selected={filters.currency === currency}
-                    onClick={() => onFiltersChange({ ...filters, currency })}
                   />
                 ))}
               </div>
