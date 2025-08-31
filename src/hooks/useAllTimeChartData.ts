@@ -24,7 +24,7 @@ export const useAllTimeChartData = () => {
   const [isDailyView, setIsDailyView] = useState(false);
   const [isLast30DaysView, setIsLast30DaysView] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<string>('USD');
-  const [availableCurrencies, setAvailableCurrencies] = useState<string[]>([]);
+  const [availableCurrencies, setAvailableCurrencies] = useState<string[]>(['USD']);
 
   // Load initial session data on mount
   useEffect(() => {
@@ -67,11 +67,13 @@ export const useAllTimeChartData = () => {
       
       // Extract available currencies from sessions
       const currencies = [...new Set(sortedSessions.map(session => session.currency || 'USD'))].sort();
-      setAvailableCurrencies(currencies);
+      setAvailableCurrencies(currencies.length > 0 ? currencies : ['USD']);
       
       // Set default currency to the first available one or USD
       if (currencies.length > 0 && !currencies.includes(selectedCurrency)) {
         setSelectedCurrency(currencies.includes('USD') ? 'USD' : currencies[0]);
+      } else if (currencies.length === 0) {
+        setSelectedCurrency('USD');
       }
       
       console.log('Sorted sessions for chart:', sortedSessions);

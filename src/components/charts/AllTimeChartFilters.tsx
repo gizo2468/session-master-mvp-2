@@ -107,7 +107,7 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {availableCurrencies.map(currency => (
+            {(availableCurrencies || []).map(currency => (
               <SelectItem key={currency} value={currency}>
                 {getCurrencySymbol(currency)} {currency}
               </SelectItem>
