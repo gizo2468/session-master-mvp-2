@@ -4,6 +4,7 @@ import { PokerSession, TableData, HandData } from '@/types/poker';
 import TableSelectionModal from './TableSelectionModal';
 import EditTableForm from './EditTableForm';
 import AddTableForm from './AddTableForm';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface SessionModalsProps {
   session: PokerSession;
@@ -73,6 +74,7 @@ const SessionModals: React.FC<SessionModalsProps> = ({
         onAddHand={onAddHand}
         onEditHand={onEditHand}
         onDeleteHand={onDeleteHand}
+        sessionCurrency={session.currency}
       />
 
       {/* Add Table Modal */}
@@ -93,6 +95,7 @@ const SessionModals: React.FC<SessionModalsProps> = ({
           onOpenChange={onEditTableClose}
           table={selectedTable}
           onSave={onTableUpdate}
+          sessionCurrency={session.currency}
         />
       )}
 
@@ -132,7 +135,7 @@ const SessionModals: React.FC<SessionModalsProps> = ({
             <div className="mb-6">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <span className="text-gray-500">$</span>
+                  <span className="text-gray-500">{getCurrencySymbol(session.currency)}</span>
                 </div>
                 <input
                   type="number"

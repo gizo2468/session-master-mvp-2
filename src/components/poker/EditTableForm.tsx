@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { TableData } from '@/types/poker';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface EditTableFormProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface EditTableFormProps {
   table: TableData;
   onSave: (updatedTable: TableData) => void;
   onDelete?: (tableId: string) => void;
+  sessionCurrency?: string; // Add session currency prop
 }
 
 const EditTableForm: React.FC<EditTableFormProps> = ({
@@ -24,7 +26,8 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
   onOpenChange,
   table,
   onSave,
-  onDelete
+  onDelete,
+  sessionCurrency = 'USD' // Default to USD if not provided
 }) => {
   const [formData, setFormData] = useState<TableData>(table);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -71,6 +74,10 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
   const originalInitialBuyIn = table.initialBuyIn || table.buyIn;
   const rebuyAmount = table.buyIn - originalInitialBuyIn;
   const currentRebuys = table.rebuys || 0;
+  
+  // Get currency symbol for display
+  const tableCurrency = table.currency || sessionCurrency;
+  const currencySymbol = getCurrencySymbol(tableCurrency);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -124,7 +131,7 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="buyIn">Initial Buy-in ($)</Label>
+              <Label htmlFor="buyIn">Initial Buy-in ({currencySymbol})</Label>
               <Input
                 id="buyIn"
                 type="number"
@@ -135,7 +142,7 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
               />
               {currentRebuys > 0 && rebuyAmount > 0 && (
                 <p className="text-xs text-gray-500 mt-1">
-                  Rebuys: {currentRebuys} × ${(rebuyAmount / currentRebuys).toFixed(2)} = +${rebuyAmount.toFixed(2)}
+                  Rebuys: {currentRebuys} × {currencySymbol}{(rebuyAmount / currentRebuys).toFixed(2)} = +{currencySymbol}{rebuyAmount.toFixed(2)}
                 </p>
               )}
             </div>
@@ -143,7 +150,7 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
             {formData.format === 'Cash' && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="smallBlind">Small Blind ($)</Label>
+                  <Label htmlFor="smallBlind">Small Blind ({currencySymbol})</Label>
                   <Input
                     id="smallBlind"
                     type="number"
@@ -154,7 +161,7 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="bigBlind">Big Blind ($)</Label>
+                  <Label htmlFor="bigBlind">Big Blind ({currencySymbol})</Label>
                   <Input
                     id="bigBlind"
                     type="number"
@@ -220,7 +227,7 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
             {!formData.isActive && (
               <>
                 <div>
-                  <Label htmlFor="cashOut">Total Payout ($)</Label>
+                  <Label htmlFor="cashOut">Total Payout ({currencySymbol})</Label>
                   <Input
                     id="cashOut"
                     type="number"
@@ -259,7 +266,7 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
                           />
                         </div>
                         <div>
-                          <Label htmlFor="bountyAmount">Total Bounty Collected ($)</Label>
+                          <Label htmlFor="bountyAmount">Total Bounty Collected ({currencySymbol})</Label>
                           <Input
                             id="bountyAmount"
                             type="number"

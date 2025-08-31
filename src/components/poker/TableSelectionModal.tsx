@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { Plus, Trash2, Hand, Edit2, ChevronDown, ChevronRight } from 'lucide-react';
 import CardDisplay from './CardDisplay';
 import HandForm from './HandForm';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface TableSelectionModalProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface TableSelectionModalProps {
   onAddHand?: (tableId: string, hand: Omit<HandData, 'id' | 'createdAt' | 'tableId'>) => void;
   onEditHand?: (tableId: string, hand: HandData) => void;
   onDeleteHand?: (tableId: string, handId: string) => void;
+  sessionCurrency?: string; // Add session currency prop
 }
 
 const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
@@ -31,7 +33,8 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
   onDeleteTable,
   onAddHand,
   onEditHand,
-  onDeleteHand
+  onDeleteHand,
+  sessionCurrency = 'USD' // Default to USD if not provided
 }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tableToDelete, setTableToDelete] = useState<TableData | null>(null);
@@ -136,12 +139,14 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
 
   const renderFinancialBadges = (table: TableData) => {
     const initialBuyIn = table.initialBuyIn || 0;
+    const tableCurrency = table.currency || sessionCurrency;
+    const currencySymbol = getCurrencySymbol(tableCurrency);
     const badges = [];
 
     // Buy-in badge
     badges.push(
       <Badge key="buyin" variant="secondary" className="text-xs">
-        Buy-in: ${initialBuyIn.toFixed(2)}
+        Buy-in: {currencySymbol}{initialBuyIn.toFixed(2)}
       </Badge>
     );
 
@@ -153,7 +158,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
       if (rebuyAmount > 0) {
         badges.push(
           <Badge key="rebuy" variant="destructive" className="text-xs">
-            Rebuy: ${rebuyAmount.toFixed(2)}
+            Rebuy: {currencySymbol}{rebuyAmount.toFixed(2)}
           </Badge>
         );
       }
@@ -163,7 +168,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
       if (rebuys > 0) {
         badges.push(
           <Badge key="rebuy" variant="destructive" className="text-xs">
-            Rebuy: ${rebuys.toFixed(2)}
+            Rebuy: {currencySymbol}{rebuys.toFixed(2)}
           </Badge>
         );
       }
@@ -173,7 +178,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
     if (table.cashOut !== undefined) {
       badges.push(
         <Badge key="cashout" variant="success" className="text-xs">
-          Cash out: ${table.cashOut.toFixed(2)}
+          Cash out: {currencySymbol}{table.cashOut.toFixed(2)}
         </Badge>
       );
     }
@@ -198,6 +203,8 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
               const profit = (table.cashOut || 0) - table.buyIn;
               const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
               const formattedStart = format(new Date(table.startTime), 'd MMM, HH:mm');
+              const tableCurrency = table.currency || sessionCurrency;
+              const currencySymbol = getCurrencySymbol(tableCurrency);
               
               return (
                 <div
@@ -213,7 +220,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`font-bold ${profitClass}`}>
-                        {profit >= 0 ? '+' : ''}${profit.toFixed(2)}
+                        {profit >= 0 ? '+' : ''}{currencySymbol}{profit.toFixed(2)}
                       </span>
                       <Button
                         variant="ghost"
@@ -288,7 +295,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                                 <div className="flex items-center gap-1 shrink-0">
                                   {hand.resultAmount !== undefined && (
                                     <span className={`font-medium ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                      {hand.resultAmount >= 0 ? '+' : ''}${hand.resultAmount.toFixed(0)}
+                                      {hand.resultAmount >= 0 ? '+' : ''}{currencySymbol}{hand.resultAmount.toFixed(0)}
                                     </span>
                                   )}
                                   <Button

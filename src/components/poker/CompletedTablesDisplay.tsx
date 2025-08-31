@@ -272,6 +272,7 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency }: 
           table={selectedTable}
           onSave={handleSaveTable}
           onDelete={() => handleDeleteTable(selectedTable)}
+          sessionCurrency={currency}
         />
       )}
 

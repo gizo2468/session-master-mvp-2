@@ -515,6 +515,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
         table={table}
         onSave={handleEditTable}
         onDelete={table.isActive ? undefined : handleDeleteTable}
+        sessionCurrency={currency}
       />
 
       <Dialog open={showEndTableDialog} onOpenChange={setShowEndTableDialog}>
