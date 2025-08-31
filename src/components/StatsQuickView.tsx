@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSessionContext } from '@/context/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,6 +45,7 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
   const { sessions, isLoading } = useSessionContext();
   const [showCurrencyBreakdown, setShowCurrencyBreakdown] = useState(false);
   const { defaultCurrency } = useDefaultCurrency();
+  
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-4 mb-6">
@@ -80,19 +80,21 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
     );
   }
 
-  // Calculate stats from database sessions - filter by user's default currency
-  const allCompletedSessions = sessions.filter(s => !s.isActive && (s.currentStatus === 'ended' || s.status === 'completed' || !s.status));
+  // Get all completed sessions
+  const completedSessions = sessions.filter(s => !s.isActive && (s.currentStatus === 'ended' || s.status === 'completed' || !s.status));
   
-  // Filter sessions to only include those in the user's default currency
-  const completedSessions = allCompletedSessions.filter(s => (s.currency || 'USD') === defaultCurrency);
-  const totalSessions = completedSessions.length;
+  // Filter sessions by user's default currency for main display
+  const defaultCurrencySessions = completedSessions.filter(s => (s.currency || 'USD') === defaultCurrency);
   
-  // Calculate wins and losses using the same logic as Overall Results
-  const wins = completedSessions.filter(s => calculateSessionProfit(s) > 0).length;
-  const losses = completedSessions.filter(s => calculateSessionProfit(s) <= 0).length;
+  // Calculate overall results for user's default currency
+  const overallResults = calculateOverallResults(defaultCurrencySessions);
   
-  // Group sessions by currency and calculate results for each (for currency breakdown dialog)
-  const allResultsByCurrency = allCompletedSessions.reduce((acc, session) => {
+  // Calculate wins and losses for user's default currency
+  const wins = defaultCurrencySessions.filter(s => calculateSessionProfit(s) > 0).length;
+  const losses = defaultCurrencySessions.filter(s => calculateSessionProfit(s) <= 0).length;
+  
+  // Group ALL sessions by currency for currency breakdown dialog (shows all currencies)
+  const allResultsByCurrency = completedSessions.reduce((acc, session) => {
     const currency = session.currency || 'USD';
     const profit = calculateSessionProfit(session);
     
@@ -104,24 +106,19 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
     return acc;
   }, {} as Record<string, number>);
 
-  // Group sessions by currency and calculate results for each
-  const resultsByCurrency = completedSessions.reduce((acc, session) => {
-    const currency = session.currency || 'USD';
-    const profit = calculateSessionProfit(session);
-    
-    if (!acc[currency]) {
-      acc[currency] = 0;
-    }
-    acc[currency] += profit;
-    
-    return acc;
-  }, {} as Record<string, number>);
+  // Currency display functions
+  const currencySymbol = getCurrencySymbol(defaultCurrency);
+  const formatCurrency = (amount: number): string => {
+    return amount % 1 === 0 ? amount.toLocaleString() : amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
 
-  // Get total for main display in user's default currency
-  const defaultCurrencyTotal = resultsByCurrency[defaultCurrency] || 0;
+  const displayCurrency = (amount: number): string => {
+    const abs = Math.abs(amount);
+    const formatted = `${currencySymbol}${formatCurrency(abs)}`;
+    return amount < 0 ? `-${formatted}` : formatted;
+  };
 
-  // ITM% across all ended sessions (cash + tournaments)
-  // payout = session-level cashOut or sum of completed table cashOuts; null treated as 0
+  // ITM% across all sessions in user's currency
   const getSessionPayout = (session: any): number => {
     if (session.tables && session.tables.length > 0) {
       const completedTables = session.tables.filter((t: any) => !t.isActive);
@@ -130,31 +127,29 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
     return session.cashOut ?? 0;
   };
   
-  const endedCount = completedSessions.length;
-  const cashedCount = completedSessions.filter(s => (getSessionPayout(s) ?? 0) > 0).length;
+  const endedCount = defaultCurrencySessions.length;
+  const cashedCount = defaultCurrencySessions.filter(s => (getSessionPayout(s) ?? 0) > 0).length;
   
   let itmPercentage = endedCount > 0 ? (cashedCount / endedCount) * 100 : 0;
-  // Clamp to [0, 100]
   itmPercentage = Math.min(100, Math.max(0, itmPercentage));
-  
   const itmDisplay = endedCount === 0 ? '—' : `${itmPercentage.toFixed(1)}%`;
   
-  // Calculate total hands entered across all sessions
-  const totalHands = completedSessions.reduce((total, session) => {
+  // Calculate stats based on user's currency sessions only
+  const totalSessions = defaultCurrencySessions.length;
+  
+  // Calculate total hands for user's currency sessions
+  const totalHands = defaultCurrencySessions.reduce((total, session) => {
     let sessionHands = (session.hands?.length || 0);
-    
-    // Add hands from tables
     if (session.tables) {
       sessionHands += session.tables.reduce((tableTotal, table) => {
         return tableTotal + (table.hands?.length || 0);
       }, 0);
     }
-    
     return total + sessionHands;
   }, 0);
   
-  // Calculate average session duration
-  const sessionsWithDuration = completedSessions.filter(s => 
+  // Calculate average session duration for user's currency sessions
+  const sessionsWithDuration = defaultCurrencySessions.filter(s => 
     s.startTime && s.endTime && s.endTime > s.startTime
   );
   
@@ -165,37 +160,26 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
       }, 0) / sessionsWithDuration.length
     : 0;
     
-  // Convert average duration from milliseconds to hours
   const averageHours = averageDuration / (1000 * 60 * 60);
-  
-  // Helper function to format currency without unnecessary decimal places and with commas
-  const formatCurrency = (amount: number): string => {
-    return amount % 1 === 0 ? amount.toLocaleString() : amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
 
-  const currencySymbol = getCurrencySymbol(defaultCurrency);
-  const displayCurrency = (amount: number): string => {
-    const abs = Math.abs(amount);
-    const formatted = `${currencySymbol}${formatCurrency(abs)}`;
-    return amount < 0 ? `-${formatted}` : formatted;
-  };
-
-  // Extended metrics (reactive to sessions)
-  const totalBuyInsAll = completedSessions.reduce((sum, s) => {
+  // Extended metrics for user's currency sessions
+  const totalBuyIns = defaultCurrencySessions.reduce((sum, s) => {
     const tablesBuyIn = s.tables && s.tables.length > 0 ? s.tables.reduce((tSum, t) => tSum + (t.buyIn || 0), 0) : 0;
     const sessionBuyIn = !s.tables || s.tables.length === 0 ? (s.buyIn || 0) : 0;
     return sum + tablesBuyIn + sessionBuyIn;
   }, 0);
 
-  const totalProfitAll = completedSessions.reduce((sum, s) => sum + calculateSessionProfit(s), 0);
-  const avgBuyIn = completedSessions.length > 0 ? totalBuyInsAll / completedSessions.length : 0;
-  const bestSessionProfit = completedSessions.length > 0 ? completedSessions.reduce((max, s) => {
-    const p = calculateSessionProfit(s);
-    return p > max ? p : max;
-  }, -Infinity) : 0;
+  const avgBuyIn = defaultCurrencySessions.length > 0 ? totalBuyIns / defaultCurrencySessions.length : 0;
+  
+  const bestSessionProfit = defaultCurrencySessions.length > 0 
+    ? defaultCurrencySessions.reduce((max, s) => {
+        const p = calculateSessionProfit(s);
+        return p > max ? p : max;
+      }, -Infinity) 
+    : 0;
   const normalizedBest = bestSessionProfit === -Infinity ? 0 : bestSessionProfit;
 
-  const totalTables = completedSessions.reduce((sum, s) => {
+  const totalTables = defaultCurrencySessions.reduce((sum, s) => {
     if (s.tables && s.tables.length > 0) return sum + s.tables.length;
     if (s.tablesPlayed && s.tablesPlayed > 0) return sum + s.tablesPlayed;
     return sum + 1;
@@ -204,10 +188,10 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
   const isCash = (f?: string) => !!f && (f.toLowerCase().includes('cash') || f.toLowerCase().includes('home'));
   const isTournament = (f?: string) => !!f && f.toLowerCase().includes('tournament');
 
-  const cashGameProfit = completedSessions.reduce((sum, s) => isCash(s.format) ? sum + calculateSessionProfit(s) : sum, 0);
-  const tournamentProfit = completedSessions.reduce((sum, s) => isTournament(s.format) ? sum + calculateSessionProfit(s) : sum, 0);
+  const cashGameProfit = defaultCurrencySessions.reduce((sum, s) => isCash(s.format) ? sum + calculateSessionProfit(s) : sum, 0);
+  const tournamentProfit = defaultCurrencySessions.reduce((sum, s) => isTournament(s.format) ? sum + calculateSessionProfit(s) : sum, 0);
 
-  const roiPercent = totalBuyInsAll > 0 ? (totalProfitAll / totalBuyInsAll) * 100 : 0;
+  const roiPercent = totalBuyIns > 0 ? (overallResults / totalBuyIns) * 100 : 0;
   
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
@@ -231,18 +215,18 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
             onClick={() => setShowCurrencyBreakdown(true)}
             title="Click to view currency breakdown"
           >
-            {Object.keys(resultsByCurrency).length === 0 ? (
+            {Object.keys(allResultsByCurrency).length === 0 ? (
               <span className="text-lg font-bold text-gray-400">{displayCurrency(0)}</span>
             ) : (
-              <span className={`text-xl font-bold ${defaultCurrencyTotal >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                {displayCurrency(defaultCurrencyTotal)}
+              <span className={`text-xl font-bold ${overallResults >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {displayCurrency(overallResults)}
               </span>
             )}
           </div>
         </div>
       </div>
       
-{!showExtendedMetrics && (
+      {!showExtendedMetrics && (
         <div className="grid grid-cols-3 gap-4 text-center mb-4">
           <div className="grid place-items-center gap-1">
             <MobileStackTitle text="ITM %" />
@@ -261,7 +245,7 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
         </div>
       )}
       
-{showExtendedMetrics && (
+      {showExtendedMetrics && (
         <>
           {/* Row 2: Total Tables, ITM %, ROI % */}
           <div className="grid grid-cols-3 gap-4 text-center mb-4">
@@ -303,7 +287,7 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
           <div className="grid grid-cols-3 gap-4 text-center">
             <div className="grid place-items-center gap-1">
               <MobileStackTitle text="Best Session" />
-              <span className="text-base font-bold">{completedSessions.length === 0 ? '—' : displayCurrency(normalizedBest)}</span>
+              <span className="text-base font-bold">{defaultCurrencySessions.length === 0 ? '—' : displayCurrency(normalizedBest)}</span>
             </div>
             
             <div className="grid place-items-center gap-1">

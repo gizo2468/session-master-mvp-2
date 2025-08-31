@@ -25,13 +25,14 @@ export interface SessionStats {
 }
 
 /**
- * Calculate statistics using Supabase backend function
+ * Calculate statistics using Supabase backend function with currency filtering
  */
 export const calculateSessionStatisticsFromDB = async (
   format: SessionFormat, 
   timeframe: string = 'all-time',
   startDate?: Date,
-  endDate?: Date
+  endDate?: Date,
+  currency?: string
 ): Promise<SessionStats> => {
   try {
     const { data: user } = await supabase.auth.getUser();
@@ -40,13 +41,14 @@ export const calculateSessionStatisticsFromDB = async (
       throw new Error('User not authenticated');
     }
 
-    console.log('Fetching statistics for user:', user.user.id, 'format:', format, 'timeframe:', timeframe);
+    console.log('Fetching statistics for user:', user.user.id, 'format:', format, 'timeframe:', timeframe, 'currency:', currency);
 
     const { data, error } = await supabase.rpc('get_user_session_statistics', {
       p_user_id: user.user.id,
       p_timeframe: timeframe,
       p_start_date: startDate?.toISOString(),
-      p_end_date: endDate?.toISOString()
+      p_end_date: endDate?.toISOString(),
+      p_currency: currency // Add currency filter to database call
     });
 
     if (error) {
@@ -324,19 +326,12 @@ export const calculateSessionStatistics = (sessions: PokerSession[], format: Ses
 };
 
 /**
- * Format currency display
+ * Format currency display - now uses the centralized currency symbols from useDefaultCurrency
  */
 export const formatCurrency = (amount: number, currency = 'USD'): string => {
-  const getCurrencySymbol = (curr: string) => {
-    switch (curr) {
-      case 'USD': return '$';
-      case 'EUR': return '€';
-      case 'GBP': return '£';
-      case 'ILS': return '₪';
-      default: return '$';
-    }
-  };
-
+  // Import getCurrencySymbol function to avoid duplication
+  const { getCurrencySymbol } = require('@/hooks/useDefaultCurrency');
+  
   const symbol = getCurrencySymbol(currency);
   const abs = Math.abs(amount);
   const formatted = abs % 1 === 0 ? abs.toLocaleString() : abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });

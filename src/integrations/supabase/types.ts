@@ -945,12 +945,20 @@ export type Database = {
         Returns: string
       }
       get_user_session_statistics: {
-        Args: {
-          p_end_date?: string
-          p_start_date?: string
-          p_timeframe?: string
-          p_user_id: string
-        }
+        Args:
+          | {
+              p_currency?: string
+              p_end_date?: string
+              p_start_date?: string
+              p_timeframe?: string
+              p_user_id: string
+            }
+          | {
+              p_end_date?: string
+              p_start_date?: string
+              p_timeframe?: string
+              p_user_id: string
+            }
         Returns: {
           average_bb100: number
           average_duration: number
