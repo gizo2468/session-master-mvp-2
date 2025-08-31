@@ -24,7 +24,7 @@ export const useAllTimeChartData = () => {
   const [isDailyView, setIsDailyView] = useState(false);
   const [isLast30DaysView, setIsLast30DaysView] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<string>('USD');
-  const [availableCurrencies, setAvailableCurrencies] = useState<string[]>(['USD']);
+  const [availableCurrencies, setAvailableCurrencies] = useState<string[]>([]);
 
   // Load initial session data on mount
   useEffect(() => {
@@ -65,19 +65,29 @@ export const useAllTimeChartData = () => {
         new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
       );
       
-      // Extract available currencies from sessions
-      const currencies = [...new Set(sortedSessions.map(session => session.currency || 'USD'))].sort();
-      setAvailableCurrencies(currencies.length > 0 ? currencies : ['USD']);
+      // Extract available currencies from actual sessions only
+      const sessionCurrencies = sortedSessions.map(session => session.currency || 'USD');
+      const uniqueCurrencies = [...new Set(sessionCurrencies)].sort();
       
-      // Set default currency to the first available one or USD
-      if (currencies.length > 0 && !currencies.includes(selectedCurrency)) {
-        setSelectedCurrency(currencies.includes('USD') ? 'USD' : currencies[0]);
-      } else if (currencies.length === 0) {
+      console.log('Session currencies found:', sessionCurrencies);
+      console.log('Unique currencies:', uniqueCurrencies);
+      
+      // Only set currencies that actually exist in session data
+      if (uniqueCurrencies.length > 0) {
+        setAvailableCurrencies(uniqueCurrencies);
+        
+        // Always default to USD if it exists in the data, otherwise use the first available currency
+        const defaultCurrency = uniqueCurrencies.includes('USD') ? 'USD' : uniqueCurrencies[0];
+        setSelectedCurrency(defaultCurrency);
+        
+        console.log('Default currency set to:', defaultCurrency);
+      } else {
+        // No sessions exist yet - keep USD as fallback but don't show currency filter
+        setAvailableCurrencies([]);
         setSelectedCurrency('USD');
       }
       
       console.log('Sorted sessions for chart:', sortedSessions);
-      console.log('Available currencies:', currencies);
       
       const tableBasedData = processTableBasedData(sortedSessions);
       setChartData(tableBasedData);
