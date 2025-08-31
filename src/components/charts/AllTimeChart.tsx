@@ -7,7 +7,6 @@ import { useAllTimeChartData } from '@/hooks/useAllTimeChartData';
 const AllTimeChart: React.FC = () => {
   const {
     loading,
-    chartData,
     filteredData,
     dateRange,
     setDateRange,
@@ -49,7 +48,6 @@ const AllTimeChart: React.FC = () => {
       <CardContent>
         <AllTimeChartDisplay
           loading={loading}
-          chartData={chartData}
           filteredData={filteredData}
           dateRange={dateRange}
           isMonthlyView={isMonthlyView}

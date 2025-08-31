@@ -17,7 +17,6 @@ interface ChartDataPoint {
 
 interface AllTimeChartDisplayProps {
   loading: boolean;
-  chartData: ChartDataPoint[];
   filteredData: ChartDataPoint[];
   dateRange: { start: string; end: string };
   isMonthlyView: boolean;
@@ -28,7 +27,6 @@ interface AllTimeChartDisplayProps {
 
 export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
   loading,
-  chartData,
   filteredData,
   dateRange,
   isMonthlyView,
@@ -51,17 +49,14 @@ export const AllTimeChartDisplay: React.FC<AllTimeChartDisplayProps> = ({
     );
   }
 
-  // Determine what data to display and chart mode
-  const hasDateFilter = dateRange.start || dateRange.end;
-  const dataToDisplay = (isMonthlyView || isWeeklyView || isDailyView || isLast30DaysView) ? filteredData : (hasDateFilter ? filteredData : chartData);
-  const isTableMode = !isMonthlyView && !isWeeklyView && !isDailyView && !isLast30DaysView && !hasDateFilter;
+  // Determine which data to display and chart mode
+  const dataToDisplay = filteredData;
+  const isTableMode = !isMonthlyView && !isWeeklyView && !isDailyView && !isLast30DaysView && !dateRange.start && !dateRange.end;
 
   if (dataToDisplay.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">
-          {hasDateFilter ? "No data available for selected dates" : "No session data available"}
-        </div>
+        <div className="text-muted-foreground">No session data available for selected currency</div>
       </div>
     );
   }

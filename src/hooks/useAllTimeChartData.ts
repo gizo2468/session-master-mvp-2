@@ -16,7 +16,6 @@ interface ChartDataPoint {
 
 export const useAllTimeChartData = () => {
   const [loading, setLoading] = useState(false);
-  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [filteredData, setFilteredData] = useState<ChartDataPoint[]>([]);
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [isMonthlyView, setIsMonthlyView] = useState(false);
@@ -33,54 +32,70 @@ export const useAllTimeChartData = () => {
 
   // Effect to process data based on view/date range changes and currency filter
   useEffect(() => {
-    if (chartData.length === 0) return;
-    
-    console.log('Processing chart data based on current filters, currency:', selectedCurrency);
-    
-    // First filter by currency
-    const currencyFilteredData = chartData.filter(point => point.currency === selectedCurrency);
-    
-    if (dateRange.start && dateRange.end) {
-      filterDataByDateRange(currencyFilteredData);
-    } else if (isMonthlyView) {
-      displayMonthlyView(currencyFilteredData);
-    } else if (isWeeklyView) {
-      displayWeeklyView(currencyFilteredData);
-    } else if (isDailyView) {
-      displayDailyView(currencyFilteredData);
-    } else if (isLast30DaysView) {
-      displayLast30DaysView(currencyFilteredData);
-    } else {
-      // Default to all-time view with currency filter
-      setFilteredData(currencyFilteredData);
+    // Process data whenever filters change
+    processDataWithCurrentFilters();
+  }, [dateRange, isMonthlyView, isWeeklyView, isDailyView, isLast30DaysView, selectedCurrency]);
+
+  const processDataWithCurrentFilters = async () => {
+    try {
+      setLoading(true);
+      const userSessions = await fetchUserSessions();
+      const completedSessions = userSessions.filter(session => session.status === 'completed');
+      
+      // Filter sessions by selected currency
+      const currencyFilteredSessions = completedSessions.filter(session => 
+        (session.currency || 'USD') === selectedCurrency
+      );
+      
+      const sortedSessions = currencyFilteredSessions.sort((a, b) => 
+        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+      );
+
+      if (dateRange.start && dateRange.end) {
+        filterDataByDateRange(sortedSessions);
+      } else if (isMonthlyView) {
+        const monthlyData = processMonthlyData(sortedSessions);
+        setFilteredData(monthlyData);
+      } else if (isWeeklyView) {
+        const weeklyData = processWeeklyData(sortedSessions);
+        setFilteredData(weeklyData);
+      } else if (isDailyView) {
+        const dailyData = processDailyData(sortedSessions);
+        setFilteredData(dailyData);
+      } else if (isLast30DaysView) {
+        const last30DaysData = processLast30DaysData(sortedSessions);
+        setFilteredData(last30DaysData);
+      } else {
+        // Default to all-time view - use table-based for detailed view
+        const tableBasedData = processTableBasedData(sortedSessions);
+        setFilteredData(tableBasedData);
+      }
+    } catch (error) {
+      console.error('Error processing chart data:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [chartData, dateRange, isMonthlyView, isWeeklyView, isDailyView, isLast30DaysView, selectedCurrency]);
+  };
 
   const loadSessionData = async () => {
     try {
       setLoading(true);
       const userSessions = await fetchUserSessions();
       const completedSessions = userSessions.filter(session => session.status === 'completed');
-      const sortedSessions = completedSessions.sort((a, b) => 
-        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-      );
       
       // Extract available currencies from sessions
-      const currencies = [...new Set(sortedSessions.map(session => session.currency || 'USD'))].sort();
+      const currencies = [...new Set(completedSessions.map(session => session.currency || 'USD'))].sort();
       setAvailableCurrencies(currencies.length > 0 ? currencies : ['USD']);
       
-      // Set default currency to the first available one or USD
-      if (currencies.length > 0 && !currencies.includes(selectedCurrency)) {
-        setSelectedCurrency(currencies.includes('USD') ? 'USD' : currencies[0]);
-      } else if (currencies.length === 0) {
+      // Set default currency to USD if available, otherwise first available currency
+      if (currencies.length > 0) {
+        const defaultCurrency = currencies.includes('USD') ? 'USD' : currencies[0];
+        setSelectedCurrency(defaultCurrency);
+      } else {
         setSelectedCurrency('USD');
       }
       
-      console.log('Sorted sessions for chart:', sortedSessions);
       console.log('Available currencies:', currencies);
-      
-      const tableBasedData = processTableBasedData(sortedSessions);
-      setChartData(tableBasedData);
     } catch (error) {
       console.error('Error loading session data:', error);
     } finally {
@@ -88,67 +103,16 @@ export const useAllTimeChartData = () => {
     }
   };
 
-  const filterDataByDateRange = async (currencyData?: ChartDataPoint[]) => {
-    if (currencyData) {
-      // Use pre-filtered currency data and filter by date range
-      const filteredByDate = currencyData.filter(point => {
-        return point.date >= dateRange.start && point.date <= dateRange.end;
-      });
-      setFilteredData(filteredByDate);
-    } else {
-      const userSessions = await fetchUserSessions();
-      const completedSessions = userSessions.filter(session => session.status === 'completed');
-      
-      const filteredSessions = completedSessions.filter(session => {
-        const sessionDate = format(new Date(session.startTime), 'yyyy-MM-dd');
-        const currency = session.currency || 'USD';
-        return sessionDate >= dateRange.start && sessionDate <= dateRange.end && currency === selectedCurrency;
-      });
-      
-      const sortedSessions = filteredSessions.sort((a, b) => 
-        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-      );
-      
-      const processedData = processAllTimeData(sortedSessions);
-      setFilteredData(processedData);
-    }
+  const filterDataByDateRange = (sessions: PokerSession[]) => {
+    const filteredSessions = sessions.filter(session => {
+      const sessionDate = format(new Date(session.startTime), 'yyyy-MM-dd');
+      return sessionDate >= dateRange.start && sessionDate <= dateRange.end;
+    });
+    
+    const processedData = processAllTimeData(filteredSessions);
+    setFilteredData(processedData);
   };
 
-  const displayMonthlyView = async (currencyData?: ChartDataPoint[]) => {
-    const userSessions = await fetchUserSessions();
-    const completedSessions = userSessions.filter(session => 
-      session.status === 'completed' && (session.currency || 'USD') === selectedCurrency
-    );
-    const monthlyData = processMonthlyData(completedSessions);
-    setFilteredData(monthlyData);
-  };
-
-  const displayWeeklyView = async (currencyData?: ChartDataPoint[]) => {
-    const userSessions = await fetchUserSessions();
-    const completedSessions = userSessions.filter(session => 
-      session.status === 'completed' && (session.currency || 'USD') === selectedCurrency
-    );
-    const weeklyData = processWeeklyData(completedSessions);
-    setFilteredData(weeklyData);
-  };
-
-  const displayDailyView = async (currencyData?: ChartDataPoint[]) => {
-    const userSessions = await fetchUserSessions();
-    const completedSessions = userSessions.filter(session => 
-      session.status === 'completed' && (session.currency || 'USD') === selectedCurrency
-    );
-    const dailyData = processDailyData(completedSessions);
-    setFilteredData(dailyData);
-  };
-
-  const displayLast30DaysView = async (currencyData?: ChartDataPoint[]) => {
-    const userSessions = await fetchUserSessions();
-    const completedSessions = userSessions.filter(session => 
-      session.status === 'completed' && (session.currency || 'USD') === selectedCurrency
-    );
-    const last30DaysData = processLast30DaysData(completedSessions);
-    setFilteredData(last30DaysData);
-  };
 
   const resetDateRange = () => {
     setDateRange({ start: '', end: '' });
@@ -204,7 +168,6 @@ export const useAllTimeChartData = () => {
 
   return {
     loading,
-    chartData,
     filteredData,
     dateRange,
     setDateRange,
