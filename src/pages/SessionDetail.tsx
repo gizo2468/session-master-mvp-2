@@ -8,7 +8,7 @@ import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import TableDetailsCard from '@/components/poker/TableDetailsCard';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TableData, HandData } from '@/types/poker';
-import SessionDetailHeader from '@/components/poker/SessionDetailHeader';
+import SessionDetailHeader, { ShareWithCoachButton } from '@/components/poker/SessionDetailHeader';
 import SessionStatusBadges from '@/components/poker/SessionStatusBadges';
 import SessionInfoDisplay from '@/components/poker/SessionInfoDisplay';
 import SessionActions from '@/components/poker/SessionActions';
@@ -359,6 +359,9 @@ export default function SessionDetail() {
             profit={profit}
             isCompleted={isCompleted}
           />
+
+          {/* Share button below Profit/Loss */}
+          <ShareWithCoachButton sessionId={session.id} />
           
           {/* Only show end session button for active sessions */}
           {session.isActive && (

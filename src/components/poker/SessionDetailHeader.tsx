@@ -13,6 +13,10 @@ interface SessionDetailHeaderProps {
   onDeleteClick: () => void;
 }
 
+interface ShareButtonProps {
+  sessionId: string;
+}
+
 const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
   sessionId,
   location,
@@ -57,27 +61,9 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
           Back
         </Button>
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-serif font-bold">
-              Session Summary
-            </h1>
-            {showShareToggle && (
-              <Button
-                onClick={handleOpenShareModal}
-                disabled={sharingLoading || connectedCoaches.length === 0}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                {sharingLoading ? (
-                  <Icon name="Loader2" size={14} className="animate-spin" />
-                ) : (
-                  <Icon name="Share" size={14} />
-                )}
-                {isShared ? `Shared with ${sharedCoaches.length} coach${sharedCoaches.length !== 1 ? 'es' : ''}` : 'Share with Coach'}
-              </Button>
-            )}
-          </div>
+          <h1 className="text-2xl font-serif font-bold">
+            Session Summary
+          </h1>
           <div className="flex gap-2">
             <Button 
               onClick={onEditClick}
@@ -98,6 +84,66 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
           </div>
         </div>
       </header>
+
+      <CoachSelectionModal
+        isOpen={showCoachModal}
+        onClose={() => setShowCoachModal(false)}
+        coaches={connectedCoaches}
+        onSelectCoaches={handleSelectCoaches}
+        selectedCoaches={sharedCoaches}
+        loading={sharingLoading}
+      />
+    </>
+  );
+};
+
+export const ShareWithCoachButton: React.FC<ShareButtonProps> = ({ sessionId }) => {
+  const { user } = useAuth();
+  const [showCoachModal, setShowCoachModal] = useState(false);
+  
+  // Only show the toggle for players (students), not coaches
+  const showShareToggle = user?.role === 'student';
+  
+  // Use the session sharing hook
+  const {
+    isShared,
+    sharedCoaches,
+    connectedCoaches,
+    loading: sharingLoading,
+    shareSession,
+    unshareSession
+  } = useSessionSharing(sessionId);
+
+  const handleOpenShareModal = () => {
+    setShowCoachModal(true);
+  };
+
+  const handleSelectCoaches = async (coachIds: string[]) => {
+    await shareSession(coachIds);
+  };
+
+  if (!showShareToggle) {
+    return null;
+  }
+
+  return (
+    <>
+      <div className="mt-4 flex justify-center">
+        <Button
+          onClick={handleOpenShareModal}
+          disabled={sharingLoading || connectedCoaches.length === 0}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          {sharingLoading ? (
+            <Icon name="Loader2" size={14} className="animate-spin" />
+          ) : (
+            <Icon name="Share" size={14} />
+          )}
+          {isShared ? `Shared with ${sharedCoaches.length} coach${sharedCoaches.length !== 1 ? 'es' : ''}` : 'Share with Coach'}
+        </Button>
+      </div>
 
       <CoachSelectionModal
         isOpen={showCoachModal}
