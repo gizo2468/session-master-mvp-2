@@ -302,7 +302,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                       onClick={() => setShowBlindHistory(true)}
                       className="text-xs text-gray-900 hover:text-gray-700"
                     >
-                      View All Blinds Updates ({blindHistory.length})
+                      View All Blinds Updates
                     </button>
                   )}
                 </div>
@@ -348,7 +348,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                       onClick={() => setShowBlindHistory(true)}
                       className="text-xs text-gray-900 hover:text-gray-700"
                     >
-                      View All Blinds Updates ({blindHistory.length})
+                      View All Blinds Updates
                     </button>
                   )}
                 </div>
