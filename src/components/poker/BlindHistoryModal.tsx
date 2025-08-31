@@ -32,7 +32,7 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
 }) => {
   const isCashGame = tableFormat === 'Cash';
 
-  // Group tournament entries by level for display
+  // Group tournament entries by level for display with continuous levels
   const groupedHistory = React.useMemo(() => {
     if (isCashGame) {
       return history.map(update => ({ level: null, updates: [update] }));
@@ -51,13 +51,43 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
         levelGroups.get(level)!.push(update);
       });
     
-    // Convert to array and sort by level
-    return Array.from(levelGroups.entries())
-      .sort(([a], [b]) => a - b)
-      .map(([level, updates]) => ({
-        level,
-        updates: updates.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime())
-      }));
+    // Find the highest level reached
+    const maxLevel = Math.max(...Array.from(levelGroups.keys()), 0);
+    
+    // Create continuous levels from 1 to maxLevel
+    const continuousLevels: Array<{ level: number; updates: BBStackUpdate[] }> = [];
+    let lastKnownBB = 0;
+    let lastKnownStack = 0;
+    
+    for (let level = 1; level <= maxLevel; level++) {
+      if (levelGroups.has(level)) {
+        // Level has actual entries
+        const updates = levelGroups.get(level)!
+          .sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
+        
+        // Update last known values from the most recent entry
+        const lastEntry = updates[updates.length - 1];
+        if (lastEntry.bb) lastKnownBB = lastEntry.bb;
+        if (lastEntry.stack) lastKnownStack = lastEntry.stack;
+        
+        continuousLevels.push({ level, updates });
+      } else {
+        // Level has no entries - inherit from previous level
+        const inheritedUpdate: BBStackUpdate = {
+          user_id: '',
+          session_id: '',
+          table_id: '',
+          level,
+          bb: lastKnownBB || undefined,
+          stack: lastKnownStack || undefined,
+          created_at: undefined // No timestamp for inherited entries
+        };
+        
+        continuousLevels.push({ level, updates: [inheritedUpdate] });
+      }
+    }
+    
+    return continuousLevels;
   }, [history, isCashGame]);
 
   return (
@@ -89,7 +119,9 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                   {group.updates.map((update, updateIndex) => (
                     <div 
                       key={`${groupIndex}-${updateIndex}`} 
-                      className={`border rounded-lg p-3 bg-gray-50 ${group.level !== null ? 'ml-4' : ''}`}
+                      className={`border rounded-lg p-3 ${group.level !== null ? 'ml-4' : ''} ${
+                        update.created_at ? 'bg-gray-50' : 'bg-gray-100 border-dashed'
+                      }`}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div className="space-y-1">
@@ -104,6 +136,11 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                               )}
                               {update.stack && (
                                 <div>Stack: {update.stack}</div>
+                              )}
+                              {!update.created_at && (update.bb || update.stack) && (
+                                <div className="text-xs text-gray-400 italic">
+                                  (inherited from previous level)
+                                </div>
                               )}
                             </div>
                           )}

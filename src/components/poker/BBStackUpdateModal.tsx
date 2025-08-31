@@ -196,15 +196,36 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
         if (isCashTable) {
           // Validation for cash games
           if (data.smallBlind <= 0 || data.bigBlind <= 0) {
-            alert('Cash game blinds cannot be 0 or empty');
+            setValidationError('Cash game blinds cannot be 0 or empty');
+            setTimeout(() => setValidationError(''), 3000);
             return;
           }
         } else {
           // For tournaments, validate numeric fields
           if (data.stack !== '' && !/^\d+$/.test(data.stack) ||
               data.bb !== '' && !/^\d+$/.test(data.bb)) {
-            alert('Tournament fields must contain only numbers');
+            setValidationError('Tournament fields must contain only numbers');
+            setTimeout(() => setValidationError(''), 3000);
             return;
+          }
+
+          // Check for identical duplicates on the same level
+          const history = await BBStackUpdateService.getBBStackHistory(data.tableId);
+          const lastEntryForLevel = history
+            .filter(h => h.level === data.level)
+            .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())[0];
+          
+          if (lastEntryForLevel) {
+            const currentStack = data.stack || '0';
+            const currentBB = data.bb || '0';
+            const lastStack = lastEntryForLevel.stack?.toString() || '0';
+            const lastBB = lastEntryForLevel.bb?.toString() || '0';
+            
+            if (currentStack === lastStack && currentBB === lastBB) {
+              setValidationError(`Level ${data.level} already has identical BB/Stack values. Please change at least one value.`);
+              setTimeout(() => setValidationError(''), 3000);
+              return;
+            }
           }
         }
       }
