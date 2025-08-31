@@ -14,6 +14,7 @@ import TournamentControlsCard from '@/components/poker/TournamentControlsCard';
 import TableTimerDisplay from '@/components/poker/TableTimerDisplay';
 import { Badge } from '@/components/ui/badge';
 import TableCard from '@/components/poker/TableCard';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { 
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ export default function ConfirmSession() {
   const { activeSession, endSession, updateSessionDuration, addRebuy, updateSession, endTable, addTableRebuy } = useSessionContext();
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const currencySymbol = getCurrencySymbol(activeSession?.currency);
   
   const [showEndSessionSheet, setShowEndSessionSheet] = useState(false);
   const [cashOutAmount, setCashOutAmount] = useState('');
@@ -80,7 +82,7 @@ export default function ConfirmSession() {
       }
       
       if (bountyCollected) {
-        bountyInfo.push(`Total Bounty Collected: $${bountyCollected}`);
+        bountyInfo.push(`Total Bounty Collected: ${currencySymbol}${bountyCollected}`);
       }
       
       if (bountyInfo.length > 0) {
@@ -111,7 +113,7 @@ export default function ConfirmSession() {
     addRebuy(activeSession.id, rebuyAmount);
     toast({
       title: "Rebuy Added",
-      description: `$${rebuyAmount.toFixed(2)} rebuy has been added to your session.`
+      description: `${currencySymbol}${rebuyAmount.toFixed(2)} rebuy has been added to your session.`
     });
     setShowRebuyConfirmDialog(false);
   };
@@ -158,7 +160,7 @@ export default function ConfirmSession() {
       addTableRebuy(activeSession.id, tableId, amount);
       toast({
         title: "Rebuy Added",
-        description: `$${amount.toFixed(2)} rebuy has been added to the table.`
+        description: `${currencySymbol}${amount.toFixed(2)} rebuy has been added to the table.`
       });
     } catch (error) {
       console.error("Error adding table rebuy:", error);
@@ -299,7 +301,7 @@ export default function ConfirmSession() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500">$</span>
+                    <span className="text-gray-500">{currencySymbol}</span>
                   </div>
                   <input
                     id="cashout"
@@ -407,7 +409,7 @@ export default function ConfirmSession() {
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500">{currencySymbol}</span>
                       </div>
                       <input
                         id="bountyCollected"

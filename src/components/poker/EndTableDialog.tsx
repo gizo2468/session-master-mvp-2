@@ -12,6 +12,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { TableData } from '@/types/poker';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface EndTableDialogProps {
   open: boolean;
@@ -35,6 +36,7 @@ interface EndTableDialogProps {
   onChipsCarryoverChange: (chips: string) => void;
   onConfirm: () => void;
   onCancel: () => void;
+  currency?: string;
 }
 
 export default function EndTableDialog({
@@ -58,8 +60,11 @@ export default function EndTableDialog({
   chipsCarryover,
   onChipsCarryoverChange,
   onConfirm,
-  onCancel
+  onCancel,
+  currency
 }: EndTableDialogProps) {
+  const currencySymbol = getCurrencySymbol(currency);
+  
   // Helper function to check if a table is a multi-day tournament
   const isMultiDayTournament = (table: TableData) => {
     return table.format === 'Tournament' && table.isMultiDay === true;
@@ -116,7 +121,7 @@ export default function EndTableDialog({
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500">$</span>
+                    <span className="text-gray-500">{currencySymbol}</span>
                   </div>
                   <input
                     id="tableCashout"
@@ -171,7 +176,7 @@ export default function EndTableDialog({
                     </label>
                     <div className="flex rounded-md shadow-sm">
                       <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
-                        $
+                        {currencySymbol}
                       </span>
                       <input
                         id="bountyAmount"
@@ -201,8 +206,8 @@ export default function EndTableDialog({
                           : 'text-gray-500'
                     }`}>
                       {cashOutAmount && table
-                        ? `$${(parseFloat(cashOutAmount) - table.buyIn).toFixed(2)}` 
-                        : '$0.00'}
+                        ? `${currencySymbol}${(parseFloat(cashOutAmount) - table.buyIn).toFixed(2)}` 
+                        : `${currencySymbol}0.00`}
                     </span>
                   </div>
                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden">

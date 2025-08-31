@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { PokerSession } from '@/types/poker';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface EndSessionSheetProps {
   open: boolean;
@@ -14,6 +15,7 @@ interface EndSessionSheetProps {
   sessionNotes: string;
   onSessionNotesChange: (notes: string) => void;
   onEndSession: () => void;
+  currency?: string;
 }
 
 export default function EndSessionSheet({
@@ -23,8 +25,10 @@ export default function EndSessionSheet({
   autoCashOutAmount,
   sessionNotes,
   onSessionNotesChange,
-  onEndSession
+  onEndSession,
+  currency
 }: EndSessionSheetProps) {
+  const currencySymbol = getCurrencySymbol(currency);
   const [cashOutAmount, setCashOutAmount] = useState(autoCashOutAmount.toString());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -76,7 +80,7 @@ export default function EndSessionSheet({
               </div>
               <div>
                 <span className="text-gray-500">Buy-in:</span>
-                <span className="ml-1 font-medium">${session.buyIn.toFixed(2)}</span>
+                <span className="ml-1 font-medium">{currencySymbol}{session.buyIn.toFixed(2)}</span>
               </div>
               <div>
                 <span className="text-gray-500">Rebuys:</span>
@@ -108,7 +112,7 @@ export default function EndSessionSheet({
             <label className="text-sm font-medium">Cash Out Amount</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <span className="text-gray-500">$</span>
+                <span className="text-gray-500">{currencySymbol}</span>
               </div>
               <Input
                 type="number"
@@ -130,7 +134,7 @@ export default function EndSessionSheet({
                 <div>
                   <span className="text-gray-500">Profit/Loss:</span>
                   <span className={`ml-1 font-medium ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    ${profit.toFixed(2)}
+                    {currencySymbol}{profit.toFixed(2)}
                   </span>
                 </div>
                 <div>

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { PokerSession } from '@/types/poker';
 import { AlertTriangle, DollarSign } from 'lucide-react';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface EndSessionSheetProps {
   open: boolean;
@@ -15,6 +16,7 @@ interface EndSessionSheetProps {
   sessionNotes: string;
   onSessionNotesChange: (notes: string) => void;
   onEndSession: () => void;
+  currency?: string;
 }
 
 const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
@@ -25,7 +27,9 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
   sessionNotes,
   onSessionNotesChange,
   onEndSession,
+  currency,
 }) => {
+  const currencySymbol = getCurrencySymbol(currency);
   const activeTables = session.tables?.filter(table => table.isActive) || [];
   const hasActiveTables = activeTables.length > 0;
   
@@ -87,11 +91,11 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <div className="text-gray-500">Total Buy-in</div>
-                <div className="font-medium">${session.buyIn.toFixed(2)}</div>
+                <div className="font-medium">{currencySymbol}{session.buyIn.toFixed(2)}</div>
               </div>
               <div>
                 <div className="text-gray-500">Total Cash-out</div>
-                <div className="font-medium">${autoCashOutAmount.toFixed(2)}</div>
+                <div className="font-medium">{currencySymbol}{autoCashOutAmount.toFixed(2)}</div>
               </div>
               <div>
                 <div className="text-gray-500">Tables Played</div>
@@ -114,7 +118,7 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
               <div className="col-span-2 pt-2 border-t border-gray-200">
                 <div className="text-gray-500">Net Result</div>
                 <div className={`font-bold text-lg ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {profit >= 0 ? '+' : ''}${profit.toFixed(2)}
+                  {profit >= 0 ? '+' : ''}{currencySymbol}{profit.toFixed(2)}
                 </div>
               </div>
             </div>

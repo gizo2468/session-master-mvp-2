@@ -155,6 +155,7 @@ export default function LiveSession() {
         sessionNotes={sessionActions.sessionNotes}
         onSessionNotesChange={sessionActions.setSessionNotes}
         onEndSession={sessionActions.handleEndSession}
+        currency={currentSession.currency}
       />
       
       <RebuyConfirmationDialog
@@ -187,6 +188,7 @@ export default function LiveSession() {
         onChipsCarryoverChange={endTableActions.setChipsCarryover}
         onConfirm={endTableActions.handleConfirmEndTable}
         onCancel={endTableActions.resetEndTableStates}
+        currency={currentSession.currency}
       />
       
       <AddTableForm

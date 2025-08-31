@@ -556,7 +556,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500">$</span>
+                      <span className="text-gray-500">{currencySymbol}</span>
                     </div>
                     <input
                       id="tableCashout"
@@ -613,7 +613,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                       </label>
                       <div className="flex rounded-md shadow-sm">
                         <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
-                          $
+                          {currencySymbol}
                         </span>
                         <input
                           id="bountyAmount"
@@ -643,8 +643,8 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                             : 'text-gray-500'
                       }`}>
                         {cashOutAmount 
-                          ? `$${(parseFloat(cashOutAmount) - table.buyIn).toFixed(2)}` 
-                          : '$0.00'}
+                        ? `${currencySymbol}${(parseFloat(cashOutAmount) - table.buyIn).toFixed(2)}` 
+                        : `${currencySymbol}0.00`}
                       </span>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -770,7 +770,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               <div className="flex flex-col items-center space-y-6 py-6">
                 <div className="text-center">
                   <div className="text-4xl font-bold text-poker-gold mb-2">
-                    ${(table.tournamentBuyIn || table.initialBuyIn || table.buyIn).toFixed(2)}
+                    {currencySymbol}{(table.tournamentBuyIn || table.initialBuyIn || table.buyIn).toFixed(2)}
                   </div>
                   <div className="text-sm text-gray-600">Tournament Rebuy Amount</div>
                 </div>
@@ -792,7 +792,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500">$</span>
+                    <span className="text-gray-500">{currencySymbol}</span>
                   </div>
                   <input
                     id="rebuyAmount"
