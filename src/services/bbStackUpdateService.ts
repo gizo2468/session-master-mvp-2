@@ -84,7 +84,34 @@ export class BBStackUpdateService {
         throw error;
       }
 
-      return data || [];
+      if (!data) return [];
+
+      // For cash games, return all entries (blinds can change multiple times)
+      // For tournaments, deduplicate by level - keep only the latest entry per level
+      const deduplicatedData: BBStackUpdate[] = [];
+      const levelMap = new Map<number, BBStackUpdate>();
+
+      data.forEach(update => {
+        // If it's a cash game (has small_blind/big_blind), keep all entries
+        if (update.small_blind !== null && update.big_blind !== null) {
+          deduplicatedData.push(update);
+        } 
+        // If it's a tournament (has level), deduplicate by level
+        else if (update.level !== null) {
+          const existingUpdate = levelMap.get(update.level);
+          if (!existingUpdate || new Date(update.created_at) > new Date(existingUpdate.created_at)) {
+            levelMap.set(update.level, update);
+          }
+        }
+      });
+
+      // Add deduplicated tournament entries back to the array
+      levelMap.forEach(update => deduplicatedData.push(update));
+
+      // Sort by created_at to maintain chronological order
+      return deduplicatedData.sort((a, b) => 
+        new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime()
+      );
     } catch (error) {
       console.error('BBStackUpdateService.getBBStackHistory error:', error);
       throw error;
