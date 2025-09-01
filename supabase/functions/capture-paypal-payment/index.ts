@@ -20,8 +20,12 @@ serve(async (req) => {
     }
 
     // Get PayPal access token
-    const clientId = 'YOUR_PAYPAL_CLIENT_ID'; // This should be set as a public config
+    const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
     const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
+    
+    if (!clientId) {
+      throw new Error('PayPal client ID not configured');
+    }
     
     if (!clientSecret) {
       throw new Error('PayPal client secret not configured');

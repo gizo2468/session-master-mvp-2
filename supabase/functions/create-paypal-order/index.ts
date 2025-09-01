@@ -20,8 +20,12 @@ serve(async (req) => {
     }
 
     // Get PayPal access token
-    const clientId = 'YOUR_PAYPAL_CLIENT_ID'; // This should be set as a public config
+    const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
     const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
+    
+    if (!clientId) {
+      throw new Error('PayPal client ID not configured');
+    }
     
     if (!clientSecret) {
       throw new Error('PayPal client secret not configured');
@@ -95,7 +99,7 @@ serve(async (req) => {
     if (!orderResponse.ok) {
       const errorText = await orderResponse.text();
       console.error('PayPal order creation failed:', errorText);
-      throw new Error('Failed to create PayPal order');
+      throw new Error(`PayPal order creation failed: ${errorText}`);
     }
 
     const order = await orderResponse.json();
@@ -133,7 +137,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ 
-      id: order.id,
+      orderId: order.id,
       approval_url: order.links.find((link: any) => link.rel === 'approve')?.href 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
