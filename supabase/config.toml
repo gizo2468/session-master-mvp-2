@@ -24,3 +24,9 @@ disable_plaintext_mfa = false
 enable_leaked_password_protection = true
 enable_strong_password = false
 enable_phone_email_authentication = false
+
+[functions.capture-paypal-payment]
+verify_jwt = false
+
+[functions.paypal-health]
+verify_jwt = false

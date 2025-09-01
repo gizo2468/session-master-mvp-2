@@ -13,7 +13,12 @@ serve(async (req) => {
   }
 
   try {
-    const { planType } = await req.json();
+    const requestId = crypto.randomUUID();
+    console.log(`[${requestId}] Processing PayPal order creation request`);
+    
+    const body = await req.json();
+    const { planType } = body;
+    console.log(`[${requestId}] Request body:`, JSON.stringify(body, null, 2));
     
     if (!planType || !['monthly', 'lifetime'].includes(planType)) {
       throw new Error('Invalid plan type');
@@ -43,8 +48,12 @@ serve(async (req) => {
     });
 
     if (!tokenResponse.ok) {
-      throw new Error('Failed to get PayPal access token');
+      const errorText = await tokenResponse.text();
+      console.error(`[${requestId}] PayPal token request failed:`, errorText);
+      throw new Error(`Failed to get PayPal access token: ${errorText}`);
     }
+
+    console.log(`[${requestId}] Successfully obtained PayPal access token`);
 
     const { access_token } = await tokenResponse.json();
 
@@ -104,7 +113,14 @@ serve(async (req) => {
 
     const order = await orderResponse.json();
 
-    // Store pending payment in database
+    // Store pending payment in database using service role for admin operations
+    const supabaseService = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { persistSession: false } }
+    );
+
+    // Also create regular client for user authentication
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
@@ -120,7 +136,7 @@ serve(async (req) => {
 
     const amount = planType === 'monthly' ? 14.99 : 199.00;
 
-    const { error: insertError } = await supabaseClient
+    const { error: insertError } = await supabaseService
       .from('user_payments')
       .insert({
         user_id: user.id,
@@ -132,12 +148,17 @@ serve(async (req) => {
       });
 
     if (insertError) {
-      console.error('Database insert error:', insertError);
-      throw new Error('Failed to store payment record');
+      console.error(`[${requestId}] Database insert error:`, insertError);
+      throw new Error(`Failed to store payment record: ${insertError.message}`);
     }
+
+    console.log(`[${requestId}] Successfully created payment record for user ${user.id}, plan: ${planType}`);
+
+    console.log(`[${requestId}] Successfully created PayPal order: ${order.id}`);
 
     return new Response(JSON.stringify({ 
       orderId: order.id,
+      requestId,
       approval_url: order.links.find((link: any) => link.rel === 'approve')?.href 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -145,8 +166,13 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Create PayPal order error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const requestId = crypto.randomUUID();
+    console.error(`[${requestId}] Create PayPal order error:`, error);
+    console.error(`[${requestId}] Error stack:`, error.stack);
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      requestId 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });
