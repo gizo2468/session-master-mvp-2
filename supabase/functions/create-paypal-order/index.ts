@@ -24,9 +24,10 @@ serve(async (req) => {
       throw new Error('Invalid plan type');
     }
 
-    // Get PayPal access token
+    // Get PayPal credentials and environment
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
     const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
+    const paypalEnv = Deno.env.get('PAYPAL_ENV') || 'sandbox';
     
     if (!clientId) {
       throw new Error('PayPal client ID not configured');
@@ -36,9 +37,13 @@ serve(async (req) => {
       throw new Error('PayPal client secret not configured');
     }
 
+    console.log(`[${requestId}] Environment: ${paypalEnv}`);
     const auth = btoa(`${clientId}:${clientSecret}`);
+    const baseUrl = paypalEnv === 'sandbox' 
+      ? 'https://api-m.sandbox.paypal.com' 
+      : 'https://api-m.paypal.com';
     
-    const tokenResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+    const tokenResponse = await fetch(`${baseUrl}/v1/oauth2/token`, {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
@@ -96,7 +101,7 @@ serve(async (req) => {
     }
 
     // Create PayPal order
-    const orderResponse = await fetch('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
+    const orderResponse = await fetch(`${baseUrl}/v2/checkout/orders`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${access_token}`,

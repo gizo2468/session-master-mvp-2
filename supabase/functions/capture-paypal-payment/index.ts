@@ -55,9 +55,10 @@ serve(async (req) => {
     
     console.log(`[${requestId}] Processing order: ${orderId}`);
 
-    // Get PayPal access token
+    // Get PayPal credentials and environment
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
     const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
+    const paypalEnv = Deno.env.get('PAYPAL_ENV') || 'sandbox';
     
     if (!clientId) {
       throw new Error('PayPal client ID not configured');
@@ -67,9 +68,13 @@ serve(async (req) => {
       throw new Error('PayPal client secret not configured');
     }
 
+    console.log(`[${requestId}] Environment: ${paypalEnv}`);
     const auth = btoa(`${clientId}:${clientSecret}`);
+    const baseUrl = paypalEnv === 'sandbox' 
+      ? 'https://api-m.sandbox.paypal.com' 
+      : 'https://api-m.paypal.com';
     
-    const tokenResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+    const tokenResponse = await fetch(`${baseUrl}/v1/oauth2/token`, {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
@@ -79,13 +84,17 @@ serve(async (req) => {
     });
 
     if (!tokenResponse.ok) {
-      throw new Error('Failed to get PayPal access token');
+      const errorText = await tokenResponse.text();
+      console.error(`[${requestId}] PayPal token request failed:`, errorText);
+      throw new Error(`Failed to get PayPal access token: ${errorText}`);
     }
+
+    console.log(`[${requestId}] Successfully obtained PayPal access token`);
 
     const { access_token } = await tokenResponse.json();
 
     // Capture the payment
-    const captureResponse = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`, {
+    const captureResponse = await fetch(`${baseUrl}/v2/checkout/orders/${orderId}/capture`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${access_token}`,
@@ -95,9 +104,11 @@ serve(async (req) => {
 
     if (!captureResponse.ok) {
       const errorText = await captureResponse.text();
-      console.error('PayPal capture failed:', errorText);
-      throw new Error('Failed to capture PayPal payment');
+      console.error(`[${requestId}] PayPal capture failed:`, errorText);
+      throw new Error(`Failed to capture PayPal payment: ${errorText}`);
     }
+
+    console.log(`[${requestId}] Successfully captured PayPal payment`);
 
     const captureData = await captureResponse.json();
 
