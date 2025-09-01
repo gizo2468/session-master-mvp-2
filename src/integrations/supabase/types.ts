@@ -156,6 +156,7 @@ export type Database = {
           has_accepted_terms: boolean | null
           id: string
           is_active: boolean | null
+          is_premium: boolean | null
           language: string
           last_login_at: string | null
           notification_preferences: Json
@@ -177,6 +178,7 @@ export type Database = {
           has_accepted_terms?: boolean | null
           id: string
           is_active?: boolean | null
+          is_premium?: boolean | null
           language?: string
           last_login_at?: string | null
           notification_preferences?: Json
@@ -198,6 +200,7 @@ export type Database = {
           has_accepted_terms?: boolean | null
           id?: string
           is_active?: boolean | null
+          is_premium?: boolean | null
           language?: string
           last_login_at?: string | null
           notification_preferences?: Json
@@ -844,6 +847,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          id: string
+          paypal_order_id: string | null
+          paypal_payment_id: string | null
+          plan_type: string
+          status: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          paypal_order_id?: string | null
+          paypal_payment_id?: string | null
+          plan_type: string
+          status: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          paypal_order_id?: string | null
+          paypal_payment_id?: string | null
+          plan_type?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_private_data: {
         Row: {
           address: Json | null
@@ -887,6 +929,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_subscriptions: {
+        Row: {
+          created_at: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          plan_type: string
+          start_date: string
+          status: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          plan_type: string
+          start_date: string
+          status: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          plan_type?: string
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -1027,6 +1105,10 @@ export type Database = {
       }
       update_terms_acceptance: {
         Args: { accepted: boolean; user_id: string }
+        Returns: boolean
+      }
+      update_user_premium_status: {
+        Args: { p_user_id: string }
         Returns: boolean
       }
     }
