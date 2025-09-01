@@ -13,11 +13,47 @@ serve(async (req) => {
   }
 
   try {
-    const { orderId } = await req.json();
+    const requestId = crypto.randomUUID();
+    console.log(`[${requestId}] Processing request: ${req.method}`);
+    
+    const body = await req.json();
+    console.log(`[${requestId}] Request body:`, JSON.stringify(body, null, 2));
+    
+    let orderId = null;
+    let isWebhook = false;
+    
+    // Check if this is a PayPal webhook event
+    if (body.event_type && body.resource) {
+      isWebhook = true;
+      console.log(`[${requestId}] Processing PayPal webhook event: ${body.event_type}`);
+      
+      // Handle different webhook event types
+      switch (body.event_type) {
+        case 'CHECKOUT.ORDER.APPROVED':
+        case 'PAYMENT.CAPTURE.COMPLETED':
+          if (body.resource && body.resource.id) {
+            orderId = body.resource.id;
+          } else if (body.resource && body.resource.supplementary_data && body.resource.supplementary_data.related_ids && body.resource.supplementary_data.related_ids.order_id) {
+            orderId = body.resource.supplementary_data.related_ids.order_id;
+          }
+          break;
+        default:
+          console.log(`[${requestId}] Ignoring webhook event type: ${body.event_type}`);
+          return new Response(JSON.stringify({ message: 'Event type not handled' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          });
+      }
+    } else {
+      // Manual capture request (backward compatibility)
+      orderId = body.orderId;
+    }
     
     if (!orderId) {
-      throw new Error('Order ID is required');
+      throw new Error(`Order ID not found in ${isWebhook ? 'webhook event' : 'request'}`);
     }
+    
+    console.log(`[${requestId}] Processing order: ${orderId}`);
 
     // Get PayPal access token
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
@@ -135,20 +171,27 @@ serve(async (req) => {
       console.error('Failed to update profile:', profileUpdateError);
     }
 
-    console.log(`Successfully processed payment for user ${payment.user_id}, plan: ${payment.plan_type}`);
+    console.log(`[${requestId}] Successfully processed payment for user ${payment.user_id}, plan: ${payment.plan_type}`);
 
     return new Response(JSON.stringify({ 
       success: true,
+      requestId,
       planType: payment.plan_type,
-      amount: payment.amount
+      amount: payment.amount,
+      isWebhook
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
 
   } catch (error) {
-    console.error('Capture PayPal payment error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const requestId = crypto.randomUUID();
+    console.error(`[${requestId}] Capture PayPal payment error:`, error);
+    console.error(`[${requestId}] Error stack:`, error.stack);
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      requestId 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });
