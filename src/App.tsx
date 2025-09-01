@@ -23,6 +23,9 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import FocusModePage from "./pages/FocusModePage";
 import PlayerProfile from "./pages/PlayerProfile";
 import CoachProfile from "./pages/CoachProfile";
+import Subscription from "./pages/Subscription";
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
+import SubscriptionCancel from "./pages/SubscriptionCancel";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +66,9 @@ const App = () => (
                 <Route path="/auth/login" element={<Login />} />
                 <Route path="/auth/signup" element={<Signup />} />
                 <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+                <Route path="/subscription" element={<Subscription />} />
+                <Route path="/subscription/success" element={<SubscriptionSuccess />} />
+                <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
               </Routes>
               </SessionProvider>
             </AuthGuard>

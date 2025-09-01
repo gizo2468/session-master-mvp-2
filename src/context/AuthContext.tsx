@@ -20,6 +20,7 @@ export interface User {
   isActive?: boolean;
   coachingFocus?: string[];
   experience?: string;
+  isPremium?: boolean;
   notificationPreferences: {
     liveSessionStart: boolean;
     newFeedback: boolean;
@@ -152,6 +153,7 @@ const createUserFromProfile = (supabaseUser: SupabaseUser, profileData: any): Us
     isActive: Boolean(profileData.is_active ?? true),
     coachingFocus: profileData.coaching_focus || undefined,
     experience: profileData.experience || undefined,
+    isPremium: Boolean(profileData.is_premium ?? false),
     notificationPreferences: parseNotificationPreferences(profileData.notification_preferences),
   };
 };

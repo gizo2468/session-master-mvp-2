@@ -492,6 +492,25 @@ const Settings: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Subscription */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Icon name="Crown" className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Subscription</p>
+                      <p className="text-sm text-gray-500">Manage your premium plan</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/subscription')}
+                    className="text-poker-feltGreen hover:text-poker-green"
+                  >
+                    <Icon name="ChevronRight" className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
