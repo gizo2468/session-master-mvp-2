@@ -20,7 +20,7 @@ serve(async (req) => {
     const { planType } = body;
     console.log(`[${requestId}] Request body:`, JSON.stringify(body, null, 2));
     
-    if (!planType || !['monthly', 'lifetime'].includes(planType)) {
+    if (!planType || planType !== 'monthly') {
       throw new Error('Invalid plan type');
     }
 
@@ -62,43 +62,23 @@ serve(async (req) => {
 
     const { access_token } = await tokenResponse.json();
 
-    // Set up order details based on plan type
-    let orderData;
-    if (planType === 'monthly') {
-      orderData = {
-        intent: 'CAPTURE',
-        purchase_units: [{
-          amount: {
-            currency_code: 'USD',
-            value: '14.99'
-          },
-          description: 'Monthly Subscription - $14.99/month'
-        }],
-        application_context: {
-          return_url: `${req.headers.get('origin')}/subscription/success`,
-          cancel_url: `${req.headers.get('origin')}/subscription/cancel`,
-          brand_name: 'Your App Name',
-          user_action: 'PAY_NOW'
-        }
-      };
-    } else {
-      orderData = {
-        intent: 'CAPTURE',
-        purchase_units: [{
-          amount: {
-            currency_code: 'USD',
-            value: '199.00'
-          },
-          description: 'Lifetime Deal - One-time payment'
-        }],
-        application_context: {
-          return_url: `${req.headers.get('origin')}/subscription/success`,
-          cancel_url: `${req.headers.get('origin')}/subscription/cancel`,
-          brand_name: 'Your App Name',
-          user_action: 'PAY_NOW'
-        }
-      };
-    }
+    // Set up order details for monthly plan
+    const orderData = {
+      intent: 'CAPTURE',
+      purchase_units: [{
+        amount: {
+          currency_code: 'USD',
+          value: '9.99'
+        },
+        description: 'Monthly Subscription - $9.99/month'
+      }],
+      application_context: {
+        return_url: `${req.headers.get('origin')}/subscription/success`,
+        cancel_url: `${req.headers.get('origin')}/subscription/cancel`,
+        brand_name: 'Your App Name',
+        user_action: 'PAY_NOW'
+      }
+    };
 
     // Create PayPal order
     const orderResponse = await fetch(`${baseUrl}/v2/checkout/orders`, {
@@ -139,7 +119,7 @@ serve(async (req) => {
       throw new Error('User not authenticated');
     }
 
-    const amount = planType === 'monthly' ? 14.99 : 199.00;
+    const amount = 9.99;
 
     const { error: insertError } = await supabaseService
       .from('user_payments')

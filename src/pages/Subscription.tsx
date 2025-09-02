@@ -18,18 +18,18 @@ const Subscription: React.FC = () => {
   const platform = detectPlatform();
   const isMobile = platform === 'ios' || platform === 'android';
 
-  const handlePayPalPayment = async (planType: 'monthly' | 'lifetime') => {
+  const handlePayPalPayment = async () => {
     if (!user) {
       toast.error('Please log in to continue');
       return;
     }
 
-    setIsLoading(planType);
+    setIsLoading('monthly');
 
     try {
       // Create PayPal order
       const { data, error } = await supabase.functions.invoke('create-paypal-order', {
-        body: { planType }
+        body: { planType: 'monthly' }
       });
 
       if (error) {
@@ -94,138 +94,86 @@ const Subscription: React.FC = () => {
 
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Choose Your Plan
+            Premium (Developed Plan)
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Unlock premium features and take your poker tracking to the next level
+            Support development and unlock all premium features.
           </p>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* Monthly Plan */}
-          <Card className="relative border-2 hover:border-primary/50 transition-all duration-300">
-            <CardHeader className="text-center pb-2">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Zap className="h-5 w-5 text-primary" />
-                <CardTitle className="text-2xl">Monthly</CardTitle>
-              </div>
-              <div className="text-4xl font-bold text-primary mb-2">
-                $14.99
-                <span className="text-lg text-muted-foreground font-normal">/month</span>
-              </div>
-              <p className="text-muted-foreground">Perfect for regular players</p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Advanced analytics & reports</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Coaching features access</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Priority support</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Export capabilities</span>
-                </div>
-              </div>
-              {isMobile ? (
-                <Button 
-                  onClick={() => toast.info('In-App Purchase functionality coming soon!')}
-                  className="w-full py-6 text-lg"
-                  size="lg"
-                >
-                  Subscribe Monthly
-                </Button>
-              ) : (
-                <Button 
-                  onClick={() => handlePayPalPayment('monthly')}
-                  disabled={isLoading === 'monthly'}
-                  className="w-full py-6 text-lg"
-                  size="lg"
-                >
-                  {isLoading === 'monthly' ? 'Processing...' : 'Subscribe Monthly'}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Lifetime Plan */}
-          <Card className="relative border-2 border-primary shadow-xl scale-105">
+        {/* Pricing Card */}
+        <div className="flex justify-center max-w-2xl mx-auto">
+          <Card className="relative border-2 border-primary shadow-xl w-full max-w-md">
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-4 py-1">
                 <Star className="h-4 w-4 mr-1" />
-                Limited Offer
+                Premium Plan
               </Badge>
             </div>
             <CardHeader className="text-center pb-2 pt-8">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <Star className="h-5 w-5 text-primary" />
-                <CardTitle className="text-2xl">Lifetime Deal</CardTitle>
+                <Crown className="h-5 w-5 text-primary" />
+                <CardTitle className="text-2xl">Premium (Developed Plan)</CardTitle>
               </div>
               <div className="text-4xl font-bold text-primary mb-2">
-                $199
-                <span className="text-lg text-muted-foreground font-normal">/forever</span>
+                $9.99
+                <span className="text-lg text-muted-foreground font-normal">/month</span>
               </div>
-              <p className="text-muted-foreground">Best value - pay once, use forever</p>
+              <p className="text-muted-foreground">Support development and unlock all features</p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>All monthly features included</span>
+                  <span>My Finance page (full analytics)</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Lifetime access to all updates</span>
+                  <span>Unlimited coach connections</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>VIP support priority</span>
+                  <span>Multiple currencies</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Future premium features</span>
+                  <span>Real-time coach comments</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span className="font-semibold text-primary">Save $980+ over 5 years!</span>
+                  <span>Full hand uploads (all streets)</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
+                  <span>Priority access to future features</span>
                 </div>
               </div>
               {isMobile ? (
-                <Button 
-                  onClick={() => toast.info('In-App Purchase functionality coming soon!')}
-                  className="w-full py-6 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                  size="lg"
-                >
-                  Buy Lifetime
-                </Button>
+                <div className="space-y-3">
+                  <Button 
+                    onClick={() => toast.info('In-App Purchase functionality coming soon!')}
+                    className="w-full py-6 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                    size="lg"
+                  >
+                    Subscribe for $9.99 / month
+                  </Button>
+                  <Button 
+                    variant="ghost"
+                    onClick={() => toast.info('Restore Purchases functionality coming soon!')}
+                    className="w-full"
+                    size="sm"
+                  >
+                    Restore Purchases
+                  </Button>
+                </div>
               ) : (
                 <Button 
-                  onClick={() => handlePayPalPayment('lifetime')}
-                  disabled={isLoading === 'lifetime'}
+                  onClick={handlePayPalPayment}
+                  disabled={isLoading === 'monthly'}
                   className="w-full py-6 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
                   size="lg"
                 >
-                  {isLoading === 'lifetime' ? 'Processing...' : 'Get Lifetime Deal'}
-                </Button>
-              )}
-              
-              {/* Mobile-only Restore Purchases button */}
-              {isMobile && (
-                <Button 
-                  variant="ghost"
-                  onClick={() => toast.info('Restore Purchases functionality coming soon!')}
-                  className="w-full mt-2"
-                  size="sm"
-                >
-                  Restore Purchases
+                  {isLoading === 'monthly' ? 'Processing...' : 'Subscribe for $9.99 / month'}
                 </Button>
               )}
             </CardContent>
