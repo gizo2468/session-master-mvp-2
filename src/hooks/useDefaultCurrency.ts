@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { usePremiumAccess } from './usePremiumAccess';
 
 export interface Currency {
   code: string;
@@ -31,6 +32,7 @@ export const getCurrencyName = (currencyCode: string): string => {
 
 export const useDefaultCurrency = () => {
   const { user } = useAuth();
+  const { isPremium } = usePremiumAccess();
   const [defaultCurrency, setDefaultCurrency] = useState<string>('USD');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -52,7 +54,17 @@ export const useDefaultCurrency = () => {
           console.error('Error fetching default currency:', error);
           setDefaultCurrency('USD');
         } else if (data?.default_currency) {
-          setDefaultCurrency(data.default_currency);
+          // For free users, only allow USD
+          if (!isPremium && data.default_currency !== 'USD') {
+            setDefaultCurrency('USD');
+            // Update user's currency back to USD if they downgraded
+            await supabase
+              .from('profiles')
+              .update({ default_currency: 'USD' })
+              .eq('id', user.id);
+          } else {
+            setDefaultCurrency(data.default_currency);
+          }
         } else {
           setDefaultCurrency('USD');
         }
@@ -65,11 +77,20 @@ export const useDefaultCurrency = () => {
     };
 
     fetchDefaultCurrency();
-  }, [user?.id]);
+  }, [user?.id, isPremium]);
+
+  // Get available currencies based on premium status
+  const getAvailableCurrencies = () => {
+    if (isPremium) {
+      return CURRENCIES;
+    }
+    return CURRENCIES.filter(currency => currency.code === 'USD');
+  };
 
   return {
     defaultCurrency,
     isLoading,
+    getAvailableCurrencies,
     getCurrencySymbol: (code?: string) => getCurrencySymbol(code || defaultCurrency),
     getCurrencyName: (code?: string) => getCurrencyName(code || defaultCurrency),
   };

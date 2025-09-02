@@ -3,15 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Check, Star, Zap } from 'lucide-react';
+import { ArrowLeft, Check, Star, Zap, Crown } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { detectPlatform } from '@/utils/platformDetection';
+import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 
 const Subscription: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isPremium } = usePremiumAccess();
   const [isLoading, setIsLoading] = useState<string | null>(null);
+  const platform = detectPlatform();
+  const isMobile = platform === 'ios' || platform === 'android';
 
   const handlePayPalPayment = async (planType: 'monthly' | 'lifetime') => {
     if (!user) {
@@ -61,6 +66,32 @@ const Subscription: React.FC = () => {
           </Button>
         </div>
 
+        {/* Subscription Status Card */}
+        <Card className={`mb-8 ${isPremium ? 'border-green-500 bg-green-50/50' : 'border-orange-500 bg-orange-50/50'}`}>
+          <CardContent className="flex items-center justify-between p-6">
+            <div className="flex items-center gap-3">
+              <Crown className={`h-6 w-6 ${isPremium ? 'text-green-600' : 'text-orange-600'}`} />
+              <div>
+                <h3 className="font-semibold text-lg">
+                  {isPremium ? 'Premium Account' : 'Free Account'}
+                </h3>
+                <p className="text-muted-foreground">
+                  {isPremium 
+                    ? 'You have access to all premium features'
+                    : 'Upgrade to unlock all features'
+                  }
+                </p>
+              </div>
+            </div>
+            {isPremium && (
+              <Badge className="bg-green-100 text-green-800 border-green-200">
+                <Check className="h-4 w-4 mr-1" />
+                Active
+              </Badge>
+            )}
+          </CardContent>
+        </Card>
+
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             Choose Your Plan
@@ -104,14 +135,24 @@ const Subscription: React.FC = () => {
                   <span>Export capabilities</span>
                 </div>
               </div>
-              <Button 
-                onClick={() => handlePayPalPayment('monthly')}
-                disabled={isLoading === 'monthly'}
-                className="w-full py-6 text-lg"
-                size="lg"
-              >
-                {isLoading === 'monthly' ? 'Processing...' : 'Subscribe Monthly'}
-              </Button>
+              {isMobile ? (
+                <Button 
+                  onClick={() => toast.info('In-App Purchase functionality coming soon!')}
+                  className="w-full py-6 text-lg"
+                  size="lg"
+                >
+                  Subscribe Monthly
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => handlePayPalPayment('monthly')}
+                  disabled={isLoading === 'monthly'}
+                  className="w-full py-6 text-lg"
+                  size="lg"
+                >
+                  {isLoading === 'monthly' ? 'Processing...' : 'Subscribe Monthly'}
+                </Button>
+              )}
             </CardContent>
           </Card>
 
@@ -157,14 +198,36 @@ const Subscription: React.FC = () => {
                   <span className="font-semibold text-primary">Save $980+ over 5 years!</span>
                 </div>
               </div>
-              <Button 
-                onClick={() => handlePayPalPayment('lifetime')}
-                disabled={isLoading === 'lifetime'}
-                className="w-full py-6 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                size="lg"
-              >
-                {isLoading === 'lifetime' ? 'Processing...' : 'Get Lifetime Deal'}
-              </Button>
+              {isMobile ? (
+                <Button 
+                  onClick={() => toast.info('In-App Purchase functionality coming soon!')}
+                  className="w-full py-6 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                  size="lg"
+                >
+                  Buy Lifetime
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => handlePayPalPayment('lifetime')}
+                  disabled={isLoading === 'lifetime'}
+                  className="w-full py-6 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                  size="lg"
+                >
+                  {isLoading === 'lifetime' ? 'Processing...' : 'Get Lifetime Deal'}
+                </Button>
+              )}
+              
+              {/* Mobile-only Restore Purchases button */}
+              {isMobile && (
+                <Button 
+                  variant="ghost"
+                  onClick={() => toast.info('Restore Purchases functionality coming soon!')}
+                  className="w-full mt-2"
+                  size="sm"
+                >
+                  Restore Purchases
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -206,12 +269,15 @@ const Subscription: React.FC = () => {
         {/* Trust Section */}
         <div className="mt-16 text-center">
           <p className="text-muted-foreground mb-4">
-            Secure payment processing powered by PayPal
+            {isMobile 
+              ? 'Secure in-app purchases protected by your app store'
+              : 'Secure payment processing powered by PayPal'
+            }
           </p>
           <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
             <span>🔒 SSL Encrypted</span>
             <span>•</span>
-            <span>💳 PayPal Protected</span>
+            <span>{isMobile ? '📱 App Store Protected' : '💳 PayPal Protected'}</span>
             <span>•</span>
             <span>↩️ Money Back Guarantee</span>
           </div>

@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/Lucide';
+import ConnectionLimitGate from '@/components/ui/ConnectionLimitGate';
 
 interface ConnectedUser {
   id: string;
@@ -757,98 +758,108 @@ const MyCoachingNetwork: React.FC = () => {
       <CardContent>
         {isCoach && (
           <div className="mb-4">
-            <Dialog open={connectPlayerDialogOpen} onOpenChange={setConnectPlayerDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="w-full">
-                  <Icon name="UserPlus" className="h-4 w-4 mr-2" />
-                  Connect to Player
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Connect to Player</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    Enter the player's username to request a connection.
-                  </p>
-                  <Input
-                    placeholder="Player username"
-                    value={playerUsername}
-                    onChange={(e) => setPlayerUsername(e.target.value)}
-                    name="search-player"
-                    inputMode="search"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !connectingPlayer) {
-                        handleConnectToPlayer();
-                      }
-                    }}
-                  />
-                  <Button
-                    onClick={handleConnectToPlayer}
-                    disabled={connectingPlayer || !playerUsername.trim()}
-                    className="w-full"
-                  >
-                    {connectingPlayer ? (
-                      <>
-                        <Icon name="Loader" className="h-4 w-4 mr-2 animate-spin" />
-                        Sending Request...
-                      </>
-                    ) : (
-                      'Send Request'
-                    )}
+            <ConnectionLimitGate
+              currentConnections={connectedUsers.length}
+              userRole="coach"
+            >
+              <Dialog open={connectPlayerDialogOpen} onOpenChange={setConnectPlayerDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full">
+                    <Icon name="UserPlus" className="h-4 w-4 mr-2" />
+                    Connect to Player
                   </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Connect to Player</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <p className="text-sm text-muted-foreground">
+                      Enter the player's username to request a connection.
+                    </p>
+                    <Input
+                      placeholder="Player username"
+                      value={playerUsername}
+                      onChange={(e) => setPlayerUsername(e.target.value)}
+                      name="search-player"
+                      inputMode="search"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !connectingPlayer) {
+                          handleConnectToPlayer();
+                        }
+                      }}
+                    />
+                    <Button
+                      onClick={handleConnectToPlayer}
+                      disabled={connectingPlayer || !playerUsername.trim()}
+                      className="w-full"
+                    >
+                      {connectingPlayer ? (
+                        <>
+                          <Icon name="Loader" className="h-4 w-4 mr-2 animate-spin" />
+                          Sending Request...
+                        </>
+                      ) : (
+                        'Send Request'
+                      )}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </ConnectionLimitGate>
           </div>
         )}
         {isStudent && (
           <div className="mb-4">
-            <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="w-full">
-                  <Icon name="UserPlus" className="h-4 w-4 mr-2" />
-                  Connect to Coach
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Connect to Coach</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    Enter your coach's username to request a connection.
-                  </p>
-                  <Input
-                    placeholder="Coach username"
-                    value={coachUsername}
-                    onChange={(e) => setCoachUsername(e.target.value)}
-                    name="search-coach"
-                    inputMode="search"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !connecting) {
-                        handleConnectToCoach();
-                      }
-                    }}
-                  />
-                  <Button 
-                    onClick={handleConnectToCoach} 
-                    disabled={connecting || !coachUsername.trim()}
-                    className="w-full"
-                  >
-                    {connecting ? (
-                      <>
-                        <Icon name="Loader" className="h-4 w-4 mr-2 animate-spin" />
-                        Sending Request...
-                      </>
-                    ) : (
-                      'Send Request'
-                    )}
+            <ConnectionLimitGate
+              currentConnections={connectedUsers.length}
+              userRole="student"
+            >
+              <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full">
+                    <Icon name="UserPlus" className="h-4 w-4 mr-2" />
+                    Connect to Coach
                   </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Connect to Coach</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <p className="text-sm text-muted-foreground">
+                      Enter your coach's username to request a connection.
+                    </p>
+                    <Input
+                      placeholder="Coach username"
+                      value={coachUsername}
+                      onChange={(e) => setCoachUsername(e.target.value)}
+                      name="search-coach"
+                      inputMode="search"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !connecting) {
+                          handleConnectToCoach();
+                        }
+                      }}
+                    />
+                    <Button 
+                      onClick={handleConnectToCoach} 
+                      disabled={connecting || !coachUsername.trim()}
+                      className="w-full"
+                    >
+                      {connecting ? (
+                        <>
+                          <Icon name="Loader" className="h-4 w-4 mr-2 animate-spin" />
+                          Sending Request...
+                        </>
+                      ) : (
+                        'Send Request'
+                      )}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </ConnectionLimitGate>
           </div>
         )}
         

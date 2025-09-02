@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import { formatDuration, formatPercentage, formatRatio } from '@/utils/statisticsCalculator';
 import { useDefaultCurrency, getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useStatisticsData } from '@/hooks/useStatisticsData';
+import PremiumFeatureGate from '@/components/ui/PremiumFeatureGate';
 
 // Local currency formatter to avoid import issues
 const formatCurrency = (amount: number, currency = 'USD'): string => {
@@ -52,6 +53,17 @@ interface MyStatisticsSectionProps {
 }
 
 export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilterClick }) => {
+  return (
+    <PremiumFeatureGate
+      featureName="My Finance"
+      description="Unlock detailed financial analytics and advanced statistics for your poker sessions."
+    >
+      <MyStatisticsContent onFilterClick={onFilterClick} />
+    </PremiumFeatureGate>
+  );
+};
+
+const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick }) => {
   const [activeTab, setActiveTab] = useState('sessions');
   const { defaultCurrency } = useDefaultCurrency();
   
