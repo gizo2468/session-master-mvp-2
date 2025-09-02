@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Check, Star, Zap, Crown } from 'lucide-react';
+import { ArrowLeft, Check, Star, Zap, Crown, FileDown } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -125,7 +125,13 @@ const Subscription: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>My Finance page (full analytics)</span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span>My Finance page (full analytics + PDF export)</span>
+                    <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-primary/20">
+                      <FileDown className="h-3 w-3 mr-1" />
+                      + PDF export
+                    </Badge>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-green-500 flex-shrink-0" />

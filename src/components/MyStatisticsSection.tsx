@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, FileDown } from 'lucide-react';
 import { formatDuration, formatPercentage, formatRatio } from '@/utils/statisticsCalculator';
 import { useDefaultCurrency, getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useStatisticsData } from '@/hooks/useStatisticsData';
@@ -89,7 +91,13 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
   if (isLoading || !currentStats) {
     return (
       <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
-        <h3 className="text-xl sm:text-2xl font-bold mb-4 text-primary text-center">My Finance</h3>
+        <div className="flex items-center gap-3 mb-4">
+          <h3 className="text-xl sm:text-2xl font-bold text-primary">My Finance</h3>
+          <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20">
+            <FileDown className="h-3 w-3 mr-1" />
+            PDF export included
+          </Badge>
+        </div>
         <div className="animate-pulse">
           <div className="h-10 bg-gray-200 rounded mb-4"></div>
           <div className="grid grid-cols-2 gap-4">
@@ -105,7 +113,13 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
   if (error) {
     return (
       <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
-        <h3 className="text-xl sm:text-2xl font-bold mb-4 text-primary text-center">My Finance</h3>
+        <div className="flex items-center gap-3 mb-4">
+          <h3 className="text-xl sm:text-2xl font-bold text-primary">My Finance</h3>
+          <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20">
+            <FileDown className="h-3 w-3 mr-1" />
+            PDF export included
+          </Badge>
+        </div>
         <div className="text-center text-red-500 p-4">
           Failed to load statistics: {error}
         </div>
@@ -126,7 +140,13 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
 
   return (
     <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
-      <h3 className="text-xl sm:text-2xl font-bold mb-4 text-primary text-center">My Finance</h3>
+      <div className="flex items-center gap-3 mb-4">
+        <h3 className="text-xl sm:text-2xl font-bold text-primary">My Finance</h3>
+        <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20">
+          <FileDown className="h-3 w-3 mr-1" />
+          PDF export included
+        </Badge>
+      </div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center gap-1 sm:gap-2 mb-4">
           <TabsList className="grid grid-cols-3 flex-1 h-9 sm:h-10">
