@@ -93,9 +93,6 @@ const Subscription: React.FC = () => {
         </Card>
 
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Premium (Developed Plan)
-          </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Support development and unlock all premium features.
           </p>
@@ -233,7 +230,7 @@ const Subscription: React.FC = () => {
             <span>•</span>
             <span>{isMobile ? '📱 App Store Protected' : '💳 PayPal Protected'}</span>
             <span>•</span>
-            <span>↩️ Money Back Guarantee</span>
+            <span>Cancel anytime</span>
           </div>
         </div>
       </div>
