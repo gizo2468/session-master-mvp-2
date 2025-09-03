@@ -26,6 +26,13 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
 }) => {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [activeSlotIndex, setActiveSlotIndex] = useState<number | null>(null);
+  const [currentSelection, setCurrentSelection] = useState<{
+    rank: string | null;
+    suit: string | null;
+  }>({
+    rank: null,
+    suit: null
+  });
 
   const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
   const suits = [
@@ -56,6 +63,7 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
     } else {
       // Open picker for this slot
       setActiveSlotIndex(slotIndex);
+      setCurrentSelection({ rank: null, suit: null }); // Reset selection state
       setIsPickerOpen(true);
     }
   };
@@ -65,6 +73,26 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
     const newCards = [...selectedCards];
     newCards[slotIndex] = { id: slotIndex };
     onChange(newCards);
+  };
+
+  // Handle rank selection
+  const handleRankSelect = (rank: string) => {
+    setCurrentSelection(prev => ({ ...prev, rank }));
+    
+    // If a suit is already selected, create the card
+    if (currentSelection.suit) {
+      handleCardSelect(rank, currentSelection.suit);
+    }
+  };
+
+  // Handle suit selection
+  const handleSuitSelect = (suit: string) => {
+    setCurrentSelection(prev => ({ ...prev, suit }));
+    
+    // If a rank is already selected, create the card
+    if (currentSelection.rank) {
+      handleCardSelect(currentSelection.rank, suit);
+    }
   };
 
   // Handle card selection from picker
@@ -80,6 +108,7 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
     onChange(newCards);
     setIsPickerOpen(false);
     setActiveSlotIndex(null);
+    setCurrentSelection({ rank: null, suit: null });
   };
 
   // Get suit info for display
@@ -170,19 +199,13 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                   <button
                     key={rank}
                     type="button"
-                    onClick={() => {
-                      // Find the first available suit for this rank
-                      const availableSuit = suits.find(suit => 
-                        !isCardExcluded(rank, suit.symbol)
-                      );
-                      if (availableSuit) {
-                        handleCardSelect(rank, availableSuit.symbol);
-                      }
-                    }}
+                    onClick={() => handleRankSelect(rank)}
                     disabled={suits.every(suit => isCardExcluded(rank, suit.symbol))}
                     className={cn(
                       "py-2 px-2 text-sm font-bold rounded transition-all",
-                      "bg-gray-200 hover:bg-gray-300 text-gray-800",
+                      currentSelection.rank === rank
+                        ? "bg-primary text-white shadow-md"
+                        : "bg-gray-200 hover:bg-gray-300 text-gray-800",
                       suits.every(suit => isCardExcluded(rank, suit.symbol)) && "opacity-50 cursor-not-allowed"
                     )}
                   >
@@ -195,19 +218,13 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                   <button
                     key={rank}
                     type="button"
-                    onClick={() => {
-                      // Find the first available suit for this rank
-                      const availableSuit = suits.find(suit => 
-                        !isCardExcluded(rank, suit.symbol)
-                      );
-                      if (availableSuit) {
-                        handleCardSelect(rank, availableSuit.symbol);
-                      }
-                    }}
+                    onClick={() => handleRankSelect(rank)}
                     disabled={suits.every(suit => isCardExcluded(rank, suit.symbol))}
                     className={cn(
                       "py-2 px-2 text-sm font-bold rounded transition-all",
-                      "bg-gray-200 hover:bg-gray-300 text-gray-800",
+                      currentSelection.rank === rank
+                        ? "bg-primary text-white shadow-md"
+                        : "bg-gray-200 hover:bg-gray-300 text-gray-800",
                       suits.every(suit => isCardExcluded(rank, suit.symbol)) && "opacity-50 cursor-not-allowed"
                     )}
                   >
@@ -222,30 +239,22 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
               <h4 className="text-sm font-medium mb-2">Suit</h4>
               <div className="grid grid-cols-4 gap-2">
                 {suits.map(suit => (
-                  <div key={suit.symbol} className="space-y-1">
-                    <div className="text-center text-sm font-medium">
-                      <span className={suit.color}>{suit.display}</span>
-                    </div>
-                    {/* Show available ranks for this suit */}
-                    <div className="grid grid-cols-4 gap-0.5">
-                      {ranks.map(rank => (
-                        <button
-                          key={`${rank}${suit.symbol}`}
-                          type="button"
-                          onClick={() => handleCardSelect(rank, suit.symbol)}
-                          disabled={isCardExcluded(rank, suit.symbol)}
-                          className={cn(
-                            "py-1 px-1 text-xs rounded transition-all",
-                            !isCardExcluded(rank, suit.symbol) 
-                              ? "bg-gray-100 hover:bg-primary/20 text-gray-800"
-                              : "opacity-30 cursor-not-allowed bg-gray-50"
-                          )}
-                        >
-                          {rank}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <button
+                    key={suit.symbol}
+                    type="button"
+                    onClick={() => handleSuitSelect(suit.symbol)}
+                    disabled={ranks.every(rank => isCardExcluded(rank, suit.symbol))}
+                    className={cn(
+                      "py-3 px-2 text-2xl rounded transition-all flex items-center justify-center",
+                      currentSelection.suit === suit.symbol
+                        ? "bg-primary text-white shadow-md"
+                        : "bg-gray-200 hover:bg-gray-300",
+                      suit.color,
+                      ranks.every(rank => isCardExcluded(rank, suit.symbol)) && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    {suit.display}
+                  </button>
                 ))}
               </div>
             </div>
