@@ -103,11 +103,15 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
   };
 
   const handleApply = () => {
+    onApplyFilters();
+    onOpenChange(false);
+  };
+
+  const handleExportClick = () => {
     setShowConfirmation(true);
   };
 
   const handleConfirmExport = () => {
-    onApplyFilters();
     onExportPDF();
     setShowConfirmation(false);
     onOpenChange(false);
@@ -299,7 +303,7 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
         </div>
 
         <DialogFooter className="flex gap-2 sm:gap-2">
-          <Button variant="outline" onClick={onExportPDF}>
+          <Button variant="outline" onClick={handleExportClick}>
             Export to PDF
           </Button>
           <Button onClick={handleApply}>
