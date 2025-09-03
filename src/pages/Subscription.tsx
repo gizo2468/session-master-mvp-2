@@ -218,21 +218,20 @@ const Subscription: React.FC = () => {
         </div>
 
         {/* Trust Section */}
-        <div className="mt-16 text-center">
-          <p className="text-muted-foreground mb-4">
-            {isMobile 
-              ? 'Secure in-app purchases protected by your app store'
-              : 'Secure payment processing powered by PayPal'
-            }
-          </p>
-          <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-            <span>🔒 SSL Encrypted</span>
-            <span>•</span>
-            <span>{isMobile ? '📱 App Store Protected' : '💳 PayPal Protected'}</span>
-            <span>•</span>
-            <span>Cancel anytime</span>
+        {!isMobile && (
+          <div className="mt-16 text-center">
+            <p className="text-muted-foreground mb-4">
+              Secure payment processing powered by PayPal
+            </p>
+            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+              <span>🔒 SSL Encrypted</span>
+              <span>•</span>
+              <span>💳 PayPal Protected</span>
+              <span>•</span>
+              <span>Cancel anytime</span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
