@@ -130,46 +130,77 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   
   return (
     <div className="space-y-3">
-      {/* Display selected cards */}
-      <div className="flex justify-between items-center">
-        <div className="flex gap-2 overflow-x-auto py-1 pb-2 flex-grow">
-          {selectedCardObjects.map((card, index) => {
-            const { display, color } = getSuitInfo(card.suit);
-            return (
-              <button
-                key={index}
-                type="button"
-                onClick={() => removeCard(index)}
-                className="flex items-center justify-center bg-white border border-gray-300 rounded-md px-3 py-2 shadow-sm hover:bg-gray-50 transition-colors"
-              >
-                <span className="font-bold">{card.rank}</span>
-                <span className={`ml-1 ${color}`}>{display}</span>
-              </button>
-            );
-          })}
+      {/* Display selected cards as card placeholders */}
+      <div className="flex gap-2 mb-4">
+        {Array.from({ length: maxCards }, (_, index) => {
+          const card = selectedCardObjects[index];
+          const { display, color } = card ? getSuitInfo(card.suit) : { display: '', color: '' };
           
-          {selectedCardCount === 0 && (
-            <div className="text-gray-400 italic text-sm py-2">
-              Select cards below
-            </div>
-          )}
-        </div>
+          return (
+            <button
+              key={index}
+              type="button"
+              onClick={() => card ? removeCard(index) : undefined}
+              className={cn(
+                "w-12 h-16 border-2 rounded-md flex flex-col items-center justify-center transition-all",
+                card ? "cursor-pointer hover:opacity-80" : "cursor-default"
+              )}
+            >
+              {card ? (
+                <>
+                  {/* Filled card slot with white background and border */}
+                  <div className="relative w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-1">
+                    <div className="font-bold text-sm">{card.rank}</div>
+                    <div className={`${color} text-lg`}>{display}</div>
+                    {/* Small X overlay for clearing */}
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-xs">
+                      <Trash2 className="w-2 h-2" />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Empty card slot - yellow card back with white diamond pattern */}
+                  <div className="w-full h-full bg-yellow-400 rounded border-2 border-white relative overflow-hidden">
+                    {/* Diamond pattern overlay */}
+                    <div 
+                      className="absolute inset-0 opacity-30"
+                      style={{
+                        backgroundImage: `
+                          repeating-linear-gradient(
+                            45deg,
+                            transparent,
+                            transparent 3px,
+                            white 3px,
+                            white 6px
+                          ),
+                          repeating-linear-gradient(
+                            -45deg,
+                            transparent,
+                            transparent 3px,
+                            white 3px,
+                            white 6px
+                          )
+                        `
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+            </button>
+          );
+        })}
         
         {selectedCardCount > 0 && (
           <button
             onClick={clearSelectedCards}
             type="button"
-            className="ml-2 text-gray-500 hover:text-gray-800"
+            className="ml-2 text-gray-500 hover:text-gray-800 self-center"
             aria-label="Clear all cards"
           >
             <Trash2 size={20} />
           </button>
         )}
-      </div>
-      
-      {/* Card selection counter */}
-      <div className="text-sm text-gray-500">
-        {selectedCardCount} / {maxCards} cards selected
       </div>
       
       {/* Card selection keyboard layout */}
