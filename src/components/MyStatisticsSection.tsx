@@ -1,23 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus, FileDown } from 'lucide-react';
-import { formatDuration, formatPercentage, formatRatio } from '@/utils/statisticsCalculator';
-import { useDefaultCurrency, getCurrencySymbol } from '@/hooks/useDefaultCurrency';
-import { useStatisticsData } from '@/hooks/useStatisticsData';
+import { formatDuration, formatPercentage, formatRatio, formatCurrency } from '@/utils/statisticsCalculator';
 import PremiumFeatureGate from '@/components/ui/PremiumFeatureGate';
 import { FilterOptions } from './StatisticsFilterModal';
+import useUnifiedSessionStats from '@/hooks/useUnifiedSessionStats';
 
-// Local currency formatter to avoid import issues
-const formatCurrency = (amount: number, currency = 'USD'): string => {
-  const symbol = getCurrencySymbol(currency);
-  const abs = Math.abs(amount);
-  const formatted = abs % 1 === 0 ? abs.toLocaleString() : abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return amount < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
-};
-
+// Remove local currency formatter - use the one from utils
 interface StatCellProps {
   label: string;
   value: string;
@@ -71,71 +63,39 @@ export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilt
 
 const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick, onExportPDF, onRegisterExportFunction, filters }) => {
   const [activeTab, setActiveTab] = useState('sessions');
-  const { defaultCurrency } = useDefaultCurrency();
   
-  // Convert filters to useStatisticsData parameters
-  const getTimeframeAndDates = () => {
-    if (!filters) return { timeframe: 'all-time' };
-    
-    let timeframe = 'all-time';
-    let startDate: Date | undefined;
-    let endDate: Date | undefined;
-    
-    if (filters.timeframeType === 'custom') {
-      timeframe = 'custom';
-      startDate = filters.customStartDate;
-      endDate = filters.customEndDate;
-    } else if (filters.timeframeValue) {
-      if (filters.timeframeValue === 'This Month') {
-        timeframe = 'this-month';
-      } else if (filters.timeframeValue === 'Last Month') {
-        timeframe = 'custom';
-        const now = new Date();
-        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        endDate = new Date(now.getFullYear(), now.getMonth(), 0);
-      } else if (filters.timeframeValue === 'Last 30 Days') {
-        timeframe = 'custom';
-        const now = new Date();
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 29);
-        endDate = now;
-      }
-      // Add more timeframe conversions as needed
-    }
-    
-    return { timeframe, startDate, endDate };
-  };
-  
-  const { timeframe, startDate, endDate } = getTimeframeAndDates();
-  
-  // Get statistics from Supabase with filters
-  const { statisticsData, isLoading, error } = useStatisticsData(timeframe, startDate, endDate);
+  // Use the unified statistics hook with filters
+  const { 
+    statistics, 
+    getStatsForScope, 
+    isLoading, 
+    error, 
+    defaultCurrency 
+  } = useUnifiedSessionStats(filters);
 
-  // Register export function when component mounts
+  // Register export function when component mounts or data changes
   React.useEffect(() => {
-    if (onRegisterExportFunction && !isLoading && statisticsData) {
+    if (onRegisterExportFunction && !isLoading && statistics) {
       const exportFunction = () => {
-        onExportPDF?.(activeTab, statisticsData, defaultCurrency);
+        onExportPDF?.(activeTab, statistics, defaultCurrency);
       };
       onRegisterExportFunction(exportFunction);
     }
-  }, [onRegisterExportFunction, activeTab, statisticsData, defaultCurrency, isLoading, onExportPDF]);
+  }, [onRegisterExportFunction, activeTab, statistics, defaultCurrency, isLoading, onExportPDF]);
 
-  // Helper function to get stats based on active tab
-  const getStats = () => {
-    if (!statisticsData.all) return null;
-    
+  // Get current statistics based on active tab
+  const getCurrentStats = () => {
     switch (activeTab) {
       case 'cash':
-        return statisticsData.cash;
+        return getStatsForScope('cash');
       case 'tournaments':
-        return statisticsData.tournaments;
+        return getStatsForScope('tournaments');
       default:
-        return statisticsData.all;
+        return getStatsForScope('all');
     }
   };
 
-  const currentStats = getStats();
+  const currentStats = getCurrentStats();
 
   if (isLoading || !currentStats) {
     return (
@@ -218,10 +178,10 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
         
         <TabsContent value="sessions" className="mt-0">
           <div className="grid grid-cols-2 grid-rows-6 gap-3 sm:gap-4">
-            <StatCell label="Net Result" value={netResultDisplay} isPositive={statisticsData.all?.netResult >= 0} />
-            <StatCell label="Net Hourly Rate" value={netHourlyDisplay} isPositive={statisticsData.all?.netHourlyRate >= 0} />
+            <StatCell label="Net Result" value={netResultDisplay} isPositive={currentStats?.netResult >= 0} />
+            <StatCell label="Net Hourly Rate" value={netHourlyDisplay} isPositive={currentStats?.netHourlyRate >= 0} />
             
-            <StatCell label="Average Net Result" value={avgNetResultDisplay} isPositive={statisticsData.all?.averageNetResult >= 0} />
+            <StatCell label="Average Net Result" value={avgNetResultDisplay} isPositive={currentStats?.averageNetResult >= 0} />
             <StatCell label="Total Buy-ins" value={totalBuyInsDisplay} />
             
             <StatCell label="Average Duration" value={avgDurationDisplay} />
@@ -230,55 +190,55 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
             <StatCell label="Win Ratio" value={winRatioDisplay} />
             <StatCell label="Profit/Loss Ratio" value={profitLossRatioDisplay} />
             
-            <StatCell label="Total Tables" value={statisticsData.all?.totalTables.toString() || '0'} />
-            <StatCell label="Number of Sessions" value={statisticsData.all?.numberOfSessions.toString() || '0'} />
+            <StatCell label="Total Tables" value={currentStats?.totalTables.toString() || '0'} />
+            <StatCell label="Number of Sessions" value={currentStats?.numberOfSessions.toString() || '0'} />
             
-            <StatCell label="Total Payouts" value={formatCurrency(statisticsData.all?.totalPayouts || 0, defaultCurrency)} />
+            <StatCell label="Total Payouts" value={totalPayoutsDisplay} />
             <StatCell label="" value="" isEmpty />
           </div>
         </TabsContent>
         
         <TabsContent value="cash" className="mt-0">
           <div className="grid grid-cols-2 grid-rows-6 gap-3 sm:gap-4">
-            <StatCell label="Net Result" value={formatCurrency(statisticsData.cash?.netResult || 0, defaultCurrency)} isPositive={statisticsData.cash?.netResult >= 0} />
-            <StatCell label="Net Hourly Rate" value={formatCurrency(statisticsData.cash?.netHourlyRate || 0, defaultCurrency)} isPositive={statisticsData.cash?.netHourlyRate >= 0} />
+            <StatCell label="Net Result" value={formatCurrency(getStatsForScope('cash')?.netResult || 0, defaultCurrency)} isPositive={getStatsForScope('cash')?.netResult >= 0} />
+            <StatCell label="Net Hourly Rate" value={formatCurrency(getStatsForScope('cash')?.netHourlyRate || 0, defaultCurrency)} isPositive={getStatsForScope('cash')?.netHourlyRate >= 0} />
             
-            <StatCell label="Average Net Result" value={formatCurrency(statisticsData.cash?.averageNetResult || 0, defaultCurrency)} isPositive={statisticsData.cash?.averageNetResult >= 0} />
-            <StatCell label="Total Buy-ins" value={formatCurrency(statisticsData.cash?.totalBuyIns || 0, defaultCurrency)} />
+            <StatCell label="Average Net Result" value={formatCurrency(getStatsForScope('cash')?.averageNetResult || 0, defaultCurrency)} isPositive={getStatsForScope('cash')?.averageNetResult >= 0} />
+            <StatCell label="Total Buy-ins" value={formatCurrency(getStatsForScope('cash')?.totalBuyIns || 0, defaultCurrency)} />
             
-            <StatCell label="Average Duration" value={formatDuration(statisticsData.cash?.averageDuration || 0)} />
-            <StatCell label="Total Duration" value={formatDuration(statisticsData.cash?.totalDuration || 0)} />
+            <StatCell label="Average Duration" value={formatDuration(getStatsForScope('cash')?.averageDuration || 0)} />
+            <StatCell label="Total Duration" value={formatDuration(getStatsForScope('cash')?.totalDuration || 0)} />
             
-            <StatCell label="Average BB/100" value={statisticsData.cash?.averageBB100?.toFixed(1) || '0.0'} isPositive={statisticsData.cash?.averageBB100 ? statisticsData.cash.averageBB100 >= 0 : null} />
-            <StatCell label="Profit/Loss Ratio" value={formatRatio(statisticsData.cash?.profitLossRatio || 0)} />
+            <StatCell label="Average BB/100" value={getStatsForScope('cash')?.averageBB100?.toFixed(1) || '0.0'} isPositive={getStatsForScope('cash')?.averageBB100 ? getStatsForScope('cash').averageBB100 >= 0 : null} />
+            <StatCell label="Profit/Loss Ratio" value={formatRatio(getStatsForScope('cash')?.profitLossRatio || 0)} />
             
-            <StatCell label="Total Tables" value={statisticsData.cash?.totalTables.toString() || '0'} />
-            <StatCell label="Hands Count" value={statisticsData.cash?.handsCount.toLocaleString() || '0'} />
+            <StatCell label="Total Tables" value={getStatsForScope('cash')?.totalTables.toString() || '0'} />
+            <StatCell label="Hands Count" value={getStatsForScope('cash')?.handsCount.toLocaleString() || '0'} />
             
-            <StatCell label="Number of Sessions" value={statisticsData.cash?.numberOfSessions.toString() || '0'} />
-            <StatCell label="Total Payouts" value={formatCurrency(statisticsData.cash?.totalPayouts || 0, defaultCurrency)} />
+            <StatCell label="Number of Sessions" value={getStatsForScope('cash')?.numberOfSessions.toString() || '0'} />
+            <StatCell label="Total Payouts" value={formatCurrency(getStatsForScope('cash')?.totalPayouts || 0, defaultCurrency)} />
           </div>
         </TabsContent>
         
         <TabsContent value="tournaments" className="mt-0">
           <div className="grid grid-cols-2 grid-rows-6 gap-3 sm:gap-4">
-            <StatCell label="Net Result" value={formatCurrency(statisticsData.tournaments?.netResult || 0, defaultCurrency)} isPositive={statisticsData.tournaments?.netResult >= 0} />
-            <StatCell label="Net Hourly Rate" value={formatCurrency(statisticsData.tournaments?.netHourlyRate || 0, defaultCurrency)} isPositive={statisticsData.tournaments?.netHourlyRate >= 0} />
+            <StatCell label="Net Result" value={formatCurrency(getStatsForScope('tournaments')?.netResult || 0, defaultCurrency)} isPositive={getStatsForScope('tournaments')?.netResult >= 0} />
+            <StatCell label="Net Hourly Rate" value={formatCurrency(getStatsForScope('tournaments')?.netHourlyRate || 0, defaultCurrency)} isPositive={getStatsForScope('tournaments')?.netHourlyRate >= 0} />
             
-            <StatCell label="Average Net Result" value={formatCurrency(statisticsData.tournaments?.averageNetResult || 0, defaultCurrency)} isPositive={statisticsData.tournaments?.averageNetResult >= 0} />
-            <StatCell label="Total Buy-ins" value={formatCurrency(statisticsData.tournaments?.totalBuyIns || 0, defaultCurrency)} />
+            <StatCell label="Average Net Result" value={formatCurrency(getStatsForScope('tournaments')?.averageNetResult || 0, defaultCurrency)} isPositive={getStatsForScope('tournaments')?.averageNetResult >= 0} />
+            <StatCell label="Total Buy-ins" value={formatCurrency(getStatsForScope('tournaments')?.totalBuyIns || 0, defaultCurrency)} />
             
-            <StatCell label="Average Duration" value={formatDuration(statisticsData.tournaments?.averageDuration || 0)} />
-            <StatCell label="Total Duration" value={formatDuration(statisticsData.tournaments?.totalDuration || 0)} />
+            <StatCell label="Average Duration" value={formatDuration(getStatsForScope('tournaments')?.averageDuration || 0)} />
+            <StatCell label="Total Duration" value={formatDuration(getStatsForScope('tournaments')?.totalDuration || 0)} />
             
-            <StatCell label="Final Tables" value={statisticsData.tournaments?.finalTables?.toString() || '0'} />
-            <StatCell label="First Place Finish" value={statisticsData.tournaments?.firstPlaceFinish?.toString() || '0'} />
+            <StatCell label="Final Tables" value={getStatsForScope('tournaments')?.finalTables?.toString() || '0'} />
+            <StatCell label="First Place Finish" value={getStatsForScope('tournaments')?.firstPlaceFinish?.toString() || '0'} />
             
-            <StatCell label="Total Tables" value={statisticsData.tournaments?.totalTables.toString() || '0'} />
-            <StatCell label="Hands Count" value={statisticsData.tournaments?.handsCount.toLocaleString() || '0'} />
+            <StatCell label="Total Tables" value={getStatsForScope('tournaments')?.totalTables.toString() || '0'} />
+            <StatCell label="Hands Count" value={getStatsForScope('tournaments')?.handsCount.toLocaleString() || '0'} />
             
-            <StatCell label="Number of Sessions" value={statisticsData.tournaments?.numberOfSessions.toString() || '0'} />
-            <StatCell label="Total Payouts" value={formatCurrency(statisticsData.tournaments?.totalPayouts || 0, defaultCurrency)} />
+            <StatCell label="Number of Sessions" value={getStatsForScope('tournaments')?.numberOfSessions.toString() || '0'} />
+            <StatCell label="Total Payouts" value={formatCurrency(getStatsForScope('tournaments')?.totalPayouts || 0, defaultCurrency)} />
           </div>
         </TabsContent>
       </Tabs>

@@ -20,9 +20,14 @@ interface ExportData {
 
 export const generateStatisticsPDFFromDB = async (data: ExportData) => {
   try {
-    // Fetch fresh data from Supabase
-    const formatMap = { sessions: 'all', cash: 'cash', tournaments: 'tournament' } as const;
-    const format = formatMap[data.activeTab as keyof typeof formatMap] || 'all';
+    // Use the unified statistics function with proper format mapping
+    const formatMap = { 
+      sessions: 'all', 
+      cash: 'cash', 
+      tournaments: 'tournament' 
+    } as const;
+    
+    const dbFormat = formatMap[data.activeTab as keyof typeof formatMap] || 'all';
     
     // Convert timeframe to backend format - handle all timeframe values
     let timeframe = 'all-time';
@@ -94,15 +99,15 @@ export const generateStatisticsPDFFromDB = async (data: ExportData) => {
     }
     
     const stats = await calculateSessionStatisticsFromDB(
-      format,
+      dbFormat,
       timeframe,
       startDate,
       endDate,
-      data.defaultCurrency || 'USD'
+      null // Remove currency filtering for broader data access
     );
 
-    // Calculate best session result from sessions with same filters
-    const bestSessionResult = await calculateBestSessionResult(format, startDate, endDate);
+    // Calculate best session result using the same filtering logic
+    const bestSessionResult = await calculateBestSessionResult(dbFormat, startDate, endDate);
 
     // Generate PDF with fresh data
     generateStatisticsPDFWithData({
@@ -124,15 +129,15 @@ const calculateBestSessionResult = async (format: string, startDate?: Date, endD
 
     let query = supabase
       .from('sessions')
-      .select('cash_out, buy_in')
+      .select('cash_out, buy_in, rebuy_amount')
       .eq('user_id', user.user.id)
       .not('end_time', 'is', null); // Only completed sessions
 
-    // Apply format filter
+    // Apply format filter with proper mapping
     if (format === 'cash') {
-      query = query.eq('format', 'Cash');
+      query = query.ilike('format', '%cash%');
     } else if (format === 'tournament') {
-      query = query.eq('format', 'Tournament');
+      query = query.ilike('format', '%tournament%');
     }
 
     // Apply date filters
@@ -149,9 +154,9 @@ const calculateBestSessionResult = async (format: string, startDate?: Date, endD
       return 0;
     }
 
-    // Calculate the best (highest) session result
+    // Calculate the best (highest) session result including rebuys
     const sessionResults = sessions.map(session => 
-      (session.cash_out || 0) - (session.buy_in || 0)
+      (session.cash_out || 0) - ((session.buy_in || 0) + (session.rebuy_amount || 0))
     );
 
     return Math.max(...sessionResults);

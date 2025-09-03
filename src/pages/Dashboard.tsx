@@ -35,6 +35,7 @@ const Dashboard: React.FC = () => {
   const handleApplyFilters = () => {
     console.log('Applying filters:', filters);
     setIsFilterModalOpen(false);
+    // Filters are automatically applied through the filters prop to MyStatisticsSection
   };
 
   const handleExportPDF = (activeTab: string, statisticsData: any, defaultCurrency: string) => {
@@ -46,6 +47,8 @@ const Dashboard: React.FC = () => {
       statisticsData,
       defaultCurrency,
     };
+    
+    console.log('Exporting PDF with data:', exportData);
     generateStatisticsPDF(exportData);
   };
 

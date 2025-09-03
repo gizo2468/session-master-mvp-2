@@ -1018,6 +1018,34 @@ export type Database = {
           username: string
         }[]
       }
+      get_unified_session_statistics: {
+        Args: {
+          p_currency?: string
+          p_end_date?: string
+          p_format?: string
+          p_start_date?: string
+          p_timeframe?: string
+          p_user_id: string
+        }
+        Returns: {
+          average_bb100: number
+          average_duration: number
+          average_net_result: number
+          final_tables: number
+          first_place_finish: number
+          hands_count: number
+          net_hourly_rate: number
+          net_result: number
+          number_of_sessions: number
+          profit_loss_ratio: number
+          scope: string
+          total_buy_ins: number
+          total_duration: number
+          total_payouts: number
+          total_tables: number
+          win_ratio: number
+        }[]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: string

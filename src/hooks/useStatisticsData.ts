@@ -4,9 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 
 /**
- * Hook to provide calculated statistics data for all session formats using Supabase
- * This ensures consistent data access across components and prevents recalculation
- * Now automatically filters by user's default currency for consistent data isolation
+ * Hook to provide unified statistics data using the new database function
+ * This ensures data consistency between My Finance and Sessions Stats
  */
 export const useStatisticsData = (
   timeframe: string = 'all-time',
@@ -36,16 +35,17 @@ export const useStatisticsData = (
         // Debug: Check authentication status
         const { data: authData } = await supabase.auth.getUser();
         console.log('Current authenticated user:', authData.user?.id);
-        console.log('Fetching statistics with currency:', defaultCurrency);
+        console.log('Fetching unified statistics with currency:', defaultCurrency);
 
-        // Pass user's default currency to ensure proper filtering at database level
+        // Use the unified statistics function for consistent data
+        // Remove strict currency filtering - let users see all their sessions
         const [allStats, cashStats, tournamentStats] = await Promise.all([
-          calculateSessionStatisticsFromDB('all', timeframe, startDate, endDate, defaultCurrency),
-          calculateSessionStatisticsFromDB('cash', timeframe, startDate, endDate, defaultCurrency),
-          calculateSessionStatisticsFromDB('tournament', timeframe, startDate, endDate, defaultCurrency),
+          calculateSessionStatisticsFromDB('all', timeframe, startDate, endDate, null), // No currency filter for broader view
+          calculateSessionStatisticsFromDB('cash', timeframe, startDate, endDate, null),
+          calculateSessionStatisticsFromDB('tournament', timeframe, startDate, endDate, null),
         ]);
 
-        console.log('Statistics fetched with currency filter:', { allStats, cashStats, tournamentStats, currency: defaultCurrency });
+        console.log('Unified statistics fetched:', { allStats, cashStats, tournamentStats, currency: defaultCurrency });
 
         setStatisticsData({
           all: allStats,
@@ -53,7 +53,7 @@ export const useStatisticsData = (
           tournaments: tournamentStats,
         });
       } catch (err) {
-        console.error('Failed to fetch statistics:', err);
+        console.error('Failed to fetch unified statistics:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch statistics');
       } finally {
         setIsLoading(false);
@@ -61,7 +61,7 @@ export const useStatisticsData = (
     };
 
     fetchStatistics();
-  }, [timeframe, startDate, endDate, defaultCurrency, currencyLoading]); // Add currencyLoading as dependency
+  }, [timeframe, startDate, endDate, defaultCurrency, currencyLoading]);
 
   return {
     statisticsData,
