@@ -471,7 +471,7 @@ const HandForm: React.FC<HandFormProps> = ({
                     {/* Flop Analysis - Collapsible */}
                     <Collapsible open={isFlopOpen} onOpenChange={setIsFlopOpen}>
                       <CollapsibleTrigger className="w-full">
-                        <div className="flex items-center justify-between w-full p-3 bg-poker-gold text-black font-bold rounded-md hover:bg-poker-darkGold transition-colors">
+                        <div className="flex items-center justify-between w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
                           <span>Flop</span>
                           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isFlopOpen ? 'rotate-180' : ''}`} />
                         </div>
@@ -509,7 +509,7 @@ const HandForm: React.FC<HandFormProps> = ({
                     {/* Turn Analysis - Collapsible */}
                     <Collapsible open={isTurnOpen} onOpenChange={setIsTurnOpen}>
                       <CollapsibleTrigger className="w-full">
-                        <div className="flex items-center justify-between w-full p-3 bg-poker-gold text-black font-bold rounded-md hover:bg-poker-darkGold transition-colors">
+                        <div className="flex items-center justify-between w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
                           <span>Turn</span>
                           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isTurnOpen ? 'rotate-180' : ''}`} />
                         </div>
@@ -547,7 +547,7 @@ const HandForm: React.FC<HandFormProps> = ({
                     {/* River Analysis - Collapsible */}
                     <Collapsible open={isRiverOpen} onOpenChange={setIsRiverOpen}>
                       <CollapsibleTrigger className="w-full">
-                        <div className="flex items-center justify-between w-full p-3 bg-poker-gold text-black font-bold rounded-md hover:bg-poker-darkGold transition-colors">
+                        <div className="flex items-center justify-between w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
                           <span>River</span>
                           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isRiverOpen ? 'rotate-180' : ''}`} />
                         </div>
@@ -585,7 +585,7 @@ const HandForm: React.FC<HandFormProps> = ({
                     {/* Showdown Result - Collapsible */}
                     <Collapsible open={isShowdownOpen} onOpenChange={setIsShowdownOpen}>
                       <CollapsibleTrigger className="w-full">
-                        <div className="flex items-center justify-between w-full p-3 bg-poker-gold text-black font-bold rounded-md hover:bg-poker-darkGold transition-colors">
+                        <div className="flex items-center justify-between w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
                           <span>Showdown Result</span>
                           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isShowdownOpen ? 'rotate-180' : ''}`} />
                         </div>
