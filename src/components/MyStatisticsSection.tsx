@@ -8,6 +8,7 @@ import { formatDuration, formatPercentage, formatRatio } from '@/utils/statistic
 import { useDefaultCurrency, getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useStatisticsData } from '@/hooks/useStatisticsData';
 import PremiumFeatureGate from '@/components/ui/PremiumFeatureGate';
+import { FilterOptions } from './StatisticsFilterModal';
 
 // Local currency formatter to avoid import issues
 const formatCurrency = (amount: number, currency = 'USD'): string => {
@@ -52,25 +53,73 @@ const StatCell: React.FC<StatCellProps> = ({ label, value, isPositive = null, is
 
 interface MyStatisticsSectionProps {
   onFilterClick: () => void;
+  onExportPDF?: (activeTab: string, statisticsData: any, defaultCurrency: string) => void;
+  onRegisterExportFunction?: (exportFn: () => void) => void;
+  filters?: FilterOptions;
 }
 
-export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilterClick }) => {
+export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilterClick, onExportPDF, onRegisterExportFunction, filters }) => {
   return (
     <PremiumFeatureGate
       featureName="My Finance"
       description="Unlock detailed financial analytics and advanced statistics for your poker sessions."
     >
-      <MyStatisticsContent onFilterClick={onFilterClick} />
+      <MyStatisticsContent onFilterClick={onFilterClick} onExportPDF={onExportPDF} onRegisterExportFunction={onRegisterExportFunction} filters={filters} />
     </PremiumFeatureGate>
   );
 };
 
-const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick }) => {
+const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick, onExportPDF, onRegisterExportFunction, filters }) => {
   const [activeTab, setActiveTab] = useState('sessions');
   const { defaultCurrency } = useDefaultCurrency();
   
-  // Get statistics from Supabase
-  const { statisticsData, isLoading, error } = useStatisticsData();
+  // Convert filters to useStatisticsData parameters
+  const getTimeframeAndDates = () => {
+    if (!filters) return { timeframe: 'all-time' };
+    
+    let timeframe = 'all-time';
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
+    
+    if (filters.timeframeType === 'custom') {
+      timeframe = 'custom';
+      startDate = filters.customStartDate;
+      endDate = filters.customEndDate;
+    } else if (filters.timeframeValue) {
+      if (filters.timeframeValue === 'This Month') {
+        timeframe = 'this-month';
+      } else if (filters.timeframeValue === 'Last Month') {
+        timeframe = 'custom';
+        const now = new Date();
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+      } else if (filters.timeframeValue === 'Last 30 Days') {
+        timeframe = 'custom';
+        const now = new Date();
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 29);
+        endDate = now;
+      }
+      // Add more timeframe conversions as needed
+    }
+    
+    return { timeframe, startDate, endDate };
+  };
+  
+  const { timeframe, startDate, endDate } = getTimeframeAndDates();
+  
+  // Get statistics from Supabase with filters
+  const { statisticsData, isLoading, error } = useStatisticsData(timeframe, startDate, endDate);
+
+  // Register export function when component mounts
+  React.useEffect(() => {
+    if (onRegisterExportFunction && !isLoading && statisticsData) {
+      const exportFunction = () => {
+        onExportPDF?.(activeTab, statisticsData, defaultCurrency);
+      };
+      onRegisterExportFunction(exportFunction);
+    }
+  }, [onRegisterExportFunction, activeTab, statisticsData, defaultCurrency, isLoading, onExportPDF]);
 
   // Helper function to get stats based on active tab
   const getStats = () => {
@@ -158,8 +207,9 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
             <Button
               variant="ghost"
               size="sm"
-              onClick={onFilterClick}
+              onClick={() => onFilterClick?.()}
               className="h-9 w-9 sm:h-10 sm:w-10 p-0"
+              title="Filter & Export"
             >
               <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>

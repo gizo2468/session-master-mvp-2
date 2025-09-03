@@ -14,6 +14,8 @@ interface ExportData {
   stats: StatData[];
   filters: FilterOptions;
   userName?: string;
+  statisticsData?: any;
+  defaultCurrency?: string;
 }
 
 export const generateStatisticsPDFFromDB = async (data: ExportData) => {
@@ -95,7 +97,8 @@ export const generateStatisticsPDFFromDB = async (data: ExportData) => {
       format,
       timeframe,
       startDate,
-      endDate
+      endDate,
+      data.defaultCurrency || 'USD'
     );
 
     // Calculate best session result from sessions with same filters
@@ -104,7 +107,7 @@ export const generateStatisticsPDFFromDB = async (data: ExportData) => {
     // Generate PDF with fresh data
     generateStatisticsPDFWithData({
       ...data,
-      stats: formatStatsForPDF(stats, data.activeTab, bestSessionResult)
+      stats: formatStatsForPDF(stats, data.activeTab, bestSessionResult, data.defaultCurrency || 'USD')
     });
 
   } catch (error) {
@@ -158,8 +161,7 @@ const calculateBestSessionResult = async (format: string, startDate?: Date, endD
   }
 };
 
-const formatStatsForPDF = (stats: any, activeTab: string, bestSessionResult: number): StatData[] => {
-  const currency = 'USD'; // TODO: get from user preferences
+const formatStatsForPDF = (stats: any, activeTab: string, bestSessionResult: number, currency: string = 'USD'): StatData[] => {
   
   // Base stats without the removed fields (Average Net Result, Average Duration, Profit/Loss Ratio)
   const baseStats = [
@@ -174,36 +176,53 @@ const formatStatsForPDF = (stats: any, activeTab: string, bestSessionResult: num
 
   if (activeTab === 'sessions') {
     return [
-      ...baseStats.slice(0, 6), // All stats up to Number of Sessions
-      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
-      { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currency) },
+      { label: 'Net Result', value: formatCurrency(stats.netResult, currency) },
+      { label: 'Net Hourly Rate', value: formatCurrency(stats.netHourlyRate, currency) },
+      { label: 'Average Net Result', value: formatCurrency(stats.averageNetResult, currency) },
+      { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns, currency) },
+      { label: 'Average Duration', value: formatDuration(stats.averageDuration) },
+      { label: 'Total Duration', value: formatDuration(stats.totalDuration) },
       { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
+      { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
+      { label: 'Total Tables', value: stats.totalTables.toString() },
+      { label: 'Number of Sessions', value: stats.numberOfSessions.toString() },
+      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
     ];
   } else if (activeTab === 'cash') {
     return [
-      ...baseStats.slice(0, 5), // All stats up to Total Tables
+      { label: 'Net Result', value: formatCurrency(stats.netResult, currency) },
+      { label: 'Net Hourly Rate', value: formatCurrency(stats.netHourlyRate, currency) },
+      { label: 'Average Net Result', value: formatCurrency(stats.averageNetResult, currency) },
+      { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns, currency) },
+      { label: 'Average Duration', value: formatDuration(stats.averageDuration) },
+      { label: 'Total Duration', value: formatDuration(stats.totalDuration) },
+      { label: 'Average BB/100', value: stats.averageBB100?.toFixed(1) || '0.0' },
+      { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
+      { label: 'Total Tables', value: stats.totalTables.toString() },
+      { label: 'Hands Count', value: stats.handsCount.toLocaleString() },
       { label: 'Number of Sessions', value: stats.numberOfSessions.toString() },
       { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
-      { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currency) },
-      { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
-      { label: 'Average BB/100', value: stats.averageBB100.toFixed(2) },
-      { label: 'Hands Count', value: stats.handsCount.toString() },
     ];
   } else if (activeTab === 'tournaments') {
     return [
-      ...baseStats.slice(0, 5), // All stats up to Total Tables
+      { label: 'Net Result', value: formatCurrency(stats.netResult, currency) },
+      { label: 'Net Hourly Rate', value: formatCurrency(stats.netHourlyRate, currency) },
+      { label: 'Average Net Result', value: formatCurrency(stats.averageNetResult, currency) },
+      { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns, currency) },
+      { label: 'Average Duration', value: formatDuration(stats.averageDuration) },
+      { label: 'Total Duration', value: formatDuration(stats.totalDuration) },
+      { label: 'Final Tables', value: stats.finalTables?.toString() || '0' },
+      { label: 'First Place Finish', value: stats.firstPlaceFinish?.toString() || '0' },
+      { label: 'Total Tables', value: stats.totalTables.toString() },
+      { label: 'Hands Count', value: stats.handsCount.toLocaleString() },
       { label: 'Number of Sessions', value: stats.numberOfSessions.toString() },
       { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
-      { label: 'Best Session Result', value: formatCurrency(bestSessionResult, currency) },
-      { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
-      { label: 'Final Tables', value: stats.finalTables.toString() },
-      { label: 'First Place Finish', value: stats.firstPlaceFinish.toString() },
-      { label: 'Hands Count', value: stats.handsCount.toString() },
     ];
   }
 
   return [
-    ...baseStats,
+    { label: 'Net Result', value: formatCurrency(stats.netResult, currency) },
+    { label: 'Net Hourly Rate', value: formatCurrency(stats.netHourlyRate, currency) },
     { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
   ];
 };
@@ -237,11 +256,11 @@ const generateStatisticsPDFWithData = (data: ExportData) => {
     currentY += 20;
   }
   
-  // My Statistics Title (olive-green color)
+  // My Finance Title (olive-green color)
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(85, 107, 47); // Olive green color
-  doc.text('My Statistics', pageWidth / 2, currentY, { align: 'center' });
+  doc.text('My Finance', pageWidth / 2, currentY, { align: 'center' });
   currentY += 25;
   
   // Meta Info Header Block (receipt style)
@@ -409,7 +428,7 @@ const generateStatisticsPDFWithData = (data: ExportData) => {
                               data.filters.timeframeValue.replace(/\s+/g, '');
   const scopeForFilename = data.filters.gameScope.charAt(0).toUpperCase() + data.filters.gameScope.slice(1);
   const dateForFilename = format(new Date(), 'yyyy-MM-dd');
-  const filename = `MyStatistics_${scopeForFilename}_${timeframeForFilename}_${dateForFilename}.pdf`;
+  const filename = `MyFinance_${scopeForFilename}_${timeframeForFilename}_${dateForFilename}.pdf`;
   
   // Save the PDF
   doc.save(filename);

@@ -16,6 +16,7 @@ const Dashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
   const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [exportPDFFunction, setExportPDFFunction] = useState<(() => void) | null>(null);
   const [filters, setFilters] = useState<FilterOptions>({
     timeframeType: 'monthly',
     timeframeValue: 'This Month',
@@ -32,19 +33,24 @@ const Dashboard: React.FC = () => {
   };
 
   const handleApplyFilters = () => {
-    // For now, this just closes the modal
-    // In the future, this will trigger data refetch with filters
     console.log('Applying filters:', filters);
+    setIsFilterModalOpen(false);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = (activeTab: string, statisticsData: any, defaultCurrency: string) => {
     const exportData = {
-      activeTab: 'All Statistics',
-      stats: [], // Empty for now, could be populated from real data later
+      activeTab,
+      stats: [], // Will be populated by the PDF generator using real data
       filters,
       userName: user?.fullName || user?.username,
+      statisticsData,
+      defaultCurrency,
     };
     generateStatisticsPDF(exportData);
+  };
+
+  const handleRegisterExportFunction = (exportFn: () => void) => {
+    setExportPDFFunction(() => exportFn);
   };
 
   if (isLoading) {
@@ -104,7 +110,12 @@ const Dashboard: React.FC = () => {
                 <MyCoachingNetwork />
                 <StatsQuickView showExtendedMetrics />
                 <PlayerAllTimeChart />
-                <MyStatisticsSection onFilterClick={() => setIsFilterModalOpen(true)} />
+                <MyStatisticsSection 
+                  onFilterClick={() => setIsFilterModalOpen(true)} 
+                  onExportPDF={handleExportPDF}
+                  onRegisterExportFunction={handleRegisterExportFunction}
+                  filters={filters}
+                />
               </div>
             ) : (
               <div className="space-y-6">
@@ -112,7 +123,12 @@ const Dashboard: React.FC = () => {
                 <MyCoachingNetwork />
                 <StatsQuickView showExtendedMetrics />
                 <PlayerAllTimeChart />
-                <MyStatisticsSection onFilterClick={() => setIsFilterModalOpen(true)} />
+                <MyStatisticsSection 
+                  onFilterClick={() => setIsFilterModalOpen(true)} 
+                  onExportPDF={handleExportPDF}
+                  onRegisterExportFunction={handleRegisterExportFunction}
+                  filters={filters}
+                />
               </div>
             )}
           </div>
@@ -126,7 +142,11 @@ const Dashboard: React.FC = () => {
         filters={filters}
         onFiltersChange={setFilters}
         onApplyFilters={handleApplyFilters}
-        onExportPDF={handleExportPDF}
+        onExportPDF={() => {
+          if (exportPDFFunction) {
+            exportPDFFunction();
+          }
+        }}
       />
     </div>
   );
