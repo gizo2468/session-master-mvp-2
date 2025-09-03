@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,7 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/Lucide';
 import { PokerChip } from '../Icons';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
-import { CircleHelp, Camera } from 'lucide-react';
+import { CircleHelp, Camera, ChevronDown } from 'lucide-react';
 import HandDetailGate from '@/components/ui/HandDetailGate';
 
 interface HandFormProps {
@@ -32,10 +33,6 @@ const handFormSchema = z.object({
   cards: z.string().min(2, 'Select at least 1 card').max(12, 'Maximum 6 cards'),
   position: z.string().optional(),
   action: z.string().optional(),
-  currencyType: z.enum(['currency', 'chips']).default('currency'),
-  resultAmount: z.number().optional(),
-  smallBlind: z.number().optional(),
-  bigBlind: z.number().optional(),
   notes: z.string().max(1000, 'Notes are too long').optional(),
   pokercraftLink: z.string().url('Invalid URL format').optional().or(z.literal('')),
   image: z.string().optional().or(z.any().optional()),
@@ -68,12 +65,6 @@ const HandForm: React.FC<HandFormProps> = ({
       cards: initialData.cards || '',
       position: initialData.position || '',
       action: initialData.action || 'Open / Flat',
-      currencyType: tableFormat 
-        ? (tableFormat === 'Cash' ? 'currency' : 'chips') 
-        : (initialData.currencyType || 'currency'),
-      resultAmount: initialData.resultAmount || undefined,
-      smallBlind: initialData.smallBlind || undefined,
-      bigBlind: initialData.bigBlind || undefined,
       notes: initialData.notes || '',
       pokercraftLink: initialData.pokercraftLink || '',
       image: initialData.image || undefined,
@@ -85,12 +76,24 @@ const HandForm: React.FC<HandFormProps> = ({
   // Position selector state - simplified approach now
   const [selectedPositionIndex, setSelectedPositionIndex] = useState(0);
   
+  // Collapsible section states
+  const [isFlopOpen, setIsFlopOpen] = useState(false);
+  const [isTurnOpen, setIsTurnOpen] = useState(false);
+  const [isRiverOpen, setIsRiverOpen] = useState(false);
+  const [isShowdownOpen, setIsShowdownOpen] = useState(false);
+  
   // Get current form values for reactive UI updates
   const gameType = form.watch('gameType');
   const selectedCards = form.watch('cards');
-  const currencyType = tableFormat 
-    ? (tableFormat === 'Cash' ? 'currency' : 'chips')
-    : form.watch('currencyType');
+  
+  // Watch form values to auto-expand sections when data is input
+  const flopCards = form.watch('flopCards');
+  const flopAction = form.watch('flopAction');
+  const turnCard = form.watch('turnCard');
+  const turnAction = form.watch('turnAction');
+  const riverCard = form.watch('riverCard');
+  const riverAction = form.watch('riverAction');
+  const showdownResult = form.watch('showdownResult');
   
   // Position options - updated to follow standard poker table order
   const positions = ['UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
@@ -112,12 +115,22 @@ const HandForm: React.FC<HandFormProps> = ({
     form.setValue('position', positions[index]);
   };
   
-  // Set currencyType based on tableFormat when it changes
+  // Auto-expand sections when data is input
   useEffect(() => {
-    if (tableFormat) {
-      form.setValue('currencyType', tableFormat === 'Cash' ? 'currency' : 'chips');
-    }
-  }, [tableFormat, form]);
+    if (flopCards || flopAction) setIsFlopOpen(true);
+  }, [flopCards, flopAction]);
+  
+  useEffect(() => {
+    if (turnCard || turnAction) setIsTurnOpen(true);
+  }, [turnCard, turnAction]);
+  
+  useEffect(() => {
+    if (riverCard || riverAction) setIsRiverOpen(true);
+  }, [riverCard, riverAction]);
+  
+  useEffect(() => {
+    if (showdownResult) setIsShowdownOpen(true);
+  }, [showdownResult]);
   
   // Determine max cards based on game type
   const getMaxCards = (): number => {
@@ -143,10 +156,6 @@ const HandForm: React.FC<HandFormProps> = ({
         cards: '',
         position: '',
         action: 'Open / Flat',
-        currencyType: tableFormat === 'Cash' ? 'currency' : 'chips',
-        resultAmount: undefined,
-        smallBlind: undefined,
-        bigBlind: undefined,
         notes: '',
         pokercraftLink: '',
         image: undefined,
@@ -155,8 +164,13 @@ const HandForm: React.FC<HandFormProps> = ({
       });
       setImagePreview(null);
       setSelectedPositionIndex(0);
+      // Reset collapsible states
+      setIsFlopOpen(false);
+      setIsTurnOpen(false);
+      setIsRiverOpen(false);
+      setIsShowdownOpen(false);
     }
-  }, [open, isEditing, form, tableId, tableFormat]);
+  }, [open, isEditing, form, tableId]);
   
   const handleSubmit = (values: FormValues) => {
     // Only validate card count for the game type
@@ -201,9 +215,7 @@ const HandForm: React.FC<HandFormProps> = ({
     image: "Upload an image of your hand from the table. Common formats like JPG, PNG and WEBP are accepted. Maximum file size is 5MB.",
     videoLink: "Paste a link to a video of your hand from YouTube, Twitch, or a hand replay from a poker site like PokerCraft.",
     position: "Your position at the table relative to the dealer button. This affects your strategic options and expected ranges.",
-    action: "The type of betting action you took with this hand. Open/Flat means opening the pot or calling. 3Bet means raising a previous raise.",
-    resultAmount: "Enter how much you won or lost on this hand. For cash games, use currency. For tournaments, use chip value.",
-    blinds: "The stakes being played. Small blind is typically half of the big blind. These values establish the relative value of bets."
+    action: "The type of betting action you took with this hand. Open/Flat means opening the pot or calling. 3Bet means raising a previous raise."
   };
   
   return (
@@ -413,311 +425,189 @@ const HandForm: React.FC<HandFormProps> = ({
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="action"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center gap-2">
-                        <FormLabel>Action</FormLabel>
-                        <AdaptiveTooltip content={tooltipContent.action}>
-                          <CircleHelp className="h-4 w-4 text-gray-500" />
-                        </AdaptiveTooltip>
-                      </div>
-                      <FormControl>
-                        <ToggleGroup 
-                          type="single" 
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          className="flex flex-wrap justify-between gap-2"
-                        >
-                          {actionTypes.map(actionType => (
-                            <ToggleGroupItem 
-                              key={actionType.value} 
-                              value={actionType.value}
-                              variant="outline"
-                              className={`flex-1 min-w-[110px] py-2 ${field.value === actionType.value ? 
-                                'bg-poker-feltGreen text-white' : 
-                                'bg-white'}`}
-                            >
-                              {actionType.label}
-                            </ToggleGroupItem>
-                          ))}
-                        </ToggleGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="space-y-4">
-                  {/* Hide currency type selector if table format is provided */}
-                  {!tableFormat && (
+                {/* Premium Street-by-Street Analysis */}
+                <HandDetailGate>
+                  <div className="space-y-6 border-t pt-6">
+                    <h4 className="font-semibold text-lg text-center">Street-by-Street Analysis</h4>
+                    
+                    {/* Preflop Action - Moved from above */}
                     <FormField
                       control={form.control}
-                      name="currencyType"
+                      name="action"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Currency Type</FormLabel>
+                          <div className="flex items-center gap-2">
+                            <FormLabel>Preflop Action</FormLabel>
+                            <AdaptiveTooltip content={tooltipContent.action}>
+                              <CircleHelp className="h-4 w-4 text-gray-500" />
+                            </AdaptiveTooltip>
+                          </div>
                           <FormControl>
                             <ToggleGroup 
                               type="single" 
                               value={field.value}
                               onValueChange={field.onChange}
-                              className="flex justify-center gap-4 my-1"
+                              className="flex flex-wrap justify-between gap-2"
                             >
-                              <ToggleGroupItem 
-                                value="currency" 
-                                variant="outline"
-                                className={`flex-1 py-2 ${field.value === 'currency' ? 
-                                  'bg-poker-feltGreen text-white' : 
-                                  'bg-white'}`}
-                              >
-                                💵 Currency
-                              </ToggleGroupItem>
-                              <ToggleGroupItem 
-                                value="chips" 
-                                variant="outline"
-                                className={`flex-1 py-2 ${field.value === 'chips' ? 
-                                  'bg-poker-feltGreen text-white' : 
-                                  'bg-white'}`}
-                              >
-                                <PokerChip className="h-5 w-5" /> Chips
-                              </ToggleGroupItem>
+                              {actionTypes.map(actionType => (
+                                <ToggleGroupItem 
+                                  key={actionType.value} 
+                                  value={actionType.value}
+                                  variant="outline"
+                                  className={`flex-1 min-w-[110px] py-2 ${field.value === actionType.value ? 
+                                    'bg-poker-feltGreen text-white' : 
+                                    'bg-white'}`}
+                                >
+                                  {actionType.label}
+                                </ToggleGroupItem>
+                              ))}
                             </ToggleGroup>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  )}
-                
-                  <FormField
-                    control={form.control}
-                    name="resultAmount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center gap-2">
-                          <FormLabel>Result Amount</FormLabel>
-                          <AdaptiveTooltip content={tooltipContent.resultAmount}>
-                            <CircleHelp className="h-4 w-4 text-gray-500" />
-                          </AdaptiveTooltip>
-                        </div>
-                        <FormControl>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                              {currencyType === 'currency' ? (
-                                <span className="text-gray-500">$</span>
-                              ) : (
-                                <span className="text-gray-500"><PokerChip className="h-5 w-5" /></span>
-                              )}
-                            </div>
-                            <Input 
-                              type="number"
-                              placeholder="0.00"
-                              className="pl-8"
-                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                              value={field.value !== undefined ? field.value : ''}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          {currencyType === 'currency' ? 
-                            'Positive for wins, negative for losses' : 
-                            'Tournament chip value won or lost'}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <FormField
-                    control={form.control}
-                    name="smallBlind"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center gap-2">
-                          <FormLabel>Small Blind</FormLabel>
-                          <AdaptiveTooltip content={tooltipContent.blinds}>
-                            <CircleHelp className="h-4 w-4 text-gray-500" />
-                          </AdaptiveTooltip>
-                        </div>
-                        <FormControl>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                              <span className="text-gray-500">
-                                {currencyType === 'currency' ? '💵' : <PokerChip className="h-5 w-5" />}
-                              </span>
-                            </div>
-                            <Input 
-                              type="number"
-                              placeholder="Small Blind"
-                              className="pl-8"
-                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                              value={field.value !== undefined ? field.value : ''}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          {currencyType === 'currency' ? 'Cash game small blind' : 'Tournament small blind'}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                     
-                  <FormField
-                    control={form.control}
-                    name="bigBlind"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center gap-2">
-                          <FormLabel>Big Blind</FormLabel>
-                          <AdaptiveTooltip content={tooltipContent.blinds}>
-                            <CircleHelp className="h-4 w-4 text-gray-500" />
-                          </AdaptiveTooltip>
+                    {/* Flop Analysis - Collapsible */}
+                    <Collapsible open={isFlopOpen} onOpenChange={setIsFlopOpen}>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between w-full p-3 bg-poker-gold text-black font-bold rounded-md hover:bg-poker-darkGold transition-colors">
+                          <span>Flop</span>
+                          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isFlopOpen ? 'rotate-180' : ''}`} />
                         </div>
-                        <FormControl>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                              <span className="text-gray-500">
-                                {currencyType === 'currency' ? '💵' : <PokerChip className="h-5 w-5" />}
-                              </span>
-                            </div>
-                            <Input 
-                              type="number"
-                              placeholder="Big Blind"
-                              className="pl-8"
-                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                              value={field.value !== undefined ? field.value : ''}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          {currencyType === 'currency' ? 'Cash game big blind' : 'Tournament big blind'}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                {/* Premium Street-by-Street Analysis */}
-                <HandDetailGate>
-                  <div className="space-y-6 border-t pt-6">
-                    <h4 className="font-semibold text-lg text-center">Street-by-Street Analysis</h4>
-                    
-                    {/* Flop Analysis */}
-                    <div className="space-y-4">
-                      <h5 className="font-medium text-md">Flop</h5>
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="flopCards"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Flop Cards</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="e.g., AcKsQh" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="flopAction"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Flop Action</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="e.g., Check, Bet, Fold" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-4 pt-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="flopCards"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Flop Cards</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="e.g., AcKsQh" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="flopAction"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Flop Action</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="e.g., Check, Bet, Fold" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
 
-                    {/* Turn Analysis */}
-                    <div className="space-y-4">
-                      <h5 className="font-medium text-md">Turn</h5>
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="turnCard"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Turn Card</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="e.g., Jd" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="turnAction"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Turn Action</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="e.g., Check, Bet, Call" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
+                    {/* Turn Analysis - Collapsible */}
+                    <Collapsible open={isTurnOpen} onOpenChange={setIsTurnOpen}>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between w-full p-3 bg-poker-gold text-black font-bold rounded-md hover:bg-poker-darkGold transition-colors">
+                          <span>Turn</span>
+                          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isTurnOpen ? 'rotate-180' : ''}`} />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-4 pt-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="turnCard"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Turn Card</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="e.g., Jd" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="turnAction"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Turn Action</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="e.g., Check, Bet, Call" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
 
-                    {/* River Analysis */}
-                    <div className="space-y-4">
-                      <h5 className="font-medium text-md">River</h5>
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="riverCard"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>River Card</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="e.g., 9s" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="riverAction"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>River Action</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="e.g., All-in, Call, Fold" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
+                    {/* River Analysis - Collapsible */}
+                    <Collapsible open={isRiverOpen} onOpenChange={setIsRiverOpen}>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between w-full p-3 bg-poker-gold text-black font-bold rounded-md hover:bg-poker-darkGold transition-colors">
+                          <span>River</span>
+                          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isRiverOpen ? 'rotate-180' : ''}`} />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-4 pt-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="riverCard"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>River Card</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="e.g., 9s" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="riverAction"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>River Action</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="e.g., All-in, Call, Fold" />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
 
-                    {/* Showdown Result */}
-                    <FormField
-                      control={form.control}
-                      name="showdownResult"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Showdown Result</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="e.g., Won with straight, Lost to flush" />
-                          </FormControl>
-                          <FormDescription>
-                            Describe the final outcome and winning/losing hand
-                          </FormDescription>
-                        </FormItem>
-                      )}
-                    />
+                    {/* Showdown Result - Collapsible */}
+                    <Collapsible open={isShowdownOpen} onOpenChange={setIsShowdownOpen}>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between w-full p-3 bg-poker-gold text-black font-bold rounded-md hover:bg-poker-darkGold transition-colors">
+                          <span>Showdown Result</span>
+                          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isShowdownOpen ? 'rotate-180' : ''}`} />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-4 pt-4">
+                        <FormField
+                          control={form.control}
+                          name="showdownResult"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Showdown Result</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="e.g., Won with straight, Lost to flush" />
+                              </FormControl>
+                              <FormDescription>
+                                Describe the final outcome and winning/losing hand
+                              </FormDescription>
+                            </FormItem>
+                          )}
+                        />
+                      </CollapsibleContent>
+                    </Collapsible>
                   </div>
                 </HandDetailGate>
                 
