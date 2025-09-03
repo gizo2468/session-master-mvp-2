@@ -16,7 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/Lucide';
 import { PokerChip } from '../Icons';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
-import { CircleHelp, Camera, ChevronDown } from 'lucide-react';
+import { CircleHelp, Camera, ChevronDown, Trash2 } from 'lucide-react';
 import HandDetailGate from '@/components/ui/HandDetailGate';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -692,7 +692,21 @@ const HandForm: React.FC<HandFormProps> = ({
                         <div className="space-y-4">
                           {/* Board Cards Display */}
                           <div>
-                            <FormLabel className="text-base">Board</FormLabel>
+                            <div className="flex items-center justify-between">
+                              <FormLabel className="text-base">Board</FormLabel>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  form.setValue('flopCards', [{ id: 0 }, { id: 1 }, { id: 2 }]);
+                                  form.setValue('turnCards', [{ id: 0 }]);
+                                  form.setValue('riverCards', [{ id: 0 }]);
+                                }}
+                                className="text-gray-500 hover:text-gray-800 ml-2"
+                                aria-label="Clear all board cards"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                             <div className="flex flex-wrap gap-2 mt-2">
                               {/* Flop Cards */}
                               {flopCards?.filter(c => c.rank && c.suit).map((card, index) => (

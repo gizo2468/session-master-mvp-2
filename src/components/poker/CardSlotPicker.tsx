@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { X } from 'lucide-react';
 
 interface CardSlot {
@@ -77,20 +78,28 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
 
   // Handle rank selection
   const handleRankSelect = (rank: string) => {
+    if (suits.every(suit => isCardExcluded(rank, suit.symbol))) {
+      return; // Don't allow selection if all suits are excluded
+    }
+    
     setCurrentSelection(prev => ({ ...prev, rank }));
     
     // If a suit is already selected, create the card
-    if (currentSelection.suit) {
+    if (currentSelection.suit && !isCardExcluded(rank, currentSelection.suit)) {
       handleCardSelect(rank, currentSelection.suit);
     }
   };
 
   // Handle suit selection
   const handleSuitSelect = (suit: string) => {
+    if (ranks.every(rank => isCardExcluded(rank, suit))) {
+      return; // Don't allow selection if all ranks are excluded
+    }
+    
     setCurrentSelection(prev => ({ ...prev, suit }));
     
     // If a rank is already selected, create the card
-    if (currentSelection.rank) {
+    if (currentSelection.rank && !isCardExcluded(currentSelection.rank, suit)) {
       handleCardSelect(currentSelection.rank, suit);
     }
   };
@@ -196,40 +205,62 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
               <h4 className="text-sm font-medium mb-2">Rank</h4>
               <div className="grid grid-cols-7 gap-1">
                 {ranks.slice(0, 7).map(rank => (
-                  <button
-                    key={rank}
-                    type="button"
-                    onClick={() => handleRankSelect(rank)}
-                    disabled={suits.every(suit => isCardExcluded(rank, suit.symbol))}
-                    className={cn(
-                      "py-2 px-2 text-sm font-bold rounded transition-all",
-                      currentSelection.rank === rank
-                        ? "bg-primary text-white shadow-md"
-                        : "bg-gray-200 hover:bg-gray-300 text-gray-800",
-                      suits.every(suit => isCardExcluded(rank, suit.symbol)) && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    {rank}
-                  </button>
+                  <TooltipProvider key={rank}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          key={rank}
+                          type="button"
+                          onClick={() => handleRankSelect(rank)}
+                          disabled={suits.every(suit => isCardExcluded(rank, suit.symbol))}
+                          className={cn(
+                            "py-2 px-2 text-sm font-bold rounded transition-all",
+                            currentSelection.rank === rank
+                              ? "bg-primary text-white shadow-md"
+                              : "bg-gray-200 hover:bg-gray-300 text-gray-800",
+                            suits.every(suit => isCardExcluded(rank, suit.symbol)) && "opacity-50 cursor-not-allowed"
+                          )}
+                        >
+                          {rank}
+                        </button>
+                      </TooltipTrigger>
+                      {suits.every(suit => isCardExcluded(rank, suit.symbol)) && (
+                        <TooltipContent>
+                          <p>Already used</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
                 ))}
               </div>
               <div className="grid grid-cols-6 gap-1 mt-1">
                 {ranks.slice(7).map(rank => (
-                  <button
-                    key={rank}
-                    type="button"
-                    onClick={() => handleRankSelect(rank)}
-                    disabled={suits.every(suit => isCardExcluded(rank, suit.symbol))}
-                    className={cn(
-                      "py-2 px-2 text-sm font-bold rounded transition-all",
-                      currentSelection.rank === rank
-                        ? "bg-primary text-white shadow-md"
-                        : "bg-gray-200 hover:bg-gray-300 text-gray-800",
-                      suits.every(suit => isCardExcluded(rank, suit.symbol)) && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    {rank}
-                  </button>
+                  <TooltipProvider key={rank}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          key={rank}
+                          type="button"
+                          onClick={() => handleRankSelect(rank)}
+                          disabled={suits.every(suit => isCardExcluded(rank, suit.symbol))}
+                          className={cn(
+                            "py-2 px-2 text-sm font-bold rounded transition-all",
+                            currentSelection.rank === rank
+                              ? "bg-primary text-white shadow-md"
+                              : "bg-gray-200 hover:bg-gray-300 text-gray-800",
+                            suits.every(suit => isCardExcluded(rank, suit.symbol)) && "opacity-50 cursor-not-allowed"
+                          )}
+                        >
+                          {rank}
+                        </button>
+                      </TooltipTrigger>
+                      {suits.every(suit => isCardExcluded(rank, suit.symbol)) && (
+                        <TooltipContent>
+                          <p>Already used</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
                 ))}
               </div>
             </div>
@@ -239,22 +270,33 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
               <h4 className="text-sm font-medium mb-2">Suit</h4>
               <div className="grid grid-cols-4 gap-2">
                 {suits.map(suit => (
-                  <button
-                    key={suit.symbol}
-                    type="button"
-                    onClick={() => handleSuitSelect(suit.symbol)}
-                    disabled={ranks.every(rank => isCardExcluded(rank, suit.symbol))}
-                    className={cn(
-                      "py-3 px-2 text-2xl rounded transition-all flex items-center justify-center",
-                      currentSelection.suit === suit.symbol
-                        ? "bg-primary text-white shadow-md"
-                        : "bg-gray-200 hover:bg-gray-300",
-                      suit.color,
-                      ranks.every(rank => isCardExcluded(rank, suit.symbol)) && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    {suit.display}
-                  </button>
+                  <TooltipProvider key={suit.symbol}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          key={suit.symbol}
+                          type="button"
+                          onClick={() => handleSuitSelect(suit.symbol)}
+                          disabled={ranks.every(rank => isCardExcluded(rank, suit.symbol))}
+                          className={cn(
+                            "py-3 px-2 text-2xl rounded transition-all flex items-center justify-center",
+                            currentSelection.suit === suit.symbol
+                              ? "bg-primary text-white shadow-md"
+                              : "bg-gray-200 hover:bg-gray-300",
+                            suit.color,
+                            ranks.every(rank => isCardExcluded(rank, suit.symbol)) && "opacity-50 cursor-not-allowed"
+                          )}
+                        >
+                          {suit.display}
+                        </button>
+                      </TooltipTrigger>
+                      {ranks.every(rank => isCardExcluded(rank, suit.symbol)) && (
+                        <TooltipContent>
+                          <p>Already used</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
                 ))}
               </div>
             </div>
