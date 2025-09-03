@@ -61,84 +61,50 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
         </div>
         
         {/* Flop Section */}
-        <Collapsible open={isFlopOpen} onOpenChange={setIsFlopOpen} className="border rounded-lg">
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-gray-50">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">Flop</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Board preview for Flop */}
-              {flopCards && flopCards.length > 0 && (
-                <div className="flex items-center gap-1">
-                  {flopCards.filter(c => c.rank && c.suit).map((card, idx) => (
-                    <div key={idx} className="w-6 h-8 bg-white border border-gray-300 rounded text-xs flex flex-col items-center justify-center">
-                      <span className="font-bold leading-none">{card.rank}</span>
-                      <span className={`leading-none ${
-                        card.suit === 'h' || card.suit === 'd' ? 'text-red-600' : 'text-black'
-                      }`}>
-                        {card.suit === 's' ? '♠' : card.suit === 'h' ? '♥' : card.suit === 'd' ? '♦' : '♣'}
-                      </span>
-                    </div>
-                  ))}
-                  <Trash2 
-                    className="h-4 w-4 text-gray-500 hover:text-red-500 cursor-pointer ml-1" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setValue('flopCards', [{ id: 0 }, { id: 1 }, { id: 2 }]);
-                    }}
+        <div className="space-y-4">
+          <FormField
+            control={control}
+            name="flopCards"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Flop Cards</FormLabel>
+                <FormControl>
+                  <CardSlotPicker
+                    slots={3}
+                    selectedCards={field.value || []}
+                    onChange={field.onChange}
+                    excludedCards={[
+                      ...(selectedCards.match(/.{2}/g) || []),
+                      ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                      ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                      ...((villainCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                    ].filter(card => 
+                      !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                    )}
                   />
-                </div>
-              )}
-              <ChevronDown className={`h-4 w-4 transition-transform ${isFlopOpen ? 'rotate-180' : ''}`} />
-            </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="px-4 pb-4">
-            <div className="space-y-4">
-              <FormField
-                control={control}
-                name="flopCards"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Flop Cards</FormLabel>
-                    <FormControl>
-                      <CardSlotPicker
-                        slots={3}
-                        selectedCards={field.value || []}
-                        onChange={field.onChange}
-                        excludedCards={[
-                          ...(selectedCards.match(/.{2}/g) || []),
-                          ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                          ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                          ...((villainCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
-                        ].filter(card => 
-                          !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
-                        )}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={control}
-                name="flopAction"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Action</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Describe the action on the flop..."
-                        className="resize-none"
-                        rows={2}
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={control}
+            name="flopAction"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Flop Action</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Describe the action on the flop..."
+                    className="resize-none"
+                    rows={2}
+                    {...field}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
 
         {/* Turn Analysis - Collapsible */}
         <Collapsible open={isTurnOpen} onOpenChange={setIsTurnOpen}>
