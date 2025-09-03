@@ -14,7 +14,7 @@ interface ExportData {
   stats: StatData[];
   filters: FilterOptions;
   userName?: string;
-  statisticsData?: any;
+  statistics?: any;
   defaultCurrency?: string;
 }
 

@@ -38,13 +38,13 @@ const Dashboard: React.FC = () => {
     // Filters are automatically applied through the filters prop to MyStatisticsSection
   };
 
-  const handleExportPDF = (activeTab: string, statisticsData: any, defaultCurrency: string) => {
+  const handleExportPDF = (activeTab: string, statistics: any, defaultCurrency: string) => {
     const exportData = {
       activeTab,
       stats: [], // Will be populated by the PDF generator using real data
       filters,
       userName: user?.fullName || user?.username,
-      statisticsData,
+      statistics,
       defaultCurrency,
     };
     

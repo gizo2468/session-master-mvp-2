@@ -45,7 +45,7 @@ const StatCell: React.FC<StatCellProps> = ({ label, value, isPositive = null, is
 
 interface MyStatisticsSectionProps {
   onFilterClick: () => void;
-  onExportPDF?: (activeTab: string, statisticsData: any, defaultCurrency: string) => void;
+  onExportPDF?: (activeTab: string, statistics: any, defaultCurrency: string) => void;
   onRegisterExportFunction?: (exportFn: () => void) => void;
   filters?: FilterOptions;
 }
