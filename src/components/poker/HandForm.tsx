@@ -95,6 +95,9 @@ const HandForm: React.FC<HandFormProps> = ({
   // Position selector state - simplified approach now
   const [selectedPositionIndex, setSelectedPositionIndex] = useState(0);
   
+  // Help modal state
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  
   // Collapsible section states
   const [isFlopOpen, setIsFlopOpen] = useState(false);
   const [isTurnOpen, setIsTurnOpen] = useState(false);
@@ -466,7 +469,15 @@ const HandForm: React.FC<HandFormProps> = ({
                 {/* Premium Street-by-Street Analysis */}
                 <HandDetailGate>
                   <div className="space-y-6 border-t pt-6">
-                    <h4 className="font-semibold text-lg text-center">Street-by-Street Analysis</h4>
+                    <div className="flex items-center justify-center gap-2">
+                      <h4 className="font-semibold text-lg">Street-by-Street</h4>
+                      <AdaptiveTooltip content="Click for help on Street-by-Street analysis">
+                        <CircleHelp 
+                          className="h-4 w-4 text-gray-500 cursor-pointer" 
+                          onClick={() => setIsHelpModalOpen(true)}
+                        />
+                      </AdaptiveTooltip>
+                    </div>
                     
                     {/* Preflop Action - Moved from above */}
                     <FormField
@@ -474,12 +485,7 @@ const HandForm: React.FC<HandFormProps> = ({
                       name="action"
                       render={({ field }) => (
                         <FormItem>
-                          <div className="flex items-center gap-2">
-                            <FormLabel>Preflop Action</FormLabel>
-                            <AdaptiveTooltip content={tooltipContent.action}>
-                              <CircleHelp className="h-4 w-4 text-gray-500" />
-                            </AdaptiveTooltip>
-                          </div>
+                          <FormLabel>Preflop Action</FormLabel>
                           <FormControl>
                             <ToggleGroup 
                               type="single" 
@@ -836,8 +842,70 @@ const HandForm: React.FC<HandFormProps> = ({
              </Button>
            </DialogFooter>
          </div>
-       </DialogContent>
-     </Dialog>
+      </DialogContent>
+
+      {/* Help Modal */}
+      <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Street-by-Street Help</DialogTitle>
+            <DialogDescription>
+              Guide to using the Street-by-Street analysis section
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-semibold text-sm mb-2">Preflop Action</h4>
+              <p className="text-sm text-muted-foreground">
+                Select the action you took preflop (Open/Flat, 3Bet, 4Bet, BvB).
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-sm mb-2">Cards (Flop/Turn/River)</h4>
+              <p className="text-sm text-muted-foreground">
+                Tap blank cards to select rank + suit. Cards already used cannot be reused.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-sm mb-2">Action fields</h4>
+              <p className="text-sm text-muted-foreground">
+                Write the betting sequence for that street (e.g., Check, Bet, Call).
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-sm mb-2">Villain Hand</h4>
+              <p className="text-sm text-muted-foreground">
+                Enter opponent's cards if showdown occurred.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-sm mb-2">Result</h4>
+              <p className="text-sm text-muted-foreground">
+                Short text about the outcome (Won, Lost, Split).
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-sm mb-2">Board preview</h4>
+              <p className="text-sm text-muted-foreground">
+                Shows flop/turn/river cards automatically if entered.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" onClick={() => setIsHelpModalOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Dialog>
   );
 };
 
