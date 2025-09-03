@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { X } from 'lucide-react';
-import cardBackGold from '@/assets/card-back-gold.png';
 
 interface CardSlot {
   id?: number;
@@ -124,13 +123,31 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
             </>
           ) : (
             <>
-              {/* Empty card slot - card back */}
-              <div 
-                className="w-full h-full bg-cover bg-center rounded" 
-                style={{
-                  backgroundImage: `url(${cardBackGold})`
-                }}
-              >
+              {/* Empty card slot - card back with yellow background and white diamond pattern */}
+              <div className="w-full h-full bg-yellow-400 rounded border-2 border-white relative overflow-hidden">
+                {/* Diamond pattern overlay */}
+                <div 
+                  className="absolute inset-0 opacity-30"
+                  style={{
+                    backgroundImage: `
+                      repeating-linear-gradient(
+                        45deg,
+                        transparent,
+                        transparent 3px,
+                        white 3px,
+                        white 6px
+                      ),
+                      repeating-linear-gradient(
+                        -45deg,
+                        transparent,
+                        transparent 3px,
+                        white 3px,
+                        white 6px
+                      )
+                    `
+                  }}
+                >
+                </div>
               </div>
             </>
           )}
