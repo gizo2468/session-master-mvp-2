@@ -220,15 +220,15 @@ const HandForm: React.FC<HandFormProps> = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>{isEditing ? 'Edit Hand' : 'Add New Hand'}</DialogTitle>
           <DialogDescription>
             Record the details of your poker hand for analysis and tracking.
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="max-h-[70vh]">
+        <ScrollArea className="flex-1 overflow-hidden">
           <div className="p-1">
             <Form {...form}>
               <form onSubmit={(e) => {
