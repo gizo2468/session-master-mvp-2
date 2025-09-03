@@ -174,15 +174,16 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Add New Table</DialogTitle>
-          <DialogDescription>
-            Enter the details for the new table you're playing at.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 py-4" autoComplete="off">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="space-y-6">
+          <DialogHeader>
+            <DialogTitle>Add New Table</DialogTitle>
+            <DialogDescription>
+              Enter the details for the new table you're playing at.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           <div className="space-y-2">
             <Label htmlFor="tableName">Table Name (Optional)</Label>
             <Input
@@ -385,8 +386,9 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </DialogContent>
+  </Dialog>
   );
 };
 
