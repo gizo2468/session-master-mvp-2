@@ -19,6 +19,7 @@ import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { CircleHelp, Camera, ChevronDown, Trash2 } from 'lucide-react';
 import HandDetailGate from '@/components/ui/HandDetailGate';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useToast } from '@/hooks/use-toast';
 
 interface HandFormProps {
   open: boolean;
@@ -104,6 +105,43 @@ const HandForm: React.FC<HandFormProps> = ({
   const [isRiverOpen, setIsRiverOpen] = useState(false);
   const [isShowdownOpen, setIsShowdownOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { toast } = useToast();
+  
+  // Helper function to get all used cards
+  const getAllUsedCards = (): string[] => {
+    const usedCards: string[] = [];
+    
+    // Add flop cards
+    if (flopCards) {
+      const flopCardsArray = flopCards.filter(c => c.rank && c.suit).map(c => c.rank + c.suit);
+      usedCards.push(...flopCardsArray);
+    }
+    
+    // Add turn cards
+    if (turnCards) {
+      const turnCardsArray = turnCards.filter(c => c.rank && c.suit).map(c => c.rank + c.suit);
+      usedCards.push(...turnCardsArray);
+    }
+    
+    // Add river cards
+    if (riverCards) {
+      const riverCardsArray = riverCards.filter(c => c.rank && c.suit).map(c => c.rank + c.suit);
+      usedCards.push(...riverCardsArray);
+    }
+    
+    // Add villain cards
+    if (villainCards) {
+      const villainCardsArray = villainCards.filter(c => c.rank && c.suit).map(c => c.rank + c.suit);
+      usedCards.push(...villainCardsArray);
+    }
+    
+    return usedCards;
+  };
+  
+  // Helper to get excluded cards for main card selector (excludes all other cards except own)
+  const getExcludedCardsForMain = (): string[] => {
+    return getAllUsedCards(); // Exclude cards from all other selectors
+  };
   
   // Get current form values for reactive UI updates
   const gameType = form.watch('gameType');
@@ -375,11 +413,12 @@ const HandForm: React.FC<HandFormProps> = ({
                         </AdaptiveTooltip>
                       </div>
                       <FormControl>
-                        <CardSelector 
-                          selectedCards={field.value} 
-                          onChange={field.onChange}
-                          maxCards={getMaxCards()}
-                        />
+                         <CardSelector 
+                           selectedCards={field.value} 
+                           onChange={field.onChange}
+                           maxCards={getMaxCards()}
+                           excludedCards={getExcludedCardsForMain()}
+                         />
                       </FormControl>
                       <FormDescription>
                         {gameType === 'NLH' 
@@ -528,12 +567,19 @@ const HandForm: React.FC<HandFormProps> = ({
                                 <FormItem>
                                   <FormLabel>Flop Cards</FormLabel>
                                   <FormControl>
-                                    <CardSlotPicker
-                                      slots={3}
-                                      selectedCards={field.value || [{ id: 0 }, { id: 1 }, { id: 2 }]}
-                                      onChange={field.onChange}
-                                      excludedCards={selectedCards.match(/.{2}/g) || []}
-                                    />
+                                     <CardSlotPicker
+                                       slots={3}
+                                       selectedCards={field.value || [{ id: 0 }, { id: 1 }, { id: 2 }]}
+                                       onChange={field.onChange}
+                                       excludedCards={[
+                                         ...(selectedCards.match(/.{2}/g) || []),
+                                         ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                         ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                         ...((villainCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                                       ].filter(card => 
+                                         !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                                       )}
+                                     />
                                   </FormControl>
                                 </FormItem>
                               )}
@@ -560,11 +606,18 @@ const HandForm: React.FC<HandFormProps> = ({
                                 <FormItem>
                                   <FormLabel>Flop Cards</FormLabel>
                                   <FormControl>
-                                    <CardSlotPicker
-                                      slots={3}
-                                      selectedCards={field.value || [{ id: 0 }, { id: 1 }, { id: 2 }]}
-                                      onChange={field.onChange}
-                                      excludedCards={selectedCards.match(/.{2}/g) || []}
+                                  <CardSlotPicker
+                                    slots={3}
+                                    selectedCards={field.value || [{ id: 0 }, { id: 1 }, { id: 2 }]}
+                                    onChange={field.onChange}
+                                    excludedCards={[
+                                      ...(selectedCards.match(/.{2}/g) || []),
+                                      ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                      ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                      ...((villainCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                                    ].filter(card => 
+                                      !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                                    )}
                                     />
                                   </FormControl>
                                 </FormItem>
@@ -604,14 +657,18 @@ const HandForm: React.FC<HandFormProps> = ({
                               <FormItem>
                                 <FormLabel>Turn Card</FormLabel>
                                 <FormControl>
-                                  <CardSlotPicker
-                                    slots={1}
-                                    selectedCards={field.value || [{ id: 0 }]}
-                                    onChange={field.onChange}
-                                    excludedCards={[
-                                      ...(selectedCards.match(/.{2}/g) || []),
-                                      ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
-                                    ]}
+                                   <CardSlotPicker
+                                     slots={1}
+                                     selectedCards={field.value || [{ id: 0 }]}
+                                     onChange={field.onChange}
+                                     excludedCards={[
+                                       ...(selectedCards.match(/.{2}/g) || []),
+                                       ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                       ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                       ...((villainCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                                     ].filter(card => 
+                                       !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                                     )}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -650,15 +707,18 @@ const HandForm: React.FC<HandFormProps> = ({
                               <FormItem>
                                 <FormLabel>River Card</FormLabel>
                                 <FormControl>
-                                  <CardSlotPicker
-                                    slots={1}
-                                    selectedCards={field.value || [{ id: 0 }]}
-                                    onChange={field.onChange}
-                                    excludedCards={[
-                                      ...(selectedCards.match(/.{2}/g) || []),
-                                      ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                                      ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
-                                    ]}
+                                   <CardSlotPicker
+                                     slots={1}
+                                     selectedCards={field.value || [{ id: 0 }]}
+                                     onChange={field.onChange}
+                                     excludedCards={[
+                                       ...(selectedCards.match(/.{2}/g) || []),
+                                       ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                       ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                       ...((villainCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                                     ].filter(card => 
+                                       !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                                     )}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -787,16 +847,18 @@ const HandForm: React.FC<HandFormProps> = ({
                               <FormItem>
                                 <FormLabel>Villain Hand</FormLabel>
                                 <FormControl>
-                                  <CardSlotPicker
-                                    slots={gameType === 'NLH' ? 2 : 4}
-                                    selectedCards={field.value || (gameType === 'NLH' ? [{ id: 0 }, { id: 1 }] : [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }])}
-                                    onChange={field.onChange}
-                                    excludedCards={[
-                                      ...(selectedCards.match(/.{2}/g) || []),
-                                      ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                                      ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                                      ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
-                                    ]}
+                                   <CardSlotPicker
+                                     slots={gameType === 'NLH' ? 2 : 4}
+                                     selectedCards={field.value || (gameType === 'NLH' ? [{ id: 0 }, { id: 1 }] : [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }])}
+                                     onChange={field.onChange}
+                                     excludedCards={[
+                                       ...(selectedCards.match(/.{2}/g) || []),
+                                       ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                       ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                       ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                                     ].filter(card => 
+                                       !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                                     )}
                                   />
                                 </FormControl>
                               </FormItem>

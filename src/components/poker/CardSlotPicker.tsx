@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface CardSlot {
   id?: number;
@@ -34,6 +35,8 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
     rank: null,
     suit: null
   });
+  
+  const { toast } = useToast();
 
   const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
   const suits = [
@@ -53,6 +56,12 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
            selectedCards.some(card => card.rank === rank && card.suit === suit);
   };
 
+  // Check if max cards are already selected
+  const isAtMaxCapacity = () => {
+    const filledSlots = selectedCards.filter(card => card.rank && card.suit).length;
+    return filledSlots >= slots;
+  };
+
   // Handle slot tap - open picker for empty slots, clear for filled slots
   const handleSlotTap = (slotIndex: number) => {
     if (disabled) return;
@@ -62,6 +71,16 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
       // Clear the slot
       clearSlot(slotIndex);
     } else {
+      // Check if at capacity
+      if (isAtMaxCapacity()) {
+        toast({
+          title: "Maximum cards reached",
+          description: `You can only select up to ${slots} card${slots > 1 ? 's' : ''}.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
       // Open picker for this slot
       setActiveSlotIndex(slotIndex);
       setCurrentSelection({ rank: null, suit: null }); // Reset selection state
@@ -79,6 +98,11 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
   // Handle rank selection
   const handleRankSelect = (rank: string) => {
     if (suits.every(suit => isCardExcluded(rank, suit.symbol))) {
+      toast({
+        title: "Already used",
+        description: "This card is already in use.",
+        variant: "destructive",
+      });
       return; // Don't allow selection if all suits are excluded
     }
     
@@ -93,6 +117,11 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
   // Handle suit selection
   const handleSuitSelect = (suit: string) => {
     if (ranks.every(rank => isCardExcluded(rank, suit))) {
+      toast({
+        title: "Already used",
+        description: "This card is already in use.",
+        variant: "destructive",
+      });
       return; // Don't allow selection if all ranks are excluded
     }
     
@@ -106,7 +135,16 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
 
   // Handle card selection from picker
   const handleCardSelect = (rank: string, suit: string) => {
-    if (activeSlotIndex === null || isCardExcluded(rank, suit)) return;
+    if (activeSlotIndex === null || isCardExcluded(rank, suit)) {
+      if (isCardExcluded(rank, suit)) {
+        toast({
+          title: "Already used",
+          description: "This card is already in use.",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
     
     const newCards = [...selectedCards];
     newCards[activeSlotIndex] = { 
@@ -214,11 +252,12 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                           onClick={() => handleRankSelect(rank)}
                           disabled={suits.every(suit => isCardExcluded(rank, suit.symbol))}
                           className={cn(
-                            "py-2 px-2 text-sm font-bold rounded transition-all",
-                            currentSelection.rank === rank
-                              ? "bg-primary text-white shadow-md"
-                              : "bg-gray-200 hover:bg-gray-300 text-gray-800",
-                            suits.every(suit => isCardExcluded(rank, suit.symbol)) && "opacity-50 cursor-not-allowed"
+                             "py-2 px-2 text-sm font-bold rounded transition-all",
+                             currentSelection.rank === rank
+                               ? "bg-primary text-white shadow-md"
+                               : suits.every(suit => isCardExcluded(rank, suit.symbol))
+                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                 : "bg-gray-200 hover:bg-gray-300 text-gray-800"
                           )}
                         >
                           {rank}
@@ -244,11 +283,12 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                           onClick={() => handleRankSelect(rank)}
                           disabled={suits.every(suit => isCardExcluded(rank, suit.symbol))}
                           className={cn(
-                            "py-2 px-2 text-sm font-bold rounded transition-all",
-                            currentSelection.rank === rank
-                              ? "bg-primary text-white shadow-md"
-                              : "bg-gray-200 hover:bg-gray-300 text-gray-800",
-                            suits.every(suit => isCardExcluded(rank, suit.symbol)) && "opacity-50 cursor-not-allowed"
+                             "py-2 px-2 text-sm font-bold rounded transition-all",
+                             currentSelection.rank === rank
+                               ? "bg-primary text-white shadow-md"
+                               : suits.every(suit => isCardExcluded(rank, suit.symbol))
+                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                 : "bg-gray-200 hover:bg-gray-300 text-gray-800"
                           )}
                         >
                           {rank}
@@ -279,12 +319,13 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                           onClick={() => handleSuitSelect(suit.symbol)}
                           disabled={ranks.every(rank => isCardExcluded(rank, suit.symbol))}
                           className={cn(
-                            "py-3 px-2 text-2xl rounded transition-all flex items-center justify-center",
-                            currentSelection.suit === suit.symbol
-                              ? "bg-primary text-white shadow-md"
-                              : "bg-gray-200 hover:bg-gray-300",
-                            suit.color,
-                            ranks.every(rank => isCardExcluded(rank, suit.symbol)) && "opacity-50 cursor-not-allowed"
+                             "py-3 px-2 text-2xl rounded transition-all flex items-center justify-center",
+                             currentSelection.suit === suit.symbol
+                               ? "bg-primary text-white shadow-md"
+                               : ranks.every(rank => isCardExcluded(rank, suit.symbol))
+                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                 : "bg-gray-200 hover:bg-gray-300",
+                             !ranks.every(rank => isCardExcluded(rank, suit.symbol)) && suit.color
                           )}
                         >
                           {suit.display}

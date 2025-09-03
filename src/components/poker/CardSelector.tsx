@@ -8,12 +8,14 @@ interface CardSelectorProps {
   selectedCards: string;
   onChange: (cards: string) => void;
   maxCards?: number;
+  excludedCards?: string[];
 }
 
 const CardSelector: React.FC<CardSelectorProps> = ({ 
   selectedCards, 
   onChange, 
-  maxCards = 6 // Default max
+  maxCards = 6, // Default max
+  excludedCards = []
 }) => {
   // State to track the current selection process
   const [currentSelection, setCurrentSelection] = useState<{
@@ -61,6 +63,17 @@ const CardSelector: React.FC<CardSelectorProps> = ({
     return cardSet;
   }, [selectedCardObjects]);
   
+  // Get set of excluded cards
+  const excludedCardSet = useMemo(() => {
+    return new Set(excludedCards);
+  }, [excludedCards]);
+  
+  // Check if a card is unavailable (selected or excluded)
+  const isCardUnavailable = (rank: string, suit: string) => {
+    const cardString = rank + suit;
+    return selectedCardSet.has(cardString) || excludedCardSet.has(cardString);
+  };
+  
   // Get suit display and color info
   const getSuitInfo = (suitSymbol: string) => {
     const suit = suits.find(s => s.symbol === suitSymbol);
@@ -71,14 +84,19 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   const handleRankSelect = (rank: string) => {
     if (selectedCards.length / 2 >= maxCards) return;
     
+    // Check if all suits for this rank are unavailable
+    if (suits.every(suit => isCardUnavailable(rank, suit.symbol))) {
+      return;
+    }
+    
     setCurrentSelection(prev => ({ ...prev, rank }));
     
     // If a suit is already selected, add the card and reset
     if (currentSelection.suit) {
       const card = rank + currentSelection.suit;
       
-      // Check if this card is already selected
-      if (!selectedCardSet.has(card)) {
+      // Check if this card is unavailable
+      if (!isCardUnavailable(rank, currentSelection.suit)) {
         onChange(selectedCards + card);
       }
       
@@ -90,14 +108,19 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   const handleSuitSelect = (suitSymbol: string) => {
     if (selectedCards.length / 2 >= maxCards) return;
     
+    // Check if all ranks for this suit are unavailable
+    if (ranks.every(rank => isCardUnavailable(rank, suitSymbol))) {
+      return;
+    }
+    
     setCurrentSelection(prev => ({ ...prev, suit: suitSymbol }));
     
     // If a rank is already selected, add the card and reset
     if (currentSelection.rank) {
       const card = currentSelection.rank + suitSymbol;
       
-      // Check if this card is already selected
-      if (!selectedCardSet.has(card)) {
+      // Check if this card is unavailable
+      if (!isCardUnavailable(currentSelection.rank, suitSymbol)) {
         onChange(selectedCards + card);
       }
       
@@ -122,11 +145,6 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   
   // Check if we've reached the maximum number of cards
   const isMaxReached = selectedCardCount >= maxCards;
-  
-  // Check if a specific card is already selected
-  const isCardSelected = (rank: string, suit: string) => {
-    return selectedCardSet.has(rank + suit);
-  };
   
   return (
     <div className="space-y-3">
@@ -204,13 +222,14 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRankSelect(rank)}
-                      disabled={isMaxReached || suits.every(suit => isCardSelected(rank, suit.symbol))}
-                      className={cn(
-                        "py-2.5 rounded-md font-bold text-lg transition-all",
-                        currentSelection.rank === rank 
-                          ? "bg-poker-gold text-white shadow-md" 
-                          : "bg-gray-300 hover:bg-gray-200 text-gray-800",
-                        (isMaxReached || suits.every(suit => isCardSelected(rank, suit.symbol))) && "opacity-50 cursor-not-allowed"
+                       disabled={isMaxReached || suits.every(suit => isCardUnavailable(rank, suit.symbol))}
+                       className={cn(
+                         "py-2.5 rounded-md font-bold text-lg transition-all",
+                         currentSelection.rank === rank 
+                           ? "bg-poker-gold text-white shadow-md" 
+                           : suits.every(suit => isCardUnavailable(rank, suit.symbol))
+                             ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                             : "bg-gray-300 hover:bg-gray-200 text-gray-800"
                       )}
                     >
                       {rank}
@@ -221,11 +240,11 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                       <p>Maximum cards reached</p>
                     </TooltipContent>
                   )}
-                  {!isMaxReached && suits.every(suit => isCardSelected(rank, suit.symbol)) && (
-                    <TooltipContent>
-                      <p>All {rank} cards are already selected</p>
-                    </TooltipContent>
-                  )}
+                   {!isMaxReached && suits.every(suit => isCardUnavailable(rank, suit.symbol)) && (
+                     <TooltipContent>
+                       <p>Already used</p>
+                     </TooltipContent>
+                   )}
                 </Tooltip>
               </TooltipProvider>
             ))}
@@ -240,13 +259,14 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRankSelect(rank)}
-                      disabled={isMaxReached || suits.every(suit => isCardSelected(rank, suit.symbol))}
-                      className={cn(
-                        "py-2.5 rounded-md font-bold text-lg transition-all",
-                        currentSelection.rank === rank 
-                          ? "bg-poker-gold text-white shadow-md" 
-                          : "bg-gray-300 hover:bg-gray-200 text-gray-800",
-                        (isMaxReached || suits.every(suit => isCardSelected(rank, suit.symbol))) && "opacity-50 cursor-not-allowed"
+                       disabled={isMaxReached || suits.every(suit => isCardUnavailable(rank, suit.symbol))}
+                       className={cn(
+                         "py-2.5 rounded-md font-bold text-lg transition-all",
+                         currentSelection.rank === rank 
+                           ? "bg-poker-gold text-white shadow-md" 
+                           : suits.every(suit => isCardUnavailable(rank, suit.symbol))
+                             ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                             : "bg-gray-300 hover:bg-gray-200 text-gray-800"
                       )}
                     >
                       {rank}
@@ -257,11 +277,11 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                       <p>Maximum cards reached</p>
                     </TooltipContent>
                   )}
-                  {!isMaxReached && suits.every(suit => isCardSelected(rank, suit.symbol)) && (
-                    <TooltipContent>
-                      <p>All {rank} cards are already selected</p>
-                    </TooltipContent>
-                  )}
+                   {!isMaxReached && suits.every(suit => isCardUnavailable(rank, suit.symbol)) && (
+                     <TooltipContent>
+                       <p>Already used</p>
+                     </TooltipContent>
+                   )}
                 </Tooltip>
               </TooltipProvider>
             ))}
@@ -277,14 +297,15 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                   <button
                     type="button"
                     onClick={() => handleSuitSelect(suit.symbol)}
-                    disabled={isMaxReached || ranks.every(rank => isCardSelected(rank, suit.symbol))}
-                    className={cn(
-                      "py-1.5 rounded-md text-lg transition-all flex items-center justify-center",
-                      currentSelection.suit === suit.symbol
-                        ? "bg-poker-gold text-white shadow-md" 
-                        : "bg-gray-300 hover:bg-gray-200",
-                      suit.color,
-                      (isMaxReached || ranks.every(rank => isCardSelected(rank, suit.symbol))) && "opacity-50 cursor-not-allowed"
+                     disabled={isMaxReached || ranks.every(rank => isCardUnavailable(rank, suit.symbol))}
+                     className={cn(
+                       "py-1.5 rounded-md text-lg transition-all flex items-center justify-center",
+                       currentSelection.suit === suit.symbol
+                         ? "bg-poker-gold text-white shadow-md" 
+                         : ranks.every(rank => isCardUnavailable(rank, suit.symbol))
+                           ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                           : "bg-gray-300 hover:bg-gray-200",
+                       !ranks.every(rank => isCardUnavailable(rank, suit.symbol)) && suit.color
                     )}
                   >
                     {suit.display}
@@ -295,11 +316,11 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                     <p>Maximum cards reached</p>
                   </TooltipContent>
                 )}
-                {!isMaxReached && ranks.every(rank => isCardSelected(rank, suit.symbol)) && (
-                  <TooltipContent>
-                    <p>All {suit.display} cards are already selected</p>
-                  </TooltipContent>
-                )}
+                 {!isMaxReached && ranks.every(rank => isCardUnavailable(rank, suit.symbol)) && (
+                   <TooltipContent>
+                     <p>Already used</p>
+                   </TooltipContent>
+                 )}
               </Tooltip>
             </TooltipProvider>
           ))}
