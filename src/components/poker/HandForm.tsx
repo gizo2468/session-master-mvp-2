@@ -471,12 +471,10 @@ const HandForm: React.FC<HandFormProps> = ({
                   <div className="space-y-6 border-t pt-6">
                     <div className="flex items-center justify-center gap-2">
                       <h4 className="font-semibold text-lg">Street-by-Street</h4>
-                      <AdaptiveTooltip content="Click for help on Street-by-Street analysis">
-                        <CircleHelp 
-                          className="h-4 w-4 text-gray-500 cursor-pointer" 
-                          onClick={() => setIsHelpModalOpen(true)}
-                        />
-                      </AdaptiveTooltip>
+                      <CircleHelp 
+                        className="h-4 w-4 text-gray-500 cursor-pointer" 
+                        onClick={() => setIsHelpModalOpen(true)}
+                      />
                     </div>
                     
                     {/* Preflop Action - Moved from above */}
@@ -897,12 +895,6 @@ const HandForm: React.FC<HandFormProps> = ({
               </p>
             </div>
           </div>
-          
-          <DialogFooter>
-            <Button type="button" onClick={() => setIsHelpModalOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Dialog>
