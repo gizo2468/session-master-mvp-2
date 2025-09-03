@@ -140,52 +140,40 @@ const CardSelector: React.FC<CardSelectorProps> = ({
             <button
               key={index}
               type="button"
-              onClick={() => card ? removeCard(index) : undefined}
-              className={cn(
-                "w-12 h-16 border-2 rounded-md flex flex-col items-center justify-center transition-all",
-                card ? "cursor-pointer hover:opacity-80" : "cursor-default"
-              )}
+              className="w-12 h-16 border-2 rounded-md flex flex-col items-center justify-center transition-all cursor-default"
             >
               {card ? (
-                <>
-                  {/* Filled card slot with white background and border */}
-                  <div className="relative w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-1">
-                    <div className="font-bold text-sm">{card.rank}</div>
-                    <div className={`${color} text-lg`}>{display}</div>
-                    {/* Small X overlay for clearing */}
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-xs">
-                      <Trash2 className="w-2 h-2" />
-                    </div>
-                  </div>
-                </>
+                /* Filled card slot with white background and border */
+                <div className="relative w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-1">
+                  <div className="font-bold text-sm">{card.rank}</div>
+                  <div className={`${color} text-lg`}>{display}</div>
+                </div>
               ) : (
-                <>
-                  {/* Empty card slot - yellow card back with white diamond pattern */}
-                  <div className="w-full h-full bg-yellow-400 rounded border-2 border-white relative overflow-hidden">
-                    {/* Diamond pattern overlay */}
-                    <div 
-                      className="absolute inset-0 opacity-30"
-                      style={{
-                        backgroundImage: `
-                          repeating-linear-gradient(
-                            45deg,
-                            transparent,
-                            transparent 3px,
-                            white 3px,
-                            white 6px
-                          ),
-                          repeating-linear-gradient(
-                            -45deg,
-                            transparent,
-                            transparent 3px,
-                            white 3px,
-                            white 6px
-                          )
-                        `
-                      }}
-                    />
-                  </div>
-                </>
+                /* Empty card slot - yellow card back with white diamond pattern */
+                <div className="w-full h-full bg-yellow-400 rounded border-2 border-white relative overflow-hidden">
+                  {/* Diamond pattern overlay */}
+                  <div 
+                    className="absolute inset-0 opacity-30"
+                    style={{
+                      backgroundImage: `
+                        repeating-linear-gradient(
+                          45deg,
+                          transparent,
+                          transparent 3px,
+                          white 3px,
+                          white 6px
+                        ),
+                        repeating-linear-gradient(
+                          -45deg,
+                          transparent,
+                          transparent 3px,
+                          white 3px,
+                          white 6px
+                        )
+                      `
+                    }}
+                  />
+                </div>
               )}
             </button>
           );
