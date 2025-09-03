@@ -258,16 +258,14 @@ const HandForm: React.FC<HandFormProps> = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle>{isEditing ? 'Edit Hand' : 'Add New Hand'}</DialogTitle>
-          <DialogDescription>
-            Record the details of your poker hand for analysis and tracking.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <ScrollArea className="flex-1">
-          <div className="pr-4">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <div className="space-y-6">
+          <DialogHeader>
+            <DialogTitle>{isEditing ? 'Edit Hand' : 'Add New Hand'}</DialogTitle>
+            <DialogDescription>
+              Record the details of your poker hand for analysis and tracking.
+            </DialogDescription>
+          </DialogHeader>
             <Form {...form}>
               <form onSubmit={(e) => {
                 if (e.nativeEvent instanceof KeyboardEvent && e.nativeEvent.key === 'Enter') {
@@ -711,27 +709,26 @@ const HandForm: React.FC<HandFormProps> = ({
                       <FormMessage />
                     </FormItem>
                   )}
-                />
-              </form>
-            </Form>
-          </div>
-        </ScrollArea>
-        
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button 
-            type="button"
-            onClick={form.handleSubmit(handleSubmit)}
-            disabled={!selectedCards || selectedCards.length === 0}
-            className="bg-poker-gold hover:bg-poker-darkGold text-white"
-          >
-            {isEditing ? 'Save Changes' : 'Add Hand'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+                 />
+               </form>
+             </Form>
+           
+           <DialogFooter>
+             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+               Cancel
+             </Button>
+             <Button 
+               type="button"
+               onClick={form.handleSubmit(handleSubmit)}
+               disabled={!selectedCards || selectedCards.length === 0}
+               className="bg-poker-gold hover:bg-poker-darkGold text-white"
+             >
+               {isEditing ? 'Save Changes' : 'Add Hand'}
+             </Button>
+           </DialogFooter>
+         </div>
+       </DialogContent>
+     </Dialog>
   );
 };
 
