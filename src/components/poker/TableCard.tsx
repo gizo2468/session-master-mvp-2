@@ -68,7 +68,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
   const safeEndTime = table.endTime && isValid(table.endTime) ? table.endTime : undefined;
   
   const formattedStartTime = dateFormat(safeStartTime, 'HH:mm');
-  const formattedDate = dateFormat(safeStartTime, 'd MMM yyyy');
 
   const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
   const rebuyCount = Math.floor(rebuyAmount / (table.initialBuyIn || table.buyIn || 1));
@@ -190,9 +189,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               Multi-Day
             </span>
           )}
-          <div className="text-sm text-gray-500 mt-1">
-            {formattedDate}
-          </div>
         </div>
 
         <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 pb-4">
