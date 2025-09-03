@@ -266,7 +266,7 @@ const HandForm: React.FC<HandFormProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 max-h-[calc(90vh-120px)]">
+        <ScrollArea className="flex-1">
           <div className="pr-4">
             <Form {...form}>
               <form onSubmit={(e) => {
