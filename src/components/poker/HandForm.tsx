@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import CardSelector from './CardSelector';
+import CardSlotPicker from './CardSlotPicker';
 import { HandData } from '@/types/poker';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/Lucide';
@@ -38,14 +39,31 @@ const handFormSchema = z.object({
   image: z.string().optional().or(z.any().optional()),
   gameType: z.enum(['NLH', 'PLO']).default('NLH'),
   tableId: z.string().optional(),
-  // Premium hand detail fields
-  flopCards: z.string().optional(),
+  // Premium hand detail fields - updated for card slot structure
+  flopCards: z.array(z.object({
+    id: z.number(),
+    rank: z.string().optional(),
+    suit: z.string().optional(),
+  })).default([{ id: 0 }, { id: 1 }, { id: 2 }]),
   flopAction: z.string().optional(),
-  turnCard: z.string().optional(),
+  turnCards: z.array(z.object({
+    id: z.number(),
+    rank: z.string().optional(),
+    suit: z.string().optional(),
+  })).default([{ id: 0 }]),
   turnAction: z.string().optional(),
-  riverCard: z.string().optional(),
+  riverCards: z.array(z.object({
+    id: z.number(),
+    rank: z.string().optional(),
+    suit: z.string().optional(),
+  })).default([{ id: 0 }]),
   riverAction: z.string().optional(),
-  showdownResult: z.string().optional(),
+  villainCards: z.array(z.object({
+    id: z.number(),
+    rank: z.string().optional(),
+    suit: z.string().optional(),
+  })).default([]),
+  result: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof handFormSchema>;
@@ -89,11 +107,12 @@ const HandForm: React.FC<HandFormProps> = ({
   // Watch form values to auto-expand sections when data is input
   const flopCards = form.watch('flopCards');
   const flopAction = form.watch('flopAction');
-  const turnCard = form.watch('turnCard');
+  const turnCards = form.watch('turnCards');
   const turnAction = form.watch('turnAction');
-  const riverCard = form.watch('riverCard');
+  const riverCards = form.watch('riverCards');
   const riverAction = form.watch('riverAction');
-  const showdownResult = form.watch('showdownResult');
+  const villainCards = form.watch('villainCards');
+  const result = form.watch('result');
   
   // Position options - updated to follow standard poker table order
   const positions = ['UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
@@ -117,20 +136,20 @@ const HandForm: React.FC<HandFormProps> = ({
   
   // Auto-expand sections when data is input
   useEffect(() => {
-    if (flopCards || flopAction) setIsFlopOpen(true);
+    if ((flopCards && flopCards.some(c => c.rank && c.suit)) || flopAction) setIsFlopOpen(true);
   }, [flopCards, flopAction]);
   
   useEffect(() => {
-    if (turnCard || turnAction) setIsTurnOpen(true);
-  }, [turnCard, turnAction]);
+    if ((turnCards && turnCards.some(c => c.rank && c.suit)) || turnAction) setIsTurnOpen(true);
+  }, [turnCards, turnAction]);
   
   useEffect(() => {
-    if (riverCard || riverAction) setIsRiverOpen(true);
-  }, [riverCard, riverAction]);
+    if ((riverCards && riverCards.some(c => c.rank && c.suit)) || riverAction) setIsRiverOpen(true);
+  }, [riverCards, riverAction]);
   
   useEffect(() => {
-    if (showdownResult) setIsShowdownOpen(true);
-  }, [showdownResult]);
+    if ((villainCards && villainCards.some(c => c.rank && c.suit)) || result) setIsShowdownOpen(true);
+  }, [villainCards, result]);
   
   // Determine max cards based on game type
   const getMaxCards = (): number => {
@@ -161,6 +180,14 @@ const HandForm: React.FC<HandFormProps> = ({
         image: undefined,
         gameType: 'NLH',
         tableId: tableId,
+        flopCards: [{ id: 0 }, { id: 1 }, { id: 2 }],
+        flopAction: '',
+        turnCards: [{ id: 0 }],
+        turnAction: '',
+        riverCards: [{ id: 0 }],
+        riverAction: '',
+        villainCards: gameType === 'NLH' ? [{ id: 0 }, { id: 1 }] : [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }],
+        result: '',
       });
       setImagePreview(null);
       setSelectedPositionIndex(0);
@@ -184,14 +211,25 @@ const HandForm: React.FC<HandFormProps> = ({
       return;
     }
     
-    // Exclude premium fields that have type mismatches for now
-    const { flopCards, flopAction, turnCard, turnAction, riverCard, riverAction, showdownResult, ...handData } = values;
+    // Exclude premium fields that have type mismatches for now - convert cards to strings for storage
+    const { flopCards: flopCardsArray, turnCards: turnCardsArray, riverCards: riverCardsArray, villainCards: villainCardsArray, ...handData } = values;
+    
+    // Convert card arrays to strings for storage
+    const flopCardsString = flopCardsArray?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit).join('') || '';
+    const turnCardsString = turnCardsArray?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit).join('') || '';
+    const riverCardsString = riverCardsArray?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit).join('') || '';
+    const villainCardsString = villainCardsArray?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit).join('') || '';
     
     onSubmit({
       ...handData,
       id: initialData.id,
       image: imagePreview,
-      position: positions[selectedPositionIndex] // Use the position from our wheel picker
+      position: positions[selectedPositionIndex], // Use the position from our wheel picker
+      // Store the card data in the expected format
+      flopCards: flopCardsString ? [flopCardsString] : undefined,
+      turnCard: turnCardsString || undefined,
+      riverCard: riverCardsString || undefined,
+      showdownResult: values.result || undefined,
     });
     onOpenChange(false);
   };
@@ -485,7 +523,12 @@ const HandForm: React.FC<HandFormProps> = ({
                               <FormItem>
                                 <FormLabel>Flop Cards</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="e.g., AcKsQh" />
+                                  <CardSlotPicker
+                                    slots={3}
+                                    selectedCards={field.value || [{ id: 0 }, { id: 1 }, { id: 2 }]}
+                                    onChange={field.onChange}
+                                    excludedCards={selectedCards.match(/.{2}/g) || []}
+                                  />
                                 </FormControl>
                               </FormItem>
                             )}
@@ -497,7 +540,7 @@ const HandForm: React.FC<HandFormProps> = ({
                               <FormItem>
                                 <FormLabel>Flop Action</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="e.g., Check, Bet, Fold" />
+                                  <Input {...field} />
                                 </FormControl>
                               </FormItem>
                             )}
@@ -518,12 +561,20 @@ const HandForm: React.FC<HandFormProps> = ({
                         <div className="grid grid-cols-2 gap-4">
                           <FormField
                             control={form.control}
-                            name="turnCard"
+                            name="turnCards"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Turn Card</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="e.g., Jd" />
+                                  <CardSlotPicker
+                                    slots={1}
+                                    selectedCards={field.value || [{ id: 0 }]}
+                                    onChange={field.onChange}
+                                    excludedCards={[
+                                      ...(selectedCards.match(/.{2}/g) || []),
+                                      ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                                    ]}
+                                  />
                                 </FormControl>
                               </FormItem>
                             )}
@@ -535,7 +586,7 @@ const HandForm: React.FC<HandFormProps> = ({
                               <FormItem>
                                 <FormLabel>Turn Action</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="e.g., Check, Bet, Call" />
+                                  <Input {...field} />
                                 </FormControl>
                               </FormItem>
                             )}
@@ -556,12 +607,21 @@ const HandForm: React.FC<HandFormProps> = ({
                         <div className="grid grid-cols-2 gap-4">
                           <FormField
                             control={form.control}
-                            name="riverCard"
+                            name="riverCards"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>River Card</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="e.g., 9s" />
+                                  <CardSlotPicker
+                                    slots={1}
+                                    selectedCards={field.value || [{ id: 0 }]}
+                                    onChange={field.onChange}
+                                    excludedCards={[
+                                      ...(selectedCards.match(/.{2}/g) || []),
+                                      ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                      ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                                    ]}
+                                  />
                                 </FormControl>
                               </FormItem>
                             )}
@@ -573,7 +633,7 @@ const HandForm: React.FC<HandFormProps> = ({
                               <FormItem>
                                 <FormLabel>River Action</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="e.g., All-in, Call, Fold" />
+                                  <Input {...field} />
                                 </FormControl>
                               </FormItem>
                             )}
@@ -591,21 +651,45 @@ const HandForm: React.FC<HandFormProps> = ({
                         </div>
                       </CollapsibleTrigger>
                       <CollapsibleContent className="space-y-4 pt-4">
-                        <FormField
-                          control={form.control}
-                          name="showdownResult"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Showdown Result</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="e.g., Won with straight, Lost to flush" />
-                              </FormControl>
-                              <FormDescription>
-                                Describe the final outcome and winning/losing hand
-                              </FormDescription>
-                            </FormItem>
-                          )}
-                        />
+                        <div className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="villainCards"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Villain Hand</FormLabel>
+                                <FormControl>
+                                  <CardSlotPicker
+                                    slots={gameType === 'NLH' ? 2 : 4}
+                                    selectedCards={field.value || (gameType === 'NLH' ? [{ id: 0 }, { id: 1 }] : [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }])}
+                                    onChange={field.onChange}
+                                    excludedCards={[
+                                      ...(selectedCards.match(/.{2}/g) || []),
+                                      ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                      ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                      ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                                    ]}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="result"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Result</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                  Describe the final outcome and winning/losing hand
+                                </FormDescription>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </CollapsibleContent>
                     </Collapsible>
                   </div>
