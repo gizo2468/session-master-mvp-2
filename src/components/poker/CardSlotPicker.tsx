@@ -97,18 +97,30 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
 
   // Handle rank selection
   const handleRankSelect = (rank: string) => {
-    if (suits.every(suit => isCardExcluded(rank, suit.symbol))) {
+    // Check if all suits for this rank are unavailable
+    const allSuitsUnavailable = suits.every(suit => isCardExcluded(rank, suit.symbol));
+    
+    if (allSuitsUnavailable) {
       toast({
         title: "Already used",
-        description: "This card is already in use.",
+        description: "All cards with this rank are already in use.",
         variant: "destructive",
       });
-      return; // Don't allow selection if all suits are excluded
+      return;
+    }
+    
+    if (isAtMaxCapacity()) {
+      toast({
+        title: "Maximum cards reached",
+        description: `You can only select up to ${slots} card${slots > 1 ? 's' : ''}.`,
+        variant: "destructive",
+      });
+      return;
     }
     
     setCurrentSelection(prev => ({ ...prev, rank }));
     
-    // If a suit is already selected, create the card
+    // If a suit is already selected, create the card if valid
     if (currentSelection.suit && !isCardExcluded(rank, currentSelection.suit)) {
       handleCardSelect(rank, currentSelection.suit);
     }
@@ -116,18 +128,30 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
 
   // Handle suit selection
   const handleSuitSelect = (suit: string) => {
-    if (ranks.every(rank => isCardExcluded(rank, suit))) {
+    // Check if all ranks for this suit are unavailable
+    const allRanksUnavailable = ranks.every(rank => isCardExcluded(rank, suit));
+    
+    if (allRanksUnavailable) {
       toast({
         title: "Already used",
-        description: "This card is already in use.",
+        description: "All cards with this suit are already in use.",
         variant: "destructive",
       });
-      return; // Don't allow selection if all ranks are excluded
+      return;
+    }
+    
+    if (isAtMaxCapacity()) {
+      toast({
+        title: "Maximum cards reached",
+        description: `You can only select up to ${slots} card${slots > 1 ? 's' : ''}.`,
+        variant: "destructive",
+      });
+      return;
     }
     
     setCurrentSelection(prev => ({ ...prev, suit }));
     
-    // If a rank is already selected, create the card
+    // If a rank is already selected, create the card if valid
     if (currentSelection.rank && !isCardExcluded(currentSelection.rank, suit)) {
       handleCardSelect(currentSelection.rank, suit);
     }
@@ -250,15 +274,15 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                           key={rank}
                           type="button"
                           onClick={() => handleRankSelect(rank)}
-                          disabled={suits.every(suit => isCardExcluded(rank, suit.symbol))}
-                          className={cn(
+                           disabled={suits.every(suit => isCardExcluded(rank, suit.symbol))}
+                           className={cn(
                              "py-2 px-2 text-sm font-bold rounded transition-all",
                              currentSelection.rank === rank
                                ? "bg-primary text-white shadow-md"
                                : suits.every(suit => isCardExcluded(rank, suit.symbol))
-                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
                                  : "bg-gray-200 hover:bg-gray-300 text-gray-800"
-                          )}
+                           )}
                         >
                           {rank}
                         </button>
@@ -281,15 +305,15 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                           key={rank}
                           type="button"
                           onClick={() => handleRankSelect(rank)}
-                          disabled={suits.every(suit => isCardExcluded(rank, suit.symbol))}
-                          className={cn(
+                           disabled={suits.every(suit => isCardExcluded(rank, suit.symbol))}
+                           className={cn(
                              "py-2 px-2 text-sm font-bold rounded transition-all",
                              currentSelection.rank === rank
                                ? "bg-primary text-white shadow-md"
                                : suits.every(suit => isCardExcluded(rank, suit.symbol))
-                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
                                  : "bg-gray-200 hover:bg-gray-300 text-gray-800"
-                          )}
+                           )}
                         >
                           {rank}
                         </button>
@@ -317,16 +341,18 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                           key={suit.symbol}
                           type="button"
                           onClick={() => handleSuitSelect(suit.symbol)}
-                          disabled={ranks.every(rank => isCardExcluded(rank, suit.symbol))}
-                          className={cn(
+                           disabled={ranks.every(rank => isCardExcluded(rank, suit.symbol))}
+                           className={cn(
                              "py-3 px-2 text-2xl rounded transition-all flex items-center justify-center",
                              currentSelection.suit === suit.symbol
                                ? "bg-primary text-white shadow-md"
                                : ranks.every(rank => isCardExcluded(rank, suit.symbol))
-                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
                                  : "bg-gray-200 hover:bg-gray-300",
-                             !ranks.every(rank => isCardExcluded(rank, suit.symbol)) && suit.color
-                          )}
+                             // Only apply suit color if not disabled
+                             !ranks.every(rank => isCardExcluded(rank, suit.symbol)) && 
+                             currentSelection.suit !== suit.symbol && suit.color
+                           )}
                         >
                           {suit.display}
                         </button>

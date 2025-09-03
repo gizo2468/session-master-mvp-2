@@ -82,48 +82,42 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   
   // Handle rank selection
   const handleRankSelect = (rank: string) => {
-    if (selectedCards.length / 2 >= maxCards) return;
-    
     // Check if all suits for this rank are unavailable
-    if (suits.every(suit => isCardUnavailable(rank, suit.symbol))) {
-      return;
+    const allSuitsUnavailable = suits.every(suit => isCardUnavailable(rank, suit.symbol));
+    
+    if (allSuitsUnavailable) {
+      return; // Don't allow selection at all
     }
+    
+    if (selectedCards.length / 2 >= maxCards) return;
     
     setCurrentSelection(prev => ({ ...prev, rank }));
     
-    // If a suit is already selected, add the card and reset
-    if (currentSelection.suit) {
+    // If a suit is already selected, add the card if valid
+    if (currentSelection.suit && !isCardUnavailable(rank, currentSelection.suit)) {
       const card = rank + currentSelection.suit;
-      
-      // Check if this card is unavailable
-      if (!isCardUnavailable(rank, currentSelection.suit)) {
-        onChange(selectedCards + card);
-      }
-      
+      onChange(selectedCards + card);
       setCurrentSelection({ rank: null, suit: null });
     }
   };
   
   // Handle suit selection
   const handleSuitSelect = (suitSymbol: string) => {
-    if (selectedCards.length / 2 >= maxCards) return;
-    
     // Check if all ranks for this suit are unavailable
-    if (ranks.every(rank => isCardUnavailable(rank, suitSymbol))) {
-      return;
+    const allRanksUnavailable = ranks.every(rank => isCardUnavailable(rank, suitSymbol));
+    
+    if (allRanksUnavailable) {
+      return; // Don't allow selection at all
     }
+    
+    if (selectedCards.length / 2 >= maxCards) return;
     
     setCurrentSelection(prev => ({ ...prev, suit: suitSymbol }));
     
-    // If a rank is already selected, add the card and reset
-    if (currentSelection.rank) {
+    // If a rank is already selected, add the card if valid  
+    if (currentSelection.rank && !isCardUnavailable(currentSelection.rank, suitSymbol)) {
       const card = currentSelection.rank + suitSymbol;
-      
-      // Check if this card is unavailable
-      if (!isCardUnavailable(currentSelection.rank, suitSymbol)) {
-        onChange(selectedCards + card);
-      }
-      
+      onChange(selectedCards + card);
       setCurrentSelection({ rank: null, suit: null });
     }
   };
@@ -228,9 +222,9 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                          currentSelection.rank === rank 
                            ? "bg-poker-gold text-white shadow-md" 
                            : suits.every(suit => isCardUnavailable(rank, suit.symbol))
-                             ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                             ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
                              : "bg-gray-300 hover:bg-gray-200 text-gray-800"
-                      )}
+                       )}
                     >
                       {rank}
                     </button>
@@ -265,9 +259,9 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                          currentSelection.rank === rank 
                            ? "bg-poker-gold text-white shadow-md" 
                            : suits.every(suit => isCardUnavailable(rank, suit.symbol))
-                             ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                             ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
                              : "bg-gray-300 hover:bg-gray-200 text-gray-800"
-                      )}
+                       )}
                     >
                       {rank}
                     </button>
@@ -303,10 +297,12 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                        currentSelection.suit === suit.symbol
                          ? "bg-poker-gold text-white shadow-md" 
                          : ranks.every(rank => isCardUnavailable(rank, suit.symbol))
-                           ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                           ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
                            : "bg-gray-300 hover:bg-gray-200",
-                       !ranks.every(rank => isCardUnavailable(rank, suit.symbol)) && suit.color
-                    )}
+                       // Only apply suit color if not disabled
+                       !ranks.every(rank => isCardUnavailable(rank, suit.symbol)) && 
+                       currentSelection.suit !== suit.symbol && suit.color
+                     )}
                   >
                     {suit.display}
                   </button>
