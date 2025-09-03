@@ -686,6 +686,82 @@ const HandForm: React.FC<HandFormProps> = ({
                       </CollapsibleTrigger>
                       <CollapsibleContent className="space-y-4 pt-4">
                         <div className="space-y-4">
+                          {/* Board Cards Display */}
+                          <div>
+                            <FormLabel className="text-base">Board</FormLabel>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {/* Flop Cards */}
+                              {flopCards?.filter(c => c.rank && c.suit).map((card, index) => (
+                                <div key={`flop-${index}`} className="w-12 h-16 relative">
+                                  <div className="w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-1">
+                                    <div className="font-bold text-sm">{card.rank}</div>
+                                    <div className={`${card.suit === 'h' || card.suit === 'd' ? 'text-red-600' : 'text-black'} text-lg`}>
+                                      {card.suit === 'h' ? '♥' : card.suit === 'd' ? '♦' : card.suit === 's' ? '♠' : '♣'}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                              
+                              {/* Turn Card */}
+                              {turnCards?.filter(c => c.rank && c.suit).map((card, index) => (
+                                <div key={`turn-${index}`} className="w-12 h-16 relative">
+                                  <div className="w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-1">
+                                    <div className="font-bold text-sm">{card.rank}</div>
+                                    <div className={`${card.suit === 'h' || card.suit === 'd' ? 'text-red-600' : 'text-black'} text-lg`}>
+                                      {card.suit === 'h' ? '♥' : card.suit === 'd' ? '♦' : card.suit === 's' ? '♠' : '♣'}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                              
+                              {/* River Card */}
+                              {riverCards?.filter(c => c.rank && c.suit).map((card, index) => (
+                                <div key={`river-${index}`} className="w-12 h-16 relative">
+                                  <div className="w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-1">
+                                    <div className="font-bold text-sm">{card.rank}</div>
+                                    <div className={`${card.suit === 'h' || card.suit === 'd' ? 'text-red-600' : 'text-black'} text-lg`}>
+                                      {card.suit === 'h' ? '♥' : card.suit === 'd' ? '♦' : card.suit === 's' ? '♠' : '♣'}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                              
+                              {/* Show placeholder cards for remaining slots if no cards entered */}
+                              {(!flopCards?.some(c => c.rank && c.suit) && !turnCards?.some(c => c.rank && c.suit) && !riverCards?.some(c => c.rank && c.suit)) && (
+                                <>
+                                  {Array.from({ length: 5 }, (_, index) => (
+                                    <div key={`placeholder-${index}`} className="w-12 h-16">
+                                      <div className="w-full h-full bg-yellow-400 rounded border-2 border-white relative overflow-hidden">
+                                        <div 
+                                          className="absolute inset-0 opacity-30"
+                                          style={{
+                                            backgroundImage: `
+                                              repeating-linear-gradient(
+                                                45deg,
+                                                transparent,
+                                                transparent 3px,
+                                                white 3px,
+                                                white 6px
+                                              ),
+                                              repeating-linear-gradient(
+                                                -45deg,
+                                                transparent,
+                                                transparent 3px,
+                                                white 3px,
+                                                white 6px
+                                              )
+                                            `
+                                          }}
+                                        >
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          
                           <FormField
                             control={form.control}
                             name="villainCards"
@@ -717,9 +793,6 @@ const HandForm: React.FC<HandFormProps> = ({
                                 <FormControl>
                                   <Input {...field} />
                                 </FormControl>
-                                <FormDescription>
-                                  Describe the final outcome and winning/losing hand
-                                </FormDescription>
                               </FormItem>
                             )}
                           />
