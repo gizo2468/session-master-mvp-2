@@ -18,6 +18,7 @@ import { PokerChip } from '../Icons';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { CircleHelp, Camera, ChevronDown } from 'lucide-react';
 import HandDetailGate from '@/components/ui/HandDetailGate';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface HandFormProps {
   open: boolean;
@@ -99,6 +100,7 @@ const HandForm: React.FC<HandFormProps> = ({
   const [isTurnOpen, setIsTurnOpen] = useState(false);
   const [isRiverOpen, setIsRiverOpen] = useState(false);
   const [isShowdownOpen, setIsShowdownOpen] = useState(false);
+  const isMobile = useIsMobile();
   
   // Get current form values for reactive UI updates
   const gameType = form.watch('gameType');
@@ -513,37 +515,71 @@ const HandForm: React.FC<HandFormProps> = ({
                         </div>
                       </CollapsibleTrigger>
                       <CollapsibleContent className="space-y-4 pt-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="flopCards"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Flop Cards</FormLabel>
-                                <FormControl>
-                                  <CardSlotPicker
-                                    slots={3}
-                                    selectedCards={field.value || [{ id: 0 }, { id: 1 }, { id: 2 }]}
-                                    onChange={field.onChange}
-                                    excludedCards={selectedCards.match(/.{2}/g) || []}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="flopAction"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Flop Action</FormLabel>
-                                <FormControl>
-                                  <Input {...field} />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                        {isMobile ? (
+                          <div className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="flopCards"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Flop Cards</FormLabel>
+                                  <FormControl>
+                                    <CardSlotPicker
+                                      slots={3}
+                                      selectedCards={field.value || [{ id: 0 }, { id: 1 }, { id: 2 }]}
+                                      onChange={field.onChange}
+                                      excludedCards={selectedCards.match(/.{2}/g) || []}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="flopAction"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Flop Action</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="flopCards"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Flop Cards</FormLabel>
+                                  <FormControl>
+                                    <CardSlotPicker
+                                      slots={3}
+                                      selectedCards={field.value || [{ id: 0 }, { id: 1 }, { id: 2 }]}
+                                      onChange={field.onChange}
+                                      excludedCards={selectedCards.match(/.{2}/g) || []}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="flopAction"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Flop Action</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
                       </CollapsibleContent>
                     </Collapsible>
 
