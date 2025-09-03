@@ -266,8 +266,8 @@ const HandForm: React.FC<HandFormProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 overflow-hidden">
-          <div className="p-1">
+        <ScrollArea className="flex-1 max-h-[calc(90vh-120px)]">
+          <div className="pr-4">
             <Form {...form}>
               <form onSubmit={(e) => {
                 if (e.nativeEvent instanceof KeyboardEvent && e.nativeEvent.key === 'Enter') {
