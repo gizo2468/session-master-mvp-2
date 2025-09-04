@@ -26,7 +26,6 @@ import CoachProfile from "./pages/CoachProfile";
 import Subscription from "./pages/Subscription";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import SubscriptionCancel from "./pages/SubscriptionCancel";
-import AdminUsers from "./pages/AdminUsers";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,7 +69,6 @@ const App = () => (
                 <Route path="/subscription" element={<Subscription />} />
                 <Route path="/subscription/success" element={<SubscriptionSuccess />} />
                 <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
-                <Route path="/admin/users" element={<AdminUsers />} />
               </Routes>
               </SessionProvider>
             </AuthGuard>
