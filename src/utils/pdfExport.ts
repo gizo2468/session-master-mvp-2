@@ -20,103 +20,43 @@ interface ExportData {
 
 export const generateStatisticsPDFFromDB = async (data: ExportData) => {
   try {
-    // Use the unified statistics function with proper format mapping
-    const formatMap = { 
-      sessions: 'all', 
-      cash: 'cash', 
-      tournaments: 'tournament' 
-    } as const;
-    
-    const dbFormat = formatMap[data.activeTab as keyof typeof formatMap] || 'all';
-    
-    // Convert timeframe to backend format - handle all timeframe values
-    let timeframe = 'all-time';
-    let startDate = data.filters.customStartDate;
-    let endDate = data.filters.customEndDate;
-    
-    if (data.filters.timeframeType === 'custom') {
-      timeframe = 'custom';
-    } else if (data.filters.timeframeValue === 'This Month') {
-      timeframe = 'this-month';
-      // Set current month dates
-      const now = new Date();
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    } else if (data.filters.timeframeValue === 'Last Month') {
-      timeframe = 'custom';
-      const now = new Date();
-      startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      endDate = new Date(now.getFullYear(), now.getMonth(), 0);
-    } else if (data.filters.timeframeValue === 'Last 3 Months') {
-      timeframe = 'custom';
-      const now = new Date();
-      startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    } else if (data.filters.timeframeValue === 'This Week') {
-      timeframe = 'custom';
-      const now = new Date();
-      const dayOfWeek = now.getDay();
-      startDate = new Date(now);
-      startDate.setDate(now.getDate() - dayOfWeek);
-      endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 6);
-    } else if (data.filters.timeframeValue === 'Last Week') {
-      timeframe = 'custom';
-      const now = new Date();
-      const lastWeekStart = new Date(now);
-      lastWeekStart.setDate(now.getDate() - now.getDay() - 7);
-      startDate = lastWeekStart;
-      endDate = new Date(lastWeekStart);
-      endDate.setDate(lastWeekStart.getDate() + 6);
-    } else if (data.filters.timeframeValue === 'Last 7 Days') {
-      timeframe = 'custom';
-      const now = new Date();
-      startDate = new Date(now);
-      startDate.setDate(now.getDate() - 6);
-      endDate = now;
-    } else if (data.filters.timeframeValue === 'Last 30 Days') {
-      timeframe = 'custom';
-      const now = new Date();
-      startDate = new Date(now);
-      startDate.setDate(now.getDate() - 29);
-      endDate = now;
-    } else if (data.filters.timeframeValue === 'Last 90 Days') {
-      timeframe = 'custom';
-      const now = new Date();
-      startDate = new Date(now);
-      startDate.setDate(now.getDate() - 89);
-      endDate = now;
-    } else if (data.filters.timeframeValue === 'Last Year') {
-      timeframe = 'custom';
-      const now = new Date();
-      startDate = new Date(now.getFullYear() - 1, 0, 1);
-      endDate = new Date(now.getFullYear() - 1, 11, 31);
-    } else if (data.filters.timeframeValue === 'This Year') {
-      timeframe = 'custom';
-      const now = new Date();
-      startDate = new Date(now.getFullYear(), 0, 1);
-      endDate = new Date(now.getFullYear(), 11, 31);
+    // Use the already filtered statistics from the UI instead of fetching fresh data
+    if (data.statistics) {
+      console.log('Using filtered statistics from UI:', data.statistics);
+      
+      // Get the correct stats based on active tab
+      let currentStats;
+      switch (data.activeTab) {
+        case 'cash':
+          currentStats = data.statistics.cash;
+          break;
+        case 'tournaments':
+          currentStats = data.statistics.tournaments;
+          break;
+        default:
+          currentStats = data.statistics.all;
+      }
+
+      if (currentStats) {
+        // Format the existing filtered statistics for PDF
+        const formattedStats = formatStatsForPDF(currentStats, data.activeTab, 0, data.defaultCurrency || 'USD');
+        
+        // Generate PDF with the same filtered data displayed in the UI
+        generateStatisticsPDFWithData({
+          ...data,
+          stats: formattedStats
+        });
+        
+        return;
+      }
     }
-    
-    const stats = await calculateSessionStatisticsFromDB(
-      dbFormat,
-      timeframe,
-      startDate,
-      endDate,
-      null // Remove currency filtering for broader data access
-    );
 
-    // Calculate best session result using the same filtering logic
-    const bestSessionResult = await calculateBestSessionResult(dbFormat, startDate, endDate);
-
-    // Generate PDF with fresh data
-    generateStatisticsPDFWithData({
-      ...data,
-      stats: formatStatsForPDF(stats, data.activeTab, bestSessionResult, data.defaultCurrency || 'USD')
-    });
+    // Fallback: only if no statistics are provided, fetch fresh data
+    console.warn('No filtered statistics provided, falling back to fresh data fetch');
+    generateStatisticsPDFWithData(data);
 
   } catch (error) {
-    console.error('Failed to generate PDF with fresh data:', error);
+    console.error('Failed to generate PDF with filtered data:', error);
     // Fallback to provided data
     generateStatisticsPDFWithData(data);
   }
@@ -282,6 +222,10 @@ const generateStatisticsPDFWithData = (data: ExportData) => {
       return `Custom Range: ${data.filters.customStartDate ? format(data.filters.customStartDate, 'MMM dd, yyyy') : 'Not set'} - ${data.filters.customEndDate ? format(data.filters.customEndDate, 'MMM dd, yyyy') : 'Not set'}`;
     }
 
+    if (timeframeType === 'default') {
+      return 'All Time';
+    }
+
     switch (timeframeValue) {
       case 'This Month':
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -430,6 +374,7 @@ const generateStatisticsPDFWithData = (data: ExportData) => {
   
   // Generate filename
   const timeframeForFilename = data.filters.timeframeType === 'custom' ? 'Custom' : 
+                              data.filters.timeframeType === 'default' ? 'AllTime' :
                               data.filters.timeframeValue.replace(/\s+/g, '');
   const scopeForFilename = data.filters.gameScope.charAt(0).toUpperCase() + data.filters.gameScope.slice(1);
   const dateForFilename = format(new Date(), 'yyyy-MM-dd');
