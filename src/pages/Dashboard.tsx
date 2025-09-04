@@ -18,8 +18,8 @@ const Dashboard: React.FC = () => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [exportPDFFunction, setExportPDFFunction] = useState<(() => void) | null>(null);
   const [filters, setFilters] = useState<FilterOptions>({
-    timeframeType: 'monthly',
-    timeframeValue: 'This Month',
+    timeframeType: 'default',
+    timeframeValue: 'All Time',
     gameScope: 'all',
     gameTypes: [],
     sessionFormat: [],

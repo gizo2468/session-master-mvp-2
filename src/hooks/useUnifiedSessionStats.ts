@@ -32,7 +32,9 @@ export const useUnifiedSessionStats = (filters?: FilterOptions) => {
     let startDate: Date | undefined;
     let endDate: Date | undefined;
 
-    if (filters.timeframeType === 'custom') {
+    if (filters.timeframeType === 'default') {
+      timeframe = 'all-time';
+    } else if (filters.timeframeType === 'custom') {
       timeframe = 'custom';
       startDate = filters.customStartDate;
       endDate = filters.customEndDate;

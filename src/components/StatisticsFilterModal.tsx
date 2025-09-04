@@ -30,7 +30,7 @@ import { FilterChip } from './FilterChip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export interface FilterOptions {
-  timeframeType: 'monthly' | 'weekly' | 'quick' | 'yearly' | 'custom';
+  timeframeType: 'default' | 'weekly' | 'monthly' | 'yearly' | 'quick' | 'custom';
   timeframeValue: string;
   gameScope: 'all' | 'cash' | 'tournaments';
   gameTypes: string[];
@@ -61,10 +61,11 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const timeframeOptions = {
-    monthly: ['This Month', 'Last Month', 'Last 3 Months'],
+    default: ['All Time'],
     weekly: ['This Week', 'Last Week'],
-    quick: ['Last 7 Days', 'Last 30 Days', 'Last 90 Days'],
+    monthly: ['This Month', 'Last Month', 'Last 3 Months'],
     yearly: ['This Year', 'Last Year'],
+    quick: ['Last 7 Days', 'Last 30 Days', 'Last 90 Days'],
   };
 
   const gameTypeOptions = ['Hold\'em', 'PLO', 'PLO5/6', 'Other'];
@@ -72,10 +73,11 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
 
   const handleTimeframeTypeChange = (type: FilterOptions['timeframeType']) => {
     const defaultValues = {
-      monthly: 'This Month',
+      default: 'All Time',
       weekly: 'This Week',
-      quick: 'Last 7 Days',
+      monthly: 'This Month',
       yearly: 'This Year',
+      quick: 'Last 7 Days',
       custom: 'Custom Range',
     };
 
@@ -161,10 +163,10 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
           <div className="space-y-3">
             <h4 className="text-sm font-medium">Timeframe</h4>
             <div className="flex flex-wrap gap-2">
-              {(['monthly', 'weekly', 'quick', 'yearly', 'custom'] as const).map(type => (
+              {(['default', 'weekly', 'monthly', 'yearly', 'quick', 'custom'] as const).map(type => (
                 <FilterChip
                   key={type}
-                  label={type === 'quick' ? 'Quick Ranges' : type === 'custom' ? 'Custom Range' : type.charAt(0).toUpperCase() + type.slice(1)}
+                  label={type === 'default' ? 'Default' : type === 'quick' ? 'Quick Ranges' : type === 'custom' ? 'Custom Range' : type.charAt(0).toUpperCase() + type.slice(1)}
                   selected={filters.timeframeType === type}
                   onClick={() => handleTimeframeTypeChange(type)}
                 />
@@ -172,7 +174,7 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
             </div>
             
             {/* Timeframe Value Selection */}
-            {filters.timeframeType !== 'custom' && (
+            {filters.timeframeType !== 'custom' && filters.timeframeType !== 'default' && (
               <div className="flex flex-wrap gap-2 ml-4">
                 {timeframeOptions[filters.timeframeType].map(value => (
                   <FilterChip
