@@ -178,7 +178,7 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
         
         <TabsContent value="sessions" className="mt-0">
           <div className="grid grid-cols-2 grid-rows-6 gap-3 sm:gap-4">
-            <StatCell label="Net Result" value={netResultDisplay} isPositive={currentStats?.netResult >= 0} />
+            <StatCell label="Sessions Results" value={netResultDisplay} isPositive={currentStats?.netResult >= 0} />
             <StatCell label="Net Hourly Rate" value={netHourlyDisplay} isPositive={currentStats?.netHourlyRate >= 0} />
             
             <StatCell label="Average Net Result" value={avgNetResultDisplay} isPositive={currentStats?.averageNetResult >= 0} />
@@ -200,7 +200,7 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
         
         <TabsContent value="cash" className="mt-0">
           <div className="grid grid-cols-2 grid-rows-6 gap-3 sm:gap-4">
-            <StatCell label="Net Result" value={formatCurrency(getStatsForScope('cash')?.netResult || 0, defaultCurrency)} isPositive={getStatsForScope('cash')?.netResult >= 0} />
+            <StatCell label="Sessions Results" value={formatCurrency(getStatsForScope('cash')?.netResult || 0, defaultCurrency)} isPositive={getStatsForScope('cash')?.netResult >= 0} />
             <StatCell label="Net Hourly Rate" value={formatCurrency(getStatsForScope('cash')?.netHourlyRate || 0, defaultCurrency)} isPositive={getStatsForScope('cash')?.netHourlyRate >= 0} />
             
             <StatCell label="Average Net Result" value={formatCurrency(getStatsForScope('cash')?.averageNetResult || 0, defaultCurrency)} isPositive={getStatsForScope('cash')?.averageNetResult >= 0} />
@@ -222,7 +222,7 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
         
         <TabsContent value="tournaments" className="mt-0">
           <div className="grid grid-cols-2 grid-rows-6 gap-3 sm:gap-4">
-            <StatCell label="Net Result" value={formatCurrency(getStatsForScope('tournaments')?.netResult || 0, defaultCurrency)} isPositive={getStatsForScope('tournaments')?.netResult >= 0} />
+            <StatCell label="Sessions Results" value={formatCurrency(getStatsForScope('tournaments')?.netResult || 0, defaultCurrency)} isPositive={getStatsForScope('tournaments')?.netResult >= 0} />
             <StatCell label="Net Hourly Rate" value={formatCurrency(getStatsForScope('tournaments')?.netHourlyRate || 0, defaultCurrency)} isPositive={getStatsForScope('tournaments')?.netHourlyRate >= 0} />
             
             <StatCell label="Average Net Result" value={formatCurrency(getStatsForScope('tournaments')?.averageNetResult || 0, defaultCurrency)} isPositive={getStatsForScope('tournaments')?.averageNetResult >= 0} />
