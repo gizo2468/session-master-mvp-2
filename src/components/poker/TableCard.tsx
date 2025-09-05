@@ -706,9 +706,11 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               <Textarea
                 id="tableNotes"
                 className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                placeholder="Add any notes about this table..."
+                placeholder="Table notes"
                 value={tableNotes}
                 onChange={(e) => setTableNotes(e.target.value)}
+                autoComplete="off"
+                data-form-type="other"
               />
             </div>
             

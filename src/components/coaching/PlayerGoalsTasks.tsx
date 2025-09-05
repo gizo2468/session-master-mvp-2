@@ -235,9 +235,11 @@ export default function PlayerGoalsTasks({ studentId, mode, coachId }: PlayerGoa
                   </div>
                   <div className="md:col-span-2">
                     <Textarea
-                      placeholder="Details / Notes (optional)"
+                      placeholder="Task details"
                       value={details}
                       onChange={(e) => setDetails(e.target.value)}
+                      autoComplete="off"
+                      data-form-type="other"
                     />
                   </div>
                   <div className="md:col-span-2">

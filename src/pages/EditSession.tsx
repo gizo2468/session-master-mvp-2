@@ -354,8 +354,10 @@ export default function EditSession() {
               <Textarea
                 value={formData.notes}
                 onChange={(e) => handleInputChange('notes', e.target.value)}
-                placeholder="Add any notes about this session..."
+                placeholder="Session notes"
                 rows={3}
+                autoComplete="off"
+                data-form-type="other"
               />
             </div>
 

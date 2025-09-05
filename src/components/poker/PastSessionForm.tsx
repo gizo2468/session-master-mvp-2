@@ -569,7 +569,9 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                   <FormLabel>Location</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="Casino name or site name" 
+                      placeholder="Venue or site" 
+                      autoComplete="off"
+                      data-form-type="other"
                       {...field} 
                     />
                   </FormControl>
@@ -714,11 +716,13 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                 <FormItem>
                   <FormLabel>Notes (Optional)</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Any notes about the session..."
-                      className="resize-none"
-                      {...field} 
-                    />
+                <Textarea 
+                  placeholder="Session comments" 
+                  className="resize-none"
+                  autoComplete="off"
+                  data-form-type="other"
+                  {...field} 
+                />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

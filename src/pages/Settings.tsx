@@ -337,11 +337,13 @@ const Settings: React.FC = () => {
                     <div className="flex-1">
                       {isEditing && profile?.role === 'coach' ? (
                         <div>
-                          <Input
+            <Input
                             value={editForm.username}
                             onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
-                            placeholder="Enter username"
+                            placeholder="Display handle"
                             className="max-w-[200px]"
+                            autoComplete="off"
+                            data-form-type="other"
                           />
                           <p className="text-sm text-gray-500 mt-1">Username</p>
                         </div>

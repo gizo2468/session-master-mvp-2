@@ -119,6 +119,8 @@ const ForgotPassword: React.FC = () => {
                 placeholder="Enter your email"
                 required
                 disabled={isLoading}
+                enableAutofill
+                autoComplete="email"
               />
             </div>
             

@@ -92,7 +92,9 @@ const PastSessionInfoStep: React.FC<PastSessionInfoStepProps> = ({
             <Input
               id="location"
               {...form.register('location')}
-              placeholder="Casino name or site name"
+              placeholder="Venue or site"
+              autoComplete="off"
+              data-form-type="other"
             />
             {form.formState.errors.location && (
               <p className="text-sm text-red-500 mt-1">{form.formState.errors.location.message}</p>
@@ -104,7 +106,9 @@ const PastSessionInfoStep: React.FC<PastSessionInfoStepProps> = ({
             <Textarea
               id="notes"
               {...form.register('notes')}
-              placeholder="Any notes about the session..."
+              placeholder="Session notes"
+              autoComplete="off"
+              data-form-type="other"
             />
           </div>
         </CardContent>

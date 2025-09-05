@@ -430,13 +430,15 @@ export default function ConfirmSession() {
                 <label htmlFor="notes" className="block text-sm font-medium mb-1">
                   Session Notes (Optional)
                 </label>
-                <Textarea
-                  id="notes"
-                  className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
-                  placeholder="Add any notes about this session..."
-                  value={sessionNotes}
-                  onChange={(e) => setSessionNotes(e.target.value)}
-                />
+              <Textarea
+                id="notes"
+                className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                placeholder="Session notes"
+                value={sessionNotes}
+                onChange={(e) => setSessionNotes(e.target.value)}
+                autoComplete="off"
+                data-form-type="other"
+              />
               </div>
               
               <div className="flex gap-3">

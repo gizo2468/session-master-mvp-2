@@ -71,8 +71,10 @@ const CreateCoachProfileForm = () => {
               <FormLabel>Display Name</FormLabel>
               <FormControl>
                 <Input 
-                  placeholder="Your coaching name" 
+                  placeholder="Your display name" 
                   disabled={isFormLoading}
+                  autoComplete="off"
+                  data-form-type="other"
                   {...field} 
                 />
               </FormControl>
@@ -89,8 +91,10 @@ const CreateCoachProfileForm = () => {
               <FormLabel>Bio (Optional)</FormLabel>
               <FormControl>
                 <Textarea 
-                  placeholder="A brief description of your coaching experience" 
+                  placeholder="Brief coaching background" 
                   disabled={isFormLoading}
+                  autoComplete="off"
+                  data-form-type="other"
                   {...field} 
                 />
               </FormControl>

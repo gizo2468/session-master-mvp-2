@@ -490,7 +490,9 @@ export default function SessionForm() {
                   <FormLabel className="text-base font-medium">Table / Session Name</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="Casino name or online site" 
+                      placeholder="Venue or site" 
+                      autoComplete="off"
+                      data-form-type="other"
                       {...field} 
                     />
                   </FormControl>

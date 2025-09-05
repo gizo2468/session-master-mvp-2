@@ -94,7 +94,9 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
                 id="tableName"
                 value={formData.name || formData.location || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value, location: e.target.value }))}
-                placeholder="Enter table name or location"
+                placeholder="Table identifier"
+                autoComplete="off"
+                data-form-type="other"
               />
             </div>
 
@@ -289,8 +291,10 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
                 id="notes"
                 value={formData.notes || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Add any notes about this table..."
+                placeholder="Table notes"
                 className="min-h-[80px]"
+                autoComplete="off"
+                data-form-type="other"
               />
             </div>
 

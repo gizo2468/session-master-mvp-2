@@ -20,8 +20,10 @@ const NotesSection: React.FC<NotesSectionProps> = ({
           <FormLabel>Notes</FormLabel>
           <FormControl>
             <Textarea 
-              placeholder="Add notes about this hand (chips won/lost, reads, strategy thoughts)"
+              placeholder="Hand notes (reads, decisions, strategy)" 
               className="h-20"
+              autoComplete="off"
+              data-form-type="other"
               {...field} 
             />
           </FormControl>

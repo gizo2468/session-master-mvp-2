@@ -38,7 +38,12 @@ const CreateStudentProfileForm = () => {
             <FormItem>
               <FormLabel>Display Name</FormLabel>
               <FormControl>
-                <Input placeholder="Your name" {...field} />
+                <Input 
+                  placeholder="Your display name" 
+                  autoComplete="off"
+                  data-form-type="other"
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

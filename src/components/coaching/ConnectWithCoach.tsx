@@ -38,10 +38,13 @@ const ConnectWithCoach = () => {
             <Input
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="Enter 6-character code"
+              placeholder="Connection ID"
               maxLength={6}
               className="text-center text-lg tracking-widest font-mono uppercase"
               disabled={loading}
+              autoComplete="one-time-code"
+              inputMode="text"
+              data-form-type="other"
             />
           </div>
           <Button 

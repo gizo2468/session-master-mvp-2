@@ -191,7 +191,9 @@ const PastMultiDayEndDialog: React.FC<PastMultiDayEndDialogProps> = ({
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Tournament elimination notes..."
+                placeholder="Tournament notes"
+                autoComplete="off"
+                data-form-type="other"
               />
             </div>
 
@@ -248,7 +250,9 @@ const PastMultiDayEndDialog: React.FC<PastMultiDayEndDialogProps> = ({
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="End of day notes..."
+                placeholder="Day notes"
+                autoComplete="off"
+                data-form-type="other"
               />
             </div>
 

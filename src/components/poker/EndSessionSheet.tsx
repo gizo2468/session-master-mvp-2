@@ -128,10 +128,12 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
             <Label htmlFor="sessionNotes">Session Notes (Optional)</Label>
             <Textarea
               id="sessionNotes"
-              placeholder="Add any notes about this session..."
+              placeholder="Session notes"
               value={sessionNotes}
               onChange={(e) => onSessionNotesChange(e.target.value)}
               className="min-h-[100px]"
+              autoComplete="off"
+              data-form-type="other"
             />
           </div>
         </div>

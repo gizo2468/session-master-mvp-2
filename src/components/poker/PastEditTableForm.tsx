@@ -551,8 +551,10 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
                     <FormControl>
                       <Textarea
                         {...field}
-                        placeholder="Any notes about this table..."
+                        placeholder="Table notes"
                         className="min-h-[60px]"
+                        autoComplete="off"
+                        data-form-type="other"
                       />
                     </FormControl>
                     <FormMessage />

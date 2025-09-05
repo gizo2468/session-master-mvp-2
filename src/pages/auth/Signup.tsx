@@ -470,6 +470,8 @@ const Signup: React.FC = () => {
                         <Input 
                           type={showConfirmPassword ? "text" : "password"} 
                           placeholder="••••••••" 
+                          enableAutofill
+                          autoComplete="new-password"
                           {...field} 
                         />
                         <Button

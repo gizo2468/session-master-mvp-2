@@ -188,10 +188,11 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
             <Label htmlFor="tableName">Table Name (Optional)</Label>
             <Input
               id="tableName"
-              placeholder="Enter a custom table name (optional)"
+              placeholder="Table identifier"
               value={tableName}
               onChange={(e) => setTableName(e.target.value)}
               autoComplete="off"
+              data-form-type="other"
             />
           </div>
 

@@ -778,11 +778,13 @@ const MyCoachingNetwork: React.FC = () => {
                       Enter the player's username to request a connection.
                     </p>
                     <Input
-                      placeholder="Player username"
+                      placeholder="Player handle"
                       value={playerUsername}
                       onChange={(e) => setPlayerUsername(e.target.value)}
                       name="search-player"
                       inputMode="search"
+                      autoComplete="off"
+                      data-form-type="other"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !connectingPlayer) {
                           handleConnectToPlayer();
@@ -831,11 +833,13 @@ const MyCoachingNetwork: React.FC = () => {
                       Enter your coach's username to request a connection.
                     </p>
                     <Input
-                      placeholder="Coach username"
+                      placeholder="Coach handle"
                       value={coachUsername}
                       onChange={(e) => setCoachUsername(e.target.value)}
                       name="search-coach"
                       inputMode="search"
+                      autoComplete="off"
+                      data-form-type="other"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !connecting) {
                           handleConnectToCoach();
