@@ -27,28 +27,14 @@ export default function SessionActionButtons({ session }: SessionActionButtonsPr
   const handleDeleteConfirm = async () => {
     try {
       setIsDeleting(true);
-      // Deleting session from database
       
+      // Delete session - this now includes optimistic updates and rollback
       await deleteSession(session.id);
-      
-      // Refresh the sessions list from database to ensure UI is updated
-      if (refreshSessionsFromDatabase) {
-        await refreshSessionsFromDatabase();
-      }
-      
-      toast({
-        title: "Session Deleted",
-        description: "The session has been permanently deleted from your records."
-      });
       
       setShowDeleteDialog(false);
     } catch (error) {
       console.error('Error deleting session:', error);
-      toast({
-        title: "Error Deleting Session",
-        description: "There was a problem deleting the session. Please try again.",
-        variant: "destructive"
-      });
+      // Error handling is now done inside deleteSession
     } finally {
       setIsDeleting(false);
     }

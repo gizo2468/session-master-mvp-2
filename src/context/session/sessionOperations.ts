@@ -64,6 +64,18 @@ export const createSessionOperations = (
   };
 
   const deleteSession = async (id: string) => {
+    // Store deleted session for potential rollback
+    const sessionToDelete = sessions.find(s => s.id === id);
+    if (!sessionToDelete) {
+      toast({
+        title: "Error",
+        description: "Session not found.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Optimistic update: Remove from UI immediately
     setSessions((prev) => prev.filter((session) => session.id !== id));
     
     if (activeSession && activeSession.id === id) {
@@ -72,15 +84,55 @@ export const createSessionOperations = (
 
     if (user?.id) {
       try {
-        await deleteSessionFromDatabase(id);
+        // Attempt database deletion
+        const success = await deleteSessionFromDatabase(id);
+        
+        if (!success) {
+          throw new Error('Database deletion failed');
+        }
+        
+        // Success: Show confirmation and trigger statistics refresh
+        toast({
+          title: "Session Deleted",
+          description: "The session has been permanently deleted from your records."
+        });
+        
+        // Trigger statistics refresh
+        await refreshSessionsFromDatabase();
+        
       } catch (error) {
         console.error('Failed to delete session from database:', error);
+        
+        // Rollback: Restore session to UI
+        setSessions((prev) => {
+          // Check if session is already back (avoid duplicates)
+          if (prev.find(s => s.id === id)) {
+            return prev;
+          }
+          // Insert back in original position (sorted by start time)
+          const sorted = [...prev, sessionToDelete].sort((a, b) => 
+            new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+          );
+          return sorted;
+        });
+        
+        // Restore active session if it was active
+        if (sessionToDelete.isActive) {
+          setActiveSession(sessionToDelete);
+        }
+        
         toast({
-          title: "Sync Warning",
-          description: "Session deleted locally but failed to sync to cloud. It will sync when connection is restored.",
+          title: "Deletion Failed",
+          description: "Could not delete session. Please try again.",
           variant: "destructive"
         });
       }
+    } else {
+      // No user logged in, just show success for local deletion
+      toast({
+        title: "Session Deleted",
+        description: "The session has been removed from your local records."
+      });
     }
   };
 
