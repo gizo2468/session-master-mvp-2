@@ -147,7 +147,6 @@ export default function SessionHistory() {
                   key={session.id} 
                   session={session} 
                   onClick={() => handleSessionClick(session.id)}
-                  showActions={true}
                 />
               ))}
             </div>
