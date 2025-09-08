@@ -26,6 +26,18 @@ const CardSelector: React.FC<CardSelectorProps> = ({
     suit: null
   });
 
+  // State to track visible slots (for Omaha progressive expansion)
+  const [visibleSlots, setVisibleSlots] = useState(() => {
+    // For Omaha (maxCards = 6), start with 4 slots
+    // For Hold'em (maxCards = 2), show all slots
+    return maxCards === 6 ? 4 : maxCards;
+  });
+
+  // Reset visible slots when maxCards changes (game type switch)
+  React.useEffect(() => {
+    setVisibleSlots(maxCards === 6 ? 4 : maxCards);
+  }, [maxCards]);
+
   // Card ranks in descending order (A to 2)
   const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
   
@@ -89,7 +101,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
       return; // Don't allow selection at all
     }
     
-    if (selectedCards.length / 2 >= maxCards) return;
+    if (selectedCards.length / 2 >= visibleSlots) return;
     
     setCurrentSelection(prev => ({ ...prev, rank }));
     
@@ -110,7 +122,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
       return; // Don't allow selection at all
     }
     
-    if (selectedCards.length / 2 >= maxCards) return;
+    if (selectedCards.length / 2 >= visibleSlots) return;
     
     setCurrentSelection(prev => ({ ...prev, suit: suitSymbol }));
     
@@ -137,14 +149,38 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   // Count of selected cards
   const selectedCardCount = selectedCards.length / 2;
   
+  // Check if we've reached the visible slot limit
+  const isVisibleSlotsReached = selectedCardCount >= visibleSlots;
+  
   // Check if we've reached the maximum number of cards
   const isMaxReached = selectedCardCount >= maxCards;
+
+  // Progressive slot expansion logic for Omaha
+  const shouldShowExpandButton = maxCards === 6 && visibleSlots < maxCards && selectedCardCount === visibleSlots;
+  
+  // Handle slot expansion
+  const handleExpandSlots = () => {
+    if (visibleSlots < maxCards) {
+      setVisibleSlots(prev => Math.min(prev + 1, maxCards));
+    }
+  };
+
+  // Auto-shrink slots if cards are removed and we have empty slots at the end
+  React.useEffect(() => {
+    if (maxCards === 6 && selectedCardCount < visibleSlots && visibleSlots > 4) {
+      // Only shrink if there are empty slots at the end
+      const minNeededSlots = Math.max(4, selectedCardCount);
+      if (visibleSlots > minNeededSlots) {
+        setVisibleSlots(minNeededSlots);
+      }
+    }
+  }, [selectedCardCount, visibleSlots, maxCards]);
   
   return (
     <div className="space-y-3">
       {/* Display selected cards as card placeholders */}
-      <div className="flex gap-2 mb-4">
-        {Array.from({ length: maxCards }, (_, index) => {
+      <div className="flex gap-2 mb-4 items-center">
+        {Array.from({ length: visibleSlots }, (_, index) => {
           const card = selectedCardObjects[index];
           const { display, color } = card ? getSuitInfo(card.suit) : { display: '', color: '' };
           
@@ -191,6 +227,18 @@ const CardSelector: React.FC<CardSelectorProps> = ({
           );
         })}
         
+        {/* Expand button for Omaha */}
+        {shouldShowExpandButton && (
+          <button
+            onClick={handleExpandSlots}
+            type="button"
+            className="w-10 h-10 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center hover:border-poker-gold hover:text-poker-gold transition-all self-center"
+            aria-label="Add another card slot"
+          >
+            <span className="text-xl font-bold">+</span>
+          </button>
+        )}
+        
         {selectedCardCount > 0 && (
           <button
             onClick={clearSelectedCards}
@@ -216,7 +264,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRankSelect(rank)}
-                       disabled={isMaxReached || suits.every(suit => isCardUnavailable(rank, suit.symbol))}
+                        disabled={isVisibleSlotsReached || suits.every(suit => isCardUnavailable(rank, suit.symbol))}
                        className={cn(
                          "py-2.5 rounded-md font-bold text-lg transition-all",
                          currentSelection.rank === rank 
@@ -229,16 +277,16 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                       {rank}
                     </button>
                   </TooltipTrigger>
-                  {isMaxReached && (
-                    <TooltipContent>
-                      <p>Maximum cards reached</p>
-                    </TooltipContent>
-                  )}
-                   {!isMaxReached && suits.every(suit => isCardUnavailable(rank, suit.symbol)) && (
+                   {isVisibleSlotsReached && (
                      <TooltipContent>
-                       <p>Already used</p>
+                       <p>Maximum cards reached</p>
                      </TooltipContent>
                    )}
+                    {!isVisibleSlotsReached && suits.every(suit => isCardUnavailable(rank, suit.symbol)) && (
+                      <TooltipContent>
+                        <p>Already used</p>
+                      </TooltipContent>
+                    )}
                 </Tooltip>
               </TooltipProvider>
             ))}
@@ -253,7 +301,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRankSelect(rank)}
-                       disabled={isMaxReached || suits.every(suit => isCardUnavailable(rank, suit.symbol))}
+                       disabled={isVisibleSlotsReached || suits.every(suit => isCardUnavailable(rank, suit.symbol))}
                        className={cn(
                          "py-2.5 rounded-md font-bold text-lg transition-all",
                          currentSelection.rank === rank 
@@ -266,16 +314,16 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                       {rank}
                     </button>
                   </TooltipTrigger>
-                  {isMaxReached && (
-                    <TooltipContent>
-                      <p>Maximum cards reached</p>
-                    </TooltipContent>
-                  )}
-                   {!isMaxReached && suits.every(suit => isCardUnavailable(rank, suit.symbol)) && (
+                   {isVisibleSlotsReached && (
                      <TooltipContent>
-                       <p>Already used</p>
+                       <p>Maximum cards reached</p>
                      </TooltipContent>
                    )}
+                    {!isVisibleSlotsReached && suits.every(suit => isCardUnavailable(rank, suit.symbol)) && (
+                      <TooltipContent>
+                        <p>Already used</p>
+                      </TooltipContent>
+                    )}
                 </Tooltip>
               </TooltipProvider>
             ))}
@@ -291,7 +339,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                   <button
                     type="button"
                     onClick={() => handleSuitSelect(suit.symbol)}
-                     disabled={isMaxReached || ranks.every(rank => isCardUnavailable(rank, suit.symbol))}
+                     disabled={isVisibleSlotsReached || ranks.every(rank => isCardUnavailable(rank, suit.symbol))}
                      className={cn(
                        "py-1.5 rounded-md text-lg transition-all flex items-center justify-center",
                        currentSelection.suit === suit.symbol
@@ -307,16 +355,16 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                     {suit.display}
                   </button>
                 </TooltipTrigger>
-                {isMaxReached && (
-                  <TooltipContent>
-                    <p>Maximum cards reached</p>
-                  </TooltipContent>
-                )}
-                 {!isMaxReached && ranks.every(rank => isCardUnavailable(rank, suit.symbol)) && (
+                 {isVisibleSlotsReached && (
                    <TooltipContent>
-                     <p>Already used</p>
+                     <p>Maximum cards reached</p>
                    </TooltipContent>
                  )}
+                  {!isVisibleSlotsReached && ranks.every(rank => isCardUnavailable(rank, suit.symbol)) && (
+                    <TooltipContent>
+                      <p>Already used</p>
+                    </TooltipContent>
+                  )}
               </Tooltip>
             </TooltipProvider>
           ))}
