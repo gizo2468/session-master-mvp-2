@@ -187,9 +187,9 @@ const CardSelector: React.FC<CardSelectorProps> = ({
     <div className="space-y-3">
       {/* Display selected cards as card placeholders */}
       <div className="mb-4">
-        {/* Card slots container with responsive wrapping */}
-        <div className="flex flex-wrap gap-2 items-center">
-          <div className="flex gap-2 items-center flex-wrap">
+        {/* Card slots container with responsive sizing */}
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center">
+          <div className="flex gap-1.5 sm:gap-2 items-center">
             {Array.from({ length: visibleSlots }, (_, index) => {
               const card = selectedCardObjects[index];
               const { display, color } = card ? getSuitInfo(card.suit) : { display: '', color: '' };
@@ -198,13 +198,13 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                 <button
                   key={index}
                   type="button"
-                  className="w-12 h-16 border-2 rounded-md flex flex-col items-center justify-center transition-all cursor-default flex-shrink-0"
+                  className="w-10 h-14 sm:w-12 sm:h-16 border-2 rounded-md flex flex-col items-center justify-center transition-all cursor-default flex-shrink-0"
                 >
                   {card ? (
                     /* Filled card slot with white background and border */
-                    <div className="relative w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-1">
-                      <div className="font-bold text-sm">{card.rank}</div>
-                      <div className={`${color} text-lg`}>{display}</div>
+                    <div className="relative w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-0.5 sm:p-1">
+                      <div className="font-bold text-xs sm:text-sm">{card.rank}</div>
+                      <div className={`${color} text-base sm:text-lg`}>{display}</div>
                     </div>
                   ) : (
                     /* Empty card slot - yellow card back with white diamond pattern */
@@ -242,23 +242,23 @@ const CardSelector: React.FC<CardSelectorProps> = ({
               <button
                 onClick={handleExpandSlots}
                 type="button"
-                className="w-10 h-10 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center hover:border-poker-gold hover:text-poker-gold transition-all bg-white hover:bg-gray-50 cursor-pointer flex-shrink-0"
+                className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center hover:border-poker-gold hover:text-poker-gold transition-all bg-white hover:bg-gray-50 cursor-pointer flex-shrink-0"
                 aria-label="Add another card slot"
               >
-                <span className="text-xl font-bold text-gray-600 hover:text-poker-gold">+</span>
+                <span className="text-lg sm:text-xl font-bold text-gray-600 hover:text-poker-gold">+</span>
               </button>
             )}
           </div>
           
-          {/* Clear button - can wrap to next line on mobile if needed */}
+          {/* Clear button - positioned to prevent overlap */}
           {selectedCardCount > 0 && (
             <button
               onClick={clearSelectedCards}
               type="button"
-              className="text-gray-500 hover:text-gray-800 flex-shrink-0 mt-1 sm:mt-0"
+              className="text-gray-500 hover:text-gray-800 flex-shrink-0 ml-1 sm:ml-2"
               aria-label="Clear all cards"
             >
-              <Trash2 size={20} />
+              <Trash2 size={18} className="sm:w-5 sm:h-5" />
             </button>
           )}
         </div>
