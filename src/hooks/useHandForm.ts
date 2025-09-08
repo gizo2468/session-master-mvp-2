@@ -99,6 +99,13 @@ export const useHandForm = ({
   useEffect(() => {
     if ((villainCards && villainCards.some(c => c.rank && c.suit)) || result) setIsShowdownOpen(true);
   }, [villainCards, result]);
+
+  // Clear cards when game type changes to prevent validation issues
+  useEffect(() => {
+    if (open && !isEditing) {
+      form.setValue('cards', '');
+    }
+  }, [gameType, open, isEditing, form]);
   
   useEffect(() => {
     if (open && !isEditing) {
