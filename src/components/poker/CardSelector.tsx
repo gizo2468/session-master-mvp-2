@@ -158,10 +158,29 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   // Progressive slot expansion logic for Omaha
   const shouldShowExpandButton = maxCards === 6 && visibleSlots < maxCards && selectedCardCount === visibleSlots;
   
+  // Debug logging
+  console.log('🔍 CardSelector Debug:', {
+    maxCards,
+    visibleSlots,
+    selectedCardCount,
+    selectedCards,
+    shouldShowExpandButton,
+    condition1: maxCards === 6,
+    condition2: visibleSlots < maxCards,
+    condition3: selectedCardCount === visibleSlots
+  });
+  
   // Handle slot expansion
   const handleExpandSlots = () => {
+    console.log('🔧 handleExpandSlots called, current visibleSlots:', visibleSlots);
     if (visibleSlots < maxCards) {
-      setVisibleSlots(prev => Math.min(prev + 1, maxCards));
+      setVisibleSlots(prev => {
+        const newValue = Math.min(prev + 1, maxCards);
+        console.log('🔧 Setting visibleSlots from', prev, 'to', newValue);
+        return newValue;
+      });
+    } else {
+      console.log('🔧 Cannot expand: already at max cards');
     }
   };
 
@@ -179,85 +198,100 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   return (
     <div className="space-y-3">
       {/* Display selected cards as card placeholders */}
-      <div className="flex flex-wrap gap-2 mb-4 items-center">
-        <div className="flex gap-2 items-center">
-          {Array.from({ length: visibleSlots }, (_, index) => {
-            const card = selectedCardObjects[index];
-            const { display, color } = card ? getSuitInfo(card.suit) : { display: '', color: '' };
+      <div className="mb-4">
+        {/* Card slots container with responsive wrapping */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex gap-2 items-center flex-wrap">
+            {Array.from({ length: visibleSlots }, (_, index) => {
+              const card = selectedCardObjects[index];
+              const { display, color } = card ? getSuitInfo(card.suit) : { display: '', color: '' };
+              
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  className="w-12 h-16 border-2 rounded-md flex flex-col items-center justify-center transition-all cursor-default flex-shrink-0"
+                >
+                  {card ? (
+                    /* Filled card slot with white background and border */
+                    <div className="relative w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-1">
+                      <div className="font-bold text-sm">{card.rank}</div>
+                      <div className={`${color} text-lg`}>{display}</div>
+                    </div>
+                  ) : (
+                    /* Empty card slot - yellow card back with white diamond pattern */
+                    <div className="w-full h-full bg-yellow-400 rounded border-2 border-white relative overflow-hidden">
+                      {/* Diamond pattern overlay */}
+                      <div 
+                        className="absolute inset-0 opacity-30"
+                        style={{
+                          backgroundImage: `
+                            repeating-linear-gradient(
+                              45deg,
+                              transparent,
+                              transparent 3px,
+                              white 3px,
+                              white 6px
+                            ),
+                            repeating-linear-gradient(
+                              -45deg,
+                              transparent,
+                              transparent 3px,
+                              white 3px,
+                              white 6px
+                            )
+                          `
+                        }}
+                      />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
             
-            return (
+            {/* Expand button for Omaha */}
+            {shouldShowExpandButton && (
               <button
-                key={index}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('🔥 Expand button clicked!', {
+                    visibleSlots,
+                    maxCards,
+                    selectedCardCount
+                  });
+                  handleExpandSlots();
+                }}
                 type="button"
-                className="w-12 h-16 border-2 rounded-md flex flex-col items-center justify-center transition-all cursor-default"
+                className="w-10 h-10 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center hover:border-poker-gold hover:text-poker-gold transition-all bg-white hover:bg-gray-50 cursor-pointer flex-shrink-0"
+                aria-label="Add another card slot"
+                tabIndex={0}
               >
-                {card ? (
-                  /* Filled card slot with white background and border */
-                  <div className="relative w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-1">
-                    <div className="font-bold text-sm">{card.rank}</div>
-                    <div className={`${color} text-lg`}>{display}</div>
-                  </div>
-                ) : (
-                  /* Empty card slot - yellow card back with white diamond pattern */
-                  <div className="w-full h-full bg-yellow-400 rounded border-2 border-white relative overflow-hidden">
-                    {/* Diamond pattern overlay */}
-                    <div 
-                      className="absolute inset-0 opacity-30"
-                      style={{
-                        backgroundImage: `
-                          repeating-linear-gradient(
-                            45deg,
-                            transparent,
-                            transparent 3px,
-                            white 3px,
-                            white 6px
-                          ),
-                          repeating-linear-gradient(
-                            -45deg,
-                            transparent,
-                            transparent 3px,
-                            white 3px,
-                            white 6px
-                          )
-                        `
-                      }}
-                    />
-                  </div>
-                )}
+                <span className="text-xl font-bold text-gray-600 hover:text-poker-gold">+</span>
               </button>
-            );
-          })}
+            )}
+          </div>
           
-          {/* Expand button for Omaha */}
-          {shouldShowExpandButton && (
+          {/* Clear button - can wrap to next line on mobile if needed */}
+          {selectedCardCount > 0 && (
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Expand button clicked, current visibleSlots:', visibleSlots);
-                handleExpandSlots();
-                console.log('After expansion, visibleSlots should be:', visibleSlots + 1);
-              }}
+              onClick={clearSelectedCards}
               type="button"
-              className="w-10 h-10 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center hover:border-poker-gold hover:text-poker-gold transition-all"
-              aria-label="Add another card slot"
+              className="text-gray-500 hover:text-gray-800 flex-shrink-0 mt-1 sm:mt-0"
+              aria-label="Clear all cards"
             >
-              <span className="text-xl font-bold">+</span>
+              <Trash2 size={20} />
             </button>
           )}
         </div>
         
-        {selectedCardCount > 0 && (
-          <button
-            onClick={clearSelectedCards}
-            type="button"
-            className="text-gray-500 hover:text-gray-800 flex-shrink-0"
-            aria-label="Clear all cards"
-          >
-            <Trash2 size={20} />
-          </button>
-         )}
-       </div>
+        {/* Debug info - remove this in production */}
+        {maxCards === 6 && (
+          <div className="text-xs text-gray-400 mt-2">
+            Debug: {visibleSlots}/{maxCards} slots, {selectedCardCount} cards, show+: {shouldShowExpandButton.toString()}
+          </div>
+        )}
+      </div>
       
       {/* Card selection keyboard layout */}
       <div className="bg-gray-100 rounded-lg p-3">
