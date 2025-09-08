@@ -179,77 +179,85 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   return (
     <div className="space-y-3">
       {/* Display selected cards as card placeholders */}
-      <div className="flex gap-2 mb-4 items-center">
-        {Array.from({ length: visibleSlots }, (_, index) => {
-          const card = selectedCardObjects[index];
-          const { display, color } = card ? getSuitInfo(card.suit) : { display: '', color: '' };
+      <div className="flex flex-wrap gap-2 mb-4 items-center">
+        <div className="flex gap-2 items-center">
+          {Array.from({ length: visibleSlots }, (_, index) => {
+            const card = selectedCardObjects[index];
+            const { display, color } = card ? getSuitInfo(card.suit) : { display: '', color: '' };
+            
+            return (
+              <button
+                key={index}
+                type="button"
+                className="w-12 h-16 border-2 rounded-md flex flex-col items-center justify-center transition-all cursor-default"
+              >
+                {card ? (
+                  /* Filled card slot with white background and border */
+                  <div className="relative w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-1">
+                    <div className="font-bold text-sm">{card.rank}</div>
+                    <div className={`${color} text-lg`}>{display}</div>
+                  </div>
+                ) : (
+                  /* Empty card slot - yellow card back with white diamond pattern */
+                  <div className="w-full h-full bg-yellow-400 rounded border-2 border-white relative overflow-hidden">
+                    {/* Diamond pattern overlay */}
+                    <div 
+                      className="absolute inset-0 opacity-30"
+                      style={{
+                        backgroundImage: `
+                          repeating-linear-gradient(
+                            45deg,
+                            transparent,
+                            transparent 3px,
+                            white 3px,
+                            white 6px
+                          ),
+                          repeating-linear-gradient(
+                            -45deg,
+                            transparent,
+                            transparent 3px,
+                            white 3px,
+                            white 6px
+                          )
+                        `
+                      }}
+                    />
+                  </div>
+                )}
+              </button>
+            );
+          })}
           
-          return (
+          {/* Expand button for Omaha */}
+          {shouldShowExpandButton && (
             <button
-              key={index}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Expand button clicked, current visibleSlots:', visibleSlots);
+                handleExpandSlots();
+                console.log('After expansion, visibleSlots should be:', visibleSlots + 1);
+              }}
               type="button"
-              className="w-12 h-16 border-2 rounded-md flex flex-col items-center justify-center transition-all cursor-default"
+              className="w-10 h-10 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center hover:border-poker-gold hover:text-poker-gold transition-all"
+              aria-label="Add another card slot"
             >
-              {card ? (
-                /* Filled card slot with white background and border */
-                <div className="relative w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-1">
-                  <div className="font-bold text-sm">{card.rank}</div>
-                  <div className={`${color} text-lg`}>{display}</div>
-                </div>
-              ) : (
-                /* Empty card slot - yellow card back with white diamond pattern */
-                <div className="w-full h-full bg-yellow-400 rounded border-2 border-white relative overflow-hidden">
-                  {/* Diamond pattern overlay */}
-                  <div 
-                    className="absolute inset-0 opacity-30"
-                    style={{
-                      backgroundImage: `
-                        repeating-linear-gradient(
-                          45deg,
-                          transparent,
-                          transparent 3px,
-                          white 3px,
-                          white 6px
-                        ),
-                        repeating-linear-gradient(
-                          -45deg,
-                          transparent,
-                          transparent 3px,
-                          white 3px,
-                          white 6px
-                        )
-                      `
-                    }}
-                  />
-                </div>
-              )}
+              <span className="text-xl font-bold">+</span>
             </button>
-          );
-        })}
-        
-        {/* Expand button for Omaha */}
-        {shouldShowExpandButton && (
-          <button
-            onClick={handleExpandSlots}
-            type="button"
-            className="w-10 h-10 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center hover:border-poker-gold hover:text-poker-gold transition-all self-center"
-            aria-label="Add another card slot"
-          >
-            <span className="text-xl font-bold">+</span>
-          </button>
-        )}
+          )}
+        </div>
         
         {selectedCardCount > 0 && (
           <button
             onClick={clearSelectedCards}
             type="button"
-            className="ml-2 text-gray-500 hover:text-gray-800 self-center"
+            className="text-gray-500 hover:text-gray-800 flex-shrink-0"
             aria-label="Clear all cards"
           >
             <Trash2 size={20} />
           </button>
-        )}
-      </div>
+         )}
+       </div>
       
       {/* Card selection keyboard layout */}
       <div className="bg-gray-100 rounded-lg p-3">
