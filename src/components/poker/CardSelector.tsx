@@ -155,45 +155,33 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   // Check if we've reached the maximum number of cards
   const isMaxReached = selectedCardCount >= maxCards;
 
-  // Progressive slot expansion logic for Omaha
-  const shouldShowExpandButton = maxCards === 6 && visibleSlots < maxCards && selectedCardCount === visibleSlots;
-  
-  // Debug logging
-  console.log('🔍 CardSelector Debug:', {
-    maxCards,
-    visibleSlots,
-    selectedCardCount,
-    selectedCards,
-    shouldShowExpandButton,
-    condition1: maxCards === 6,
-    condition2: visibleSlots < maxCards,
-    condition3: selectedCardCount === visibleSlots
-  });
+  // Progressive slot expansion logic for Omaha  
+  // Show + button when: it's Omaha (6 max), haven't reached max slots, and all visible slots are filled
+  const shouldShowExpandButton = maxCards === 6 && visibleSlots < maxCards && selectedCardCount >= visibleSlots;
   
   // Handle slot expansion
   const handleExpandSlots = () => {
-    console.log('🔧 handleExpandSlots called, current visibleSlots:', visibleSlots);
     if (visibleSlots < maxCards) {
-      setVisibleSlots(prev => {
-        const newValue = Math.min(prev + 1, maxCards);
-        console.log('🔧 Setting visibleSlots from', prev, 'to', newValue);
-        return newValue;
-      });
-    } else {
-      console.log('🔧 Cannot expand: already at max cards');
+      setLastExpandTime(Date.now());
+      setVisibleSlots(prev => Math.min(prev + 1, maxCards));
     }
   };
 
-  // Auto-shrink slots if cards are removed and we have empty slots at the end
+  // Auto-shrink slots if cards are removed - but not immediately after manual expansion
+  const [lastExpandTime, setLastExpandTime] = useState(0);
+  
   React.useEffect(() => {
     if (maxCards === 6 && selectedCardCount < visibleSlots && visibleSlots > 4) {
-      // Only shrink if there are empty slots at the end
-      const minNeededSlots = Math.max(4, selectedCardCount);
-      if (visibleSlots > minNeededSlots) {
-        setVisibleSlots(minNeededSlots);
+      // Don't auto-shrink within 500ms of manual expansion
+      const timeSinceExpand = Date.now() - lastExpandTime;
+      if (timeSinceExpand > 500) {
+        const minNeededSlots = Math.max(4, selectedCardCount);
+        if (visibleSlots > minNeededSlots) {
+          setVisibleSlots(minNeededSlots);
+        }
       }
     }
-  }, [selectedCardCount, visibleSlots, maxCards]);
+  }, [selectedCardCount, visibleSlots, maxCards, lastExpandTime]);
   
   return (
     <div className="space-y-3">
@@ -252,20 +240,10 @@ const CardSelector: React.FC<CardSelectorProps> = ({
             {/* Expand button for Omaha */}
             {shouldShowExpandButton && (
               <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('🔥 Expand button clicked!', {
-                    visibleSlots,
-                    maxCards,
-                    selectedCardCount
-                  });
-                  handleExpandSlots();
-                }}
+                onClick={handleExpandSlots}
                 type="button"
                 className="w-10 h-10 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center hover:border-poker-gold hover:text-poker-gold transition-all bg-white hover:bg-gray-50 cursor-pointer flex-shrink-0"
                 aria-label="Add another card slot"
-                tabIndex={0}
               >
                 <span className="text-xl font-bold text-gray-600 hover:text-poker-gold">+</span>
               </button>
@@ -284,13 +262,6 @@ const CardSelector: React.FC<CardSelectorProps> = ({
             </button>
           )}
         </div>
-        
-        {/* Debug info - remove this in production */}
-        {maxCards === 6 && (
-          <div className="text-xs text-gray-400 mt-2">
-            Debug: {visibleSlots}/{maxCards} slots, {selectedCardCount} cards, show+: {shouldShowExpandButton.toString()}
-          </div>
-        )}
       </div>
       
       {/* Card selection keyboard layout */}
