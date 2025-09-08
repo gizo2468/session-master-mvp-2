@@ -124,7 +124,7 @@ export const useHandForm = ({
         turnAction: '',
         riverCards: [{ id: 0 }],
         riverAction: '',
-        villainCards: gameType === 'NLH' ? [{ id: 0 }, { id: 1 }] : [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }],
+        villainCards: [{ id: 0 }, { id: 1 }],
         result: '',
       });
       setImagePreview(null);
@@ -135,16 +135,37 @@ export const useHandForm = ({
       setIsRiverOpen(false);
       setIsShowdownOpen(false);
     }
-  }, [open, isEditing, form, tableId, gameType]);
+  }, [open, isEditing, form, tableId]);
   
   const handleSubmit = (values: FormValues) => {
-    // Only validate card count for the game type
-    const requiredCardCount = gameType === 'NLH' ? 2 : 4;
+    console.log('🔍 SUBMIT: Form submission with values:', {
+      gameType: values.gameType,
+      cardCount: values.cards.length / 2,
+      cards: values.cards
+    });
     
-    if ((values.cards.length / 2) < requiredCardCount) {
+    // Only validate card count for the game type
+    const requiredCardCount = values.gameType === 'NLH' ? 2 : 4;
+    const maxCardCount = values.gameType === 'NLH' ? 2 : 6;
+    const currentCardCount = values.cards.length / 2;
+    
+    console.log('🔍 VALIDATION: Card count check:', {
+      gameType: values.gameType,
+      currentCardCount,
+      requiredCardCount,
+      maxCardCount,
+      isValid: currentCardCount >= requiredCardCount && currentCardCount <= maxCardCount
+    });
+    
+    if (currentCardCount < requiredCardCount || currentCardCount > maxCardCount) {
+      const gameTypeName = values.gameType === 'NLH' ? 'Texas Hold\'em' : 'Omaha';
+      const cardMessage = values.gameType === 'NLH' 
+        ? `Select exactly ${requiredCardCount} cards for ${gameTypeName}`
+        : `Select between ${requiredCardCount}-${maxCardCount} cards for ${gameTypeName}`;
+        
       form.setError("cards", {
         type: "manual", 
-        message: `Select at least ${requiredCardCount} cards for ${gameType === 'NLH' ? 'Texas Hold\'em' : 'Omaha'}`
+        message: cardMessage
       });
       return;
     }

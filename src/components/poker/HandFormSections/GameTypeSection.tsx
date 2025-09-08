@@ -31,22 +31,31 @@ const GameTypeSection: React.FC<GameTypeSectionProps> = ({
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => field.onChange('NLH')}
-                className={`flex-1 py-2 px-4 rounded-full transition-all ${
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log('NLH button clicked');
+                  field.onChange('NLH');
+                }}
+                className={`flex-1 py-2 px-4 rounded-full transition-all cursor-pointer ${
                   field.value === 'NLH' 
                     ? 'bg-poker-gold text-white' 
-                    : 'bg-gray-100 text-gray-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 Texas Hold'em
               </button>
               <button
                 type="button"
-                onClick={() => field.onChange('PLO')}
-                className={`flex-1 py-2 px-4 rounded-full transition-all ${
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log('PLO button clicked, current value:', field.value);
+                  field.onChange('PLO');
+                  console.log('PLO onChange called');
+                }}
+                className={`flex-1 py-2 px-4 rounded-full transition-all cursor-pointer ${
                   field.value === 'PLO' 
                     ? 'bg-poker-gold text-white' 
-                    : 'bg-gray-100 text-gray-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 Omaha
