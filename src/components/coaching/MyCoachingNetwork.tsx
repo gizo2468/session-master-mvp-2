@@ -192,11 +192,16 @@ const MyCoachingNetwork: React.FC = () => {
         return;
       }
 
-      // Get all user IDs we need profiles for
+      // Get all user IDs we need profiles for (excluding current user)
       const userIds = new Set<string>();
       (allRequests || []).forEach(conn => {
-        userIds.add(conn.coach_id);
-        userIds.add(conn.student_id);
+        // Add the other user's ID (not the current user's ID)
+        if (conn.coach_id !== user.id) {
+          userIds.add(conn.coach_id);
+        }
+        if (conn.student_id !== user.id) {
+          userIds.add(conn.student_id);
+        }
       });
 
       if (userIds.size === 0) {
@@ -222,6 +227,11 @@ const MyCoachingNetwork: React.FC = () => {
         return;
       }
 
+      if (privateResult.error) {
+        console.error('Error loading private data:', privateResult.error);
+        return;
+      }
+
       const profileMap = new Map(profilesResult.data?.map(p => [p.id, p]) || []);
       const privateMap = new Map(privateResult.data?.map(p => [p.id, p]) || []);
 
@@ -230,7 +240,8 @@ const MyCoachingNetwork: React.FC = () => {
       const outgoing: PendingRequest[] = [];
 
       (allRequests || []).forEach(conn => {
-        const otherUserId = isCoach ? conn.student_id : conn.coach_id;
+        // Determine who the "other" user is based on current user's role
+        const otherUserId = conn.coach_id === user.id ? conn.student_id : conn.coach_id;
         const profile = profileMap.get(otherUserId);
         const privateInfo = privateMap.get(otherUserId);
         
@@ -250,20 +261,22 @@ const MyCoachingNetwork: React.FC = () => {
           }
         };
 
-        // Determine direction based on current user role and who initiated
+        // Determine direction: if current user initiated, it's outgoing; otherwise incoming
         if (isStudent) {
-          if (conn.student_id === user.id) {
+          // For students: outgoing if they sent to coach, incoming if coach sent to them
+          if (conn.student_id === user.id && conn.coach_id === otherUserId) {
             request.direction = 'outgoing';
             outgoing.push(request);
-          } else if (conn.coach_id === user.id) {
+          } else if (conn.coach_id === user.id && conn.student_id === otherUserId) {
             request.direction = 'incoming';
             incoming.push(request);
           }
         } else if (isCoach) {
-          if (conn.coach_id === user.id) {
+          // For coaches: incoming if student sent to them, outgoing if they sent to student
+          if (conn.coach_id === user.id && conn.student_id === otherUserId) {
             request.direction = 'incoming';
             incoming.push(request);
-          } else if (conn.student_id === user.id) {
+          } else if (conn.student_id === user.id && conn.coach_id === otherUserId) {
             request.direction = 'outgoing';
             outgoing.push(request);
           }
