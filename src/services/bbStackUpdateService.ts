@@ -190,19 +190,21 @@ export class BBStackUpdateService {
   }
 
   static formatHistoryLine(update: BBStackUpdate, isLastUpdate: boolean = false): string {
-    // For cash games
-    if (update.small_blind !== undefined && update.big_blind !== undefined) {
+    // For cash games - check for null values properly
+    if (update.small_blind !== null && update.small_blind !== undefined && 
+        update.big_blind !== null && update.big_blind !== undefined) {
       return `${update.small_blind}/${update.big_blind}`;
     }
     
-    // For tournaments - show Level X — BB Y format
-    if (update.level && update.bb) {
-      return `Level ${update.level} — BB ${update.bb}`;
+    // For tournaments - show LVL X • BB Y format (user requested format)
+    if (update.level !== null && update.level !== undefined && 
+        update.bb !== null && update.bb !== undefined) {
+      return `LVL ${update.level} • BB ${update.bb}`;
     }
     
     // If only level is available
-    if (update.level) {
-      return `Level ${update.level}`;
+    if (update.level !== null && update.level !== undefined) {
+      return `LVL ${update.level}`;
     }
     
     return '';
