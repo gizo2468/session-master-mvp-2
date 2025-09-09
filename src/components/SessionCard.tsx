@@ -64,6 +64,32 @@ export default function SessionCard({ session, onClick, showActions = false }: S
 
   const duration = calculateDuration();
   
+  // Determine display format based on tables played
+  const getDisplayFormat = () => {
+    if (!session.tables || session.tables.length === 0) {
+      return session.format || 'Unknown';
+    }
+    
+    const formats = new Set(session.tables.map(table => table.format));
+    const uniqueFormats = Array.from(formats);
+    
+    if (uniqueFormats.length === 1) {
+      return uniqueFormats[0];
+    } else if (uniqueFormats.includes('Tournament') && uniqueFormats.includes('Cash')) {
+      return 'Tournament, Cash';
+    } else {
+      // If there are other combinations, join them with Tournament first if present
+      const sortedFormats = uniqueFormats.sort((a, b) => {
+        if (a === 'Tournament') return -1;
+        if (b === 'Tournament') return 1;
+        return a.localeCompare(b);
+      });
+      return sortedFormats.join(', ');
+    }
+  };
+
+  const displayFormat = getDisplayFormat();
+  
   // CRITICAL FIX: Format dates with proper timezone handling and error checking
   const getFormattedDate = () => {
     try {
@@ -143,7 +169,7 @@ export default function SessionCard({ session, onClick, showActions = false }: S
         </div>
         <div>
           <span className="text-gray-500">Format:</span>
-          <span className="ml-1 font-medium">{session.format || 'Unknown'}</span>
+          <span className="ml-1 font-medium">{displayFormat}</span>
         </div>
         <div>
           <span className="text-gray-500">Duration:</span>
