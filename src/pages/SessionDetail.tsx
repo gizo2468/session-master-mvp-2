@@ -6,6 +6,7 @@ import { useSessionLoader } from '@/hooks/useSessionLoader';
 import { useToast } from '@/hooks/use-toast';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import TableDetailsCard from '@/components/poker/TableDetailsCard';
+import { TablesPlayedSection } from '@/components/poker/TablesPlayedSection';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TableData, HandData } from '@/types/poker';
 import SessionDetailHeader, { ShareWithCoachButton } from '@/components/poker/SessionDetailHeader';
@@ -375,14 +376,10 @@ export default function SessionDetail() {
         </div>
         
         {!session.isActive && Array.isArray(session.tables) && session.tables.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-lg font-bold mb-4">Tables Played</h2>
-            {session.tables.map(table => {
-              return (
-                <TableDetailsCard key={table.id} table={table} sessionCurrency={session.currency} />
-              );
-            })}
-          </div>
+          <TablesPlayedSection 
+            tables={session.tables} 
+            sessionCurrency={session.currency} 
+          />
         )}
         
         <div className="bg-white rounded-lg shadow-md p-6">
