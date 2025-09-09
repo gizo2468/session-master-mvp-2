@@ -556,30 +556,20 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                         {/* Mobile-friendly header layout */}
                          <div className="space-y-3">
                            {/* Badges row */}
-                           <div className="flex flex-wrap items-center gap-2">
-                             <Badge variant="outline">
-                               Table #{index + 1}
-                             </Badge>
-                             {table.table_name && (
-                               <Badge variant="secondary">{table.table_name}</Badge>
-                             )}
-                             {table.game_format && (
-                               <Badge variant="outline">{table.game_format}</Badge>
-                             )}
-                             {table.is_active && (
-                               <Badge variant="default">Active</Badge>
-                             )}
-                             {/* Show latest blind/BB update for coaches */}
-                             {isCoach && tableBBUpdates.has(table.id) && (() => {
-                               const update = tableBBUpdates.get(table.id);
-                               const formattedUpdate = BBStackUpdateService.formatHistoryLine(update);
-                               return formattedUpdate ? (
-                                 <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                   {formattedUpdate}
-                                 </Badge>
-                               ) : null;
-                             })()}
-                           </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Badge variant="outline">
+                                Table #{index + 1}
+                              </Badge>
+                              {table.table_name && (
+                                <Badge variant="secondary">{table.table_name}</Badge>
+                              )}
+                              {table.game_format && (
+                                <Badge variant="outline">{table.game_format}</Badge>
+                              )}
+                              {table.is_active && (
+                                <Badge variant="default">Active</Badge>
+                              )}
+                            </div>
                            
                          </div>
 
@@ -602,7 +592,20 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                               <span className="font-medium">{currencySymbol}{table.cashout.toFixed(0)}</span>
                             </div>
                           )}
-                        </div>
+                         </div>
+
+                         {/* Level/BB badge centered below Buy-in/Cash Out */}
+                         {isCoach && tableBBUpdates.has(table.id) && (() => {
+                           const update = tableBBUpdates.get(table.id);
+                           const formattedUpdate = BBStackUpdateService.formatHistoryLine(update);
+                           return formattedUpdate ? (
+                             <div className="flex justify-center mt-3">
+                               <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                 {formattedUpdate}
+                               </Badge>
+                             </div>
+                           ) : null;
+                         })()}
 
                         {/* Other financial info grid */}
                         {table.rebuys !== undefined && table.rebuys > 0 && (
