@@ -100,8 +100,8 @@ const MyCoachingNetwork: React.FC = () => {
             const privateInfo = privateMap.get(id);
             return {
               id,
-              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
-              username: profile?.username || 'unknown',
+              full_name: privateInfo?.full_name || '',
+              username: profile?.username || '',
               profile_picture: privateInfo?.profile_picture
             };
           });
@@ -151,8 +151,8 @@ const MyCoachingNetwork: React.FC = () => {
             const privateInfo = privateMap.get(id);
             return {
               id,
-              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
-              username: profile?.username || 'unknown',
+              full_name: privateInfo?.full_name || '',
+              username: profile?.username || '',
               profile_picture: privateInfo?.profile_picture,
               bio: profile?.bio
             };
@@ -234,8 +234,8 @@ const MyCoachingNetwork: React.FC = () => {
           direction: 'incoming',
           otherUser: {
             id: otherUserId,
-            full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
-            username: profile?.username || 'unknown',
+            full_name: privateInfo?.full_name || '',
+            username: profile?.username || '',
             profile_picture: privateInfo?.profile_picture,
             role: profile?.role || (isCoach ? 'student' : 'coach')
           }
@@ -559,8 +559,13 @@ const MyCoachingNetwork: React.FC = () => {
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
+  // Helper function to get display name with proper priority
+  const getDisplayName = (fullName: string, username: string) => {
+    return fullName || username || 'User';
+  };
+
+  const getInitials = (displayName: string) => {
+    return displayName
       .split(' ')
       .map(n => n[0])
       .join('')
@@ -622,12 +627,12 @@ const MyCoachingNetwork: React.FC = () => {
             <Avatar className="h-10 w-10">
               <AvatarImage src={connectedUser.profile_picture || ''} />
               <AvatarFallback className="bg-primary/10 text-primary">
-                {getInitials(connectedUser.full_name || connectedUser.username || (isCoach ? 'Player' : 'Coach'))}
+                {getInitials(getDisplayName(connectedUser.full_name, connectedUser.username))}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">
-                {connectedUser.full_name || connectedUser.username || (isCoach ? 'Player' : 'Coach')}
+                {getDisplayName(connectedUser.full_name, connectedUser.username)}
               </p>
               <p className="text-sm text-muted-foreground">
                 {isCoach ? "Click to view player's shared content" : "Click to view shared sessions"}
@@ -671,12 +676,12 @@ const MyCoachingNetwork: React.FC = () => {
               <Avatar className="h-10 w-10 shrink-0">
                 <AvatarImage src={request.otherUser.profile_picture || ''} />
                 <AvatarFallback className="bg-primary/10 text-primary">
-                  {getInitials(request.otherUser.full_name || request.otherUser.username)}
+                  {getInitials(getDisplayName(request.otherUser.full_name, request.otherUser.username))}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm">
-                  {request.otherUser.full_name || request.otherUser.username}
+                  {getDisplayName(request.otherUser.full_name, request.otherUser.username)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {isCoach ? 'Player' : 'Coach'} • {new Date(request.created_at).toLocaleDateString()}
@@ -726,12 +731,12 @@ const MyCoachingNetwork: React.FC = () => {
             <Avatar className="h-8 w-8 shrink-0">
               <AvatarImage src={request.otherUser.profile_picture || ''} />
               <AvatarFallback className="bg-muted text-muted-foreground">
-                {getInitials(request.otherUser.full_name || request.otherUser.username)}
+                {getInitials(getDisplayName(request.otherUser.full_name, request.otherUser.username))}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm">
-                {request.otherUser.full_name || request.otherUser.username}
+                {getDisplayName(request.otherUser.full_name, request.otherUser.username)}
               </p>
               <p className="text-xs text-muted-foreground">
                 Sent {new Date(request.created_at).toLocaleDateString()}
