@@ -17,6 +17,7 @@ interface ConnectedUser {
   username: string;
   profile_picture?: string;
   bio?: string;
+  role?: string; // Added to distinguish coaches from players
 }
 
 interface PendingRequest {
@@ -39,6 +40,8 @@ const MyCoachingNetwork: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
+  const [connectedPlayers, setConnectedPlayers] = useState<ConnectedUser[]>([]);
+  const [connectedCoaches, setConnectedCoaches] = useState<ConnectedUser[]>([]);
   const [incomingRequests, setIncomingRequests] = useState<PendingRequest[]>([]);
   const [outgoingRequests, setOutgoingRequests] = useState<PendingRequest[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,6 +54,12 @@ const MyCoachingNetwork: React.FC = () => {
   const [connectPlayerDialogOpen, setConnectPlayerDialogOpen] = useState(false);
   const [connectingPlayer, setConnectingPlayer] = useState(false);
   
+  // Coach -> Coach connect dialog state
+  const [coachAsCoachUsername, setCoachAsCoachUsername] = useState('');
+  const [connectCoachDialogOpen, setConnectCoachDialogOpen] = useState(false);
+  const [connectingCoach, setConnectingCoach] = useState(false);
+  const [showCoachConfirmation, setShowCoachConfirmation] = useState(false);
+  
   const isCoach = user?.role === 'coach';
   const isStudent = user?.role === 'student';
   
@@ -60,54 +69,92 @@ const MyCoachingNetwork: React.FC = () => {
     setLoading(true);
     try {
       if (isCoach) {
-        // Load connected students for coaches
-        const { data: connections, error: connectionsError } = await supabase
-          .from('coach_student_connections')
-          .select('student_id')
-          .eq('coach_id', user.id)
-          .eq('status', 'approved');
+        // Load both students and coaches connected to this coach
+        const [studentsResult, coachesResult] = await Promise.all([
+          // Load students where this user is the coach
+          supabase
+            .from('coach_student_connections')
+            .select('student_id')
+            .eq('coach_id', user.id)
+            .eq('status', 'approved'),
+          // Load coaches where this user is the student (coach-to-coach relationships)
+          supabase
+            .from('coach_student_connections')
+            .select('coach_id')
+            .eq('student_id', user.id)
+            .eq('status', 'approved')
+        ]);
 
-        if (connectionsError) {
-          console.error('Error loading connections:', connectionsError);
-          return;
+        const studentConnections = studentsResult.data || [];
+        const coachConnections = coachesResult.data || [];
+
+        if (studentsResult.error) {
+          console.error('Error loading student connections:', studentsResult.error);
+        }
+        if (coachesResult.error) {
+          console.error('Error loading coach connections:', coachesResult.error);
         }
 
-        if (connections && connections.length > 0) {
-          const studentIds = connections.map(c => c.student_id);
-          
-          // Get profiles and private data
+        // Get all user IDs
+        const allUserIds = [
+          ...studentConnections.map(c => c.student_id),
+          ...coachConnections.map(c => c.coach_id)
+        ];
+
+        if (allUserIds.length > 0) {
+          // Get profiles and private data for all users
           const [profilesResult, privateResult] = await Promise.all([
             supabase
               .from('profiles')
-              .select('id, username')
-              .in('id', studentIds),
+              .select('id, username, bio, role')
+              .in('id', allUserIds),
             supabase
               .from('user_private_data')
               .select('id, full_name, profile_picture')
-              .in('id', studentIds)
+              .in('id', allUserIds)
           ]);
 
           if (profilesResult.error) {
-            console.error('Error loading student profiles:', profilesResult.error);
+            console.error('Error loading user profiles:', profilesResult.error);
             return;
           }
 
           const profileMap = new Map(profilesResult.data?.map(p => [p.id, p]) || []);
           const privateMap = new Map(privateResult.data?.map(p => [p.id, p]) || []);
 
-          const users = studentIds.map(id => {
+          // Separate players and coaches
+          const players = studentConnections.map(c => c.student_id).map(id => {
             const profile = profileMap.get(id);
             const privateInfo = privateMap.get(id);
             return {
               id,
               full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
               username: profile?.username || 'unknown',
-              profile_picture: privateInfo?.profile_picture
+              profile_picture: privateInfo?.profile_picture,
+              bio: profile?.bio,
+              role: profile?.role || 'student'
             };
           });
 
-          setConnectedUsers(users);
+          const coaches = coachConnections.map(c => c.coach_id).map(id => {
+            const profile = profileMap.get(id);
+            const privateInfo = privateMap.get(id);
+            return {
+              id,
+              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+              username: profile?.username || 'unknown',
+              profile_picture: privateInfo?.profile_picture,
+              bio: profile?.bio,
+              role: profile?.role || 'coach'
+            };
+          });
+
+          setConnectedPlayers(players);
+          setConnectedCoaches(coaches);
+          setConnectedUsers([...players, ...coaches]); // Keep for compatibility
         } else {
+          setConnectedPlayers([]);
+          setConnectedCoaches([]);
           setConnectedUsers([]);
         }
       } else if (isStudent) {
@@ -221,7 +268,23 @@ const MyCoachingNetwork: React.FC = () => {
       const outgoing: PendingRequest[] = [];
 
       (allRequests || []).forEach(conn => {
-        const otherUserId = isCoach ? conn.student_id : conn.coach_id;
+        // Determine who is the "other user" in this connection
+        let otherUserId: string;
+        let direction: 'incoming' | 'outgoing';
+        
+        if (conn.coach_id === user.id) {
+          // Current user is the coach, so the other user is the student
+          otherUserId = conn.student_id;
+          direction = 'incoming';
+        } else if (conn.student_id === user.id) {
+          // Current user is the student, so the other user is the coach
+          otherUserId = conn.coach_id;
+          direction = 'outgoing';
+        } else {
+          // This shouldn't happen, but skip if it does
+          return;
+        }
+        
         const profile = profileMap.get(otherUserId);
         const privateInfo = privateMap.get(otherUserId);
         
@@ -231,37 +294,20 @@ const MyCoachingNetwork: React.FC = () => {
           student_id: conn.student_id,
           created_at: conn.created_at,
           status: conn.status,
-          direction: 'incoming',
+          direction,
           otherUser: {
             id: otherUserId,
             full_name: privateInfo?.full_name || '',
             username: profile?.username || '',
             profile_picture: privateInfo?.profile_picture,
-            role: profile?.role || (isCoach ? 'student' : 'coach')
+            role: profile?.role || 'student'
           }
         };
 
-        // Determine if this is incoming or outgoing based on who initiated
-        // Students initiate requests to coaches, so:
-        // - For students: outgoing when student_id = user.id, incoming when coach_id = user.id (shouldn't happen normally)
-        // - For coaches: incoming when coach_id = user.id, outgoing when student_id = user.id (shouldn't happen normally)
-        
-        if (isStudent) {
-          if (conn.student_id === user.id) {
-            request.direction = 'outgoing';
-            outgoing.push(request);
-          } else if (conn.coach_id === user.id) {
-            request.direction = 'incoming';
-            incoming.push(request);
-          }
-        } else if (isCoach) {
-          if (conn.coach_id === user.id) {
-            request.direction = 'incoming';
-            incoming.push(request);
-          } else if (conn.student_id === user.id) {
-            request.direction = 'outgoing';
-            outgoing.push(request);
-          }
+        if (direction === 'incoming') {
+          incoming.push(request);
+        } else {
+          outgoing.push(request);
         }
       });
 
@@ -559,6 +605,111 @@ const MyCoachingNetwork: React.FC = () => {
     }
   };
 
+  // Coach sends connection request to another coach
+  const handleConnectToCoachAsCoach = async () => {
+    if (!coachAsCoachUsername.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a coach username.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (coachAsCoachUsername.trim() === user?.username) {
+      toast({
+        title: "Error",
+        description: "You cannot send a request to yourself.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setConnectingCoach(true);
+    try {
+      // Search for coach by username
+      const { data: coachProfile, error: searchError } = await (supabase as any)
+        .rpc('search_coach_by_username', { p_username: coachAsCoachUsername.trim() })
+        .maybeSingle();
+
+      if (searchError || !coachProfile) {
+        toast({
+          title: "Coach not found",
+          description: "No coach found with that username.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if connection already exists
+      const { data: existingConnection, error: checkError } = await supabase
+        .from('coach_student_connections')
+        .select('id, status')
+        .eq('coach_id', coachProfile.id)
+        .eq('student_id', user?.id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking existing connection:', checkError);
+        toast({
+          title: "Error",
+          description: "Failed to check existing connections.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (existingConnection) {
+        toast({
+          title: "Request already exists",
+          description: `You already have a ${existingConnection.status} request with this coach.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create connection request (requesting coach becomes the "student" in the relationship)
+      const { error: insertError } = await supabase
+        .from('coach_student_connections')
+        .insert({
+          coach_id: coachProfile.id,
+          student_id: user?.id,
+          status: 'pending'
+        });
+
+      if (insertError) {
+        console.error('Error creating connection:', insertError);
+        toast({
+          title: "Error",
+          description: "Failed to send connection request.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Request sent!",
+        description: `Request sent to ${coachAsCoachUsername}.`,
+      });
+
+      setCoachAsCoachUsername('');
+      setConnectCoachDialogOpen(false);
+      setShowCoachConfirmation(false);
+      // Refresh both lists
+      loadConnectedUsers();
+      loadPendingRequests();
+    } catch (error) {
+      console.error('Error in handleConnectToCoachAsCoach:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setConnectingCoach(false);
+    }
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -611,11 +762,10 @@ const MyCoachingNetwork: React.FC = () => {
             key={connectedUser.id}
             className="flex items-center space-x-3 p-3 rounded-lg bg-card/50 hover:bg-card/80 transition-colors cursor-pointer"
             onClick={() => {
-              if (isCoach) {
-                navigate(`/player/${connectedUser.id}`);
-              } else {
-                // Student clicking on a coach - navigate to coach profile page
+              if (connectedUser.role === 'coach') {
                 navigate(`/coach/${connectedUser.id}`);
+              } else {
+                navigate(`/player/${connectedUser.id}`);
               }
             }}
           >
@@ -630,7 +780,7 @@ const MyCoachingNetwork: React.FC = () => {
                 {connectedUser.full_name || connectedUser.username || (isCoach ? 'Player' : 'Coach')}
               </p>
               <p className="text-sm text-muted-foreground">
-                {isCoach ? "Click to view player's shared content" : "Click to view shared sessions"}
+                {connectedUser.role === 'coach' ? "Click to view shared sessions" : "Click to view player's shared content"}
               </p>
             </div>
             <Icon name="ChevronRight" className="h-4 w-4 text-muted-foreground" />
@@ -760,57 +910,133 @@ const MyCoachingNetwork: React.FC = () => {
       </CardHeader>
       <CardContent>
         {isCoach && (
-          <div className="mb-4">
+          <div className="mb-4 space-y-2">
             <ConnectionLimitGate
               currentConnections={connectedUsers.length}
               userRole="coach"
             >
-              <Dialog open={connectPlayerDialogOpen} onOpenChange={setConnectPlayerDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full">
-                    <Icon name="UserPlus" className="h-4 w-4 mr-2" />
-                    Connect to Player
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Connect to Player</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 pt-4">
-                    <p className="text-sm text-muted-foreground">
-                      Enter the player's username to request a connection.
-                    </p>
-                    <Input
-                      placeholder="Player handle"
-                      value={playerUsername}
-                      onChange={(e) => setPlayerUsername(e.target.value)}
-                      name="search-player"
-                      inputMode="search"
-                      autoComplete="off"
-                      data-form-type="other"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !connectingPlayer) {
-                          handleConnectToPlayer();
-                        }
-                      }}
-                    />
-                    <Button
-                      onClick={handleConnectToPlayer}
-                      disabled={connectingPlayer || !playerUsername.trim()}
-                      className="w-full"
-                    >
-                      {connectingPlayer ? (
-                        <>
-                          <Icon name="Loader" className="h-4 w-4 mr-2 animate-spin" />
-                          Sending Request...
-                        </>
-                      ) : (
-                        'Send Request'
-                      )}
+              <div className="grid grid-cols-2 gap-2">
+                <Dialog open={connectPlayerDialogOpen} onOpenChange={setConnectPlayerDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Icon name="UserPlus" className="h-4 w-4 mr-2" />
+                      Connect to Player
                     </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Connect to Player</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                      <p className="text-sm text-muted-foreground">
+                        Enter the player's username to request a connection.
+                      </p>
+                      <Input
+                        placeholder="Player handle"
+                        value={playerUsername}
+                        onChange={(e) => setPlayerUsername(e.target.value)}
+                        name="search-player"
+                        inputMode="search"
+                        autoComplete="off"
+                        data-form-type="other"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !connectingPlayer) {
+                            handleConnectToPlayer();
+                          }
+                        }}
+                      />
+                      <Button
+                        onClick={handleConnectToPlayer}
+                        disabled={connectingPlayer || !playerUsername.trim()}
+                        className="w-full"
+                      >
+                        {connectingPlayer ? (
+                          <>
+                            <Icon name="Loader" className="h-4 w-4 mr-2 animate-spin" />
+                            Sending Request...
+                          </>
+                        ) : (
+                          'Send Request'
+                        )}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                
+                <Dialog open={connectCoachDialogOpen} onOpenChange={setConnectCoachDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Icon name="GraduationCap" className="h-4 w-4 mr-2" />
+                      Connect to Coach
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Connect to Coach</DialogTitle>
+                    </DialogHeader>
+                    {!showCoachConfirmation ? (
+                      <div className="space-y-4 pt-4">
+                        <p className="text-sm text-muted-foreground">
+                          Enter the coach's username to request mentoring.
+                        </p>
+                        <Input
+                          placeholder="Coach handle"
+                          value={coachAsCoachUsername}
+                          onChange={(e) => setCoachAsCoachUsername(e.target.value)}
+                          name="search-coach-as-coach"
+                          inputMode="search"
+                          autoComplete="off"
+                          data-form-type="other"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !connectingCoach && coachAsCoachUsername.trim()) {
+                              setShowCoachConfirmation(true);
+                            }
+                          }}
+                        />
+                        <Button
+                          onClick={() => setShowCoachConfirmation(true)}
+                          disabled={!coachAsCoachUsername.trim()}
+                          className="w-full"
+                        >
+                          Continue
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4 pt-4">
+                        <div className="rounded-lg bg-muted/50 p-4">
+                          <h4 className="font-medium mb-2">Confirm Connection Request</h4>
+                          <p className="text-sm text-muted-foreground">
+                            You're about to connect with a coach. This will send a request to be coached by them.
+                          </p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowCoachConfirmation(false)}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={handleConnectToCoachAsCoach}
+                            disabled={connectingCoach}
+                            className="flex-1"
+                          >
+                            {connectingCoach ? (
+                              <>
+                                <Icon name="Loader" className="h-4 w-4 mr-2 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              'Confirm'
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </DialogContent>
+                </Dialog>
+              </div>
             </ConnectionLimitGate>
           </div>
         )}
@@ -892,20 +1118,93 @@ const MyCoachingNetwork: React.FC = () => {
           </div>
         )}
         
-        <div>
-          {isCoach && connectedUsers.length > 0 && (
-            <h3 className="text-lg font-semibold mb-3 flex items-center space-x-2">
-              <Icon name="Users" className="h-4 w-4" />
-              <span>Connected Players</span>
-            </h3>
+        <div className="space-y-6">
+          {/* Connected Players Section (for coaches) */}
+          {isCoach && connectedPlayers.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-3 flex items-center space-x-2">
+                <Icon name="Users" className="h-4 w-4" />
+                <span>Connected Players</span>
+              </h3>
+              <div className="space-y-3">
+                {connectedPlayers.map((player) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center space-x-3 p-3 rounded-lg bg-card/50 hover:bg-card/80 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/player/${player.id}`)}
+                  >
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={player.profile_picture || ''} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {getInitials(player.full_name || player.username || 'Player')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        {player.full_name || player.username || 'Player'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Click to view player's shared content
+                      </p>
+                    </div>
+                    <Icon name="ChevronRight" className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
-          {isStudent && connectedUsers.length > 0 && (
-            <h3 className="text-lg font-semibold mb-3 flex items-center space-x-2">
-              <Icon name="GraduationCap" className="h-4 w-4" />
-              <span>Connected Coaches</span>
-            </h3>
+
+          {/* Connected Coaches Section (for coaches and students) */}
+          {((isCoach && connectedCoaches.length > 0) || (isStudent && connectedUsers.length > 0)) && (
+            <div>
+              <h3 className="text-lg font-semibold mb-3 flex items-center space-x-2">
+                <Icon name="GraduationCap" className="h-4 w-4" />
+                <span>Connected Coaches</span>
+              </h3>
+              <div className="space-y-3">
+                {(isCoach ? connectedCoaches : connectedUsers).map((coach) => (
+                  <div
+                    key={coach.id}
+                    className="flex items-center space-x-3 p-3 rounded-lg bg-card/50 hover:bg-card/80 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/coach/${coach.id}`)}
+                  >
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={coach.profile_picture || ''} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {getInitials(coach.full_name || coach.username || 'Coach')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        {coach.full_name || coach.username || 'Coach'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Click to view shared sessions
+                      </p>
+                    </div>
+                    <Icon name="ChevronRight" className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
-          {renderConnections()}
+
+          {/* No connections message */}
+          {connectedUsers.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              {isCoach ? (
+                <>
+                  <Icon name="Users" className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No connections yet. Connect with players or other coaches to get started.</p>
+                </>
+              ) : (
+                <>
+                  <Icon name="GraduationCap" className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No connected coaches yet.</p>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
