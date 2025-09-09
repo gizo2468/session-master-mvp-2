@@ -24,7 +24,7 @@ interface CompletedTablesDisplayProps {
 
 export default function CompletedTablesDisplay({ tables, sessionId, currency }: CompletedTablesDisplayProps) {
   const { updateTable, deleteTable } = useSessionContext();
-  const currencySymbol = getCurrencySymbol(currency);
+  // Remove global currencySymbol - calculate per table instead
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -64,6 +64,7 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency }: 
           const profitLoss = (table.cashOut ?? 0) - table.buyIn;
           // Fixed: Use actual cashOut amount, not calculated minimum
           const actualPayout = table.cashOut ?? 0;
+          const currencySymbol = getCurrencySymbol(table.currency || currency);
           
           return (
             <div 
@@ -272,7 +273,7 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency }: 
           table={selectedTable}
           onSave={handleSaveTable}
           onDelete={() => handleDeleteTable(selectedTable)}
-          sessionCurrency={currency}
+          sessionCurrency={selectedTable.currency || currency}
         />
       )}
 

@@ -21,7 +21,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
   
   // Calculate profit based ONLY on the manually entered payout value
   const profit = manuallyEnteredPayout - (table.buyIn ?? 0);
-  const currencySymbol = getCurrencySymbol(sessionCurrency);
+  const currencySymbol = getCurrencySymbol(table.currency || sessionCurrency);
   const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
   const formattedStart = format(new Date(table.startTime), 'd MMM, HH:mm');
   const formattedEnd = table.endTime ? format(new Date(table.endTime), 'd MMM, HH:mm') : null;

@@ -88,11 +88,11 @@ export const TablesPlayedSection: React.FC<TablesPlayedSectionProps> = ({
       ) : (
         <div className="space-y-4">
           {filteredAndSortedTables.map(table => (
-            <TableDetailsCard 
-              key={table.id} 
-              table={table} 
-              sessionCurrency={sessionCurrency} 
-            />
+          <TableDetailsCard 
+            key={table.id} 
+            table={table} 
+            sessionCurrency={table.currency || sessionCurrency}
+          />
           ))}
         </div>
       )}

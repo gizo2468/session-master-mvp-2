@@ -240,6 +240,7 @@ export default function ConfirmSession() {
                   <TableCard
                     key={table.id}
                     table={table}
+                    currency={table.currency || activeSession.currency}
                     onEndTable={handleEndTable}
                     onAddRebuy={handleAddTableRebuy}
                     sessionId={activeSession.id}

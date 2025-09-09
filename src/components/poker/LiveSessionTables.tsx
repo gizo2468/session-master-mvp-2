@@ -99,7 +99,7 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
                     <TableCard
                       key={table.id}
                       table={table}
-                      currency={currentSession.currency}
+                      currency={table.currency || currentSession.currency}
                       sessionId={currentSession.id}
                       onEndTable={onEndTable}
                       onAddRebuy={onAddTableRebuy}

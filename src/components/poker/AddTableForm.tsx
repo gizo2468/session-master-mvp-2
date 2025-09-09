@@ -11,7 +11,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
-import { CURRENCIES, getCurrencySymbol } from '@/hooks/useDefaultCurrency';
+import { CURRENCIES, getCurrencySymbol, useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 
 interface AddTableFormProps {
   open: boolean;
@@ -47,6 +47,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
   isCompletedSession = false,
   sessionCurrency = 'USD'
 }) => {
+  const { defaultCurrency } = useDefaultCurrency();
   // Auto-select format based on session format or use fixedFormat
   const [format, setFormat] = useState<'Cash' | 'Tournament'>(
     fixedFormat || sessionFormat || 'Cash'
@@ -55,7 +56,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
   const [tableName, setTableName] = useState(''); // Renamed from location
   const [buyIn, setBuyIn] = useState('');
   const [payout, setPayout] = useState(''); // New payout field for completed sessions
-  const [currency, setCurrency] = useState(sessionCurrency); // Currency field
+  const [currency, setCurrency] = useState(defaultCurrency || 'USD'); // Currency field - default to user's currency
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[smallBlindIndex]);
   const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[smallBlindIndex] * 2); // Always 2x small blind for cash
@@ -71,10 +72,12 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
     }
   }, [fixedFormat, sessionFormat]);
 
-  // Auto-sync currency when sessionCurrency changes
+  // Set currency to user's default when component loads
   useEffect(() => {
-    setCurrency(sessionCurrency);
-  }, [sessionCurrency]);
+    if (defaultCurrency) {
+      setCurrency(defaultCurrency);
+    }
+  }, [defaultCurrency]);
 
   useEffect(() => {
     if (fixedFormat) {
@@ -154,7 +157,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
     setTableName(''); // Reset tableName instead of location
     setBuyIn('');
     setPayout(''); // Reset payout field
-    setCurrency(sessionCurrency); // Reset currency to session currency
+    setCurrency(defaultCurrency || 'USD'); // Reset currency to user's default currency
     setSmallBlindIndex(2);
     setSmallBlind(BLIND_PRESETS.smallBlind[2]);
     setBigBlind(BLIND_PRESETS.smallBlind[2] * 2); // Reset to 2x small blind
@@ -267,6 +270,22 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
                 <Label htmlFor="plo" className="cursor-pointer">PLO</Label>
               </div>
             </RadioGroup>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="currency">Currency</Label>
+            <Select value={currency} onValueChange={setCurrency}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select currency" />
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCIES.map((curr) => (
+                  <SelectItem key={curr.code} value={curr.code}>
+                    {curr.symbol} {curr.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
