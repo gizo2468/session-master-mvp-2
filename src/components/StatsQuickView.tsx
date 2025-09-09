@@ -7,7 +7,7 @@ import { calculateOverallResults, calculateSessionProfit } from '@/utils/session
 import { getCurrencySymbol, useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 
 function MobileStackTitle({ text }: { text: string }) {
-  const isPercentTitle = text.includes('%'); // e.g., "ITM %", "ROI %"
+  const isPercentTitle = text.includes('%'); // e.g., "Win %", "ROI %"
 
   // Keep percentage titles on a single line on mobile; vertically center within two-line slot
   if (isPercentTitle) {
@@ -118,24 +118,13 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
     return amount < 0 ? `-${formatted}` : formatted;
   };
 
-  // ITM% across all sessions in user's currency
-  const getSessionPayout = (session: any): number => {
-    if (session.tables && session.tables.length > 0) {
-      const completedTables = session.tables.filter((t: any) => !t.isActive);
-      return completedTables.reduce((sum: number, t: any) => sum + (t.cashOut ?? 0), 0);
-    }
-    return session.cashOut ?? 0;
-  };
-  
-  const endedCount = defaultCurrencySessions.length;
-  const cashedCount = defaultCurrencySessions.filter(s => (getSessionPayout(s) ?? 0) > 0).length;
-  
-  let itmPercentage = endedCount > 0 ? (cashedCount / endedCount) * 100 : 0;
-  itmPercentage = Math.min(100, Math.max(0, itmPercentage));
-  const itmDisplay = endedCount === 0 ? '—' : `${itmPercentage.toFixed(1)}%`;
-  
   // Calculate stats based on user's currency sessions only
   const totalSessions = defaultCurrencySessions.length;
+  
+  // Win% across all sessions in user's currency (percentage of profitable sessions)
+  let winPercentage = totalSessions > 0 ? (wins / totalSessions) * 100 : 0;
+  winPercentage = Math.min(100, Math.max(0, winPercentage));
+  const winDisplay = totalSessions === 0 ? '—' : `${winPercentage.toFixed(1)}%`;
   
   // Calculate total hands for user's currency sessions
   const totalHands = defaultCurrencySessions.reduce((total, session) => {
@@ -229,8 +218,8 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
       {!showExtendedMetrics && (
         <div className="grid grid-cols-3 gap-4 text-center mb-4">
           <div className="grid place-items-center gap-1">
-            <MobileStackTitle text="ITM %" />
-            <span className="text-xl font-bold">{itmDisplay}</span>
+            <MobileStackTitle text="Win %" />
+            <span className="text-xl font-bold">{winDisplay}</span>
           </div>
           
           <div className="grid place-items-center gap-1">
@@ -255,8 +244,8 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
             </div>
             
             <div className="grid place-items-center gap-1">
-              <MobileStackTitle text="ITM %" />
-              <span className="text-base font-bold">{itmDisplay}</span>
+              <MobileStackTitle text="Win %" />
+              <span className="text-base font-bold">{winDisplay}</span>
             </div>
             
             <div className="grid place-items-center gap-1">
