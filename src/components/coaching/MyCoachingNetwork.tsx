@@ -234,8 +234,8 @@ const MyCoachingNetwork: React.FC = () => {
           direction: 'incoming',
           otherUser: {
             id: otherUserId,
-            full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
-            username: profile?.username || 'unknown',
+            full_name: privateInfo?.full_name || '',
+            username: profile?.username || '',
             profile_picture: privateInfo?.profile_picture,
             role: profile?.role || (isCoach ? 'student' : 'coach')
           }
@@ -676,10 +676,13 @@ const MyCoachingNetwork: React.FC = () => {
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm">
-                  {request.otherUser.full_name || request.otherUser.username}
+                  {request.otherUser.full_name || request.otherUser.username || `${request.otherUser.role === 'coach' ? 'Coach' : 'Player'}`}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {isCoach ? 'Player' : 'Coach'} • {new Date(request.created_at).toLocaleDateString()}
+                  {request.otherUser.role === 'coach' ? 'Wants to be your coach.' : 'Wants to be your player.'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(request.created_at).toLocaleDateString()}
                 </p>
               </div>
             </div>
@@ -731,7 +734,7 @@ const MyCoachingNetwork: React.FC = () => {
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm">
-                {request.otherUser.full_name || request.otherUser.username}
+                {request.otherUser.full_name || request.otherUser.username || `${request.otherUser.role === 'coach' ? 'Coach' : 'Player'}`}
               </p>
               <p className="text-xs text-muted-foreground">
                 Sent {new Date(request.created_at).toLocaleDateString()}
