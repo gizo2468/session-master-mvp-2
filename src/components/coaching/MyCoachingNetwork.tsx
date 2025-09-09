@@ -100,8 +100,8 @@ const MyCoachingNetwork: React.FC = () => {
             const privateInfo = privateMap.get(id);
             return {
               id,
-              full_name: privateInfo?.full_name || '',
-              username: profile?.username || '',
+              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+              username: profile?.username || 'unknown',
               profile_picture: privateInfo?.profile_picture
             };
           });
@@ -151,8 +151,8 @@ const MyCoachingNetwork: React.FC = () => {
             const privateInfo = privateMap.get(id);
             return {
               id,
-              full_name: privateInfo?.full_name || '',
-              username: profile?.username || '',
+              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+              username: profile?.username || 'unknown',
               profile_picture: privateInfo?.profile_picture,
               bio: profile?.bio
             };
@@ -171,9 +171,7 @@ const MyCoachingNetwork: React.FC = () => {
   };
 
   const loadPendingRequests = async () => {
-    if (!user?.id) {
-      return;
-    }
+    if (!user?.id) return;
     
     setPendingLoading(true);
     try {
@@ -192,56 +190,38 @@ const MyCoachingNetwork: React.FC = () => {
         return;
       }
 
-      // Get all user IDs we need profiles for (excluding current user)
+      // Get all user IDs we need profiles for
       const userIds = new Set<string>();
       (allRequests || []).forEach(conn => {
-        // Add the other user's ID (not the current user's ID)
-        if (conn.coach_id !== user.id) {
-          userIds.add(conn.coach_id);
-        }
-        if (conn.student_id !== user.id) {
-          userIds.add(conn.student_id);
-        }
+        userIds.add(conn.coach_id);
+        userIds.add(conn.student_id);
       });
 
-      if (userIds.size === 0) {
-        setIncomingRequests([]);
-        setOutgoingRequests([]);
-        return;
+      // Load full profiles for all users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, role')
+        .in('id', Array.from(userIds));
+
+      // Load private data for user display names
+      const { data: privateData, error: privateError } = await supabase
+        .from('user_private_data')
+        .select('id, full_name, profile_picture')
+        .in('id', Array.from(userIds));
+
+      if (profilesError) {
+        console.error('Error loading user profiles:', profilesError);
       }
 
-      // Load profiles and private data in parallel
-      const [profilesResult, privateResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('id, username, role')
-          .in('id', Array.from(userIds)),
-        supabase
-          .from('user_private_data')
-          .select('id, full_name, profile_picture')
-          .in('id', Array.from(userIds))
-      ]);
-
-      if (profilesResult.error) {
-        console.error('Error loading user profiles:', profilesResult.error);
-        return;
-      }
-
-      if (privateResult.error) {
-        console.error('Error loading private data:', privateResult.error);
-        return;
-      }
-
-      const profileMap = new Map(profilesResult.data?.map(p => [p.id, p]) || []);
-      const privateMap = new Map(privateResult.data?.map(p => [p.id, p]) || []);
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const privateMap = new Map(privateData?.map(p => [p.id, p]) || []);
 
       // Separate incoming and outgoing requests
       const incoming: PendingRequest[] = [];
       const outgoing: PendingRequest[] = [];
 
       (allRequests || []).forEach(conn => {
-        // Determine who the "other" user is based on current user's role
-        const otherUserId = conn.coach_id === user.id ? conn.student_id : conn.coach_id;
+        const otherUserId = isCoach ? conn.student_id : conn.coach_id;
         const profile = profileMap.get(otherUserId);
         const privateInfo = privateMap.get(otherUserId);
         
@@ -261,22 +241,24 @@ const MyCoachingNetwork: React.FC = () => {
           }
         };
 
-        // Determine direction: if current user initiated, it's outgoing; otherwise incoming
+        // Determine if this is incoming or outgoing based on who initiated
+        // Students initiate requests to coaches, so:
+        // - For students: outgoing when student_id = user.id, incoming when coach_id = user.id (shouldn't happen normally)
+        // - For coaches: incoming when coach_id = user.id, outgoing when student_id = user.id (shouldn't happen normally)
+        
         if (isStudent) {
-          // For students: outgoing if they sent to coach, incoming if coach sent to them
-          if (conn.student_id === user.id && conn.coach_id === otherUserId) {
+          if (conn.student_id === user.id) {
             request.direction = 'outgoing';
             outgoing.push(request);
-          } else if (conn.coach_id === user.id && conn.student_id === otherUserId) {
+          } else if (conn.coach_id === user.id) {
             request.direction = 'incoming';
             incoming.push(request);
           }
         } else if (isCoach) {
-          // For coaches: incoming if student sent to them, outgoing if they sent to student
-          if (conn.coach_id === user.id && conn.student_id === otherUserId) {
+          if (conn.coach_id === user.id) {
             request.direction = 'incoming';
             incoming.push(request);
-          } else if (conn.student_id === user.id && conn.coach_id === otherUserId) {
+          } else if (conn.student_id === user.id) {
             request.direction = 'outgoing';
             outgoing.push(request);
           }
@@ -296,7 +278,7 @@ const MyCoachingNetwork: React.FC = () => {
   useEffect(() => {
     if (user?.id && (isCoach || isStudent)) {
       loadConnectedUsers();
-      loadPendingRequests();
+      loadPendingRequests(); // Load for both coaches and students now
     }
   }, [user?.id, isCoach, isStudent]);
 
@@ -577,13 +559,8 @@ const MyCoachingNetwork: React.FC = () => {
     }
   };
 
-  // Helper function to get display name with proper priority
-  const getDisplayName = (fullName: string, username: string) => {
-    return fullName || username || 'User';
-  };
-
-  const getInitials = (displayName: string) => {
-    return displayName
+  const getInitials = (name: string) => {
+    return name
       .split(' ')
       .map(n => n[0])
       .join('')
@@ -645,12 +622,12 @@ const MyCoachingNetwork: React.FC = () => {
             <Avatar className="h-10 w-10">
               <AvatarImage src={connectedUser.profile_picture || ''} />
               <AvatarFallback className="bg-primary/10 text-primary">
-                {getInitials(getDisplayName(connectedUser.full_name, connectedUser.username))}
+                {getInitials(connectedUser.full_name || connectedUser.username || (isCoach ? 'Player' : 'Coach'))}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">
-                {getDisplayName(connectedUser.full_name, connectedUser.username)}
+                {connectedUser.full_name || connectedUser.username || (isCoach ? 'Player' : 'Coach')}
               </p>
               <p className="text-sm text-muted-foreground">
                 {isCoach ? "Click to view player's shared content" : "Click to view shared sessions"}
@@ -684,62 +661,55 @@ const MyCoachingNetwork: React.FC = () => {
 
     return (
       <div className="space-y-3">
-        {incomingRequests.map((request) => {
-          // Determine intent text based on who sent the request
-          const intentText = request.otherUser.role === 'coach' 
-            ? 'Wants to be your coach.' 
-            : 'Wants to be your player.';
-            
-          return (
-            <div
-              key={request.id}
-              className="flex flex-col p-4 rounded-lg border bg-card/30 space-y-3"
-            >
-              {/* User Info Row */}
-              <div className="flex items-center space-x-3">
-                <Avatar className="h-10 w-10 shrink-0">
-                  <AvatarImage src={request.otherUser.profile_picture || ''} />
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    {getInitials(getDisplayName(request.otherUser.full_name, request.otherUser.username))}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">
-                    {getDisplayName(request.otherUser.full_name, request.otherUser.username)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {intentText}
-                  </p>
-                  <p className="text-xs text-muted-foreground opacity-75">
-                    {new Date(request.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Buttons Row */}
-              <div className="flex space-x-2 justify-end">
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={() => handleApproveRequest(request.id, request.otherUser.username)}
-                  className="h-8 px-3 text-xs"
-                >
-                  <Icon name="Check" className="h-3 w-3 mr-1" />
-                  Approve
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleRejectRequest(request.id, request.otherUser.username)}
-                  className="h-8 px-3 text-xs"
-                >
-                  <Icon name="X" className="h-3 w-3 mr-1" />
-                  Reject
-                </Button>
+        {incomingRequests.map((request) => (
+          <div
+            key={request.id}
+            className="flex flex-col p-4 rounded-lg border bg-card/30 space-y-3"
+          >
+            {/* User Info Row */}
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-10 w-10 shrink-0">
+                <AvatarImage src={request.otherUser.profile_picture || ''} />
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  {getInitials(request.otherUser.full_name || request.otherUser.username)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">
+                  {request.otherUser.full_name || request.otherUser.username || `${request.otherUser.role === 'coach' ? 'Coach' : 'Player'}`}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {request.otherUser.role === 'coach' ? 'Wants to be your coach.' : 'Wants to be your player.'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(request.created_at).toLocaleDateString()}
+                </p>
               </div>
             </div>
-          );
-        })}
+            
+            {/* Buttons Row */}
+            <div className="flex space-x-2 justify-end">
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => handleApproveRequest(request.id, request.otherUser.username)}
+                className="h-8 px-3 text-xs"
+              >
+                <Icon name="Check" className="h-3 w-3 mr-1" />
+                Approve
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleRejectRequest(request.id, request.otherUser.username)}
+                className="h-8 px-3 text-xs"
+              >
+                <Icon name="X" className="h-3 w-3 mr-1" />
+                Reject
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
     );
   };
@@ -751,38 +721,31 @@ const MyCoachingNetwork: React.FC = () => {
 
     return (
       <div className="space-y-3">
-        {outgoingRequests.map((request) => {
-          // Determine what type of connection was requested
-          const connectionType = request.otherUser.role === 'coach' 
-            ? 'coaching request' 
-            : 'player request';
-            
-          return (
-            <div
-              key={request.id}
-              className="flex items-center p-3 rounded-lg border bg-card/20 space-x-3"
-            >
-              <Avatar className="h-8 w-8 shrink-0">
-                <AvatarImage src={request.otherUser.profile_picture || ''} />
-                <AvatarFallback className="bg-muted text-muted-foreground">
-                  {getInitials(getDisplayName(request.otherUser.full_name, request.otherUser.username))}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">
-                  {getDisplayName(request.otherUser.full_name, request.otherUser.username)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {connectionType} • Sent {new Date(request.created_at).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Icon name="Clock" className="h-4 w-4 text-amber-500" />
-                <span className="text-xs text-amber-600">Pending</span>
-              </div>
+        {outgoingRequests.map((request) => (
+          <div
+            key={request.id}
+            className="flex items-center p-3 rounded-lg border bg-card/20 space-x-3"
+          >
+            <Avatar className="h-8 w-8 shrink-0">
+              <AvatarImage src={request.otherUser.profile_picture || ''} />
+              <AvatarFallback className="bg-muted text-muted-foreground">
+                {getInitials(request.otherUser.full_name || request.otherUser.username)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm">
+                {request.otherUser.full_name || request.otherUser.username || `${request.otherUser.role === 'coach' ? 'Coach' : 'Player'}`}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Sent {new Date(request.created_at).toLocaleDateString()}
+              </p>
             </div>
-          );
-        })}
+            <div className="flex items-center space-x-2">
+              <Icon name="Clock" className="h-4 w-4 text-amber-500" />
+              <span className="text-xs text-amber-600">Pending</span>
+            </div>
+          </div>
+        ))}
       </div>
     );
   };
