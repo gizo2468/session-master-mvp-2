@@ -171,8 +171,31 @@ const MyCoachingNetwork: React.FC = () => {
   };
 
   const loadPendingRequests = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('🚫 No user ID, skipping loadPendingRequests');
+      return;
+    }
     
+    // Check if we have a valid session
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('🔐 Current session check:', {
+      hasSession: !!session,
+      sessionUserId: session?.user?.id,
+      contextUserId: user.id,
+      sessionMatch: session?.user?.id === user.id
+    });
+    
+    if (!session || session.user.id !== user.id) {
+      console.error('❌ Session mismatch or missing session!');
+      toast({
+        title: "Authentication Error",
+        description: "Please refresh the page and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    console.log('🔄 Loading pending requests for user:', user.id);
     setPendingLoading(true);
     try {
       // Load all pending requests involving the current user
@@ -186,9 +209,11 @@ const MyCoachingNetwork: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading pending requests:', error);
+        console.error('❌ Error loading pending requests:', error);
         return;
       }
+
+      console.log('📋 Found pending requests:', allRequests?.length || 0);
 
       // Get all user IDs we need profiles for
       const userIds = new Set<string>();
@@ -196,6 +221,8 @@ const MyCoachingNetwork: React.FC = () => {
         userIds.add(conn.coach_id);
         userIds.add(conn.student_id);
       });
+
+      console.log('👥 Loading profiles for user IDs:', Array.from(userIds));
 
       // Load full profiles for all users
       const { data: profiles, error: profilesError } = await supabase
@@ -209,12 +236,27 @@ const MyCoachingNetwork: React.FC = () => {
         .select('id, full_name, profile_picture')
         .in('id', Array.from(userIds));
 
+      console.log('📊 Profiles loaded:', profiles?.length || 0);
+      console.log('🔒 Private data loaded:', privateData?.length || 0);
+      
+      // Log the actual data to see what we're getting
+      if (privateData) {
+        console.log('🔍 Private data details:', privateData.map(d => ({ id: d.id, full_name: d.full_name })));
+      }
+
       if (profilesError) {
-        console.error('Error loading user profiles:', profilesError);
+        console.error('❌ Error loading user profiles:', profilesError);
+      }
+
+      if (privateError) {
+        console.error('❌ Error loading private data:', privateError);
       }
 
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
       const privateMap = new Map(privateData?.map(p => [p.id, p]) || []);
+
+      console.log('🗺️ Profile map keys:', Array.from(profileMap.keys()));
+      console.log('🔐 Private map keys:', Array.from(privateMap.keys()));
 
       // Separate incoming and outgoing requests
       const incoming: PendingRequest[] = [];
@@ -224,6 +266,11 @@ const MyCoachingNetwork: React.FC = () => {
         const otherUserId = isCoach ? conn.student_id : conn.coach_id;
         const profile = profileMap.get(otherUserId);
         const privateInfo = privateMap.get(otherUserId);
+        
+        console.log(`👤 Processing request for user ${otherUserId}:`, {
+          profile: profile ? { id: profile.id, username: profile.username } : 'NOT FOUND',
+          privateInfo: privateInfo ? { id: privateInfo.id, full_name: privateInfo.full_name } : 'NOT FOUND'
+        });
         
         const request: PendingRequest = {
           id: conn.id,
@@ -267,8 +314,17 @@ const MyCoachingNetwork: React.FC = () => {
 
       setIncomingRequests(incoming);
       setOutgoingRequests(outgoing);
+      
+      console.log('📥 Final incoming requests:', incoming.map(r => ({
+        id: r.id,
+        otherUser: { id: r.otherUser.id, full_name: r.otherUser.full_name, username: r.otherUser.username }
+      })));
+      console.log('📤 Final outgoing requests:', outgoing.map(r => ({
+        id: r.id,
+        otherUser: { id: r.otherUser.id, full_name: r.otherUser.full_name, username: r.otherUser.username }
+      })));
     } catch (error) {
-      console.error('Error in loadPendingRequests:', error);
+      console.error('💥 Error in loadPendingRequests:', error);
     } finally {
       setPendingLoading(false);
     }
@@ -276,9 +332,15 @@ const MyCoachingNetwork: React.FC = () => {
 
   // Load connected users and pending requests on component mount and when user changes
   useEffect(() => {
+    console.log('🔄 useEffect triggered - User ID:', user?.id, 'Role:', user?.role);
+    
+    // Ensure we have a fully authenticated user before making queries
     if (user?.id && (isCoach || isStudent)) {
+      console.log('✅ User authenticated, loading data...');
       loadConnectedUsers();
       loadPendingRequests(); // Load for both coaches and students now
+    } else {
+      console.log('⏳ Waiting for authentication or role setup...');
     }
   }, [user?.id, isCoach, isStudent]);
 
