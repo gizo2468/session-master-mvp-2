@@ -11,6 +11,7 @@ import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 import { useSessionStats } from '@/hooks/useSessionStats';
 import CardDisplay from '@/components/poker/CardDisplay';
 import { useToast } from '@/hooks/use-toast';
+import { BBStackUpdateService } from '@/services/bbStackUpdateService';
 
 interface SessionDetails {
   id: string;
@@ -105,6 +106,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [isSavingFeedback, setIsSavingFeedback] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isCoach, setIsCoach] = useState(false);
+  const [tableBBUpdates, setTableBBUpdates] = useState<Map<string, any>>(new Map());
   
   const { toast } = useToast();
   
@@ -116,6 +118,32 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
       loadSessionData();
     }
   }, [isOpen, sessionId]);
+
+  // Set up real-time subscription for BB/Stack updates
+  useEffect(() => {
+    if (!isOpen || !sessionId || !isCoach) return;
+
+    const channel = supabase
+      .channel(`bb_stack_updates_${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'table_bb_stack_updates',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        () => {
+          // Refetch BB/Stack updates when changes occur
+          loadBBStackUpdates();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isOpen, sessionId, isCoach]);
 
   const loadSessionData = async () => {
     setLoading(true);
@@ -191,10 +219,26 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
       } else {
         setSessionTables(tablesData || []);
       }
+
+      // Load BB/Stack updates if viewing as coach
+      if (!isSessionOwner) {
+        await loadBBStackUpdates();
+      }
     } catch (error) {
       console.error('Error in loadSessionData:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadBBStackUpdates = async () => {
+    if (!sessionId) return;
+    
+    try {
+      const updates = await BBStackUpdateService.getLatestBBStackForSharedSession(sessionId);
+      setTableBBUpdates(updates);
+    } catch (error) {
+      console.error('Error loading BB/Stack updates:', error);
     }
   };
 
@@ -510,24 +554,34 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                     <Card key={table.id}>
                       <CardContent className="p-4">
                         {/* Mobile-friendly header layout */}
-                        <div className="space-y-3">
-                          {/* Badges row */}
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant="outline">
-                              Table #{index + 1}
-                            </Badge>
-                            {table.table_name && (
-                              <Badge variant="secondary">{table.table_name}</Badge>
-                            )}
-                            {table.game_format && (
-                              <Badge variant="outline">{table.game_format}</Badge>
-                            )}
-                            {table.is_active && (
-                              <Badge variant="default">Active</Badge>
-                            )}
-                          </div>
-                          
-                        </div>
+                         <div className="space-y-3">
+                           {/* Badges row */}
+                           <div className="flex flex-wrap items-center gap-2">
+                             <Badge variant="outline">
+                               Table #{index + 1}
+                             </Badge>
+                             {table.table_name && (
+                               <Badge variant="secondary">{table.table_name}</Badge>
+                             )}
+                             {table.game_format && (
+                               <Badge variant="outline">{table.game_format}</Badge>
+                             )}
+                             {table.is_active && (
+                               <Badge variant="default">Active</Badge>
+                             )}
+                             {/* Show latest blind/BB update for coaches */}
+                             {isCoach && tableBBUpdates.has(table.id) && (() => {
+                               const update = tableBBUpdates.get(table.id);
+                               const formattedUpdate = BBStackUpdateService.formatHistoryLine(update);
+                               return formattedUpdate ? (
+                                 <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                   {formattedUpdate}
+                                 </Badge>
+                               ) : null;
+                             })()}
+                           </div>
+                           
+                         </div>
 
                         {/* Buy-in and Cash Out side by side */}
                         <div className="flex gap-6 mt-2 text-sm">

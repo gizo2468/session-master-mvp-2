@@ -154,6 +154,41 @@ export class BBStackUpdateService {
     }
   }
 
+  static async getLatestBBStackForSharedSession(sessionId: string): Promise<Map<string, BBStackUpdate>> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Get the latest BB/Stack update for each table in the session
+      const { data, error } = await supabase
+        .from('table_bb_stack_updates')
+        .select('*')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching BB/Stack updates for shared session:', error);
+        throw error;
+      }
+
+      if (!data) return new Map();
+
+      // Group by table_id and keep only the latest update for each table
+      const latestUpdates = new Map<string, BBStackUpdate>();
+      
+      data.forEach(update => {
+        if (!latestUpdates.has(update.table_id)) {
+          latestUpdates.set(update.table_id, update);
+        }
+      });
+
+      return latestUpdates;
+    } catch (error) {
+      console.error('BBStackUpdateService.getLatestBBStackForSharedSession error:', error);
+      return new Map();
+    }
+  }
+
   static formatHistoryLine(update: BBStackUpdate, isLastUpdate: boolean = false): string {
     // For cash games
     if (update.small_blind !== undefined && update.big_blind !== undefined) {
