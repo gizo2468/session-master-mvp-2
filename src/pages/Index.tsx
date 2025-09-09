@@ -146,53 +146,55 @@ export default function Index() {
             />
           )}
           
-          {sessions.length > 0 && (
-            <div className="w-full space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-extrabold tracking-tight">Recent Sessions</h2>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    onClick={() => setShowPastSessionForm(true)}
-                    variant="outline" 
-                    size="sm"
-                    className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
-                  >
-                    <Icon name="Plus" size={16} />
-                  </Button>
-                  <Button 
-                    onClick={() => navigate('/history')}
-                    variant="outline" 
-                    size="sm"
-                    className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
-                  >
-                    View All
-                  </Button>
+          {/* Recent Sessions header - always visible */}
+          <div className="w-full space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-extrabold tracking-tight">Recent Sessions</h2>
+              <div className="flex items-center gap-2">
+                <Button 
+                  onClick={() => setShowPastSessionForm(true)}
+                  variant="outline" 
+                  size="sm"
+                  className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+                >
+                  <Icon name="Plus" size={16} />
+                </Button>
+                <Button 
+                  onClick={() => navigate('/history')}
+                  variant="outline" 
+                  size="sm"
+                  className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+                >
+                  View All
+                </Button>
+              </div>
+            </div>
+            
+            {/* Show filters and sessions only if there are sessions */}
+            {sessions.length > 0 ? (
+              <>
+                <FilterBar filters={filters} onFiltersChange={setFilters} />
+                
+                <div className="space-y-4">
+                  {recentSessions.map((session) => (
+                    <SessionCard 
+                      key={session.id} 
+                      session={session} 
+                      onClick={() => handleSessionClick(session.id)}
+                    />
+                  ))}
                 </div>
+              </>
+            ) : !hasActiveSessions ? (
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <Icon name="PlusCircle" size={48} className="mx-auto" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No sessions yet</h3>
+                <p className="text-gray-500 mb-6">Start your first poker session to begin tracking your performance.</p>
               </div>
-              
-              <FilterBar filters={filters} onFiltersChange={setFilters} />
-              
-              <div className="space-y-4">
-                {recentSessions.map((session) => (
-                  <SessionCard 
-                    key={session.id} 
-                    session={session} 
-                    onClick={() => handleSessionClick(session.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {sessions.length === 0 && !hasActiveSessions && (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <Icon name="PlusCircle" size={48} className="mx-auto" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No sessions yet</h3>
-              <p className="text-gray-500 mb-6">Start your first poker session to begin tracking your performance.</p>
-            </div>
-          )}
+            ) : null}
+          </div>
         </div>
       </main>
       
