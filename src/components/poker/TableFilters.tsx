@@ -66,7 +66,7 @@ export const TableFilters: React.FC<TableFiltersProps> = ({
   };
 
   return (
-    <div className="mb-4 border border-border rounded-lg bg-background">
+    <div className="mb-4">
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
