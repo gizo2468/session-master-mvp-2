@@ -684,52 +684,62 @@ const MyCoachingNetwork: React.FC = () => {
 
     return (
       <div className="space-y-3">
-        {incomingRequests.map((request) => (
-          <div
-            key={request.id}
-            className="flex flex-col p-4 rounded-lg border bg-card/30 space-y-3"
-          >
-            {/* User Info Row */}
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-10 w-10 shrink-0">
-                <AvatarImage src={request.otherUser.profile_picture || ''} />
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {getInitials(getDisplayName(request.otherUser.full_name, request.otherUser.username))}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">
-                  {getDisplayName(request.otherUser.full_name, request.otherUser.username)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {isCoach ? 'Player' : 'Coach'} • {new Date(request.created_at).toLocaleDateString()}
-                </p>
+        {incomingRequests.map((request) => {
+          // Determine intent text based on who sent the request
+          const intentText = request.otherUser.role === 'coach' 
+            ? 'Wants to be your coach.' 
+            : 'Wants to be your player.';
+            
+          return (
+            <div
+              key={request.id}
+              className="flex flex-col p-4 rounded-lg border bg-card/30 space-y-3"
+            >
+              {/* User Info Row */}
+              <div className="flex items-center space-x-3">
+                <Avatar className="h-10 w-10 shrink-0">
+                  <AvatarImage src={request.otherUser.profile_picture || ''} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {getInitials(getDisplayName(request.otherUser.full_name, request.otherUser.username))}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">
+                    {getDisplayName(request.otherUser.full_name, request.otherUser.username)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {intentText}
+                  </p>
+                  <p className="text-xs text-muted-foreground opacity-75">
+                    {new Date(request.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Buttons Row */}
+              <div className="flex space-x-2 justify-end">
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={() => handleApproveRequest(request.id, request.otherUser.username)}
+                  className="h-8 px-3 text-xs"
+                >
+                  <Icon name="Check" className="h-3 w-3 mr-1" />
+                  Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleRejectRequest(request.id, request.otherUser.username)}
+                  className="h-8 px-3 text-xs"
+                >
+                  <Icon name="X" className="h-3 w-3 mr-1" />
+                  Reject
+                </Button>
               </div>
             </div>
-            
-            {/* Buttons Row */}
-            <div className="flex space-x-2 justify-end">
-              <Button
-                size="sm"
-                variant="default"
-                onClick={() => handleApproveRequest(request.id, request.otherUser.username)}
-                className="h-8 px-3 text-xs"
-              >
-                <Icon name="Check" className="h-3 w-3 mr-1" />
-                Approve
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleRejectRequest(request.id, request.otherUser.username)}
-                className="h-8 px-3 text-xs"
-              >
-                <Icon name="X" className="h-3 w-3 mr-1" />
-                Reject
-              </Button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -741,31 +751,38 @@ const MyCoachingNetwork: React.FC = () => {
 
     return (
       <div className="space-y-3">
-        {outgoingRequests.map((request) => (
-          <div
-            key={request.id}
-            className="flex items-center p-3 rounded-lg border bg-card/20 space-x-3"
-          >
-            <Avatar className="h-8 w-8 shrink-0">
-              <AvatarImage src={request.otherUser.profile_picture || ''} />
-              <AvatarFallback className="bg-muted text-muted-foreground">
-                {getInitials(getDisplayName(request.otherUser.full_name, request.otherUser.username))}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm">
-                {getDisplayName(request.otherUser.full_name, request.otherUser.username)}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Sent {new Date(request.created_at).toLocaleDateString()}
-              </p>
+        {outgoingRequests.map((request) => {
+          // Determine what type of connection was requested
+          const connectionType = request.otherUser.role === 'coach' 
+            ? 'coaching request' 
+            : 'player request';
+            
+          return (
+            <div
+              key={request.id}
+              className="flex items-center p-3 rounded-lg border bg-card/20 space-x-3"
+            >
+              <Avatar className="h-8 w-8 shrink-0">
+                <AvatarImage src={request.otherUser.profile_picture || ''} />
+                <AvatarFallback className="bg-muted text-muted-foreground">
+                  {getInitials(getDisplayName(request.otherUser.full_name, request.otherUser.username))}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">
+                  {getDisplayName(request.otherUser.full_name, request.otherUser.username)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {connectionType} • Sent {new Date(request.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Icon name="Clock" className="h-4 w-4 text-amber-500" />
+                <span className="text-xs text-amber-600">Pending</span>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Icon name="Clock" className="h-4 w-4 text-amber-500" />
-              <span className="text-xs text-amber-600">Pending</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
