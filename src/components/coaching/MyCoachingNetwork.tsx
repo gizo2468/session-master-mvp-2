@@ -915,12 +915,12 @@ const MyCoachingNetwork: React.FC = () => {
               currentConnections={connectedUsers.length}
               userRole="coach"
             >
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-1 sm:gap-2">
                 <Dialog open={connectPlayerDialogOpen} onOpenChange={setConnectPlayerDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Icon name="UserPlus" className="h-4 w-4 mr-2" />
-                      Connect to Player
+                    <Button variant="outline" size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
+                      <Icon name="UserPlus" className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Connect to </span>Player
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -965,9 +965,9 @@ const MyCoachingNetwork: React.FC = () => {
                 
                 <Dialog open={connectCoachDialogOpen} onOpenChange={setConnectCoachDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Icon name="GraduationCap" className="h-4 w-4 mr-2" />
-                      Connect to Coach
+                    <Button variant="outline" size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
+                      <Icon name="GraduationCap" className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Connect to </span>Coach
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
