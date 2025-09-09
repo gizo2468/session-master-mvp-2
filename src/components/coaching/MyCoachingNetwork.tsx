@@ -100,8 +100,8 @@ const MyCoachingNetwork: React.FC = () => {
             const privateInfo = privateMap.get(id);
             return {
               id,
-              full_name: privateInfo?.full_name || '',
-              username: profile?.username || '',
+              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+              username: profile?.username || 'unknown',
               profile_picture: privateInfo?.profile_picture
             };
           });
@@ -151,8 +151,8 @@ const MyCoachingNetwork: React.FC = () => {
             const privateInfo = privateMap.get(id);
             return {
               id,
-              full_name: privateInfo?.full_name || '',
-              username: profile?.username || '',
+              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+              username: profile?.username || 'unknown',
               profile_picture: privateInfo?.profile_picture,
               bio: profile?.bio
             };
@@ -234,8 +234,8 @@ const MyCoachingNetwork: React.FC = () => {
           direction: 'incoming',
           otherUser: {
             id: otherUserId,
-            full_name: privateInfo?.full_name || '',
-            username: profile?.username || '',
+            full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+            username: profile?.username || 'unknown',
             profile_picture: privateInfo?.profile_picture,
             role: profile?.role || (isCoach ? 'student' : 'coach')
           }
@@ -679,10 +679,7 @@ const MyCoachingNetwork: React.FC = () => {
                   {request.otherUser.full_name || request.otherUser.username}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {request.otherUser.role === 'coach' ? 'Wants to be your coach.' : 'Wants to be your player.'}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(request.created_at).toLocaleDateString()}
+                  {isCoach ? 'Player' : 'Coach'} • {new Date(request.created_at).toLocaleDateString()}
                 </p>
               </div>
             </div>
