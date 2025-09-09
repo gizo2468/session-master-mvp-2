@@ -11,6 +11,7 @@ import PastTableHandsPanel from './PastTableHandsPanel';
 import PastMultiDayEndDialog from './PastMultiDayEndDialog';
 import HandForm from './HandForm';
 import HandsList from './HandsList';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface PastTableCardProps {
   table: TableData;
@@ -39,8 +40,9 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
   };
 
   const getGameDetails = () => {
+    const currencySymbol = getCurrencySymbol(table.currency || 'USD');
     if (table.format === 'Cash') {
-      return `$${table.smallBlind}/$${table.bigBlind}`;
+      return `${currencySymbol}${table.smallBlind}/${currencySymbol}${table.bigBlind}`;
     }
     return table.finalPosition ? `Position: ${table.finalPosition}` : 'Tournament';
   };
@@ -119,7 +121,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                   <div className="text-center">
                     {!isContinuing && (
                       <p className={`font-bold text-xl whitespace-nowrap ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)}
+                        {profitLoss >= 0 ? '+' : ''}{getCurrencySymbol(table.currency || 'USD')}{profitLoss.toFixed(2)}
                       </p>
                     )}
                     {isContinuing && (
@@ -197,24 +199,24 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 border-b border-gray-100">
                     <span className="text-sm text-gray-600 font-medium">Initial Buy-in</span>
-                    <span className="text-sm font-semibold">${table.initialBuyIn?.toFixed(2) || '0.00'}</span>
+                    <span className="text-sm font-semibold">{getCurrencySymbol(table.currency || 'USD')}{table.initialBuyIn?.toFixed(2) || '0.00'}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-gray-100">
                     <span className="text-sm text-gray-600 font-medium">Rebuys</span>
-                    <span className="text-sm font-semibold">${(table.rebuys || 0).toFixed(2)}</span>
+                    <span className="text-sm font-semibold">{getCurrencySymbol(table.currency || 'USD')}{(table.rebuys || 0).toFixed(2)}</span>
                   </div>
                   {/* Only show cash out for non-continuing tournaments */}
                   {!isContinuing && (
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="text-sm text-gray-600 font-medium">Total Payout</span>
-                      <span className="text-sm font-semibold">${(table.cashOut || 0).toFixed(2)}</span>
+                      <span className="text-sm font-semibold">{getCurrencySymbol(table.currency || 'USD')}{(table.cashOut || 0).toFixed(2)}</span>
                     </div>
                   )}
                   {/* Only show bounties for non-continuing tournaments - display only, not included in totals */}
                   {!isContinuing && table.bountyAmount && table.bountyAmount > 0 && (
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="text-sm text-gray-600 font-medium">Bounty Payout (info only)</span>
-                      <span className="text-sm font-semibold text-gray-500">${table.bountyAmount.toFixed(2)}</span>
+                      <span className="text-sm font-semibold text-gray-500">{getCurrencySymbol(table.currency || 'USD')}{table.bountyAmount.toFixed(2)}</span>
                     </div>
                   )}
                 </div>

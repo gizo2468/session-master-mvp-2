@@ -126,6 +126,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
       rebuys: 0,
       notes: '',
       hands: [],
+      currency: values.currency,
       ...(values.format === 'Tournament' && {
         tournamentTypes: values.tournamentType ? [values.tournamentType] : undefined,
         isMultiDay: values.isMultiDay,

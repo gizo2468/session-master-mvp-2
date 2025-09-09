@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import { TableData } from '@/types/poker';
 import PastTableCard from './PastTableCard';
 import PastAddTableForm from './PastAddTableForm';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface SessionInfo {
   startTime: Date;
@@ -40,6 +41,9 @@ const PastSessionTablesStep: React.FC<PastSessionTablesStepProps> = ({
     return sum + tableProfit;
   }, 0);
 
+  // Get currency symbol from the first table or default to USD
+  const sessionCurrency = tables.length > 0 ? tables[0].currency || 'USD' : 'USD';
+
   return (
     <div className="space-y-6">
       <div className="bg-background rounded-lg border p-4 md:p-6">
@@ -56,7 +60,7 @@ const PastSessionTablesStep: React.FC<PastSessionTablesStepProps> = ({
           <div className="space-y-1">
             <span className="text-muted-foreground">Total P/L:</span>
             <p className={`font-medium ${totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {totalProfit >= 0 ? '+' : ''}${Math.abs(totalProfit).toFixed(2)}
+              {totalProfit >= 0 ? '+' : ''}{getCurrencySymbol(sessionCurrency)}{Math.abs(totalProfit).toFixed(2)}
             </p>
           </div>
         </div>
