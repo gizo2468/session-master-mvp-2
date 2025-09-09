@@ -66,7 +66,11 @@ export default function Index() {
   // Only show completed sessions (not active ones) in recent sessions
   const recentSessions = filteredSessions
     .filter(session => !session.isActive)
-    .slice(0, 5);
+    .slice(0, 10);
+  
+  // Check if we should show a second "View All" button
+  const totalCompletedSessions = filteredSessions.filter(session => !session.isActive).length;
+  const shouldShowSecondViewAll = totalCompletedSessions >= 10;
 
   const handleSessionClick = (sessionId: string) => {
     // Find the session to check its status
@@ -183,6 +187,20 @@ export default function Index() {
                       onClick={() => handleSessionClick(session.id)}
                     />
                   ))}
+                  
+                  {/* Second "View All" button when showing 10+ sessions */}
+                  {shouldShowSecondViewAll && (
+                    <div className="flex justify-center pt-4">
+                      <Button 
+                        onClick={() => navigate('/history')}
+                        variant="outline" 
+                        size="sm"
+                        className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+                      >
+                        View All
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </>
             ) : !hasActiveSessions ? (
