@@ -38,6 +38,7 @@ interface SessionDetails {
 
 interface SessionHand {
   id: string;
+  table_id?: string;
   hand_number?: number;
   pot_size?: number;
   amount_invested?: number;
@@ -195,7 +196,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
       // Load session hands using session owner's ID
       const { data: handsData, error: handsError } = await supabase
         .from('session_hands_new')
-        .select('*')
+        .select('id, table_id, hand_number, pot_size, amount_invested, amount_won, position, hole_cards, preflop_action, flop_cards, flop_action, turn_card, turn_action, river_card, river_action, showdown_result, hand_notes, hand_image, created_at')
         .eq('session_id', sessionId)
         .eq('user_id', sessionOwnerId)
         .order('created_at', { ascending: true });
@@ -330,6 +331,13 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
     const totalBuyIn = (table.buy_in || 0) + (table.rebuy_amount || 0);
     const totalCashOut = (table.cashout || 0) + ((table.bounty_amount || 0) * (table.players_eliminated || 0));
     return totalCashOut - totalBuyIn;
+  };
+
+  // Helper function to get table number for a hand
+  const getTableNumber = (tableId?: string): number | null => {
+    if (!tableId) return null;
+    const tableIndex = sessionTables.findIndex(table => table.id === tableId);
+    return tableIndex !== -1 ? tableIndex + 1 : null;
   };
 
   // Load existing feedback when a hand is selected for review
@@ -689,6 +697,11 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                              <Badge variant="outline">
                                Hand #{hand.hand_number || index + 1}
                              </Badge>
+                             {getTableNumber(hand.table_id) && (
+                               <Badge variant="outline" className="opacity-60">
+                                 Table #{getTableNumber(hand.table_id)}
+                               </Badge>
+                             )}
                              {hand.position && (
                                <Badge variant="secondary">{hand.position}</Badge>
                              )}
