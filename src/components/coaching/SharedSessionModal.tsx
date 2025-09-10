@@ -686,25 +686,28 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {sessionHands.map((hand, index) => (
-                    <Card key={hand.id}>
-                      <CardContent 
-                        className="p-4 cursor-pointer hover:bg-muted/20 transition-colors"
-                        onClick={() => setReviewHandId(hand.id)}
-                      >
-                         <div className="flex justify-between items-start mb-3">
-                           <div className="flex items-center gap-2">
-                             <Badge variant="outline">
-                               Hand #{hand.hand_number || index + 1}
-                             </Badge>
-                             {getTableNumber(hand.table_id) && (
-                               <Badge variant="outline" className="opacity-60">
-                                 Table #{getTableNumber(hand.table_id)}
+                  {sessionHands.map((hand, index) => {
+                    const tableNumber = getTableNumber(hand.table_id);
+                    
+                    return (
+                      <Card key={hand.id}>
+                        <CardContent 
+                          className="p-4 cursor-pointer hover:bg-muted/20 transition-colors"
+                          onClick={() => setReviewHandId(hand.id)}
+                        >
+                           <div className="flex justify-between items-start mb-3">
+                             <div className="flex items-center gap-2">
+                               <Badge variant="outline">
+                                 Hand #{hand.hand_number || index + 1}
                                </Badge>
-                             )}
-                             {hand.position && (
-                               <Badge variant="secondary">{hand.position}</Badge>
-                             )}
+                               {tableNumber && (
+                                 <Badge variant="outline" className="opacity-60">
+                                   Table #{tableNumber}
+                                 </Badge>
+                               )}
+                               {hand.position && (
+                                 <Badge variant="secondary">{hand.position}</Badge>
+                               )}
                              {hand.hand_image && (
                                <button
                                  onClick={(e) => {
@@ -743,9 +746,10 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                             {hand.hand_notes}
                           </div>
                         )}
-                      </CardContent>
-                    </Card>
-                  ))}
+                       </CardContent>
+                     </Card>
+                   );
+                  })}
                 </div>
               )}
             </TabsContent>
