@@ -855,35 +855,17 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                         </div>
                       )}
 
-                      {/* Community cards */}
-                      <div className="space-y-3">
-                        {hand.flop_cards && (
-                          <div>
-                            <span className="text-sm text-muted-foreground">Flop</span>
-                            <div className="mt-2">
-                              <CardDisplay cards={hand.flop_cards} size="md" />
-                            </div>
+                      {/* Community cards - all 5 board cards in one row */}
+                      {(hand.flop_cards || hand.turn_card || hand.river_card) && (
+                        <div>
+                          <span className="text-sm text-muted-foreground">Board</span>
+                          <div className="mt-2 flex items-center gap-2">
+                            {hand.flop_cards && <CardDisplay cards={hand.flop_cards} size="md" />}
+                            {hand.turn_card && <CardDisplay cards={hand.turn_card} size="md" />}
+                            {hand.river_card && <CardDisplay cards={hand.river_card} size="md" />}
                           </div>
-                        )}
-                        
-                        {hand.turn_card && (
-                          <div>
-                            <span className="text-sm text-muted-foreground">Turn</span>
-                            <div className="mt-2">
-                              <CardDisplay cards={hand.turn_card} size="md" />
-                            </div>
-                          </div>
-                        )}
-                        
-                        {hand.river_card && (
-                          <div>
-                            <span className="text-sm text-muted-foreground">River</span>
-                            <div className="mt-2">
-                              <CardDisplay cards={hand.river_card} size="md" />
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
 
                       {/* Financial details */}
                       <div className="grid grid-cols-2 gap-4">
