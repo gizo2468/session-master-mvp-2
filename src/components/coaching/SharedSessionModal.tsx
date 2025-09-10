@@ -564,20 +564,17 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                         {/* Mobile-friendly header layout */}
                          <div className="space-y-3">
                            {/* Badges row */}
-                            <div className="flex flex-wrap items-center gap-2">
-                              <Badge variant="outline">
-                                Table #{index + 1}
-                              </Badge>
-                              {table.table_name && (
-                                <Badge variant="secondary">{table.table_name}</Badge>
-                              )}
-                              {table.game_format && (
-                                <Badge variant="outline">{table.game_format}</Badge>
-                              )}
-                              {table.is_active && (
-                                <Badge variant="default">Active</Badge>
-                              )}
-                            </div>
+                             <div className="flex flex-wrap items-center gap-2">
+                               <Badge variant="outline">
+                                 Table #{index + 1}
+                               </Badge>
+                               {table.game_format && (
+                                 <Badge variant="outline">{table.game_format}</Badge>
+                               )}
+                               {table.is_active && (
+                                 <Badge variant="default">Active</Badge>
+                               )}
+                             </div>
                            
                          </div>
 
