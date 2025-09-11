@@ -66,7 +66,6 @@ const PlayerDashboard = () => {
         </header>
         
         <div className="grid grid-cols-1 gap-6 mb-6">
-          {user?.id && <PlayerGoalsTasks studentId={user.id} mode="player" />}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -187,6 +186,8 @@ const PlayerDashboard = () => {
               </div>
             </CardContent>
           </Card>
+          
+          {user?.id && <PlayerGoalsTasks studentId={user.id} mode="player" />}
         </div>
       </div>
     </div>
