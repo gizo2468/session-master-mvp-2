@@ -520,9 +520,6 @@ const calculateSummary = (sessions: SharedSession[]) => {
           </CardContent>
         </Card>
 
-        {/* Player Goals & Tasks */}
-        <PlayerGoalsTasks studentId={playerId!} mode="coach" />
-
         {/* Summary */}
         {summary && (
           <Card>
@@ -579,6 +576,9 @@ const calculateSummary = (sessions: SharedSession[]) => {
             </CardContent>
           </Card>
         )}
+
+        {/* Player Goals & Tasks */}
+        <PlayerGoalsTasks studentId={playerId!} mode="coach" />
 
         {/* Shared Session Modal */}
         {selectedSessionId && (

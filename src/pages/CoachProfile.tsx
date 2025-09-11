@@ -523,9 +523,6 @@ const CoachProfile: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Coach Goals & Tasks */}
-        {user?.id && coachId && <PlayerGoalsTasks studentId={user.id} mode="player" coachId={coachId} />}
-
         {/* Session Modal */}
         {selectedSessionId && selectedPlayerId && (
           <SharedSessionModal
@@ -633,6 +630,9 @@ const CoachProfile: React.FC = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Coach Goals & Tasks */}
+        {user?.id && coachId && <PlayerGoalsTasks studentId={user.id} mode="player" coachId={coachId} />}
 
         {/* Hand Details Dialog */}
         <HandDetailsDialog
