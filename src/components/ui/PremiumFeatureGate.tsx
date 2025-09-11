@@ -26,14 +26,14 @@ const PremiumFeatureGate: React.FC<PremiumFeatureGateProps> = ({
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative overflow-hidden ${className}`}>
       {/* Blurred content */}
       <div className="filter blur-sm pointer-events-none select-none">
         {children}
       </div>
       
       {/* Premium overlay */}
-      <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
         <Card className="w-full max-w-sm mx-4">
           <CardHeader className="text-center pb-2">
             <div className="flex justify-center mb-2">
