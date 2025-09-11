@@ -936,9 +936,16 @@ const MyCoachingNetwork: React.FC = () => {
                         value={playerUsername}
                         onChange={(e) => setPlayerUsername(e.target.value)}
                         name="search-player"
-                        inputMode="search"
+                        inputMode="text"
+                        autoCorrect="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
                         autoComplete="off"
                         data-form-type="other"
+                        readOnly
+                        onMouseDown={(e) => e.currentTarget.removeAttribute('readonly')}
+                        onTouchStart={(e) => e.currentTarget.removeAttribute('readonly')}
+                        onFocus={(e) => e.currentTarget.removeAttribute('readonly')}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !connectingPlayer) {
                             handleConnectToPlayer();
@@ -984,9 +991,14 @@ const MyCoachingNetwork: React.FC = () => {
                           value={coachAsCoachUsername}
                           onChange={(e) => setCoachAsCoachUsername(e.target.value)}
                           name="search-coach-as-coach"
-                          inputMode="search"
+                          inputMode="text"
+                          autoCorrect="off"
+                          autoCapitalize="none"
+                          spellCheck={false}
                           autoComplete="off"
                           data-form-type="other"
+                          readOnly
+                          onFocus={(e) => e.currentTarget.removeAttribute('readonly')}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !connectingCoach && coachAsCoachUsername.trim()) {
                               setShowCoachConfirmation(true);
@@ -1062,19 +1074,24 @@ const MyCoachingNetwork: React.FC = () => {
                       Enter your coach's username to request a connection.
                     </p>
                     <Input
-                      placeholder="Coach handle"
-                      value={coachUsername}
-                      onChange={(e) => setCoachUsername(e.target.value)}
-                      name="search-coach"
-                      inputMode="search"
-                      autoComplete="off"
-                      data-form-type="other"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !connecting) {
-                          handleConnectToCoach();
-                        }
-                      }}
-                    />
+                       placeholder="Coach handle"
+                       value={coachUsername}
+                       onChange={(e) => setCoachUsername(e.target.value)}
+                       name="search-coach"
+                       inputMode="text"
+                       autoCorrect="off"
+                       autoCapitalize="none"
+                       spellCheck={false}
+                       autoComplete="off"
+                       data-form-type="other"
+                       readOnly
+                       onFocus={(e) => e.currentTarget.removeAttribute('readonly')}
+                       onKeyDown={(e) => {
+                         if (e.key === 'Enter' && !connecting) {
+                           handleConnectToCoach();
+                         }
+                       }}
+                     />
                     <Button 
                       onClick={handleConnectToCoach} 
                       disabled={connecting || !coachUsername.trim()}
