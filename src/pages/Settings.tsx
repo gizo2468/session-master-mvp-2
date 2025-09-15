@@ -314,15 +314,12 @@ const Settings: React.FC = () => {
             <CardContent>
               <div className="space-y-4">
                 {/* Email */}
-                <div className="flex items-center gap-3 justify-between">
-                  <div className="flex items-center gap-3">
-                    <Icon name="Mail" className="h-5 w-5 text-gray-500" />
-                    <div>
-                      <p className="font-medium">{user?.email || 'Not signed in'}</p>
-                      <p className="text-sm text-gray-500">Email</p>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <Icon name="Mail" className="h-5 w-5 text-gray-500" />
+                  <div>
+                    <p className="font-medium">{user?.email || 'Not signed in'}</p>
+                    <p className="text-sm text-gray-500">Email</p>
                   </div>
-                  <Icon name="Pencil" className="h-4 w-4 text-gray-400" />
                 </div>
 
                 {/* Username */}
@@ -335,31 +332,28 @@ const Settings: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 justify-between">
-                    <div className="flex items-center gap-3 flex-1">
-                      <Icon name="AtSign" className="h-5 w-5 text-gray-500" />
-                      <div className="flex-1">
-                        {isEditing ? (
-                          <div>
-                            <Input
-                              value={editForm.username}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
-                              placeholder="Display handle"
-                              className="max-w-[200px]"
-                              autoComplete="off"
-                              data-form-type="other"
-                            />
-                            <p className="text-sm text-gray-500 mt-1">Username</p>
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="font-medium">@{profile?.username || 'Not set'}</p>
-                            <p className="text-sm text-gray-500">Username</p>
-                          </div>
-                        )}
-                      </div>
+                  <div className="flex items-center gap-3 flex-1">
+                    <Icon name="AtSign" className="h-5 w-5 text-gray-500" />
+                    <div className="flex-1">
+                      {isEditing ? (
+                        <div>
+                          <Input
+                            value={editForm.username}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
+                            placeholder="Display handle"
+                            className="max-w-[200px]"
+                            autoComplete="off"
+                            data-form-type="other"
+                          />
+                          <p className="text-sm text-gray-500 mt-1">Username</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="font-medium">@{profile?.username || 'Not set'}</p>
+                          <p className="text-sm text-gray-500">Username</p>
+                        </div>
+                      )}
                     </div>
-                    <Icon name="Pencil" className="h-4 w-4 text-gray-400" />
                   </div>
                 )}
 
@@ -373,15 +367,12 @@ const Settings: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 justify-between">
-                    <div className="flex items-center gap-3">
-                      <Icon name="User" className="h-5 w-5 text-gray-500" />
-                      <div>
-                        <p className="font-medium">{getDisplayRole(profile?.role)}</p>
-                        <p className="text-sm text-gray-500">Role</p>
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <Icon name="User" className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <p className="font-medium">{getDisplayRole(profile?.role)}</p>
+                      <p className="text-sm text-gray-500">Role</p>
                     </div>
-                    <Icon name="Pencil" className="h-4 w-4 text-gray-400" />
                   </div>
                 )}
 
