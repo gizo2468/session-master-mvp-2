@@ -87,7 +87,7 @@ const Settings: React.FC = () => {
 
   // Initialize edit form when profile loads
   useEffect(() => {
-    if (profile && profile.role === 'coach') {
+    if (profile) {
       setEditForm({
         username: profile.username || '',
         coaching_focus: profile.coaching_focus || [],
@@ -272,7 +272,7 @@ const Settings: React.FC = () => {
                   <CardTitle>Account</CardTitle>
                   <CardDescription className="text-center">Your account information</CardDescription>
                 </div>
-                {profile?.role === 'coach' && !profileLoading && (
+                {!profileLoading && (
                   <div className="flex items-center gap-2 mt-2">
                     {isEditing ? (
                       <>
@@ -335,7 +335,7 @@ const Settings: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <Icon name="AtSign" className="h-5 w-5 text-gray-500" />
                     <div className="flex-1">
-                      {isEditing && profile?.role === 'coach' ? (
+                      {isEditing ? (
                         <div>
             <Input
                             value={editForm.username}
