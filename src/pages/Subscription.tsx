@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,11 @@ const Subscription: React.FC = () => {
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const platform = detectPlatform();
   const isMobile = platform === 'ios' || platform === 'android';
+
+  // Ensure we always land at the top when arriving on this page
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
 
   const handlePayPalPayment = async () => {
     if (!user) {
