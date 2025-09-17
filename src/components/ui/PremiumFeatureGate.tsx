@@ -53,7 +53,10 @@ const PremiumFeatureGate: React.FC<PremiumFeatureGateProps> = ({
             
             <div className="space-y-2">
               <Button 
-                onClick={() => navigate('/subscription')}
+                onClick={() => {
+                  navigate('/subscription');
+                  window.scrollTo(0, 0);
+                }}
                 className="w-full"
                 size="sm"
               >
