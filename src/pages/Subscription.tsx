@@ -207,27 +207,23 @@ const Subscription: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
-                  <span>OCR Hand Analysis – automatic analysis of hands from screenshots</span>
+                  <span>OCR Hand Analysis</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
-                  <span>Improved Graphs & Additional Charts – improvements to existing graphs and addition of other necessary charts</span>
+                  <span>Improved Graphs & Additional Charts</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
-                  <span>Coach-Assigned Goals & Tasks – coaches will be able to assign goals and tasks to players</span>
+                  <span>Coach-Assigned Goals & Tasks</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
-                  <span>Hand History Import – ability to import hand history directly into the app</span>
+                  <span>Expanded Tournament Support</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
-                  <span>Expanded Tournament Support – broader support for additional tournament formats (bounty, re-buy, add-on, etc.)</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
-                  <span>More features to be revealed soon…</span>
+                  <span>…and more features coming soon</span>
                 </div>
               </div>
             </CardContent>
