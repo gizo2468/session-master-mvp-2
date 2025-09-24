@@ -103,10 +103,9 @@ const Subscription: React.FC = () => {
           </p>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {/* Premium Plan Card */}
-          <Card className="relative border-2 border-primary shadow-xl">
+        {/* Pricing Card */}
+        <div className="flex justify-center max-w-2xl mx-auto">
+          <Card className="relative border-2 border-primary shadow-xl w-full max-w-md">
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-4 py-1">
                 <Star className="h-4 w-4 mr-1" />
@@ -187,9 +186,11 @@ const Subscription: React.FC = () => {
               )}
             </CardContent>
           </Card>
+        </div>
 
-          {/* What's Coming Soon Card */}
-          <Card className="relative border-2 border-muted-foreground/20 shadow-xl">
+        {/* What's Coming Soon Section */}
+        <div className="mt-16 flex justify-center max-w-2xl mx-auto">
+          <Card className="relative border-2 border-muted-foreground/20 shadow-xl w-full max-w-md">
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <Badge className="bg-gradient-to-r from-muted-foreground to-muted-foreground/80 text-background px-4 py-1">
                 <Zap className="h-4 w-4 mr-1" />
