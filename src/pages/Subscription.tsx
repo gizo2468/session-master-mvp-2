@@ -188,6 +188,40 @@ const Subscription: React.FC = () => {
           </Card>
         </div>
 
+        {/* Features Section */}
+        <div className="mt-16 text-center">
+          <h2 className="text-2xl font-bold mb-8">What You Get With Premium</h2>
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="space-y-3">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
+                <Zap className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-semibold">Advanced Analytics</h3>
+              <p className="text-muted-foreground text-sm">
+                Deep insights into your game with detailed charts and statistics
+              </p>
+            </div>
+            <div className="space-y-3">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
+                <Star className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-semibold">Coaching Features</h3>
+              <p className="text-muted-foreground text-sm">
+                Connect with coaches and access advanced learning tools
+              </p>
+            </div>
+            <div className="space-y-3">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
+                <Check className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-semibold">Priority Support</h3>
+              <p className="text-muted-foreground text-sm">
+                Get help faster with our dedicated premium support team
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* What's Coming Soon Section */}
         <div className="mt-16 flex justify-center max-w-2xl mx-auto">
           <Card className="relative border-2 border-muted-foreground/20 shadow-xl w-full max-w-md">
@@ -229,40 +263,6 @@ const Subscription: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Features Section */}
-        <div className="mt-16 text-center">
-          <h2 className="text-2xl font-bold mb-8">What You Get With Premium</h2>
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="space-y-3">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
-                <Zap className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold">Advanced Analytics</h3>
-              <p className="text-muted-foreground text-sm">
-                Deep insights into your game with detailed charts and statistics
-              </p>
-            </div>
-            <div className="space-y-3">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
-                <Star className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold">Coaching Features</h3>
-              <p className="text-muted-foreground text-sm">
-                Connect with coaches and access advanced learning tools
-              </p>
-            </div>
-            <div className="space-y-3">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
-                <Check className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold">Priority Support</h3>
-              <p className="text-muted-foreground text-sm">
-                Get help faster with our dedicated premium support team
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* Trust Section */}
