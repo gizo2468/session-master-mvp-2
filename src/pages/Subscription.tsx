@@ -103,9 +103,10 @@ const Subscription: React.FC = () => {
           </p>
         </div>
 
-        {/* Pricing Card */}
-        <div className="flex justify-center max-w-2xl mx-auto">
-          <Card className="relative border-2 border-primary shadow-xl w-full max-w-md">
+        {/* Pricing Cards */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          {/* Premium Plan Card */}
+          <Card className="relative border-2 border-primary shadow-xl">
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-4 py-1">
                 <Star className="h-4 w-4 mr-1" />
@@ -184,6 +185,51 @@ const Subscription: React.FC = () => {
                   {isLoading === 'monthly' ? 'Processing...' : 'Subscribe for $9.99 / month'}
                 </Button>
               )}
+            </CardContent>
+          </Card>
+
+          {/* What's Coming Soon Card */}
+          <Card className="relative border-2 border-muted-foreground/20 shadow-xl">
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+              <Badge className="bg-gradient-to-r from-muted-foreground to-muted-foreground/80 text-background px-4 py-1">
+                <Zap className="h-4 w-4 mr-1" />
+                Coming Soon
+              </Badge>
+            </div>
+            <CardHeader className="text-center pb-2 pt-8">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Star className="h-5 w-5 text-muted-foreground" />
+                <CardTitle className="text-2xl">What's Coming Soon</CardTitle>
+              </div>
+              <p className="text-muted-foreground">Exciting features in development</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
+                  <span>OCR Hand Analysis – automatic analysis of hands from screenshots</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
+                  <span>Improved Graphs & Additional Charts – improvements to existing graphs and addition of other necessary charts</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
+                  <span>Coach-Assigned Goals & Tasks – coaches will be able to assign goals and tasks to players</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
+                  <span>Hand History Import – ability to import hand history directly into the app</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
+                  <span>Expanded Tournament Support – broader support for additional tournament formats (bounty, re-buy, add-on, etc.)</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
+                  <span>More features to be revealed soon…</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
