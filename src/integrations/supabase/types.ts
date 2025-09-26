@@ -983,7 +983,35 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      safe_coach_student_data: {
+        Row: {
+          coach_id: string | null
+          coach_name: string | null
+          coach_picture: string | null
+          connection_date: string | null
+          connection_id: string | null
+          status: string | null
+          student_id: string | null
+          student_name: string | null
+          student_picture: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_student_connections_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_student_connections_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       check_email_available: {
@@ -1014,6 +1042,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_coach_accessible_student_data: {
+        Args: { student_user_id: string }
+        Returns: {
+          full_name: string
+          id: string
+          profile_picture: string
+        }[]
+      }
       get_current_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1031,6 +1067,14 @@ export type Database = {
           role: string
           students_coached_count: number
           username: string
+        }[]
+      }
+      get_student_accessible_coach_data: {
+        Args: { coach_user_id: string }
+        Returns: {
+          full_name: string
+          id: string
+          profile_picture: string
         }[]
       }
       get_unified_session_statistics: {
