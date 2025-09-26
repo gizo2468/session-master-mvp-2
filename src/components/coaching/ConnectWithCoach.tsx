@@ -4,15 +4,29 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useCoachStudent } from '@/context/CoachStudentContext';
+import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 import Icon from '@/components/ui/Lucide';
+import CoachConnectionLimitDialog from './CoachConnectionLimitDialog';
 
 const ConnectWithCoach = () => {
   const { connectWithCoach, connectedCoaches, loading } = useCoachStudent();
+  const { isPremium, getConnectionLimits } = usePremiumAccess();
   const [code, setCode] = useState('');
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
+  
+  const limits = getConnectionLimits();
+  const maxConnections = limits.maxCoachesForStudent;
+  const isAtLimit = !isPremium && connectedCoaches.length >= maxConnections;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (code.trim().length === 6) {
+      // Check if user is at connection limit
+      if (isAtLimit) {
+        setShowLimitDialog(true);
+        return;
+      }
+      
       connectWithCoach(code.trim().toUpperCase());
       setCode(''); // Clear the input after submission
     }
@@ -26,10 +40,15 @@ const ConnectWithCoach = () => {
           Connect with a Coach
         </CardTitle>
         <CardDescription>
-          {connectedCoaches.length > 0 
-            ? "You can connect with multiple coaches for different aspects of your game"
-            : "Enter the connection code provided by your coach"
-          }
+          {isPremium ? (
+            connectedCoaches.length > 0 
+              ? "You can connect with unlimited coaches for different aspects of your game"
+              : "Enter the connection code provided by your coach"
+          ) : (
+            connectedCoaches.length > 0 
+              ? `You are connected to ${connectedCoaches.length}/${maxConnections} coach${maxConnections > 1 ? 'es' : ''} (Free limit). Upgrade to Premium for unlimited connections.`
+              : "Enter the connection code provided by your coach"
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -67,6 +86,11 @@ const ConnectWithCoach = () => {
           </Button>
         </form>
       </CardContent>
+      
+      <CoachConnectionLimitDialog
+        open={showLimitDialog}
+        onOpenChange={setShowLimitDialog}
+      />
     </Card>
   );
 };
