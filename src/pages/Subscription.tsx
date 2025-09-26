@@ -242,15 +242,15 @@ const Subscription: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
-                  <span>OCR Hand Analysis</span>
+                  <span>Advanced Screenshot Hand Analysis</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
-                  <span>Improved Graphs & Additional Charts</span>
+                  <span>Improved Graphs & Visual Charts</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
-                  <span>Coach-Assigned Goals & Tasks</span>
+                  <span>Enhanced Coaching Features</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
@@ -258,7 +258,7 @@ const Subscription: React.FC = () => {
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
-                  <span>…and more features coming soon</span>
+                  <span>…More exciting features are in development — upgrade to Premium to support our progress</span>
                 </div>
               </div>
             </CardContent>
