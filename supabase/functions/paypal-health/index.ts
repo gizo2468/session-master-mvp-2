@@ -1,11 +1,32 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// Secure CORS configuration - only allow specific domains
+const getAllowedOrigins = () => {
+  const allowedOrigins = [
+    'https://session-master-mvp.lovable.app', // Production domain
+    'http://localhost:3000',                   // Local development
+    'http://localhost:5173',                   // Vite dev server
+    'https://localhost:3000',                  // Local HTTPS
+  ];
+  return allowedOrigins;
+};
+
+const getCorsHeaders = (origin: string | null) => {
+  const allowedOrigins = getAllowedOrigins();
+  const allowedOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Credentials': 'true',
+  };
 };
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -70,10 +91,11 @@ serve(async (req) => {
 
   } catch (error) {
     const requestId = crypto.randomUUID();
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`[${requestId}] PayPal health check failed:`, error);
     return new Response(JSON.stringify({ 
       status: 'unhealthy',
-      error: error.message,
+      error: errorMessage,
       requestId,
       timestamp: new Date().toISOString()
     }), {

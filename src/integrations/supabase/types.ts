@@ -983,35 +983,7 @@ export type Database = {
       }
     }
     Views: {
-      safe_coach_student_data: {
-        Row: {
-          coach_id: string | null
-          coach_name: string | null
-          coach_picture: string | null
-          connection_date: string | null
-          connection_id: string | null
-          status: string | null
-          student_id: string | null
-          student_name: string | null
-          student_picture: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "coach_student_connections_coach_id_fkey"
-            columns: ["coach_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "coach_student_connections_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       check_email_available: {
