@@ -775,6 +775,42 @@ export type Database = {
           },
         ]
       }
+      student_data_sharing_consent: {
+        Row: {
+          coach_id: string
+          created_at: string
+          data_field: string
+          granted: boolean
+          granted_at: string | null
+          id: string
+          revoked_at: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          data_field: string
+          granted?: boolean
+          granted_at?: string | null
+          id?: string
+          revoked_at?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          data_field?: string
+          granted?: boolean
+          granted_at?: string | null
+          id?: string
+          revoked_at?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       table_bb_stack_updates: {
         Row: {
           bb: number | null
@@ -1019,6 +1055,30 @@ export type Database = {
         Returns: {
           full_name: string
           id: string
+          profile_picture: string
+        }[]
+      }
+      get_consented_coach_data: {
+        Args: { p_coach_id: string }
+        Returns: {
+          address: Json
+          date_of_birth: string
+          email: string
+          full_name: string
+          id: string
+          phone_number: string
+          profile_picture: string
+        }[]
+      }
+      get_consented_student_data: {
+        Args: { p_student_id: string }
+        Returns: {
+          address: Json
+          date_of_birth: string
+          email: string
+          full_name: string
+          id: string
+          phone_number: string
           profile_picture: string
         }[]
       }
