@@ -1040,7 +1040,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_feedback_with_usernames: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          feedback_text: string | null
+          id: string | null
+          user_id: string | null
+          user_role: string | null
+          username: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_email_available: {
