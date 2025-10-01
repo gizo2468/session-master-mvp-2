@@ -57,12 +57,12 @@ export const CurrencySelector: React.FC<CurrencySelectorProps> = ({
       <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="bg-background border-border z-[100]">
+      <SelectContent className="bg-background border-border z-[100] w-[280px] sm:w-[320px]">
         <SelectItem value="USD">
           {getCurrencySymbol('USD')} USD ($)
         </SelectItem>
-        <div className="px-3 py-4 border-t border-border bg-background">
-          <p className="text-sm text-muted-foreground mb-3 text-center">
+        <div className="px-4 py-4 border-t border-border bg-background">
+          <p className="text-sm text-muted-foreground mb-3 text-center leading-relaxed">
             To use other currencies, please upgrade to Premium.
           </p>
           <Button
@@ -74,8 +74,8 @@ export const CurrencySelector: React.FC<CurrencySelectorProps> = ({
             className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white"
             size="sm"
           >
-            <Icon name="Crown" className="mr-2 h-4 w-4" />
-            Upgrade to Premium
+            <Icon name="Crown" className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span className="whitespace-nowrap">Upgrade to Premium</span>
           </Button>
         </div>
       </SelectContent>
