@@ -9,7 +9,8 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/Lucide';
-import ConnectionLimitGate from '@/components/ui/ConnectionLimitGate';
+import { usePremiumAccess } from '@/hooks/usePremiumAccess';
+import ConnectionLimitDialog from './ConnectionLimitDialog';
 
 interface ConnectedUser {
   id: string;
@@ -39,6 +40,7 @@ interface PendingRequest {
 const MyCoachingNetwork: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { isPremium, getConnectionLimits } = usePremiumAccess();
   const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
   const [connectedPlayers, setConnectedPlayers] = useState<ConnectedUser[]>([]);
   const [connectedCoaches, setConnectedCoaches] = useState<ConnectedUser[]>([]);
@@ -59,6 +61,10 @@ const MyCoachingNetwork: React.FC = () => {
   const [connectCoachDialogOpen, setConnectCoachDialogOpen] = useState(false);
   const [connectingCoach, setConnectingCoach] = useState(false);
   const [showCoachConfirmation, setShowCoachConfirmation] = useState(false);
+  
+  // Connection limit dialog state
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
+  const [limitDialogRole, setLimitDialogRole] = useState<'coach' | 'student'>('student');
   
   const isCoach = user?.role === 'coach';
   const isStudent = user?.role === 'student';
@@ -417,6 +423,17 @@ const MyCoachingNetwork: React.FC = () => {
       return;
     }
 
+    // Check connection limits for non-premium users
+    if (!isPremium) {
+      const limits = getConnectionLimits();
+      const currentConnections = connectedUsers.length;
+      if (currentConnections >= limits.maxCoachesForStudent) {
+        setLimitDialogRole('student');
+        setShowLimitDialog(true);
+        return;
+      }
+    }
+
     setConnecting(true);
     try {
       // Search for coach by username
@@ -521,6 +538,17 @@ const MyCoachingNetwork: React.FC = () => {
       return;
     }
 
+    // Check connection limits for non-premium coaches
+    if (!isPremium) {
+      const limits = getConnectionLimits();
+      const currentConnections = connectedUsers.length;
+      if (currentConnections >= limits.maxStudentsForCoach) {
+        setLimitDialogRole('coach');
+        setShowLimitDialog(true);
+        return;
+      }
+    }
+
     setConnectingPlayer(true);
     try {
       // Search for player by username (role must be student)
@@ -623,6 +651,17 @@ const MyCoachingNetwork: React.FC = () => {
         variant: "destructive",
       });
       return;
+    }
+
+    // Check connection limits for non-premium coaches
+    if (!isPremium) {
+      const limits = getConnectionLimits();
+      const currentConnections = connectedUsers.length;
+      if (currentConnections >= limits.maxStudentsForCoach) {
+        setLimitDialogRole('coach');
+        setShowLimitDialog(true);
+        return;
+      }
     }
 
     setConnectingCoach(true);
@@ -911,11 +950,7 @@ const MyCoachingNetwork: React.FC = () => {
       <CardContent>
         {isCoach && (
           <div className="mb-4 space-y-2">
-            <ConnectionLimitGate
-              currentConnections={connectedUsers.length}
-              userRole="coach"
-            >
-              <div className="grid grid-cols-2 gap-1 sm:gap-2">
+            <div className="grid grid-cols-2 gap-1 sm:gap-2">
                 <Dialog open={connectPlayerDialogOpen} onOpenChange={setConnectPlayerDialogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
@@ -1049,16 +1084,11 @@ const MyCoachingNetwork: React.FC = () => {
                   </DialogContent>
                 </Dialog>
               </div>
-            </ConnectionLimitGate>
           </div>
         )}
         {isStudent && (
           <div className="mb-4">
-            <ConnectionLimitGate
-              currentConnections={connectedUsers.length}
-              userRole="student"
-            >
-              <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
+            <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" className="w-full">
                     <Icon name="UserPlus" className="h-4 w-4 mr-2" />
@@ -1109,9 +1139,16 @@ const MyCoachingNetwork: React.FC = () => {
                   </div>
                 </DialogContent>
               </Dialog>
-            </ConnectionLimitGate>
           </div>
         )}
+        
+        {/* Connection Limit Dialog */}
+        <ConnectionLimitDialog
+          open={showLimitDialog}
+          onOpenChange={setShowLimitDialog}
+          userRole={limitDialogRole}
+          maxConnections={limitDialogRole === 'coach' ? getConnectionLimits().maxStudentsForCoach : getConnectionLimits().maxCoachesForStudent}
+        />
         
         {/* Incoming Requests (for approval) */}
         {incomingRequests.length > 0 && (
