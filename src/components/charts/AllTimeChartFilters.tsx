@@ -2,7 +2,9 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CURRENCIES, getCurrencySymbol } from '@/hooks/useDefaultCurrency';
+import { CurrencySelector } from '@/components/ui/CurrencySelector';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
+import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 
 interface AllTimeChartFiltersProps {
   dateRange: { start: string; end: string };
@@ -37,6 +39,8 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
   toggleLast30DaysView,
   onCurrencyChange
 }) => {
+  const { isPremium } = usePremiumAccess();
+  
   const getCurrentView = () => {
     if (isMonthlyView) return "monthly";
     if (isWeeklyView) return "weekly";
@@ -102,18 +106,28 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
             <SelectItem value="monthly">Monthly</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
-          <SelectTrigger className="w-32 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {(availableCurrencies || []).map(currency => (
-              <SelectItem key={currency} value={currency}>
-                {getCurrencySymbol(currency)} {currency}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {isPremium ? (
+          <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
+            <SelectTrigger className="w-32 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(availableCurrencies || []).map(currency => (
+                <SelectItem key={currency} value={currency}>
+                  {getCurrencySymbol(currency)} {currency}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <div className="w-32">
+            <CurrencySelector
+              value={selectedCurrency}
+              onValueChange={onCurrencyChange}
+              className="text-sm"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

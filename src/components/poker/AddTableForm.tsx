@@ -4,14 +4,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CurrencySelector } from '@/components/ui/CurrencySelector';
 import { TableData } from '@/types/poker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
-import { CURRENCIES, getCurrencySymbol, useDefaultCurrency } from '@/hooks/useDefaultCurrency';
+import { getCurrencySymbol, useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 
 interface AddTableFormProps {
   open: boolean;
@@ -274,18 +274,11 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="currency">Currency</Label>
-            <Select value={currency} onValueChange={setCurrency}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select currency" />
-              </SelectTrigger>
-              <SelectContent>
-                {CURRENCIES.map((curr) => (
-                  <SelectItem key={curr.code} value={curr.code}>
-                    {curr.symbol} {curr.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CurrencySelector
+              value={currency}
+              onValueChange={setCurrency}
+              placeholder="Select currency"
+            />
           </div>
 
           <div className="space-y-2">

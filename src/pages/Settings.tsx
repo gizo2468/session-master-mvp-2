@@ -8,10 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CurrencySelector } from '@/components/ui/CurrencySelector';
 import Icon from '@/components/ui/Lucide';
 import { useToast } from '@/hooks/use-toast';
-import { useDefaultCurrency, CURRENCIES } from '@/hooks/useDefaultCurrency';
+import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 import { supabase } from '@/integrations/supabase/client';
 import SupportSettings from '@/components/settings/SupportSettings';
 
@@ -476,21 +476,11 @@ const Settings: React.FC = () => {
                     {profileLoading ? (
                       <div className="h-9 w-full bg-gray-200 rounded animate-pulse"></div>
                     ) : (
-                      <Select
+                      <CurrencySelector
                         value={profile?.default_currency || 'USD'}
                         onValueChange={handleCurrencyChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                           {CURRENCIES.map((currency) => (
-                             <SelectItem key={currency.code} value={currency.code}>
-                               {currency.name}
-                             </SelectItem>
-                           ))}
-                        </SelectContent>
-                      </Select>
+                        className="min-w-[140px]"
+                      />
                     )}
                   </div>
                 </div>

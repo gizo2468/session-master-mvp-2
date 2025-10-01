@@ -12,12 +12,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CurrencySelector } from '@/components/ui/CurrencySelector';
 import Icon from '@/components/ui/Lucide';
 import { useSessionContext } from '@/context/SessionContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useDefaultCurrency, CURRENCIES } from '@/hooks/useDefaultCurrency';
+import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 import { PokerSession, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -446,20 +446,13 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Currency</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="USD" />
-                          </SelectTrigger>
-                        </FormControl>
-                         <SelectContent>
-                           {CURRENCIES.map((currency) => (
-                             <SelectItem key={currency.code} value={currency.code}>
-                               {currency.name}
-                             </SelectItem>
-                           ))}
-                         </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <CurrencySelector
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="USD"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -473,20 +466,20 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Tournament Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select tournament type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
+                        <FormControl>
+                          <select
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            value={field.value}
+                            onChange={field.onChange}
+                          >
+                            <option value="">Select tournament type</option>
                             {TOURNAMENT_TYPES.map((type) => (
-                              <SelectItem key={type} value={type}>
+                              <option key={type} value={type}>
                                 {type}
-                              </SelectItem>
+                              </option>
                             ))}
-                          </SelectContent>
-                        </Select>
+                          </select>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}

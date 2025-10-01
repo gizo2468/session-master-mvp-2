@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CurrencySelector } from '@/components/ui/CurrencySelector';
 import Icon from '@/components/ui/Lucide';
 import { Slider } from '@/components/ui/slider';
 import { useSessionContext } from '@/context/SessionContext';
@@ -462,20 +462,13 @@ export default function SessionForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-base font-medium">Currency <span className="text-red-500 text-sm">*</span></FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select currency" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {CURRENCIES.map((currency) => (
-                        <SelectItem key={currency.code} value={currency.code}>
-                          {currency.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <CurrencySelector 
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select currency"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
