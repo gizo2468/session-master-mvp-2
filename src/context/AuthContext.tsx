@@ -325,6 +325,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', supabaseUser.id)
         .single();
 
+      // Also fetch full_name from user_private_data
+      const { data: privateData } = await supabase
+        .from('user_private_data')
+        .select('full_name')
+        .eq('id', supabaseUser.id)
+        .single();
+
       if (error) {
         console.error("Error fetching user profile:", error);
         // Create fallback user from Supabase user metadata
@@ -339,7 +346,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Successfully fetched profile data - create user with comprehensive validation
         console.log("Fetched user profile from database - Role:", data.role, "Full data:", data);
         
-        const appUser = createUserFromProfile(supabaseUser, data);
+        // Merge profile data with private data
+        const mergedData = {
+          ...data,
+          full_name: privateData?.full_name || undefined
+        };
+        
+        const appUser = createUserFromProfile(supabaseUser, mergedData);
         console.log("Final user object created with role:", appUser.role);
         setUser(appUser);
 
