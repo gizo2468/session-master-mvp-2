@@ -105,13 +105,13 @@ const SimpleSettings: React.FC = () => {
                 </div>
 
                 {/* Full Name */}
-                <div className="flex items-center gap-3">
-                  <Icon name="UserCircle2" className="h-5 w-5 text-gray-500" />
-                  <div>
-                    <p className="font-medium">{user?.fullName || 'Unknown'}</p>
-                    <p className="text-sm text-gray-500">Full Name</p>
+                  <div className="flex items-center gap-3">
+                    <Icon name="UserCircle2" className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <p className="font-medium">{user?.fullName || '—'}</p>
+                      <p className="text-sm text-gray-500">Full Name</p>
+                    </div>
                   </div>
-                </div>
 
                 {/* Username */}
                 {profileLoading ? (
