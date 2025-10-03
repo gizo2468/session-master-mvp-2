@@ -26,63 +26,50 @@ const PrivacyPolicy: React.FC = () => {
           <div className="prose max-w-none">
             <p className="text-sm text-gray-500 mb-4">Last updated: July 23, 2025</p>
             
+            <p className="mb-4">At SessionMaster, we respect your privacy. We only collect the information that is strictly necessary to provide and improve the app.</p>
+            
+            <p className="mb-4"><strong>What we do not collect:</strong> We do not collect or access your external financial profits or losses, bankroll amounts held outside the app, bank or card numbers, external account balances or transactions, government IDs, or precise GPS location. We also do not scrape or import data from poker sites or payment providers. Any monetary figures you choose to enter in the app are stored in your SessionMaster account solely to power in-app analytics and features, and are not linked to your external financial accounts.</p>
+
             <h2 className="text-xl font-bold mt-6 mb-3">1. Information We Collect</h2>
-            <p>When you use SessionMaster, we may collect the following types of information:</p>
+            <p>When you use SessionMaster, we may collect the following types of information.</p>
             <ul className="list-disc pl-6 mb-4">
               <li><strong>Account Information:</strong> Your email address, username, full name, and profile picture.</li>
-              <li><strong>Session Data:</strong> Hands played, session logs, goals, notes, and performance metrics.</li>
-              <li><strong>Location Information:</strong> Approximate location based on your device settings.</li>
+              <li><strong>Session Data:</strong> Hands played, session logs, goals, notes, and performance metrics necessary to provide core app features.</li>
+              <li><strong>Location Information:</strong> Approximate location based on your device settings. We do not collect or track precise GPS location.</li>
               <li><strong>Device Information:</strong> Device type, operating system, version, crash reports, and general usage data that is non-identifiable.</li>
-              <li><strong>Payment Information:</strong> Payment confirmations from Google Play, Apple App Store, or PayPal. We do not store full billing details.</li>
-              <li><strong>User Actions:</strong> Your in-app behavior such as creating or editing sessions, submitting hands, and interactions between coaches and players.</li>
+              <li><strong>Payment Information:</strong> Payment confirmations from Google Play, Apple App Store, or PayPal for subscription validation. We do not store full billing details.</li>
+              <li><strong>User Actions:</strong> Your in-app behavior such as creating or editing sessions, submitting hands, and coach-player interactions.</li>
             </ul>
 
             <h2 className="text-xl font-bold mt-6 mb-3">2. How We Use Your Information</h2>
-            <p>We use the information we collect in order to:</p>
-            <ul className="list-disc pl-6 mb-4">
-              <li>Provide and maintain the core features of the app.</li>
-              <li>Track and analyze your gameplay and session performance.</li>
-              <li>Store and display your session history and goals.</li>
-              <li>Enable interactions between coaches and players.</li>
-              <li>Improve the functionality, stability, and overall user experience of the app.</li>
-              <li>Process subscription payments and validate your purchase status.</li>
-              <li>Send you essential notifications or updates related to your account or activity.</li>
-            </ul>
+            <p>We use the information we collect to provide and maintain the app, track and analyze your gameplay and session performance, store and display your session history and goals, enable coach-player interactions with your explicit connection, improve functionality and user experience, process subscription payments and validate purchase status, and send essential account or activity notifications.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">3. Data Storage and Sharing</h2>
-            <p>Your data is securely stored using Supabase, a trusted cloud database platform. We do not sell or rent your personal information to third parties. We may share anonymized and aggregated analytics data to improve our services.</p>
-            <p>We may also use trusted third-party services, such as Firebase or Google Analytics, to help us analyze app performance or deliver core functionality. These services may collect basic usage data in accordance with their own privacy policies.</p>
+            <p>Your data is securely stored using Supabase, a trusted cloud database platform. We do not sell or rent your personal information to third parties. We may share anonymized and aggregated analytics to improve our services. We may use trusted service providers to help us analyze app performance or deliver core functionality in accordance with their privacy policies.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">4. Cookies and Tracking</h2>
-            <p>SessionMaster does not use cookies in the traditional web sense, but third-party services integrated into the app (such as Supabase or analytics tools) may use similar technologies for error tracking, authentication, or performance monitoring.</p>
+            <p>SessionMaster does not use traditional web cookies. Certain integrated services may use similar technologies for authentication, error tracking, or performance monitoring.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">5. Data Retention</h2>
-            <p>We retain your data for as long as your account is active or as necessary to provide you with our services. If you request account deletion, your personal data will be permanently removed from our systems within a reasonable timeframe (usually within 30 days), unless we are required to keep certain information for legal or security reasons.</p>
+            <p>We retain your data for as long as your account is active or as necessary to provide the service. If you request account deletion, your personal data will be permanently removed within a reasonable timeframe, usually within 30 days, unless we must retain certain information for legal or security reasons.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">6. Your Rights</h2>
-            <p>You have the following rights regarding your data:</p>
-            <ul className="list-disc pl-6 mb-4">
-              <li><strong>Access:</strong> You may request a copy of the information we store about you.</li>
-              <li><strong>Edit:</strong> You can update your profile details directly in the app.</li>
-              <li><strong>Delete:</strong> You may request account deletion by contacting us at: sessionmaster11@gmail.com.</li>
-            </ul>
-            <p>An in-app account deletion feature will also be available in a future release to comply with Google and Apple requirements.</p>
+            <p>You may request a copy of the information we store about you, update your profile details in the app, or request account deletion by contacting us at sessionmaster11@gmail.com. An in-app account deletion feature is planned to further streamline this process.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">7. Data Security</h2>
-            <p>We implement reasonable technical and organizational measures to protect your personal data from unauthorized access, disclosure, alteration, or destruction. However, no system can be 100% secure, and we cannot guarantee absolute security.</p>
+            <p>We implement reasonable technical and organizational measures to protect your personal data from unauthorized access, disclosure, alteration, or destruction. No system is completely secure, and we cannot guarantee absolute security.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">8. Children's Privacy</h2>
-            <p>SessionMaster is not intended for use by individuals under the age of 13. We do not knowingly collect personal data from children. If we become aware that we have inadvertently collected information from a child under 13, we will delete it immediately.</p>
+            <p>SessionMaster is not intended for individuals under 13. We do not knowingly collect personal data from children. If we learn that we have collected data from a child under 13, we will delete it promptly.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">9. International Users</h2>
-            <p>Currently, SessionMaster is intended for users in Israel and the United States. If we expand to other regions, this policy will be updated to comply with local regulations such as the GDPR (Europe) and the CCPA (California).</p>
+            <p>SessionMaster currently serves users in Israel and the United States. If we expand to additional regions, we will update this policy to comply with local regulations such as GDPR and CCPA.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">10. Changes to This Policy</h2>
-            <p>We may update this Privacy Policy from time to time. The latest version will always be available inside the app. Material changes will be communicated via in-app notice or email.</p>
+            <p>We may update this Privacy Policy from time to time. The latest version will always be available in the app. Material changes will be communicated via in-app notice or email.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">11. Contact Us</h2>
-            <p>If you have any questions or requests regarding your personal information or this policy, please contact us at:</p>
-            <p><a href="mailto:sessionmaster11@gmail.com" className="text-poker-gold hover:underline">sessionmaster11@gmail.com</a></p>
+            <p>If you have questions or requests about your personal information or this policy, contact sessionmaster11@gmail.com.</p>
           </div>
         </div>
       </div>
