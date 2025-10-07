@@ -3,13 +3,14 @@ import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/for
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { CircleHelp, ChevronDown, Trash2 } from 'lucide-react';
 import { Control, UseFormSetValue } from 'react-hook-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import HandDetailGate from '@/components/ui/HandDetailGate';
 import CardSlotPicker from '../CardSlotPicker';
-import { FormValues } from '@/utils/handFormHelpers';
+import { FormValues, positions } from '@/utils/handFormHelpers';
 
 interface StreetByStreetSectionProps {
   control: Control<FormValues>;
@@ -314,30 +315,105 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                 </div>
               </div>
               
-              <FormField
-                control={control}
-                name="villainCards"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Villain Hand</FormLabel>
-                    <FormControl>
-                      <CardSlotPicker
-                        slots={gameType === 'NLH' ? 2 : 4}
-                        selectedCards={field.value || (gameType === 'NLH' ? [{ id: 0 }, { id: 1 }] : [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }])}
-                        onChange={field.onChange}
-                        excludedCards={[
-                          ...(selectedCards.match(/.{2}/g) || []),
-                          ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                          ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                          ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
-                        ].filter(card => 
-                          !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
-                        )}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                {/* Villain Hand Label with BB and Position inputs */}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  {/* Left: Label */}
+                  <FormLabel className="text-base">Villain Hand</FormLabel>
+                  
+                  {/* Right: BB input + Position selector */}
+                  <div className="flex items-center gap-2">
+                    {/* Villain BB Input */}
+                    <FormField
+                      control={control}
+                      name="villainBigBlind"
+                      render={({ field: vbbField }) => (
+                        <div className="flex items-center gap-1.5">
+                          <Input
+                            type="number"
+                            inputMode="decimal"
+                            step="0.01"
+                            min="0.01"
+                            placeholder="0"
+                            aria-label="Villain Big Blind amount"
+                            autoComplete="off"
+                            data-lpignore="true"
+                            data-1p-ignore="true"
+                            data-bwignore="true"
+                            name="villain-bb-amount"
+                            spellCheck={false}
+                            autoCapitalize="off"
+                            autoCorrect="off"
+                            {...vbbField}
+                            value={vbbField.value ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === '') {
+                                vbbField.onChange(undefined);
+                              } else {
+                                const num = parseFloat(value);
+                                if (!isNaN(num) && isFinite(num) && num >= 0) {
+                                  vbbField.onChange(num);
+                                }
+                              }
+                            }}
+                            className="w-20 h-8 text-sm"
+                          />
+                          <span className="text-sm text-muted-foreground font-medium">BB</span>
+                        </div>
+                      )}
+                    />
+                    
+                    {/* Villain Position Selector */}
+                    <FormField
+                      control={control}
+                      name="villainPosition"
+                      render={({ field: vPosField }) => (
+                        <Select
+                          value={vPosField.value || ''}
+                          onValueChange={vPosField.onChange}
+                        >
+                          <SelectTrigger className="w-24 h-8 text-sm bg-background">
+                            <SelectValue placeholder="Pos" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background z-50">
+                            {positions.map((pos) => (
+                              <SelectItem key={pos} value={pos}>
+                                {pos}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+                </div>
+                
+                {/* Card Picker */}
+                <FormField
+                  control={control}
+                  name="villainCards"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <CardSlotPicker
+                          slots={gameType === 'NLH' ? 2 : 4}
+                          selectedCards={field.value || (gameType === 'NLH' ? [{ id: 0 }, { id: 1 }] : [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }])}
+                          onChange={field.onChange}
+                          excludedCards={[
+                            ...(selectedCards.match(/.{2}/g) || []),
+                            ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                            ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                            ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                          ].filter(card => 
+                            !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                          )}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
               <FormField
                 control={control}
                 name="result"

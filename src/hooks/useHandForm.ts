@@ -33,6 +33,8 @@ export const useHandForm = ({
       gameType: initialData.gameType || 'NLH',
       tableId: tableId || initialData.tableId,
       bigBlind: initialData.bigBlind || undefined,
+      villainBigBlind: initialData.villainBigBlind || undefined,
+      villainPosition: initialData.villainPosition || '',
     }
   });
   
@@ -127,6 +129,8 @@ export const useHandForm = ({
         riverCards: [{ id: 0 }],
         riverAction: '',
         villainCards: [{ id: 0 }, { id: 1 }],
+        villainBigBlind: undefined,
+        villainPosition: '',
         result: '',
       });
       setImagePreview(null);
@@ -187,10 +191,13 @@ export const useHandForm = ({
       image: imagePreview,
       position: positions[selectedPositionIndex], // Use the position from our wheel picker
       bigBlind: values.bigBlind,
+      villainBigBlind: values.villainBigBlind,
+      villainPosition: values.villainPosition,
       // Store the card data in the expected format
       flopCards: flopCardsString ? [flopCardsString] : undefined,
       turnCard: turnCardsString || undefined,
       riverCard: riverCardsString || undefined,
+      villainHand: villainCardsString || undefined,
       showdownResult: values.result || undefined,
     });
     onOpenChange(false);

@@ -42,6 +42,15 @@ export const handFormSchema = z.object({
     rank: z.string().optional(),
     suit: z.string().optional(),
   })).default([]),
+  villainBigBlind: z.preprocess(
+    (val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    },
+    z.number().positive().finite().optional()
+  ),
+  villainPosition: z.string().optional(),
   result: z.string().optional(),
 });
 

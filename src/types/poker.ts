@@ -15,6 +15,9 @@ export interface HandData {
   turnAction?: string;
   riverCard?: string;
   riverAction?: string;
+  villainHand?: string;
+  villainBigBlind?: number;
+  villainPosition?: string;
   showdownResult?: string;
   result?: string | number;
   resultAmount?: number;
