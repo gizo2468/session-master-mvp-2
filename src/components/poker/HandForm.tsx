@@ -54,7 +54,7 @@ const HandForm: React.FC<HandFormProps> = ({
     turnAction,
     riverCards,
     riverAction,
-    villainCards,
+    villains,
     result,
     handlePositionSelect,
     handleSubmit,
@@ -108,7 +108,7 @@ const HandForm: React.FC<HandFormProps> = ({
                 flopCards={flopCards}
                 turnCards={turnCards}
                 riverCards={riverCards}
-                villainCards={villainCards}
+                villains={villains}
               />
               
               {/* Position Wheel Selector */}
@@ -138,7 +138,7 @@ const HandForm: React.FC<HandFormProps> = ({
                 flopCards={flopCards}
                 turnCards={turnCards}
                 riverCards={riverCards}
-                villainCards={villainCards}
+                villains={villains}
               />
               
               {/* Notes */}

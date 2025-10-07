@@ -13,7 +13,7 @@ interface CardSelectionSectionProps {
   flopCards: any[];
   turnCards: any[];
   riverCards: any[];
-  villainCards: any[];
+  villains: any[];
 }
 
 const CardSelectionSection: React.FC<CardSelectionSectionProps> = ({
@@ -22,7 +22,7 @@ const CardSelectionSection: React.FC<CardSelectionSectionProps> = ({
   flopCards,
   turnCards,
   riverCards,
-  villainCards
+  villains
 }) => {
   return (
     <FormField
@@ -85,7 +85,7 @@ const CardSelectionSection: React.FC<CardSelectionSectionProps> = ({
               selectedCards={field.value} 
               onChange={field.onChange}
               maxCards={getMaxCards(gameType)}
-              excludedCards={getExcludedCardsForMain(flopCards, turnCards, riverCards, villainCards)}
+              excludedCards={getExcludedCardsForMain(flopCards, turnCards, riverCards, villains)}
             />
           </FormControl>
           <FormDescription>

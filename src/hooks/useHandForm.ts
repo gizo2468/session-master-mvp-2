@@ -33,6 +33,19 @@ export const useHandForm = ({
       gameType: initialData.gameType || 'NLH',
       tableId: tableId || initialData.tableId,
       bigBlind: initialData.bigBlind || undefined,
+      // Multi-villain support - convert legacy data if present
+      villains: initialData.villains ? initialData.villains.map(v => ({
+        cards: [],
+        position: v.position || '',
+        bigBlind: v.bigBlind
+      })) : (initialData.villainHand || initialData.villainPosition || initialData.villainBigBlind) ? 
+        [{
+          cards: [],
+          position: initialData.villainPosition || '',
+          bigBlind: initialData.villainBigBlind
+        }] : 
+        [{ cards: [], position: '', bigBlind: undefined }],
+      // Legacy fields for backward compatibility
       villainBigBlind: initialData.villainBigBlind || undefined,
       villainPosition: initialData.villainPosition || '',
     }
@@ -66,7 +79,7 @@ export const useHandForm = ({
   const turnAction = form.watch('turnAction');
   const riverCards = form.watch('riverCards');
   const riverAction = form.watch('riverAction');
-  const villainCards = form.watch('villainCards');
+  const villains = form.watch('villains');
   const result = form.watch('result');
   
   // Set initial position index if editing
@@ -100,8 +113,9 @@ export const useHandForm = ({
   }, [riverCards, riverAction]);
   
   useEffect(() => {
-    if ((villainCards && villainCards.some(c => c.rank && c.suit)) || result) setIsShowdownOpen(true);
-  }, [villainCards, result]);
+    const hasVillainData = villains?.some(v => v.cards?.some((c: any) => c.rank && c.suit));
+    if (hasVillainData || result) setIsShowdownOpen(true);
+  }, [villains, result]);
 
   // Clear cards when game type changes to prevent validation issues
   useEffect(() => {
@@ -128,7 +142,7 @@ export const useHandForm = ({
         turnAction: '',
         riverCards: [{ id: 0 }],
         riverAction: '',
-        villainCards: [{ id: 0 }, { id: 1 }],
+        villains: [{ cards: [], position: '', bigBlind: undefined }],
         villainBigBlind: undefined,
         villainPosition: '',
         result: '',
@@ -177,13 +191,19 @@ export const useHandForm = ({
     }
     
     // Exclude premium fields that have type mismatches for now - convert cards to strings for storage
-    const { flopCards: flopCardsArray, turnCards: turnCardsArray, riverCards: riverCardsArray, villainCards: villainCardsArray, ...handData } = values;
+    const { flopCards: flopCardsArray, turnCards: turnCardsArray, riverCards: riverCardsArray, villains: villainsArray, ...handData } = values;
     
     // Convert card arrays to strings for storage
     const flopCardsString = flopCardsArray?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit).join('') || '';
     const turnCardsString = turnCardsArray?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit).join('') || '';
     const riverCardsString = riverCardsArray?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit).join('') || '';
-    const villainCardsString = villainCardsArray?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit).join('') || '';
+    
+    // Convert villains array to storage format
+    const villainsData = villainsArray?.map(v => ({
+      hand: v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit).join('') || '',
+      bigBlind: v.bigBlind,
+      position: v.position
+    })).filter(v => v.hand || v.position || v.bigBlind) || [];
     
     onSubmit({
       ...handData,
@@ -191,13 +211,11 @@ export const useHandForm = ({
       image: imagePreview,
       position: positions[selectedPositionIndex], // Use the position from our wheel picker
       bigBlind: values.bigBlind,
-      villainBigBlind: values.villainBigBlind,
-      villainPosition: values.villainPosition,
       // Store the card data in the expected format
       flopCards: flopCardsString ? [flopCardsString] : undefined,
       turnCard: turnCardsString || undefined,
       riverCard: riverCardsString || undefined,
-      villainHand: villainCardsString || undefined,
+      villains: villainsData.length > 0 ? villainsData : undefined,
       showdownResult: values.result || undefined,
     });
     onOpenChange(false);
@@ -240,7 +258,7 @@ export const useHandForm = ({
     turnAction,
     riverCards,
     riverAction,
-    villainCards,
+    villains,
     result,
     handlePositionSelect,
     handleSubmit,

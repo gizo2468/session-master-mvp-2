@@ -15,6 +15,13 @@ export interface HandData {
   turnAction?: string;
   riverCard?: string;
   riverAction?: string;
+  // Multi-villain support
+  villains?: Array<{
+    hand?: string;
+    bigBlind?: number;
+    position?: string;
+  }>;
+  // Legacy single villain fields (for backward compatibility)
   villainHand?: string;
   villainBigBlind?: number;
   villainPosition?: string;

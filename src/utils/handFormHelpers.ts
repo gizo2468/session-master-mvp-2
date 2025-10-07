@@ -37,11 +37,29 @@ export const handFormSchema = z.object({
     suit: z.string().optional(),
   })).default([{ id: 0 }]),
   riverAction: z.string().optional(),
+  // Multi-villain support
+  villains: z.array(z.object({
+    cards: z.array(z.object({
+      id: z.number(),
+      rank: z.string().optional(),
+      suit: z.string().optional(),
+    })).default([]),
+    position: z.string().optional(),
+    bigBlind: z.preprocess(
+      (val) => {
+        if (val === '' || val === null || val === undefined) return undefined;
+        const num = Number(val);
+        return isNaN(num) ? undefined : num;
+      },
+      z.number().positive().finite().optional()
+    ),
+  })).default([{ cards: [], position: '', bigBlind: undefined }]),
+  // Legacy fields for backward compatibility (deprecated)
   villainCards: z.array(z.object({
     id: z.number(),
     rank: z.string().optional(),
     suit: z.string().optional(),
-  })).default([]),
+  })).optional(),
   villainBigBlind: z.preprocess(
     (val) => {
       if (val === '' || val === null || val === undefined) return undefined;
@@ -75,12 +93,12 @@ export const tooltipContent = {
   action: "The type of betting action you took with this hand. Open/Flat means opening the pot or calling. 3Bet means raising a previous raise."
 };
 
-// Helper function to get all used cards
+// Helper function to get all used cards (updated for multi-villain support)
 export const getAllUsedCards = (
   flopCards: any[],
   turnCards: any[],
   riverCards: any[],
-  villainCards: any[]
+  villains: any[]
 ): string[] => {
   const usedCards: string[] = [];
   
@@ -102,10 +120,14 @@ export const getAllUsedCards = (
     usedCards.push(...riverCardsArray);
   }
   
-  // Add villain cards
-  if (villainCards) {
-    const villainCardsArray = villainCards.filter(c => c.rank && c.suit).map(c => c.rank + c.suit);
-    usedCards.push(...villainCardsArray);
+  // Add all villain cards
+  if (villains && Array.isArray(villains)) {
+    villains.forEach(villain => {
+      if (villain.cards) {
+        const villainCardsArray = villain.cards.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit);
+        usedCards.push(...villainCardsArray);
+      }
+    });
   }
   
   return usedCards;
@@ -116,9 +138,9 @@ export const getExcludedCardsForMain = (
   flopCards: any[],
   turnCards: any[],
   riverCards: any[],
-  villainCards: any[]
+  villains: any[]
 ): string[] => {
-  return getAllUsedCards(flopCards, turnCards, riverCards, villainCards);
+  return getAllUsedCards(flopCards, turnCards, riverCards, villains);
 };
 
 // Determine max cards based on game type

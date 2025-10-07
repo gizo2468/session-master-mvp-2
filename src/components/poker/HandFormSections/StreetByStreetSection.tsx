@@ -2,11 +2,12 @@ import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
-import { CircleHelp, ChevronDown, Trash2 } from 'lucide-react';
-import { Control, UseFormSetValue } from 'react-hook-form';
+import { CircleHelp, ChevronDown, Trash2, Plus, X } from 'lucide-react';
+import { Control, UseFormSetValue, useFieldArray } from 'react-hook-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import HandDetailGate from '@/components/ui/HandDetailGate';
 import CardSlotPicker from '../CardSlotPicker';
@@ -28,7 +29,7 @@ interface StreetByStreetSectionProps {
   flopCards: any[];
   turnCards: any[];
   riverCards: any[];
-  villainCards: any[];
+  villains: any[];
 }
 
 const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
@@ -47,9 +48,15 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
   flopCards,
   turnCards,
   riverCards,
-  villainCards
+  villains
 }) => {
   const isMobile = useIsMobile();
+  
+  // Use field array for dynamic villain management
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'villains'
+  });
 
   return (
         <HandDetailGate>
@@ -85,7 +92,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                         ...(selectedCards.match(/.{2}/g) || []),
                         ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
                         ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                        ...((villainCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                        ...(villains?.flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit)) || [])
                       ].filter(card => 
                         !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
                       )}
@@ -140,7 +147,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                           ...(selectedCards.match(/.{2}/g) || []),
                           ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
                           ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                          ...((villainCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                          ...(villains?.flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit)) || [])
                         ].filter(card => 
                           !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
                         )}
@@ -190,7 +197,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                           ...(selectedCards.match(/.{2}/g) || []),
                           ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
                           ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                          ...((villainCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                          ...(villains?.flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit)) || [])
                         ].filter(card => 
                           !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
                         )}
@@ -315,111 +322,150 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <FormLabel className="text-base">Villain Hand</FormLabel>
+              {/* Multi-Villain Section */}
+              <div className="space-y-1.5">
+                <FormLabel className="text-base">Villain Hands</FormLabel>
                 
-                {/* Two-column layout: Cards | Position & BB */}
-                <div className="grid grid-cols-[auto_1fr] gap-4 items-start">
-                  {/* Column 1: Villain Cards */}
-                  <FormField
-                    control={control}
-                    name="villainCards"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <CardSlotPicker
-                            slots={gameType === 'NLH' ? 2 : 4}
-                            selectedCards={field.value || (gameType === 'NLH' ? [{ id: 0 }, { id: 1 }] : [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }])}
-                            onChange={field.onChange}
-                            excludedCards={[
-                              ...(selectedCards.match(/.{2}/g) || []),
-                              ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                              ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                              ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
-                            ].filter(card => 
-                              !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                {fields.map((field, index) => {
+                  // Get all other villains' cards for exclusion
+                  const otherVillainsCards = villains
+                    ?.filter((_, i) => i !== index)
+                    .flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit) || []) || [];
+                  
+                  return (
+                    <div key={field.id} className="relative border border-border rounded-md p-3 bg-card">
+                      {/* Remove button (only show if more than 1 villain) */}
+                      {fields.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => remove(index)}
+                          className="absolute top-2 right-2 text-muted-foreground hover:text-destructive transition-colors"
+                          aria-label={`Remove villain ${index + 1}`}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                      
+                      <div className="text-xs text-muted-foreground mb-1.5">Villain {index + 1}</div>
+                      
+                      {/* Two-column layout: Cards | Position & BB */}
+                      <div className="grid grid-cols-[auto_1fr] gap-3 items-start">
+                        {/* Column 1: Villain Cards */}
+                        <FormField
+                          control={control}
+                          name={`villains.${index}.cards`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <CardSlotPicker
+                                  slots={gameType === 'NLH' ? 2 : 4}
+                                  selectedCards={field.value || (gameType === 'NLH' ? [{ id: 0 }, { id: 1 }] : [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }])}
+                                  onChange={field.onChange}
+                                  excludedCards={[
+                                    ...(selectedCards.match(/.{2}/g) || []),
+                                    ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                    ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                    ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                                    ...otherVillainsCards
+                                  ].filter(card => 
+                                    !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                                  )}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        {/* Column 2: Position Selector & BB Input stacked */}
+                        <div className="flex flex-col gap-1.5">
+                          {/* Position Selector */}
+                          <FormField
+                            control={control}
+                            name={`villains.${index}.position`}
+                            render={({ field: vPosField }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Select
+                                    value={vPosField.value || ''}
+                                    onValueChange={vPosField.onChange}
+                                  >
+                                    <SelectTrigger className="w-full h-8 text-sm bg-background">
+                                      <SelectValue placeholder="Position" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-background z-50">
+                                      {positions.map((pos) => (
+                                        <SelectItem key={pos} value={pos}>
+                                          {pos}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                              </FormItem>
                             )}
                           />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {/* Column 2: Position Selector & BB Input stacked */}
-                  <div className="flex flex-col gap-2">
-                    {/* Position Selector */}
-                    <FormField
-                      control={control}
-                      name="villainPosition"
-                      render={({ field: vPosField }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Select
-                              value={vPosField.value || ''}
-                              onValueChange={vPosField.onChange}
-                            >
-                              <SelectTrigger className="w-full h-9 bg-background">
-                                <SelectValue placeholder="Position" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-background z-50">
-                                {positions.map((pos) => (
-                                  <SelectItem key={pos} value={pos}>
-                                    {pos}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {/* Villain BB Input */}
-                    <FormField
-                      control={control}
-                      name="villainBigBlind"
-                      render={({ field: vbbField }) => (
-                        <FormItem>
-                          <FormControl>
-                            <div className="flex items-center gap-1.5">
-                              <Input
-                                type="number"
-                                inputMode="decimal"
-                                step="0.01"
-                                min="0.01"
-                                placeholder="0"
-                                aria-label="Villain Big Blind amount"
-                                autoComplete="off"
-                                data-lpignore="true"
-                                data-1p-ignore="true"
-                                data-bwignore="true"
-                                name="villain-bb-amount"
-                                spellCheck={false}
-                                autoCapitalize="off"
-                                autoCorrect="off"
-                                {...vbbField}
-                                value={vbbField.value ?? ''}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  if (value === '') {
-                                    vbbField.onChange(undefined);
-                                  } else {
-                                    const num = parseFloat(value);
-                                    if (!isNaN(num) && isFinite(num) && num >= 0) {
-                                      vbbField.onChange(num);
-                                    }
-                                  }
-                                }}
-                                className="flex-1 h-9"
-                              />
-                              <span className="text-sm text-muted-foreground font-medium">BB</span>
-                            </div>
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
+                          
+                          {/* Villain BB Input */}
+                          <FormField
+                            control={control}
+                            name={`villains.${index}.bigBlind`}
+                            render={({ field: vbbField }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <div className="flex items-center gap-1.5">
+                                    <Input
+                                      type="number"
+                                      inputMode="decimal"
+                                      step="0.01"
+                                      min="0.01"
+                                      placeholder="0"
+                                      aria-label={`Villain ${index + 1} Big Blind amount`}
+                                      autoComplete="off"
+                                      data-lpignore="true"
+                                      data-1p-ignore="true"
+                                      data-bwignore="true"
+                                      name={`villain-${index}-bb`}
+                                      spellCheck={false}
+                                      autoCapitalize="off"
+                                      autoCorrect="off"
+                                      {...vbbField}
+                                      value={vbbField.value ?? ''}
+                                      onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value === '') {
+                                          vbbField.onChange(undefined);
+                                        } else {
+                                          const num = parseFloat(value);
+                                          if (!isNaN(num) && isFinite(num) && num >= 0) {
+                                            vbbField.onChange(num);
+                                          }
+                                        }
+                                      }}
+                                      className="flex-1 h-8 text-sm"
+                                    />
+                                    <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">BB</span>
+                                  </div>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {/* Add Villain Button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => append({ cards: [], position: '', bigBlind: undefined })}
+                  className="w-full h-8 text-sm"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Villain
+                </Button>
               </div>
               <FormField
                 control={control}
