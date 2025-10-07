@@ -44,7 +44,7 @@ const CardSelectionSection: React.FC<CardSelectionSectionProps> = ({
             control={control}
             name="bigBlind"
             render={({ field: bbField }) => (
-              <div className="flex items-center gap-1.5 self-center translate-y-[2px]">
+              <div className="flex items-center gap-1.5 self-center translate-y-[24px]">
                 <Input
                   type="number"
                   inputMode="decimal"
