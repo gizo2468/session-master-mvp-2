@@ -30,7 +30,7 @@ const CardSelectionSection: React.FC<CardSelectionSectionProps> = ({
       name="cards"
       render={({ field }) => (
       <FormItem>
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Left side: Cards label + help icon */}
           <div className="flex items-center gap-2">
             <FormLabel>Cards</FormLabel>
@@ -44,14 +44,22 @@ const CardSelectionSection: React.FC<CardSelectionSectionProps> = ({
             control={control}
             name="bigBlind"
             render={({ field: bbField }) => (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 self-center translate-y-[2px]">
                 <Input
                   type="number"
                   inputMode="decimal"
                   step="0.01"
-                  min="0"
+                  min="0.01"
                   placeholder="0"
                   aria-label="Big Blind amount"
+                  autoComplete="off"
+                  data-lpignore="true"
+                  data-1p-ignore="true"
+                  data-bwignore="true"
+                  name="bb-amount"
+                  spellCheck={false}
+                  autoCapitalize="off"
+                  autoCorrect="off"
                   {...bbField}
                   value={bbField.value ?? ''}
                   onChange={(e) => {
