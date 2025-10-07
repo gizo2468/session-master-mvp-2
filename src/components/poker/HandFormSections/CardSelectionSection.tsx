@@ -3,6 +3,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessa
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { CircleHelp } from 'lucide-react';
 import { Control } from 'react-hook-form';
+import { Input } from '@/components/ui/input';
 import CardSelector from '../CardSelector';
 import { FormValues, getMaxCards, getExcludedCardsForMain, tooltipContent } from '@/utils/handFormHelpers';
 
@@ -28,14 +29,50 @@ const CardSelectionSection: React.FC<CardSelectionSectionProps> = ({
       control={control}
       name="cards"
       render={({ field }) => (
-        <FormItem>
+      <FormItem>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {/* Left side: Cards label + help icon */}
           <div className="flex items-center gap-2">
             <FormLabel>Cards</FormLabel>
             <AdaptiveTooltip content={tooltipContent.cards}>
               <CircleHelp className="h-4 w-4 text-gray-500" />
             </AdaptiveTooltip>
           </div>
-          <FormControl>
+          
+          {/* Right side: BB input field */}
+          <FormField
+            control={control}
+            name="bigBlind"
+            render={({ field: bbField }) => (
+              <div className="flex items-center gap-1.5">
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  placeholder="0"
+                  aria-label="Big Blind amount"
+                  {...bbField}
+                  value={bbField.value ?? ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '') {
+                      bbField.onChange(undefined);
+                    } else {
+                      const num = parseFloat(value);
+                      if (!isNaN(num) && isFinite(num) && num >= 0) {
+                        bbField.onChange(num);
+                      }
+                    }
+                  }}
+                  className="w-20 h-8 text-sm"
+                />
+                <span className="text-sm text-muted-foreground font-medium">BB</span>
+              </div>
+            )}
+          />
+        </div>
+        <FormControl>
             <CardSelector 
               selectedCards={field.value} 
               onChange={field.onChange}

@@ -3,6 +3,14 @@ import * as z from 'zod';
 // Updated schema to make only Cards required
 export const handFormSchema = z.object({
   cards: z.string().min(2, 'Select at least 1 card').max(12, 'Maximum 6 cards'),
+  bigBlind: z.preprocess(
+    (val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    },
+    z.number().positive().finite().optional()
+  ),
   position: z.string().optional(),
   action: z.string().optional(),
   notes: z.string().max(1000, 'Notes are too long').optional(),

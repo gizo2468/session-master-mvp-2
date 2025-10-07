@@ -32,6 +32,7 @@ export const useHandForm = ({
       image: initialData.image || undefined,
       gameType: initialData.gameType || 'NLH',
       tableId: tableId || initialData.tableId,
+      bigBlind: initialData.bigBlind || undefined,
     }
   });
   
@@ -118,6 +119,7 @@ export const useHandForm = ({
         image: undefined,
         gameType: 'NLH',
         tableId: tableId,
+        bigBlind: undefined,
         flopCards: [{ id: 0 }, { id: 1 }, { id: 2 }],
         flopAction: '',
         turnCards: [{ id: 0 }],
@@ -184,6 +186,7 @@ export const useHandForm = ({
       id: initialData.id,
       image: imagePreview,
       position: positions[selectedPositionIndex], // Use the position from our wheel picker
+      bigBlind: values.bigBlind,
       // Store the card data in the expected format
       flopCards: flopCardsString ? [flopCardsString] : undefined,
       turnCard: turnCardsString || undefined,
