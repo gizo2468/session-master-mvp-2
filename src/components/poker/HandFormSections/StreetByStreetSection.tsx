@@ -316,103 +316,110 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
               </div>
               
               <div className="space-y-2">
-                {/* Villain Hand Label with BB and Position inputs */}
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  {/* Left: Label */}
-                  <FormLabel className="text-base">Villain Hand</FormLabel>
+                <FormLabel className="text-base">Villain Hand</FormLabel>
+                
+                {/* Two-column layout: Cards | Position & BB */}
+                <div className="grid grid-cols-[auto_1fr] gap-4 items-start">
+                  {/* Column 1: Villain Cards */}
+                  <FormField
+                    control={control}
+                    name="villainCards"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <CardSlotPicker
+                            slots={gameType === 'NLH' ? 2 : 4}
+                            selectedCards={field.value || (gameType === 'NLH' ? [{ id: 0 }, { id: 1 }] : [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }])}
+                            onChange={field.onChange}
+                            excludedCards={[
+                              ...(selectedCards.match(/.{2}/g) || []),
+                              ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                              ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                              ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
+                            ].filter(card => 
+                              !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                            )}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                   
-                  {/* Right: BB input + Position selector */}
-                  <div className="flex items-center gap-2">
+                  {/* Column 2: Position Selector & BB Input stacked */}
+                  <div className="flex flex-col gap-2">
+                    {/* Position Selector */}
+                    <FormField
+                      control={control}
+                      name="villainPosition"
+                      render={({ field: vPosField }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Select
+                              value={vPosField.value || ''}
+                              onValueChange={vPosField.onChange}
+                            >
+                              <SelectTrigger className="w-full h-9 bg-background">
+                                <SelectValue placeholder="Position" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background z-50">
+                                {positions.map((pos) => (
+                                  <SelectItem key={pos} value={pos}>
+                                    {pos}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
                     {/* Villain BB Input */}
                     <FormField
                       control={control}
                       name="villainBigBlind"
                       render={({ field: vbbField }) => (
-                        <div className="flex items-center gap-1.5">
-                          <Input
-                            type="number"
-                            inputMode="decimal"
-                            step="0.01"
-                            min="0.01"
-                            placeholder="0"
-                            aria-label="Villain Big Blind amount"
-                            autoComplete="off"
-                            data-lpignore="true"
-                            data-1p-ignore="true"
-                            data-bwignore="true"
-                            name="villain-bb-amount"
-                            spellCheck={false}
-                            autoCapitalize="off"
-                            autoCorrect="off"
-                            {...vbbField}
-                            value={vbbField.value ?? ''}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              if (value === '') {
-                                vbbField.onChange(undefined);
-                              } else {
-                                const num = parseFloat(value);
-                                if (!isNaN(num) && isFinite(num) && num >= 0) {
-                                  vbbField.onChange(num);
-                                }
-                              }
-                            }}
-                            className="w-20 h-8 text-sm"
-                          />
-                          <span className="text-sm text-muted-foreground font-medium">BB</span>
-                        </div>
-                      )}
-                    />
-                    
-                    {/* Villain Position Selector */}
-                    <FormField
-                      control={control}
-                      name="villainPosition"
-                      render={({ field: vPosField }) => (
-                        <Select
-                          value={vPosField.value || ''}
-                          onValueChange={vPosField.onChange}
-                        >
-                          <SelectTrigger className="w-24 h-8 text-sm bg-background">
-                            <SelectValue placeholder="Pos" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-background z-50">
-                            {positions.map((pos) => (
-                              <SelectItem key={pos} value={pos}>
-                                {pos}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormItem>
+                          <FormControl>
+                            <div className="flex items-center gap-1.5">
+                              <Input
+                                type="number"
+                                inputMode="decimal"
+                                step="0.01"
+                                min="0.01"
+                                placeholder="0"
+                                aria-label="Villain Big Blind amount"
+                                autoComplete="off"
+                                data-lpignore="true"
+                                data-1p-ignore="true"
+                                data-bwignore="true"
+                                name="villain-bb-amount"
+                                spellCheck={false}
+                                autoCapitalize="off"
+                                autoCorrect="off"
+                                {...vbbField}
+                                value={vbbField.value ?? ''}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (value === '') {
+                                    vbbField.onChange(undefined);
+                                  } else {
+                                    const num = parseFloat(value);
+                                    if (!isNaN(num) && isFinite(num) && num >= 0) {
+                                      vbbField.onChange(num);
+                                    }
+                                  }
+                                }}
+                                className="flex-1 h-9"
+                              />
+                              <span className="text-sm text-muted-foreground font-medium">BB</span>
+                            </div>
+                          </FormControl>
+                        </FormItem>
                       )}
                     />
                   </div>
                 </div>
-                
-                {/* Card Picker */}
-                <FormField
-                  control={control}
-                  name="villainCards"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <CardSlotPicker
-                          slots={gameType === 'NLH' ? 2 : 4}
-                          selectedCards={field.value || (gameType === 'NLH' ? [{ id: 0 }, { id: 1 }] : [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }])}
-                          onChange={field.onChange}
-                          excludedCards={[
-                            ...(selectedCards.match(/.{2}/g) || []),
-                            ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                            ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                            ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || [])
-                          ].filter(card => 
-                            !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
-                          )}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
               </div>
               <FormField
                 control={control}
