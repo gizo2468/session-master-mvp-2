@@ -30,3 +30,6 @@ verify_jwt = false
 
 [functions.paypal-health]
 verify_jwt = false
+
+[functions.analyze-poker-hand]
+verify_jwt = true

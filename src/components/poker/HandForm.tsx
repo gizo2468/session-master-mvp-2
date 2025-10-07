@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
@@ -12,6 +12,8 @@ import PositionSection from './HandFormSections/PositionSection';
 import ActionSection from './HandFormSections/ActionSection';
 import StreetByStreetSection from './HandFormSections/StreetByStreetSection';
 import NotesSection from './HandFormSections/NotesSection';
+import AIHandAnalyzerBanner from './AIHandAnalyzerBanner';
+import AIHandAnalyzerDialog from './AIHandAnalyzerDialog';
 
 interface HandFormProps {
   open: boolean;
@@ -32,6 +34,8 @@ const HandForm: React.FC<HandFormProps> = ({
   tableId,
   tableFormat
 }) => {
+  const [showAIAnalyzer, setShowAIAnalyzer] = useState(false);
+  
   const {
     form,
     selectedPositionIndex,
@@ -121,8 +125,18 @@ const HandForm: React.FC<HandFormProps> = ({
               {/* Action Type */}
               <ActionSection control={form.control} />
               
+              {/* AI Hand Analyzer */}
+              <AIHandAnalyzerBanner onClick={() => setShowAIAnalyzer(true)} />
+              
+              <AIHandAnalyzerDialog
+                open={showAIAnalyzer}
+                onOpenChange={setShowAIAnalyzer}
+                setValue={form.setValue}
+                currentFormValues={form.getValues()}
+              />
+              
               {/* Street-by-Street Analysis */}
-              <StreetByStreetSection 
+              <StreetByStreetSection
                 control={form.control}
                 setValue={form.setValue}
                 selectedCards={selectedCards}

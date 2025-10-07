@@ -212,3 +212,83 @@ export interface CoachTierDetails {
   maxStudents: number;
   features: string[];
 }
+
+// AI Hand Analysis Types
+export interface AICardDetection {
+  rank: string;
+  suit: string;
+  confidence: number; // 0-1
+}
+
+export interface AIPlayerDetection {
+  position: string; // UTG|MP|CO|BTN|SB|BB|UNKNOWN
+  cards: AICardDetection[] | 'hidden';
+  stack: number;
+  stackUnit: 'chips' | 'BB';
+  confidence: number;
+}
+
+export interface AIDealerButtonDetection {
+  position: string | null;
+  confidence: number;
+  requiresManualSelection: boolean;
+}
+
+export interface AIBoardDetection {
+  flop: AICardDetection[] | null;
+  turn: AICardDetection | null;
+  river: AICardDetection | null;
+  confidence: number;
+}
+
+export interface AIActionDetection {
+  street: 'preflop' | 'flop' | 'turn' | 'river';
+  description: string;
+  actions: Array<{
+    player: string;
+    action: string;
+    amount?: number;
+    confidence: number;
+  }>;
+}
+
+export interface AIGameContextDetection {
+  gameType: 'NLH' | 'PLO' | 'PLO5' | 'UNKNOWN';
+  format: 'cash' | 'tournament' | 'unknown';
+  blindLevel: { sb: number; bb: number } | null;
+  confidence: number;
+}
+
+export interface AIHandAnalysisResult {
+  gameContext: AIGameContextDetection;
+  hero: AIPlayerDetection;
+  dealerButton: AIDealerButtonDetection;
+  villains: AIPlayerDetection[];
+  board: AIBoardDetection;
+  actions: AIActionDetection[];
+  pot: { size: number; unit: 'chips' | 'BB'; confidence: number };
+  result: {
+    outcome: 'win' | 'loss' | 'split' | 'unknown';
+    amount: number;
+    unit: 'chips' | 'BB';
+    summary: string;
+    confidence: number;
+  };
+  metadata: {
+    heroOverrideAvailable: boolean;
+    warnings: string[];
+    processingTimeMs: number;
+  };
+}
+
+export interface AIAnalyzerState {
+  status: 'idle' | 'uploading' | 'analyzing' | 'needsDealerSelection' | 'success' | 'error' | 'unsupportedFormat';
+  image: string | null;
+  imageSize: number;
+  analysis: AIHandAnalysisResult | null;
+  error: string | null;
+  manualOverrides: {
+    heroPosition?: string;
+    dealerPosition?: string;
+  };
+}
