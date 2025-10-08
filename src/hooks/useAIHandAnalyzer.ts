@@ -162,12 +162,20 @@ export const useAIHandAnalyzer = () => {
       
       let errorMessage = 'Analysis failed. Please try again.';
       
-      if (err.message?.includes('429') || err.code === 'RATE_LIMIT') {
+      // Use the structured error message if available
+      if (err.message && typeof err.message === 'string') {
+        errorMessage = err.message;
+      }
+      
+      // Special handling for specific error codes
+      if (err.code === 'RATE_LIMIT' || err.message?.includes('429')) {
         errorMessage = 'AI rate limit exceeded. Please try again in a moment.';
-      } else if (err.message?.includes('402') || err.code === 'CREDITS_DEPLETED') {
+      } else if (err.code === 'CREDITS_DEPLETED' || err.message?.includes('402')) {
         errorMessage = 'AI credits depleted. Please add credits to continue using AI analysis.';
-      } else if (err.code === 'TIMEOUT') {
+      } else if (err.code === 'TIMEOUT' || err.message?.includes('408')) {
         errorMessage = 'Analysis timed out. Please try with a clearer image.';
+      } else if (err.code === 'CONFIG_ERROR') {
+        errorMessage = 'AI service not configured properly. Please contact support.';
       }
 
       setState(prev => ({

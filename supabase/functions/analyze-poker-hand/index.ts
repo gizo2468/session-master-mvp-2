@@ -1,8 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const ALLOWED_ORIGINS = [
+  'https://session-master-mvp.lovable.app',
+  'https://fa19e82d-191f-494f-933f-bcc0a4a9f418.lovableproject.com',
+  'http://localhost:3000'
+];
+
+const corsHeaders = (origin: string | null) => {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
 };
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -43,29 +52,38 @@ async function stripEXIF(base64Image: string): Promise<string> {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const headers = corsHeaders(origin);
+  
   // Log request arrival for debugging
   console.log('Request received', {
     method: req.method,
     hasAuth: req.headers.get('authorization') ? 'yes' : 'no',
-    origin: req.headers.get('origin'),
+    origin: origin,
     contentType: req.headers.get('content-type')
   });
 
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers });
   }
 
   const startTime = Date.now();
 
   try {
+    const origin = req.headers.get('origin');
+    const headers = corsHeaders(origin);
+    
     const { image, heroOverride, dealerOverride } = await req.json();
     
     // Validate image size
     const imageSizeBytes = (image.length * 3) / 4;
     if (imageSizeBytes > MAX_FILE_SIZE) {
       return new Response(
-        JSON.stringify({ error: 'Image size exceeds 10MB limit' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          code: 'FILE_TOO_LARGE',
+          error: `Image size (${Math.round(imageSizeBytes / 1024)}KB) exceeds 10MB limit` 
+        }),
+        { status: 413, headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -80,7 +98,17 @@ serve(async (req) => {
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+      console.error('analyze-poker-hand error: LOVABLE_API_KEY not configured');
+      return new Response(
+        JSON.stringify({ 
+          code: 'CONFIG_ERROR',
+          error: 'AI service not configured. Please contact support.' 
+        }),
+        { 
+          status: 500, 
+          headers: { ...headers, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
     const systemPrompt = `You are an expert poker hand analyzer specializing in No-Limit Hold'em (NLH).
@@ -268,7 +296,7 @@ Return structured data with confidence scores for every field.`;
               error: 'AI analysis rate limit exceeded. Please wait a moment and try again.',
               code: 'RATE_LIMIT'
             }),
-            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { status: 429, headers: { ...headers, 'Content-Type': 'application/json' } }
           );
         }
 
@@ -278,7 +306,7 @@ Return structured data with confidence scores for every field.`;
               error: 'AI credits depleted. Please add credits to continue using AI analysis.',
               code: 'CREDITS_DEPLETED'
             }),
-            { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { status: 402, headers: { ...headers, 'Content-Type': 'application/json' } }
           );
         }
 
@@ -312,7 +340,7 @@ Return structured data with confidence scores for every field.`;
           JSON.stringify(analysisResult),
           { 
             status: 200, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            headers: { ...headers, 'Content-Type': 'application/json' } 
           }
         );
 
@@ -324,7 +352,7 @@ Return structured data with confidence scores for every field.`;
               error: 'Analysis timed out after 30 seconds. Please try with a clearer image.',
               code: 'TIMEOUT'
             }),
-            { status: 408, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { status: 408, headers: { ...headers, 'Content-Type': 'application/json' } }
           );
         }
         
@@ -339,13 +367,15 @@ Return structured data with confidence scores for every field.`;
 
   } catch (error) {
     console.error('analyze-poker-hand error:', error instanceof Error ? error.message : 'Unknown error');
+    const origin = req.headers.get('origin');
+    const headers = corsHeaders(origin);
 
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Analysis failed. Please try again.',
         code: 'ANALYSIS_ERROR'
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
     );
   }
 });
