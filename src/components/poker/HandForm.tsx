@@ -99,6 +99,9 @@ const HandForm: React.FC<HandFormProps> = ({
                 onImageChange={handleImageChange}
               />
 
+              {/* AI Hand Analyzer */}
+              <AIHandAnalyzerBanner onClick={() => setShowAIAnalyzer(true)} />
+
               {/* Game Type Selection */}
               <GameTypeSection 
                 control={form.control}
@@ -124,9 +127,6 @@ const HandForm: React.FC<HandFormProps> = ({
               
               {/* Action Type */}
               <ActionSection control={form.control} />
-              
-              {/* AI Hand Analyzer */}
-              <AIHandAnalyzerBanner onClick={() => setShowAIAnalyzer(true)} />
               
               <AIHandAnalyzerDialog
                 open={showAIAnalyzer}
