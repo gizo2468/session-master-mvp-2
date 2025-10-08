@@ -111,7 +111,21 @@ export const useAIHandAnalyzer = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Full error object:', {
+          message: error.message,
+          context: error.context,
+          details: error.details,
+          status: error.status
+        });
+        
+        // Extract error code from response body if available
+        const errorData = error.context?.body;
+        if (errorData?.code) {
+          throw { code: errorData.code, message: errorData.error || error.message };
+        }
+        throw error;
+      }
 
       const result = data as AIHandAnalysisResult;
 
