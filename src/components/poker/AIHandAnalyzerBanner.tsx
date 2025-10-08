@@ -20,7 +20,7 @@ const AIHandAnalyzerBanner: React.FC<AIHandAnalyzerBannerProps> = ({ onClick }) 
         className="w-full h-14 bg-gradient-to-r from-poker-gold/10 to-poker-gold/5 border-2 border-poker-gold/30 hover:bg-poker-gold/20 hover:border-poker-gold/50 transition-all shadow-sm hover:shadow-md"
       >
         <span className="text-sm font-semibold text-poker-gold">
-          Analyze Hand with AI (Premium)
+          Add Your Hand with AI
         </span>
       </Button>
     </div>
