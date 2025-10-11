@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,6 @@ import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useSessionLiveState } from '@/hooks/useSessionLiveState';
 import { useToast } from '@/hooks/use-toast';
 import { BBStackUpdateService } from '@/services/bbStackUpdateService';
-import { useBBStackHistory } from '@/hooks/useBBStackHistory';
 
 interface BBStackUpdateModalProps {
   isOpen: boolean;
@@ -64,78 +63,69 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   // Remove session-level format check - we'll check per table instead
   const currencySymbol = getCurrencySymbol(currency);
 
-  // Initialize state when modal opens or tables change
+  // Initialize state when modal opens - instant load with saved/default values
   useEffect(() => {
-    const loadHighestLevels = async () => {
-      if (isOpen && tables.length > 0) {
-        const levels: Record<string, number> = {};
+    if (isOpen && tables.length > 0) {
+      // Initialize immediately with saved data or defaults (instant UI)
+      const initialData = tables.map(table => {
+        const isCashTable = table.format === 'Cash';
+        const savedData = liveState.bbStackUpdates?.[table.id];
         
-        // Fetch all highest levels in parallel for better performance
-        const tournamentTables = tables.filter(table => table.format !== 'Cash');
-        const levelPromises = tournamentTables.map(table => 
-          BBStackUpdateService.getHighestLevel(table.id)
-        );
-        
-        const levelResults = await Promise.all(levelPromises);
-        
-        tournamentTables.forEach((table, index) => {
-          levels[table.id] = levelResults[index];
-        });
-        
-        setHighestLevels(levels);
-        
-        setUpdateData(
-          tables.map(table => {
-            const isCashTable = table.format === 'Cash';
-            const savedData = liveState.bbStackUpdates?.[table.id];
-            
-            if (isCashTable) {
-              // For cash games, use saved data or fall back to table defaults
-              const smallBlindValue = savedData?.smallBlind ?? table.smallBlind ?? 1;
-              const bigBlindValue = savedData?.bigBlind ?? table.bigBlind ?? (smallBlindValue * 2);
-              
-              return {
-                tableId: table.id,
-                level: 1, // Not used for cash games
-                stack: '', // Not used for cash games  
-                bb: '', // Not used for cash games
-                smallBlind: smallBlindValue,
-                bigBlind: bigBlindValue
-              };
-            } else {
-              // For tournaments, check if we're editing a specific level
-              if (editingLevel) {
-                return {
-                  tableId: table.id,
-                  level: editingLevel,
-                  stack: initialStack?.toString() ?? '',
-                  bb: initialBB?.toString() ?? '',
-                  smallBlind: 0, // Not used for tournaments
-                  bigBlind: 0 // Not used for tournaments
-                };
-              } else {
-                // Use highest level + 1 as default, or 1 if no history
-                const highestLevel = levels[table.id] || 0;
-                const defaultLevel = highestLevel > 0 ? highestLevel : 1;
-                
-                return {
-                  tableId: table.id,
-                  level: savedData?.level ?? defaultLevel,
-                  stack: savedData?.stack ?? table.currentStack?.toString() ?? '',
-                  bb: savedData?.bb ?? table.startingBB?.toString() ?? '',
-                  smallBlind: 0, // Not used for tournaments
-                  bigBlind: 0 // Not used for tournaments
-                };
-              }
-            }
-          })
-        );
-      }
-    };
-
-    if (isOpen) {
-      loadHighestLevels();
+        if (isCashTable) {
+          const smallBlindValue = savedData?.smallBlind ?? table.smallBlind ?? 1;
+          const bigBlindValue = savedData?.bigBlind ?? table.bigBlind ?? (smallBlindValue * 2);
+          
+          return {
+            tableId: table.id,
+            level: 1,
+            stack: '',
+            bb: '',
+            smallBlind: smallBlindValue,
+            bigBlind: bigBlindValue
+          };
+        } else {
+          // For tournaments, use editing level or saved level or default to 1
+          const defaultLevel = editingLevel || savedData?.level || 1;
+          
+          return {
+            tableId: table.id,
+            level: defaultLevel,
+            stack: editingLevel ? (initialStack?.toString() ?? '') : (savedData?.stack ?? table.currentStack?.toString() ?? ''),
+            bb: editingLevel ? (initialBB?.toString() ?? '') : (savedData?.bb ?? table.startingBB?.toString() ?? ''),
+            smallBlind: 0,
+            bigBlind: 0
+          };
+        }
+      });
+      
+      setUpdateData(initialData);
       setValidationError('');
+      
+      // Fetch highest levels in background (batch)
+      const tournamentTableIds = tables.filter(t => t.format !== 'Cash').map(t => t.id);
+      if (tournamentTableIds.length > 0 && !editingLevel) {
+        BBStackUpdateService.getHighestLevelsBatch(tournamentTableIds).then(levels => {
+          if (!isOpen) return; // Guard against unmounted state update
+          
+          setHighestLevels(levels);
+          
+          // Only adjust levels for tables that don't have explicit saved/editing levels
+          setUpdateData(prev => prev.map(data => {
+            const table = tables.find(t => t.id === data.tableId);
+            if (!table || table.format === 'Cash') return data;
+            
+            const savedData = liveState.bbStackUpdates?.[data.tableId];
+            const highestLevel = levels[data.tableId] || 0;
+            
+            // Don't adjust if editing a specific level or if saved level exists
+            if (editingLevel || savedData?.level) return data;
+            
+            // Adjust to highest level if current is default
+            const adjustedLevel = highestLevel > 0 ? highestLevel : 1;
+            return data.level === 1 ? { ...data, level: adjustedLevel } : data;
+          }));
+        });
+      }
     }
   }, [isOpen, tables, liveState.bbStackUpdates, editingLevel, initialBB, initialStack]);
 
@@ -213,7 +203,19 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
 
   const handleSave = async () => {
     try {
-      // Validate per table based on its format
+      const tournamentTableIds = updateData
+        .filter(data => {
+          const table = tables.find(t => t.id === data.tableId);
+          return table && table.format !== 'Cash';
+        })
+        .map(data => data.tableId);
+
+      // Fetch all histories in batch (single query)
+      const historiesMap = tournamentTableIds.length > 0
+        ? await BBStackUpdateService.getBBStackHistoriesBatch(tournamentTableIds)
+        : {};
+
+      // Validate all tables
       for (const data of updateData) {
         const table = tables.find(t => t.id === data.tableId);
         if (!table) continue;
@@ -221,14 +223,12 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
         const isCashTable = table.format === 'Cash';
         
         if (isCashTable) {
-          // Validation for cash games
           if (data.smallBlind <= 0 || data.bigBlind <= 0) {
             setValidationError('Cash game blinds cannot be 0 or empty');
             setTimeout(() => setValidationError(''), 3000);
             return;
           }
         } else {
-          // For tournaments, validate numeric fields
           if (data.stack !== '' && !/^\d+$/.test(data.stack) ||
               data.bb !== '' && !/^\d+$/.test(data.bb)) {
             setValidationError('Tournament fields must contain only numbers');
@@ -236,14 +236,13 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
             return;
           }
 
-          // Check for identical duplicates on the same level
-          const history = await BBStackUpdateService.getBBStackHistory(data.tableId);
+          // Use pre-fetched history for duplicate detection
+          const history = historiesMap[data.tableId] || [];
           const lastEntryForLevel = history
             .filter(h => h.level === data.level)
             .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())[0];
           
           if (lastEntryForLevel) {
-            // Get inherited values if current inputs are empty
             const inheritedHistory = history
               .filter(h => h.level !== null && h.level < data.level)
               .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())[0];
@@ -253,7 +252,6 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
             const lastStack = lastEntryForLevel.stack?.toString() || '';
             const lastBB = lastEntryForLevel.bb?.toString() || '';
             
-            // Only compare if both have values (ignore empty comparisons)
             const hasCurrentValues = currentStack !== '' || currentBB !== '';
             const hasLastValues = lastStack !== '' || lastBB !== '';
             
@@ -266,23 +264,22 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
         }
       }
       
-      // Save to database first
-      for (const data of updateData) {
+      // Build bulk insert rows
+      const bulkUpdates = updateData.map(data => {
         const table = tables.find(t => t.id === data.tableId);
-        if (!table) continue;
+        if (!table) return null;
         
         const isCashTable = table.format === 'Cash';
         
         if (isCashTable) {
-          await BBStackUpdateService.saveBBStackUpdate({
+          return {
             sessionId,
             tableId: data.tableId,
             smallBlind: data.smallBlind,
             bigBlind: data.bigBlind
-          });
+          };
         } else {
-          // Get the latest values for inheritance if empty
-          const history = await BBStackUpdateService.getBBStackHistory(data.tableId);
+          const history = historiesMap[data.tableId] || [];
           const latestEntry = history
             .filter(h => h.level !== null)
             .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())[0];
@@ -290,17 +287,28 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
           const inheritedStack = data.stack || latestEntry?.stack?.toString() || '';
           const inheritedBB = data.bb || latestEntry?.bb?.toString() || '';
           
-          await BBStackUpdateService.saveBBStackUpdate({
+          return {
             sessionId,
             tableId: data.tableId,
             level: data.level,
             stack: inheritedStack,
             bb: inheritedBB
-          });
+          };
         }
-      }
+      }).filter(Boolean) as Array<{
+        sessionId: string;
+        tableId: string;
+        level?: number;
+        stack?: string;
+        bb?: string;
+        smallBlind?: number;
+        bigBlind?: number;
+      }>;
+
+      // Save all in one bulk insert
+      await BBStackUpdateService.saveBBStackUpdatesBulk(bulkUpdates);
       
-      // Save the data to live state
+      // Update live state
       const bbStackUpdates = { ...liveState.bbStackUpdates };
       
       updateData.forEach(data => {
@@ -332,7 +340,6 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       
       console.log('BB/Stack Update Data saved to database and live state');
       
-      // Call refresh callback if provided
       if (onDataSaved) {
         onDataSaved();
       }
@@ -354,8 +361,42 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     onClose();
   };
 
-  // Generate level options (Lvl 1 through Lvl 50)
-  const levelOptions = Array.from({ length: 50 }, (_, i) => i + 1);
+  // Memoize level options (constant)
+  const levelOptions = useMemo(() => Array.from({ length: 50 }, (_, i) => i + 1), []);
+
+  // Memoize blind index maps for O(1) slider lookups
+  const smallBlindIndexMap = useMemo(() => {
+    const map = new Map<number, number>();
+    BLIND_PRESETS.smallBlind.forEach((val, idx) => map.set(val, idx));
+    return map;
+  }, []);
+
+  const bigBlindIndexMap = useMemo(() => {
+    const map = new Map<number, number>();
+    BLIND_PRESETS.bigBlind.forEach((val, idx) => map.set(val, idx));
+    return map;
+  }, []);
+
+  // Memoized handlers to prevent re-renders
+  const handleLevelChangeMemo = useCallback((tableId: string, level: string) => {
+    handleLevelChange(tableId, level);
+  }, [highestLevels, editingLevel, validationError]);
+
+  const handleStackChangeMemo = useCallback((tableId: string, stack: string) => {
+    handleStackChange(tableId, stack);
+  }, []);
+
+  const handleBBChangeMemo = useCallback((tableId: string, bb: string) => {
+    handleBBChange(tableId, bb);
+  }, []);
+
+  const handleSmallBlindChangeMemo = useCallback((tableId: string, values: number[]) => {
+    handleSmallBlindChange(tableId, values);
+  }, []);
+
+  const handleBigBlindSliderChangeMemo = useCallback((tableId: string, values: number[]) => {
+    handleBigBlindSliderChange(tableId, values);
+  }, []);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -380,122 +421,24 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
               const isCashTable = table.format === 'Cash';
 
               return (
-                <div key={table.id} className="border rounded-lg p-4 bg-gray-50">
-                  <h4 className="font-medium mb-3">
-                    Table {index + 1}
-                    {table.buyIn && (
-                      <span className="text-sm text-poker-gold ml-2">
-                        ({currencySymbol}{table.buyIn}
-                        {isCashTable ? 
-                          '' : 
-                          table.tournamentTypes && table.tournamentTypes.length > 0 ? 
-                            ` – ${table.tournamentTypes[0]}` : 
-                            ''
-                        })
-                      </span>
-                    )}
-                  </h4>
-                  
-                  {isCashTable ? (
-                    // Cash Game UI - Show sliders for Small Blind and Big Blind
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <Label className="text-xs text-gray-500">Small Blind</Label>
-                            <span className="text-xs font-medium">{currencySymbol}{tableData.smallBlind}</span>
-                          </div>
-                          <Slider
-                            value={[BLIND_PRESETS.smallBlind.findIndex(val => val === tableData.smallBlind)]}
-                            max={BLIND_PRESETS.smallBlind.length - 1}
-                            step={1}
-                            onValueChange={(values) => handleSmallBlindChange(table.id, values)}
-                            className="py-2"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <Label className="text-xs text-gray-500">Big Blind</Label>
-                            <span className="text-xs font-medium">{currencySymbol}{tableData.bigBlind}</span>
-                          </div>
-                          <Slider
-                            value={[BLIND_PRESETS.bigBlind.findIndex(val => val === tableData.bigBlind) !== -1 
-                              ? BLIND_PRESETS.bigBlind.findIndex(val => val === tableData.bigBlind) 
-                              : 0]}
-                            max={BLIND_PRESETS.bigBlind.length - 1}
-                            step={1}
-                            onValueChange={(values) => handleBigBlindSliderChange(table.id, values)}
-                            className="py-2"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    // Tournament UI - Keep existing design
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="text-xs text-gray-500 mb-1 block">
-                          Level
-                          {editingLevel && (
-                            <span className="text-xs text-gray-400 ml-1">
-                              (editing)
-                            </span>
-                          )}
-                          {!editingLevel && highestLevels[table.id] > 0 && (
-                            <span className="text-xs text-gray-400 ml-1">
-                              (min: {highestLevels[table.id]})
-                            </span>
-                          )}
-                        </label>
-                        <Select
-                          value={tableData.level.toString()}
-                          onValueChange={(value) => handleLevelChange(table.id, value)}
-                          disabled={!!editingLevel} // Disable level selection when editing
-                        >
-                          <SelectTrigger className="h-10">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-60">
-                            {levelOptions
-                              .filter(level => {
-                                if (editingLevel) {
-                                  return level === editingLevel; // Only show the editing level
-                                }
-                                return level >= (highestLevels[table.id] || 1);
-                              })
-                              .map(level => (
-                                <SelectItem key={level} value={level.toString()}>
-                                  Lvl {level}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Stack</label>
-                        <Input
-                          type="text"
-                          placeholder="Stack"
-                          value={tableData.stack}
-                          onChange={(e) => handleStackChange(table.id, e.target.value)}
-                          className="h-10"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="text-xs text-gray-500 mb-1 block">BB</label>
-                        <Input
-                          type="text"
-                          placeholder="BB"
-                          value={tableData.bb}
-                          onChange={(e) => handleBBChange(table.id, e.target.value)}
-                          className="h-10"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <TableRow
+                  key={table.id}
+                  table={table}
+                  index={index}
+                  tableData={tableData}
+                  isCashTable={isCashTable}
+                  currencySymbol={currencySymbol}
+                  editingLevel={editingLevel}
+                  highestLevel={highestLevels[table.id]}
+                  levelOptions={levelOptions}
+                  smallBlindIndex={smallBlindIndexMap.get(tableData.smallBlind) ?? 0}
+                  bigBlindIndex={bigBlindIndexMap.get(tableData.bigBlind) ?? 0}
+                  onLevelChange={handleLevelChangeMemo}
+                  onStackChange={handleStackChangeMemo}
+                  onBBChange={handleBBChangeMemo}
+                  onSmallBlindChange={handleSmallBlindChangeMemo}
+                  onBigBlindChange={handleBigBlindSliderChangeMemo}
+                />
               );
             })}
             
@@ -519,5 +462,157 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     </Dialog>
   );
 };
+
+// Memoized TableRow component to prevent unnecessary re-renders
+const TableRow = React.memo<{
+  table: TableData;
+  index: number;
+  tableData: TableUpdateData;
+  isCashTable: boolean;
+  currencySymbol: string;
+  editingLevel?: number;
+  highestLevel?: number;
+  levelOptions: number[];
+  smallBlindIndex: number;
+  bigBlindIndex: number;
+  onLevelChange: (tableId: string, level: string) => void;
+  onStackChange: (tableId: string, stack: string) => void;
+  onBBChange: (tableId: string, bb: string) => void;
+  onSmallBlindChange: (tableId: string, values: number[]) => void;
+  onBigBlindChange: (tableId: string, values: number[]) => void;
+}>(({
+  table,
+  index,
+  tableData,
+  isCashTable,
+  currencySymbol,
+  editingLevel,
+  highestLevel,
+  levelOptions,
+  smallBlindIndex,
+  bigBlindIndex,
+  onLevelChange,
+  onStackChange,
+  onBBChange,
+  onSmallBlindChange,
+  onBigBlindChange
+}) => {
+  return (
+    <div className="border rounded-lg p-4 bg-gray-50">
+      <h4 className="font-medium mb-3">
+        Table {index + 1}
+        {table.buyIn && (
+          <span className="text-sm text-poker-gold ml-2">
+            ({currencySymbol}{table.buyIn}
+            {isCashTable ? 
+              '' : 
+              table.tournamentTypes && table.tournamentTypes.length > 0 ? 
+                ` – ${table.tournamentTypes[0]}` : 
+                ''
+            })
+          </span>
+        )}
+      </h4>
+      
+      {isCashTable ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <Label className="text-xs text-gray-500">Small Blind</Label>
+                <span className="text-xs font-medium">{currencySymbol}{tableData.smallBlind}</span>
+              </div>
+              <Slider
+                value={[smallBlindIndex]}
+                max={BLIND_PRESETS.smallBlind.length - 1}
+                step={1}
+                onValueChange={(values) => onSmallBlindChange(table.id, values)}
+                className="py-2"
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <Label className="text-xs text-gray-500">Big Blind</Label>
+                <span className="text-xs font-medium">{currencySymbol}{tableData.bigBlind}</span>
+              </div>
+              <Slider
+                value={[bigBlindIndex]}
+                max={BLIND_PRESETS.bigBlind.length - 1}
+                step={1}
+                onValueChange={(values) => onBigBlindChange(table.id, values)}
+                className="py-2"
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">
+              Level
+              {editingLevel && (
+                <span className="text-xs text-gray-400 ml-1">
+                  (editing)
+                </span>
+              )}
+              {!editingLevel && highestLevel && highestLevel > 0 && (
+                <span className="text-xs text-gray-400 ml-1">
+                  (min: {highestLevel})
+                </span>
+              )}
+            </label>
+            <Select
+              value={tableData.level.toString()}
+              onValueChange={(value) => onLevelChange(table.id, value)}
+              disabled={!!editingLevel}
+            >
+              <SelectTrigger className="h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {levelOptions
+                  .filter(level => {
+                    if (editingLevel) {
+                      return level === editingLevel;
+                    }
+                    return level >= (highestLevel || 1);
+                  })
+                  .map(level => (
+                    <SelectItem key={level} value={level.toString()}>
+                      Lvl {level}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Stack</label>
+            <Input
+              type="text"
+              placeholder="Stack"
+              value={tableData.stack}
+              onChange={(e) => onStackChange(table.id, e.target.value)}
+              className="h-10"
+            />
+          </div>
+          
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">BB</label>
+            <Input
+              type="text"
+              placeholder="BB"
+              value={tableData.bb}
+              onChange={(e) => onBBChange(table.id, e.target.value)}
+              className="h-10"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+TableRow.displayName = 'TableRow';
 
 export default BBStackUpdateModal;

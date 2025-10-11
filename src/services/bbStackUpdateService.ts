@@ -189,6 +189,160 @@ export class BBStackUpdateService {
     }
   }
 
+  static async getHighestLevelsBatch(tableIds: string[]): Promise<Record<string, number>> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      if (tableIds.length === 0) return {};
+
+      const { data, error } = await supabase
+        .from('table_bb_stack_updates')
+        .select('table_id, level')
+        .eq('user_id', user.id)
+        .in('table_id', tableIds)
+        .not('level', 'is', null)
+        .order('table_id', { ascending: true })
+        .order('level', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching highest levels batch:', error);
+        throw error;
+      }
+
+      if (!data) return {};
+
+      // Build a map keeping the first (highest) level per table_id
+      const levelsMap: Record<string, number> = {};
+      data.forEach(row => {
+        if (!levelsMap[row.table_id] && row.level !== null) {
+          levelsMap[row.table_id] = row.level;
+        }
+      });
+
+      return levelsMap;
+    } catch (error) {
+      console.error('BBStackUpdateService.getHighestLevelsBatch error:', error);
+      return {};
+    }
+  }
+
+  static async getBBStackHistoriesBatch(tableIds: string[]): Promise<Record<string, BBStackUpdate[]>> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      if (tableIds.length === 0) return {};
+
+      const { data, error } = await supabase
+        .from('table_bb_stack_updates')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('table_id', tableIds)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching BB/Stack histories batch:', error);
+        throw error;
+      }
+
+      if (!data) return {};
+
+      // Group by table_id and process each group
+      const historiesMap: Record<string, BBStackUpdate[]> = {};
+      
+      tableIds.forEach(tableId => {
+        const tableData = data.filter(row => row.table_id === tableId);
+        const processedData: BBStackUpdate[] = [];
+
+        tableData.forEach(update => {
+          // If it's a cash game (has small_blind/big_blind), keep all entries
+          if (update.small_blind !== null && update.big_blind !== null) {
+            processedData.push(update);
+          } 
+          // If it's a tournament (has level), check for duplicates
+          else if (update.level !== null) {
+            const existingEntry = processedData.find(existing => 
+              existing.level === update.level &&
+              existing.bb === update.bb &&
+              existing.stack === update.stack
+            );
+            
+            if (!existingEntry) {
+              processedData.push(update);
+            } else {
+              // Keep the more recent one
+              const updateTime = new Date(update.created_at!).getTime();
+              const existingTime = new Date(existingEntry.created_at!).getTime();
+              
+              if (updateTime > existingTime) {
+                const index = processedData.indexOf(existingEntry);
+                processedData[index] = update;
+              }
+            }
+          }
+        });
+
+        historiesMap[tableId] = processedData;
+      });
+
+      return historiesMap;
+    } catch (error) {
+      console.error('BBStackUpdateService.getBBStackHistoriesBatch error:', error);
+      return {};
+    }
+  }
+
+  static async saveBBStackUpdatesBulk(updates: Array<{
+    sessionId: string;
+    tableId: string;
+    level?: number;
+    stack?: string;
+    bb?: string;
+    smallBlind?: number;
+    bigBlind?: number;
+  }>): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      if (updates.length === 0) return;
+
+      const rows = updates.map(update => {
+        const row: any = {
+          user_id: user.id,
+          session_id: update.sessionId,
+          table_id: update.tableId,
+        };
+
+        // Add tournament fields if provided
+        if (update.level !== undefined) row.level = update.level;
+        if (update.stack && update.stack !== '') row.stack = parseInt(update.stack);
+        if (update.bb && update.bb !== '') row.bb = parseInt(update.bb);
+
+        // Add cash game fields if provided
+        if (update.smallBlind !== undefined) row.small_blind = update.smallBlind;
+        if (update.bigBlind !== undefined) row.big_blind = update.bigBlind;
+
+        return row;
+      });
+
+      const { error } = await supabase
+        .from('table_bb_stack_updates')
+        .insert(rows);
+
+      if (error) {
+        console.error('Error saving BB/Stack updates bulk:', error);
+        throw error;
+      }
+
+      console.log('BB/Stack updates saved successfully in bulk:', rows.length, 'rows');
+    } catch (error) {
+      console.error('BBStackUpdateService.saveBBStackUpdatesBulk error:', error);
+      throw error;
+    }
+  }
+
   static formatHistoryLine(update: BBStackUpdate, isLastUpdate: boolean = false): string {
     // For cash games - check for null values properly
     if (update.small_blind !== null && update.small_blind !== undefined && 
