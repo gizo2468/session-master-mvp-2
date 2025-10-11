@@ -70,11 +70,17 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       if (isOpen && tables.length > 0) {
         const levels: Record<string, number> = {};
         
-        for (const table of tables) {
-          if (table.format !== 'Cash') {
-            levels[table.id] = await BBStackUpdateService.getHighestLevel(table.id);
-          }
-        }
+        // Fetch all highest levels in parallel for better performance
+        const tournamentTables = tables.filter(table => table.format !== 'Cash');
+        const levelPromises = tournamentTables.map(table => 
+          BBStackUpdateService.getHighestLevel(table.id)
+        );
+        
+        const levelResults = await Promise.all(levelPromises);
+        
+        tournamentTables.forEach((table, index) => {
+          levels[table.id] = levelResults[index];
+        });
         
         setHighestLevels(levels);
         
