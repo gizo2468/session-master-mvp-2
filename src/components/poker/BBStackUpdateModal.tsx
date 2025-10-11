@@ -378,7 +378,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
                   <h4 className="font-medium mb-3">
                     Table {index + 1}
                     {table.buyIn && (
-                      <span className="text-sm text-gray-500 ml-2">
+                      <span className="text-sm text-poker-gold ml-2">
                         ({currencySymbol}{table.buyIn}
                         {isCashTable ? 
                           '' : 
