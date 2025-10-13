@@ -318,16 +318,56 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                   </AlertDescription>
                 </Alert>
 
-                <div className="space-y-3 text-sm">
+                <div className="space-y-4 text-sm">
+                  {/* Game Overview */}
+                  <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                    <h4 className="font-semibold text-base">Game Overview</h4>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-muted-foreground">Players in Hand:</span>
+                        <span className="ml-2 font-medium">
+                          {state.analysis.metadata.playerCount || (1 + (state.analysis.villains?.length || 0))}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Game Type:</span>
+                        <span className="ml-2 font-medium">{state.analysis.gameContext.gameType}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Format:</span>
+                        <span className="ml-2 font-medium capitalize">{state.analysis.gameContext.format}</span>
+                      </div>
+                      {state.analysis.gameContext.blindLevel && (
+                        <div>
+                          <span className="text-muted-foreground">Blinds:</span>
+                          <span className="ml-2 font-medium">
+                            {state.analysis.gameContext.blindLevel.sb}/{state.analysis.gameContext.blindLevel.bb}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Hero */}
                   <div>
-                    <h4 className="font-semibold mb-1">Hero ({state.analysis.hero.position})</h4>
+                    <h4 className="font-semibold mb-1">
+                      Hero {state.analysis.hero.position !== 'UNKNOWN' && `(${state.analysis.hero.position})`}
+                    </h4>
                     <p className="text-muted-foreground">
                       {state.analysis.hero.cards === 'hidden' ? 
                         'Cards not visible' : 
                         Array.isArray(state.analysis.hero.cards) ?
-                          state.analysis.hero.cards.map(c => `${c.rank}${c.suit}`).join(' ') :
-                          'Unknown'
+                          state.analysis.hero.cards
+                            .filter(c => c?.rank && c?.suit)
+                            .map(c => `${c.rank}${c.suit}`)
+                            .join(' ') || 'Cards not detected' :
+                          'Cards not detected'
                       }
+                      {state.analysis.hero.stack && (
+                        <span className="ml-2 text-xs">
+                          (Stack: {state.analysis.hero.stack} {state.analysis.hero.stackUnit || 'chips'})
+                        </span>
+                      )}
                       {state.analysis.hero.confidence < 0.8 && (
                         <span className="text-xs text-yellow-600 ml-2">
                           (Confidence: {Math.round(state.analysis.hero.confidence * 100)}%)
@@ -336,27 +376,87 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                     </p>
                   </div>
 
-                  {state.analysis.board.flop && (
+                  {/* Board Cards */}
+                  {state.analysis.board.flop && Array.isArray(state.analysis.board.flop) && state.analysis.board.flop.length > 0 && (
                     <div>
                       <h4 className="font-semibold mb-1">Board</h4>
-                      <p className="text-muted-foreground">
-                        Flop: {state.analysis.board.flop.map(c => `${c.rank}${c.suit}`).join(' ')}
-                        {state.analysis.board.turn && ` | Turn: ${state.analysis.board.turn.rank}${state.analysis.board.turn.suit}`}
-                        {state.analysis.board.river && ` | River: ${state.analysis.board.river.rank}${state.analysis.board.river.suit}`}
-                      </p>
+                      <div className="text-muted-foreground space-y-1">
+                        <div>
+                          <span className="font-medium">Flop:</span> {
+                            state.analysis.board.flop
+                              .filter(c => c?.rank && c?.suit)
+                              .map(c => `${c.rank}${c.suit}`)
+                              .join(' ') || 'Not detected'
+                          }
+                        </div>
+                        {state.analysis.board.turn?.rank && state.analysis.board.turn?.suit && (
+                          <div>
+                            <span className="font-medium">Turn:</span> {state.analysis.board.turn.rank}{state.analysis.board.turn.suit}
+                          </div>
+                        )}
+                        {state.analysis.board.river?.rank && state.analysis.board.river?.suit && (
+                          <div>
+                            <span className="font-medium">River:</span> {state.analysis.board.river.rank}{state.analysis.board.river.suit}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
+                  {/* Action Sequences */}
+                  {state.analysis.actions && state.analysis.actions.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Action Sequence</h4>
+                      <div className="space-y-3">
+                        {state.analysis.actions.map((streetAction, idx) => (
+                          <div key={idx} className="border-l-2 border-poker-gold/30 pl-3">
+                            <h5 className="font-medium text-xs uppercase text-poker-gold mb-1">
+                              {streetAction.street}
+                            </h5>
+                            {streetAction.sequence && Array.isArray(streetAction.sequence) && streetAction.sequence.length > 0 ? (
+                              <ul className="space-y-1 text-xs">
+                                {streetAction.sequence.map((action, actionIdx) => (
+                                  <li key={actionIdx} className="text-muted-foreground">
+                                    <span className="font-medium text-foreground">{action.player}:</span>{' '}
+                                    <span className="capitalize">{action.action}</span>
+                                    {action.amount && ` (${action.amount})`}
+                                    {action.confidence < 0.7 && (
+                                      <span className="text-yellow-600 ml-1">(?)</span>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-xs text-muted-foreground italic">
+                                {streetAction.description || 'No detailed actions detected'}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Result */}
                   {state.analysis.result.summary && (
                     <div>
                       <h4 className="font-semibold mb-1">Result</h4>
                       <p className="text-muted-foreground">
                         {state.analysis.result.summary}
+                        {state.analysis.result.amount && state.analysis.result.outcome !== 'unknown' && (
+                          <span className={cn(
+                            "ml-2 font-medium",
+                            state.analysis.result.outcome === 'win' ? "text-green-600" : "text-red-600"
+                          )}>
+                            ({state.analysis.result.outcome === 'win' ? '+' : '-'}{state.analysis.result.amount})
+                          </span>
+                        )}
                       </p>
                     </div>
                   )}
 
-                  {state.analysis.metadata.warnings.length > 0 && (
+                  {/* Warnings */}
+                  {state.analysis.metadata.warnings && state.analysis.metadata.warnings.length > 0 && (
                     <Alert variant="destructive">
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>

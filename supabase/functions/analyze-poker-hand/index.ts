@@ -121,6 +121,12 @@ CRITICAL RULES:
 5. Units: Return all amounts in chips. Only convert to BB if blind level is clearly visible and confident.
 6. Format Detection: Mark as "tournament" only if clear indicators (prize pool, tournament name). Otherwise "cash" or "unknown".
 7. Position Detection: Use dealer button to determine positions clockwise: BTN → SB → BB → UTG → MP → CO. Mark as "UNKNOWN" if uncertain.
+8. Player Count: COUNT ALL VISIBLE PLAYERS at the table (hero + villains). This is critical information.
+9. Action Sequences: For each street (preflop, flop, turn, river), extract ALL player actions in CHRONOLOGICAL order. Include:
+   - Player position or seat
+   - Action type: fold, check, call, bet, raise, all-in
+   - Bet/raise amounts when visible
+   - Mark unclear amounts as null but still record the action type
 
 Return structured data with confidence scores for every field.`;
 
@@ -216,8 +222,21 @@ Return structured data with confidence scores for every field.`;
                 properties: {
                   street: { type: "string", enum: ["preflop", "flop", "turn", "river"] },
                   description: { type: "string" },
-                  actions: { type: "array" }
-                }
+                  sequence: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        player: { type: "string" },
+                        action: { type: "string", enum: ["fold", "check", "call", "bet", "raise", "all-in"] },
+                        amount: { type: "number", nullable: true },
+                        confidence: { type: "number" }
+                      },
+                      required: ["player", "action", "confidence"]
+                    }
+                  }
+                },
+                required: ["street", "description", "sequence"]
               }
             },
             pot: {
@@ -241,9 +260,11 @@ Return structured data with confidence scores for every field.`;
             metadata: {
               type: "object",
               properties: {
+                playerCount: { type: "number", minimum: 2, maximum: 10 },
                 heroOverrideAvailable: { type: "boolean" },
                 warnings: { type: "array", items: { type: "string" } }
-              }
+              },
+              required: ["playerCount", "warnings"]
             }
           },
           required: ["gameContext", "hero", "dealerButton", "board", "actions", "result", "metadata"]

@@ -244,9 +244,9 @@ export interface AIBoardDetection {
 export interface AIActionDetection {
   street: 'preflop' | 'flop' | 'turn' | 'river';
   description: string;
-  actions: Array<{
+  sequence: Array<{
     player: string;
-    action: string;
+    action: 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in';
     amount?: number;
     confidence: number;
   }>;
@@ -275,6 +275,7 @@ export interface AIHandAnalysisResult {
     confidence: number;
   };
   metadata: {
+    playerCount: number;
     heroOverrideAvailable: boolean;
     warnings: string[];
     processingTimeMs: number;
