@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 const SupportSettings: React.FC = () => {
+  const navigate = useNavigate();
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showCookieModal, setShowCookieModal] = useState(false);
@@ -110,6 +112,16 @@ const SupportSettings: React.FC = () => {
               <div className="flex items-center">
                 <Icon name="Cookie" className="mr-3 text-gray-500 h-4 w-4" />
                 <span>Cookie Policy</span>
+              </div>
+              <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
+            </div>
+            <div className="flex items-center justify-between border-b pb-3" 
+                 onClick={() => navigate('/help')}
+                 role="button"
+                 aria-label="View help">
+              <div className="flex items-center">
+                <Icon name="HelpCircle" className="mr-3 text-gray-500 h-4 w-4" />
+                <span>Help</span>
               </div>
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
             </div>

@@ -17,6 +17,7 @@ import EditSession from "./pages/EditSession";
 import Settings from "./pages/Settings";
 import Dashboard from "./pages/Dashboard";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import Help from "./pages/legal/Help";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -63,6 +64,7 @@ const App = () => (
                 <Route path="/coach/:coachId" element={<CoachProfile />} />
                 <Route path="/focus-mode" element={<FocusModePage />} />
                 <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+                <Route path="/help" element={<Help />} />
                 <Route path="/auth/login" element={<Login />} />
                 <Route path="/auth/signup" element={<Signup />} />
                 <Route path="/auth/forgot-password" element={<ForgotPassword />} />
