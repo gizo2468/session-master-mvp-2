@@ -62,11 +62,14 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   const [isLoadingTables, setIsLoadingTables] = useState(false);
   const { liveState, updateLiveState } = useSessionLiveState(sessionId);
   const { toast } = useToast();
+  const hasFetchedRef = React.useRef(false);
 
   // Fetch active tables when modal opens - prefer RPC, fallback to direct select
   useEffect(() => {
     const fetchTables = async () => {
-      if (!isOpen || !sessionId || isLoadingTables) return;
+      if (!isOpen || !sessionId) return;
+      if (hasFetchedRef.current) return; // Avoid duplicate fetches while open
+      hasFetchedRef.current = true;
       console.log('🔍 BBStackUpdateModal: Fetching active tables for session:', sessionId);
       setIsLoadingTables(true);
 
@@ -140,7 +143,11 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     };
 
     fetchTables();
-  }, [isOpen, sessionId, toast, isLoadingTables]);
+    return () => {
+      // Reset when modal closes so it can refetch next time
+      if (!isOpen) hasFetchedRef.current = false;
+    };
+  }, [isOpen, sessionId, toast]);
 
   // Use loaded tables if available, otherwise use prop
   const activeTables = loadedTables.length > 0 ? loadedTables : tables;
