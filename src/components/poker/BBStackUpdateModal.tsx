@@ -75,7 +75,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
             .from('session_tables')
             .select('*')
             .eq('session_id', sessionId)
-            .eq('is_active', true);
+            .is('end_time', null)
 
           if (error) throw error;
 
@@ -102,6 +102,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
               cashOut: table.cashout || 0,
               hands: []
             }));
+            console.log('✅ BBStackUpdateModal: Converted tables:', convertedTables.map(t => ({ id: t.id, format: t.format, isActive: t.isActive })));
             setLoadedTables(convertedTables);
           } else {
             console.warn('⚠️ BBStackUpdateModal: No active tables found in database');
@@ -133,6 +134,22 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     activeTables: activeTables.length,
     isLoadingTables
   });
+
+  // Safety net: if modal is open and we have tables but no updateData yet, initialize once
+  useEffect(() => {
+    if (isOpen && activeTables.length > 0 && updateData.length === 0) {
+      const initialData = activeTables.map(table => {
+        const isCashTable = table.format === 'Cash';
+        if (isCashTable) {
+          const smallBlindValue = table.smallBlind ?? 1;
+          const bigBlindValue = table.bigBlind ?? (smallBlindValue * 2);
+          return { tableId: table.id, level: 1, stack: '', bb: '', smallBlind: smallBlindValue, bigBlind: bigBlindValue };
+        }
+        return { tableId: table.id, level: editingLevel || 1, stack: '', bb: '', smallBlind: 0, bigBlind: 0 };
+      });
+      setUpdateData(initialData);
+    }
+  }, [isOpen, activeTables, updateData.length, editingLevel]);
 
   // Initialize state when modal opens - instant load with saved/default values
   useEffect(() => {
@@ -183,7 +200,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
           
           // Only adjust levels for tables that don't have explicit saved/editing levels
           setUpdateData(prev => prev.map(data => {
-            const table = tables.find(t => t.id === data.tableId);
+            const table = activeTables.find(t => t.id === data.tableId);
             if (!table || table.format === 'Cash') return data;
             
             const savedData = liveState.bbStackUpdates?.[data.tableId];
@@ -289,7 +306,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
 
       // Validate all tables
       for (const data of updateData) {
-        const table = tables.find(t => t.id === data.tableId);
+        const table = activeTables.find(t => t.id === data.tableId);
         if (!table) continue;
         
         const isCashTable = table.format === 'Cash';
@@ -338,7 +355,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       
       // Build bulk insert rows
       const bulkUpdates = updateData.map(data => {
-        const table = tables.find(t => t.id === data.tableId);
+        const table = activeTables.find(t => t.id === data.tableId);
         if (!table) return null;
         
         const isCashTable = table.format === 'Cash';
@@ -384,7 +401,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       const bbStackUpdates = { ...liveState.bbStackUpdates };
       
       updateData.forEach(data => {
-        const table = tables.find(t => t.id === data.tableId);
+        const table = activeTables.find(t => t.id === data.tableId);
         if (!table) return;
         
         const isCashTable = table.format === 'Cash';
