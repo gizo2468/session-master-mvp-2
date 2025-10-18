@@ -60,6 +60,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   const [validationError, setValidationError] = useState<string>('');
   const [loadedTables, setLoadedTables] = useState<TableData[]>([]);
   const [isLoadingTables, setIsLoadingTables] = useState(false);
+  const [latestByTable, setLatestByTable] = useState<Record<string, { level?: number; bb?: number; smallBlind?: number; bigBlind?: number }>>({});
   const { liveState, updateLiveState } = useSessionLiveState(sessionId);
   const { toast } = useToast();
   const hasFetchedRef = React.useRef(false);
@@ -153,6 +154,30 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   const activeTables = loadedTables.length > 0 ? loadedTables : tables;
   const currencySymbol = getCurrencySymbol(currency);
 
+  // Fetch latest BB/Stack per table for this session (for prefill)
+  useEffect(() => {
+    const run = async () => {
+      if (!isOpen || activeTables.length === 0) return;
+      try {
+        const latestMap = await BBStackUpdateService.getLatestBBStackForSharedSession(sessionId);
+        const simple: Record<string, { level?: number; bb?: number; smallBlind?: number; bigBlind?: number }> = {};
+        latestMap.forEach((u, tableId) => {
+          simple[tableId] = {
+            level: u.level ?? undefined,
+            bb: u.bb ?? undefined,
+            smallBlind: u.small_blind ?? undefined,
+            bigBlind: u.big_blind ?? undefined,
+          };
+        });
+        setLatestByTable(simple);
+      } catch (e) {
+        console.warn('BBStackUpdateModal: No latest updates available yet');
+      }
+    };
+    run();
+  }, [isOpen, sessionId, activeTables.length]);
+
+
   console.log('🔍 BBStackUpdateModal render:', {
     isOpen,
     tablesProp: tables.length,
@@ -166,16 +191,19 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     if (isOpen && activeTables.length > 0 && updateData.length === 0) {
       const initialData = activeTables.map(table => {
         const isCashTable = table.format === 'Cash';
+        const latest = latestByTable[table.id] || {};
         if (isCashTable) {
-          const smallBlindValue = table.smallBlind ?? 1;
-          const bigBlindValue = table.bigBlind ?? (smallBlindValue * 2);
+          const smallBlindValue = latest.smallBlind ?? table.smallBlind ?? 1;
+          const bigBlindValue = latest.bigBlind ?? table.bigBlind ?? (smallBlindValue * 2);
           return { tableId: table.id, level: 1, stack: '', bb: '', smallBlind: smallBlindValue, bigBlind: bigBlindValue };
         }
-        return { tableId: table.id, level: editingLevel || 1, stack: '', bb: '', smallBlind: 0, bigBlind: 0 };
+        const defaultLevel = editingLevel || latest.level || 1;
+        const defaultBB = latest.bb ?? table.startingBB;
+        return { tableId: table.id, level: defaultLevel, stack: '', bb: defaultBB ? String(defaultBB) : '', smallBlind: 0, bigBlind: 0 };
       });
       setUpdateData(initialData);
     }
-  }, [isOpen, activeTables, updateData.length, editingLevel]);
+  }, [isOpen, activeTables, updateData.length, editingLevel, latestByTable]);
 
   // Initialize state when modal opens - instant load with saved/default values
   useEffect(() => {
