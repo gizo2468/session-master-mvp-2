@@ -264,7 +264,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               id: table.id,
               session_id: sessionData.id,
               table_name: table.name,
-              game_format: table.format,
+              game_format: table.gameType,
               buy_in: table.buyIn,
               starting_stack: table.startingBB,
               current_stack: table.currentStack,
@@ -277,7 +277,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               end_time: endDateTime.toISOString(),
               is_active: false,
               table_notes: table.notes,
-              table_type: table.gameType,
+              table_type: table.format,
               stakes: `${table.smallBlind}/${table.bigBlind}`,
             }));
 

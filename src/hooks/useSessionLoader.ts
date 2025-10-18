@@ -55,8 +55,8 @@ export const useSessionLoader = (id: string | undefined) => {
           .from('sessions')
           .select(`
             *,
-            session_tables(*),
-            session_hands_new(*)
+            session_tables!session_tables_session_id_fkey(*),
+            session_hands_new!session_hands_new_session_id_fkey(*)
           `)
           .eq('id', id)
           .maybeSingle();

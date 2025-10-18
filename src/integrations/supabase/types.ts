@@ -1082,6 +1082,37 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_active_session_tables: {
+        Args: { p_session_id: string }
+        Returns: {
+          bounty_amount: number
+          buy_in: number
+          cashout: number
+          created_at: string
+          currency: string
+          current_stack: number
+          end_time: string
+          end_time_utc: number
+          final_position: number
+          game_format: string
+          id: string
+          is_active: boolean
+          players_eliminated: number
+          rebuy_amount: number
+          rebuys: number
+          session_id: string
+          stakes: string
+          start_time: string
+          start_time_utc: number
+          starting_stack: number
+          table_name: string
+          table_notes: string
+          table_type: string
+          tournament_type: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_coach_accessible_student_data: {
         Args: { student_user_id: string }
         Returns: {

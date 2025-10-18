@@ -63,24 +63,21 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   const { liveState, updateLiveState } = useSessionLiveState(sessionId);
   const { toast } = useToast();
 
-  // Fallback: fetch tables from database if prop is empty
+  // Fallback: fetch tables from database if prop is empty - use RPC for security and reliability
   useEffect(() => {
     const fetchTables = async () => {
       if (isOpen && tables.length === 0 && sessionId && !isLoadingTables) {
-        console.log('🔍 BBStackUpdateModal: Tables prop is empty, fetching from database...');
+        console.log('🔍 BBStackUpdateModal: Tables prop is empty, fetching via RPC...');
         setIsLoadingTables(true);
         
         try {
           const { data, error } = await supabase
-            .from('session_tables')
-            .select('*')
-            .eq('session_id', sessionId)
-            .is('end_time', null)
+            .rpc('get_active_session_tables', { p_session_id: sessionId });
 
           if (error) throw error;
 
           if (data && data.length > 0) {
-            console.log('✅ BBStackUpdateModal: Fetched tables from database:', data.length);
+            console.log('✅ BBStackUpdateModal: Fetched tables via RPC:', data.length);
             const convertedTables: TableData[] = data.map(table => ({
               id: table.id,
               name: table.table_name || '',
@@ -92,23 +89,23 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
               initialBuyIn: table.buy_in || 0,
               currentStack: table.current_stack || 0,
               startingStack: table.starting_stack || 0,
-              smallBlind: 0,
-              bigBlind: 0,
-              startingBB: 0,
-              isActive: table.is_active || false,
+              smallBlind: table.stakes ? parseFloat(table.stakes.split('/')[0]) : 0,
+              bigBlind: table.stakes ? parseFloat(table.stakes.split('/')[1]) : 0,
+              startingBB: table.starting_stack || 0,
+              isActive: !table.end_time,
               startTime: new Date(table.start_time),
               rebuys: table.rebuys || 0,
               rebuyAmount: table.rebuy_amount || 0,
               cashOut: table.cashout || 0,
               hands: []
             }));
-            console.log('✅ BBStackUpdateModal: Converted tables:', convertedTables.map(t => ({ id: t.id, format: t.format, isActive: t.isActive })));
+            console.log('✅ BBStackUpdateModal: Converted tables:', convertedTables.map(t => ({ id: t.id, name: t.name, format: t.format })));
             setLoadedTables(convertedTables);
           } else {
-            console.warn('⚠️ BBStackUpdateModal: No active tables found in database');
+            console.warn('⚠️ BBStackUpdateModal: No active tables found via RPC');
           }
         } catch (error) {
-          console.error('❌ BBStackUpdateModal: Error fetching tables:', error);
+          console.error('❌ BBStackUpdateModal: Error fetching tables via RPC:', error);
           toast({
             title: "Error Loading Tables",
             description: "Could not load table data. Please try again.",
