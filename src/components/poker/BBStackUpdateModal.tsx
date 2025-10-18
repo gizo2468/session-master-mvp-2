@@ -472,8 +472,8 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
             </div>
           </div>
         ) : (
-          <ScrollArea className="flex-1 max-h-[60vh] pr-4">
-            <div className="space-y-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <ScrollArea className="flex-1 overflow-y-auto pr-4">
+            <div className="space-y-4 pb-2" style={{ WebkitOverflowScrolling: 'touch' }}>
               {activeTables.map((table, index) => {
               const tableData = updateData.find(data => data.tableId === table.id);
               if (!tableData) return null;
