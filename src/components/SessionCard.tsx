@@ -6,7 +6,6 @@ import SessionStatsDisplay from './poker/SessionStatsDisplay';
 import SessionActionButtons from './SessionActionButtons';
 import { useSessionStats } from '@/hooks/useSessionStats';
 import { PokerSession } from '@/types/poker';
-import { calculateSessionProfit } from '@/utils/sessionCalculations';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 
 interface SessionCardProps {
@@ -18,9 +17,9 @@ interface SessionCardProps {
 export default function SessionCard({ session, onClick, showActions = false }: SessionCardProps) {
   const { stats, loading } = useSessionStats(session.id, session);
   
-  // FIXED: Calculate net profit correctly: Payout - Buy-ins
-  // Calculate net profit using unified calculation logic
-  const netProfit = calculateSessionProfit(session);
+  // Calculate net profit from database-fetched stats to ensure consistency
+  // This ensures the profit shown on Home matches the session detail page
+  const netProfit = stats.totalPayout - stats.totalBuyIns;
   
   const calculateDuration = () => {
     try {
