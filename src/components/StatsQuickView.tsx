@@ -3,8 +3,9 @@ import { useSessionContext } from '@/context/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { calculateOverallResults, calculateSessionProfit } from '@/utils/sessionCalculations';
+import { calculateSessionProfit } from '@/utils/sessionCalculations';
 import { getCurrencySymbol, useDefaultCurrency } from '@/hooks/useDefaultCurrency';
+import { useUnifiedSessionStats } from '@/hooks/useUnifiedSessionStats';
 
 function MobileStackTitle({ text }: { text: string }) {
   const isPercentTitle = text.includes('%'); // e.g., "Win %", "ROI %"
@@ -42,9 +43,13 @@ function MobileStackTitle({ text }: { text: string }) {
 }
 
 export default function StatsQuickView({ showExtendedMetrics = false }: { showExtendedMetrics?: boolean }) {
-  const { sessions, isLoading } = useSessionContext();
+  const { sessions, isLoading: sessionsLoading } = useSessionContext();
   const [showCurrencyBreakdown, setShowCurrencyBreakdown] = useState(false);
   const { defaultCurrency } = useDefaultCurrency();
+  
+  // Fetch unified statistics from database - single source of truth
+  const { statistics, isLoading: statsLoading } = useUnifiedSessionStats();
+  const isLoading = sessionsLoading || statsLoading;
   
   if (isLoading) {
     return (
@@ -80,20 +85,23 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
     );
   }
 
-  // Get all completed sessions
+  // Get database-sourced statistics (single source of truth)
+  const dbStats = statistics.all;
+  
+  // Calculate statistics from database
+  const overallResults = dbStats?.netResult || 0;
+  const totalSessions = dbStats?.numberOfSessions || 0;
+  const winRatio = dbStats?.winRatio || 0;
+  const wins = Math.round((winRatio * totalSessions) / 100);
+  const losses = totalSessions - wins;
+  const totalHands = dbStats?.handsCount || 0;
+  const averageHours = dbStats?.averageDuration || 0;
+  const totalTables = dbStats?.totalTables || 0;
+  const totalBuyIns = dbStats?.totalBuyIns || 0;
+  const totalPayouts = dbStats?.totalPayouts || 0;
+  
+  // Group ALL sessions by currency for currency breakdown dialog (display-only feature)
   const completedSessions = sessions.filter(s => !s.isActive && (s.currentStatus === 'ended' || s.status === 'completed' || !s.status));
-  
-  // Filter sessions by user's default currency for main display
-  const defaultCurrencySessions = completedSessions.filter(s => (s.currency || 'USD') === defaultCurrency);
-  
-  // Calculate overall results for user's default currency
-  const overallResults = calculateOverallResults(defaultCurrencySessions);
-  
-  // Calculate wins and losses for user's default currency
-  const wins = defaultCurrencySessions.filter(s => calculateSessionProfit(s) > 0).length;
-  const losses = defaultCurrencySessions.filter(s => calculateSessionProfit(s) <= 0).length;
-  
-  // Group ALL sessions by currency for currency breakdown dialog (shows all currencies)
   const allResultsByCurrency = completedSessions.reduce((acc, session) => {
     const currency = session.currency || 'USD';
     const profit = calculateSessionProfit(session);
@@ -118,48 +126,19 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
     return amount < 0 ? `-${formatted}` : formatted;
   };
 
-  // Calculate stats based on user's currency sessions only
-  const totalSessions = defaultCurrencySessions.length;
+  // Display calculations
+  const winDisplay = totalSessions === 0 ? '—' : `${winRatio.toFixed(1)}%`;
+  const avgBuyIn = totalSessions > 0 ? totalBuyIns / totalSessions : 0;
+  const roiPercent = totalBuyIns > 0 ? (overallResults / totalBuyIns) * 100 : 0;
   
-  // Win% across all sessions in user's currency (percentage of profitable sessions)
-  let winPercentage = totalSessions > 0 ? (wins / totalSessions) * 100 : 0;
-  winPercentage = Math.min(100, Math.max(0, winPercentage));
-  const winDisplay = totalSessions === 0 ? '—' : `${winPercentage.toFixed(1)}%`;
+  // Extended metrics - fetch from database for cash/tournament splits
+  const cashStats = statistics.cash;
+  const tournamentStats = statistics.tournaments;
+  const cashGameProfit = cashStats?.netResult || 0;
+  const tournamentProfit = tournamentStats?.netResult || 0;
   
-  // Calculate total hands for user's currency sessions
-  const totalHands = defaultCurrencySessions.reduce((total, session) => {
-    let sessionHands = (session.hands?.length || 0);
-    if (session.tables) {
-      sessionHands += session.tables.reduce((tableTotal, table) => {
-        return tableTotal + (table.hands?.length || 0);
-      }, 0);
-    }
-    return total + sessionHands;
-  }, 0);
-  
-  // Calculate average session duration for user's currency sessions
-  const sessionsWithDuration = defaultCurrencySessions.filter(s => 
-    s.startTime && s.endTime && s.endTime > s.startTime
-  );
-  
-  const averageDuration = sessionsWithDuration.length > 0 
-    ? sessionsWithDuration.reduce((total, session) => {
-        const duration = session.endTime!.getTime() - session.startTime.getTime();
-        return total + duration;
-      }, 0) / sessionsWithDuration.length
-    : 0;
-    
-  const averageHours = averageDuration / (1000 * 60 * 60);
-
-  // Extended metrics for user's currency sessions
-  const totalBuyIns = defaultCurrencySessions.reduce((sum, s) => {
-    const tablesBuyIn = s.tables && s.tables.length > 0 ? s.tables.reduce((tSum, t) => tSum + (t.buyIn || 0), 0) : 0;
-    const sessionBuyIn = !s.tables || s.tables.length === 0 ? (s.buyIn || 0) : 0;
-    return sum + tablesBuyIn + sessionBuyIn;
-  }, 0);
-
-  const avgBuyIn = defaultCurrencySessions.length > 0 ? totalBuyIns / defaultCurrencySessions.length : 0;
-  
+  // Best session calculation from in-memory (for display purposes)
+  const defaultCurrencySessions = completedSessions.filter(s => (s.currency || 'USD') === defaultCurrency);
   const bestSessionProfit = defaultCurrencySessions.length > 0 
     ? defaultCurrencySessions.reduce((max, s) => {
         const p = calculateSessionProfit(s);
@@ -167,20 +146,6 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
       }, -Infinity) 
     : 0;
   const normalizedBest = bestSessionProfit === -Infinity ? 0 : bestSessionProfit;
-
-  const totalTables = defaultCurrencySessions.reduce((sum, s) => {
-    if (s.tables && s.tables.length > 0) return sum + s.tables.length;
-    if (s.tablesPlayed && s.tablesPlayed > 0) return sum + s.tablesPlayed;
-    return sum + 1;
-  }, 0);
-
-  const isCash = (f?: string) => !!f && (f.toLowerCase().includes('cash') || f.toLowerCase().includes('home'));
-  const isTournament = (f?: string) => !!f && f.toLowerCase().includes('tournament');
-
-  const cashGameProfit = defaultCurrencySessions.reduce((sum, s) => isCash(s.format) ? sum + calculateSessionProfit(s) : sum, 0);
-  const tournamentProfit = defaultCurrencySessions.reduce((sum, s) => isTournament(s.format) ? sum + calculateSessionProfit(s) : sum, 0);
-
-  const roiPercent = totalBuyIns > 0 ? (overallResults / totalBuyIns) * 100 : 0;
   
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
