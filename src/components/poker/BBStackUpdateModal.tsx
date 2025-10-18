@@ -412,7 +412,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
           )}
         </DialogHeader>
         
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 h-0 pr-4">
           <div className="space-y-4">
             {tables.map((table, index) => {
               const tableData = updateData.find(data => data.tableId === table.id);
