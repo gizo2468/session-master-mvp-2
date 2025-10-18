@@ -63,62 +63,84 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   const { liveState, updateLiveState } = useSessionLiveState(sessionId);
   const { toast } = useToast();
 
-  // Fallback: fetch tables from database if prop is empty - use RPC for security and reliability
+  // Fetch active tables when modal opens - prefer RPC, fallback to direct select
   useEffect(() => {
     const fetchTables = async () => {
-      if (isOpen && tables.length === 0 && sessionId && !isLoadingTables) {
-        console.log('🔍 BBStackUpdateModal: Tables prop is empty, fetching via RPC...');
-        setIsLoadingTables(true);
-        
-        try {
+      if (!isOpen || !sessionId || isLoadingTables) return;
+      console.log('🔍 BBStackUpdateModal: Fetching active tables for session:', sessionId);
+      setIsLoadingTables(true);
+
+      try {
+        // Try RPC first (auth-aware)
+        let tablesData: any[] | null = null;
+        let rpcError: any = null;
+        const rpc = await supabase.rpc('get_active_session_tables', { p_session_id: sessionId });
+        rpcError = rpc.error;
+        tablesData = rpc.data as any[] | null;
+
+        if (rpcError) {
+          console.warn('⚠️ BBStackUpdateModal: RPC failed, falling back to direct select:', rpcError.message);
+        }
+
+        if (!tablesData || tablesData.length === 0) {
+          // Fallback to direct select under RLS
           const { data, error } = await supabase
-            .rpc('get_active_session_tables', { p_session_id: sessionId });
+            .from('session_tables')
+            .select('*')
+            .eq('session_id', sessionId)
+            .is('end_time', null);
 
           if (error) throw error;
-
-          if (data && data.length > 0) {
-            console.log('✅ BBStackUpdateModal: Fetched tables via RPC:', data.length);
-            const convertedTables: TableData[] = data.map(table => ({
-              id: table.id,
-              name: table.table_name || '',
-              format: (table.table_type || 'Cash') as 'Cash' | 'Tournament',
-              gameType: (table.game_format || 'NLH') as 'NLH' | 'PLO',
-              stakes: table.stakes || '',
-              location: 'Online',
-              buyIn: table.buy_in || 0,
-              initialBuyIn: table.buy_in || 0,
-              currentStack: table.current_stack || 0,
-              startingStack: table.starting_stack || 0,
-              smallBlind: table.stakes ? parseFloat(table.stakes.split('/')[0]) : 0,
-              bigBlind: table.stakes ? parseFloat(table.stakes.split('/')[1]) : 0,
-              startingBB: table.starting_stack || 0,
-              isActive: !table.end_time,
-              startTime: new Date(table.start_time),
-              rebuys: table.rebuys || 0,
-              rebuyAmount: table.rebuy_amount || 0,
-              cashOut: table.cashout || 0,
-              hands: []
-            }));
-            console.log('✅ BBStackUpdateModal: Converted tables:', convertedTables.map(t => ({ id: t.id, name: t.name, format: t.format })));
-            setLoadedTables(convertedTables);
-          } else {
-            console.warn('⚠️ BBStackUpdateModal: No active tables found via RPC');
-          }
-        } catch (error) {
-          console.error('❌ BBStackUpdateModal: Error fetching tables via RPC:', error);
-          toast({
-            title: "Error Loading Tables",
-            description: "Could not load table data. Please try again.",
-            variant: "destructive"
-          });
-        } finally {
-          setIsLoadingTables(false);
+          tablesData = data || [];
+          console.log('📥 BBStackUpdateModal: Fallback select returned:', tablesData.length);
+        } else {
+          console.log('📥 BBStackUpdateModal: RPC returned:', tablesData.length);
         }
+
+        if (tablesData && tablesData.length > 0) {
+          const convertedTables: TableData[] = tablesData.map((table: any) => ({
+            id: table.id,
+            name: table.table_name || 'Table',
+            format: (table.table_type || 'Cash') as 'Cash' | 'Tournament',
+            gameType: (table.game_format || 'NLH') as 'NLH' | 'PLO',
+            stakes: table.stakes || '',
+            location: 'Online',
+            buyIn: table.buy_in || 0,
+            initialBuyIn: table.buy_in || 0,
+            currentStack: table.current_stack || 0,
+            startingStack: table.starting_stack || 0,
+            smallBlind: table.stakes ? parseFloat(String(table.stakes).split('/')[0]) : 0,
+            bigBlind: table.stakes ? parseFloat(String(table.stakes).split('/')[1]) : 0,
+            startingBB: table.starting_stack || 0,
+            isActive: !table.end_time,
+            startTime: table.start_time ? new Date(table.start_time) : new Date(),
+            rebuys: table.rebuys || 0,
+            rebuyAmount: table.rebuy_amount || 0,
+            cashOut: table.cashout || 0,
+            notes: table.table_notes || '',
+            hands: [],
+            tournamentTypes: table.tournament_type ? [table.tournament_type] : undefined,
+          }));
+          console.log('✅ BBStackUpdateModal: Converted tables:', convertedTables.map(t => ({ id: t.id, name: t.name, format: t.format })));
+          setLoadedTables(convertedTables);
+        } else {
+          console.warn('⚠️ BBStackUpdateModal: No active tables found for session');
+          setLoadedTables([]);
+        }
+      } catch (error) {
+        console.error('❌ BBStackUpdateModal: Error fetching tables:', error);
+        toast({
+          title: 'Error Loading Tables',
+          description: 'Could not load table data. Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoadingTables(false);
       }
     };
 
     fetchTables();
-  }, [isOpen, tables.length, sessionId, toast, isLoadingTables]);
+  }, [isOpen, sessionId, toast, isLoadingTables]);
 
   // Use loaded tables if available, otherwise use prop
   const activeTables = loadedTables.length > 0 ? loadedTables : tables;

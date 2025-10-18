@@ -263,6 +263,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
             const tablesData = tables.map(table => ({
               id: table.id,
               session_id: sessionData.id,
+              user_id: user?.id || undefined,
               table_name: table.name,
               game_format: table.gameType,
               buy_in: table.buyIn,
