@@ -258,7 +258,11 @@ const Subscription: React.FC = () => {
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
-                  <span>…More exciting features are in development — upgrade to Premium to support our progress</span>
+                  <span>More exciting features are in development, upgrade to Premium to support our progress!</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="h-5 w-5 mt-0.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
+                  <span>We apologize for any bugs or issues, we're still in early release and constantly improving based on your feedback</span>
                 </div>
               </div>
             </CardContent>
