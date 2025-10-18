@@ -11,6 +11,7 @@ import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useSessionLiveState } from '@/hooks/useSessionLiveState';
 import { useToast } from '@/hooks/use-toast';
 import { BBStackUpdateService } from '@/services/bbStackUpdateService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BBStackUpdateModalProps {
   isOpen: boolean;
@@ -57,17 +58,88 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   const [updateData, setUpdateData] = useState<TableUpdateData[]>([]);
   const [highestLevels, setHighestLevels] = useState<Record<string, number>>({});
   const [validationError, setValidationError] = useState<string>('');
+  const [loadedTables, setLoadedTables] = useState<TableData[]>([]);
+  const [isLoadingTables, setIsLoadingTables] = useState(false);
   const { liveState, updateLiveState } = useSessionLiveState(sessionId);
   const { toast } = useToast();
 
-  // Remove session-level format check - we'll check per table instead
+  // Fallback: fetch tables from database if prop is empty
+  useEffect(() => {
+    const fetchTables = async () => {
+      if (isOpen && tables.length === 0 && sessionId && !isLoadingTables) {
+        console.log('🔍 BBStackUpdateModal: Tables prop is empty, fetching from database...');
+        setIsLoadingTables(true);
+        
+        try {
+          const { data, error } = await supabase
+            .from('session_tables')
+            .select('*')
+            .eq('session_id', sessionId)
+            .eq('is_active', true);
+
+          if (error) throw error;
+
+          if (data && data.length > 0) {
+            console.log('✅ BBStackUpdateModal: Fetched tables from database:', data.length);
+            const convertedTables: TableData[] = data.map(table => ({
+              id: table.id,
+              name: table.table_name || '',
+              format: table.game_format as 'Cash' | 'Tournament' || 'Cash',
+              gameType: table.table_type as 'NLH' | 'PLO' || 'NLH',
+              stakes: table.stakes || '',
+              location: 'Online',
+              buyIn: table.buy_in || 0,
+              initialBuyIn: table.buy_in || 0,
+              currentStack: table.current_stack || 0,
+              startingStack: table.starting_stack || 0,
+              smallBlind: 0,
+              bigBlind: 0,
+              startingBB: 0,
+              isActive: table.is_active || false,
+              startTime: new Date(table.start_time),
+              rebuys: table.rebuys || 0,
+              rebuyAmount: table.rebuy_amount || 0,
+              cashOut: table.cashout || 0,
+              hands: []
+            }));
+            setLoadedTables(convertedTables);
+          } else {
+            console.warn('⚠️ BBStackUpdateModal: No active tables found in database');
+          }
+        } catch (error) {
+          console.error('❌ BBStackUpdateModal: Error fetching tables:', error);
+          toast({
+            title: "Error Loading Tables",
+            description: "Could not load table data. Please try again.",
+            variant: "destructive"
+          });
+        } finally {
+          setIsLoadingTables(false);
+        }
+      }
+    };
+
+    fetchTables();
+  }, [isOpen, tables.length, sessionId, toast, isLoadingTables]);
+
+  // Use loaded tables if available, otherwise use prop
+  const activeTables = loadedTables.length > 0 ? loadedTables : tables;
   const currencySymbol = getCurrencySymbol(currency);
+
+  console.log('🔍 BBStackUpdateModal render:', {
+    isOpen,
+    tablesProp: tables.length,
+    loadedTables: loadedTables.length,
+    activeTables: activeTables.length,
+    isLoadingTables
+  });
 
   // Initialize state when modal opens - instant load with saved/default values
   useEffect(() => {
-    if (isOpen && tables.length > 0) {
+    if (isOpen && activeTables.length > 0) {
       // Initialize immediately with saved data or defaults (instant UI)
-      const initialData = tables.map(table => {
+      console.log('✅ BBStackUpdateModal: Initializing with tables:', activeTables.length);
+      const initialData = activeTables.map(table => {
         const isCashTable = table.format === 'Cash';
         const savedData = liveState.bbStackUpdates?.[table.id];
         
@@ -127,7 +199,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
         });
       }
     }
-  }, [isOpen, tables, liveState.bbStackUpdates, editingLevel, initialBB, initialStack]);
+  }, [isOpen, activeTables, liveState.bbStackUpdates, editingLevel, initialBB, initialStack]);
 
   const handleLevelChange = (tableId: string, level: string) => {
     const newLevel = parseInt(level);
@@ -412,9 +484,24 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
           )}
         </DialogHeader>
         
-        <ScrollArea className="flex-1 h-0 pr-4">
-          <div className="space-y-4">
-            {tables.map((table, index) => {
+        {isLoadingTables ? (
+          <div className="flex-1 flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading tables...</p>
+            </div>
+          </div>
+        ) : activeTables.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center py-12">
+            <div className="text-center text-gray-500">
+              <p className="text-lg font-medium mb-2">No Active Tables</p>
+              <p className="text-sm">Add a table to update BB/Stack values</p>
+            </div>
+          </div>
+        ) : (
+          <ScrollArea className="flex-1 h-0 pr-4">
+            <div className="space-y-4">
+              {activeTables.map((table, index) => {
               const tableData = updateData.find(data => data.tableId === table.id);
               if (!tableData) return null;
               
@@ -441,20 +528,15 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
                 />
               );
             })}
-            
-            {tables.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <p>No active tables to update.</p>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+            </div>
+          </ScrollArea>
+        )}
         
         <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
           <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button onClick={handleSave} className="bg-poker-gold hover:bg-poker-darkGold text-white">
+          <Button onClick={handleSave} className="bg-poker-gold hover:bg-poker-darkGold text-white" disabled={isLoadingTables || activeTables.length === 0}>
             Save
           </Button>
         </div>

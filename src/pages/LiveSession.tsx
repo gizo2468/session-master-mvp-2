@@ -109,6 +109,14 @@ export default function LiveSession() {
     return 'Cash';
   };
 
+  // Debug logging for tables
+  console.log('🔍 LiveSession render:', {
+    sessionId: currentSession.id,
+    totalTables: currentSession.tables?.length || 0,
+    activeTables: currentSession.tables?.filter(table => table.isActive).length || 0,
+    tables: currentSession.tables
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <LiveSessionHeader />
