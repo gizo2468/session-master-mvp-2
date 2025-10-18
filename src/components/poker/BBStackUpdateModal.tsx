@@ -11,7 +11,6 @@ import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useSessionLiveState } from '@/hooks/useSessionLiveState';
 import { useToast } from '@/hooks/use-toast';
 import { BBStackUpdateService } from '@/services/bbStackUpdateService';
-import { supabase } from '@/integrations/supabase/client';
 
 interface BBStackUpdateModalProps {
   isOpen: boolean;
@@ -58,100 +57,12 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   const [updateData, setUpdateData] = useState<TableUpdateData[]>([]);
   const [highestLevels, setHighestLevels] = useState<Record<string, number>>({});
   const [validationError, setValidationError] = useState<string>('');
-  const [loadedTables, setLoadedTables] = useState<TableData[]>([]);
-  const [isLoadingTables, setIsLoadingTables] = useState(false);
   const [latestByTable, setLatestByTable] = useState<Record<string, { level?: number; bb?: number; smallBlind?: number; bigBlind?: number }>>({});
   const { liveState, updateLiveState } = useSessionLiveState(sessionId);
   const { toast } = useToast();
-  const hasFetchedRef = React.useRef(false);
 
-  // Fetch active tables when modal opens - prefer RPC, fallback to direct select
-  useEffect(() => {
-    const fetchTables = async () => {
-      if (!isOpen || !sessionId) return;
-      if (hasFetchedRef.current) return; // Avoid duplicate fetches while open
-      hasFetchedRef.current = true;
-      console.log('🔍 BBStackUpdateModal: Fetching active tables for session:', sessionId);
-      setIsLoadingTables(true);
-
-      try {
-        // Try RPC first (auth-aware)
-        let tablesData: any[] | null = null;
-        let rpcError: any = null;
-        const rpc = await supabase.rpc('get_active_session_tables', { p_session_id: sessionId });
-        rpcError = rpc.error;
-        tablesData = rpc.data as any[] | null;
-
-        if (rpcError) {
-          console.warn('⚠️ BBStackUpdateModal: RPC failed, falling back to direct select:', rpcError.message);
-        }
-
-        if (!tablesData || tablesData.length === 0) {
-          // Fallback to direct select under RLS
-          const { data, error } = await supabase
-            .from('session_tables')
-            .select('*')
-            .eq('session_id', sessionId)
-            .is('end_time', null);
-
-          if (error) throw error;
-          tablesData = data || [];
-          console.log('📥 BBStackUpdateModal: Fallback select returned:', tablesData.length);
-        } else {
-          console.log('📥 BBStackUpdateModal: RPC returned:', tablesData.length);
-        }
-
-        if (tablesData && tablesData.length > 0) {
-          const convertedTables: TableData[] = tablesData.map((table: any) => ({
-            id: table.id,
-            name: table.table_name || 'Table',
-            format: (table.table_type || 'Cash') as 'Cash' | 'Tournament',
-            gameType: (table.game_format || 'NLH') as 'NLH' | 'PLO',
-            stakes: table.stakes || '',
-            location: 'Online',
-            buyIn: table.buy_in || 0,
-            initialBuyIn: table.buy_in || 0,
-            currentStack: table.current_stack || 0,
-            startingStack: table.starting_stack || 0,
-            smallBlind: table.stakes ? parseFloat(String(table.stakes).split('/')[0]) : 0,
-            bigBlind: table.stakes ? parseFloat(String(table.stakes).split('/')[1]) : 0,
-            startingBB: table.starting_stack || 0,
-            isActive: !table.end_time,
-            startTime: table.start_time ? new Date(table.start_time) : new Date(),
-            rebuys: table.rebuys || 0,
-            rebuyAmount: table.rebuy_amount || 0,
-            cashOut: table.cashout || 0,
-            notes: table.table_notes || '',
-            hands: [],
-            tournamentTypes: table.tournament_type ? [table.tournament_type] : undefined,
-          }));
-          console.log('✅ BBStackUpdateModal: Converted tables:', convertedTables.map(t => ({ id: t.id, name: t.name, format: t.format })));
-          setLoadedTables(convertedTables);
-        } else {
-          console.warn('⚠️ BBStackUpdateModal: No active tables found for session');
-          setLoadedTables([]);
-        }
-      } catch (error) {
-        console.error('❌ BBStackUpdateModal: Error fetching tables:', error);
-        toast({
-          title: 'Error Loading Tables',
-          description: 'Could not load table data. Please try again.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoadingTables(false);
-      }
-    };
-
-    fetchTables();
-    return () => {
-      // Reset when modal closes so it can refetch next time
-      if (!isOpen) hasFetchedRef.current = false;
-    };
-  }, [isOpen, sessionId, toast]);
-
-  // Use loaded tables if available, otherwise use prop
-  const activeTables = loadedTables.length > 0 ? loadedTables : tables;
+  // Use tables directly from props (already loaded in session)
+  const activeTables = tables;
   const currencySymbol = getCurrencySymbol(currency);
 
   // Fetch latest BB/Stack per table for this session (for prefill)
@@ -180,10 +91,8 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
 
   console.log('🔍 BBStackUpdateModal render:', {
     isOpen,
-    tablesProp: tables.length,
-    loadedTables: loadedTables.length,
     activeTables: activeTables.length,
-    isLoadingTables
+    updateData: updateData.length
   });
 
   // Safety net: if modal is open and we have tables but no updateData yet, initialize once
@@ -543,7 +452,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md w-full max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-md w-full max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {editingLevel ? `Edit Level ${editingLevel}` : 'BB / Stack Update'}
@@ -555,14 +464,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
           )}
         </DialogHeader>
         
-        {isLoadingTables ? (
-          <div className="flex-1 flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading tables...</p>
-            </div>
-          </div>
-        ) : activeTables.length === 0 ? (
+        {activeTables.length === 0 ? (
           <div className="flex-1 flex items-center justify-center py-12">
             <div className="text-center text-gray-500">
               <p className="text-lg font-medium mb-2">No Active Tables</p>
@@ -570,8 +472,8 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
             </div>
           </div>
         ) : (
-          <ScrollArea className="flex-1 h-0 pr-4">
-            <div className="space-y-4">
+          <ScrollArea className="flex-1 max-h-[60vh] pr-4">
+            <div className="space-y-4" style={{ WebkitOverflowScrolling: 'touch' }}>
               {activeTables.map((table, index) => {
               const tableData = updateData.find(data => data.tableId === table.id);
               if (!tableData) return null;
@@ -607,7 +509,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
           <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button onClick={handleSave} className="bg-poker-gold hover:bg-poker-darkGold text-white" disabled={isLoadingTables || activeTables.length === 0}>
+          <Button onClick={handleSave} className="bg-poker-gold hover:bg-poker-darkGold text-white" disabled={activeTables.length === 0}>
             Save
           </Button>
         </div>
