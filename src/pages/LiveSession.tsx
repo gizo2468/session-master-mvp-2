@@ -131,6 +131,7 @@ export default function LiveSession() {
             smallBlind={currentSession.smallBlind}
             bigBlind={currentSession.bigBlind}
             currency={currentSession.currency}
+            sessionId={currentSession.id}
             onEndSession={() => sessionActions.setShowEndSessionSheet(true)}
             onAddTable={() => sessionActions.setShowAddTableForm(true)}
             onBBStackUpdate={() => {

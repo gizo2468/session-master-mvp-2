@@ -217,6 +217,7 @@ export default function ConfirmSession() {
             format={activeSession.format}
             smallBlind={activeSession.smallBlind}
             bigBlind={activeSession.bigBlind}
+            sessionId={activeSession.id}
             onEndSession={() => setShowEndSessionSheet(true)}
           />
           

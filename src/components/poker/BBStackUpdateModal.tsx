@@ -84,8 +84,8 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
             const convertedTables: TableData[] = data.map(table => ({
               id: table.id,
               name: table.table_name || '',
-              format: table.game_format as 'Cash' | 'Tournament' || 'Cash',
-              gameType: table.table_type as 'NLH' | 'PLO' || 'NLH',
+              format: (table.table_type || 'Cash') as 'Cash' | 'Tournament',
+              gameType: (table.game_format || 'NLH') as 'NLH' | 'PLO',
               stakes: table.stakes || '',
               location: 'Online',
               buyIn: table.buy_in || 0,
@@ -174,7 +174,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       setValidationError('');
       
       // Fetch highest levels in background (batch)
-      const tournamentTableIds = tables.filter(t => t.format !== 'Cash').map(t => t.id);
+      const tournamentTableIds = activeTables.filter(t => t.format !== 'Cash').map(t => t.id);
       if (tournamentTableIds.length > 0 && !editingLevel) {
         BBStackUpdateService.getHighestLevelsBatch(tournamentTableIds).then(levels => {
           if (!isOpen) return; // Guard against unmounted state update

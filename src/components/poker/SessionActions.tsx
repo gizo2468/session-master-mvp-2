@@ -24,6 +24,7 @@ const SessionActions: React.FC<SessionActionsProps> = ({
         format={session.format}
         smallBlind={session.smallBlind}
         bigBlind={session.bigBlind}
+        sessionId={session.id}
         onEndSession={onEndSession}
       />
       

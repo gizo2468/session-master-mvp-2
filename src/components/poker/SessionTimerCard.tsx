@@ -17,6 +17,7 @@ interface SessionTimerCardProps {
   smallBlind: number;
   bigBlind: number;
   currency?: string; // Currency code
+  sessionId: string; // Session ID for modals
   onEndSession: () => void;
   onAddTable?: () => void;
   onBBStackUpdate?: () => void;
@@ -31,6 +32,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   smallBlind,
   bigBlind,
   currency,
+  sessionId,
   onEndSession,
   onAddTable,
   onBBStackUpdate,
@@ -240,7 +242,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         tables={activeTables}
         sessionFormat={format}
         currency={currency}
-        sessionId={activeSession?.id || ''}
+        sessionId={sessionId}
         onDataSaved={() => {
           // Trigger any refresh callbacks passed from parent
           if (onBBStackUpdate) {
@@ -253,7 +255,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         isOpen={showHandTableModal}
         onClose={() => setShowHandTableModal(false)}
         tables={activeTables}
-        sessionId={activeSession?.id || ''}
+        sessionId={sessionId}
       />
     </div>
   );
