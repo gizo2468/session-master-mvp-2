@@ -1,17 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const ALLOWED_ORIGINS = [
-  'https://session-master-mvp.lovable.app',
-  'https://fa19e82d-191f-494f-933f-bcc0a4a9f418.lovableproject.com',
-  'http://localhost:3000'
-];
-
-const corsHeaders = (origin: string | null) => {
-  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  return {
-    'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  };
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -53,7 +44,6 @@ async function stripEXIF(base64Image: string): Promise<string> {
 
 serve(async (req) => {
   const origin = req.headers.get('origin');
-  const headers = corsHeaders(origin);
   
   // Log request arrival for debugging
   console.log('Request received', {
@@ -64,15 +54,12 @@ serve(async (req) => {
   });
 
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers });
+    return new Response(null, { headers: corsHeaders });
   }
 
   const startTime = Date.now();
 
   try {
-    const origin = req.headers.get('origin');
-    const headers = corsHeaders(origin);
-    
     const { image, heroOverride, dealerOverride } = await req.json();
     
     // Validate image size
@@ -83,7 +70,7 @@ serve(async (req) => {
           code: 'FILE_TOO_LARGE',
           error: `Image size (${Math.round(imageSizeBytes / 1024)}KB) exceeds 10MB limit` 
         }),
-        { status: 413, headers: { ...headers, 'Content-Type': 'application/json' } }
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -106,7 +93,7 @@ serve(async (req) => {
         }),
         { 
           status: 500, 
-          headers: { ...headers, 'Content-Type': 'application/json' } 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -385,7 +372,7 @@ Remember: Card detection accuracy is the TOP priority. Take your time to identif
               error: 'AI analysis rate limit exceeded. Please wait a moment and try again.',
               code: 'RATE_LIMIT'
             }),
-            { status: 429, headers: { ...headers, 'Content-Type': 'application/json' } }
+            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
 
@@ -395,7 +382,7 @@ Remember: Card detection accuracy is the TOP priority. Take your time to identif
               error: 'AI credits depleted. Please add credits to continue using AI analysis.',
               code: 'CREDITS_DEPLETED'
             }),
-            { status: 402, headers: { ...headers, 'Content-Type': 'application/json' } }
+            { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
 
@@ -437,7 +424,7 @@ Remember: Card detection accuracy is the TOP priority. Take your time to identif
           JSON.stringify(analysisResult),
           { 
             status: 200, 
-            headers: { ...headers, 'Content-Type': 'application/json' } 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           }
         );
 
@@ -449,7 +436,7 @@ Remember: Card detection accuracy is the TOP priority. Take your time to identif
               error: 'Analysis timed out after 30 seconds. Please try with a clearer image.',
               code: 'TIMEOUT'
             }),
-            { status: 408, headers: { ...headers, 'Content-Type': 'application/json' } }
+            { status: 408, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
         
@@ -472,7 +459,7 @@ Remember: Card detection accuracy is the TOP priority. Take your time to identif
         error: error instanceof Error ? error.message : 'Analysis failed. Please try again.',
         code: 'ANALYSIS_ERROR'
       }),
-      { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
