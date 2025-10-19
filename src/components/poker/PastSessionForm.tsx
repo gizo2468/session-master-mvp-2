@@ -319,7 +319,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
   const watchedFormat = form.watch('format');
 
   return (
-    <div className="w-full max-w-full max-h-[90vh] overflow-y-auto">
+    <div className="w-full max-w-full">
       <div className="space-y-6 p-4 sm:p-6">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Add Past Session</h2>
