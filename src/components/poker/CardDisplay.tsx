@@ -48,7 +48,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({ cards, size = 'md' }) => {
         
         cardArray.push(
           <div 
-            key={`${rank}${suit}`}
+            key={`${rank}${suit}-${i}`}
             className={`${sizeClasses[size]} inline-flex mx-1 bg-white border border-gray-300 rounded shadow-sm flex-col items-center justify-between p-1`}
           >
             <div className="font-bold">{rank}</div>

@@ -31,6 +31,33 @@ const normalizeSuit = (suit: string): string => {
   return suitMap[suit] || suit.toLowerCase();
 };
 
+const parseCards = (cards: any): Array<{rank: string, suit: string}> => {
+  // If it's already an array of objects with rank and suit, return as-is
+  if (Array.isArray(cards) && cards.length > 0 && cards[0]?.rank && cards[0]?.suit) {
+    return cards;
+  }
+  
+  // If it's a string, try to parse it
+  if (typeof cards === 'string') {
+    // Remove brackets, spaces, and commas
+    const cleaned = cards.replace(/[\[\]\s,]/g, '');
+    
+    // Parse pairs of characters (rank + suit)
+    const result = [];
+    for (let i = 0; i < cleaned.length; i += 2) {
+      if (i + 1 < cleaned.length) {
+        result.push({
+          rank: cleaned[i].toUpperCase(),
+          suit: normalizeSuit(cleaned[i + 1])
+        });
+      }
+    }
+    return result;
+  }
+  
+  return [];
+};
+
 interface AIHandAnalyzerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -392,13 +419,23 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                       <span className="text-muted-foreground">Cards not visible</span>
                     ) : Array.isArray(state.analysis.hero.cards) && state.analysis.hero.cards.length > 0 ? (
                       <>
-                        <CardDisplay 
-                          cards={state.analysis.hero.cards
-                            .filter(c => c?.rank && c?.suit)
+                        {(() => {
+                          const parsedCards = parseCards(state.analysis.hero.cards);
+                          const cardString = parsedCards
                             .map(c => `${c.rank}${normalizeSuit(c.suit)}`)
-                            .join('') || '??'}
-                          size="md"
-                        />
+                            .join('');
+                          
+                          return (
+                            <>
+                              <CardDisplay cards={cardString || '??'} size="md" />
+                              {cardString && (
+                                <span className="text-xs font-mono text-muted-foreground">
+                                  ({parsedCards.map(c => `${c.rank}${c.suit}`).join(' ')})
+                                </span>
+                              )}
+                            </>
+                          );
+                        })()}
                         {state.analysis.hero.confidence < 0.8 && (
                           <span className="text-xs text-yellow-600">
                             (Confidence: {Math.round(state.analysis.hero.confidence * 100)}%)
@@ -423,30 +460,54 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-muted-foreground min-w-[45px]">Flop:</span>
-                        <CardDisplay 
-                          cards={state.analysis.board.flop
-                            .filter(c => c?.rank && c?.suit)
+                        {(() => {
+                          const parsedFlop = parseCards(state.analysis.board.flop);
+                          const flopString = parsedFlop
                             .map(c => `${c.rank}${normalizeSuit(c.suit)}`)
-                            .join('') || '??????'}
-                          size="sm"
-                        />
+                            .join('');
+                          
+                          return (
+                            <>
+                              <CardDisplay cards={flopString || '??????'} size="sm" />
+                              {flopString && (
+                                <span className="text-xs font-mono text-muted-foreground">
+                                  ({parsedFlop.map(c => `${c.rank}${c.suit}`).join(' ')})
+                                </span>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
                       {state.analysis.board.turn?.rank && state.analysis.board.turn?.suit && (
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-muted-foreground min-w-[45px]">Turn:</span>
-                          <CardDisplay 
-                            cards={`${state.analysis.board.turn.rank}${normalizeSuit(state.analysis.board.turn.suit)}`}
-                            size="sm"
-                          />
+                          {(() => {
+                            const turnCard = `${state.analysis.board.turn.rank}${normalizeSuit(state.analysis.board.turn.suit)}`;
+                            return (
+                              <>
+                                <CardDisplay cards={turnCard} size="sm" />
+                                <span className="text-xs font-mono text-muted-foreground">
+                                  ({state.analysis.board.turn.rank}{state.analysis.board.turn.suit})
+                                </span>
+                              </>
+                            );
+                          })()}
                         </div>
                       )}
                       {state.analysis.board.river?.rank && state.analysis.board.river?.suit && (
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-muted-foreground min-w-[45px]">River:</span>
-                          <CardDisplay 
-                            cards={`${state.analysis.board.river.rank}${normalizeSuit(state.analysis.board.river.suit)}`}
-                            size="sm"
-                          />
+                          {(() => {
+                            const riverCard = `${state.analysis.board.river.rank}${normalizeSuit(state.analysis.board.river.suit)}`;
+                            return (
+                              <>
+                                <CardDisplay cards={riverCard} size="sm" />
+                                <span className="text-xs font-mono text-muted-foreground">
+                                  ({state.analysis.board.river.rank}{state.analysis.board.river.suit})
+                                </span>
+                              </>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>

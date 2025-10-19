@@ -113,6 +113,13 @@ serve(async (req) => {
 
     const systemPrompt = `You are an expert poker hand analyzer with advanced computer vision capabilities, specializing in No-Limit Hold'em (NLH).
 
+CRITICAL CARD FORMAT REQUIREMENTS:
+- ALL cards MUST use single lowercase letter suits: h (hearts), d (diamonds), s (spades), c (clubs)
+- Hero cards MUST be returned as array of objects: [{"rank": "A", "suit": "h"}, {"rank": "K", "suit": "d"}]
+- NEVER return cards as strings like "AhKd" or "[Ah,Kd]" or "Ah Kd"
+- Flop MUST be array of 3 objects: [{"rank": "Q", "suit": "s"}, {"rank": "5", "suit": "h"}, {"rank": "9", "suit": "c"}]
+- Turn/River MUST be single objects: {"rank": "2", "suit": "d"}
+
 CRITICAL CARD DETECTION INSTRUCTIONS:
 
 1. HERO CARDS (HIGHEST PRIORITY):
@@ -125,7 +132,8 @@ CRITICAL CARD DETECTION INSTRUCTIONS:
      * Identify the rank symbol (A, K, Q, J, T/10, 9, 8, 7, 6, 5, 4, 3, 2) in the corners
      * Identify the suit symbol: ♠ (spades), ♥ (hearts), ♦ (diamonds), ♣ (clubs)
      * Color identification: Red suits = hearts/diamonds, Black suits = spades/clubs
-   - Format: Return as array: [{ rank: "Q", suit: "c", confidence: 0.95 }, { rank: "J", suit: "c", confidence: 0.95 }]
+   - Format: MUST return as array: [{"rank": "Q", "suit": "c", "confidence": 0.95}, {"rank": "J", "suit": "c", "confidence": 0.95}]
+   - Suit notation: Use ONLY single lowercase letters: h, d, s, c
    - If cards are clearly visible but you're uncertain of exact rank/suit, still make your best determination and lower the confidence score
    - Only use "hidden" if absolutely no cards are visible at bottom-center
 
@@ -339,7 +347,7 @@ Return structured data with confidence scores for every field.`;
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-pro',
+            model: 'google/gemini-2.5-flash',
             messages: [
               { role: 'system', content: systemPrompt },
               {
