@@ -19,6 +19,18 @@ import { FormValues } from '@/utils/handFormHelpers';
 import { cn } from '@/lib/utils';
 import CardDisplay from './CardDisplay';
 
+const normalizeSuit = (suit: string): string => {
+  // Convert Unicode symbols or full names to letter codes
+  const suitMap: Record<string, string> = {
+    '♥': 'h', '♡': 'h', 'hearts': 'h', 'heart': 'h', 'H': 'h',
+    '♦': 'd', '♢': 'd', 'diamonds': 'd', 'diamond': 'd', 'D': 'd',
+    '♠': 's', '♤': 's', 'spades': 's', 'spade': 's', 'S': 's',
+    '♣': 'c', '♧': 'c', 'clubs': 'c', 'club': 'c', 'C': 'c',
+  };
+  
+  return suitMap[suit] || suit.toLowerCase();
+};
+
 interface AIHandAnalyzerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -383,7 +395,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                         <CardDisplay 
                           cards={state.analysis.hero.cards
                             .filter(c => c?.rank && c?.suit)
-                            .map(c => `${c.rank}${c.suit}`)
+                            .map(c => `${c.rank}${normalizeSuit(c.suit)}`)
                             .join('') || '??'}
                           size="md"
                         />
@@ -414,7 +426,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                         <CardDisplay 
                           cards={state.analysis.board.flop
                             .filter(c => c?.rank && c?.suit)
-                            .map(c => `${c.rank}${c.suit}`)
+                            .map(c => `${c.rank}${normalizeSuit(c.suit)}`)
                             .join('') || '??????'}
                           size="sm"
                         />
@@ -423,7 +435,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-muted-foreground min-w-[45px]">Turn:</span>
                           <CardDisplay 
-                            cards={`${state.analysis.board.turn.rank}${state.analysis.board.turn.suit}`}
+                            cards={`${state.analysis.board.turn.rank}${normalizeSuit(state.analysis.board.turn.suit)}`}
                             size="sm"
                           />
                         </div>
@@ -432,7 +444,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-muted-foreground min-w-[45px]">River:</span>
                           <CardDisplay 
-                            cards={`${state.analysis.board.river.rank}${state.analysis.board.river.suit}`}
+                            cards={`${state.analysis.board.river.rank}${normalizeSuit(state.analysis.board.river.suit)}`}
                             size="sm"
                           />
                         </div>

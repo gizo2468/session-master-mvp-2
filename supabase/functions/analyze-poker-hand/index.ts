@@ -214,7 +214,11 @@ Return structured data with confidence scores for every field.`;
                         type: "object",
                         properties: {
                           rank: { type: "string" },
-                          suit: { type: "string" },
+                          suit: { 
+                            type: "string",
+                            enum: ["h", "d", "s", "c"],
+                            description: "Suit as single letter: h=hearts, d=diamonds, s=spades, c=clubs"
+                          },
                           confidence: { type: "number" }
                         }
                       }
@@ -404,6 +408,14 @@ Remember: Card detection accuracy is the TOP priority. Take your time to identif
 
         const analysisResult = JSON.parse(toolCall.function.arguments);
         analysisResult.metadata.processingTimeMs = Date.now() - startTime;
+
+        // Log card detection results for debugging
+        console.log('Card detection results:', {
+          heroCards: analysisResult.hero.cards,
+          boardFlop: analysisResult.board.flop,
+          boardTurn: analysisResult.board.turn,
+          boardRiver: analysisResult.board.river
+        });
 
         // Minimal analytics - no PII
         console.log('Hand analysis completed', {
