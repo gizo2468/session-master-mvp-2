@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSessionContext } from '@/context/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { calculateSessionProfit } from '@/utils/sessionCalculations';
 import { getCurrencySymbol, useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 import { useUnifiedSessionStats } from '@/hooks/useUnifiedSessionStats';
+import { calculateSessionStatisticsFromDB } from '@/utils/statisticsCalculator';
 
 function MobileStackTitle({ text }: { text: string }) {
   const isPercentTitle = text.includes('%'); // e.g., "Win %", "ROI %"
@@ -49,7 +50,40 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
   
   // Fetch unified statistics from database - single source of truth
   const { statistics, isLoading: statsLoading } = useUnifiedSessionStats();
-  const isLoading = sessionsLoading || statsLoading;
+  const [breakdownLoading, setBreakdownLoading] = useState(false);
+  const [currencyBreakdown, setCurrencyBreakdown] = useState<Record<string, number>>({});
+  const [overallCurrencyResult, setOverallCurrencyResult] = useState<number>(0);
+  const isLoading = sessionsLoading || statsLoading || breakdownLoading;
+
+  // Keep Overall Results and Currency Breakdown fully in sync with DB totals per currency
+  useEffect(() => {
+    const fetchBreakdown = async () => {
+      try {
+        setBreakdownLoading(true);
+        // Use completed sessions only to discover currencies; values come from DB
+        const completed = sessions.filter(s => !s.isActive && (s.currentStatus === 'ended' || s.status === 'completed' || !s.status));
+        const currencies = Array.from(new Set(completed.map(s => s.currency || 'USD')));
+        if (!currencies.includes(defaultCurrency)) {
+          currencies.push(defaultCurrency);
+        }
+        const results = await Promise.all(
+          currencies.map(async (cur) => {
+            const stats = await calculateSessionStatisticsFromDB('all', 'all-time', undefined, undefined, cur);
+            return [cur, Number(stats?.netResult || 0)] as [string, number];
+          })
+        );
+        const map: Record<string, number> = {};
+        results.forEach(([cur, val]) => { map[cur] = val; });
+        setCurrencyBreakdown(map);
+        setOverallCurrencyResult(map[defaultCurrency] || 0);
+      } catch (e) {
+        console.error('Failed to fetch currency breakdown from DB', e);
+      } finally {
+        setBreakdownLoading(false);
+      }
+    };
+    fetchBreakdown();
+  }, [sessions, defaultCurrency]);
   
   if (isLoading) {
     return (
@@ -89,7 +123,7 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
   const dbStats = statistics.all;
   
   // Calculate statistics from database
-  const overallResults = dbStats?.netResult || 0;
+  const overallResults = overallCurrencyResult;
   const totalSessions = dbStats?.numberOfSessions || 0;
   const winRatio = dbStats?.winRatio || 0;
   const wins = Math.round((winRatio * totalSessions) / 100);
@@ -100,19 +134,9 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
   const totalBuyIns = dbStats?.totalBuyIns || 0;
   const totalPayouts = dbStats?.totalPayouts || 0;
   
-  // Group ALL sessions by currency for currency breakdown dialog (display-only feature)
+  // Currency breakdown sourced from DB to stay in sync
   const completedSessions = sessions.filter(s => !s.isActive && (s.currentStatus === 'ended' || s.status === 'completed' || !s.status));
-  const allResultsByCurrency = completedSessions.reduce((acc, session) => {
-    const currency = session.currency || 'USD';
-    const profit = calculateSessionProfit(session);
-    
-    if (!acc[currency]) {
-      acc[currency] = 0;
-    }
-    acc[currency] += profit;
-    
-    return acc;
-  }, {} as Record<string, number>);
+  const allResultsByCurrency = currencyBreakdown;
 
   // Currency display functions
   const currencySymbol = getCurrencySymbol(defaultCurrency);
