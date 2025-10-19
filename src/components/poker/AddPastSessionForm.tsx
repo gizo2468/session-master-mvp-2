@@ -160,7 +160,7 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
       <div className="container mx-auto max-w-4xl px-4 py-4 md:py-8">
         <header className="mb-6 md:mb-8">
           <Button 
