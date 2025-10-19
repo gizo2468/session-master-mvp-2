@@ -154,7 +154,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>AI Hand Analyzer</DialogTitle>
           <DialogDescription>
@@ -162,369 +162,366 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh] pr-4">
-          <div className="space-y-4">
-            {/* Privacy Note */}
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription className="text-xs">
-                Images are processed securely and temporarily. No personal data is stored or logged.
-              </AlertDescription>
-            </Alert>
+        <div className="space-y-4 py-4">
+          {/* Privacy Note */}
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription className="text-xs">
+              Images are processed securely and temporarily. No personal data is stored or logged.
+            </AlertDescription>
+          </Alert>
 
-            {/* Upload State */}
-            {state.status === 'idle' && !state.image && (
-              <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-8 text-center hover:bg-poker-gold/5 transition-colors">
-                <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground mb-2">
-                  Drop poker hand screenshot here
-                </p>
-                <label htmlFor="hand-upload" className="cursor-pointer">
-                  <Button type="button" variant="outline" size="sm" asChild>
-                    <span>Choose File</span>
-                  </Button>
-                </label>
-                <input
-                  id="hand-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileSelect}
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Supported: JPG, PNG, WebP (max 10MB)
-                </p>
-              </div>
-            )}
+          {/* Upload State */}
+          {state.status === 'idle' && !state.image && (
+            <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-8 text-center hover:bg-poker-gold/5 transition-colors">
+              <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground mb-2">
+                Drop poker hand screenshot here
+              </p>
+              <label htmlFor="hand-upload" className="cursor-pointer">
+                <Button type="button" variant="outline" size="sm" asChild>
+                  <span>Choose File</span>
+                </Button>
+              </label>
+              <input
+                id="hand-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Supported: JPG, PNG, WebP (max 10MB)
+              </p>
+            </div>
+          )}
 
-            {/* Image Preview */}
-            {state.image && state.status === 'idle' && (
-              <div className="space-y-3">
-                <img
-                  src={state.image}
-                  alt="Poker hand screenshot"
-                  className="w-full rounded-lg border"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    onClick={analyzeHand}
-                    className="flex-1 bg-poker-gold hover:bg-poker-darkGold text-white"
-                  >
-                    Analyze Hand
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={reset}
-                  >
-                    Change Image
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Analyzing State */}
-            {state.status === 'analyzing' && (
-              <div className="flex flex-col items-center justify-center py-12">
-                <Loader2 className="h-12 w-12 animate-spin text-poker-gold mb-4" />
-                <p className="text-sm font-medium">Analyzing hand...</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  This may take up to 30 seconds
-                </p>
-              </div>
-            )}
-
-            {/* Unsupported Format */}
-            {state.status === 'unsupportedFormat' && (
-              <div className="space-y-3">
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>{state.error}</AlertDescription>
-                </Alert>
+          {/* Image Preview */}
+          {state.image && state.status === 'idle' && (
+            <div className="space-y-3">
+              <img
+                src={state.image}
+                alt="Poker hand screenshot"
+                className="w-full rounded-lg border"
+              />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  onClick={analyzeHand}
+                  className="flex-1 bg-poker-gold hover:bg-poker-darkGold text-white"
+                >
+                  Analyze Hand
+                </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={reset}
-                  className="w-full"
                 >
-                  Try Another Hand
+                  Change Image
                 </Button>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Dealer Selection Needed */}
-            {state.status === 'needsDealerSelection' && (
-              <div className="space-y-4">
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    Could not confidently detect dealer button position. Please select manually:
-                  </AlertDescription>
-                </Alert>
-                
-                <div className="flex flex-col items-center gap-4 py-4">
-                  <div className="relative w-48 h-48">
-                    {positions.map((pos, idx) => {
-                      const angle = (idx * 60) - 90;
-                      const radian = (angle * Math.PI) / 180;
-                      const x = 96 + 80 * Math.cos(radian);
-                      const y = 96 + 80 * Math.sin(radian);
-                      
-                      return (
-                        <button
-                          key={pos}
-                          type="button"
-                          onClick={() => setSelectedDealer(pos)}
-                          className={cn(
-                            "absolute w-12 h-12 rounded-full border-2 text-sm font-semibold transition-all",
-                            selectedDealer === pos
-                              ? "bg-poker-gold border-poker-gold text-white"
-                              : "bg-background border-muted-foreground/30 hover:border-poker-gold"
-                          )}
-                          style={{
-                            left: `${x - 24}px`,
-                            top: `${y - 24}px`,
-                          }}
-                        >
-                          {pos}
-                        </button>
-                      );
-                    })}
+          {/* Analyzing State */}
+          {state.status === 'analyzing' && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="h-12 w-12 animate-spin text-poker-gold mb-4" />
+              <p className="text-sm font-medium">Analyzing hand...</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                This may take up to 30 seconds
+              </p>
+            </div>
+          )}
+
+          {/* Unsupported Format */}
+          {state.status === 'unsupportedFormat' && (
+            <div className="space-y-3">
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{state.error}</AlertDescription>
+              </Alert>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={reset}
+                className="w-full"
+              >
+                Try Another Hand
+              </Button>
+            </div>
+          )}
+
+          {/* Dealer Selection Needed */}
+          {state.status === 'needsDealerSelection' && (
+            <div className="space-y-4">
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Could not confidently detect dealer button position. Please select manually:
+                </AlertDescription>
+              </Alert>
+              
+              <div className="flex flex-col items-center gap-4 py-4">
+                <div className="relative w-48 h-48">
+                  {positions.map((pos, idx) => {
+                    const angle = (idx * 60) - 90;
+                    const radian = (angle * Math.PI) / 180;
+                    const x = 96 + 80 * Math.cos(radian);
+                    const y = 96 + 80 * Math.sin(radian);
                     
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold">
-                      D
-                    </div>
-                  </div>
+                    return (
+                      <button
+                        key={pos}
+                        type="button"
+                        onClick={() => setSelectedDealer(pos)}
+                        className={cn(
+                          "absolute w-12 h-12 rounded-full border-2 text-sm font-semibold transition-all",
+                          selectedDealer === pos
+                            ? "bg-poker-gold border-poker-gold text-white"
+                            : "bg-background border-muted-foreground/30 hover:border-poker-gold"
+                        )}
+                        style={{
+                          left: `${x - 24}px`,
+                          top: `${y - 24}px`,
+                        }}
+                      >
+                        {pos}
+                      </button>
+                    );
+                  })}
                   
-                  <Button
-                    type="button"
-                    onClick={handleDealerConfirm}
-                    disabled={!selectedDealer}
-                    className="bg-poker-gold hover:bg-poker-darkGold text-white"
-                  >
-                    Confirm Dealer Position
-                  </Button>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold">
+                    D
+                  </div>
                 </div>
+                
+                <Button
+                  type="button"
+                  onClick={handleDealerConfirm}
+                  className="bg-poker-gold hover:bg-poker-darkGold text-white"
+                >
+                  Confirm Dealer Position
+                </Button>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Success - Analysis Results */}
-            {state.status === 'success' && state.analysis && (
-              <div className="space-y-4">
-                <Alert>
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <AlertDescription>
-                    Hand analyzed successfully in {(state.analysis.metadata.processingTimeMs / 1000).toFixed(1)}s
-                  </AlertDescription>
-                </Alert>
+          {/* Success - Analysis Results */}
+          {state.status === 'success' && state.analysis && (
+            <div className="space-y-4">
+              <Alert>
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription>
+                  Hand analyzed successfully in {(state.analysis.metadata.processingTimeMs / 1000).toFixed(1)}s
+                </AlertDescription>
+              </Alert>
 
-                <div className="space-y-4 text-sm">
-                  {/* Game Overview */}
-                  <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                    <h4 className="font-semibold text-base">Game Overview</h4>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div>
-                        <span className="text-muted-foreground">Players in Hand:</span>
-                        <span className="ml-2 font-medium">
-                          {state.analysis.metadata.playerCount || (1 + (state.analysis.villains?.length || 0))}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Game Type:</span>
-                        <span className="ml-2 font-medium">{state.analysis.gameContext.gameType}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Format:</span>
-                        <span className="ml-2 font-medium capitalize">{state.analysis.gameContext.format}</span>
-                      </div>
-                      {state.analysis.gameContext.blindLevel && (
-                        <div>
-                          <span className="text-muted-foreground">Blinds:</span>
-                          <span className="ml-2 font-medium">
-                            {state.analysis.gameContext.blindLevel.sb}/{state.analysis.gameContext.blindLevel.bb}
-                          </span>
-                        </div>
-                      )}
+              <div className="space-y-4 text-sm">
+                {/* Game Overview */}
+                <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                  <h4 className="font-semibold text-base">Game Overview</h4>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Players in Hand:</span>
+                      <span className="ml-2 font-medium">
+                        {state.analysis.metadata.playerCount || (1 + (state.analysis.villains?.length || 0))}
+                      </span>
                     </div>
-                    
-                    {/* Screenshot Thumbnail */}
-                    {state.image && (
-                      <div className="mt-3 pt-3 border-t border-muted-foreground/10">
-                        <button
-                          type="button"
-                          onClick={() => setShowFullImage(true)}
-                          className="group relative w-20 h-14 rounded border border-muted-foreground/20 overflow-hidden hover:border-poker-gold transition-colors"
-                        >
-                          <img
-                            src={state.image}
-                            alt="Hand screenshot thumbnail"
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                            <span className="text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 px-1.5 py-0.5 rounded">
-                              View
-                            </span>
-                          </div>
-                        </button>
+                    <div>
+                      <span className="text-muted-foreground">Game Type:</span>
+                      <span className="ml-2 font-medium">{state.analysis.gameContext.gameType}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Format:</span>
+                      <span className="ml-2 font-medium capitalize">{state.analysis.gameContext.format}</span>
+                    </div>
+                    {state.analysis.gameContext.blindLevel && (
+                      <div>
+                        <span className="text-muted-foreground">Blinds:</span>
+                        <span className="ml-2 font-medium">
+                          {state.analysis.gameContext.blindLevel.sb}/{state.analysis.gameContext.blindLevel.bb}
+                        </span>
                       </div>
                     )}
                   </div>
+                  
+                  {/* Screenshot Thumbnail */}
+                  {state.image && (
+                    <div className="mt-3 pt-3 border-t border-muted-foreground/10">
+                      <button
+                        type="button"
+                        onClick={() => setShowFullImage(true)}
+                        className="group relative w-20 h-14 rounded border border-muted-foreground/20 overflow-hidden hover:border-poker-gold transition-colors"
+                      >
+                        <img
+                          src={state.image}
+                          alt="Hand screenshot thumbnail"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                          <span className="text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 px-1.5 py-0.5 rounded">
+                            View
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
 
-                  {/* Hero */}
+                {/* Hero */}
+                <div>
+                  <h4 className="font-semibold mb-1">
+                    Hero {state.analysis.hero.position !== 'UNKNOWN' && `(${state.analysis.hero.position})`}
+                  </h4>
+                  <p className="text-muted-foreground">
+                    {state.analysis.hero.cards === 'hidden' ? 
+                      'Cards not visible' : 
+                      Array.isArray(state.analysis.hero.cards) ?
+                        state.analysis.hero.cards
+                          .filter(c => c?.rank && c?.suit)
+                          .map(c => `${c.rank}${c.suit}`)
+                          .join(' ') || 'Cards not detected' :
+                        'Cards not detected'
+                    }
+                    {state.analysis.hero.stack && (
+                      <span className="ml-2 text-xs">
+                        (Stack: {state.analysis.hero.stack} {state.analysis.hero.stackUnit || 'chips'})
+                      </span>
+                    )}
+                    {state.analysis.hero.confidence < 0.8 && (
+                      <span className="text-xs text-yellow-600 ml-2">
+                        (Confidence: {Math.round(state.analysis.hero.confidence * 100)}%)
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {/* Board Cards */}
+                {state.analysis.board.flop && Array.isArray(state.analysis.board.flop) && state.analysis.board.flop.length > 0 && (
                   <div>
-                    <h4 className="font-semibold mb-1">
-                      Hero {state.analysis.hero.position !== 'UNKNOWN' && `(${state.analysis.hero.position})`}
-                    </h4>
-                    <p className="text-muted-foreground">
-                      {state.analysis.hero.cards === 'hidden' ? 
-                        'Cards not visible' : 
-                        Array.isArray(state.analysis.hero.cards) ?
-                          state.analysis.hero.cards
+                    <h4 className="font-semibold mb-1">Board</h4>
+                    <div className="text-muted-foreground space-y-1">
+                      <div>
+                        <span className="font-medium">Flop:</span> {
+                          state.analysis.board.flop
                             .filter(c => c?.rank && c?.suit)
                             .map(c => `${c.rank}${c.suit}`)
-                            .join(' ') || 'Cards not detected' :
-                          'Cards not detected'
-                      }
-                      {state.analysis.hero.stack && (
-                        <span className="ml-2 text-xs">
-                          (Stack: {state.analysis.hero.stack} {state.analysis.hero.stackUnit || 'chips'})
-                        </span>
+                            .join(' ') || 'Not detected'
+                        }
+                      </div>
+                      {state.analysis.board.turn?.rank && state.analysis.board.turn?.suit && (
+                        <div>
+                          <span className="font-medium">Turn:</span> {state.analysis.board.turn.rank}{state.analysis.board.turn.suit}
+                        </div>
                       )}
-                      {state.analysis.hero.confidence < 0.8 && (
-                        <span className="text-xs text-yellow-600 ml-2">
-                          (Confidence: {Math.round(state.analysis.hero.confidence * 100)}%)
+                      {state.analysis.board.river?.rank && state.analysis.board.river?.suit && (
+                        <div>
+                          <span className="font-medium">River:</span> {state.analysis.board.river.rank}{state.analysis.board.river.suit}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Sequences */}
+                {state.analysis.actions && state.analysis.actions.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Action Sequence</h4>
+                    <div className="space-y-3">
+                      {state.analysis.actions.map((streetAction, idx) => (
+                        <div key={idx} className="border-l-2 border-poker-gold/30 pl-3">
+                          <h5 className="font-medium text-xs uppercase text-poker-gold mb-1">
+                            {streetAction.street}
+                          </h5>
+                          {streetAction.sequence && Array.isArray(streetAction.sequence) && streetAction.sequence.length > 0 ? (
+                            <ul className="space-y-1 text-xs">
+                              {streetAction.sequence.map((action, actionIdx) => (
+                                <li key={actionIdx} className="text-muted-foreground">
+                                  <span className="font-medium text-foreground">{action.player}:</span>{' '}
+                                  <span className="capitalize">{action.action}</span>
+                                  {action.amount && ` (${action.amount})`}
+                                  {action.confidence < 0.7 && (
+                                    <span className="text-yellow-600 ml-1">(?)</span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-xs text-muted-foreground italic">
+                              {streetAction.description || 'No detailed actions detected'}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Result */}
+                {state.analysis.result.summary && (
+                  <div>
+                    <h4 className="font-semibold mb-1">Result</h4>
+                    <p className="text-muted-foreground">
+                      {state.analysis.result.summary}
+                      {state.analysis.result.amount && state.analysis.result.outcome !== 'unknown' && (
+                        <span className={cn(
+                          "ml-2 font-medium",
+                          state.analysis.result.outcome === 'win' ? "text-green-600" : "text-red-600"
+                        )}>
+                          ({state.analysis.result.outcome === 'win' ? '+' : '-'}{state.analysis.result.amount})
                         </span>
                       )}
                     </p>
                   </div>
+                )}
 
-                  {/* Board Cards */}
-                  {state.analysis.board.flop && Array.isArray(state.analysis.board.flop) && state.analysis.board.flop.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold mb-1">Board</h4>
-                      <div className="text-muted-foreground space-y-1">
-                        <div>
-                          <span className="font-medium">Flop:</span> {
-                            state.analysis.board.flop
-                              .filter(c => c?.rank && c?.suit)
-                              .map(c => `${c.rank}${c.suit}`)
-                              .join(' ') || 'Not detected'
-                          }
-                        </div>
-                        {state.analysis.board.turn?.rank && state.analysis.board.turn?.suit && (
-                          <div>
-                            <span className="font-medium">Turn:</span> {state.analysis.board.turn.rank}{state.analysis.board.turn.suit}
-                          </div>
-                        )}
-                        {state.analysis.board.river?.rank && state.analysis.board.river?.suit && (
-                          <div>
-                            <span className="font-medium">River:</span> {state.analysis.board.river.rank}{state.analysis.board.river.suit}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Action Sequences */}
-                  {state.analysis.actions && state.analysis.actions.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold mb-2">Action Sequence</h4>
-                      <div className="space-y-3">
-                        {state.analysis.actions.map((streetAction, idx) => (
-                          <div key={idx} className="border-l-2 border-poker-gold/30 pl-3">
-                            <h5 className="font-medium text-xs uppercase text-poker-gold mb-1">
-                              {streetAction.street}
-                            </h5>
-                            {streetAction.sequence && Array.isArray(streetAction.sequence) && streetAction.sequence.length > 0 ? (
-                              <ul className="space-y-1 text-xs">
-                                {streetAction.sequence.map((action, actionIdx) => (
-                                  <li key={actionIdx} className="text-muted-foreground">
-                                    <span className="font-medium text-foreground">{action.player}:</span>{' '}
-                                    <span className="capitalize">{action.action}</span>
-                                    {action.amount && ` (${action.amount})`}
-                                    {action.confidence < 0.7 && (
-                                      <span className="text-yellow-600 ml-1">(?)</span>
-                                    )}
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <p className="text-xs text-muted-foreground italic">
-                                {streetAction.description || 'No detailed actions detected'}
-                              </p>
-                            )}
-                          </div>
+                {/* Warnings */}
+                {state.analysis.metadata.warnings && state.analysis.metadata.warnings.length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <ul className="list-disc list-inside text-xs">
+                        {state.analysis.metadata.warnings.map((w, i) => (
+                          <li key={i}>{w}</li>
                         ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Result */}
-                  {state.analysis.result.summary && (
-                    <div>
-                      <h4 className="font-semibold mb-1">Result</h4>
-                      <p className="text-muted-foreground">
-                        {state.analysis.result.summary}
-                        {state.analysis.result.amount && state.analysis.result.outcome !== 'unknown' && (
-                          <span className={cn(
-                            "ml-2 font-medium",
-                            state.analysis.result.outcome === 'win' ? "text-green-600" : "text-red-600"
-                          )}>
-                            ({state.analysis.result.outcome === 'win' ? '+' : '-'}{state.analysis.result.amount})
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Warnings */}
-                  {state.analysis.metadata.warnings && state.analysis.metadata.warnings.length > 0 && (
-                    <Alert variant="destructive">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription>
-                        <ul className="list-disc list-inside text-xs">
-                          {state.analysis.metadata.warnings.map((w, i) => (
-                            <li key={i}>{w}</li>
-                          ))}
-                        </ul>
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="edit-before-apply"
-                    checked={editBeforeApplying}
-                    onCheckedChange={(checked) => setEditBeforeApplying(checked as boolean)}
-                  />
-                  <Label htmlFor="edit-before-apply" className="text-sm cursor-pointer">
-                    Review and edit before applying to form
-                  </Label>
-                </div>
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
-            )}
 
-            {/* Error State */}
-            {state.status === 'error' && (
-              <div className="space-y-3">
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>{state.error}</AlertDescription>
-                </Alert>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={reset}
-                  className="w-full"
-                >
-                  Try Again
-                </Button>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="edit-before-apply"
+                  checked={editBeforeApplying}
+                  onCheckedChange={(checked) => setEditBeforeApplying(checked as boolean)}
+                />
+                <Label htmlFor="edit-before-apply" className="text-sm cursor-pointer">
+                  Review and edit before applying to form
+                </Label>
               </div>
-            )}
-          </div>
-        </ScrollArea>
+            </div>
+          )}
+
+          {/* Error State */}
+          {state.status === 'error' && (
+            <div className="space-y-3">
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{state.error}</AlertDescription>
+              </Alert>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={reset}
+                className="w-full bg-poker-gold hover:bg-poker-darkGold text-white"
+              >
+                Try Again
+              </Button>
+            </div>
+          )}
+        </div>
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={handleClose}>
