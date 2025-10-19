@@ -8,6 +8,40 @@ const corsHeaders = {
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ANALYSIS_TIMEOUT = 30000; // 30 seconds
 
+// Dealer button reference image (yellow circle with "D")
+const DEALER_BUTTON_REFERENCE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxOCIgZmlsbD0iI0ZGRDcwMCIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjIwIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzAwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkQ8L3RleHQ+PC9zdmc+';
+
+// Normalize dealer button position strings to canonical seat names
+function normalizeDealerSeat(pos?: string | null): string | null {
+  if (!pos) return null;
+  const s = pos.toLowerCase().replace(/[\s_-]+/g, '');
+  if (s.includes('hero') || s.includes('bottomcenter') || s.includes('centerbottom') || s.includes('bottommiddle') || s.includes('middlebottom')) return 'BOTTOM_CENTER';
+  if (s.includes('bottomright')) return 'BOTTOM_RIGHT';
+  if (s === 'right' || s.includes('middleright')) return 'RIGHT';
+  if (s.includes('topright')) return 'TOP_RIGHT';
+  if (s.includes('topcenter') || s.includes('centertop') || s.includes('topmiddle') || s.includes('middletop')) return 'TOP_CENTER';
+  if (s.includes('topleft')) return 'TOP_LEFT';
+  if (s === 'left' || s.includes('middleleft')) return 'LEFT';
+  if (s.includes('bottomleft')) return 'BOTTOM_LEFT';
+  return null;
+}
+
+// Map dealer seat to hero position (clockwise calculation)
+function mapDealerSeatToHeroPos(seat: string, playerCount = 6): string | null {
+  const sixPlus = playerCount >= 6;
+  switch (seat) {
+    case 'BOTTOM_CENTER': return 'BTN';
+    case 'BOTTOM_RIGHT':  return 'SB';
+    case 'RIGHT':         return 'BB';
+    case 'TOP_RIGHT':     return 'UTG';
+    case 'TOP_CENTER':    return sixPlus ? 'MP' : 'UTG';
+    case 'TOP_LEFT':      return sixPlus ? 'MP' : 'CO';
+    case 'LEFT':          return 'CO';
+    case 'BOTTOM_LEFT':   return 'CO';
+    default:              return null;
+  }
+}
+
 // Server-side EXIF stripping by re-encoding
 async function stripEXIF(base64Image: string): Promise<string> {
   try {
@@ -198,17 +232,22 @@ CRITICAL POSITION DETECTION INSTRUCTIONS:
 
 1. DEALER BUTTON IDENTIFICATION:
    - Visual Characteristics:
-     * Look for a white or yellow circular icon with "D" or "DEALER" text
-     * Usually positioned near a player's avatar (above, beside, or below the name)
-     * May be a small button icon, badge, or marker
-     * Sometimes appears as a chip with "D" marking
+     * BRIGHT YELLOW circular badge with black "D" letter (see reference image provided)
+     * Small circular icon (typically 20-40px diameter)
+     * High contrast: bright yellow/gold fill (#FFD700 or similar) with black text
+     * Usually positioned DIRECTLY NEXT TO or OVERLAPPING a player's avatar/name plate
+     * Most common locations: slightly above avatar, beside avatar, or on the avatar border
+     * The "D" glyph is bold, centered, and clearly visible against the yellow background
    
    - Detection Strategy:
-     1. First, scan all visible player positions for the dealer button icon
-     2. If the dealer button is on the HERO (bottom-center player), hero position = "BTN"
-     3. If the dealer button is on another player, use clockwise table geometry to calculate hero position
-     4. Mark confidence as high (>0.8) if the button is clearly visible
-     5. Mark confidence as low (<0.5) if button is obscured or unclear
+      1. FIRST: Compare the screenshot to the reference dealer button image I'm providing
+      2. Scan ALL visible player avatars/names for the bright yellow circular badge with "D"
+      3. CRITICAL: If the dealer button is on the HERO (bottom-center player), ALWAYS return position="BTN" with hero.confidence=0.95
+      4. If the dealer button is on another player, return the EXACT spatial location (e.g., "BOTTOM_RIGHT", "TOP_LEFT", "RIGHT")
+      5. For spatial location, use these terms: "BOTTOM_CENTER" (hero), "BOTTOM_RIGHT", "BOTTOM_LEFT", "RIGHT", "LEFT", "TOP_RIGHT", "TOP_CENTER", "TOP_LEFT"
+      6. Mark confidence as high (>0.85) if the button is clearly visible and matches the reference image
+      7. Mark confidence as medium (0.5-0.85) if button is partially obscured but detectable
+      8. Mark confidence as low (<0.5) if button is severely obscured or uncertain
 
 2. POSITION CALCULATION FROM DEALER BUTTON:
    - Use CLOCKWISE movement from dealer button:
@@ -450,11 +489,20 @@ Return structured data with confidence scores for every field.`;
             messages: [
               { role: 'system', content: systemPrompt },
               {
-                role: 'user',
+                 role: 'user',
                 content: [
+                  {
+                    type: 'image_url',
+                    image_url: { 
+                      url: DEALER_BUTTON_REFERENCE,
+                      detail: 'low'
+                    }
+                  },
                   { 
                     type: 'text', 
-                    text: `CRITICAL: Detect cards with PRECISE spatial positioning.
+                    text: `DEALER BUTTON REFERENCE: The first image shows what the dealer button looks like (bright yellow circle with "D"). Find THIS EXACT icon in the poker table screenshot (second image).
+
+CRITICAL: Detect cards with PRECISE spatial positioning.
 
 STEP 1 - HERO CARDS (Bottom-Center Position):
 - Find the player avatar that is horizontally CENTERED on the bottom edge of the table
@@ -479,17 +527,25 @@ SPATIAL REFERENCE:
 - Bottom-left = left side of the bottom edge (NOT hero)
 - Bottom-right = right side of the bottom edge (NOT hero)
 
-STEP 4 - POSITION DETECTION (Critical for hand analysis):
-- FIRST: Look for the dealer button icon (white/yellow circle with "D") near any player's avatar
-- If dealer button is on the HERO (bottom-center player): position = "BTN"
-- If dealer button is on another player: Count clockwise seats to determine hero position
-- FALLBACK: If button not visible, check the preflop action for SB/BB blind posts
-- LAST RESORT: If no button and no blind info, set position = "UNKNOWN" with low confidence
+STEP 4 - POSITION DETECTION (CRITICAL - Use reference image):
+- FIRST: Compare the reference dealer button (first image) to the poker table screenshot (second image)
+- Look for the BRIGHT YELLOW circular badge with black "D" near any player avatar
+- If dealer button is on the HERO (bottom-center player): ALWAYS return hero.position="BTN" and dealerButton.position="BOTTOM_CENTER" or "hero"
+- If dealer button is on another player: Return the EXACT spatial location using these terms:
+  * "BOTTOM_RIGHT" = player to hero's right
+  * "RIGHT" = player on right side of table
+  * "TOP_RIGHT" = player at top-right
+  * "TOP_CENTER" = player at top-center
+  * "TOP_LEFT" = player at top-left
+  * "LEFT" = player on left side of table
+  * "BOTTOM_LEFT" = player to hero's left
+- FALLBACK: If button not clearly visible, check the preflop action panel on the left for "SB" and "BB" blind posts
+- LAST RESORT: If no button and no blind info, set hero.position="UNKNOWN" with dealerButton.confidence < 0.5
 - DO NOT GUESS: If uncertain, use "UNKNOWN" instead of a wrong position
 
-Table position mapping (clockwise from dealer):
-- Standard positions (clockwise): BTN → SB → BB → UTG → MP → CO → BTN
-- For 5-handed: Skip MP (BTN → SB → BB → UTG → CO)
+Clockwise seat mapping (for reference only - you should return spatial location, not calculated position):
+- BTN → SB (next clockwise) → BB (next) → UTG → MP → CO → back to BTN
+- For 5-handed tables: Skip MP position
 
 ${heroOverride ? `Hero position override: ${heroOverride}.` : ''} ${dealerOverride ? `OVERRIDE APPLIED: Dealer button is at ${dealerOverride}. Calculate hero position accordingly.` : ''}
 
@@ -642,6 +698,70 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             analysisResult.metadata.warnings.push(
               'Position inconsistency detected. Dealer button on hero should indicate BTN position.'
             );
+          }
+        }
+
+        // POST-PROCESSING: Apply deterministic position correction
+        const dealerRaw = analysisResult.dealerButton?.position ?? null;
+        const dealerConf = analysisResult.dealerButton?.confidence ?? 0;
+        const playerCount = analysisResult.metadata?.playerCount ?? 6;
+        const normalizedSeat = normalizeDealerSeat(dealerRaw);
+        const mapped = normalizedSeat ? mapDealerSeatToHeroPos(normalizedSeat, playerCount) : null;
+
+        console.log('Position override check:', {
+          dealerRaw,
+          normalizedSeat,
+          mapped,
+          dealerConf,
+          currentHeroPos: analysisResult.hero?.position,
+          heroConf: analysisResult.hero?.confidence,
+          playerCount
+        });
+
+        // FORCE BTN if dealer button is on hero
+        if (normalizedSeat === 'BOTTOM_CENTER') {
+          if (analysisResult.hero.position !== 'BTN') {
+            console.log('CORRECTING: Dealer on hero, forcing position to BTN');
+            analysisResult.metadata.warnings = analysisResult.metadata.warnings.filter(
+              w => !w.includes('Position inconsistency')
+            );
+            analysisResult.metadata.warnings.push('Position corrected to BTN (dealer button on hero).');
+          }
+          analysisResult.hero.position = 'BTN';
+          analysisResult.hero.confidence = Math.max(analysisResult.hero.confidence ?? 0, dealerConf, 0.9);
+        } 
+        // Apply mapped position if dealer confidence is high
+        else if (mapped && dealerConf >= 0.7) {
+          if (analysisResult.hero.position !== mapped) {
+            console.log(`CORRECTING: Dealer mapping suggests ${mapped}, overriding from ${analysisResult.hero.position}`);
+            analysisResult.metadata.warnings.push(`Position corrected to ${mapped} based on dealer button location.`);
+          }
+          analysisResult.hero.position = mapped;
+          analysisResult.hero.confidence = Math.max(analysisResult.hero.confidence ?? 0, dealerConf);
+        } 
+        // Set UNKNOWN if mapping exists but confidence is medium and there's disagreement
+        else if (mapped && dealerConf >= 0.4 && dealerConf < 0.7) {
+          if (analysisResult.hero.position && analysisResult.hero.position !== mapped && (analysisResult.hero.confidence ?? 0) < 0.7) {
+            console.log('DOWNGRADING: Position disagreement with medium confidence, setting to UNKNOWN');
+            analysisResult.hero.position = 'UNKNOWN';
+            analysisResult.metadata.warnings.push('Position set to UNKNOWN due to low confidence (disagreement between sources).');
+          }
+        } 
+        // Fallback: use villain SB/BB positions if available
+        else if (dealerConf < 0.4) {
+          const hasSB = (analysisResult.villains || []).some(v => (v.position || '').toUpperCase() === 'SB');
+          const hasBB = (analysisResult.villains || []).some(v => (v.position || '').toUpperCase() === 'BB');
+          
+          if (hasSB && hasBB) {
+            if (analysisResult.hero.position !== 'BTN') {
+              console.log('FALLBACK: Inferring BTN from villain SB/BB postings');
+              analysisResult.hero.position = 'BTN';
+              analysisResult.metadata.warnings.push('Position inferred as BTN from blind postings (dealer button not clearly visible).');
+              analysisResult.hero.confidence = Math.max(analysisResult.hero.confidence ?? 0, 0.75);
+            }
+          } else if ((analysisResult.hero.confidence ?? 0) < 0.5) {
+            console.log('FALLBACK: Low confidence and no reliable position data, setting to UNKNOWN');
+            analysisResult.hero.position = 'UNKNOWN';
           }
         }
 
