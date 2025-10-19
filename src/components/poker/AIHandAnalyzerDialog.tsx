@@ -413,6 +413,9 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                 <div className="bg-muted/30 rounded-lg p-3">
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
                     Hero 
+                    <span className="text-xs font-normal bg-blue-500/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded">
+                      Bottom-Center Player
+                    </span>
                     {state.analysis.hero.position !== 'UNKNOWN' && (
                       <span className="text-xs font-normal bg-poker-gold/20 text-poker-gold px-2 py-0.5 rounded">
                         {state.analysis.hero.position}
@@ -421,7 +424,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                   </h4>
                   
                   <div className="space-y-2">
-                    {/* Cards Display */}
+                    {/* Cards Display with confidence warning */}
                     <div className="flex items-center gap-3">
                       {state.analysis.hero.cards === 'hidden' ? (
                         <div className="flex items-center gap-2">
@@ -443,10 +446,15 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                                   <span className="text-sm font-mono font-semibold">
                                     {parsedCards.map(c => `${c.rank}${c.suit.toUpperCase()}`).join(' ')}
                                   </span>
-                                  {state.analysis.hero.confidence < 0.8 && (
-                                    <span className="text-xs text-yellow-600">
-                                      Confidence: {Math.round(state.analysis.hero.confidence * 100)}%
-                                    </span>
+                                  {state.analysis.hero.confidence < 0.7 && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-xs text-yellow-600 dark:text-yellow-500 font-medium">
+                                        ⚠ Low confidence: {Math.round(state.analysis.hero.confidence * 100)}%
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        (Verify bottom-center player)
+                                      </span>
+                                    </div>
                                   )}
                                 </div>
                               </div>
@@ -456,8 +464,8 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                       ) : (
                         <div className="flex items-center gap-2">
                           <CardDisplay cards="??" size="md" />
-                          <span className="text-sm text-muted-foreground italic">
-                            Could not detect cards
+                          <span className="text-sm text-red-600 dark:text-red-400 font-medium">
+                            ⚠ Detection failed - Please verify bottom-center player cards
                           </span>
                         </div>
                       )}

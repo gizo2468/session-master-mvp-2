@@ -130,35 +130,62 @@ CRITICAL OUTPUT FORMAT RULES - EXTREMELY IMPORTANT:
 CRITICAL CARD DETECTION INSTRUCTIONS:
 
 1. HERO CARDS (HIGHEST PRIORITY):
-   - Location: ALWAYS at the BOTTOM-CENTER of the table image
-   - Appearance: Usually the LARGEST and most clearly visible cards on screen
-   - Count: Exactly 2 cards
-   - Process: Examine the bottom-center area FIRST before analyzing anything else
-   - Detection Strategy:
-     * Look for card-shaped rectangles with white/light backgrounds
-     * Identify the rank symbol (A, K, Q, J, T/10, 9, 8, 7, 6, 5, 4, 3, 2) in the corners
-     * Identify the suit symbol: ♠ (spades), ♥ (hearts), ♦ (diamonds), ♣ (clubs)
-     * Color identification: Red suits = hearts/diamonds, Black suits = spades/clubs
-   - Format: MUST return as array: [{"rank": "Q", "suit": "c", "confidence": 0.95}, {"rank": "J", "suit": "c", "confidence": 0.95}]
+   - Location: ALWAYS directly underneath the player avatar/name at the ABSOLUTE BOTTOM-CENTER of the screen
+   - Spatial Rule: The hero player is positioned at the vertical center of the bottom edge (horizontally centered)
+   - Key Identifiers:
+     * Player avatar/name is directly centered on the bottom edge of the table
+     * Cards appear DIRECTLY BELOW this centered player position
+     * These cards may have a "WIN" highlight, dealer button, or position badge nearby
+     * Ignore cards that are bottom-left, bottom-right, or at the sides - these belong to villains
+   - Visual Characteristics:
+     * Usually 2 cards side-by-side
+     * May be partially obscured by "WIN" text overlay, yellow highlights, or dealer buttons
+     * Look THROUGH overlays - the actual card rank/suit is still visible underneath
+   - Detection Priority:
+     1. First, identify the bottom-center player position (horizontally centered on bottom edge)
+     2. Then locate the 2 cards directly beneath that player's avatar
+     3. Read the card ranks/suits even if partially obscured by overlays
+   - Format: MUST return as array: [{"rank": "9", "suit": "d", "confidence": 0.95}, {"rank": "7", "suit": "h", "confidence": 0.95}]
    - Suit notation: Use ONLY single lowercase letters: h, d, s, c
-   - If cards are clearly visible but you're uncertain of exact rank/suit, still make your best determination and lower the confidence score
-   - Only use "hidden" if absolutely no cards are visible at bottom-center
+   - Only use "hidden" if absolutely no cards exist at the bottom-center position
 
 2. BOARD CARDS (SECOND PRIORITY):
-   - Location: CENTER/MIDDLE of the table in a horizontal line
-   - Appearance: Smaller than hero cards, arranged in a row
-   - Count: 0 (preflop), 3 (flop), 4 (flop+turn), or 5 (flop+turn+river)
+   - Location: ALWAYS in the horizontal CENTER of the table (middle of the felt/green area)
+   - Count: 0 (preflop), 3 (flop), 4 (flop+turn), or 5 (all streets)
+   - Key Challenge: Board cards are FREQUENTLY obscured by:
+     * Pot size displays (e.g., "43.6 BB")
+     * Chip stack graphics
+     * "WIN" labels
+     * Tournament information banners
    - Detection Strategy:
-     * Scan the center horizontal area of the image
-     * Count all card-shaped objects in a line
-     * Apply same rank/suit detection as hero cards
+     * Scan the CENTER horizontal band of the image (middle 30% of vertical space)
+     * Look for 3-5 card-shaped rectangles arranged in a horizontal line
+     * Read card ranks/suits THROUGH overlays - the cards are still visible underneath
+     * If you see partial cards (only top or bottom visible), still identify them
+     * Common pattern: White/light rectangular cards with rank in corner and suit symbol
    - Format:
-     * flop: array of 3 cards or null
-     * turn: single card object or null  
-     * river: single card object or null
-   - If ANY board cards are visible, detect and return ALL of them
+     * flop: [{"rank": "8", "suit": "h"}, {"rank": "2", "suit": "c"}, {"rank": "A", "suit": "s"}]
+     * turn: {"rank": "9", "suit": "h"}
+     * river: {"rank": "6", "suit": "s"}
+   - Critical: ALWAYS detect board cards if present, even if partially hidden
 
-3. CARD NOTATION REFERENCE:
+3. VILLAIN CARDS:
+   - All other visible hole cards belong to villains (not the hero)
+   - Typically located at: top-left, top-center, top-right, bottom-left, bottom-right
+   - May be face-down (hidden) or revealed at showdown
+   - Examples from screenshot:
+     * Bottom-left player: 5♠5♣ (clearly visible - this is NOT the hero)
+     * Top-left player: Face-down (hidden)
+     * Other positions: Face-down or revealed
+
+4. HANDLING WIN OVERLAYS:
+   - When you see a "WIN" label or yellow highlight on cards:
+     * This indicates the winning hand at showdown
+     * The actual card ranks/suits are STILL VISIBLE underneath the overlay
+     * Read the cards normally - don't be confused by the highlight
+     * The win overlay does NOT change which player is the hero
+
+5. CARD NOTATION REFERENCE:
    Ranks: A (Ace), K (King), Q (Queen), J (Jack), T (Ten), 9-2 (pip cards)
    Suits: h (hearts ♥), d (diamonds ♦), s (spades ♠), c (clubs ♣)
    
@@ -362,17 +389,34 @@ Return structured data with confidence scores for every field.`;
                 content: [
                   { 
                     type: 'text', 
-                    text: `CRITICAL: Focus on accurately detecting ALL visible playing cards in this poker hand screenshot.
+                    text: `CRITICAL: Detect cards with PRECISE spatial positioning.
 
-STEP 1: Examine the BOTTOM-CENTER of the image for the hero's 2 hole cards. These cards are usually the largest and most prominent. Look carefully at the rank and suit symbols.
+STEP 1 - HERO CARDS (Bottom-Center Position):
+- Find the player avatar that is horizontally CENTERED on the bottom edge of the table
+- The hero is the middle player at the bottom row, NOT left or right players
+- Look for the 2 hole cards DIRECTLY BENEATH this centered player's avatar
+- These cards may have a "WIN" overlay - read the ranks/suits underneath the overlay
+- Example: If you see players at bottom-left, bottom-center, and bottom-right, ONLY the bottom-center player is the hero
 
-STEP 2: Examine the CENTER of the table for board cards (community cards). Count how many cards are visible in a horizontal line and identify each one.
+STEP 2 - BOARD CARDS (Table Center):
+- Scan the CENTER of the green felt area for 3-5 cards in a horizontal line
+- These cards are often partially covered by pot displays, chip graphics, or text
+- Read the card ranks/suits even if obscured by overlays
+- Look for white/light rectangular shapes with suit symbols (♥♦♠♣) in the table center
 
-STEP 3: Extract all other game information (positions, stacks, actions).
+STEP 3 - VILLAIN CARDS:
+- All OTHER visible hole cards belong to villains (not the hero)
+- Villain positions: top-left, top-center, top-right, bottom-left, bottom-right
+- If a villain's cards are face-up, record them; if face-down, mark as "hidden"
+
+SPATIAL REFERENCE:
+- Bottom-center = horizontally centered on the bottom edge
+- Bottom-left = left side of the bottom edge (NOT hero)
+- Bottom-right = right side of the bottom edge (NOT hero)
 
 ${heroOverride ? `Hero position override: ${heroOverride}.` : ''} ${dealerOverride ? `Dealer button override: ${dealerOverride}.` : ''}
 
-Remember: Card detection accuracy is the TOP priority. Take your time to identify each visible card correctly.` 
+Remember: The hero is ALWAYS the bottom-center player. All other players are villains.`
                   },
                   { type: 'image_url', image_url: { url: cleanImage } }
                 ]
@@ -457,6 +501,44 @@ Remember: Card detection accuracy is the TOP priority. Take your time to identif
         // Apply to board flop
         if (analysisResult.board?.flop) {
           analysisResult.board.flop = validateAndFixCards(analysisResult.board.flop);
+        }
+
+        // Validate hero card detection with spatial reasoning
+        if (analysisResult.hero?.cards && Array.isArray(analysisResult.hero.cards)) {
+          console.log('Hero cards detected:', {
+            cards: analysisResult.hero.cards,
+            position: analysisResult.hero.position,
+            confidence: analysisResult.hero.confidence
+          });
+          
+          // Add warning if confidence is low
+          if (analysisResult.hero.confidence < 0.7) {
+            analysisResult.metadata.warnings.push(
+              'Low confidence in hero card detection. Please verify the bottom-center player cards.'
+            );
+          }
+        }
+
+        // Validate board card detection
+        if (analysisResult.board) {
+          const boardCardCount = 
+            (Array.isArray(analysisResult.board.flop) ? analysisResult.board.flop.length : 0) +
+            (analysisResult.board.turn ? 1 : 0) +
+            (analysisResult.board.river ? 1 : 0);
+          
+          console.log('Board cards detected:', {
+            flop: analysisResult.board.flop,
+            turn: analysisResult.board.turn,
+            river: analysisResult.board.river,
+            totalCards: boardCardCount,
+            confidence: analysisResult.board.confidence
+          });
+          
+          if (boardCardCount === 0 && analysisResult.metadata.playerCount > 2) {
+            analysisResult.metadata.warnings.push(
+              'No board cards detected, but multiple players are visible. Hand may have gone to showdown.'
+            );
+          }
         }
 
         // Log card detection results for debugging
