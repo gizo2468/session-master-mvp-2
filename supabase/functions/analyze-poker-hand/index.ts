@@ -111,22 +111,46 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are an expert poker hand analyzer specializing in No-Limit Hold'em (NLH).
+    const systemPrompt = `You are an expert poker hand analyzer with advanced computer vision capabilities, specializing in No-Limit Hold'em (NLH).
 
-CRITICAL SPATIAL DETECTION RULES:
-1. Hero Cards Location: The hero's two hole cards are ALWAYS at the BOTTOM-CENTER of the table image. They are typically the largest, most clearly visible cards. Look at the bottom-center position FIRST before analyzing anything else. If you see cards there, mark them as hero's cards with high confidence (>0.8).
-   - Card Format: Return each card with rank (A,K,Q,J,T,9,8,7,6,5,4,3,2) and suit (h=hearts, d=diamonds, s=spades, c=clubs)
-   - Example: Ace of Spades = { rank: "A", suit: "s", confidence: 0.95 }
-   - If a card is partially visible but readable, include it with lower confidence
-   - Only mark as "hidden" if absolutely no cards are visible at bottom-center
+CRITICAL CARD DETECTION INSTRUCTIONS:
 
-2. Board Cards Location: Community cards (flop, turn, river) are ALWAYS displayed in the CENTER/MIDDLE of the table in a horizontal line. Look for:
-   - 3 cards in a row = flop only (hand ended on flop)
-   - 4 cards in a row = flop + turn
-   - 5 cards in a row = flop + turn + river (hand went to showdown)
-   - No cards in center = hand ended preflop
-   - Card Format: Same as hero cards - use rank and suit notation
-   - Always detect ALL visible board cards, even if image quality is poor
+1. HERO CARDS (HIGHEST PRIORITY):
+   - Location: ALWAYS at the BOTTOM-CENTER of the table image
+   - Appearance: Usually the LARGEST and most clearly visible cards on screen
+   - Count: Exactly 2 cards
+   - Process: Examine the bottom-center area FIRST before analyzing anything else
+   - Detection Strategy:
+     * Look for card-shaped rectangles with white/light backgrounds
+     * Identify the rank symbol (A, K, Q, J, T/10, 9, 8, 7, 6, 5, 4, 3, 2) in the corners
+     * Identify the suit symbol: ♠ (spades), ♥ (hearts), ♦ (diamonds), ♣ (clubs)
+     * Color identification: Red suits = hearts/diamonds, Black suits = spades/clubs
+   - Format: Return as array: [{ rank: "Q", suit: "c", confidence: 0.95 }, { rank: "J", suit: "c", confidence: 0.95 }]
+   - If cards are clearly visible but you're uncertain of exact rank/suit, still make your best determination and lower the confidence score
+   - Only use "hidden" if absolutely no cards are visible at bottom-center
+
+2. BOARD CARDS (SECOND PRIORITY):
+   - Location: CENTER/MIDDLE of the table in a horizontal line
+   - Appearance: Smaller than hero cards, arranged in a row
+   - Count: 0 (preflop), 3 (flop), 4 (flop+turn), or 5 (flop+turn+river)
+   - Detection Strategy:
+     * Scan the center horizontal area of the image
+     * Count all card-shaped objects in a line
+     * Apply same rank/suit detection as hero cards
+   - Format:
+     * flop: array of 3 cards or null
+     * turn: single card object or null  
+     * river: single card object or null
+   - If ANY board cards are visible, detect and return ALL of them
+
+3. CARD NOTATION REFERENCE:
+   Ranks: A (Ace), K (King), Q (Queen), J (Jack), T (Ten), 9-2 (pip cards)
+   Suits: h (hearts ♥), d (diamonds ♦), s (spades ♠), c (clubs ♣)
+   
+   Example detections:
+   - Queen of Clubs = { rank: "Q", suit: "c", confidence: 0.9 }
+   - Ace of Hearts = { rank: "A", suit: "h", confidence: 0.95 }
+   - Ten of Spades = { rank: "T", suit: "s", confidence: 0.85 }
 
 3. Dealer Button: Detect the dealer button position. Return confidence score. If confidence < 0.7 or button not visible, set requiresManualSelection=true.
 
@@ -311,7 +335,7 @@ Return structured data with confidence scores for every field.`;
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
+            model: 'google/gemini-2.5-pro',
             messages: [
               { role: 'system', content: systemPrompt },
               {
@@ -319,7 +343,17 @@ Return structured data with confidence scores for every field.`;
                 content: [
                   { 
                     type: 'text', 
-                    text: `Analyze this poker hand. ${heroOverride ? `Hero override: ${heroOverride}.` : ''} ${dealerOverride ? `Dealer override: ${dealerOverride}.` : ''}` 
+                    text: `CRITICAL: Focus on accurately detecting ALL visible playing cards in this poker hand screenshot.
+
+STEP 1: Examine the BOTTOM-CENTER of the image for the hero's 2 hole cards. These cards are usually the largest and most prominent. Look carefully at the rank and suit symbols.
+
+STEP 2: Examine the CENTER of the table for board cards (community cards). Count how many cards are visible in a horizontal line and identify each one.
+
+STEP 3: Extract all other game information (positions, stacks, actions).
+
+${heroOverride ? `Hero position override: ${heroOverride}.` : ''} ${dealerOverride ? `Dealer button override: ${dealerOverride}.` : ''}
+
+Remember: Card detection accuracy is the TOP priority. Take your time to identify each visible card correctly.` 
                   },
                   { type: 'image_url', image_url: { url: cleanImage } }
                 ]
