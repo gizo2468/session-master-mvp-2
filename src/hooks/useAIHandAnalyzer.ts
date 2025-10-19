@@ -129,6 +129,17 @@ export const useAIHandAnalyzer = () => {
 
       const result = data as AIHandAnalysisResult;
 
+      // Add comprehensive debugging
+      console.log('AI Analysis Result:', {
+        heroCards: result.hero.cards,
+        heroCardsType: typeof result.hero.cards,
+        heroCardsIsArray: Array.isArray(result.hero.cards),
+        heroPosition: result.hero.position,
+        boardFlop: result.board.flop,
+        boardFlopType: typeof result.board.flop,
+        fullResult: result
+      });
+
       // Check for unsupported game types
       if (result.gameContext.gameType !== 'NLH') {
         setState(prev => ({

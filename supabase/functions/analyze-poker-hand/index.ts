@@ -100,12 +100,32 @@ serve(async (req) => {
 
     const systemPrompt = `You are an expert poker hand analyzer with advanced computer vision capabilities, specializing in No-Limit Hold'em (NLH).
 
-CRITICAL CARD FORMAT REQUIREMENTS:
-- ALL cards MUST use single lowercase letter suits: h (hearts), d (diamonds), s (spades), c (clubs)
-- Hero cards MUST be returned as array of objects: [{"rank": "A", "suit": "h"}, {"rank": "K", "suit": "d"}]
-- NEVER return cards as strings like "AhKd" or "[Ah,Kd]" or "Ah Kd"
-- Flop MUST be array of 3 objects: [{"rank": "Q", "suit": "s"}, {"rank": "5", "suit": "h"}, {"rank": "9", "suit": "c"}]
-- Turn/River MUST be single objects: {"rank": "2", "suit": "d"}
+CRITICAL OUTPUT FORMAT RULES - EXTREMELY IMPORTANT:
+
+1. **Hero Cards Format** (MUST be valid JSON array):
+   ✅ CORRECT: [{"rank": "5", "suit": "s"}, {"rank": "5", "suit": "c"}]
+   ❌ WRONG: "[{'rank': '5', 'suit': 's'}, {'rank': '5', 'suit': 'c'}]"
+   ❌ WRONG: "5s5c"
+   ❌ WRONG: ["5s", "5c"]
+   
+   - Use double quotes for property names and values
+   - Each card MUST be an object with "rank" and "suit" properties
+   - Return as a JavaScript array of objects, NOT a string
+
+2. **Rank Format**: Single character uppercase
+   - Face cards: A, K, Q, J, T (ten)
+   - Number cards: 9, 8, 7, 6, 5, 4, 3, 2
+
+3. **Suit Format**: Single lowercase letter ONLY
+   - h = hearts (♥)
+   - d = diamonds (♦)
+   - s = spades (♠)
+   - c = clubs (♣)
+
+4. **Board Cards**:
+   - Flop: Array of 3 card objects: [{"rank": "K", "suit": "h"}, {"rank": "9", "suit": "d"}, {"rank": "2", "suit": "c"}]
+   - Turn: Single card object: {"rank": "A", "suit": "s"}
+   - River: Single card object: {"rank": "Q", "suit": "h"}
 
 CRITICAL CARD DETECTION INSTRUCTIONS:
 
@@ -404,9 +424,45 @@ Remember: Card detection accuracy is the TOP priority. Take your time to identif
         const analysisResult = JSON.parse(toolCall.function.arguments);
         analysisResult.metadata.processingTimeMs = Date.now() - startTime;
 
+        // Validate and fix card format if needed
+        const validateAndFixCards = (cards: any): any => {
+          // If it's a string that looks like an array, try to parse it
+          if (typeof cards === 'string') {
+            try {
+              // Replace single quotes with double quotes for valid JSON
+              const fixed = cards.replace(/'/g, '"');
+              const parsed = JSON.parse(fixed);
+              return parsed;
+            } catch (e) {
+              console.error('Failed to parse card string:', cards);
+              return 'hidden';
+            }
+          }
+          return cards;
+        };
+
+        // Apply validation to hero cards
+        if (analysisResult.hero?.cards) {
+          analysisResult.hero.cards = validateAndFixCards(analysisResult.hero.cards);
+        }
+
+        // Apply to villains
+        if (analysisResult.villains && Array.isArray(analysisResult.villains)) {
+          analysisResult.villains = analysisResult.villains.map(v => ({
+            ...v,
+            cards: v.cards ? validateAndFixCards(v.cards) : 'hidden'
+          }));
+        }
+
+        // Apply to board flop
+        if (analysisResult.board?.flop) {
+          analysisResult.board.flop = validateAndFixCards(analysisResult.board.flop);
+        }
+
         // Log card detection results for debugging
         console.log('Card detection results:', {
           heroCards: analysisResult.hero.cards,
+          heroCardsType: typeof analysisResult.hero.cards,
           boardFlop: analysisResult.board.flop,
           boardTurn: analysisResult.board.turn,
           boardRiver: analysisResult.board.river

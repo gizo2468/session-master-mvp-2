@@ -410,56 +410,76 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                 </div>
 
                 {/* Hero */}
-                <div>
-                  <h4 className="font-semibold mb-1">
-                    Hero {state.analysis.hero.position !== 'UNKNOWN' && `(${state.analysis.hero.position})`}
-                  </h4>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    {state.analysis.hero.cards === 'hidden' ? (
-                      <span className="text-muted-foreground">Cards not visible</span>
-                    ) : Array.isArray(state.analysis.hero.cards) && state.analysis.hero.cards.length > 0 ? (
-                      <>
-                        {(() => {
-                          const parsedCards = parseCards(state.analysis.hero.cards);
-                          const cardString = parsedCards
-                            .map(c => `${c.rank}${normalizeSuit(c.suit)}`)
-                            .join('');
-                          
-                          return (
-                            <>
-                              <CardDisplay cards={cardString || '??'} size="md" />
-                              {cardString && (
-                                <span className="text-xs font-mono text-muted-foreground">
-                                  ({parsedCards.map(c => `${c.rank}${c.suit}`).join(' ')})
-                                </span>
-                              )}
-                            </>
-                          );
-                        })()}
-                        {state.analysis.hero.confidence < 0.8 && (
-                          <span className="text-xs text-yellow-600">
-                            (Confidence: {Math.round(state.analysis.hero.confidence * 100)}%)
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <CardDisplay cards="??" size="md" />
-                    )}
-                    {state.analysis.hero.stack && (
-                      <span className="text-sm text-muted-foreground">
-                        Stack: {state.analysis.hero.stack} {state.analysis.hero.stackUnit || 'chips'}
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    Hero 
+                    {state.analysis.hero.position !== 'UNKNOWN' && (
+                      <span className="text-xs font-normal bg-poker-gold/20 text-poker-gold px-2 py-0.5 rounded">
+                        {state.analysis.hero.position}
                       </span>
+                    )}
+                  </h4>
+                  
+                  <div className="space-y-2">
+                    {/* Cards Display */}
+                    <div className="flex items-center gap-3">
+                      {state.analysis.hero.cards === 'hidden' ? (
+                        <div className="flex items-center gap-2">
+                          <CardDisplay cards="??" size="md" />
+                          <span className="text-sm text-muted-foreground">Cards not visible</span>
+                        </div>
+                      ) : Array.isArray(state.analysis.hero.cards) && state.analysis.hero.cards.length > 0 ? (
+                        <>
+                          {(() => {
+                            const parsedCards = parseCards(state.analysis.hero.cards);
+                            const cardString = parsedCards
+                              .map(c => `${c.rank}${normalizeSuit(c.suit)}`)
+                              .join('');
+                            
+                            return (
+                              <div className="flex items-center gap-3">
+                                <CardDisplay cards={cardString || '??'} size="md" showCardNames={false} />
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="text-sm font-mono font-semibold">
+                                    {parsedCards.map(c => `${c.rank}${c.suit.toUpperCase()}`).join(' ')}
+                                  </span>
+                                  {state.analysis.hero.confidence < 0.8 && (
+                                    <span className="text-xs text-yellow-600">
+                                      Confidence: {Math.round(state.analysis.hero.confidence * 100)}%
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <CardDisplay cards="??" size="md" />
+                          <span className="text-sm text-muted-foreground italic">
+                            Could not detect cards
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Stack Info */}
+                    {state.analysis.hero.stack && (
+                      <div className="text-xs text-muted-foreground">
+                        Stack: <span className="font-medium">{state.analysis.hero.stack}</span> {state.analysis.hero.stackUnit || 'chips'}
+                      </div>
                     )}
                   </div>
                 </div>
 
                 {/* Board Cards */}
-                <div>
+                <div className="bg-muted/30 rounded-lg p-3">
                   <h4 className="font-semibold mb-2">Board</h4>
                   {state.analysis.board.flop && Array.isArray(state.analysis.board.flop) && state.analysis.board.flop.length > 0 ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-muted-foreground min-w-[45px]">Flop:</span>
+                    <div className="space-y-3">
+                      {/* Flop */}
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-muted-foreground min-w-[50px]">Flop:</span>
                         {(() => {
                           const parsedFlop = parseCards(state.analysis.board.flop);
                           const flopString = parsedFlop
@@ -468,42 +488,46 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                           
                           return (
                             <>
-                              <CardDisplay cards={flopString || '??????'} size="sm" />
+                              <CardDisplay cards={flopString || '??????'} size="sm" showCardNames={false} />
                               {flopString && (
                                 <span className="text-xs font-mono text-muted-foreground">
-                                  ({parsedFlop.map(c => `${c.rank}${c.suit}`).join(' ')})
+                                  {parsedFlop.map(c => `${c.rank}${c.suit.toUpperCase()}`).join(' ')}
                                 </span>
                               )}
                             </>
                           );
                         })()}
                       </div>
+                      
+                      {/* Turn */}
                       {state.analysis.board.turn?.rank && state.analysis.board.turn?.suit && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-muted-foreground min-w-[45px]">Turn:</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-muted-foreground min-w-[50px]">Turn:</span>
                           {(() => {
                             const turnCard = `${state.analysis.board.turn.rank}${normalizeSuit(state.analysis.board.turn.suit)}`;
                             return (
                               <>
-                                <CardDisplay cards={turnCard} size="sm" />
+                                <CardDisplay cards={turnCard} size="sm" showCardNames={false} />
                                 <span className="text-xs font-mono text-muted-foreground">
-                                  ({state.analysis.board.turn.rank}{state.analysis.board.turn.suit})
+                                  {state.analysis.board.turn.rank}{state.analysis.board.turn.suit.toUpperCase()}
                                 </span>
                               </>
                             );
                           })()}
                         </div>
                       )}
+                      
+                      {/* River */}
                       {state.analysis.board.river?.rank && state.analysis.board.river?.suit && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-muted-foreground min-w-[45px]">River:</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-muted-foreground min-w-[50px]">River:</span>
                           {(() => {
                             const riverCard = `${state.analysis.board.river.rank}${normalizeSuit(state.analysis.board.river.suit)}`;
                             return (
                               <>
-                                <CardDisplay cards={riverCard} size="sm" />
+                                <CardDisplay cards={riverCard} size="sm" showCardNames={false} />
                                 <span className="text-xs font-mono text-muted-foreground">
-                                  ({state.analysis.board.river.rank}{state.analysis.board.river.suit})
+                                  {state.analysis.board.river.rank}{state.analysis.board.river.suit.toUpperCase()}
                                 </span>
                               </>
                             );
@@ -512,7 +536,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                       )}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No board cards (hand ended preflop)</p>
+                    <p className="text-sm text-muted-foreground italic">No board cards (hand ended preflop)</p>
                   )}
                 </div>
 
