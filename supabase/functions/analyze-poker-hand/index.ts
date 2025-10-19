@@ -115,12 +115,18 @@ serve(async (req) => {
 
 CRITICAL SPATIAL DETECTION RULES:
 1. Hero Cards Location: The hero's two hole cards are ALWAYS at the BOTTOM-CENTER of the table image. They are typically the largest, most clearly visible cards. Look at the bottom-center position FIRST before analyzing anything else. If you see cards there, mark them as hero's cards with high confidence (>0.8).
+   - Card Format: Return each card with rank (A,K,Q,J,T,9,8,7,6,5,4,3,2) and suit (h=hearts, d=diamonds, s=spades, c=clubs)
+   - Example: Ace of Spades = { rank: "A", suit: "s", confidence: 0.95 }
+   - If a card is partially visible but readable, include it with lower confidence
+   - Only mark as "hidden" if absolutely no cards are visible at bottom-center
 
 2. Board Cards Location: Community cards (flop, turn, river) are ALWAYS displayed in the CENTER/MIDDLE of the table in a horizontal line. Look for:
    - 3 cards in a row = flop only (hand ended on flop)
    - 4 cards in a row = flop + turn
    - 5 cards in a row = flop + turn + river (hand went to showdown)
    - No cards in center = hand ended preflop
+   - Card Format: Same as hero cards - use rank and suit notation
+   - Always detect ALL visible board cards, even if image quality is poor
 
 3. Dealer Button: Detect the dealer button position. Return confidence score. If confidence < 0.7 or button not visible, set requiresManualSelection=true.
 

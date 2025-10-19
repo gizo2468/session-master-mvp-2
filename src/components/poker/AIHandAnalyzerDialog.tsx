@@ -17,6 +17,7 @@ import { useAIHandAnalyzer } from '@/hooks/useAIHandAnalyzer';
 import { UseFormSetValue } from 'react-hook-form';
 import { FormValues } from '@/utils/handFormHelpers';
 import { cn } from '@/lib/utils';
+import CardDisplay from './CardDisplay';
 
 interface AIHandAnalyzerDialogProps {
   open: boolean;
@@ -374,55 +375,73 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                   <h4 className="font-semibold mb-1">
                     Hero {state.analysis.hero.position !== 'UNKNOWN' && `(${state.analysis.hero.position})`}
                   </h4>
-                  <p className="text-muted-foreground">
-                    {state.analysis.hero.cards === 'hidden' ? 
-                      'Cards not visible' : 
-                      Array.isArray(state.analysis.hero.cards) ?
-                        state.analysis.hero.cards
-                          .filter(c => c?.rank && c?.suit)
-                          .map(c => `${c.rank}${c.suit}`)
-                          .join(' ') || 'Cards not detected' :
-                        'Cards not detected'
-                    }
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {state.analysis.hero.cards === 'hidden' ? (
+                      <span className="text-muted-foreground">Cards not visible</span>
+                    ) : Array.isArray(state.analysis.hero.cards) && state.analysis.hero.cards.length > 0 ? (
+                      <>
+                        <CardDisplay 
+                          cards={state.analysis.hero.cards
+                            .filter(c => c?.rank && c?.suit)
+                            .map(c => `${c.rank}${c.suit}`)
+                            .join('') || '??'}
+                          size="md"
+                        />
+                        {state.analysis.hero.confidence < 0.8 && (
+                          <span className="text-xs text-yellow-600">
+                            (Confidence: {Math.round(state.analysis.hero.confidence * 100)}%)
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <CardDisplay cards="??" size="md" />
+                    )}
                     {state.analysis.hero.stack && (
-                      <span className="ml-2 text-xs">
-                        (Stack: {state.analysis.hero.stack} {state.analysis.hero.stackUnit || 'chips'})
+                      <span className="text-sm text-muted-foreground">
+                        Stack: {state.analysis.hero.stack} {state.analysis.hero.stackUnit || 'chips'}
                       </span>
                     )}
-                    {state.analysis.hero.confidence < 0.8 && (
-                      <span className="text-xs text-yellow-600 ml-2">
-                        (Confidence: {Math.round(state.analysis.hero.confidence * 100)}%)
-                      </span>
-                    )}
-                  </p>
+                  </div>
                 </div>
 
                 {/* Board Cards */}
-                {state.analysis.board.flop && Array.isArray(state.analysis.board.flop) && state.analysis.board.flop.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold mb-1">Board</h4>
-                    <div className="text-muted-foreground space-y-1">
-                      <div>
-                        <span className="font-medium">Flop:</span> {
-                          state.analysis.board.flop
+                <div>
+                  <h4 className="font-semibold mb-2">Board</h4>
+                  {state.analysis.board.flop && Array.isArray(state.analysis.board.flop) && state.analysis.board.flop.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-muted-foreground min-w-[45px]">Flop:</span>
+                        <CardDisplay 
+                          cards={state.analysis.board.flop
                             .filter(c => c?.rank && c?.suit)
                             .map(c => `${c.rank}${c.suit}`)
-                            .join(' ') || 'Not detected'
-                        }
+                            .join('') || '??????'}
+                          size="sm"
+                        />
                       </div>
                       {state.analysis.board.turn?.rank && state.analysis.board.turn?.suit && (
-                        <div>
-                          <span className="font-medium">Turn:</span> {state.analysis.board.turn.rank}{state.analysis.board.turn.suit}
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-muted-foreground min-w-[45px]">Turn:</span>
+                          <CardDisplay 
+                            cards={`${state.analysis.board.turn.rank}${state.analysis.board.turn.suit}`}
+                            size="sm"
+                          />
                         </div>
                       )}
                       {state.analysis.board.river?.rank && state.analysis.board.river?.suit && (
-                        <div>
-                          <span className="font-medium">River:</span> {state.analysis.board.river.rank}{state.analysis.board.river.suit}
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-muted-foreground min-w-[45px]">River:</span>
+                          <CardDisplay 
+                            cards={`${state.analysis.board.river.rank}${state.analysis.board.river.suit}`}
+                            size="sm"
+                          />
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No board cards (hand ended preflop)</p>
+                  )}
+                </div>
 
                 {/* Action Sequences */}
                 {state.analysis.actions && state.analysis.actions.length > 0 && (
