@@ -417,12 +417,19 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                       Bottom-Center Player
                     </span>
                     {state.analysis.hero.position !== 'UNKNOWN' && (
-                      <span className="text-xs font-normal bg-poker-gold/20 text-poker-gold px-2 py-0.5 rounded">
+                      <span className={`text-xs font-normal px-2 py-0.5 rounded ${
+                        state.analysis.dealerButton?.confidence < 0.5 || state.analysis.hero.confidence < 0.6
+                          ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400'
+                          : 'bg-poker-gold/20 text-poker-gold'
+                      }`}>
                         {state.analysis.hero.position}
+                        {(state.analysis.dealerButton?.confidence < 0.5 || state.analysis.hero.confidence < 0.6) && (
+                          <span className="ml-1" title="Low confidence position detection">⚠</span>
+                        )}
                       </span>
                     )}
                   </h4>
-                  
+
                   <div className="space-y-2">
                     {/* Cards Display with confidence warning */}
                     <div className="flex items-center gap-3">
@@ -468,9 +475,24 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                             ⚠ Detection failed - Please verify bottom-center player cards
                           </span>
                         </div>
-                      )}
-                    </div>
+                    )}
                     
+                    {/* Dealer Button Info */}
+                    {state.analysis.dealerButton && (
+                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                        <span>Dealer Button:</span>
+                        <span className="font-medium">
+                          {state.analysis.dealerButton.position || 'Not detected'}
+                        </span>
+                        {state.analysis.dealerButton.confidence < 0.7 && (
+                          <span className="text-yellow-600 dark:text-yellow-400">
+                            (Low confidence: {Math.round(state.analysis.dealerButton.confidence * 100)}%)
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                     {/* Stack Info */}
                     {state.analysis.hero.stack && (
                       <div className="text-xs text-muted-foreground">

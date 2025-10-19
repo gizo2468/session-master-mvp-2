@@ -189,10 +189,71 @@ CRITICAL CARD DETECTION INSTRUCTIONS:
    Ranks: A (Ace), K (King), Q (Queen), J (Jack), T (Ten), 9-2 (pip cards)
    Suits: h (hearts ♥), d (diamonds ♦), s (spades ♠), c (clubs ♣)
    
-   Example detections:
-   - Queen of Clubs = { rank: "Q", suit: "c", confidence: 0.9 }
-   - Ace of Hearts = { rank: "A", suit: "h", confidence: 0.95 }
-   - Ten of Spades = { rank: "T", suit: "s", confidence: 0.85 }
+    Example detections:
+    - Queen of Clubs = { rank: "Q", suit: "c", confidence: 0.9 }
+    - Ace of Hearts = { rank: "A", suit: "h", confidence: 0.95 }
+    - Ten of Spades = { rank: "T", suit: "s", confidence: 0.85 }
+
+CRITICAL POSITION DETECTION INSTRUCTIONS:
+
+1. DEALER BUTTON IDENTIFICATION:
+   - Visual Characteristics:
+     * Look for a white or yellow circular icon with "D" or "DEALER" text
+     * Usually positioned near a player's avatar (above, beside, or below the name)
+     * May be a small button icon, badge, or marker
+     * Sometimes appears as a chip with "D" marking
+   
+   - Detection Strategy:
+     1. First, scan all visible player positions for the dealer button icon
+     2. If the dealer button is on the HERO (bottom-center player), hero position = "BTN"
+     3. If the dealer button is on another player, use clockwise table geometry to calculate hero position
+     4. Mark confidence as high (>0.8) if the button is clearly visible
+     5. Mark confidence as low (<0.5) if button is obscured or unclear
+
+2. POSITION CALCULATION FROM DEALER BUTTON:
+   - Use CLOCKWISE movement from dealer button:
+     * Dealer Button position = BTN
+     * Next clockwise = SB (Small Blind)
+     * Next clockwise = BB (Big Blind)
+     * For 6+ handed: Next = UTG, then MP, then CO (cutoff, one seat before dealer)
+     * For 5-handed: Skip MP, go directly BTN → SB → BB → UTG → CO
+   
+   - Spatial Mapping (assuming hero is always bottom-center):
+     * If dealer button on hero (bottom-center) → hero.position = "BTN"
+     * If dealer button on bottom-right → hero.position = "SB"
+     * If dealer button on right-side → hero.position = "BB"
+     * If dealer button on top-right → hero.position = "UTG" (or "MP" for 6+ handed)
+     * If dealer button on top-left → hero.position = "CO" or "MP"
+     * If dealer button on bottom-left → hero.position = "CO"
+
+3. FALLBACK DETECTION (if dealer button not visible):
+   - Look at the PREFLOP ACTION panel or bet history:
+     * Identify which players posted SB and BB (usually shown as "posts SB", "posts BB")
+     * The player TWO seats clockwise from the hero posted BB
+     * Calculate hero position based on blind positions
+   
+   - Use TABLE GEOMETRY as last resort:
+     * Count total visible players (playerCount)
+     * Identify seat positions relative to hero (bottom-center)
+     * Use typical seating arrangements to infer position
+   
+   - Confidence levels:
+     * Dealer button clearly visible: confidence = 0.9-1.0
+     * Inferred from action sequence: confidence = 0.6-0.8
+     * Inferred from geometry: confidence = 0.4-0.6
+     * Completely uncertain: position = "UNKNOWN", confidence < 0.4
+
+4. POSITION OUTPUT RULES:
+   - Always use standard abbreviations: "BTN", "SB", "BB", "UTG", "MP", "CO"
+   - If confidence < 0.5, set position = "UNKNOWN" instead of guessing
+   - Add warning to metadata if position detection confidence is low
+   - Record dealer button position separately in dealerButton.position field
+
+5. COMMON SCENARIOS:
+   - Scenario A: Dealer button visible on hero's avatar → position = "BTN", confidence = 0.95
+   - Scenario B: Dealer button on player to hero's right → position = "SB", confidence = 0.9
+   - Scenario C: Dealer button obscured by HUD, but SB/BB posts visible in action → use blind positions, confidence = 0.7
+   - Scenario D: No dealer button, no blind info, HUD overlay → position = "UNKNOWN", confidence = 0.3
 
 3. Dealer Button: Detect the dealer button position. Return confidence score. If confidence < 0.7 or button not visible, set requiresManualSelection=true.
 
@@ -246,7 +307,11 @@ Return structured data with confidence scores for every field.`;
             hero: {
               type: "object",
               properties: {
-                position: { type: "string" },
+                position: { 
+                  type: "string",
+                  enum: ["BTN", "SB", "BB", "UTG", "MP", "CO", "UNKNOWN"],
+                  description: "Hero's table position. Use UNKNOWN if confidence < 0.5"
+                },
                 cards: {
                   oneOf: [
                     { type: "string", enum: ["hidden"] },
@@ -414,7 +479,19 @@ SPATIAL REFERENCE:
 - Bottom-left = left side of the bottom edge (NOT hero)
 - Bottom-right = right side of the bottom edge (NOT hero)
 
-${heroOverride ? `Hero position override: ${heroOverride}.` : ''} ${dealerOverride ? `Dealer button override: ${dealerOverride}.` : ''}
+STEP 4 - POSITION DETECTION (Critical for hand analysis):
+- FIRST: Look for the dealer button icon (white/yellow circle with "D") near any player's avatar
+- If dealer button is on the HERO (bottom-center player): position = "BTN"
+- If dealer button is on another player: Count clockwise seats to determine hero position
+- FALLBACK: If button not visible, check the preflop action for SB/BB blind posts
+- LAST RESORT: If no button and no blind info, set position = "UNKNOWN" with low confidence
+- DO NOT GUESS: If uncertain, use "UNKNOWN" instead of a wrong position
+
+Table position mapping (clockwise from dealer):
+- Standard positions (clockwise): BTN → SB → BB → UTG → MP → CO → BTN
+- For 5-handed: Skip MP (BTN → SB → BB → UTG → CO)
+
+${heroOverride ? `Hero position override: ${heroOverride}.` : ''} ${dealerOverride ? `OVERRIDE APPLIED: Dealer button is at ${dealerOverride}. Calculate hero position accordingly.` : ''}
 
 Remember: The hero is ALWAYS the bottom-center player. All other players are villains.`
                   },
@@ -540,6 +617,34 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             );
           }
         }
+
+        // Validate hero position detection
+        if (analysisResult.hero?.position) {
+          console.log('Hero position detected:', {
+            position: analysisResult.hero.position,
+            dealerButton: analysisResult.dealerButton?.position,
+            dealerConfidence: analysisResult.dealerButton?.confidence,
+            heroConfidence: analysisResult.hero.confidence
+          });
+          
+          // Add warning if position confidence is questionable
+          if (analysisResult.dealerButton?.confidence < 0.5 || 
+              analysisResult.hero.confidence < 0.5) {
+            analysisResult.metadata.warnings.push(
+              'Position detection has low confidence. Verify dealer button location or use manual override.'
+            );
+          }
+          
+          // Cross-validate position with dealer button
+          if (analysisResult.dealerButton?.position === 'hero' && 
+              analysisResult.hero.position !== 'BTN') {
+            console.warn('Position inconsistency: Dealer on hero but position is not BTN');
+            analysisResult.metadata.warnings.push(
+              'Position inconsistency detected. Dealer button on hero should indicate BTN position.'
+            );
+          }
+        }
+
 
         // Log card detection results for debugging
         console.log('Card detection results:', {
