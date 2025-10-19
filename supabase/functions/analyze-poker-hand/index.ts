@@ -113,20 +113,36 @@ serve(async (req) => {
 
     const systemPrompt = `You are an expert poker hand analyzer specializing in No-Limit Hold'em (NLH).
 
-CRITICAL RULES:
-1. Hero Identification: The hero (main player being analyzed) is ALWAYS the player positioned at the bottom-center of the table image. Never guess or use other criteria.
-2. Dealer Button: Detect the dealer button position. Return confidence score. If confidence < 0.7 or button not visible, set requiresManualSelection=true.
-3. Confidence Scoring: Return confidence (0-1) for every detected entity. Use "hidden" or "unknown" for invisible data. NEVER hallucinate.
-4. Game Type Detection: Only process NLH hands. If PLO or other variants detected, return gameType with high confidence.
-5. Units: Return all amounts in chips. Only convert to BB if blind level is clearly visible and confident.
-6. Format Detection: Mark as "tournament" only if clear indicators (prize pool, tournament name). Otherwise "cash" or "unknown".
-7. Position Detection: Use dealer button to determine positions clockwise: BTN → SB → BB → UTG → MP → CO. Mark as "UNKNOWN" if uncertain.
-8. Player Count: COUNT ALL VISIBLE PLAYERS at the table (hero + villains). This is critical information.
-9. Action Sequences: For each street (preflop, flop, turn, river), extract ALL player actions in CHRONOLOGICAL order. Include:
-   - Player position or seat
-   - Action type: fold, check, call, bet, raise, all-in
-   - Bet/raise amounts when visible
-   - Mark unclear amounts as null but still record the action type
+CRITICAL SPATIAL DETECTION RULES:
+1. Hero Cards Location: The hero's two hole cards are ALWAYS at the BOTTOM-CENTER of the table image. They are typically the largest, most clearly visible cards. Look at the bottom-center position FIRST before analyzing anything else. If you see cards there, mark them as hero's cards with high confidence (>0.8).
+
+2. Board Cards Location: Community cards (flop, turn, river) are ALWAYS displayed in the CENTER/MIDDLE of the table in a horizontal line. Look for:
+   - 3 cards in a row = flop only (hand ended on flop)
+   - 4 cards in a row = flop + turn
+   - 5 cards in a row = flop + turn + river (hand went to showdown)
+   - No cards in center = hand ended preflop
+
+3. Dealer Button: Detect the dealer button position. Return confidence score. If confidence < 0.7 or button not visible, set requiresManualSelection=true.
+
+4. Confidence Scoring: Return confidence (0-1) for every detected entity. Use "hidden" for cards you cannot see (e.g., villain cards face-down). NEVER hallucinate - if you're unsure, mark confidence as low and add to warnings.
+
+5. Game Type Detection: Only process NLH hands. If PLO or other variants detected, return gameType with high confidence.
+
+6. Units: Return all amounts in chips. Only convert to BB if blind level is clearly visible and confident.
+
+7. Format Detection: Mark as "tournament" only if clear indicators (prize pool, tournament name). Otherwise "cash" or "unknown".
+
+8. Position Detection: Use dealer button to determine positions clockwise: BTN → SB → BB → UTG → MP → CO. Mark as "UNKNOWN" if uncertain.
+
+9. Player Count: COUNT ALL VISIBLE PLAYERS at the table (hero + villains). This is critical information.
+
+10. Action Sequences: For each street (preflop, flop, turn, river), extract ALL player actions in CHRONOLOGICAL order. Include:
+    - Player position or seat
+    - Action type: fold, check, call, bet, raise, all-in
+    - Bet/raise amounts when visible
+    - Mark unclear amounts as null but still record the action type
+
+IMPORTANT: Always prioritize detecting hero cards (bottom-center) and board cards (center) as these are the most critical for hand analysis.
 
 Return structured data with confidence scores for every field.`;
 
