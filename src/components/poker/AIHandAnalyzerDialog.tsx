@@ -34,6 +34,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
   const { state, handleImageUpload, analyzeHand, setManualOverride, reset } = useAIHandAnalyzer();
   const [editBeforeApplying, setEditBeforeApplying] = useState(false);
   const [selectedDealer, setSelectedDealer] = useState<string>('');
+  const [showFullImage, setShowFullImage] = useState(false);
 
   const handleClose = () => {
     reset();
@@ -346,6 +347,28 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                         </div>
                       )}
                     </div>
+                    
+                    {/* Screenshot Thumbnail */}
+                    {state.image && (
+                      <div className="mt-3 pt-3 border-t border-muted-foreground/10">
+                        <button
+                          type="button"
+                          onClick={() => setShowFullImage(true)}
+                          className="group relative w-20 h-14 rounded border border-muted-foreground/20 overflow-hidden hover:border-poker-gold transition-colors"
+                        >
+                          <img
+                            src={state.image}
+                            alt="Hand screenshot thumbnail"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                            <span className="text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 px-1.5 py-0.5 rounded">
+                              View
+                            </span>
+                          </div>
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Hero */}
@@ -528,6 +551,19 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
           )}
         </DialogFooter>
       </DialogContent>
+
+      {/* Full-size Image Modal */}
+      <Dialog open={showFullImage} onOpenChange={setShowFullImage}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] p-0">
+          <div className="relative w-full h-full">
+            <img
+              src={state.image || ''}
+              alt="Full-size hand screenshot"
+              className="w-full h-auto"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
