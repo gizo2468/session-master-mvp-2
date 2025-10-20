@@ -8,8 +8,8 @@ const corsHeaders = {
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ANALYSIS_TIMEOUT = 30000; // 30 seconds
 
-// Dealer button reference image (yellow circle with "D")
-const DEALER_BUTTON_REFERENCE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxOCIgZmlsbD0iI0ZGRDcwMCIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjIwIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzAwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkQ8L3RleHQ+PC9zdmc+';
+// Dealer button reference image (yellow circle with "D") - PNG format for AI compatibility
+const DEALER_BUTTON_REFERENCE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAACXBIWXMAAAsTAAALEwEAmpwYAAADcElEQVRYhe2YS0hUYRiGn3POzJiZOo6XvOQtb5iZqZlpamVZC8tF0SKICBdBixYtW7VoU0ERBEFQC4OgRYsWUYtAKCPT0jS1zEveMi+Z45w5c2bO6R9HZ5xxRktn0aKF38LDfPO9z/f9/3m/jwkhBH+RLP4j8L8F/1rwb5b1egP6dAfhiVQSyQwqlYLQYB+T05MMuuRYXVa8Pj++gJ9gKEREdIxsthGtVvvL+FUikUjIsgzA9Mwss7OzzM3Ps7i4iN/vJxKJ4PP5CAaDBINBpqenvyn8bh1aVxejk5MolUrsdjtarZaC/ALy8vPJzc0lOzubzMxM0tPTSUtLIyUlheTkZJKSkkhMTCQhIQGdTkd8fDzT09O/FJRlGbPJxMjYGJFIhFAoRENjIxkZGdjsdhx2O0qlEqVSiV6vR6PRoFarUalUqFQqlP/rX61Wo1AoiI2NxW63Y7fbWVxc/KmgLMto1GpiYmKQZRm3282b1lYqKis5XFKCRhN95TMzMwQCASKRCOFwGFmWkWUZSZJYW1sjFAohSRKhUIjl5WUmJycJh8M7jl8JPTnCocJCBgYGGB4extHRgbOzk4qyMipOnSI+Pv4rPUmSCIfDK4Jer3clsCzLBAIBlpaWGB8f5+nTp7S3tRGJRHYcvxJ60t+H0+nkytWr3HG5uH3rFg3HjtFQX09eXh7r3yLLMpIk7dpgJBJhfn6ezq4uhoeHf5kLVhvUarVUHTnCk/v3CQQCzMzOojeamHA4eNPaSrm9HJ9PxOPx7CiYkZHBwMAAgiB8k/dVvz1ar6cjPZ2Opibay8u54XTS3t5OS0sL+QUFVFdVLr+zAwWDwePxoFQu/0h+fn65S2RZ3rUrPG4309PTu3Tj7vpcXx+9PV3cczqXnTqPz6W91O8WDAaDuN1uMjMz1++4XC76+vr2JQiQV1BA6ak8Xvt9WM0mBoaG2L+vEIP+xza1m6AoioiiuP56FySKIgqF4ptFvk4rW+TC0hKCIJCbk8OYOErm/v1Y0jPe+319Cj6/Xss+swW3x4NBr+dJaysHDqZicFjQSAv4lqxIIZnQ4gIRSSYcDBJ0e4n4fQT8QbT6GPJMJoymJO601JKd9fndtfUdFEWRtvZ22trasFgs5OTksG/vXoxGI0ajUW2327fYC4CL65/tSy/7+/vp7+/fa/zvl/2/oI+2fABzDzqTiGd+tAAAAABJRU5ErkJggg==';
 
 // Normalize dealer button position strings to canonical seat names
 function normalizeDealerSeat(pos?: string | null): string | null {
@@ -468,43 +468,24 @@ Return structured data with confidence scores for every field.`;
       }
     };
 
-    const MODEL_ORDER = ['google/gemini-2.5-flash', 'google/gemini-2.5-pro', 'openai/gpt-5-mini'] as const;
-    let attempt = 0;
-    let lastError: Error | null = null;
-    let lastStatus: number | null = null;
-    let lastSnippet: string | null = null;
-
-    while (attempt < MODEL_ORDER.length) {
-      const currentModel = MODEL_ORDER[attempt];
-      console.log('AI analyze attempt', { attempt: attempt + 1, currentModel });
+    // Helper to build messages with or without reference image
+    const buildMessages = (includeReference: boolean) => {
+      const userContent = [];
       
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), ANALYSIS_TIMEOUT);
-
-        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: currentModel,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              {
-                 role: 'user',
-                content: [
-                  {
-                    type: 'image_url',
-                    image_url: { 
-                      url: DEALER_BUTTON_REFERENCE,
-                      detail: 'low'
-                    }
-                  },
-                  { 
-                    type: 'text', 
-                    text: `DEALER BUTTON REFERENCE: The first image shows what the dealer button looks like (bright yellow circle with "D"). Find THIS EXACT icon in the poker table screenshot (second image).
+      if (includeReference) {
+        userContent.push({
+          type: 'image_url',
+          image_url: { 
+            url: DEALER_BUTTON_REFERENCE,
+            detail: 'low'
+          }
+        });
+      }
+      
+      userContent.push({ 
+        type: 'text', 
+        text: includeReference 
+          ? `DEALER BUTTON REFERENCE: The first image shows what the dealer button looks like (bright yellow circle with "D"). Find THIS EXACT icon in the poker table screenshot (second image).
 
 CRITICAL: Detect cards with PRECISE spatial positioning.
 
@@ -554,280 +535,367 @@ Clockwise seat mapping (for reference only - you should return spatial location,
 ${heroOverride ? `Hero position override: ${heroOverride}.` : ''} ${dealerOverride ? `OVERRIDE APPLIED: Dealer button is at ${dealerOverride}. Calculate hero position accordingly.` : ''}
 
 Remember: The hero is ALWAYS the bottom-center player. All other players are villains.`
-                  },
-                  { type: 'image_url', image_url: { url: cleanImage } }
-                ]
-              }
-            ],
-            tools: [toolDefinition],
-            tool_choice: { type: "function", function: { name: "extract_poker_hand" } }
-          }),
-          signal: controller.signal
-        });
+          : `CRITICAL: Detect cards with PRECISE spatial positioning.
 
-        clearTimeout(timeout);
+STEP 1 - HERO CARDS (Bottom-Center Position):
+- Find the player avatar that is horizontally CENTERED on the bottom edge of the table
+- The hero is the middle player at the bottom row, NOT left or right players
+- Look for the 2 hole cards DIRECTLY BENEATH this centered player's avatar
+- These cards may have a "WIN" overlay - read the ranks/suits underneath the overlay
 
-        if (response.status === 429) {
-          return new Response(
-            JSON.stringify({ 
-              error: 'AI analysis rate limit exceeded. Please wait a moment and try again.',
-              code: 'RATE_LIMIT'
-            }),
-            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+STEP 2 - BOARD CARDS (Table Center):
+- Scan the CENTER of the green felt area for 3-5 cards in a horizontal line
+- These cards are often partially covered by pot displays, chip graphics, or text
+- Read the card ranks/suits even if obscured by overlays
+
+STEP 3 - VILLAIN CARDS:
+- All OTHER visible hole cards belong to villains (not the hero)
+- If a villain's cards are face-up, record them; if face-down, mark as "hidden"
+
+STEP 4 - POSITION DETECTION:
+- Look for the dealer button (bright yellow circle with "D") near any player avatar
+- If dealer button is on the HERO (bottom-center player): return hero.position="BTN"
+- If dealer button is on another player: Return the EXACT spatial location
+- FALLBACK: Check the action panel for "SB" and "BB" blind posts
+- LAST RESORT: If uncertain, use "UNKNOWN"
+
+${heroOverride ? `Hero position override: ${heroOverride}.` : ''} ${dealerOverride ? `OVERRIDE APPLIED: Dealer button is at ${dealerOverride}. Calculate hero position accordingly.` : ''}
+
+Remember: The hero is ALWAYS the bottom-center player. All other players are villains.`
+      });
+      
+      userContent.push({ type: 'image_url', image_url: { url: cleanImage } });
+      
+      return [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userContent }
+      ];
+    };
+
+    const MODEL_ORDER = ['google/gemini-2.5-flash', 'google/gemini-2.5-pro', 'openai/gpt-5-mini'] as const;
+    let attempt = 0;
+    let lastError: Error | null = null;
+    let lastStatus: number | null = null;
+    let lastSnippet: string | null = null;
+
+    while (attempt < MODEL_ORDER.length) {
+      const currentModel = MODEL_ORDER[attempt];
+      console.log('AI analyze attempt', { attempt: attempt + 1, currentModel });
+      
+      // Two-phase retry: first with reference, then without if 400 error
+      for (const includeRef of [true, false]) {
+        if (!includeRef) {
+          console.log('Retrying same model without reference image');
         }
-
-        if (response.status === 402) {
-          return new Response(
-            JSON.stringify({ 
-              error: 'AI credits depleted. Please add credits to continue using AI analysis.',
-              code: 'CREDITS_DEPLETED'
-            }),
-            { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          const errorSnippet = errorText.substring(0, 200); // First 200 chars for logging
-          console.error('AI gateway error:', {
-            status: response.status,
-            model: currentModel,
-            attempt,
-            errorSnippet
-          });
-          lastError = new Error(`AI gateway error: ${response.status}`);
-          lastStatus = response.status;
-          lastSnippet = errorSnippet;
-          attempt++;
-          continue;
-        }
-
-        const data = await response.json();
-        const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
         
-        if (!toolCall) {
-          lastError = new Error('No tool call in AI response');
-          continue;
-        }
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), ANALYSIS_TIMEOUT);
 
-        const analysisResult = JSON.parse(toolCall.function.arguments);
-        analysisResult.metadata.processingTimeMs = Date.now() - startTime;
-
-        // Validate and fix card format if needed
-        const validateAndFixCards = (cards: any): any => {
-          // If it's a string that looks like an array, try to parse it
-          if (typeof cards === 'string') {
-            try {
-              // Replace single quotes with double quotes for valid JSON
-              const fixed = cards.replace(/'/g, '"');
-              const parsed = JSON.parse(fixed);
-              return parsed;
-            } catch (e) {
-              console.error('Failed to parse card string:', cards);
-              return 'hidden';
-            }
-          }
-          return cards;
-        };
-
-        // Apply validation to hero cards
-        if (analysisResult.hero?.cards) {
-          analysisResult.hero.cards = validateAndFixCards(analysisResult.hero.cards);
-        }
-
-        // Apply to villains
-        if (analysisResult.villains && Array.isArray(analysisResult.villains)) {
-          analysisResult.villains = analysisResult.villains.map(v => ({
-            ...v,
-            cards: v.cards ? validateAndFixCards(v.cards) : 'hidden'
-          }));
-        }
-
-        // Apply to board flop
-        if (analysisResult.board?.flop) {
-          analysisResult.board.flop = validateAndFixCards(analysisResult.board.flop);
-        }
-
-        // Validate hero card detection with spatial reasoning
-        if (analysisResult.hero?.cards && Array.isArray(analysisResult.hero.cards)) {
-          console.log('Hero cards detected:', {
-            cards: analysisResult.hero.cards,
-            position: analysisResult.hero.position,
-            confidence: analysisResult.hero.confidence
-          });
-          
-          // Add warning if confidence is low
-          if (analysisResult.hero.confidence < 0.7) {
-            analysisResult.metadata.warnings.push(
-              'Low confidence in hero card detection. Please verify the bottom-center player cards.'
-            );
-          }
-        }
-
-        // Validate board card detection
-        if (analysisResult.board) {
-          const boardCardCount = 
-            (Array.isArray(analysisResult.board.flop) ? analysisResult.board.flop.length : 0) +
-            (analysisResult.board.turn ? 1 : 0) +
-            (analysisResult.board.river ? 1 : 0);
-          
-          console.log('Board cards detected:', {
-            flop: analysisResult.board.flop,
-            turn: analysisResult.board.turn,
-            river: analysisResult.board.river,
-            totalCards: boardCardCount,
-            confidence: analysisResult.board.confidence
-          });
-          
-          if (boardCardCount === 0 && analysisResult.metadata.playerCount > 2) {
-            analysisResult.metadata.warnings.push(
-              'No board cards detected, but multiple players are visible. Hand may have gone to showdown.'
-            );
-          }
-        }
-
-        // Validate hero position detection
-        if (analysisResult.hero?.position) {
-          console.log('Hero position detected:', {
-            position: analysisResult.hero.position,
-            dealerButton: analysisResult.dealerButton?.position,
-            dealerConfidence: analysisResult.dealerButton?.confidence,
-            heroConfidence: analysisResult.hero.confidence
-          });
-          
-          // Add warning if position confidence is questionable
-          if (analysisResult.dealerButton?.confidence < 0.5 || 
-              analysisResult.hero.confidence < 0.5) {
-            analysisResult.metadata.warnings.push(
-              'Position detection has low confidence. Verify dealer button location or use manual override.'
-            );
-          }
-          
-          // Cross-validate position with dealer button
-          if (analysisResult.dealerButton?.position === 'hero' && 
-              analysisResult.hero.position !== 'BTN') {
-            console.warn('Position inconsistency: Dealer on hero but position is not BTN');
-            analysisResult.metadata.warnings.push(
-              'Position inconsistency detected. Dealer button on hero should indicate BTN position.'
-            );
-          }
-        }
-
-        // POST-PROCESSING: Apply deterministic position correction
-        const dealerRaw = analysisResult.dealerButton?.position ?? null;
-        const dealerConf = analysisResult.dealerButton?.confidence ?? 0;
-        const playerCount = analysisResult.metadata?.playerCount ?? 6;
-        const normalizedSeat = normalizeDealerSeat(dealerRaw);
-        const mapped = normalizedSeat ? mapDealerSeatToHeroPos(normalizedSeat, playerCount) : null;
-
-        console.log('Position override check:', {
-          dealerRaw,
-          normalizedSeat,
-          mapped,
-          dealerConf,
-          currentHeroPos: analysisResult.hero?.position,
-          heroConf: analysisResult.hero?.confidence,
-          playerCount
-        });
-
-        // FORCE BTN if dealer button is on hero
-        if (normalizedSeat === 'BOTTOM_CENTER') {
-          if (analysisResult.hero.position !== 'BTN') {
-            console.log('CORRECTING: Dealer on hero, forcing position to BTN');
-            analysisResult.metadata.warnings = analysisResult.metadata.warnings.filter(
-              w => !w.includes('Position inconsistency')
-            );
-            analysisResult.metadata.warnings.push('Position corrected to BTN (dealer button on hero).');
-          }
-          analysisResult.hero.position = 'BTN';
-          analysisResult.hero.confidence = Math.max(analysisResult.hero.confidence ?? 0, dealerConf, 0.9);
-        } 
-        // Apply mapped position if dealer confidence is high
-        else if (mapped && dealerConf >= 0.7) {
-          if (analysisResult.hero.position !== mapped) {
-            console.log(`CORRECTING: Dealer mapping suggests ${mapped}, overriding from ${analysisResult.hero.position}`);
-            analysisResult.metadata.warnings.push(`Position corrected to ${mapped} based on dealer button location.`);
-          }
-          analysisResult.hero.position = mapped;
-          analysisResult.hero.confidence = Math.max(analysisResult.hero.confidence ?? 0, dealerConf);
-        } 
-        // Set UNKNOWN if mapping exists but confidence is medium and there's disagreement
-        else if (mapped && dealerConf >= 0.4 && dealerConf < 0.7) {
-          if (analysisResult.hero.position && analysisResult.hero.position !== mapped && (analysisResult.hero.confidence ?? 0) < 0.7) {
-            console.log('DOWNGRADING: Position disagreement with medium confidence, setting to UNKNOWN');
-            analysisResult.hero.position = 'UNKNOWN';
-            analysisResult.metadata.warnings.push('Position set to UNKNOWN due to low confidence (disagreement between sources).');
-          }
-        } 
-        // Fallback: use villain SB/BB positions if available
-        else if (dealerConf < 0.4) {
-          const hasSB = (analysisResult.villains || []).some(v => (v.position || '').toUpperCase() === 'SB');
-          const hasBB = (analysisResult.villains || []).some(v => (v.position || '').toUpperCase() === 'BB');
-          
-          if (hasSB && hasBB) {
-            if (analysisResult.hero.position !== 'BTN') {
-              console.log('FALLBACK: Inferring BTN from villain SB/BB postings');
-              analysisResult.hero.position = 'BTN';
-              analysisResult.metadata.warnings.push('Position inferred as BTN from blind postings (dealer button not clearly visible).');
-              analysisResult.hero.confidence = Math.max(analysisResult.hero.confidence ?? 0, 0.75);
-            }
-          } else if ((analysisResult.hero.confidence ?? 0) < 0.5) {
-            console.log('FALLBACK: Low confidence and no reliable position data, setting to UNKNOWN');
-            analysisResult.hero.position = 'UNKNOWN';
-          }
-        }
-
-
-        // Log card detection results for debugging
-        console.log('Card detection results:', {
-          heroCards: analysisResult.hero.cards,
-          heroCardsType: typeof analysisResult.hero.cards,
-          boardFlop: analysisResult.board.flop,
-          boardTurn: analysisResult.board.turn,
-          boardRiver: analysisResult.board.river
-        });
-
-        // Minimal analytics - no PII
-        console.log('Hand analysis completed', {
-          gameType: analysisResult.gameContext.gameType,
-          format: analysisResult.gameContext.format,
-          processingTimeMs: analysisResult.metadata.processingTimeMs,
-          attempt
-        });
-
-        return new Response(
-          JSON.stringify(analysisResult),
-          { 
-            status: 200, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
-
-      } catch (err: any) {
-        lastError = err;
-        if (err.name === 'AbortError') {
-          return new Response(
-            JSON.stringify({ 
-              error: 'Analysis timed out after 30 seconds. Please try with a clearer image.',
-              code: 'TIMEOUT'
+          const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: currentModel,
+              messages: buildMessages(includeRef),
+              tools: [toolDefinition],
+              tool_choice: { type: "function", function: { name: "extract_poker_hand" } }
             }),
-            { status: 408, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            signal: controller.signal
+          });
+
+          clearTimeout(timeout);
+
+          if (response.status === 429) {
+            return new Response(
+              JSON.stringify({ 
+                error: 'AI analysis rate limit exceeded. Please wait a moment and try again.',
+                code: 'RATE_LIMIT'
+              }),
+              { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          if (response.status === 402) {
+            return new Response(
+              JSON.stringify({ 
+                error: 'AI credits depleted. Please add credits to continue using AI analysis.',
+                code: 'CREDITS_DEPLETED'
+              }),
+              { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            const errorSnippet = errorText.substring(0, 200);
+            console.error('AI gateway error:', {
+              status: response.status,
+              model: currentModel,
+              attempt: attempt + 1,
+              includeReference: includeRef,
+              errorSnippet
+            });
+            
+            lastStatus = response.status;
+            lastSnippet = errorSnippet;
+            lastError = new Error(`AI gateway error: ${response.status}`);
+            
+            // If 400 with image error and we included reference, retry without it
+            if (response.status === 400 && includeRef && 
+                (errorSnippet.includes('Failed to extract') || 
+                 errorSnippet.includes('unsupported image') ||
+                 errorSnippet.includes('formats'))) {
+              console.log('Image format error detected, will retry without reference');
+              continue; // Continue to next phase (includeRef = false)
+            }
+            
+            // Otherwise break the phase loop and move to next model
+            break;
+          }
+
+          const data = await response.json();
+          const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+          
+          if (!toolCall) {
+            lastError = new Error('No tool call in AI response');
+            break; // Move to next model
+          }
+
+          const analysisResult = JSON.parse(toolCall.function.arguments);
+          analysisResult.metadata.processingTimeMs = Date.now() - startTime;
+
+          // Validate and fix card format if needed
+          const validateAndFixCards = (cards: any): any => {
+            // If it's a string that looks like an array, try to parse it
+            if (typeof cards === 'string') {
+              try {
+                // Replace single quotes with double quotes for valid JSON
+                const fixed = cards.replace(/'/g, '"');
+                const parsed = JSON.parse(fixed);
+                return parsed;
+              } catch (e) {
+                console.error('Failed to parse card string:', cards);
+                return 'hidden';
+              }
+            }
+            return cards;
+          };
+
+          // Apply validation to hero cards
+          if (analysisResult.hero?.cards) {
+            analysisResult.hero.cards = validateAndFixCards(analysisResult.hero.cards);
+          }
+
+          // Apply to villains
+          if (analysisResult.villains && Array.isArray(analysisResult.villains)) {
+            analysisResult.villains = analysisResult.villains.map(v => ({
+              ...v,
+              cards: v.cards ? validateAndFixCards(v.cards) : 'hidden'
+            }));
+          }
+
+          // Apply to board flop
+          if (analysisResult.board?.flop) {
+            analysisResult.board.flop = validateAndFixCards(analysisResult.board.flop);
+          }
+
+          // Validate hero card detection with spatial reasoning
+          if (analysisResult.hero?.cards && Array.isArray(analysisResult.hero.cards)) {
+            console.log('Hero cards detected:', {
+              cards: analysisResult.hero.cards,
+              position: analysisResult.hero.position,
+              confidence: analysisResult.hero.confidence
+            });
+            
+            // Add warning if confidence is low
+            if (analysisResult.hero.confidence < 0.7) {
+              analysisResult.metadata.warnings.push(
+                'Low confidence in hero card detection. Please verify the bottom-center player cards.'
+              );
+            }
+          }
+
+          // Validate board card detection
+          if (analysisResult.board) {
+            const boardCardCount = 
+              (Array.isArray(analysisResult.board.flop) ? analysisResult.board.flop.length : 0) +
+              (analysisResult.board.turn ? 1 : 0) +
+              (analysisResult.board.river ? 1 : 0);
+            
+            console.log('Board cards detected:', {
+              flop: analysisResult.board.flop,
+              turn: analysisResult.board.turn,
+              river: analysisResult.board.river,
+              totalCards: boardCardCount,
+              confidence: analysisResult.board.confidence
+            });
+            
+            if (boardCardCount === 0 && analysisResult.metadata.playerCount > 2) {
+              analysisResult.metadata.warnings.push(
+                'No board cards detected, but multiple players are visible. Hand may have gone to showdown.'
+              );
+            }
+          }
+
+          // Validate hero position detection
+          if (analysisResult.hero?.position) {
+            console.log('Hero position detected:', {
+              position: analysisResult.hero.position,
+              dealerButton: analysisResult.dealerButton?.position,
+              dealerConfidence: analysisResult.dealerButton?.confidence,
+              heroConfidence: analysisResult.hero.confidence
+            });
+            
+            // Add warning if position confidence is questionable
+            if (analysisResult.dealerButton?.confidence < 0.5 || 
+                analysisResult.hero.confidence < 0.5) {
+              analysisResult.metadata.warnings.push(
+                'Position detection has low confidence. Verify dealer button location or use manual override.'
+              );
+            }
+            
+            // Cross-validate position with dealer button
+            if (analysisResult.dealerButton?.position === 'hero' && 
+                analysisResult.hero.position !== 'BTN') {
+              console.warn('Position inconsistency: Dealer on hero but position is not BTN');
+              analysisResult.metadata.warnings.push(
+                'Position inconsistency detected. Dealer button on hero should indicate BTN position.'
+              );
+            }
+          }
+
+          // POST-PROCESSING: Apply deterministic position correction
+          const dealerRaw = analysisResult.dealerButton?.position ?? null;
+          const dealerConf = analysisResult.dealerButton?.confidence ?? 0;
+          const playerCount = analysisResult.metadata?.playerCount ?? 6;
+          const normalizedSeat = normalizeDealerSeat(dealerRaw);
+          const mapped = normalizedSeat ? mapDealerSeatToHeroPos(normalizedSeat, playerCount) : null;
+
+          console.log('Position override check:', {
+            dealerRaw,
+            normalizedSeat,
+            mapped,
+            dealerConf,
+            currentHeroPos: analysisResult.hero?.position,
+            heroConf: analysisResult.hero?.confidence,
+            playerCount
+          });
+
+          // FORCE BTN if dealer button is on hero
+          if (normalizedSeat === 'BOTTOM_CENTER') {
+            if (analysisResult.hero.position !== 'BTN') {
+              console.log('CORRECTING: Dealer on hero, forcing position to BTN');
+              analysisResult.metadata.warnings = analysisResult.metadata.warnings.filter(
+                w => !w.includes('Position inconsistency')
+              );
+              analysisResult.metadata.warnings.push('Position corrected to BTN (dealer button on hero).');
+            }
+            analysisResult.hero.position = 'BTN';
+            analysisResult.hero.confidence = Math.max(analysisResult.hero.confidence ?? 0, dealerConf, 0.9);
+          } 
+          // Apply mapped position if dealer confidence is high
+          else if (mapped && dealerConf >= 0.7) {
+            if (analysisResult.hero.position !== mapped) {
+              console.log(`CORRECTING: Dealer mapping suggests ${mapped}, overriding from ${analysisResult.hero.position}`);
+              analysisResult.metadata.warnings.push(`Position corrected to ${mapped} based on dealer button location.`);
+            }
+            analysisResult.hero.position = mapped;
+            analysisResult.hero.confidence = Math.max(analysisResult.hero.confidence ?? 0, dealerConf);
+          } 
+          // Set UNKNOWN if mapping exists but confidence is medium and there's disagreement
+          else if (mapped && dealerConf >= 0.4 && dealerConf < 0.7) {
+            if (analysisResult.hero.position && analysisResult.hero.position !== mapped && (analysisResult.hero.confidence ?? 0) < 0.7) {
+              console.log('DOWNGRADING: Position disagreement with medium confidence, setting to UNKNOWN');
+              analysisResult.hero.position = 'UNKNOWN';
+              analysisResult.metadata.warnings.push('Position set to UNKNOWN due to low confidence (disagreement between sources).');
+            }
+          } 
+          // Fallback: use villain SB/BB positions if available
+          else if (dealerConf < 0.4) {
+            const hasSB = (analysisResult.villains || []).some(v => (v.position || '').toUpperCase() === 'SB');
+            const hasBB = (analysisResult.villains || []).some(v => (v.position || '').toUpperCase() === 'BB');
+            
+            if (hasSB && hasBB) {
+              if (analysisResult.hero.position !== 'BTN') {
+                console.log('FALLBACK: Inferring BTN from villain SB/BB postings');
+                analysisResult.hero.position = 'BTN';
+                analysisResult.metadata.warnings.push('Position inferred as BTN from blind postings (dealer button not clearly visible).');
+                analysisResult.hero.confidence = Math.max(analysisResult.hero.confidence ?? 0, 0.75);
+              }
+            } else if ((analysisResult.hero.confidence ?? 0) < 0.5) {
+              console.log('FALLBACK: Low confidence and no reliable position data, setting to UNKNOWN');
+              analysisResult.hero.position = 'UNKNOWN';
+            }
+          }
+
+
+          // Log card detection results for debugging
+          console.log('Card detection results:', {
+            heroCards: analysisResult.hero.cards,
+            heroCardsType: typeof analysisResult.hero.cards,
+            boardFlop: analysisResult.board.flop,
+            boardTurn: analysisResult.board.turn,
+            boardRiver: analysisResult.board.river
+          });
+
+          // Minimal analytics - no PII
+          console.log('Hand analysis completed', {
+            gameType: analysisResult.gameContext.gameType,
+            format: analysisResult.gameContext.format,
+            processingTimeMs: analysisResult.metadata.processingTimeMs,
+            attempt: attempt + 1
+          });
+
+          return new Response(
+            JSON.stringify(analysisResult),
+            { 
+              status: 200,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
           );
+
+        } catch (err: any) {
+          lastError = err;
+          if (err.name === 'AbortError') {
+            console.error('Analysis timeout:', { model: currentModel, attempt: attempt + 1 });
+            return new Response(
+              JSON.stringify({ 
+                error: 'Analysis request timed out. Please try with a clearer or smaller image.',
+                code: 'TIMEOUT'
+              }),
+              { status: 408, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          // If error in phase 2 (without ref), break to next model
+          if (!includeRef) {
+            break;
+          }
+          // Otherwise continue to phase 2
         }
-        attempt++;
-        if (attempt < MODEL_ORDER.length) {
-          console.log(`Retry attempt ${attempt + 1}`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+      }
+      
+      // After both phases, move to next model
+      attempt++;
+      if (attempt < MODEL_ORDER.length) {
+        console.log(`Moving to next model`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
+    // All models exhausted
     const finalStatus = lastStatus === 400 ? 400 : (lastStatus && lastStatus >= 500 ? 502 : 500);
+    const finalMessage = lastStatus === 400 && lastSnippet?.includes('unsupported')
+      ? 'Unsupported image format. Please upload a PNG, JPEG, GIF, or WEBP image.'
+      : 'AI gateway error. All models failed to analyze the hand.';
+    
     return new Response(
       JSON.stringify({ 
-        code: 'AI_GATEWAY_ERROR', 
-        error: 'AI gateway error', 
+        code: lastStatus === 400 ? 'UNSUPPORTED_IMAGE' : 'AI_GATEWAY_ERROR', 
+        error: finalMessage, 
         details: { status: lastStatus, snippet: lastSnippet }
       }),
       { status: finalStatus, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
