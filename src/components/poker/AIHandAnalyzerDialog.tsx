@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Loader2, Upload, CheckCircle2, AlertTriangle, Info } from 'lucide-react';
+import { Loader2, Upload, CheckCircle2, AlertTriangle, Info, X } from 'lucide-react';
 import { useAIHandAnalyzer } from '@/hooks/useAIHandAnalyzer';
 import { UseFormSetValue } from 'react-hook-form';
 import { FormValues } from '@/utils/handFormHelpers';
@@ -708,13 +708,21 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
 
       {/* Full-size Image Modal */}
       <Dialog open={showFullImage} onOpenChange={setShowFullImage}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] p-0">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] p-0 [&>button]:hidden">
           <div className="relative w-full h-full">
             <img
               src={state.image || ''}
               alt="Full-size hand screenshot"
               className="w-full h-auto"
             />
+            {/* Custom close button with high visibility */}
+            <button
+              onClick={() => setShowFullImage(false)}
+              className="absolute right-4 top-4 z-50 w-10 h-10 rounded-full bg-black flex items-center justify-center hover:bg-black/90 active:bg-black/80 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+              aria-label="Close full-size image"
+            >
+              <X className="h-5 w-5 text-white" />
+            </button>
           </div>
         </DialogContent>
       </Dialog>
