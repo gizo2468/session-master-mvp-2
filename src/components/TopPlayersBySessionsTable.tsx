@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,31 +15,50 @@ interface PlayerSessionSummary {
 }
 
 const TopPlayersBySessionsTable: React.FC = () => {
+  const { user } = useAuth();
   const [playerData, setPlayerData] = useState<PlayerSessionSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTopPlayers = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
 
-        // Query sessions and profiles separately since the view doesn't exist
+        // Get connected user IDs (coaches or students the user has approved connections with)
+        const { data: connections, error: connectionsError } = await supabase
+          .from('coach_student_connections')
+          .select('coach_id, student_id')
+          .eq('status', 'approved')
+          .or(`coach_id.eq.${user.id},student_id.eq.${user.id}`);
+
+        if (connectionsError) throw connectionsError;
+
+        // Build list of accessible user IDs (self + connected users)
+        const accessibleUserIds = new Set<string>([user.id]);
+        connections?.forEach(conn => {
+          accessibleUserIds.add(conn.coach_id);
+          accessibleUserIds.add(conn.student_id);
+        });
+
+        // Query only sessions from accessible users
         const { data: sessionsData, error: sessionsError } = await supabase
           .from('sessions')
-          .select(`
-            user_id,
-            start_time,
-            end_time
-          `);
+          .select('user_id, start_time, end_time')
+          .in('user_id', Array.from(accessibleUserIds));
 
         if (sessionsError) throw sessionsError;
 
-        // Get unique user IDs
+        // Get unique user IDs from accessible sessions
         const userIds = [...new Set(sessionsData?.map(session => session.user_id) || [])];
 
-        // Fetch profiles and private data for these users
+        // Fetch profiles and private data for these users (will succeed due to RLS policies)
         const [profilesResult, privateResult] = await Promise.all([
           supabase
             .from('profiles')
