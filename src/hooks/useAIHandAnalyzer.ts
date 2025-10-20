@@ -118,12 +118,19 @@ export const useAIHandAnalyzer = () => {
           details: error.details,
           status: error.status
         });
-        
-        // Extract error code from response body if available
-        const errorData = error.context?.body;
-        if (errorData?.code) {
-          throw { code: errorData.code, message: errorData.error || error.message };
+
+        // Extract error code/message from response body if available
+        const rawBody = (error as any)?.context?.body as unknown;
+        let parsedBody: any = null;
+        if (typeof rawBody === 'string') {
+          try { parsedBody = JSON.parse(rawBody); } catch {}
+        } else if (rawBody && typeof rawBody === 'object') {
+          parsedBody = rawBody;
         }
+        if (parsedBody?.code || parsedBody?.error) {
+          throw { code: parsedBody.code, message: parsedBody.error || error.message };
+        }
+        // Fallback to original error
         throw error;
       }
 

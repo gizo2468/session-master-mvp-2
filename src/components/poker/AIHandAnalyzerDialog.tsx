@@ -280,7 +280,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
               <Loader2 className="h-12 w-12 animate-spin text-poker-gold mb-4" />
               <p className="text-sm font-medium">Analyzing hand...</p>
               <p className="text-xs text-muted-foreground mt-1">
-                This may take up to 30 seconds
+                This may take up to 60 seconds
               </p>
             </div>
           )}

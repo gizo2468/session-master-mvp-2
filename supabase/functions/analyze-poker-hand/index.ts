@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ANALYSIS_TIMEOUT = 30000; // 30 seconds
+const ANALYSIS_TIMEOUT = 60000; // 60 seconds
 
 // Dealer button reference image (yellow circle with "D") - PNG format for AI compatibility
 const DEALER_BUTTON_REFERENCE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAACXBIWXMAAAsTAAALEwEAmpwYAAADcElEQVRYhe2YS0hUYRiGn3POzJiZOo6XvOQtb5iZqZlpamVZC8tF0SKICBdBixYtW7VoU0ERBEFQC4OgRYsWUYtAKCPT0jS1zEveMi+Z45w5c2bO6R9HZ5xxRktn0aKF38LDfPO9z/f9/3m/jwkhBH+RLP4j8L8F/1rwb5b1egP6dAfhiVQSyQwqlYLQYB+T05MMuuRYXVa8Pj++gJ9gKEREdIxsthGtVvvL+FUikUjIsgzA9Mwss7OzzM3Ps7i4iN/vJxKJ4PP5CAaDBINBpqenvyn8bh1aVxejk5MolUrsdjtarZaC/ALy8vPJzc0lOzubzMxM0tPTSUtLIyUlheTkZJKSkkhMTCQhIQGdTkd8fDzT09O/FJRlGbPJxMjYGJFIhFAoRENjIxkZGdjsdhx2O0qlEqVSiV6vR6PRoFarUalUqFQqlP/rX61Wo1AoiI2NxW63Y7fbWVxc/KmgLMto1GpiYmKQZRm3282b1lYqKis5XFKCRhN95TMzMwQCASKRCOFwGFmWkWUZSZJYW1sjFAohSRKhUIjl5WUmJycJh8M7jl8JPTnCocJCBgYGGB4extHRgbOzk4qyMipOnSI+Pv4rPUmSCIfDK4Jer3clsCzLBAIBlpaWGB8f5+nTp7S3tRGJRHYcvxJ60t+H0+nkytWr3HG5uH3rFg3HjtFQX09eXh7r3yLLMpIk7dpgJBJhfn6ezq4uhoeHf5kLVhvUarVUHTnCk/v3CQQCzMzOojeamHA4eNPaSrm9HJ9PxOPx7CiYkZHBwMAAgiB8k/dVvz1ar6cjPZ2Opibay8u54XTS3t5OS0sL+QUFVFdVLr+zAwWDwePxoFQu/0h+fn65S2RZ3rUrPG4309PTu3Tj7vpcXx+9PV3cczqXnTqPz6W91O8WDAaDuN1uMjMz1++4XC76+vr2JQiQV1BA6ak8Xvt9WM0mBoaG2L+vEIP+xza1m6AoioiiuP56FySKIgqF4ptFvk4rW+TC0hKCIJCbk8OYOErm/v1Y0jPe+319Cj6/Xss+swW3x4NBr+dJaysHDqZicFjQSAv4lqxIIZnQ4gIRSSYcDBJ0e4n4fQT8QbT6GPJMJoymJO601JKd9fndtfUdFEWRtvZ22trasFgs5OTksG/vXoxGI0ajUW2327fYC4CL65/tSy/7+/vp7+/fa/zvl/2/oI+2fABzDzqTiGd+tAAAAABJRU5ErkJggg==';
@@ -704,7 +704,10 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             if (response.status === 400 && includeRef && 
                 (errorSnippet.includes('Failed to extract') || 
                  errorSnippet.includes('unsupported image') ||
-                 errorSnippet.includes('formats'))) {
+                 errorSnippet.includes('formats') ||
+                 errorSnippet.includes('Unable to process input image') ||
+                 errorSnippet.includes('image_parse_error') ||
+                 errorSnippet.includes('invalid_request_error'))) {
               console.log('Image format error detected, will retry without reference');
               continue; // Continue to next phase (includeRef = false)
             }
