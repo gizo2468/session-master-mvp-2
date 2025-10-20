@@ -236,6 +236,17 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
             </div>
           )}
 
+          {/* Uploading State */}
+          {state.status === 'uploading' && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="h-12 w-12 animate-spin text-poker-gold mb-4" />
+              <p className="text-sm font-medium">Processing image...</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Optimizing for analysis
+              </p>
+            </div>
+          )}
+
           {/* Image Preview */}
           {state.image && state.status === 'idle' && (
             <div className="space-y-3">

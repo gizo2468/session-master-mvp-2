@@ -419,9 +419,51 @@ Return structured data with confidence scores for every field.`;
             board: {
               type: "object",
               properties: {
-                flop: { type: "array", nullable: true },
-                turn: { type: "object", nullable: true },
-                river: { type: "object", nullable: true },
+                flop: { 
+                  type: "array", 
+                  nullable: true,
+                  items: {
+                    type: "object",
+                    properties: {
+                      rank: { type: "string" },
+                      suit: { 
+                        type: "string",
+                        enum: ["h", "d", "s", "c"],
+                        description: "Suit as single letter: h=hearts, d=diamonds, s=spades, c=clubs"
+                      },
+                      confidence: { type: "number" }
+                    },
+                    required: ["rank", "suit"]
+                  }
+                },
+                turn: { 
+                  type: "object", 
+                  nullable: true,
+                  properties: {
+                    rank: { type: "string" },
+                    suit: { 
+                      type: "string",
+                      enum: ["h", "d", "s", "c"],
+                      description: "Suit as single letter: h=hearts, d=diamonds, s=spades, c=clubs"
+                    },
+                    confidence: { type: "number" }
+                  },
+                  required: ["rank", "suit"]
+                },
+                river: { 
+                  type: "object", 
+                  nullable: true,
+                  properties: {
+                    rank: { type: "string" },
+                    suit: { 
+                      type: "string",
+                      enum: ["h", "d", "s", "c"],
+                      description: "Suit as single letter: h=hearts, d=diamonds, s=spades, c=clubs"
+                    },
+                    confidence: { type: "number" }
+                  },
+                  required: ["rank", "suit"]
+                },
                 confidence: { type: "number" }
               }
             },
