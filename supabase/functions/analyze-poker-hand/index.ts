@@ -814,8 +814,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
 
   } catch (error) {
     console.error('analyze-poker-hand error:', error instanceof Error ? error.message : 'Unknown error');
-    const origin = req.headers.get('origin');
-    const headers = corsHeaders(origin);
+    const headers = corsHeaders;
 
     return new Response(
       JSON.stringify({ 
