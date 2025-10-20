@@ -470,9 +470,16 @@ Return structured data with confidence scores for every field.`;
 
     let attempt = 0;
     let lastError = null;
+    let currentModel = 'openai/gpt-4o-mini'; // Start with mini model
 
     while (attempt < 2) {
       attempt++;
+      
+      // On second attempt with 400 error, switch to full gpt-4o model
+      if (attempt === 2 && lastError && lastError.message?.includes('400')) {
+        currentModel = 'openai/gpt-4o';
+        console.log('Retrying with fallback model:', currentModel);
+      }
       
       try {
         const controller = new AbortController();
@@ -485,7 +492,7 @@ Return structured data with confidence scores for every field.`;
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
+            model: currentModel,
             messages: [
               { role: 'system', content: systemPrompt },
               {
@@ -585,7 +592,13 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('AI gateway error:', response.status);
+          const errorSnippet = errorText.substring(0, 200); // First 200 chars for logging
+          console.error('AI gateway error:', {
+            status: response.status,
+            model: currentModel,
+            attempt,
+            errorSnippet
+          });
           lastError = new Error(`AI gateway error: ${response.status}`);
           continue;
         }
