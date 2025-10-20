@@ -390,12 +390,26 @@ Return structured data with confidence scores for every field.`;
                 type: "object",
                 properties: {
                   position: { type: "string" },
-                  cards: {
-                    oneOf: [
-                      { type: "string", enum: ["hidden"] },
-                      { type: "array" }
-                    ]
-                  },
+              cards: {
+                oneOf: [
+                  { type: "string", enum: ["hidden"] },
+                  {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        rank: { type: "string" },
+                        suit: { 
+                          type: "string",
+                          enum: ["h", "d", "s", "c"],
+                          description: "Suit as single letter: h=hearts, d=diamonds, s=spades, c=clubs"
+                        },
+                        confidence: { type: "number" }
+                      }
+                    }
+                  }
+                ]
+              },
                   stack: { type: "number" },
                   stackUnit: { type: "string" },
                   confidence: { type: "number" }
