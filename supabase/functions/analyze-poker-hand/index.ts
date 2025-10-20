@@ -468,18 +468,15 @@ Return structured data with confidence scores for every field.`;
       }
     };
 
+    const MODEL_ORDER = ['google/gemini-2.5-flash', 'google/gemini-2.5-pro', 'openai/gpt-5-mini'] as const;
     let attempt = 0;
-    let lastError = null;
-    let currentModel = 'openai/gpt-4o-mini'; // Start with mini model
+    let lastError: Error | null = null;
+    let lastStatus: number | null = null;
+    let lastSnippet: string | null = null;
 
-    while (attempt < 2) {
-      attempt++;
-      
-      // On second attempt with 400 error, switch to full gpt-4o model
-      if (attempt === 2 && lastError && lastError.message?.includes('400')) {
-        currentModel = 'openai/gpt-4o';
-        console.log('Retrying with fallback model:', currentModel);
-      }
+    while (attempt < MODEL_ORDER.length) {
+      const currentModel = MODEL_ORDER[attempt];
+      console.log('AI analyze attempt', { attempt: attempt + 1, currentModel });
       
       try {
         const controller = new AbortController();
@@ -600,6 +597,9 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             errorSnippet
           });
           lastError = new Error(`AI gateway error: ${response.status}`);
+          lastStatus = response.status;
+          lastSnippet = errorSnippet;
+          attempt++;
           continue;
         }
 
@@ -815,15 +815,23 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             { status: 408, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-        
-        if (attempt < 2) {
+        attempt++;
+        if (attempt < MODEL_ORDER.length) {
           console.log(`Retry attempt ${attempt + 1}`);
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
     }
 
-    throw lastError || new Error('Analysis failed after retries');
+    const finalStatus = lastStatus === 400 ? 400 : (lastStatus && lastStatus >= 500 ? 502 : 500);
+    return new Response(
+      JSON.stringify({ 
+        code: 'AI_GATEWAY_ERROR', 
+        error: 'AI gateway error', 
+        details: { status: lastStatus, snippet: lastSnippet }
+      }),
+      { status: finalStatus, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     console.error('analyze-poker-hand error:', error instanceof Error ? error.message : 'Unknown error');
