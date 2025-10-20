@@ -83,7 +83,10 @@ const Signup: React.FC = () => {
         .rpc('check_username_available', { p_username: username });
       
       if (error) {
-        console.error('Error checking username:', error);
+        // Permission errors are expected for unauthenticated users after security lockdown
+        // Don't block signup - uniqueness will be enforced by DB constraints
+        console.log('Username check not available (unauthenticated)');
+        form.clearErrors('username');
         return;
       }
       
@@ -93,7 +96,8 @@ const Signup: React.FC = () => {
         form.clearErrors('username');
       }
     } catch (error) {
-      console.error('Username check failed:', error);
+      console.log('Username check failed:', error);
+      form.clearErrors('username');
     } finally {
       setIsCheckingUsername(false);
     }
@@ -101,7 +105,7 @@ const Signup: React.FC = () => {
 
   // Check email availability
   const checkEmailAvailability = async (email: string) => {
-    if (!email || !email.includes('@')) return;
+    if (!email || !email.includes('@')) return true;
     
     try {
       // Check if email exists in profiles table
@@ -109,14 +113,16 @@ const Signup: React.FC = () => {
         .rpc('check_email_available', { p_email: email });
       
       if (error) {
-        console.error('Error checking email availability:', error);
-        return false;
+        // Permission errors are expected for unauthenticated users after security lockdown
+        // Assume available and let signup process handle uniqueness validation
+        console.log('Email check not available (unauthenticated)');
+        return true;
       }
       
       return data === true; // true if email is available
     } catch (error) {
-      console.error('Email check failed:', error);
-      return false;
+      console.log('Email check failed:', error);
+      return true; // Assume available on error
     }
   };
 
