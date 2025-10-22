@@ -203,14 +203,6 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Privacy Note */}
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription className="text-xs">
-              Images are processed securely and temporarily. No personal data is stored or logged.
-            </AlertDescription>
-          </Alert>
-
           {/* Upload State */}
           {state.status === 'idle' && !state.image && (
             <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-8 text-center hover:bg-poker-gold/5 transition-colors">
