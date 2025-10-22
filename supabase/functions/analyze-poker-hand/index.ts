@@ -230,24 +230,44 @@ CRITICAL CARD DETECTION INSTRUCTIONS:
 
 CRITICAL POSITION DETECTION INSTRUCTIONS:
 
-1. DEALER BUTTON IDENTIFICATION:
-   - Visual Characteristics:
-     * BRIGHT YELLOW circular badge with black "D" letter (see reference image provided)
+1. DEALER BUTTON IDENTIFICATION (HIGHEST PRIORITY):
+   - Visual Characteristics (MUST MATCH ALL):
+     * BRIGHT YELLOW/GOLD circular badge (color: #FFD700, #FFC107, or similar bright yellow)
+     * BLACK letter "D" in the center (bold, sans-serif font)
      * Small circular icon (typically 20-40px diameter)
-     * High contrast: bright yellow/gold fill (#FFD700 or similar) with black text
-     * Usually positioned DIRECTLY NEXT TO or OVERLAPPING a player's avatar/name plate
-     * Most common locations: slightly above avatar, beside avatar, or on the avatar border
-     * The "D" glyph is bold, centered, and clearly visible against the yellow background
+     * HIGH CONTRAST: The yellow button should stand out clearly against the table background
+     * Shape: PERFECTLY CIRCULAR or slightly rounded (not rectangular, not oval)
+     * Usually positioned DIRECTLY NEXT TO or SLIGHTLY OVERLAPPING a player's avatar/name plate
+     * Most common locations: slightly above avatar, beside avatar name, or on the avatar border edge
    
-   - Detection Strategy:
-      1. FIRST: Compare the screenshot to the reference dealer button image I'm providing
-      2. Scan ALL visible player avatars/names for the bright yellow circular badge with "D"
-      3. CRITICAL: If the dealer button is on the HERO (bottom-center player), ALWAYS return position="BTN" with hero.confidence=0.95
-      4. If the dealer button is on another player, return the EXACT spatial location (e.g., "BOTTOM_RIGHT", "TOP_LEFT", "RIGHT")
-      5. For spatial location, use these terms: "BOTTOM_CENTER" (hero), "BOTTOM_RIGHT", "BOTTOM_LEFT", "RIGHT", "LEFT", "TOP_RIGHT", "TOP_CENTER", "TOP_LEFT"
-      6. Mark confidence as high (>0.85) if the button is clearly visible and matches the reference image
-      7. Mark confidence as medium (0.5-0.85) if button is partially obscured but detectable
-      8. Mark confidence as low (<0.5) if button is severely obscured or uncertain
+   - CRITICAL: What is NOT a dealer button:
+     * "WIN" badges (green/gold text, not circular button)
+     * Yellow chip stacks or bet amounts (not circular, not near avatars)
+     * Player balance displays or HUD elements (rectangular, not circular)
+     * Tournament badges or position indicators (different shapes/colors)
+     * Card suit symbols (hearts, diamonds - these are NOT dealer buttons)
+   
+   - Detection Strategy (FOLLOW THIS EXACT ORDER):
+      1. FIRST: Locate the HERO player at BOTTOM-CENTER (the player whose cards are directly below the centered avatar at the bottom edge)
+      2. SECOND: Look for the bright yellow circular "D" button near the HERO's avatar/name
+      3. CRITICAL RULE: If you see the dealer button ON or NEXT TO the HERO's avatar → ALWAYS return dealerButton.position="BOTTOM_CENTER" and hero.position="BTN" with confidence=0.95
+      4. If dealer button is NOT on hero, scan ALL OTHER visible player avatars clockwise starting from hero's right
+      5. For each player, check for the yellow circular "D" badge near their avatar
+      6. When found, return the EXACT spatial location using these terms ONLY:
+         * "BOTTOM_CENTER" = hero position (bottom edge, horizontally centered)
+         * "BOTTOM_RIGHT" = one seat clockwise from hero (bottom-right area)
+         * "RIGHT" = right side of table (middle-right vertically)
+         * "TOP_RIGHT" = top-right area
+         * "TOP_CENTER" = top edge center
+         * "TOP_LEFT" = top-left area
+         * "LEFT" = left side of table (middle-left vertically)
+         * "BOTTOM_LEFT" = bottom-left area (one seat counter-clockwise from hero)
+      7. Confidence scoring:
+         * confidence = 0.9-1.0: Button clearly visible, matches all visual characteristics, no obstruction
+         * confidence = 0.7-0.9: Button visible but partially obscured by HUD/overlays
+         * confidence = 0.5-0.7: Button detected but visual quality poor or uncertainty about exact position
+         * confidence < 0.5: No clear button detected or severe obstruction
+      8. If confidence < 0.5, set dealerButton.requiresManualSelection = true
 
 2. POSITION CALCULATION FROM DEALER BUTTON:
    - Use CLOCKWISE movement from dealer button:
@@ -827,12 +847,42 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             }
           }
 
-          // POST-PROCESSING: Apply deterministic position correction
+          // POST-PROCESSING: Apply deterministic position correction with spatial validation
           const dealerRaw = analysisResult.dealerButton?.position ?? null;
           const dealerConf = analysisResult.dealerButton?.confidence ?? 0;
           const playerCount = analysisResult.metadata?.playerCount ?? 6;
           const normalizedSeat = normalizeDealerSeat(dealerRaw);
           const mapped = normalizedSeat ? mapDealerSeatToHeroPos(normalizedSeat, playerCount) : null;
+          
+          // SPATIAL VALIDATION: Cross-check dealer position with hero card location
+          const heroCardsDetected = analysisResult.hero?.cards !== 'hidden' && 
+                                    Array.isArray(analysisResult.hero?.cards) && 
+                                    analysisResult.hero.cards.length === 2;
+          const heroCardsConf = analysisResult.hero?.confidence ?? 0;
+          
+          // If hero cards are confidently detected at bottom-center AND dealer is not on hero, 
+          // there's likely a spatial conflict that needs resolution
+          let spatialConflict = false;
+          if (heroCardsDetected && heroCardsConf > 0.75) {
+            // Hero cards are clearly at bottom-center, so hero IS the bottom-center player
+            if (normalizedSeat && normalizedSeat !== 'BOTTOM_CENTER' && dealerConf < 0.8) {
+              console.log('SPATIAL CONFLICT DETECTED: Hero cards clearly at bottom-center but dealer detected elsewhere', {
+                dealerDetected: normalizedSeat,
+                dealerConf,
+                heroCardsConf
+              });
+              spatialConflict = true;
+              
+              // If dealer confidence is weak, trust the hero card location more
+              // This handles cases where the AI misidentifies the dealer button position
+              if (dealerConf < 0.6) {
+                console.log('LOW DEALER CONFIDENCE: Cannot reliably determine position from visual cues');
+                analysisResult.metadata.warnings.push(
+                  'Dealer button detection uncertain. Position may require manual verification.'
+                );
+              }
+            }
+          }
 
           console.log('Position override check:', {
             dealerRaw,
@@ -844,8 +894,8 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             playerCount
           });
 
-          // FORCE BTN if dealer button is on hero
-          if (normalizedSeat === 'BOTTOM_CENTER') {
+          // RULE 1: FORCE BTN if dealer button is confidently on hero
+          if (normalizedSeat === 'BOTTOM_CENTER' && dealerConf >= 0.7) {
             if (analysisResult.hero.position !== 'BTN') {
               console.log('CORRECTING: Dealer on hero, forcing position to BTN');
               analysisResult.metadata.warnings = analysisResult.metadata.warnings.filter(
@@ -855,9 +905,19 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             }
             analysisResult.hero.position = 'BTN';
             analysisResult.hero.confidence = Math.max(analysisResult.hero.confidence ?? 0, dealerConf, 0.9);
-          } 
-          // Apply mapped position if dealer confidence is high
-          else if (mapped && dealerConf >= 0.7) {
+          }
+          // RULE 2: If spatial conflict exists (hero cards visible but dealer elsewhere with low confidence)
+          // Trust hero card location and mark position as uncertain
+          else if (spatialConflict && dealerConf < 0.6) {
+            console.log('SPATIAL CONFLICT RESOLUTION: Setting position to UNKNOWN due to conflicting visual cues');
+            analysisResult.hero.position = 'UNKNOWN';
+            analysisResult.hero.confidence = Math.max(heroCardsConf * 0.5, 0.4);
+            analysisResult.metadata.warnings.push(
+              'Position uncertain due to conflicting dealer button detection. Please verify dealer button location manually.'
+            );
+          }
+          // RULE 3: Apply mapped position if dealer confidence is high and no spatial conflict
+          else if (mapped && dealerConf >= 0.7 && !spatialConflict) {
             if (analysisResult.hero.position !== mapped) {
               console.log(`CORRECTING: Dealer mapping suggests ${mapped}, overriding from ${analysisResult.hero.position}`);
               analysisResult.metadata.warnings.push(`Position corrected to ${mapped} based on dealer button location.`);
@@ -865,15 +925,26 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             analysisResult.hero.position = mapped;
             analysisResult.hero.confidence = Math.max(analysisResult.hero.confidence ?? 0, dealerConf);
           } 
-          // Set UNKNOWN if mapping exists but confidence is medium and there's disagreement
-          else if (mapped && dealerConf >= 0.4 && dealerConf < 0.7) {
-            if (analysisResult.hero.position && analysisResult.hero.position !== mapped && (analysisResult.hero.confidence ?? 0) < 0.7) {
-              console.log('DOWNGRADING: Position disagreement with medium confidence, setting to UNKNOWN');
-              analysisResult.hero.position = 'UNKNOWN';
-              analysisResult.metadata.warnings.push('Position set to UNKNOWN due to low confidence (disagreement between sources).');
+          // RULE 4: Medium confidence dealer detection - apply mapping but warn user
+          else if (mapped && dealerConf >= 0.5 && dealerConf < 0.7 && !spatialConflict) {
+            if (analysisResult.hero.position !== mapped) {
+              console.log(`TENTATIVE CORRECTION: Medium confidence dealer suggests ${mapped}`);
+              analysisResult.metadata.warnings.push(
+                `Position tentatively set to ${mapped} based on dealer button (medium confidence - verify if needed).`
+              );
             }
+            analysisResult.hero.position = mapped;
+            analysisResult.hero.confidence = Math.max(analysisResult.hero.confidence ?? 0, dealerConf);
+          }
+          // RULE 5: Low confidence dealer but we have mapping - set to UNKNOWN with warning
+          else if (mapped && dealerConf < 0.5 && (analysisResult.hero.confidence ?? 0) < 0.7) {
+            console.log('LOW CONFIDENCE: Position disagreement, setting to UNKNOWN');
+            analysisResult.hero.position = 'UNKNOWN';
+            analysisResult.metadata.warnings.push(
+              'Position set to UNKNOWN due to low dealer button detection confidence. Manual verification recommended.'
+            );
           } 
-          // Fallback: use villain SB/BB positions if available
+          // RULE 6: Fallback - use villain SB/BB positions if dealer button not detected
           else if (dealerConf < 0.4) {
             const hasSB = (analysisResult.villains || []).some(v => (v.position || '').toUpperCase() === 'SB');
             const hasBB = (analysisResult.villains || []).some(v => (v.position || '').toUpperCase() === 'BB');
@@ -888,6 +959,9 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             } else if ((analysisResult.hero.confidence ?? 0) < 0.5) {
               console.log('FALLBACK: Low confidence and no reliable position data, setting to UNKNOWN');
               analysisResult.hero.position = 'UNKNOWN';
+              analysisResult.metadata.warnings.push(
+                'Position could not be reliably determined. Please verify dealer button location manually.'
+              );
             }
           }
 
