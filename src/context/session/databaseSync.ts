@@ -3,6 +3,21 @@ import { PokerSession } from '@/types/poker';
 import { saveSessionToDatabase } from '@/utils/database';
 import { getUserStorageKey, MAX_STORED_SESSIONS } from './storage';
 
+// Strip images from sessions to prevent localStorage quota errors
+const stripImagesFromSessions = (sessions: PokerSession[]): PokerSession[] => {
+  return sessions.map(session => ({
+    ...session,
+    tables: session.tables.map(table => ({
+      ...table,
+      hands: table.hands.map(hand => ({
+        ...hand,
+        image: undefined,
+        handImage: undefined,
+      }))
+    }))
+  }));
+};
+
 export const saveSessionsToSources = async (
   sessionsToSave: PokerSession[],
   userId: string | null,
@@ -32,8 +47,10 @@ export const saveSessionsToSources = async (
       }
       
       const storageKey = getUserStorageKey(userId);
-      localStorage.setItem(storageKey, JSON.stringify(sessionsToStore));
-      console.log('💾 Saved sessions to localStorage key:', storageKey, 'Count:', sessionsToStore.length);
+      // Strip images before saving to localStorage to prevent quota errors
+      const sessionsWithoutImages = stripImagesFromSessions(sessionsToStore);
+      localStorage.setItem(storageKey, JSON.stringify(sessionsWithoutImages));
+      console.log('💾 Saved sessions to localStorage key:', storageKey, 'Count:', sessionsToStore.length, '(images stripped)');
     } catch (error) {
       console.error("Failed to save sessions to localStorage:", error);
       
