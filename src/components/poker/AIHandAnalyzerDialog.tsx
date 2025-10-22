@@ -416,7 +416,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                 <div className="bg-muted/30 rounded-lg p-3">
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
                     Hero 
-                    <span className="text-xs font-normal bg-blue-500/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded">
+                    <span className="hidden text-xs font-normal bg-blue-500/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded">
                       Bottom-Center Player
                     </span>
                     {state.analysis.hero.position !== 'UNKNOWN' && (
@@ -482,7 +482,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                     
                     {/* Dealer Button Info */}
                     {state.analysis.dealerButton && (
-                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                      <div className="hidden text-xs text-muted-foreground flex items-center gap-2">
                         <span>Dealer Button:</span>
                         <span className="font-medium">
                           {state.analysis.dealerButton.position || 'Not detected'}
