@@ -531,7 +531,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                             <>
                               <CardDisplay cards={flopString || '??????'} size="sm" showCardNames={false} />
                               {flopString && (
-                                <span className="text-xs font-mono text-muted-foreground">
+                                <span className="text-xs font-mono text-muted-foreground text-center">
                                   {parsedFlop.map(c => `${c.rank}${c.suit.toUpperCase()}`).join(' ')}
                                 </span>
                               )}
@@ -549,7 +549,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                             return (
                               <>
                                 <CardDisplay cards={turnCard} size="sm" showCardNames={false} />
-                                <span className="text-xs font-mono text-muted-foreground">
+                                <span className="text-xs font-mono text-muted-foreground text-center">
                                   {state.analysis.board.turn.rank}{state.analysis.board.turn.suit.toUpperCase()}
                                 </span>
                               </>
@@ -567,7 +567,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                             return (
                               <>
                                 <CardDisplay cards={riverCard} size="sm" showCardNames={false} />
-                                <span className="text-xs font-mono text-muted-foreground">
+                                <span className="text-xs font-mono text-muted-foreground text-center">
                                   {state.analysis.board.river.rank}{state.analysis.board.river.suit.toUpperCase()}
                                 </span>
                               </>
