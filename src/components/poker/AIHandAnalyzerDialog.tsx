@@ -517,10 +517,10 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                 <div className="bg-muted/30 rounded-lg p-3">
                   <h4 className="font-semibold mb-2">Board</h4>
                   {state.analysis.board.flop && Array.isArray(state.analysis.board.flop) && state.analysis.board.flop.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="flex items-start gap-6">
                       {/* Flop */}
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-muted-foreground min-w-[50px]">Flop:</span>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-medium text-muted-foreground">Flop:</span>
                         {(() => {
                           const parsedFlop = parseCards(state.analysis.board.flop);
                           const flopString = parsedFlop
@@ -542,8 +542,8 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                       
                       {/* Turn */}
                       {state.analysis.board.turn?.rank && state.analysis.board.turn?.suit && (
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium text-muted-foreground min-w-[50px]">Turn:</span>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-sm font-medium text-muted-foreground">Turn:</span>
                           {(() => {
                             const turnCard = `${state.analysis.board.turn.rank}${normalizeSuit(state.analysis.board.turn.suit)}`;
                             return (
@@ -560,8 +560,8 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                       
                       {/* River */}
                       {state.analysis.board.river?.rank && state.analysis.board.river?.suit && (
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium text-muted-foreground min-w-[50px]">River:</span>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-sm font-medium text-muted-foreground">River:</span>
                           {(() => {
                             const riverCard = `${state.analysis.board.river.rank}${normalizeSuit(state.analysis.board.river.suit)}`;
                             return (
