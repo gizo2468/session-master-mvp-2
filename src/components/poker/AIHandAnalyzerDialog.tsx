@@ -520,7 +520,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                     <div className="flex items-start gap-6">
                       {/* Flop */}
                       <div className="flex flex-col gap-1">
-                        <span className="text-sm font-medium text-muted-foreground">Flop:</span>
+                        <span className="text-sm font-medium text-muted-foreground">Flop</span>
                         {(() => {
                           const parsedFlop = parseCards(state.analysis.board.flop);
                           const flopString = parsedFlop
@@ -543,7 +543,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                       {/* Turn */}
                       {state.analysis.board.turn?.rank && state.analysis.board.turn?.suit && (
                         <div className="flex flex-col gap-1">
-                          <span className="text-sm font-medium text-muted-foreground">Turn:</span>
+                          <span className="text-sm font-medium text-muted-foreground">Turn</span>
                           {(() => {
                             const turnCard = `${state.analysis.board.turn.rank}${normalizeSuit(state.analysis.board.turn.suit)}`;
                             return (
@@ -561,7 +561,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                       {/* River */}
                       {state.analysis.board.river?.rank && state.analysis.board.river?.suit && (
                         <div className="flex flex-col gap-1">
-                          <span className="text-sm font-medium text-muted-foreground">River:</span>
+                          <span className="text-sm font-medium text-muted-foreground">River</span>
                           {(() => {
                             const riverCard = `${state.analysis.board.river.rank}${normalizeSuit(state.analysis.board.river.suit)}`;
                             return (
