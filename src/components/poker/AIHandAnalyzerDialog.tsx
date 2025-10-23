@@ -583,7 +583,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                           <h5 className="font-medium text-xs uppercase text-poker-gold mb-1">
                             {streetAction.street}
                           </h5>
-                          {streetAction.sequence && Array.isArray(streetAction.sequence) && streetAction.sequence.length > 0 ? (
+                {streetAction.sequence && Array.isArray(streetAction.sequence) && streetAction.sequence.length > 0 ? (
                             <ul className="space-y-1 text-xs">
                               {streetAction.sequence.map((action, actionIdx) => (
                                 <li 
@@ -597,7 +597,9 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                                     "font-medium",
                                     action.player === "Hero" ? "text-yellow-600 dark:text-yellow-500" : "text-foreground"
                                   )}>
-                                    {action.player}:
+                                    {action.player === "Hero" && state.analysis.hero.name 
+                                      ? `Hero (${state.analysis.hero.name})`
+                                      : action.player}:
                                   </span>{' '}
                                   <span className="capitalize">{action.action}</span>
                                   {action.amount && ` (${action.amount})`}

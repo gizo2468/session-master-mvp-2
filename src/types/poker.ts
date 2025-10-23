@@ -221,6 +221,7 @@ export interface AICardDetection {
 }
 
 export interface AIPlayerDetection {
+  name?: string | null; // Player's username/nickname from screen
   position: string; // UTG|MP|CO|BTN|SB|BB|UNKNOWN
   cards: AICardDetection[] | 'hidden';
   stack: number;

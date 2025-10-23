@@ -171,6 +171,12 @@ CRITICAL CARD DETECTION INSTRUCTIONS:
      * Cards appear DIRECTLY BELOW this centered player position
      * These cards may have a "WIN" highlight, dealer button, or position badge nearby
      * Ignore cards that are bottom-left, bottom-right, or at the sides - these belong to villains
+   - Hero Name/Nickname Extraction (CRITICAL):
+     * Look for the username/nickname text displayed ABOVE or ON the hero's avatar at the bottom-center position
+     * This text is typically displayed prominently near the hero's cards and chip stack
+     * Extract the EXACT visible username (examples: "IsheepIT", "Player123", "PokerPro", etc.)
+     * If the name is partially obscured or not visible, return null for hero.name
+     * This name may be displayed in various fonts/colors depending on the poker client
    - Visual Characteristics:
      * Usually 2 cards side-by-side
      * May be partially obscured by "WIN" text overlay, yellow highlights, or dealer buttons
@@ -442,6 +448,11 @@ Return structured data with confidence scores for every field.`;
             hero: {
               type: "object",
               properties: {
+                name: {
+                  type: "string",
+                  nullable: true,
+                  description: "Hero's username/nickname visible on screen at bottom-center player position"
+                },
                 position: { 
                   type: "string",
                   enum: ["BTN", "SB", "BB", "UTG", "MP", "CO", "UNKNOWN"],
