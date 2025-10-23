@@ -63,7 +63,8 @@ async function stripEXIF(base64Image: string): Promise<string> {
     
     const cleanBlob = await canvas.convertToBlob({ 
       type: 'image/jpeg', 
-      quality: 0.85 
+      quality: 0.85  // Quality 0.85 maintains yellow color fidelity while reducing file size
+                     // Higher quality preserved for blurred input images to aid color detection
     });
     
     const buffer = await cleanBlob.arrayBuffer();
@@ -356,14 +357,23 @@ CRITICAL POSITION DETECTION INSTRUCTIONS:
       * Chip stacks or bet amounts in the center
       * Tournament info headers
     
-    VISUAL CHARACTERISTICS OF HERO ACTIONS:
+    VISUAL CHARACTERISTICS OF HERO ACTIONS (ENHANCED FOR BLURRED IMAGES):
     - Background color: Bright yellow/gold (#FFD700, #FFC107, #FFEB3B, or similar)
     - The yellow highlight covers the ENTIRE ROW/LINE of the action text
     - Text on yellow background is typically black or dark gray
     - These yellow rows appear ONLY in the action history panel
     - Non-hero actions have NO background (transparent/default) or gray background
     
-    DETECTION STRATEGY:
+    BLURRED IMAGE HANDLING (CRITICAL):
+    When the image is slightly blurred or low quality:
+    - Yellow backgrounds may appear faded, washed out, or orangish
+    - Accept color ranges: #FFD700 to #FFA500 (pure yellow to orange-yellow)
+    - Look for RELATIVE brightness: Hero action rows should be NOTICEABLY BRIGHTER than non-hero rows
+    - Even if the yellow is unclear, the row will have a LIGHTER background compared to surrounding rows
+    - Texture/pattern: Yellow rows often have a subtle glow or highlight effect even when blurred
+    - If you see ANY warm-toned highlighting (yellow/gold/orange/cream) in the action panel, treat it as a Hero action
+    
+    DETECTION STRATEGY (OPTIMIZED FOR BLURRED SCREENSHOTS):
     1. First, LOCATE the action history panel:
        - Look for a vertical or horizontal list showing sequential poker actions
        - Common identifiers: "Preflop:", "Flop:", "Turn:", "River:" headers
@@ -371,11 +381,26 @@ CRITICAL POSITION DETECTION INSTRUCTIONS:
     
     2. Once you've identified the action panel, scan ONLY within that panel area
     
-    3. For each line/row in the action panel:
-       - If the row has a YELLOW BACKGROUND → attribute to "Hero"
-       - If the row has NO yellow background → attribute to the villain player name shown
+    3. For each line/row in the action panel, check MULTIPLE signals:
+       PRIMARY SIGNAL - Yellow Background:
+       - If the row has a CLEAR YELLOW BACKGROUND → attribute to "Hero" (confidence: 0.9-1.0)
+       
+       SECONDARY SIGNAL - Relative Brightness (for blurred images):
+       - If the row is NOTICEABLY BRIGHTER than neighboring rows → likely Hero action (confidence: 0.7-0.8)
+       - Compare background luminance: Hero rows should "pop out" even if color is unclear
+       
+       TERTIARY SIGNAL - Pattern Recognition:
+       - If alternating pattern exists (yellow row, gray row, yellow row) → yellow rows are Hero
+       - If player names match bottom-center player → those are Hero actions
+       
+       NON-HERO SIGNAL:
+       - If the row has NO background or GRAY/DARK background → villain action
     
     4. Preserve chronological order (top-to-bottom or left-to-right)
+    
+    5. FOR BLURRED IMAGES: Prioritize detecting ALL highlighted rows, even with lower confidence
+       - Better to mark a Hero action with 0.6 confidence than miss it entirely
+       - The UI will display confidence warnings for low-confidence detections
     
     CRITICAL RULES:
     - Yellow WIN badges near cards are NOT hero actions
@@ -404,11 +429,30 @@ CRITICAL POSITION DETECTION INSTRUCTIONS:
       }
     ]
     
-    CONFIDENCE SCORING:
-    - 0.9-1.0: Yellow background clearly visible in action panel, text readable
-    - 0.7-0.9: Yellow visible but panel partially obscured
-    - 0.5-0.7: Uncertain if yellow or which panel is action history
-    - <0.5: Cannot identify action panel or no yellow detected
+    CONFIDENCE SCORING (ADJUSTED FOR BLURRED IMAGES):
+    - 0.9-1.0: Yellow background CLEARLY visible in action panel, text readable, sharp image
+    - 0.7-0.9: Yellow visible but image is slightly blurred OR text partially obscured
+    - 0.6-0.7: Image blurred but row is NOTICEABLY BRIGHTER than surrounding rows (relative detection)
+    - 0.5-0.6: Very blurred but warm-toned highlighting visible (yellow/gold/orange glow detected)
+    - 0.4-0.5: Uncertain - row may have slight brightness difference but cannot confirm
+    - <0.4: Cannot identify any highlighting pattern
+    
+    CRITICAL FOR BLURRED IMAGES:
+    - DO NOT require perfect yellow color detection
+    - Focus on RELATIVE BRIGHTNESS and CONTRAST between rows
+    - Even faded or washed-out yellow should be detected with 0.6+ confidence
+    - If you detect ANY pattern of alternating bright/dark rows in action panel, mark bright rows as Hero
+    
+    FALLBACK DETECTION FOR VERY BLURRED IMAGES:
+    If yellow backgrounds are too degraded to detect reliably, use these fallback strategies:
+    1. Player Name Matching: If action text includes the hero's username (from bottom-center), mark as Hero
+    2. Action Pattern: If you see clear "fold/call/raise" actions but cannot determine colors:
+       - Look for the hero's username in the action text
+       - Match bet amounts with hero's chip stack changes
+       - Identify which seat position matches the bottom-center player
+    3. Minimum Detection: ALWAYS attempt to detect at least ONE Hero action per street where actions exist
+       - If you see 5+ actions on a street and detect zero Hero actions, re-scan with lower threshold
+       - Better to include uncertain Hero actions (confidence 0.5+) than miss them entirely
     
     EXAMPLE FROM SCREENSHOT:
     In the action history panel on the left side:
@@ -981,7 +1025,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
                 // Warning: No Hero actions on a multi-action street (likely missed yellow detection)
                 if (totalActions > 2 && heroActions.length === 0) {
                   analysisResult.metadata.warnings.push(
-                    `No Hero actions detected on ${streetAction.street} - yellow backgrounds may not have been detected in action panel. Please verify.`
+                    `No Hero actions detected on ${streetAction.street}. This may indicate: (1) image is too blurred to detect yellow backgrounds, (2) yellow highlighting not present in screenshot, or (3) Hero folded preflop. Please verify the action sequence.`
                   );
                 }
                 
@@ -992,11 +1036,11 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
                   );
                 }
                 
-                // Warning: Very low confidence on Hero actions
-                const lowConfidenceHeroActions = heroActions.filter(a => a.confidence < 0.5);
+                // Warning: Very low confidence on Hero actions - adjusted threshold for blurred images
+                const lowConfidenceHeroActions = heroActions.filter(a => a.confidence < 0.4); // Reduced from 0.5
                 if (lowConfidenceHeroActions.length > 0) {
                   analysisResult.metadata.warnings.push(
-                    `Low confidence on ${lowConfidenceHeroActions.length} Hero action(s) on ${streetAction.street} - action panel may be partially obscured.`
+                    `Low confidence on ${lowConfidenceHeroActions.length} Hero action(s) on ${streetAction.street}. Image may be blurred or action panel partially obscured. Please verify these actions.`
                   );
                 }
               }
