@@ -586,8 +586,19 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                           {streetAction.sequence && Array.isArray(streetAction.sequence) && streetAction.sequence.length > 0 ? (
                             <ul className="space-y-1 text-xs">
                               {streetAction.sequence.map((action, actionIdx) => (
-                                <li key={actionIdx} className="text-muted-foreground">
-                                  <span className="font-medium text-foreground">{action.player}:</span>{' '}
+                                <li 
+                                  key={actionIdx} 
+                                  className={cn(
+                                    "text-muted-foreground",
+                                    action.player === "Hero" && "bg-yellow-400/20 -ml-1 pl-1 -mr-1 pr-1 rounded"
+                                  )}
+                                >
+                                  <span className={cn(
+                                    "font-medium",
+                                    action.player === "Hero" ? "text-yellow-600 dark:text-yellow-500" : "text-foreground"
+                                  )}>
+                                    {action.player}:
+                                  </span>{' '}
                                   <span className="capitalize">{action.action}</span>
                                   {action.amount && ` (${action.amount})`}
                                   {action.confidence < 0.7 && (

@@ -334,6 +334,82 @@ CRITICAL POSITION DETECTION INSTRUCTIONS:
     - Bet/raise amounts when visible
     - Mark unclear amounts as null but still record the action type
 
+11. HERO ACTION DETECTION - YELLOW BACKGROUND IN ACTION PANEL (CRITICAL):
+    
+    SPATIAL CONSTRAINT - WHERE TO LOOK:
+    - ONLY scan the ACTION HISTORY PANEL for yellow backgrounds
+    - This panel is typically located:
+      * LEFT side of screen (most common - vertical list of actions)
+      * BOTTOM of screen (horizontal action log)
+      * Sometimes in a semi-transparent overlay on the left or bottom edge
+    - The panel shows text like: "Player folds", "Raise 2 BB", "Call", etc.
+    - DO NOT look for yellow in these areas (these are NOT action panels):
+      * Center of table (cards, pot, board)
+      * Player avatars/names at seats (top, sides, bottom)
+      * WIN badges or overlays on cards
+      * Chip stacks or bet amounts in the center
+      * Tournament info headers
+    
+    VISUAL CHARACTERISTICS OF HERO ACTIONS:
+    - Background color: Bright yellow/gold (#FFD700, #FFC107, #FFEB3B, or similar)
+    - The yellow highlight covers the ENTIRE ROW/LINE of the action text
+    - Text on yellow background is typically black or dark gray
+    - These yellow rows appear ONLY in the action history panel
+    - Non-hero actions have NO background (transparent/default) or gray background
+    
+    DETECTION STRATEGY:
+    1. First, LOCATE the action history panel:
+       - Look for a vertical or horizontal list showing sequential poker actions
+       - Common identifiers: "Preflop:", "Flop:", "Turn:", "River:" headers
+       - Or a continuous list like: "Player A folds", "Player B raises", etc.
+    
+    2. Once you've identified the action panel, scan ONLY within that panel area
+    
+    3. For each line/row in the action panel:
+       - If the row has a YELLOW BACKGROUND → attribute to "Hero"
+       - If the row has NO yellow background → attribute to the villain player name shown
+    
+    4. Preserve chronological order (top-to-bottom or left-to-right)
+    
+    CRITICAL RULES:
+    - Yellow WIN badges near cards are NOT hero actions
+    - Yellow player name highlights at seats are NOT hero actions
+    - Yellow chip amounts in the pot are NOT hero actions
+    - ONLY yellow backgrounds IN THE ACTION PANEL indicate hero actions
+    
+    OUTPUT FORMAT:
+    For each street's action sequence, return:
+    [
+      {
+        "player": "Hero",
+        "action": "raise",
+        "amount": 2,
+        "confidence": 0.95
+      },
+      {
+        "player": "ZnowutenR",
+        "action": "fold",
+        "confidence": 0.9
+      },
+      {
+        "player": "Hero",
+        "action": "fold",
+        "confidence": 0.95
+      }
+    ]
+    
+    CONFIDENCE SCORING:
+    - 0.9-1.0: Yellow background clearly visible in action panel, text readable
+    - 0.7-0.9: Yellow visible but panel partially obscured
+    - 0.5-0.7: Uncertain if yellow or which panel is action history
+    - <0.5: Cannot identify action panel or no yellow detected
+    
+    EXAMPLE FROM SCREENSHOT:
+    In the action history panel on the left side:
+    - Line 1: "Raise 2 BB" with YELLOW BACKGROUND → player: "Hero", action: "raise", amount: 2
+    - Line 2: "ZnowutenR folds" with NO BACKGROUND → player: "ZnowutenR", action: "fold"
+    - Line 3: "Fold" with YELLOW BACKGROUND → player: "Hero", action: "fold"
+
 IMPORTANT: Always prioritize detecting hero cards (bottom-center) and board cards (center) as these are the most critical for hand analysis.
 
 Return structured data with confidence scores for every field.`;
@@ -882,6 +958,38 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
                 );
               }
             }
+          }
+
+          // Validate Hero action attribution
+          if (analysisResult.actions && Array.isArray(analysisResult.actions)) {
+            analysisResult.actions.forEach(streetAction => {
+              if (streetAction.sequence && Array.isArray(streetAction.sequence)) {
+                const heroActions = streetAction.sequence.filter(a => a.player === "Hero");
+                const totalActions = streetAction.sequence.length;
+                
+                // Warning: No Hero actions on a multi-action street (likely missed yellow detection)
+                if (totalActions > 2 && heroActions.length === 0) {
+                  analysisResult.metadata.warnings.push(
+                    `No Hero actions detected on ${streetAction.street} - yellow backgrounds may not have been detected in action panel. Please verify.`
+                  );
+                }
+                
+                // Warning: ALL actions attributed to Hero (likely wrong spatial area scanned)
+                if (heroActions.length === totalActions && totalActions > 1) {
+                  analysisResult.metadata.warnings.push(
+                    `All actions on ${streetAction.street} attributed to Hero - may have scanned wrong area for yellow highlights. Please verify.`
+                  );
+                }
+                
+                // Warning: Very low confidence on Hero actions
+                const lowConfidenceHeroActions = heroActions.filter(a => a.confidence < 0.5);
+                if (lowConfidenceHeroActions.length > 0) {
+                  analysisResult.metadata.warnings.push(
+                    `Low confidence on ${lowConfidenceHeroActions.length} Hero action(s) on ${streetAction.street} - action panel may be partially obscured.`
+                  );
+                }
+              }
+            });
           }
 
           console.log('Position override check:', {
