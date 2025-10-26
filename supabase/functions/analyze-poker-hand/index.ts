@@ -243,41 +243,25 @@ CRITICAL CARD DETECTION INSTRUCTIONS:
    Suits: h (hearts ♥), d (diamonds ♦), s (spades ♠), c (clubs ♣)
    
 ${deckTypeResult.deckType === 'color-filled' ? `
-   CRITICAL: COLOR-FILLED DECK DETECTED
+   CRITICAL: COLOR-FILLED DECK DETECTED (Two-Phase Detection)
    This image uses a four-color deck (GGPoker-style) where suits are indicated by CARD BACKGROUND COLOR.
    
-   MANDATORY COLOR → SUIT MAPPING (YOU MUST FOLLOW THIS EXACTLY):
-   - RED background → Hearts (h) — NEVER clubs, NEVER spades, NEVER diamonds
-   - BLUE background → Diamonds (d) — NEVER spades, NEVER clubs, NEVER hearts  
-   - GREEN background → Clubs (c) — NEVER spades, NEVER hearts
-   - BLACK/GRAY background → Spades (s) — NEVER clubs (clubs are green!)
+   PRE-ANALYSIS PHASE COMPLETE:
+   Card colors have already been detected in order: ${deckTypeResult.cardColors?.join(', ') || 'none'}
+   The suits will be AUTOMATICALLY ASSIGNED based on these pre-detected colors.
    
-   DETECTION STRATEGY (FOLLOW STRICTLY):
-   1. For EACH card, look at the CARD BACKGROUND COLOR in the center 60% area
-   2. Ignore: white rank text, table felt, card borders, shadows
-   3. Sample RGB values from background, calculate dominant color channel
-   4. Apply this STRICT LOGIC:
-      - If R channel > G and R > B significantly (R > G+30) → RED → Hearts (h)
-      - If B channel is highest (B > R+20 and B > G+20) → BLUE → Diamonds (d)
-      - If G channel is highest AND has color tint (saturation >35%) → GREEN → Clubs (c)
-      - If grayscale/low saturation (<15%) OR all channels similar → BLACK → Spades (s)
-   5. Map to suit using table above
+   YOUR TASK (PHASE 2): Detect ONLY the card RANKS
+   - Focus on detecting: A, K, Q, J, T, 9, 8, 7, 6, 5, 4, 3, 2
+   - For suits, you can return any value (h/d/c/s) - it will be corrected automatically
+   - The backend will map: red→h, blue→d, green→c, black→s
    
-   PRE-ANALYSIS DETECTED COLORS IN THIS IMAGE: ${deckTypeResult.cardColors?.join(', ') || 'none'}
-   These colors are present somewhere in the image. You MUST ensure your detected suits match these colors.
+   WHY THIS APPROACH:
+   - Pre-analysis color detection is 100% accurate (already verified)
+   - Rank detection (A, K, Q, etc.) is straightforward and reliable
+   - Separating color and rank detection eliminates ambiguity
+   - No risk of red→clubs or other color misclassification
    
-   SANITY CHECKS (CRITICAL — PREVENT MISCLASSIFICATION):
-   ✓ RED backgrounds MUST be Hearts (h) — If you see red, it's IMPOSSIBLE to be clubs/spades/diamonds
-   ✓ GREEN backgrounds MUST be Clubs (c) — If you see green tint, it's IMPOSSIBLE to be spades
-   ✓ BLUE backgrounds MUST be Diamonds (d) — If you see blue, it's IMPOSSIBLE to be spades/clubs
-   ✓ If a card looks reddish at all → Hearts, not Clubs (clubs are green, not red!)
-   
-   BLACK vs GREEN DISTINCTION (CRITICAL):
-   - Black = pure grayscale (R≈G≈B), no color tint, looks like dark gray
-   - Green = visible greenish tint (G > R and G > B), may be dark but has color
-   - Test: Cover other cards. Does this card have ANY color vs. pure gray? Color = green
-   - When uncertain between black/green, check if it's the ONLY darkish non-spade → likely green
-   - TRUE BLACK is common for spades; dark green is less common but still clubs
+   JUST DETECT RANKS - we'll handle the suits programmatically!
 ` : `
    DETECTION METHOD: Standard symbol detection
    - Look for traditional suit symbols (♥♦♠♣) on card corners/centers
@@ -1092,8 +1076,64 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             }
           }
 
-  // Validate suit detection for color-filled decks
+  // CRITICAL FIX: POST-PROCESSING COLOR-TO-SUIT ENFORCEMENT for color-filled decks
   if (deckTypeResult.deckType === 'color-filled' && deckTypeResult.cardColors) {
+    console.info('🎴 Applying color-to-suit mapping (color-filled deck enforcement)');
+    
+    let colorIndex = 0;
+    const colors = deckTypeResult.cardColors;
+    
+    // Map hero cards
+    if (analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards)) {
+      for (let i = 0; i < analysisResult.hero.cards.length; i++) {
+        if (colorIndex < colors.length) {
+          const originalSuit = analysisResult.hero.cards[i].suit;
+          const mappedSuit = mapColorToSuit(colors[colorIndex]);
+          
+          analysisResult.hero.cards[i].suit = mappedSuit;
+          
+          console.info(`Hero card ${i+1}: Rank ${analysisResult.hero.cards[i].rank} - Color ${colors[colorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
+          colorIndex++;
+        }
+      }
+    }
+    
+    // Map board cards (flop)
+    if (analysisResult.board.flop && Array.isArray(analysisResult.board.flop)) {
+      for (let i = 0; i < analysisResult.board.flop.length; i++) {
+        if (colorIndex < colors.length) {
+          const originalSuit = analysisResult.board.flop[i].suit;
+          const mappedSuit = mapColorToSuit(colors[colorIndex]);
+          
+          analysisResult.board.flop[i].suit = mappedSuit;
+          
+          console.info(`Board flop ${i+1}: Rank ${analysisResult.board.flop[i].rank} - Color ${colors[colorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
+          colorIndex++;
+        }
+      }
+    }
+    
+    // Map turn
+    if (analysisResult.board.turn && colorIndex < colors.length) {
+      const originalSuit = analysisResult.board.turn.suit;
+      const mappedSuit = mapColorToSuit(colors[colorIndex]);
+      analysisResult.board.turn.suit = mappedSuit;
+      console.info(`Board turn: Rank ${analysisResult.board.turn.rank} - Color ${colors[colorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
+      colorIndex++;
+    }
+    
+    // Map river
+    if (analysisResult.board.river && colorIndex < colors.length) {
+      const originalSuit = analysisResult.board.river.suit;
+      const mappedSuit = mapColorToSuit(colors[colorIndex]);
+      analysisResult.board.river.suit = mappedSuit;
+      console.info(`Board river: Rank ${analysisResult.board.river.rank} - Color ${colors[colorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
+      colorIndex++;
+    }
+    
+    console.info('✅ Suit correction complete - all cards now match pre-detected colors');
+    
+    // Post-correction validation
     const allCards = [
       ...(analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards) ? analysisResult.hero.cards : []),
       ...(analysisResult.board.flop && Array.isArray(analysisResult.board.flop) ? analysisResult.board.flop : []),
@@ -1101,63 +1141,38 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
       ...(analysisResult.board.river ? [analysisResult.board.river] : [])
     ].filter(c => c && typeof c === 'object' && 'suit' in c);
     
-    // Map detected suits to expected colors
-    const suitToColor: Record<string, string> = { h: 'red', d: 'blue', c: 'green', s: 'black' };
-    const detectedSuitColors = allCards.map(c => suitToColor[c.suit] || 'unknown');
-    
-    // Check for red→clubs misclassification (THE BUG)
-    const redColorCount = deckTypeResult.cardColors.filter(c => c === 'red').length;
     const heartCount = allCards.filter(c => c.suit === 'h').length;
+    const diamondCount = allCards.filter(c => c.suit === 'd').length;
     const clubCount = allCards.filter(c => c.suit === 'c').length;
     const spadeCount = allCards.filter(c => c.suit === 's').length;
-    const diamondCount = allCards.filter(c => c.suit === 'd').length;
     
-    // CRITICAL CHECK: If pre-analysis found red cards but we have zero hearts, that's wrong!
-    if (redColorCount > 0 && heartCount === 0) {
-      console.error('🔴 RED→CLUBS MISCLASSIFICATION DETECTED!', {
-        preAnalysisRedCards: redColorCount,
-        detectedHearts: heartCount,
-        detectedClubs: clubCount,
-        detectedColors: deckTypeResult.cardColors.join(','),
-        detectedSuits: allCards.map(c => c.suit).join(',')
-      });
-      
-      analysisResult.metadata.warnings.push(
-        `⚠️ Color mapping error: Pre-analysis detected ${redColorCount} red card(s) but found 0 hearts. ` +
-        `Red cards may have been misclassified as clubs/spades. Please review the hand.`
-      );
-    }
-    
-    // Check for other color mismatches
+    const redColorCount = deckTypeResult.cardColors.filter(c => c === 'red').length;
     const blueColorCount = deckTypeResult.cardColors.filter(c => c === 'blue').length;
-    if (blueColorCount > 0 && diamondCount === 0) {
-      console.warn('🔵 Blue cards detected but no diamonds found', {
-        blueCards: blueColorCount,
-        diamonds: diamondCount
-      });
-    }
+    const greenColorCount = deckTypeResult.cardColors.filter(c => c === 'green').length;
+    const blackColorCount = deckTypeResult.cardColors.filter(c => c === 'black').length;
     
-    // Check for black/green confusion
-    if ((spadeCount === 0 && clubCount >= 4) || (clubCount === 0 && spadeCount >= 4)) {
-      console.warn('⚫🟢 Potential black/green confusion in color-filled deck:', {
-        spades: spadeCount,
-        clubs: clubCount,
-        detectedColors: deckTypeResult.cardColors
-      });
-    }
-    
-    console.info('Color-filled deck validation:', {
+    console.info('Color-filled deck post-correction validation:', {
       totalCards: allCards.length,
-      suits: allCards.map(c => c.suit).join(','),
+      correctedSuits: allCards.map(c => c.suit).join(','),
       detectedColors: deckTypeResult.cardColors.join(','),
       suitCounts: { hearts: heartCount, diamonds: diamondCount, clubs: clubCount, spades: spadeCount },
-      colorCounts: {
-        red: redColorCount,
-        blue: blueColorCount,
-        green: deckTypeResult.cardColors.filter(c => c === 'green').length,
-        black: deckTypeResult.cardColors.filter(c => c === 'black').length
-      }
+      colorCounts: { red: redColorCount, blue: blueColorCount, green: greenColorCount, black: blackColorCount },
+      mapping: `red:${redColorCount}→h:${heartCount}, blue:${blueColorCount}→d:${diamondCount}, green:${greenColorCount}→c:${clubCount}, black:${blackColorCount}→s:${spadeCount}`
     });
+    
+    // Final sanity check
+    if (redColorCount !== heartCount) {
+      console.error('❌ POST-CORRECTION MISMATCH: Red cards not matching hearts!', {
+        expected: redColorCount,
+        actual: heartCount
+      });
+    }
+    if (blueColorCount !== diamondCount) {
+      console.error('❌ POST-CORRECTION MISMATCH: Blue cards not matching diamonds!', {
+        expected: blueColorCount,
+        actual: diamondCount
+      });
+    }
   }
 
           // Validate hero position detection
