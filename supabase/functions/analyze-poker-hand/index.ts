@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { detectDeckType, mapColorToSuit, DeckTypeResult } from './detectDeckType.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -133,6 +134,17 @@ serve(async (req) => {
       );
     }
 
+    // PHASE 1: Pre-analyze deck type and colors
+    console.log('Phase 1: Detecting deck type...');
+    const deckTypeResult = await detectDeckType(cleanImage, LOVABLE_API_KEY);
+
+    console.log('Deck type result:', {
+      type: deckTypeResult.deckType,
+      confidence: deckTypeResult.confidence,
+      hasColors: !!deckTypeResult.cardColors
+    });
+
+
     const systemPrompt = `You are an expert poker hand analyzer with advanced computer vision capabilities, specializing in No-Limit Hold'em (NLH).
 
 CRITICAL OUTPUT FORMAT RULES - EXTREMELY IMPORTANT:
@@ -230,10 +242,44 @@ CRITICAL CARD DETECTION INSTRUCTIONS:
    Ranks: A (Ace), K (King), Q (Queen), J (Jack), T (Ten), 9-2 (pip cards)
    Suits: h (hearts ♥), d (diamonds ♦), s (spades ♠), c (clubs ♣)
    
-    Example detections:
-    - Queen of Clubs = { rank: "Q", suit: "c", confidence: 0.9 }
-    - Ace of Hearts = { rank: "A", suit: "h", confidence: 0.95 }
-    - Ten of Spades = { rank: "T", suit: "s", confidence: 0.85 }
+${deckTypeResult.deckType === 'color-filled' ? `
+   CRITICAL: COLOR-FILLED DECK DETECTED
+   This image uses a four-color deck (GGPoker-style) where suits are indicated by CARD BACKGROUND COLOR.
+   
+   COLOR → SUIT MAPPING:
+   - RED background → Hearts (h)
+   - BLUE background → Diamonds (d)
+   - GREEN background → Clubs (c)
+   - BLACK background → Spades (s)
+   
+   DETECTION STRATEGY:
+   1. For each card, analyze the DOMINANT BACKGROUND COLOR (not suit symbols)
+   2. Sample the center 60% of the card rectangle (ignore white rank text)
+   3. Classify background as red/blue/green/black
+   4. Map to corresponding suit using table above
+   
+   Pre-analysis detected these colors: ${deckTypeResult.cardColors?.join(', ') || 'none'}
+   Use this as guidance when detecting suits.
+   
+   BLACK vs GREEN DISTINCTION (CRITICAL):
+   - Black = pure grayscale, no color tint, saturation <15%
+   - Green = visible greenish tint even if dark, saturation >35%
+   - When uncertain, prefer green over black (true black is rare)
+   - Use TWO-SIGNAL TEST:
+     1. Does the card have ANY greenish tint at all? YES → green
+     2. Compare to other cards - is it the only one with green tint? YES → green
+   - Only mark as black if BOTH signals confirm NO color tint
+` : `
+   DETECTION METHOD: Standard symbol detection
+   - Look for traditional suit symbols (♥♦♠♣) on card corners/centers
+   - Cards typically have white/light backgrounds
+`}
+
+   Example detections:
+   - Standard deck: Queen of Clubs = { rank: "Q", suit: "c", confidence: 0.9 }
+   - Standard deck: Ace of Hearts = { rank: "A", suit: "h", confidence: 0.95 }
+   - Color-filled deck: White "A" on blue background = { rank: "A", suit: "d", confidence: 0.85 }
+   - Color-filled deck: White "9" on green background = { rank: "9", suit: "c", confidence: 0.8 }
 
 CRITICAL POSITION DETECTION INSTRUCTIONS:
 
@@ -665,7 +711,21 @@ Return structured data with confidence scores for every field.`;
               properties: {
                 playerCount: { type: "number", minimum: 2, maximum: 10 },
                 heroOverrideAvailable: { type: "boolean" },
-                warnings: { type: "array", items: { type: "string" } }
+                warnings: { type: "array", items: { type: "string" } },
+                deckType: { 
+                  type: "string", 
+                  enum: ["standard", "color-filled", "unknown"],
+                  description: "Type of poker deck detected in the image"
+                },
+                deckTypeConfidence: { 
+                  type: "number",
+                  description: "Confidence score for deck type detection (0-1)"
+                },
+                detectedColors: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "For color-filled decks, the dominant colors detected on each card"
+                }
               },
               required: ["playerCount", "warnings"]
             }
@@ -877,6 +937,13 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
 
           const analysisResult = JSON.parse(toolCall.function.arguments);
           analysisResult.metadata.processingTimeMs = Date.now() - startTime;
+          
+          // Add deck type metadata
+          analysisResult.metadata.deckType = deckTypeResult.deckType;
+          analysisResult.metadata.deckTypeConfidence = deckTypeResult.confidence;
+          if (deckTypeResult.cardColors) {
+            analysisResult.metadata.detectedColors = deckTypeResult.cardColors;
+          }
 
           // Validate and fix card format if needed
           const validateAndFixCards = (cards: any): any => {
@@ -949,6 +1016,41 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
                 'No board cards detected, but multiple players are visible. Hand may have gone to showdown.'
               );
             }
+          }
+
+          // Validate suit detection for color-filled decks
+          if (deckTypeResult.deckType === 'color-filled' && deckTypeResult.cardColors) {
+            const allCards = [
+              ...(analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards) ? analysisResult.hero.cards : []),
+              ...(analysisResult.board.flop && Array.isArray(analysisResult.board.flop) ? analysisResult.board.flop : []),
+              ...(analysisResult.board.turn ? [analysisResult.board.turn] : []),
+              ...(analysisResult.board.river ? [analysisResult.board.river] : [])
+            ].filter(c => c && typeof c === 'object' && 'suit' in c);
+            
+            // Check for black/green confusion
+            const spadeCount = allCards.filter(c => c.suit === 's').length;
+            const clubCount = allCards.filter(c => c.suit === 'c').length;
+            
+            if ((spadeCount === 0 && clubCount >= 4) || (clubCount === 0 && spadeCount >= 4)) {
+              console.warn('Potential black/green confusion in color-filled deck:', {
+                spades: spadeCount,
+                clubs: clubCount,
+                detectedColors: deckTypeResult.cardColors
+              });
+              
+              analysisResult.metadata.warnings.push(
+                `Color-filled deck detected but suit distribution unusual (${spadeCount} spades, ${clubCount} clubs). ` +
+                `Please verify black vs. green cards.`
+              );
+            }
+            
+            console.info('Color-filled deck validation:', {
+              totalCards: allCards.length,
+              suits: allCards.map(c => c.suit).join(','),
+              detectedColors: deckTypeResult.cardColors.join(','),
+              spades: spadeCount,
+              clubs: clubCount
+            });
           }
 
           // Validate hero position detection
