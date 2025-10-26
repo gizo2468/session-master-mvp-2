@@ -230,156 +230,10 @@ CRITICAL CARD DETECTION INSTRUCTIONS:
    Ranks: A (Ace), K (King), Q (Queen), J (Jack), T (Ten), 9-2 (pip cards)
    Suits: h (hearts ♥), d (diamonds ♦), s (spades ♠), c (clubs ♣)
    
-   Detection Methods:
-   - Standard cards: Detect suit from symbols (♥♦♠♣)
-   - Four-color deck: Detect suit from marker color (Red/Blue/Green/Black)
-   
-   Example detections:
-   - Queen of Clubs = { rank: "Q", suit: "c", confidence: 0.9 }
-   - Ace of Hearts = { rank: "A", suit: "h", confidence: 0.95 }
-   - Ten of Spades = { rank: "T", suit: "s", confidence: 0.85 }
-   - Nine of Diamonds (blue marker) = { rank: "9", suit: "d", confidence: 0.8 }
-   - Ace of Clubs (green marker) = { rank: "A", suit: "c", confidence: 0.85 }
-
-6. DUAL-MODE SUIT DETECTION - SYMBOL + COLOR FALLBACK (CRITICAL):
-
-   DETECTION PRIORITY (FOLLOW IN ORDER):
-   
-   PRIMARY METHOD - Symbol Detection (Standard Cards):
-   - Look for traditional suit symbols: ♥ ♦ ♠ ♣
-   - These appear as small icons in the corner or center of cards
-   - If clearly visible with confidence >0.7, use symbol-based detection
-   - Output: h (hearts), d (diamonds), s (spades), c (clubs)
-   
-   FALLBACK METHOD - Color-Based Detection (GGPoker/Four-Color Deck):
-   - IF suit symbols are NOT visible OR confidence <0.7, analyze suit marker COLOR
-   - Some poker clients use color-coded suits instead of traditional symbols
-   - COLOR → SUIT MAPPING WITH PRECISE THRESHOLDS (CRITICAL):
-   
-     CLUBS (♣) - GREEN DETECTION:
-     * Hue range: 100°-160° (green to cyan-green)
-     * Saturation: MUST be >40% (this is the key differentiator from black)
-     * Brightness: 25%-75% (can be dark, but not pure black)
-     * Visual: Forest green, emerald, or lime suit markers
-     * RGB approximation: ~(0, 150, 0) to ~(50, 200, 100)
-     
-     SPADES (♠) - BLACK DETECTION:
-     * Hue: ANY (hue is meaningless for grayscale colors)
-     * Saturation: MUST be <25% (near-zero color intensity)
-     * Brightness: <35% (very dark)
-     * Visual: Pure black, dark gray, or charcoal suit markers
-     * RGB approximation: ~(0, 0, 0) to ~(60, 60, 60)
-     
-     HEARTS (♥) - RED DETECTION:
-     * Hue range: 0°-20° OR 340°-360° (red wraps around color wheel)
-     * Saturation: >50% (vibrant red)
-     * Brightness: 40%-95%
-     * Visual: Bright red, crimson, or rose suit markers
-     * RGB approximation: ~(200, 0, 0) to ~(255, 50, 50)
-     
-     DIAMONDS (♦) - BLUE DETECTION:
-     * Hue range: 200°-240° (blue to azure)
-     * Saturation: >45% (saturated blue)
-     * Brightness: 40%-90%
-     * Visual: Royal blue, sky blue, or azure suit markers
-     * RGB approximation: ~(0, 100, 255) to ~(50, 150, 255)
-   
-   COLOR DETECTION STRATEGY WITH DECISION TREE:
-   1. Locate the suit marker area on the card (typically top-left or center-left corner)
-   2. Sample the DOMINANT COLOR in that region (ignore white card background)
-   3. Convert to HSV/HSB color space (if not already in that format)
-   4. Apply DECISION TREE to determine suit:
-   
-      STEP 1 - CHECK SATURATION (PRIMARY DISCRIMINATOR):
-      - IF saturation <25% → BLACK → SPADES (♠)
-        Rationale: Black has no color intensity, only brightness variation
-        Confidence: 0.9-1.0 if brightness <35%, 0.7-0.9 if brightness 35-50%
-      
-      - IF saturation ≥40% → PROCEED TO STEP 2 (colored suit)
-      
-      - IF saturation 25-40% → AMBIGUOUS ZONE (use context):
-        * If hue 100-160° AND brightness <40% → Likely DARK GREEN (clubs)
-        * If brightness <25% → Likely BLACK (spades)
-        * Otherwise → Flag as uncertain (confidence 0.5-0.6)
-      
-      STEP 2 - CHECK HUE (FOR COLORED SUITS):
-      - Hue 100°-160° → GREEN → CLUBS (♣)
-        Confidence: 0.9-1.0 if saturation >60%, 0.7-0.9 if saturation 40-60%
-      
-      - Hue 200°-240° → BLUE → DIAMONDS (♦)
-        Confidence: 0.9-1.0 if saturation >60%, 0.7-0.9 if saturation 45-60%
-      
-      - Hue 0°-20° OR 340°-360° → RED → HEARTS (♥)
-        Confidence: 0.9-1.0 if saturation >70%, 0.7-0.9 if saturation 50-70%
-      
-      STEP 3 - VERIFY BRIGHTNESS (SANITY CHECK):
-      - If brightness <15% for ANY colored suit → Re-check saturation
-        * May be very dark green mistaken for black
-        * Clubs can be dark (30-40% brightness) but should still have saturation >40%
-      
-      - If brightness >80% for black → Likely detection error
-        * True black/spades should be dark (<35% brightness)
-        * May be light gray background confusion
-   
-   5. Assign final confidence based on how clearly the color matches criteria
-   
-   CRITICAL DISAMBIGUATION RULES (BLACK vs GREEN):
-   
-   The most common confusion is between SPADES (black) and CLUBS (dark green).
-   To eliminate this error, follow these STRICT RULES:
-   
-   RULE 1: SATURATION IS AUTHORITATIVE
-   - Saturation >40% → NEVER classify as black/spades
-   - Saturation <25% → NEVER classify as green/clubs
-   - Saturation 25-40% → Use brightness + hue as tiebreaker
-   
-   RULE 2: DARK GREEN IS STILL GREEN
-   - A very dark green marker (brightness 30-40%) should STILL show saturation >40%
-   - Example: HSV(130°, 65%, 35%) → CLUBS, not SPADES (saturation is high)
-   - Example: HSV(any, 10%, 25%) → SPADES, not CLUBS (saturation is low)
-   
-   RULE 3: IN AMBIGUOUS CASES, PREFER GREEN OVER BLACK
-   - If saturation is 30-35% (borderline) AND hue is 100-160° → CLUBS
-   - Rationale: True black suits are extremely unsaturated (<15% typically)
-   - Dark green will almost always retain some color intensity
-   
-   RULE 4: CONTEXT VERIFICATION
-   - After detecting all cards, check if the suit distribution makes sense:
-     * If you detect 5+ spades and 0 clubs → Re-examine dark cards
-     * Poker uses all four suits - extreme imbalance suggests detection error
-     * If confused, mark confidence 0.5-0.7 for manual review
-   
-   VISUAL REFERENCE (GGPoker-Specific):
-   - GGPoker clubs: Forest green with medium-high saturation (50-80%)
-   - GGPoker spades: Pure black with near-zero saturation (<15%)
-   - Even in dim lighting, clubs retain a greenish tint (saturation 30-50%)
-   - True black appears identical to the card border/background
-   
-   VISUAL EXAMPLES (GGPoker Four-Color Deck):
-   - Ace with GREEN marker → A♣ (Ace of Clubs)
-   - Nine with BLUE marker → 9♦ (Nine of Diamonds)
-   - King with RED marker → K♥ (King of Hearts)
-   - Queen with BLACK marker → Q♠ (Queen of Spades)
-   
-   CRITICAL RULES:
-   - ALWAYS attempt symbol detection first
-   - Use color detection ONLY as fallback when symbols unclear
-   - Color detection should work even in slightly blurred images
-   - Both methods output the SAME format: single letter (h/d/s/c)
-   - Never mix detection methods for the same card (use one or the other)
-   
-   CONFIDENCE SCORING:
-   - Symbol visible + color matches: 0.95-1.0 (highest confidence)
-   - Symbol visible, no color verification: 0.85-0.95
-   - Symbol unclear, strong color signal: 0.75-0.9
-   - No symbol, moderate color signal: 0.6-0.8
-   - Both unclear: 0.4-0.6 (flag for manual review)
-   
-   DEBUGGING TIP:
-   If you detect conflicting signals (e.g., heart symbol but green color):
-   - Trust the SYMBOL over the color (symbol is authoritative)
-   - But log lower confidence (0.6-0.7) to indicate mismatch
-   - This helps identify unusual card designs or detection errors
+    Example detections:
+    - Queen of Clubs = { rank: "Q", suit: "c", confidence: 0.9 }
+    - Ace of Hearts = { rank: "A", suit: "h", confidence: 0.95 }
+    - Ten of Spades = { rank: "T", suit: "s", confidence: 0.85 }
 
 CRITICAL POSITION DETECTION INSTRUCTIONS:
 
@@ -853,8 +707,7 @@ STEP 2 - BOARD CARDS (Table Center):
 - Scan the CENTER of the green felt area for 3-5 cards in a horizontal line
 - These cards are often partially covered by pot displays, chip graphics, or text
 - Read the card ranks/suits even if obscured by overlays
-- Look for white/light rectangular shapes with suit symbols (♥♦♠♣) OR colored suit markers (red/blue/green/black) in the table center
-- For four-color decks: Use color-based suit detection (Red=Hearts, Blue=Diamonds, Green=Clubs, Black=Spades)
+- Look for white/light rectangular shapes with suit symbols (♥♦♠♣) in the table center
 
 STEP 3 - VILLAIN CARDS:
 - All OTHER visible hole cards belong to villains (not the hero)
@@ -1091,46 +944,11 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
               confidence: analysisResult.board.confidence
             });
             
-          if (boardCardCount === 0 && analysisResult.metadata.playerCount > 2) {
-            analysisResult.metadata.warnings.push(
-              'No board cards detected, but multiple players are visible. Hand may have gone to showdown.'
-            );
-          }
-        }
-
-          // Diagnostic: Log color-based suit detection details (if applicable)
-          if (analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards)) {
-            const colorDetectedCards = analysisResult.hero.cards.filter(
-              card => card && card.confidence < 0.9 // Lower confidence may indicate color fallback
-            );
-            
-            if (colorDetectedCards.length > 0) {
-              console.info('Color-based detection used:', {
-                cards: colorDetectedCards.map(c => `${c.rank}${c.suit}`),
-                confidences: colorDetectedCards.map(c => c.confidence),
-                note: 'Confidence <0.9 may indicate color fallback method used'
-              });
+            if (boardCardCount === 0 && analysisResult.metadata.playerCount > 2) {
+              analysisResult.metadata.warnings.push(
+                'No board cards detected, but multiple players are visible. Hand may have gone to showdown.'
+              );
             }
-          }
-
-          // Check for potential black vs. green confusion
-          const allCardsForDiagnostic = [
-            ...(analysisResult.hero.cards || []),
-            ...(analysisResult.board.flop || []),
-            ...(analysisResult.board.turn ? [analysisResult.board.turn] : []),
-            ...(analysisResult.board.river ? [analysisResult.board.river] : [])
-          ].filter(c => c && typeof c === 'object' && 'suit' in c);
-
-          const spadeCount = allCardsForDiagnostic.filter(c => c.suit === 's').length;
-          const clubCount = allCardsForDiagnostic.filter(c => c.suit === 'c').length;
-
-          if ((spadeCount === 0 && clubCount > 3) || (clubCount === 0 && spadeCount > 3)) {
-            console.warn('Potential black/green confusion detected:', {
-              spades: spadeCount,
-              clubs: clubCount,
-              allSuits: allCardsForDiagnostic.map(c => c.suit).join(','),
-              note: 'Imbalanced spade/club distribution may indicate color detection issue'
-            });
           }
 
           // Validate hero position detection
@@ -1195,77 +1013,6 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
                 );
               }
             }
-          }
-
-          // Validate color-based card detection quality
-          if (analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards)) {
-            const lowConfidenceCards = analysisResult.hero.cards.filter(
-              card => card && typeof card === 'object' && card.confidence < 0.6
-            );
-            
-            if (lowConfidenceCards.length > 0) {
-              analysisResult.metadata.warnings.push(
-                `${lowConfidenceCards.length} hero card(s) detected with low confidence. ` +
-                `This may indicate color-coded suits that are unclear. Please verify: ` +
-                `${lowConfidenceCards.map(c => `${c.rank}${c.suit}`).join(', ')}`
-              );
-            }
-          }
-
-          // Collect all cards for validation (moved outside if block to fix scoping)
-          const allCards = [
-            ...(analysisResult.hero.cards || []),
-            ...(analysisResult.board.flop || []),
-            ...(analysisResult.board.turn ? [analysisResult.board.turn] : []),
-            ...(analysisResult.board.river ? [analysisResult.board.river] : [])
-          ].filter(c => c && typeof c === 'object' && 'suit' in c);
-
-          // Check for unusual suit distribution (might indicate color detection issues)
-          if (allCards.length > 0) {
-            const suitCounts = allCards.reduce((acc, card) => {
-              acc[card.suit] = (acc[card.suit] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>);
-            
-            // If one suit appears >5 times, might be detection error
-            const maxSuitCount = Math.max(...Object.values(suitCounts));
-            if (maxSuitCount > 5 && allCards.length > 5) {
-              analysisResult.metadata.warnings.push(
-                `Unusual suit distribution detected (one suit appears ${maxSuitCount} times). ` +
-                `May indicate color-based suit detection issue. Please verify cards.`
-              );
-            }
-          }
-
-          // Specific validation for black vs. green confusion
-          const spades = allCards.filter(c => c.suit === 's');
-          const clubs = allCards.filter(c => c.suit === 'c');
-
-          if (spades.length === 0 && clubs.length >= 4) {
-            analysisResult.metadata.warnings.push(
-              `No spades detected but ${clubs.length} clubs found. ` +
-              `This may indicate black vs. green color confusion in four-color deck detection. ` +
-              `Please verify that dark markers are correctly identified as clubs (green) vs. spades (black).`
-            );
-          } else if (clubs.length === 0 && spades.length >= 4) {
-            analysisResult.metadata.warnings.push(
-              `No clubs detected but ${spades.length} spades found. ` +
-              `This may indicate black vs. green color confusion in four-color deck detection. ` +
-              `Please verify that green markers are correctly identified as clubs (green) vs. spades (black).`
-            );
-          }
-
-          // Check for low-confidence spades or clubs (most prone to confusion)
-          const uncertainBlackGreen = allCards.filter(
-            c => (c.suit === 's' || c.suit === 'c') && c.confidence < 0.7
-          );
-
-          if (uncertainBlackGreen.length > 0) {
-            analysisResult.metadata.warnings.push(
-              `${uncertainBlackGreen.length} spade/club card(s) detected with low confidence: ` +
-              `${uncertainBlackGreen.map(c => `${c.rank}${c.suit}(${c.confidence.toFixed(2)})`).join(', ')}. ` +
-              `Black vs. green color detection may be uncertain. Please verify these cards.`
-            );
           }
 
           // Validate Hero action attribution
