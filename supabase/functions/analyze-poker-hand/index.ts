@@ -1077,58 +1077,131 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
           }
 
   // CRITICAL FIX: POST-PROCESSING COLOR-TO-SUIT ENFORCEMENT for color-filled decks
-  if (deckTypeResult.deckType === 'color-filled' && deckTypeResult.cardColors) {
+  if (deckTypeResult.deckType === 'color-filled') {
     console.info('🎴 Applying color-to-suit mapping (color-filled deck enforcement)');
     
-    let colorIndex = 0;
-    const colors = deckTypeResult.cardColors;
+    // Capture original suits for scoring (before mapping)
+    const originalHeroSuits = analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards) 
+      ? analysisResult.hero.cards.map(c => c.suit) : [];
+    const originalBoardSuits = [
+      ...(analysisResult.board.flop && Array.isArray(analysisResult.board.flop) ? analysisResult.board.flop.map(c => c.suit) : []),
+      ...(analysisResult.board.turn ? [analysisResult.board.turn.suit] : []),
+      ...(analysisResult.board.river ? [analysisResult.board.river.suit] : [])
+    ];
     
-    // Map hero cards
-    if (analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards)) {
-      for (let i = 0; i < analysisResult.hero.cards.length; i++) {
-        if (colorIndex < colors.length) {
-          const originalSuit = analysisResult.hero.cards[i].suit;
-          const mappedSuit = mapColorToSuit(colors[colorIndex]);
-          
-          analysisResult.hero.cards[i].suit = mappedSuit;
-          
-          console.info(`Hero card ${i+1}: Rank ${analysisResult.hero.cards[i].rank} - Color ${colors[colorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
-          colorIndex++;
-        }
+    let mappingMethod = 'unknown';
+    let heroColors: string[] = [];
+    let boardColors: string[] = [];
+    
+    // PREFERRED: Use grouped arrays if available
+    if (deckTypeResult.heroCardColors && deckTypeResult.boardCardColors) {
+      mappingMethod = 'grouped';
+      heroColors = deckTypeResult.heroCardColors;
+      boardColors = deckTypeResult.boardCardColors;
+      
+      console.info('Using grouped color arrays:', { heroColors, boardColors });
+    }
+    // FALLBACK: Use legacy cardColors with scoring to determine order
+    else if (deckTypeResult.cardColors && deckTypeResult.cardColors.length > 0) {
+      const colors = deckTypeResult.cardColors;
+      const heroCount = originalHeroSuits.length;
+      const boardCount = originalBoardSuits.length;
+      
+      // Build two candidate mappings
+      const heroFirstColors = colors.slice(0, heroCount);
+      const heroFirstBoard = colors.slice(heroCount, heroCount + boardCount);
+      
+      const boardFirstBoard = colors.slice(0, boardCount);
+      const boardFirstHero = colors.slice(boardCount, boardCount + heroCount);
+      
+      // Score each candidate by comparing mapped suits to original suits
+      const scoreMapping = (heroColors: string[], boardColors: string[]) => {
+        let score = 0;
+        
+        // Score hero cards
+        heroColors.forEach((color, i) => {
+          if (i < originalHeroSuits.length) {
+            const mappedSuit = mapColorToSuit(color);
+            if (mappedSuit === originalHeroSuits[i]) score++;
+          }
+        });
+        
+        // Score board cards
+        boardColors.forEach((color, i) => {
+          if (i < originalBoardSuits.length) {
+            const mappedSuit = mapColorToSuit(color);
+            if (mappedSuit === originalBoardSuits[i]) score++;
+          }
+        });
+        
+        return score;
+      };
+      
+      const heroFirstScore = scoreMapping(heroFirstColors, heroFirstBoard);
+      const boardFirstScore = scoreMapping(boardFirstBoard, boardFirstHero);
+      
+      console.info('Color array ordering scores:', {
+        heroFirst: heroFirstScore,
+        boardFirst: boardFirstScore,
+        totalCards: heroCount + boardCount
+      });
+      
+      // Choose best scoring candidate (prefer board-first in tie)
+      if (boardFirstScore >= heroFirstScore) {
+        mappingMethod = 'legacy-board-first';
+        heroColors = boardFirstHero;
+        boardColors = boardFirstBoard;
+      } else {
+        mappingMethod = 'legacy-hero-first';
+        heroColors = heroFirstColors;
+        boardColors = heroFirstBoard;
+      }
+      
+      console.info('Selected color mapping:', { method: mappingMethod, heroColors, boardColors });
+    }
+    
+    console.info('Color mapping strategy:', { method: mappingMethod, heroColors, boardColors });
+    
+    // Apply hero card mapping
+    if (analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards) && heroColors.length > 0) {
+      for (let i = 0; i < analysisResult.hero.cards.length && i < heroColors.length; i++) {
+        const originalSuit = analysisResult.hero.cards[i].suit;
+        const mappedSuit = mapColorToSuit(heroColors[i]);
+        analysisResult.hero.cards[i].suit = mappedSuit;
+        console.info(`Hero card ${i+1}: Rank ${analysisResult.hero.cards[i].rank} - Color ${heroColors[i]} → Suit ${mappedSuit} (was: ${originalSuit})`);
       }
     }
     
-    // Map board cards (flop)
+    // Apply board card mapping
+    let boardColorIndex = 0;
+    
+    // Flop
     if (analysisResult.board.flop && Array.isArray(analysisResult.board.flop)) {
-      for (let i = 0; i < analysisResult.board.flop.length; i++) {
-        if (colorIndex < colors.length) {
-          const originalSuit = analysisResult.board.flop[i].suit;
-          const mappedSuit = mapColorToSuit(colors[colorIndex]);
-          
-          analysisResult.board.flop[i].suit = mappedSuit;
-          
-          console.info(`Board flop ${i+1}: Rank ${analysisResult.board.flop[i].rank} - Color ${colors[colorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
-          colorIndex++;
-        }
+      for (let i = 0; i < analysisResult.board.flop.length && boardColorIndex < boardColors.length; i++) {
+        const originalSuit = analysisResult.board.flop[i].suit;
+        const mappedSuit = mapColorToSuit(boardColors[boardColorIndex]);
+        analysisResult.board.flop[i].suit = mappedSuit;
+        console.info(`Board flop ${i+1}: Rank ${analysisResult.board.flop[i].rank} - Color ${boardColors[boardColorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
+        boardColorIndex++;
       }
     }
     
-    // Map turn
-    if (analysisResult.board.turn && colorIndex < colors.length) {
+    // Turn
+    if (analysisResult.board.turn && boardColorIndex < boardColors.length) {
       const originalSuit = analysisResult.board.turn.suit;
-      const mappedSuit = mapColorToSuit(colors[colorIndex]);
+      const mappedSuit = mapColorToSuit(boardColors[boardColorIndex]);
       analysisResult.board.turn.suit = mappedSuit;
-      console.info(`Board turn: Rank ${analysisResult.board.turn.rank} - Color ${colors[colorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
-      colorIndex++;
+      console.info(`Board turn: Rank ${analysisResult.board.turn.rank} - Color ${boardColors[boardColorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
+      boardColorIndex++;
     }
     
-    // Map river
-    if (analysisResult.board.river && colorIndex < colors.length) {
+    // River
+    if (analysisResult.board.river && boardColorIndex < boardColors.length) {
       const originalSuit = analysisResult.board.river.suit;
-      const mappedSuit = mapColorToSuit(colors[colorIndex]);
+      const mappedSuit = mapColorToSuit(boardColors[boardColorIndex]);
       analysisResult.board.river.suit = mappedSuit;
-      console.info(`Board river: Rank ${analysisResult.board.river.rank} - Color ${colors[colorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
-      colorIndex++;
+      console.info(`Board river: Rank ${analysisResult.board.river.rank} - Color ${boardColors[boardColorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
+      boardColorIndex++;
     }
     
     console.info('✅ Suit correction complete - all cards now match pre-detected colors');
@@ -1146,32 +1219,27 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
     const clubCount = allCards.filter(c => c.suit === 'c').length;
     const spadeCount = allCards.filter(c => c.suit === 's').length;
     
-    const redColorCount = deckTypeResult.cardColors.filter(c => c === 'red').length;
-    const blueColorCount = deckTypeResult.cardColors.filter(c => c === 'blue').length;
-    const greenColorCount = deckTypeResult.cardColors.filter(c => c === 'green').length;
-    const blackColorCount = deckTypeResult.cardColors.filter(c => c === 'black').length;
+    const finalColors = [...heroColors, ...boardColors];
+    const redColorCount = finalColors.filter(c => c === 'red').length;
+    const blueColorCount = finalColors.filter(c => c === 'blue').length;
+    const greenColorCount = finalColors.filter(c => c === 'green').length;
+    const blackColorCount = finalColors.filter(c => c === 'black').length;
     
     console.info('Color-filled deck post-correction validation:', {
       totalCards: allCards.length,
       correctedSuits: allCards.map(c => c.suit).join(','),
-      detectedColors: deckTypeResult.cardColors.join(','),
+      detectedColors: finalColors.join(','),
       suitCounts: { hearts: heartCount, diamonds: diamondCount, clubs: clubCount, spades: spadeCount },
       colorCounts: { red: redColorCount, blue: blueColorCount, green: greenColorCount, black: blackColorCount },
       mapping: `red:${redColorCount}→h:${heartCount}, blue:${blueColorCount}→d:${diamondCount}, green:${greenColorCount}→c:${clubCount}, black:${blackColorCount}→s:${spadeCount}`
     });
     
-    // Final sanity check
-    if (redColorCount !== heartCount) {
-      console.error('❌ POST-CORRECTION MISMATCH: Red cards not matching hearts!', {
-        expected: redColorCount,
-        actual: heartCount
-      });
-    }
-    if (blueColorCount !== diamondCount) {
-      console.error('❌ POST-CORRECTION MISMATCH: Blue cards not matching diamonds!', {
-        expected: blueColorCount,
-        actual: diamondCount
-      });
+    // Final sanity check - add metadata warning if mismatch
+    if (redColorCount !== heartCount || blueColorCount !== diamondCount) {
+      console.warn('⚠️ Color-to-suit mismatch detected - may indicate pre-analysis color detection error');
+      analysisResult.metadata.warnings.push(
+        'Color detection may be inaccurate for this image. Verify card suits manually.'
+      );
     }
   }
 

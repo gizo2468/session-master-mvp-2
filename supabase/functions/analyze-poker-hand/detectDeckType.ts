@@ -9,7 +9,9 @@
 export interface DeckTypeResult {
   deckType: 'standard' | 'color-filled' | 'unknown';
   confidence: number;
-  cardColors?: string[];  // For color-filled decks: ['blue', 'blue', 'red', 'green', 'black', ...]
+  heroCardColors?: string[];  // Exactly 2 colors for hero cards (left to right)
+  boardCardColors?: string[];  // 0-5 colors for board cards (flop L→R, turn, river)
+  cardColors?: string[];  // Legacy: all colors in scan order (for backward compatibility)
   detectedCards?: number;  // Number of cards analyzed
   notes?: string;  // Any observations
 }
@@ -23,66 +25,84 @@ export async function detectDeckType(
   apiKey: string
 ): Promise<DeckTypeResult> {
   
-  const prompt = `You are a poker client interface analyzer. Your ONLY task is to identify the deck style used in this poker screenshot.
+  const prompt = `You are a poker card color detector. Analyze this screenshot and identify card background colors.
 
-TASK: Analyze 2-3 visible cards and determine the deck type.
+TASK: Detect deck type and identify card colors SEPARATELY for hero cards and board cards.
 
 DECK TYPE A - STANDARD SYMBOL DECK:
 - Cards have WHITE, CREAM, or LIGHT GRAY backgrounds
-- Suits are shown as traditional symbols (♥♦♠♣)
-- Example: White card with "A" and red ♥ symbol in corner
+- Suits shown as traditional symbols (♥♦♠♣)
 
 DECK TYPE B - COLOR-FILLED DECK (GGPoker-style):
 - Cards have SOLID COLOR BACKGROUNDS filling the entire card rectangle
-- Suits are indicated by BACKGROUND COLOR (not symbols)
-- Color mapping:
-  * RED background = Hearts
-  * BLUE background = Diamonds
-  * GREEN background = Clubs
-  * BLACK background = Spades
-- Card rank displayed in WHITE text over colored background
-- Example: White "9" on blue background = 9♦
+- Suits indicated by BACKGROUND COLOR:
+  * RED background = Hearts (♥)
+  * BLUE background = Diamonds (♦)
+  * GREEN background = Clubs (♣)
+  * BLACK/DARK GRAY background = Spades (♠)
 
-INSTRUCTIONS:
-1. Look at 2-3 clearly visible cards (hero cards or board cards)
-2. Check if cards have solid color backgrounds:
-   - YES → Color-filled deck
-   - NO (white/light backgrounds) → Standard deck
-3. For color-filled decks, identify the DOMINANT BACKGROUND COLOR for each visible card:
-   - Focus on the card's background fill color (ignore white rank text)
-   - Sample the center 60% of each card rectangle
-   - Classify as: "red", "blue", "green", or "black"
-   - Return colors in ORDER from left to right or top to bottom
+CRITICAL COLOR DETECTION GUIDE (ignore white rank text and borders):
+
+🔴 RED (Hearts):
+- Bright red, crimson, cherry red background
+- RGB roughly (200-255, 0-100, 0-100)
+- NOT orange, NOT pink
+
+🔵 BLUE (Diamonds):
+- Sky blue, ocean blue, royal blue background
+- RGB roughly (0-100, 100-200, 200-255)
+- NOT purple, NOT teal, NOT gray
+
+🟢 GREEN (Clubs):
+- Forest green, emerald green, grass green background
+- RGB roughly (0-100, 150-255, 0-100)
+- NOT yellow-green, NOT teal
+
+⚫ BLACK/DARK GRAY (Spades):
+- Very dark gray, charcoal, pure black background
+- RGB roughly (0-80, 0-80, 0-80)
+- NOT light gray, NOT blue-gray
+
+DETECTION PROCESS:
+1. Identify HERO CARDS (bottom-center of screen, 2 cards directly below player avatar)
+2. Identify BOARD CARDS (center of table, 3-5 cards in horizontal line)
+3. For each card, sample CENTER 50% of card background (ignore white text)
+4. Classify color using guide above
+5. Return colors LEFT TO RIGHT for each group
 
 OUTPUT FORMAT (JSON only):
 {
-  "deckType": "standard" | "color-filled" | "unknown",
+  "deckType": "color-filled" | "standard" | "unknown",
   "confidence": 0.0-1.0,
-  "cardColors": ["blue", "blue", "red", "green", "black"],
-  "detectedCards": 5,
-  "notes": "Additional observations if needed"
+  "heroCardColors": ["blue", "blue"],
+  "boardCardColors": ["red", "black", "black", "black", "red"],
+  "cardColors": ["blue", "blue", "red", "black", "black", "black", "red"],
+  "detectedCards": 7,
+  "notes": "Hero: 2 cards | Board: 5 cards (flop + turn + river)"
 }
 
 EXAMPLES:
 
-Example 1 - Standard Deck:
+Standard Deck:
 {
   "deckType": "standard",
   "confidence": 0.95,
-  "detectedCards": 2,
-  "notes": "White cards with red/black suit symbols visible"
+  "detectedCards": 5,
+  "notes": "White cards with suit symbols"
 }
 
-Example 2 - Color-Filled Deck:
+Color-Filled Deck:
 {
   "deckType": "color-filled",
   "confidence": 0.9,
-  "cardColors": ["blue", "blue", "red", "green", "black"],
+  "heroCardColors": ["blue", "blue"],
+  "boardCardColors": ["red", "black", "red"],
+  "cardColors": ["blue", "blue", "red", "black", "red"],
   "detectedCards": 5,
-  "notes": "GGPoker-style four-color deck with solid backgrounds"
+  "notes": "GGPoker four-color deck"
 }
 
-CRITICAL: Keep this analysis FAST and SIMPLE. Only identify deck type and colors, nothing else.`;
+CRITICAL: Return ONLY "red", "blue", "green", or "black" (lowercase). Group hero and board separately.`;
 
   try {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -132,10 +152,47 @@ CRITICAL: Keep this analysis FAST and SIMPLE. Only identify deck type and colors
 
     const result: DeckTypeResult = JSON.parse(content);
     
+    // Validation: Check grouped arrays for color-filled decks
+    if (result.deckType === 'color-filled') {
+      // Validate hero colors
+      if (result.heroCardColors) {
+        if (result.heroCardColors.length !== 2) {
+          result.notes = (result.notes || '') + ` | WARNING: Expected 2 hero colors, got ${result.heroCardColors.length}`;
+          result.confidence = Math.min(result.confidence, 0.6);
+        }
+      }
+      
+      // Validate board colors
+      if (result.boardCardColors) {
+        if (result.boardCardColors.length < 3 || result.boardCardColors.length > 5) {
+          result.notes = (result.notes || '') + ` | WARNING: Expected 3-5 board colors, got ${result.boardCardColors.length}`;
+          result.confidence = Math.min(result.confidence, 0.6);
+        }
+      }
+      
+      // Check for suspicious patterns in legacy cardColors
+      if (result.cardColors) {
+        const colorCounts = result.cardColors.reduce((acc, color) => {
+          acc[color] = (acc[color] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        
+        // Warning if all cards same color
+        if (Object.keys(colorCounts).length === 1) {
+          result.notes = (result.notes || '') + ' | WARNING: All cards same color - may be misdetection';
+          result.confidence = Math.min(result.confidence, 0.5);
+        }
+        
+        console.info('Color distribution:', colorCounts);
+      }
+    }
+    
     console.info('Deck type detected:', {
       type: result.deckType,
       confidence: result.confidence,
-      colors: result.cardColors?.length || 0,
+      heroColors: result.heroCardColors?.length || 0,
+      boardColors: result.boardCardColors?.length || 0,
+      totalColors: result.cardColors?.length || 0,
       cards: result.detectedCards
     });
 
