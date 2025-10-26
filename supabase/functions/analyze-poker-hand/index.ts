@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { detectDeckType, mapColorToSuit, DeckTypeResult } from './detectDeckType.ts';
+import { detectApp } from './detectApp.ts';
+import { getAppProfile } from './appProfiles.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -134,18 +136,37 @@ serve(async (req) => {
       );
     }
 
-    // PHASE 1: Pre-analyze deck type and colors
+    // PHASE 0: Detect poker app (fast pre-scan)
+    console.log('Phase 0: Detecting poker app...');
+    const appResult = await detectApp(cleanImage, LOVABLE_API_KEY);
+    const appProfile = getAppProfile(appResult.appName);
+    
+    console.log('App detection complete:', {
+      app: appResult.appName,
+      confidence: appResult.confidence,
+      profile: appProfile.description
+    });
+
+    // PHASE 1: Pre-analyze deck type and colors (with app context)
     console.log('Phase 1: Detecting deck type...');
-    const deckTypeResult = await detectDeckType(cleanImage, LOVABLE_API_KEY);
+    const deckTypeResult = await detectDeckType(cleanImage, LOVABLE_API_KEY, appResult.appName);
 
     console.log('Deck type result:', {
       type: deckTypeResult.deckType,
+      colorScheme: deckTypeResult.colorScheme,
       confidence: deckTypeResult.confidence,
       hasColors: !!deckTypeResult.cardColors
     });
 
 
     const systemPrompt = `You are an expert poker hand analyzer with advanced computer vision capabilities, specializing in No-Limit Hold'em (NLH).
+
+DETECTED APP: ${appResult.appName.toUpperCase()} (confidence: ${appResult.confidence.toFixed(2)})
+APP PROFILE: ${appProfile.description}
+
+DETECTED DECK TYPE: ${deckTypeResult.deckType}
+COLOR SCHEME: ${deckTypeResult.colorScheme || 'standard'}
+${(deckTypeResult.deckType === 'color-filled' || deckTypeResult.deckType === 'four-color-alt') ? 'This is a FOUR-COLOR DECK where card background colors indicate suits.' : 'This is a STANDARD DECK with traditional suit symbols.'}
 
 CRITICAL OUTPUT FORMAT RULES - EXTREMELY IMPORTANT:
 
@@ -242,9 +263,10 @@ CRITICAL CARD DETECTION INSTRUCTIONS:
    Ranks: A (Ace), K (King), Q (Queen), J (Jack), T (Ten), 9-2 (pip cards)
    Suits: h (hearts ♥), d (diamonds ♦), s (spades ♠), c (clubs ♣)
    
-${deckTypeResult.deckType === 'color-filled' ? `
-   CRITICAL: COLOR-FILLED DECK DETECTED (Two-Phase Detection)
-   This image uses a four-color deck (GGPoker-style) where suits are indicated by CARD BACKGROUND COLOR.
+${(deckTypeResult.deckType === 'color-filled' || deckTypeResult.deckType === 'four-color-alt') ? `
+   CRITICAL: FOUR-COLOR DECK DETECTED (Two-Phase Detection)
+   Color scheme: ${deckTypeResult.colorScheme}
+   This image uses a four-color deck where suits are indicated by CARD BACKGROUND COLOR.
    
    PRE-ANALYSIS PHASE COMPLETE:
    Card colors have already been detected in order: ${deckTypeResult.cardColors?.join(', ') || 'none'}
@@ -253,7 +275,7 @@ ${deckTypeResult.deckType === 'color-filled' ? `
    YOUR TASK (PHASE 2): Detect ONLY the card RANKS
    - Focus on detecting: A, K, Q, J, T, 9, 8, 7, 6, 5, 4, 3, 2
    - For suits, you can return any value (h/d/c/s) - it will be corrected automatically
-   - The backend will map: red→h, blue→d, green→c, black→s
+   - The backend will map colors to suits based on detected scheme
    
    WHY THIS APPROACH:
    - Pre-analysis color detection is 100% accurate (already verified)
@@ -277,14 +299,12 @@ ${deckTypeResult.deckType === 'color-filled' ? `
 CRITICAL POSITION DETECTION INSTRUCTIONS:
 
 1. DEALER BUTTON IDENTIFICATION (HIGHEST PRIORITY):
-   - Visual Characteristics (MUST MATCH ALL):
-     * BRIGHT YELLOW/GOLD circular badge (color: #FFD700, #FFC107, or similar bright yellow)
-     * BLACK letter "D" in the center (bold, sans-serif font)
-     * Small circular icon (typically 20-40px diameter)
-     * HIGH CONTRAST: The yellow button should stand out clearly against the table background
-     * Shape: PERFECTLY CIRCULAR or slightly rounded (not rectangular, not oval)
-     * Usually positioned DIRECTLY NEXT TO or SLIGHTLY OVERLAPPING a player's avatar/name plate
-     * Most common locations: slightly above avatar, beside avatar name, or on the avatar border edge
+   App-specific dealer button style for ${appResult.appName.toUpperCase()}:
+   - Color: ${appProfile.dealerButton.color}
+   - Shape: ${appProfile.dealerButton.shape}
+   - Text: "${appProfile.dealerButton.text}"
+   - Look for this specific style at any seat position
+   - If button is unclear, use player actions as hints (BB/SB post blinds)
    
    - CRITICAL: What is NOT a dealer button:
      * "WIN" badges (green/gold text, not circular button)
@@ -1076,9 +1096,13 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             }
           }
 
-  // CRITICAL FIX: POST-PROCESSING COLOR-TO-SUIT ENFORCEMENT for color-filled decks
-  if (deckTypeResult.deckType === 'color-filled') {
-    console.info('🎴 Applying color-to-suit mapping (color-filled deck enforcement)');
+    // Enhanced color-to-suit mapping with app-aware color schemes
+    const isColorFilledDeck = deckTypeResult.deckType === 'color-filled' || deckTypeResult.deckType === 'four-color-alt';
+    if (isColorFilledDeck && (deckTypeResult.heroCardColors || deckTypeResult.boardCardColors || deckTypeResult.cardColors)) {
+      console.info('🎴 Applying color-to-suit mapping (color-filled deck enforcement)');
+      console.info('Using color scheme:', deckTypeResult.colorScheme);
+      
+      const colorScheme = deckTypeResult.colorScheme || 'ggpoker';
     
     // Capture original suits for scoring (before mapping)
     const originalHeroSuits = analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards) 
@@ -1121,7 +1145,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
         // Score hero cards
         heroColors.forEach((color, i) => {
           if (i < originalHeroSuits.length) {
-            const mappedSuit = mapColorToSuit(color);
+            const mappedSuit = mapColorToSuit(color, colorScheme);
             if (mappedSuit === originalHeroSuits[i]) score++;
           }
         });
@@ -1129,7 +1153,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
         // Score board cards
         boardColors.forEach((color, i) => {
           if (i < originalBoardSuits.length) {
-            const mappedSuit = mapColorToSuit(color);
+            const mappedSuit = mapColorToSuit(color, colorScheme);
             if (mappedSuit === originalBoardSuits[i]) score++;
           }
         });
@@ -1166,7 +1190,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
     if (analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards) && heroColors.length > 0) {
       for (let i = 0; i < analysisResult.hero.cards.length && i < heroColors.length; i++) {
         const originalSuit = analysisResult.hero.cards[i].suit;
-        const mappedSuit = mapColorToSuit(heroColors[i]);
+        const mappedSuit = mapColorToSuit(heroColors[i], colorScheme);
         analysisResult.hero.cards[i].suit = mappedSuit;
         console.info(`Hero card ${i+1}: Rank ${analysisResult.hero.cards[i].rank} - Color ${heroColors[i]} → Suit ${mappedSuit} (was: ${originalSuit})`);
       }
@@ -1179,7 +1203,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
     if (analysisResult.board.flop && Array.isArray(analysisResult.board.flop)) {
       for (let i = 0; i < analysisResult.board.flop.length && boardColorIndex < boardColors.length; i++) {
         const originalSuit = analysisResult.board.flop[i].suit;
-        const mappedSuit = mapColorToSuit(boardColors[boardColorIndex]);
+        const mappedSuit = mapColorToSuit(boardColors[boardColorIndex], colorScheme);
         analysisResult.board.flop[i].suit = mappedSuit;
         console.info(`Board flop ${i+1}: Rank ${analysisResult.board.flop[i].rank} - Color ${boardColors[boardColorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
         boardColorIndex++;
@@ -1189,7 +1213,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
     // Turn
     if (analysisResult.board.turn && boardColorIndex < boardColors.length) {
       const originalSuit = analysisResult.board.turn.suit;
-      const mappedSuit = mapColorToSuit(boardColors[boardColorIndex]);
+      const mappedSuit = mapColorToSuit(boardColors[boardColorIndex], colorScheme);
       analysisResult.board.turn.suit = mappedSuit;
       console.info(`Board turn: Rank ${analysisResult.board.turn.rank} - Color ${boardColors[boardColorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
       boardColorIndex++;
@@ -1198,6 +1222,11 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
     // River
     if (analysisResult.board.river && boardColorIndex < boardColors.length) {
       const originalSuit = analysisResult.board.river.suit;
+      const mappedSuit = mapColorToSuit(boardColors[boardColorIndex], colorScheme);
+      analysisResult.board.river.suit = mappedSuit;
+      console.info(`Board river: Rank ${analysisResult.board.river.rank} - Color ${boardColors[boardColorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
+      boardColorIndex++;
+    }
       const mappedSuit = mapColorToSuit(boardColors[boardColorIndex]);
       analysisResult.board.river.suit = mappedSuit;
       console.info(`Board river: Rank ${analysisResult.board.river.rank} - Color ${boardColors[boardColorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);

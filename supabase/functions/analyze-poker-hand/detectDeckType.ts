@@ -22,10 +22,15 @@ export interface DeckTypeResult {
  */
 export async function detectDeckType(
   imageBase64: string,
-  apiKey: string
+  apiKey: string,
+  appName?: string
 ): Promise<DeckTypeResult> {
   
-  const prompt = `You are a poker card color detector. Analyze this screenshot and identify card background colors.
+  const appHint = appName && appName !== 'unknown' 
+    ? `\nDETECTED APP: ${appName.toUpperCase()} - Use app-specific knowledge for deck identification.` 
+    : '';
+
+  const prompt = `You are a poker card color detector. Analyze this screenshot and identify card background colors.${appHint}
 
 TASK: Detect deck type and identify card colors SEPARATELY for hero cards and board cards.
 
@@ -33,13 +38,20 @@ DECK TYPE A - STANDARD SYMBOL DECK:
 - Cards have WHITE, CREAM, or LIGHT GRAY backgrounds
 - Suits shown as traditional symbols (♥♦♠♣)
 
-DECK TYPE B - COLOR-FILLED DECK (GGPoker-style):
+DECK TYPE B - COLOR-FILLED DECK (GGPoker/ClubGG style):
 - Cards have SOLID COLOR BACKGROUNDS filling the entire card rectangle
 - Suits indicated by BACKGROUND COLOR:
   * RED background = Hearts (♥)
   * BLUE background = Diamonds (♦)
   * GREEN background = Clubs (♣)
   * BLACK/DARK GRAY background = Spades (♠)
+
+DECK TYPE C - FOUR-COLOR ALT (PokerStars style):
+- Cards have SOLID COLOR BACKGROUNDS with alternative scheme:
+  * RED background = Hearts (♥)
+  * BLUE background = Diamonds (♦)
+  * GREEN background = Clubs (♣)
+  * ORANGE/YELLOW background = Spades (♠)
 
 CRITICAL COLOR DETECTION GUIDE (ignore white rank text and borders):
 
@@ -72,7 +84,8 @@ DETECTION PROCESS:
 
 OUTPUT FORMAT (JSON only):
 {
-  "deckType": "color-filled" | "standard" | "unknown",
+  "deckType": "color-filled" | "four-color-alt" | "standard" | "unknown",
+  "colorScheme": "ggpoker" | "pokerstars" | "standard",
   "confidence": 0.0-1.0,
   "heroCardColors": ["blue", "blue"],
   "boardCardColors": ["red", "black", "black", "black", "red"],
@@ -91,9 +104,10 @@ Standard Deck:
   "notes": "White cards with suit symbols"
 }
 
-Color-Filled Deck:
+Color-Filled Deck (GGPoker):
 {
   "deckType": "color-filled",
+  "colorScheme": "ggpoker",
   "confidence": 0.9,
   "heroCardColors": ["blue", "blue"],
   "boardCardColors": ["red", "black", "red"],
@@ -102,7 +116,19 @@ Color-Filled Deck:
   "notes": "GGPoker four-color deck"
 }
 
-CRITICAL: Return ONLY "red", "blue", "green", or "black" (lowercase). Group hero and board separately.`;
+Four-Color Alt (PokerStars):
+{
+  "deckType": "four-color-alt",
+  "colorScheme": "pokerstars",
+  "confidence": 0.9,
+  "heroCardColors": ["red", "orange"],
+  "boardCardColors": ["blue", "green", "orange"],
+  "cardColors": ["red", "orange", "blue", "green", "orange"],
+  "detectedCards": 5,
+  "notes": "PokerStars four-color deck with orange spades"
+}
+
+CRITICAL: Return "red", "blue", "green", "black", or "orange" (lowercase). Group hero and board separately.`;
 
   try {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -152,8 +178,24 @@ CRITICAL: Return ONLY "red", "blue", "green", or "black" (lowercase). Group hero
 
     const result: DeckTypeResult = JSON.parse(content);
     
+    // Set appName if provided
+    if (appName) {
+      result.appName = appName;
+    }
+
+    // Default color scheme if not set
+    if (!result.colorScheme) {
+      if (result.deckType === 'color-filled') {
+        result.colorScheme = 'ggpoker';
+      } else if (result.deckType === 'four-color-alt') {
+        result.colorScheme = 'pokerstars';
+      } else {
+        result.colorScheme = 'standard';
+      }
+    }
+    
     // Validation: Check grouped arrays for color-filled decks
-    if (result.deckType === 'color-filled') {
+    if (result.deckType === 'color-filled' || result.deckType === 'four-color-alt') {
       // Validate hero colors
       if (result.heroCardColors) {
         if (result.heroCardColors.length !== 2) {
@@ -189,6 +231,7 @@ CRITICAL: Return ONLY "red", "blue", "green", or "black" (lowercase). Group hero
     
     console.info('Deck type detected:', {
       type: result.deckType,
+      colorScheme: result.colorScheme,
       confidence: result.confidence,
       heroColors: result.heroCardColors?.length || 0,
       boardColors: result.boardCardColors?.length || 0,
@@ -211,13 +254,29 @@ CRITICAL: Return ONLY "red", "blue", "green", or "black" (lowercase). Group hero
 
 /**
  * Map card colors to suits for color-filled decks
+ * Supports multiple color schemes
  */
-export function mapColorToSuit(color: string): string {
-  const mapping: Record<string, string> = {
-    'red': 'h',     // hearts
-    'blue': 'd',    // diamonds
-    'green': 'c',   // clubs
-    'black': 's'    // spades
+export function mapColorToSuit(
+  color: string, 
+  scheme: 'ggpoker' | 'pokerstars' | 'standard' = 'ggpoker'
+): string {
+  const schemes = {
+    ggpoker: {
+      red: 'h',
+      blue: 'd',
+      green: 'c',
+      black: 's'
+    },
+    pokerstars: {
+      red: 'h',
+      blue: 'd',
+      green: 'c',
+      orange: 's',
+      yellow: 's'
+    },
+    standard: {}
   };
-  return mapping[color.toLowerCase()] || '?';
+  
+  const mapping = schemes[scheme];
+  return mapping[color.toLowerCase() as keyof typeof mapping] || '?';
 }
