@@ -1212,15 +1212,16 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             }
           }
 
+          // Collect all cards for validation (moved outside if block to fix scoping)
+          const allCards = [
+            ...(analysisResult.hero.cards || []),
+            ...(analysisResult.board.flop || []),
+            ...(analysisResult.board.turn ? [analysisResult.board.turn] : []),
+            ...(analysisResult.board.river ? [analysisResult.board.river] : [])
+          ].filter(c => c && typeof c === 'object' && 'suit' in c);
+
           // Check for unusual suit distribution (might indicate color detection issues)
-          if (analysisResult.board.flop && Array.isArray(analysisResult.board.flop)) {
-            const allCards = [
-              ...(analysisResult.hero.cards || []),
-              ...analysisResult.board.flop,
-              ...(analysisResult.board.turn ? [analysisResult.board.turn] : []),
-              ...(analysisResult.board.river ? [analysisResult.board.river] : [])
-            ].filter(c => c && typeof c === 'object' && 'suit' in c);
-            
+          if (allCards.length > 0) {
             const suitCounts = allCards.reduce((acc, card) => {
               acc[card.suit] = (acc[card.suit] || 0) + 1;
               return acc;
