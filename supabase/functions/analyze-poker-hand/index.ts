@@ -230,10 +230,74 @@ CRITICAL CARD DETECTION INSTRUCTIONS:
    Ranks: A (Ace), K (King), Q (Queen), J (Jack), T (Ten), 9-2 (pip cards)
    Suits: h (hearts ♥), d (diamonds ♦), s (spades ♠), c (clubs ♣)
    
-    Example detections:
-    - Queen of Clubs = { rank: "Q", suit: "c", confidence: 0.9 }
-    - Ace of Hearts = { rank: "A", suit: "h", confidence: 0.95 }
-    - Ten of Spades = { rank: "T", suit: "s", confidence: 0.85 }
+   Detection Methods:
+   - Standard cards: Detect suit from symbols (♥♦♠♣)
+   - Four-color deck: Detect suit from marker color (Red/Blue/Green/Black)
+   
+   Example detections:
+   - Queen of Clubs = { rank: "Q", suit: "c", confidence: 0.9 }
+   - Ace of Hearts = { rank: "A", suit: "h", confidence: 0.95 }
+   - Ten of Spades = { rank: "T", suit: "s", confidence: 0.85 }
+   - Nine of Diamonds (blue marker) = { rank: "9", suit: "d", confidence: 0.8 }
+   - Ace of Clubs (green marker) = { rank: "A", suit: "c", confidence: 0.85 }
+
+6. DUAL-MODE SUIT DETECTION - SYMBOL + COLOR FALLBACK (CRITICAL):
+
+   DETECTION PRIORITY (FOLLOW IN ORDER):
+   
+   PRIMARY METHOD - Symbol Detection (Standard Cards):
+   - Look for traditional suit symbols: ♥ ♦ ♠ ♣
+   - These appear as small icons in the corner or center of cards
+   - If clearly visible with confidence >0.7, use symbol-based detection
+   - Output: h (hearts), d (diamonds), s (spades), c (clubs)
+   
+   FALLBACK METHOD - Color-Based Detection (GGPoker/Four-Color Deck):
+   - IF suit symbols are NOT visible OR confidence <0.7, analyze suit marker COLOR
+   - Some poker clients use color-coded suits instead of traditional symbols
+   - COLOR → SUIT MAPPING (CRITICAL):
+     * RED color (RGB ~255,0,0 or hue 0°-20°) → Hearts (h)
+     * BLUE color (RGB ~0,100,255 or hue 200°-240°) → Diamonds (d)
+     * GREEN color (RGB ~0,180,0 or hue 100°-160°) → Clubs (c)
+     * BLACK color (RGB ~0,0,0 or hue any, very dark) → Spades (s)
+   
+   COLOR DETECTION STRATEGY:
+   1. Locate the suit marker area on the card (typically top-left or center-left corner)
+   2. Identify the DOMINANT COLOR in that region
+   3. Analyze color properties:
+      - Hue (color family): Red/Orange, Blue, Green, or Grayscale
+      - Saturation (color intensity): High saturation = colored suit, Low = black/white
+      - Brightness: Very dark + low saturation = Black (spades)
+   4. Map the detected color to the corresponding suit using the table above
+   5. Assign confidence based on color clarity:
+      - 0.9-1.0: Strong, saturated color clearly matches mapping
+      - 0.7-0.9: Color is visible but may be slightly faded/unclear
+      - 0.5-0.7: Uncertain - color is ambiguous or partially obscured
+   
+   VISUAL EXAMPLES (GGPoker Four-Color Deck):
+   - Ace with GREEN marker → A♣ (Ace of Clubs)
+   - Nine with BLUE marker → 9♦ (Nine of Diamonds)
+   - King with RED marker → K♥ (King of Hearts)
+   - Queen with BLACK marker → Q♠ (Queen of Spades)
+   
+   CRITICAL RULES:
+   - ALWAYS attempt symbol detection first
+   - Use color detection ONLY as fallback when symbols unclear
+   - Color detection should work even in slightly blurred images
+   - Both methods output the SAME format: single letter (h/d/s/c)
+   - Never mix detection methods for the same card (use one or the other)
+   
+   CONFIDENCE SCORING:
+   - Symbol visible + color matches: 0.95-1.0 (highest confidence)
+   - Symbol visible, no color verification: 0.85-0.95
+   - Symbol unclear, strong color signal: 0.75-0.9
+   - No symbol, moderate color signal: 0.6-0.8
+   - Both unclear: 0.4-0.6 (flag for manual review)
+   
+   DEBUGGING TIP:
+   If you detect conflicting signals (e.g., heart symbol but green color):
+   - Trust the SYMBOL over the color (symbol is authoritative)
+   - But log lower confidence (0.6-0.7) to indicate mismatch
+   - This helps identify unusual card designs or detection errors
 
 CRITICAL POSITION DETECTION INSTRUCTIONS:
 
@@ -707,7 +771,8 @@ STEP 2 - BOARD CARDS (Table Center):
 - Scan the CENTER of the green felt area for 3-5 cards in a horizontal line
 - These cards are often partially covered by pot displays, chip graphics, or text
 - Read the card ranks/suits even if obscured by overlays
-- Look for white/light rectangular shapes with suit symbols (♥♦♠♣) in the table center
+- Look for white/light rectangular shapes with suit symbols (♥♦♠♣) OR colored suit markers (red/blue/green/black) in the table center
+- For four-color decks: Use color-based suit detection (Red=Hearts, Blue=Diamonds, Green=Clubs, Black=Spades)
 
 STEP 3 - VILLAIN CARDS:
 - All OTHER visible hole cards belong to villains (not the hero)
@@ -1012,6 +1077,45 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
                   'Dealer button detection uncertain. Position may require manual verification.'
                 );
               }
+            }
+          }
+
+          // Validate color-based card detection quality
+          if (analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards)) {
+            const lowConfidenceCards = analysisResult.hero.cards.filter(
+              card => card && typeof card === 'object' && card.confidence < 0.6
+            );
+            
+            if (lowConfidenceCards.length > 0) {
+              analysisResult.metadata.warnings.push(
+                `${lowConfidenceCards.length} hero card(s) detected with low confidence. ` +
+                `This may indicate color-coded suits that are unclear. Please verify: ` +
+                `${lowConfidenceCards.map(c => `${c.rank}${c.suit}`).join(', ')}`
+              );
+            }
+          }
+
+          // Check for unusual suit distribution (might indicate color detection issues)
+          if (analysisResult.board.flop && Array.isArray(analysisResult.board.flop)) {
+            const allCards = [
+              ...(analysisResult.hero.cards || []),
+              ...analysisResult.board.flop,
+              ...(analysisResult.board.turn ? [analysisResult.board.turn] : []),
+              ...(analysisResult.board.river ? [analysisResult.board.river] : [])
+            ].filter(c => c && typeof c === 'object' && 'suit' in c);
+            
+            const suitCounts = allCards.reduce((acc, card) => {
+              acc[card.suit] = (acc[card.suit] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+            
+            // If one suit appears >5 times, might be detection error
+            const maxSuitCount = Math.max(...Object.values(suitCounts));
+            if (maxSuitCount > 5 && allCards.length > 5) {
+              analysisResult.metadata.warnings.push(
+                `Unusual suit distribution detected (one suit appears ${maxSuitCount} times). ` +
+                `May indicate color-based suit detection issue. Please verify cards.`
+              );
             }
           }
 
