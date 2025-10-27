@@ -141,15 +141,21 @@ serve(async (req) => {
     const appResult = await detectApp(cleanImage, LOVABLE_API_KEY);
     const appProfile = getAppProfile(appResult.appName);
     
-    console.log('App detection complete:', {
+    // Enhanced app detection summary (Phase 4)
+    console.info('🎯 App detection complete:', {
       app: appResult.appName,
       confidence: appResult.confidence,
-      profile: appProfile.description
+      heroHighlight: appProfile.heroHighlightColor,
+      heroPosition: appProfile.heroPosition,
+      dealerButtonStyle: appProfile.dealerButton,
+      actionPanel: appProfile.actionPanelPosition,
+      colorScheme: appProfile.colorScheme,
+      description: appProfile.description
     });
 
     // PHASE 1: Pre-analyze deck type and colors (with app context)
     console.log('Phase 1: Detecting deck type...');
-    const deckTypeResult = await detectDeckType(cleanImage, LOVABLE_API_KEY, appResult.appName);
+    const deckTypeResult = await detectDeckType(cleanImage, LOVABLE_API_KEY, appResult.appName, appProfile);
 
     console.log('Deck type result:', {
       type: deckTypeResult.deckType,
@@ -194,6 +200,34 @@ CRITICAL OUTPUT FORMAT RULES - EXTREMELY IMPORTANT:
    - Flop: Array of 3 card objects: [{"rank": "K", "suit": "h"}, {"rank": "9", "suit": "d"}, {"rank": "2", "suit": "c"}]
    - Turn: Single card object: {"rank": "A", "suit": "s"}
    - River: Single card object: {"rank": "Q", "suit": "h"}
+
+APP-SPECIFIC HERO IDENTIFICATION FOR ${appResult.appName.toUpperCase()}:
+========================================================================
+App Profile:
+- Hero highlight color: ${appProfile.heroHighlightColor}
+- Hero position: ${appProfile.heroPosition}
+- Action panel: ${appProfile.actionPanelPosition}
+- Description: ${appProfile.description}
+
+CRITICAL SPATIAL RULES FOR HERO DETECTION:
+1. Hero player is ALWAYS at ${appProfile.heroPosition} (bottom edge, horizontally centered)
+2. Look for ${appProfile.heroHighlightColor} colored highlight/glow/border around this player's avatar
+3. Hero's EXACTLY 2 cards are DIRECTLY BENEATH this highlighted avatar
+4. DO NOT select cards from:
+   - Bottom-left position (villain seat)
+   - Bottom-right position (villain seat)
+   - Any position NOT at bottom-center
+
+VISUAL CONFIRMATION CHECKLIST:
+✓ Cards are at exact horizontal center of bottom edge
+✓ Avatar above cards has ${appProfile.heroHighlightColor} highlight
+✓ Action panel is on ${appProfile.actionPanelPosition} side (confirms app layout)
+✓ Exactly 2 cards side-by-side
+✓ These are the ONLY cards with the ${appProfile.heroHighlightColor} highlight color
+
+If any checklist item fails, DO NOT select those cards as hero cards.
+
+========================================================================
 
 CRITICAL CARD DETECTION INSTRUCTIONS:
 
@@ -995,8 +1029,17 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
 
           // Validate hero card detection with spatial reasoning
           if (analysisResult.hero?.cards && Array.isArray(analysisResult.hero.cards)) {
+            // Hero card count validation (Phase 2)
+            if (analysisResult.hero.cards.length !== 2) {
+              console.warn(`⚠️ Hero card count incorrect: expected 2, got ${analysisResult.hero.cards.length}`);
+              analysisResult.metadata.warnings.push(
+                `Hero card detection may be incorrect: ${analysisResult.hero.cards.length} cards detected instead of 2`
+              );
+            }
+            
             console.log('Hero cards detected:', {
               cards: analysisResult.hero.cards,
+              count: analysisResult.hero.cards.length,
               position: analysisResult.hero.position,
               confidence: analysisResult.hero.confidence
             });
@@ -1104,6 +1147,27 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
       
       const colorScheme = deckTypeResult.colorScheme || 'ggpoker';
     
+    // Pre-color-correction snapshot (Phase 4)
+    console.info('🎴 Hero cards BEFORE color correction:', {
+      cards: analysisResult.hero.cards,
+      detectedSuits: analysisResult.hero.cards?.map(c => c.suit),
+      position: analysisResult.hero.position,
+      confidence: analysisResult.hero.confidence,
+      preAnalysisColors: deckTypeResult.heroCardColors || deckTypeResult.cardColors?.slice(0, 2)
+    });
+    
+    console.info('🎴 Board cards BEFORE color correction:', {
+      flop: analysisResult.board.flop,
+      turn: analysisResult.board.turn,
+      river: analysisResult.board.river,
+      detectedSuits: [
+        ...(analysisResult.board.flop?.map(c => c.suit) || []),
+        ...(analysisResult.board.turn ? [analysisResult.board.turn.suit] : []),
+        ...(analysisResult.board.river ? [analysisResult.board.river.suit] : [])
+      ],
+      preAnalysisColors: deckTypeResult.boardCardColors
+    });
+    
     // Capture original suits for scoring (before mapping)
     const originalHeroSuits = analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards) 
       ? analysisResult.hero.cards.map(c => c.suit) : [];
@@ -1192,6 +1256,13 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
         const originalSuit = analysisResult.hero.cards[i].suit;
         const mappedSuit = mapColorToSuit(heroColors[i], colorScheme);
         analysisResult.hero.cards[i].suit = mappedSuit;
+        
+        // Mismatch warning (Phase 4)
+        if (mappedSuit !== originalSuit) {
+          console.warn(`⚠️ Hero card ${i+1} suit CORRECTED: ${originalSuit} → ${mappedSuit} (color: ${heroColors[i]})`);
+          console.warn('   This indicates the AI initially misidentified the card suit');
+        }
+        
         console.info(`Hero card ${i+1}: Rank ${analysisResult.hero.cards[i].rank} - Color ${heroColors[i]} → Suit ${mappedSuit} (was: ${originalSuit})`);
       }
     }
@@ -1205,6 +1276,12 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
         const originalSuit = analysisResult.board.flop[i].suit;
         const mappedSuit = mapColorToSuit(boardColors[boardColorIndex], colorScheme);
         analysisResult.board.flop[i].suit = mappedSuit;
+        
+        // Mismatch warning (Phase 4)
+        if (mappedSuit !== originalSuit) {
+          console.warn(`⚠️ Board flop ${i+1} suit CORRECTED: ${originalSuit} → ${mappedSuit} (color: ${boardColors[boardColorIndex]})`);
+        }
+        
         console.info(`Board flop ${i+1}: Rank ${analysisResult.board.flop[i].rank} - Color ${boardColors[boardColorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
         boardColorIndex++;
       }
@@ -1215,6 +1292,12 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
       const originalSuit = analysisResult.board.turn.suit;
       const mappedSuit = mapColorToSuit(boardColors[boardColorIndex], colorScheme);
       analysisResult.board.turn.suit = mappedSuit;
+      
+      // Mismatch warning (Phase 4)
+      if (mappedSuit !== originalSuit) {
+        console.warn(`⚠️ Board turn suit CORRECTED: ${originalSuit} → ${mappedSuit} (color: ${boardColors[boardColorIndex]})`);
+      }
+      
       console.info(`Board turn: Rank ${analysisResult.board.turn.rank} - Color ${boardColors[boardColorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
       boardColorIndex++;
     }
@@ -1224,6 +1307,12 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
       const originalSuit = analysisResult.board.river.suit;
       const mappedSuit = mapColorToSuit(boardColors[boardColorIndex], colorScheme);
       analysisResult.board.river.suit = mappedSuit;
+      
+      // Mismatch warning (Phase 4)
+      if (mappedSuit !== originalSuit) {
+        console.warn(`⚠️ Board river suit CORRECTED: ${originalSuit} → ${mappedSuit} (color: ${boardColors[boardColorIndex]})`);
+      }
+      
       console.info(`Board river: Rank ${analysisResult.board.river.rank} - Color ${boardColors[boardColorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
       boardColorIndex++;
     }

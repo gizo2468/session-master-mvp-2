@@ -14,6 +14,8 @@ export interface DeckTypeResult {
   cardColors?: string[];  // Legacy: all colors in scan order (for backward compatibility)
   detectedCards?: number;  // Number of cards analyzed
   notes?: string;  // Any observations
+  appName?: string;  // Detected poker app name
+  colorScheme?: 'ggpoker' | 'pokerstars' | 'standard';  // Color mapping scheme
 }
 
 /**
@@ -23,14 +25,34 @@ export interface DeckTypeResult {
 export async function detectDeckType(
   imageBase64: string,
   apiKey: string,
-  appName?: string
+  appName?: string,
+  appProfile?: any
 ): Promise<DeckTypeResult> {
   
   const appHint = appName && appName !== 'unknown' 
     ? `\nDETECTED APP: ${appName.toUpperCase()} - Use app-specific knowledge for deck identification.` 
     : '';
 
-  const prompt = `You are a poker card color detector. Analyze this screenshot and identify card background colors.${appHint}
+  // Add app-specific hero identification hints
+  const heroIdentificationHint = appProfile && appName !== 'unknown' ? `
+
+HERO CARD IDENTIFICATION FOR ${appName.toUpperCase()}:
+- App: ${appName}
+- Hero highlight color: ${appProfile.heroHighlightColor}
+- Hero position: ${appProfile.heroPosition}
+- Action panel position: ${appProfile.actionPanelPosition}
+
+CRITICAL SPATIAL RULES FOR HERO DETECTION:
+- Look for ${appProfile.heroHighlightColor} highlight/glow/border around the bottom-center player's avatar
+- Hero avatar is at ${appProfile.heroPosition} with EXACTLY 2 cards directly below it
+- Action panel on ${appProfile.actionPanelPosition} side helps confirm hero orientation
+- DO NOT confuse hero cards with villain cards at bottom-left or bottom-right positions
+- Hero is ALWAYS the player at the horizontal center of the bottom edge
+
+MUST DETECT EXACTLY 2 HERO CARDS - This is critical for suit mapping accuracy.
+` : '';
+
+  const prompt = `You are a poker card color detector. Analyze this screenshot and identify card background colors.${appHint}${heroIdentificationHint}
 
 TASK: Detect deck type and identify card colors SEPARATELY for hero cards and board cards.
 
@@ -76,11 +98,19 @@ CRITICAL COLOR DETECTION GUIDE (ignore white rank text and borders):
 - NOT light gray, NOT blue-gray
 
 DETECTION PROCESS:
-1. Identify HERO CARDS (bottom-center of screen, 2 cards directly below player avatar)
+1. Identify HERO CARDS (bottom-center of screen, EXACTLY 2 cards directly below player avatar)
+   - Hero is at the horizontal center of the bottom edge (NOT bottom-left or bottom-right)
+   - Look for distinctive highlight/glow around this player's avatar
+   - Count the cards: must be exactly 2 side-by-side cards
 2. Identify BOARD CARDS (center of table, 3-5 cards in horizontal line)
-3. For each card, sample CENTER 50% of card background (ignore white text)
+3. For each card, sample MULTIPLE POINTS for accuracy:
+   - Sample CENTER 50% of card background (primary sample point)
+   - For hero cards: sample center, top-center, and mid-center points
+   - Take the most dominant/consistent color across sample points
+   - Ignore white rank text, borders, and any overlay elements (WIN badges, etc.)
 4. Classify color using guide above
 5. Return colors LEFT TO RIGHT for each group
+6. CRITICAL: Verify hero card count is EXACTLY 2 before returning results
 
 OUTPUT FORMAT (JSON only):
 {
@@ -196,12 +226,18 @@ CRITICAL: Return "red", "blue", "green", "black", or "orange" (lowercase). Group
     
     // Validation: Check grouped arrays for color-filled decks
     if (result.deckType === 'color-filled' || result.deckType === 'four-color-alt') {
-      // Validate hero colors
+      // Validate hero colors (CRITICAL - must be exactly 2)
       if (result.heroCardColors) {
         if (result.heroCardColors.length !== 2) {
+          console.warn(`⚠️ Hero card detection uncertain: Expected 2 hero colors, got ${result.heroCardColors.length}`);
           result.notes = (result.notes || '') + ` | WARNING: Expected 2 hero colors, got ${result.heroCardColors.length}`;
-          result.confidence = Math.min(result.confidence, 0.6);
+          result.confidence = Math.min(result.confidence, 0.5);
+        } else {
+          console.info('✅ Hero card count validation passed: 2 cards detected');
         }
+      } else {
+        console.warn('⚠️ No hero card colors detected in pre-analysis');
+        result.confidence = Math.min(result.confidence, 0.5);
       }
       
       // Validate board colors
