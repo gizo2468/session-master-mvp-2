@@ -1227,11 +1227,6 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
       console.info(`Board river: Rank ${analysisResult.board.river.rank} - Color ${boardColors[boardColorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
       boardColorIndex++;
     }
-      const mappedSuit = mapColorToSuit(boardColors[boardColorIndex]);
-      analysisResult.board.river.suit = mappedSuit;
-      console.info(`Board river: Rank ${analysisResult.board.river.rank} - Color ${boardColors[boardColorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
-      boardColorIndex++;
-    }
     
     console.info('✅ Suit correction complete - all cards now match pre-detected colors');
     
