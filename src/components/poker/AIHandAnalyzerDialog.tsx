@@ -199,6 +199,8 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
           <DialogTitle>AI Hand Analyzer</DialogTitle>
           <DialogDescription>
             Upload a screenshot of your poker hand for automatic analysis
+            <br />
+            Make sure your screenshot is clear and not blurry.
           </DialogDescription>
         </DialogHeader>
 
@@ -224,6 +226,9 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
               />
               <p className="text-xs text-muted-foreground mt-2">
                 Supported: JPG, PNG, WebP (max 10MB)
+              </p>
+              <p className="text-xs text-muted-foreground mt-3">
+                We apologize for any temporary issues — our AI is improving every day to provide better accuracy.
               </p>
             </div>
           )}
