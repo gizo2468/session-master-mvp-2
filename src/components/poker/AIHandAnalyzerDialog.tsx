@@ -207,30 +207,32 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
         <div className="space-y-4 py-4">
           {/* Upload State */}
           {state.status === 'idle' && !state.image && (
-            <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-8 text-center hover:bg-poker-gold/5 transition-colors">
-              <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-sm text-muted-foreground mb-2">
-                Drop poker hand screenshot here
+            <>
+              <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-8 text-center hover:bg-poker-gold/5 transition-colors">
+                <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-sm text-muted-foreground mb-2">
+                  Drop poker hand screenshot here
+                </p>
+                <label htmlFor="hand-upload" className="cursor-pointer">
+                  <Button type="button" variant="outline" size="sm" asChild>
+                    <span>Choose File</span>
+                  </Button>
+                </label>
+                <input
+                  id="hand-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Supported: JPG, PNG, WebP (max 10MB)
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                We apologize for any temporary issues. Our AI is improving every day to provide better accuracy.
               </p>
-              <label htmlFor="hand-upload" className="cursor-pointer">
-                <Button type="button" variant="outline" size="sm" asChild>
-                  <span>Choose File</span>
-                </Button>
-              </label>
-              <input
-                id="hand-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
-              <p className="text-xs text-muted-foreground mt-2">
-                Supported: JPG, PNG, WebP (max 10MB)
-              </p>
-              <p className="text-xs text-muted-foreground mt-3">
-                We apologize for any temporary issues — our AI is improving every day to provide better accuracy.
-              </p>
-            </div>
+            </>
           )}
 
           {/* Uploading State */}
