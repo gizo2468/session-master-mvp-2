@@ -128,15 +128,18 @@ DETECTION PROCESS:
    - Count the cards: must be exactly 2 side-by-side cards
 2. Identify BOARD CARDS (center of table, 3-5 cards in horizontal line)
 3. For each card, sample MULTIPLE POINTS for accuracy:
-   - Sample OUTER 70% of card (edges, corners, top/bottom margins)
+   - Sample OUTER 70% of card at edges, corners, top/bottom margins
    - Avoid center where rank text is printed
-   - For hero cards: sample top-left, top-right, bottom-left, bottom-right corners
+   - For hero cards: sample top-left corner, top-right corner, left edge, right edge
+   - For board cards: sample corners and edges of each card
    - Take the most dominant/consistent color across sample points
    - Ignore white rank text, suit symbols, borders, and overlay elements (WIN badges)
-   - Focus on the BACKGROUND FILL COLOR behind all text
-4. Classify color using guide above
+   - Focus on the BACKGROUND FILL COLOR behind all text and symbols
+   - If you see a solid colored rectangle with white text on top, that rectangle color is the card color
+4. Classify color using guide above (be specific: use "red", "blue", "green", "black", not "colored" or "various")
 5. Return colors LEFT TO RIGHT for each group
 6. CRITICAL: ALWAYS populate heroCardColors and boardCardColors arrays, even for "standard" decks
+   - For standard decks with white backgrounds, return ["white", "white"] for hero, not empty array
 7. CRITICAL: Verify hero card count is EXACTLY 2 before returning results
 
 OUTPUT FORMAT (JSON only):
@@ -333,7 +336,10 @@ export function mapColorToSuit(
 ): string {
   // Validate input
   const normalized = color.toLowerCase().trim();
-  if (!normalized || normalized === 'unknown' || normalized === 'white' || normalized === 'cream') {
+  
+  // Check for neutral/inconclusive colors - return '?' to preserve original AI detection
+  const neutralColors = ['white', 'cream', 'light', 'gray', 'grey', 'silver', 'beige', 'unknown'];
+  if (!normalized || neutralColors.includes(normalized)) {
     console.warn(`⚠️ Invalid/neutral color for suit mapping: "${color}"`);
     return '?'; // Return unknown for white/invalid colors
   }
