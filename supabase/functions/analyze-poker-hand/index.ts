@@ -1139,10 +1139,21 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             }
           }
 
-    // Enhanced color-to-suit mapping with app-aware color schemes
-    const isColorFilledDeck = deckTypeResult.deckType === 'color-filled' || deckTypeResult.deckType === 'four-color-alt';
-    if (isColorFilledDeck && (deckTypeResult.heroCardColors || deckTypeResult.boardCardColors || deckTypeResult.cardColors)) {
-      console.info('🎴 Applying color-to-suit mapping (color-filled deck enforcement)');
+    // Enhanced color-to-suit mapping - apply whenever color data exists
+    const hasColorData = deckTypeResult.heroCardColors || deckTypeResult.boardCardColors || deckTypeResult.cardColors;
+    
+    // Log color detection quality
+    console.info('🎨 Color detection quality check:', {
+      deckType: deckTypeResult.deckType,
+      heroColorsDetected: !!deckTypeResult.heroCardColors,
+      boardColorsDetected: !!deckTypeResult.boardCardColors,
+      totalColorsDetected: (deckTypeResult.heroCardColors?.length || 0) + (deckTypeResult.boardCardColors?.length || 0),
+      expectedHeroColors: 2,
+      hasAnyColorData: hasColorData
+    });
+    
+    if (hasColorData) {
+      console.info('🎴 Applying color-to-suit mapping (color data available)');
       console.info('Using color scheme:', deckTypeResult.colorScheme);
       
       const colorScheme = deckTypeResult.colorScheme || 'ggpoker';
@@ -1250,21 +1261,34 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
     
     console.info('Color mapping strategy:', { method: mappingMethod, heroColors, boardColors });
     
+    // Track corrections for metrics
+    let correctionsMade = 0;
+    let totalCardsProcessed = 0;
+    
     // Apply hero card mapping
     if (analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards) && heroColors.length > 0) {
       for (let i = 0; i < analysisResult.hero.cards.length && i < heroColors.length; i++) {
         const originalSuit = analysisResult.hero.cards[i].suit;
         const mappedSuit = mapColorToSuit(heroColors[i], colorScheme);
         analysisResult.hero.cards[i].suit = mappedSuit;
+        totalCardsProcessed++;
         
         // Mismatch warning (Phase 4)
         if (mappedSuit !== originalSuit) {
+          correctionsMade++;
           console.warn(`⚠️ Hero card ${i+1} suit CORRECTED: ${originalSuit} → ${mappedSuit} (color: ${heroColors[i]})`);
           console.warn('   This indicates the AI initially misidentified the card suit');
         }
         
         console.info(`Hero card ${i+1}: Rank ${analysisResult.hero.cards[i].rank} - Color ${heroColors[i]} → Suit ${mappedSuit} (was: ${originalSuit})`);
       }
+      
+      // Log detailed mapping info
+      console.info('🔍 Hero card color-to-suit mapping:', {
+        card1: { color: heroColors[0], originalSuit: originalHeroSuits[0], mappedSuit: analysisResult.hero.cards[0]?.suit },
+        card2: { color: heroColors[1], originalSuit: originalHeroSuits[1], mappedSuit: analysisResult.hero.cards[1]?.suit },
+        correctionsMade: correctionsMade
+      });
     }
     
     // Apply board card mapping
@@ -1276,9 +1300,11 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
         const originalSuit = analysisResult.board.flop[i].suit;
         const mappedSuit = mapColorToSuit(boardColors[boardColorIndex], colorScheme);
         analysisResult.board.flop[i].suit = mappedSuit;
+        totalCardsProcessed++;
         
         // Mismatch warning (Phase 4)
         if (mappedSuit !== originalSuit) {
+          correctionsMade++;
           console.warn(`⚠️ Board flop ${i+1} suit CORRECTED: ${originalSuit} → ${mappedSuit} (color: ${boardColors[boardColorIndex]})`);
         }
         
@@ -1292,9 +1318,11 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
       const originalSuit = analysisResult.board.turn.suit;
       const mappedSuit = mapColorToSuit(boardColors[boardColorIndex], colorScheme);
       analysisResult.board.turn.suit = mappedSuit;
+      totalCardsProcessed++;
       
       // Mismatch warning (Phase 4)
       if (mappedSuit !== originalSuit) {
+        correctionsMade++;
         console.warn(`⚠️ Board turn suit CORRECTED: ${originalSuit} → ${mappedSuit} (color: ${boardColors[boardColorIndex]})`);
       }
       
@@ -1307,14 +1335,27 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
       const originalSuit = analysisResult.board.river.suit;
       const mappedSuit = mapColorToSuit(boardColors[boardColorIndex], colorScheme);
       analysisResult.board.river.suit = mappedSuit;
+      totalCardsProcessed++;
       
       // Mismatch warning (Phase 4)
       if (mappedSuit !== originalSuit) {
+        correctionsMade++;
         console.warn(`⚠️ Board river suit CORRECTED: ${originalSuit} → ${mappedSuit} (color: ${boardColors[boardColorIndex]})`);
       }
       
       console.info(`Board river: Rank ${analysisResult.board.river.rank} - Color ${boardColors[boardColorIndex]} → Suit ${mappedSuit} (was: ${originalSuit})`);
       boardColorIndex++;
+    }
+    
+    // Log correction statistics
+    if (totalCardsProcessed > 0) {
+      const correctionRate = correctionsMade / totalCardsProcessed;
+      console.info(`📊 Correction stats: ${correctionsMade} suits corrected out of ${totalCardsProcessed} cards (${(correctionRate * 100).toFixed(0)}%)`);
+      
+      if (correctionRate > 0.5) {
+        console.warn('⚠️ High suit correction rate detected - symbol reading was unreliable');
+        analysisResult.metadata.warnings.push('High suit correction rate - symbol detection may be unreliable');
+      }
     }
     
     console.info('✅ Suit correction complete - all cards now match pre-detected colors');

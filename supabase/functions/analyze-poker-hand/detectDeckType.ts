@@ -54,11 +54,15 @@ MUST DETECT EXACTLY 2 HERO CARDS - This is critical for suit mapping accuracy.
 
   const prompt = `You are a poker card color detector. Analyze this screenshot and identify card background colors.${appHint}${heroIdentificationHint}
 
-TASK: Detect deck type and identify card colors SEPARATELY for hero cards and board cards.
+CRITICAL INSTRUCTION: ALWAYS extract card background colors, EVEN FOR STANDARD DECKS.
+This color data is essential for suit validation and error correction.
+
+TASK: Detect deck type AND ALWAYS identify card colors SEPARATELY for hero cards and board cards.
 
 DECK TYPE A - STANDARD SYMBOL DECK:
 - Cards have WHITE, CREAM, or LIGHT GRAY backgrounds
 - Suits shown as traditional symbols (♥♦♠♣)
+- STILL extract color data (may show as "white" or "cream" for standard decks)
 
 DECK TYPE B - COLOR-FILLED DECK (GGPoker/ClubGG style):
 - Cards have SOLID COLOR BACKGROUNDS filling the entire card rectangle
@@ -75,27 +79,47 @@ DECK TYPE C - FOUR-COLOR ALT (PokerStars style):
   * GREEN background = Clubs (♣)
   * ORANGE/YELLOW background = Spades (♠)
 
-CRITICAL COLOR DETECTION GUIDE (ignore white rank text and borders):
+CRITICAL COLOR DETECTION GUIDE:
+
+COLOR SAMPLING STRATEGY (DO NOT CONFUSE WITH RANK TEXT):
+- Sample the OUTER 70% of card area (avoid center where rank/suit are printed)
+- Look at the BACKGROUND behind the white rank text, NOT the text itself
+- For GGPoker/ClubGG: The entire card rectangle has a solid colored background
+- White rank numbers (A, K, 8, etc.) should be IGNORED - sample the color BEHIND them
 
 🔴 RED (Hearts):
-- Bright red, crimson, cherry red background
+- Bright red, crimson, cherry red background filling entire card
 - RGB roughly (200-255, 0-100, 0-100)
 - NOT orange, NOT pink
+- Aliases: red, crimson, cherry
 
 🔵 BLUE (Diamonds):
 - Sky blue, ocean blue, royal blue background
 - RGB roughly (0-100, 100-200, 200-255)
 - NOT purple, NOT teal, NOT gray
+- Aliases: blue, sky, ocean, azure
 
 🟢 GREEN (Clubs):
 - Forest green, emerald green, grass green background
 - RGB roughly (0-100, 150-255, 0-100)
 - NOT yellow-green, NOT teal
+- Aliases: green, emerald, forest
 
 ⚫ BLACK/DARK GRAY (Spades):
 - Very dark gray, charcoal, pure black background
 - RGB roughly (0-80, 0-80, 0-80)
 - NOT light gray, NOT blue-gray
+- Aliases: black, charcoal, dark
+
+🟠 ORANGE/YELLOW (PokerStars Spades):
+- Bright orange or yellow background
+- Only for PokerStars four-color decks
+- Aliases: orange, yellow, gold
+
+DECK TYPE CLASSIFICATION RULE (LOWERED THRESHOLD):
+- If ANY card has a distinctly colored background (red/blue/green/black/orange) → "color-filled" or "four-color-alt"
+- Only classify as "standard" if ALL cards have white/cream/light backgrounds
+- When in doubt, favor "color-filled" over "standard"
 
 DETECTION PROCESS:
 1. Identify HERO CARDS (bottom-center of screen, EXACTLY 2 cards directly below player avatar)
@@ -104,13 +128,16 @@ DETECTION PROCESS:
    - Count the cards: must be exactly 2 side-by-side cards
 2. Identify BOARD CARDS (center of table, 3-5 cards in horizontal line)
 3. For each card, sample MULTIPLE POINTS for accuracy:
-   - Sample CENTER 50% of card background (primary sample point)
-   - For hero cards: sample center, top-center, and mid-center points
+   - Sample OUTER 70% of card (edges, corners, top/bottom margins)
+   - Avoid center where rank text is printed
+   - For hero cards: sample top-left, top-right, bottom-left, bottom-right corners
    - Take the most dominant/consistent color across sample points
-   - Ignore white rank text, borders, and any overlay elements (WIN badges, etc.)
+   - Ignore white rank text, suit symbols, borders, and overlay elements (WIN badges)
+   - Focus on the BACKGROUND FILL COLOR behind all text
 4. Classify color using guide above
 5. Return colors LEFT TO RIGHT for each group
-6. CRITICAL: Verify hero card count is EXACTLY 2 before returning results
+6. CRITICAL: ALWAYS populate heroCardColors and boardCardColors arrays, even for "standard" decks
+7. CRITICAL: Verify hero card count is EXACTLY 2 before returning results
 
 OUTPUT FORMAT (JSON only):
 {
@@ -224,45 +251,53 @@ CRITICAL: Return "red", "blue", "green", "black", or "orange" (lowercase). Group
       }
     }
     
-    // Validation: Check grouped arrays for color-filled decks
-    if (result.deckType === 'color-filled' || result.deckType === 'four-color-alt') {
-      // Validate hero colors (CRITICAL - must be exactly 2)
-      if (result.heroCardColors) {
-        if (result.heroCardColors.length !== 2) {
-          console.warn(`⚠️ Hero card detection uncertain: Expected 2 hero colors, got ${result.heroCardColors.length}`);
-          result.notes = (result.notes || '') + ` | WARNING: Expected 2 hero colors, got ${result.heroCardColors.length}`;
-          result.confidence = Math.min(result.confidence, 0.5);
-        } else {
-          console.info('✅ Hero card count validation passed: 2 cards detected');
-        }
+    // Enhanced validation for all deck types
+    // Validate hero colors (CRITICAL - must be exactly 2)
+    if (result.heroCardColors) {
+      if (result.heroCardColors.length !== 2) {
+        console.warn(`⚠️ Hero card detection uncertain: Expected 2 hero colors, got ${result.heroCardColors.length}`);
+        result.notes = (result.notes || '') + ` | WARNING: Expected 2 hero colors, got ${result.heroCardColors.length}`;
+        result.confidence = Math.min(result.confidence, 0.5);
       } else {
-        console.warn('⚠️ No hero card colors detected in pre-analysis');
+        console.info('✅ Hero card count validation passed: 2 cards detected');
+      }
+    } else {
+      console.warn('⚠️ No hero card colors detected in pre-analysis');
+      // Don't reduce confidence for standard decks, but log the warning
+      if (result.deckType === 'color-filled' || result.deckType === 'four-color-alt') {
+        result.confidence = Math.min(result.confidence, 0.5);
+      }
+    }
+    
+    // Validate board colors
+    if (result.boardCardColors) {
+      if (result.boardCardColors.length < 3 || result.boardCardColors.length > 5) {
+        result.notes = (result.notes || '') + ` | WARNING: Expected 3-5 board colors, got ${result.boardCardColors.length}`;
+        result.confidence = Math.min(result.confidence, 0.6);
+      }
+    }
+    
+    // Check for suspicious patterns in legacy cardColors
+    if (result.cardColors) {
+      const colorCounts = result.cardColors.reduce((acc, color) => {
+        acc[color] = (acc[color] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      // Warning if all cards same color (only for color-filled decks)
+      if (Object.keys(colorCounts).length === 1 && (result.deckType === 'color-filled' || result.deckType === 'four-color-alt')) {
+        result.notes = (result.notes || '') + ' | WARNING: All cards same color - may be misdetection';
         result.confidence = Math.min(result.confidence, 0.5);
       }
       
-      // Validate board colors
-      if (result.boardCardColors) {
-        if (result.boardCardColors.length < 3 || result.boardCardColors.length > 5) {
-          result.notes = (result.notes || '') + ` | WARNING: Expected 3-5 board colors, got ${result.boardCardColors.length}`;
-          result.confidence = Math.min(result.confidence, 0.6);
-        }
-      }
-      
-      // Check for suspicious patterns in legacy cardColors
-      if (result.cardColors) {
-        const colorCounts = result.cardColors.reduce((acc, color) => {
-          acc[color] = (acc[color] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-        
-        // Warning if all cards same color
-        if (Object.keys(colorCounts).length === 1) {
-          result.notes = (result.notes || '') + ' | WARNING: All cards same color - may be misdetection';
-          result.confidence = Math.min(result.confidence, 0.5);
-        }
-        
-        console.info('Color distribution:', colorCounts);
-      }
+      console.info('Color distribution:', colorCounts);
+    }
+    
+    // Special validation: If app is known color-filled but classified as standard, add warning
+    if (result.deckType === 'standard' && appName && ['ggpoker', 'clubgg'].includes(appName.toLowerCase())) {
+      console.warn(`⚠️ Detected ${appName} but classified as standard deck - may need re-classification`);
+      result.confidence = Math.min(result.confidence, 0.7);
+      result.notes = (result.notes || '') + ` | App uses color-filled decks but detected as standard`;
     }
     
     console.info('Deck type detected:', {
@@ -296,6 +331,45 @@ export function mapColorToSuit(
   color: string, 
   scheme: 'ggpoker' | 'pokerstars' | 'standard' = 'ggpoker'
 ): string {
+  // Validate input
+  const normalized = color.toLowerCase().trim();
+  if (!normalized || normalized === 'unknown' || normalized === 'white' || normalized === 'cream') {
+    console.warn(`⚠️ Invalid/neutral color for suit mapping: "${color}"`);
+    return '?'; // Return unknown for white/invalid colors
+  }
+  
+  // Enhanced color aliases for better matching
+  const colorAliases: Record<string, string> = {
+    // Red aliases
+    'red': 'red',
+    'crimson': 'red',
+    'cherry': 'red',
+    'scarlet': 'red',
+    // Blue aliases
+    'blue': 'blue',
+    'sky': 'blue',
+    'ocean': 'blue',
+    'azure': 'blue',
+    'royal': 'blue',
+    // Green aliases
+    'green': 'green',
+    'emerald': 'green',
+    'forest': 'green',
+    'grass': 'green',
+    // Black aliases
+    'black': 'black',
+    'charcoal': 'black',
+    'dark': 'black',
+    'gray': 'black',
+    'grey': 'black',
+    // Orange/Yellow aliases (PokerStars)
+    'orange': 'orange',
+    'yellow': 'yellow',
+    'gold': 'yellow'
+  };
+  
+  const baseColor = colorAliases[normalized] || normalized;
+  
   const schemes = {
     ggpoker: {
       red: 'h',
@@ -314,5 +388,12 @@ export function mapColorToSuit(
   };
   
   const mapping = schemes[scheme];
-  return mapping[color.toLowerCase() as keyof typeof mapping] || '?';
+  const result = mapping[baseColor as keyof typeof mapping];
+  
+  if (!result) {
+    console.warn(`⚠️ Unmapped color "${color}" (normalized: "${baseColor}") for scheme "${scheme}"`);
+    return '?';
+  }
+  
+  return result;
 }
