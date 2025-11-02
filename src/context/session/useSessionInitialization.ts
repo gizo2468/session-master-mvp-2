@@ -25,7 +25,7 @@ export const useSessionInitialization = () => {
       
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Active session fetch timeout')), 8000)
+        setTimeout(() => reject(new Error('Active session fetch timeout')), 15000)
       );
       
       const activeSession = await Promise.race([
@@ -56,7 +56,7 @@ export const useSessionInitialization = () => {
         
         // Add timeout to prevent hanging on slow queries
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Sessions fetch timeout')), 10000)
+          setTimeout(() => reject(new Error('Sessions fetch timeout')), 20000)
         );
         
         const [activeSessionResult, sessionsResult] = await Promise.allSettled([
@@ -130,7 +130,7 @@ export const useSessionInitialization = () => {
       
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Refresh timeout')), 8000)
+        setTimeout(() => reject(new Error('Refresh timeout')), 15000)
       );
       
       const [sessionsResult, activeSessionResult] = await Promise.allSettled([
@@ -173,12 +173,12 @@ export const useSessionInitialization = () => {
       try {
         console.log('🔄 User changed, reinitializing sessions. User:', user?.id);
         
-        // Set timeout for initialization (15 seconds max)
+        // Set timeout for initialization (30 seconds max)
         timeoutId = setTimeout(() => {
           console.error('❌ Session initialization timeout');
           setInitializationError('Initialization timeout. Please refresh the page.');
           setIsInitialized(true);
-        }, 15000);
+        }, 30000);
         
         if (currentUserId !== user?.id) {
           console.log('👤 User switch detected, clearing sessions');

@@ -49,14 +49,13 @@ export const useSessionLoader = (id: string | undefined) => {
         // If not found in context or invalid, try to load from database
         console.log('🔍 Loading session from database:', id);
         
-        // FIXED: Remove is_active filter to allow loading both active and completed sessions
-        // FIXED: Use maybeSingle() instead of single() to handle zero results gracefully
+        // Load session with related tables and hands
         const { data: sessionData, error: sessionError } = await supabase
           .from('sessions')
           .select(`
             *,
-            session_tables!session_tables_session_id_fkey(*),
-            session_hands_new!session_hands_new_session_id_fkey(*)
+            session_tables(*),
+            session_hands_new(*)
           `)
           .eq('id', id)
           .maybeSingle();

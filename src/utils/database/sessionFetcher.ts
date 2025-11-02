@@ -13,13 +13,13 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
 
     console.log('🔄 Fetching user sessions with optimized query');
 
-    // FIXED: Use the correct foreign key constraint name we just created
+    // Fetch sessions with related tables and hands
     const { data: sessions, error: sessionError } = await supabase
       .from('sessions')
       .select(`
         *,
-        session_tables!session_tables_session_id_fkey(*),
-        session_hands_new!session_hands_new_session_id_fkey(*)
+        session_tables(*),
+        session_hands_new(*)
       `)
       .eq('user_id', user.id)
       .order('start_time', { ascending: false });
@@ -62,13 +62,13 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
 
     console.log('🔄 Fetching active sessions with optimized query');
 
-    // FIXED: Use the correct foreign key constraint name for active sessions
+    // Fetch active sessions with related tables and hands
     const { data: sessions, error: sessionError } = await supabase
       .from('sessions')
       .select(`
         *,
-        session_tables!session_tables_session_id_fkey(*),
-        session_hands_new!session_hands_new_session_id_fkey(*)
+        session_tables(*),
+        session_hands_new(*)
       `)
       .eq('is_active', true)
       .eq('user_id', user.id)
