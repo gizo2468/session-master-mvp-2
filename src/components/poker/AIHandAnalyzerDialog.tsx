@@ -19,7 +19,7 @@ import { UseFormSetValue } from 'react-hook-form';
 import { FormValues } from '@/utils/handFormHelpers';
 import { cn } from '@/lib/utils';
 import CardDisplay from './CardDisplay';
-import CardSlotPicker from './CardSlotPicker';
+
 
 const normalizeSuit = (suit: string): string => {
   // Convert Unicode symbols or full names to letter codes
@@ -175,6 +175,166 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     return null;
   };
 
+  // Inline Card Grid Component for direct card selection
+  const InlineCardGrid: React.FC<{
+    currentCard: { rank: string; suit: string } | null;
+    excludedCards: string[];
+    onSelect: (rank: string, suit: string) => void;
+    onClear: () => void;
+  }> = ({ currentCard, excludedCards, onSelect, onClear }) => {
+    const [selectedRank, setSelectedRank] = useState<string | null>(currentCard?.rank || null);
+    const [selectedSuit, setSelectedSuit] = useState<string | null>(currentCard?.suit || null);
+
+    const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+    const suits = [
+      { symbol: 's', display: '♠', color: 'text-gray-900 dark:text-gray-100' },
+      { symbol: 'h', display: '♥', color: 'text-red-600' },
+      { symbol: 'd', display: '♦', color: 'text-red-600' },
+      { symbol: 'c', display: '♣', color: 'text-gray-900 dark:text-gray-100' },
+    ];
+
+    const isCardExcluded = (rank: string, suit: string) => {
+      return excludedCards.includes(`${rank}${suit}`);
+    };
+
+    const isRankDisabled = (rank: string) => {
+      return suits.every(suit => isCardExcluded(rank, suit.symbol));
+    };
+
+    const isSuitDisabled = (suit: string) => {
+      return ranks.every(rank => isCardExcluded(rank, suit));
+    };
+
+    const handleRankClick = (rank: string) => {
+      if (isRankDisabled(rank)) return;
+      setSelectedRank(rank);
+      
+      // If suit is already selected, complete the selection
+      if (selectedSuit && !isCardExcluded(rank, selectedSuit)) {
+        onSelect(rank, selectedSuit);
+      }
+    };
+
+    const handleSuitClick = (suit: string) => {
+      if (isSuitDisabled(suit)) return;
+      setSelectedSuit(suit);
+      
+      // If rank is already selected, complete the selection
+      if (selectedRank && !isCardExcluded(selectedRank, suit)) {
+        onSelect(selectedRank, suit);
+      }
+    };
+
+    return (
+      <div className="space-y-3">
+        {/* Header with clear button */}
+        <div className="flex items-center justify-between">
+          <h4 className="font-semibold text-sm">Select Card</h4>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+            onClick={onClear}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Ranks Grid */}
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">Select Rank</p>
+          {/* First row: A K Q J T 9 8 */}
+          <div className="grid grid-cols-7 gap-1">
+            {ranks.slice(0, 7).map(rank => {
+              const disabled = isRankDisabled(rank);
+              const selected = selectedRank === rank;
+              return (
+                <button
+                  key={rank}
+                  type="button"
+                  onClick={() => handleRankClick(rank)}
+                  disabled={disabled}
+                  className={cn(
+                    "h-10 text-sm font-bold rounded transition-all",
+                    selected
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : disabled
+                      ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                      : "bg-muted hover:bg-muted/80 text-foreground"
+                  )}
+                >
+                  {rank}
+                </button>
+              );
+            })}
+          </div>
+          {/* Second row: 7 6 5 4 3 2 */}
+          <div className="grid grid-cols-6 gap-1">
+            {ranks.slice(7).map(rank => {
+              const disabled = isRankDisabled(rank);
+              const selected = selectedRank === rank;
+              return (
+                <button
+                  key={rank}
+                  type="button"
+                  onClick={() => handleRankClick(rank)}
+                  disabled={disabled}
+                  className={cn(
+                    "h-10 text-sm font-bold rounded transition-all",
+                    selected
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : disabled
+                      ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                      : "bg-muted hover:bg-muted/80 text-foreground"
+                  )}
+                >
+                  {rank}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Suits Grid */}
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">Select Suit</p>
+          <div className="grid grid-cols-4 gap-2">
+            {suits.map(suit => {
+              const disabled = isSuitDisabled(suit.symbol);
+              const selected = selectedSuit === suit.symbol;
+              return (
+                <button
+                  key={suit.symbol}
+                  type="button"
+                  onClick={() => handleSuitClick(suit.symbol)}
+                  disabled={disabled}
+                  className={cn(
+                    "h-12 text-2xl rounded transition-all flex items-center justify-center",
+                    selected
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : disabled
+                      ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                      : cn("bg-muted hover:bg-muted/80", suit.color)
+                  )}
+                >
+                  {suit.display}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Selection hint */}
+        {selectedRank && selectedSuit && (
+          <p className="text-xs text-muted-foreground text-center">
+            Selected: {selectedRank}{suits.find(s => s.symbol === selectedSuit)?.display}
+          </p>
+        )}
+      </div>
+    );
+  };
+
   // Editable Card Component with Popover
   const EditableCardWithPopover: React.FC<{
     card: {rank: string, suit: string} | null;
@@ -191,21 +351,37 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     
     const styles = sizeClasses[size];
     
-    const handleCardSelection = (cards: Array<{id?: number, rank?: string, suit?: string}>) => {
-      const selectedCard = cards[0];
-      
+    const handleCardSelection = (rank: string, suit: string) => {
       if (type === 'hero') {
         const newHeroCards = [...editedHeroCards];
-        newHeroCards[index] = selectedCard.rank && selectedCard.suit ? { rank: selectedCard.rank, suit: selectedCard.suit } : null;
+        newHeroCards[index] = { rank, suit };
         setEditedHeroCards(newHeroCards);
       } else if (type === 'flop') {
         const newFlopCards = [...editedBoardFlop];
-        newFlopCards[index] = selectedCard.rank && selectedCard.suit ? { rank: selectedCard.rank, suit: selectedCard.suit } : null;
+        newFlopCards[index] = { rank, suit };
         setEditedBoardFlop(newFlopCards);
       } else if (type === 'turn') {
-        setEditedBoardTurn(selectedCard.rank && selectedCard.suit ? { rank: selectedCard.rank, suit: selectedCard.suit } : null);
+        setEditedBoardTurn({ rank, suit });
       } else if (type === 'river') {
-        setEditedBoardRiver(selectedCard.rank && selectedCard.suit ? { rank: selectedCard.rank, suit: selectedCard.suit } : null);
+        setEditedBoardRiver({ rank, suit });
+      }
+      
+      setOpen(false);
+    };
+
+    const handleClear = () => {
+      if (type === 'hero') {
+        const newHeroCards = [...editedHeroCards];
+        newHeroCards[index] = null;
+        setEditedHeroCards(newHeroCards);
+      } else if (type === 'flop') {
+        const newFlopCards = [...editedBoardFlop];
+        newFlopCards[index] = null;
+        setEditedBoardFlop(newFlopCards);
+      } else if (type === 'turn') {
+        setEditedBoardTurn(null);
+      } else if (type === 'river') {
+        setEditedBoardRiver(null);
       }
       
       setOpen(false);
@@ -276,35 +452,22 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
           {cardButton}
         </PopoverTrigger>
         <PopoverContent 
-          className="w-auto p-4 pointer-events-auto" 
+          className="w-[320px] p-4 pointer-events-auto" 
           align="center" 
           side="bottom" 
           sideOffset={8}
           onInteractOutside={() => setOpen(false)}
         >
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-sm">Edit Card</h4>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                onClick={() => {
-                  handleCardSelection([{ id: 0 }]);
-                }}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">Select a new card or clear the slot</p>
-            <CardSlotPicker
-              slots={1}
-              selectedCards={card ? [{ id: 0, rank: card.rank, suit: card.suit }] : [{ id: 0 }]}
-              onChange={handleCardSelection}
-              excludedCards={getAllSelectedCards()}
-            />
-          </div>
+          <InlineCardGrid
+            currentCard={card}
+            excludedCards={getAllSelectedCards().filter(c => {
+              // Exclude current card's position so user can re-select same card
+              const currentCardStr = card ? `${card.rank}${card.suit}` : null;
+              return c !== currentCardStr;
+            })}
+            onSelect={handleCardSelection}
+            onClear={handleClear}
+          />
         </PopoverContent>
       </Popover>
     );
