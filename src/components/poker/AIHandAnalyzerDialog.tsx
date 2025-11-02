@@ -18,6 +18,7 @@ import { UseFormSetValue } from 'react-hook-form';
 import { FormValues } from '@/utils/handFormHelpers';
 import { cn } from '@/lib/utils';
 import CardDisplay from './CardDisplay';
+import CardSlotPicker from './CardSlotPicker';
 
 const normalizeSuit = (suit: string): string => {
   // Convert Unicode symbols or full names to letter codes
@@ -75,11 +76,23 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
   const [editBeforeApplying, setEditBeforeApplying] = useState(false);
   const [selectedDealer, setSelectedDealer] = useState<string>('');
   const [showFullImage, setShowFullImage] = useState(false);
+  
+  // Editable card states
+  const [editedHeroCards, setEditedHeroCards] = useState<Array<{rank: string, suit: string} | null>>([null, null]);
+  const [editedBoardFlop, setEditedBoardFlop] = useState<Array<{rank: string, suit: string} | null>>([null, null, null]);
+  const [editedBoardTurn, setEditedBoardTurn] = useState<{rank: string, suit: string} | null>(null);
+  const [editedBoardRiver, setEditedBoardRiver] = useState<{rank: string, suit: string} | null>(null);
+  const [cardBeingEdited, setCardBeingEdited] = useState<{type: 'hero' | 'flop' | 'turn' | 'river', index: number} | null>(null);
 
   const handleClose = () => {
     reset();
     setEditBeforeApplying(false);
     setSelectedDealer('');
+    setEditedHeroCards([null, null]);
+    setEditedBoardFlop([null, null, null]);
+    setEditedBoardTurn(null);
+    setEditedBoardRiver(null);
+    setCardBeingEdited(null);
     onOpenChange(false);
   };
 
@@ -98,6 +111,183 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     }
   };
 
+  // Get all currently selected cards to prevent duplicates
+  const getAllSelectedCards = (): string[] => {
+    if (!state.analysis) return [];
+    
+    const cards: string[] = [];
+    
+    // Hero cards
+    const heroCards = state.analysis.hero.cards;
+    if (Array.isArray(heroCards)) {
+      heroCards.forEach((card, idx) => {
+        const edited = editedHeroCards[idx];
+        if (edited) {
+          cards.push(`${edited.rank}${edited.suit}`);
+        } else if (card.rank && card.suit) {
+          cards.push(`${card.rank}${normalizeSuit(card.suit)}`);
+        }
+      });
+    }
+    
+    // Board cards - Flop
+    const flop = state.analysis.board.flop;
+    if (Array.isArray(flop)) {
+      flop.forEach((card, idx) => {
+        const edited = editedBoardFlop[idx];
+        if (edited) {
+          cards.push(`${edited.rank}${edited.suit}`);
+        } else if (card.rank && card.suit) {
+          cards.push(`${card.rank}${normalizeSuit(card.suit)}`);
+        }
+      });
+    }
+    
+    // Turn
+    const turn = state.analysis.board.turn;
+    if (editedBoardTurn) {
+      cards.push(`${editedBoardTurn.rank}${editedBoardTurn.suit}`);
+    } else if (turn?.rank && turn?.suit) {
+      cards.push(`${turn.rank}${normalizeSuit(turn.suit)}`);
+    }
+    
+    // River
+    const river = state.analysis.board.river;
+    if (editedBoardRiver) {
+      cards.push(`${editedBoardRiver.rank}${editedBoardRiver.suit}`);
+    } else if (river?.rank && river?.suit) {
+      cards.push(`${river.rank}${normalizeSuit(river.suit)}`);
+    }
+    
+    return cards;
+  };
+
+  // Handle card click to open editor
+  const handleCardClick = (type: 'hero' | 'flop' | 'turn' | 'river', index: number) => {
+    setCardBeingEdited({ type, index });
+  };
+
+  // Handle card edit completion
+  const handleCardEdit = (cards: Array<{id?: number, rank?: string, suit?: string}>) => {
+    if (!cardBeingEdited) return;
+    
+    const card = cards[0]; // Single card editor
+    const { type, index } = cardBeingEdited;
+    
+    if (type === 'hero') {
+      const newHeroCards = [...editedHeroCards];
+      newHeroCards[index] = card.rank && card.suit ? { rank: card.rank, suit: card.suit } : null;
+      setEditedHeroCards(newHeroCards);
+    } else if (type === 'flop') {
+      const newFlopCards = [...editedBoardFlop];
+      newFlopCards[index] = card.rank && card.suit ? { rank: card.rank, suit: card.suit } : null;
+      setEditedBoardFlop(newFlopCards);
+    } else if (type === 'turn') {
+      setEditedBoardTurn(card.rank && card.suit ? { rank: card.rank, suit: card.suit } : null);
+    } else if (type === 'river') {
+      setEditedBoardRiver(card.rank && card.suit ? { rank: card.rank, suit: card.suit } : null);
+    }
+    
+    setCardBeingEdited(null);
+  };
+
+  // Get effective card (edited or original)
+  const getEffectiveCard = (type: 'hero' | 'flop' | 'turn' | 'river', index: number) => {
+    if (type === 'hero') {
+      return editedHeroCards[index] || (Array.isArray(state.analysis?.hero.cards) ? state.analysis.hero.cards[index] : null);
+    } else if (type === 'flop') {
+      return editedBoardFlop[index] || (Array.isArray(state.analysis?.board.flop) ? state.analysis.board.flop[index] : null);
+    } else if (type === 'turn') {
+      return editedBoardTurn || state.analysis?.board.turn || null;
+    } else if (type === 'river') {
+      return editedBoardRiver || state.analysis?.board.river || null;
+    }
+    return null;
+  };
+
+  // Editable Card Component
+  const EditableCard: React.FC<{
+    card: {rank: string, suit: string} | null;
+    onClick: () => void;
+    isEdited: boolean;
+    size?: 'sm' | 'md';
+  }> = ({ card, onClick, isEdited, size = 'md' }) => {
+    const sizeClasses = {
+      sm: { card: 'w-7 h-10 text-xs', suit: 'text-base' },
+      md: { card: 'w-9 h-12 text-sm', suit: 'text-lg' }
+    };
+    
+    const styles = sizeClasses[size];
+    
+    if (!card || !card.rank || !card.suit) {
+      // Empty slot - show placeholder
+      return (
+        <button
+          type="button"
+          onClick={onClick}
+          className={cn(
+            styles.card,
+            "inline-flex bg-muted border-2 border-dashed border-muted-foreground/30 rounded-md flex-col items-center justify-center",
+            "hover:border-poker-gold hover:bg-poker-gold/5 transition-all cursor-pointer group"
+          )}
+        >
+          <span className="text-muted-foreground group-hover:text-poker-gold">?</span>
+        </button>
+      );
+    }
+    
+    let suitSymbol = '?';
+    let suitColor = 'text-muted-foreground';
+    const suit = card.suit.toLowerCase();
+    
+    switch (suit) {
+      case 'h':
+        suitSymbol = '♥';
+        suitColor = 'text-red-600';
+        break;
+      case 'd':
+        suitSymbol = '♦';
+        suitColor = 'text-red-600';
+        break;
+      case 's':
+        suitSymbol = '♠';
+        suitColor = 'text-foreground';
+        break;
+      case 'c':
+        suitSymbol = '♣';
+        suitColor = 'text-foreground';
+        break;
+    }
+    
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          styles.card,
+          "relative inline-flex bg-card rounded-md shadow-md flex-col items-center justify-between py-1 px-0.5",
+          "hover:scale-105 transition-all cursor-pointer group",
+          isEdited 
+            ? "border-2 border-green-500" 
+            : "border-2 border-border hover:border-poker-gold"
+        )}
+      >
+        <div className="font-bold leading-none">{card.rank}</div>
+        <div className={cn(suitColor, styles.suit, "leading-none")}>{suitSymbol}</div>
+        {/* Edit indicator on hover */}
+        <div className="absolute -top-1 -right-1 w-4 h-4 bg-poker-gold text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="text-[10px]">✎</span>
+        </div>
+        {/* Edited badge */}
+        {isEdited && (
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-green-500 text-white text-[8px] px-1 rounded">
+            Edited
+          </div>
+        )}
+      </button>
+    );
+  };
+
   const handleApplyToForm = () => {
     if (!state.analysis) return;
 
@@ -110,12 +300,15 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
       val === '' || 
       (Array.isArray(val) && val.length === 0);
 
-    // Hero cards
-    if (isEmpty(currentFormValues.cards) && analysis.hero.cards !== 'hidden' && Array.isArray(analysis.hero.cards)) {
-      const cardsString = analysis.hero.cards
-        .map(c => c.rank + c.suit.charAt(0).toLowerCase())
-        .join('');
-      setValue('cards', cardsString, { shouldValidate: true });
+    // Hero cards - prioritize edited cards
+    if (isEmpty(currentFormValues.cards)) {
+      const heroCards = [0, 1].map(idx => getEffectiveCard('hero', idx)).filter(c => c);
+      if (heroCards.length === 2) {
+        const cardsString = heroCards
+          .map(c => c!.rank + normalizeSuit(c!.suit))
+          .join('');
+        setValue('cards', cardsString, { shouldValidate: true });
+      }
     }
 
     // Position
@@ -123,32 +316,43 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
       setValue('position', analysis.hero.position, { shouldValidate: true });
     }
 
-    // Board cards - Flop
-    if (isEmpty(currentFormValues.flopCards) && analysis.board.flop && analysis.board.flop.length === 3) {
-      const flopCards = analysis.board.flop.map((c, idx) => ({
-        id: idx,
-        rank: c.rank,
-        suit: c.suit.toLowerCase()
-      }));
-      setValue('flopCards', flopCards, { shouldValidate: true });
+    // Board cards - Flop - prioritize edited cards
+    if (isEmpty(currentFormValues.flopCards)) {
+      const flopCards = [0, 1, 2]
+        .map(idx => getEffectiveCard('flop', idx))
+        .filter(c => c)
+        .map((c, idx) => ({
+          id: idx,
+          rank: c!.rank,
+          suit: normalizeSuit(c!.suit)
+        }));
+      if (flopCards.length === 3) {
+        setValue('flopCards', flopCards, { shouldValidate: true });
+      }
     }
 
-    // Turn
-    if (isEmpty(currentFormValues.turnCards) && analysis.board.turn) {
-      setValue('turnCards', [{
-        id: 0,
-        rank: analysis.board.turn.rank,
-        suit: analysis.board.turn.suit.toLowerCase()
-      }], { shouldValidate: true });
+    // Turn - prioritize edited
+    if (isEmpty(currentFormValues.turnCards)) {
+      const turnCard = getEffectiveCard('turn', 0);
+      if (turnCard) {
+        setValue('turnCards', [{
+          id: 0,
+          rank: turnCard.rank,
+          suit: normalizeSuit(turnCard.suit)
+        }], { shouldValidate: true });
+      }
     }
 
-    // River
-    if (isEmpty(currentFormValues.riverCards) && analysis.board.river) {
-      setValue('riverCards', [{
-        id: 0,
-        rank: analysis.board.river.rank,
-        suit: analysis.board.river.suit.toLowerCase()
-      }], { shouldValidate: true });
+    // River - prioritize edited
+    if (isEmpty(currentFormValues.riverCards)) {
+      const riverCard = getEffectiveCard('river', 0);
+      if (riverCard) {
+        setValue('riverCards', [{
+          id: 0,
+          rank: riverCard.rank,
+          suit: normalizeSuit(riverCard.suit)
+        }], { shouldValidate: true });
+      }
     }
 
     // Actions by street
@@ -441,51 +645,46 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                   </h4>
 
                   <div className="space-y-2">
-                    {/* Cards Display with confidence warning */}
+                    {/* Hero Cards - Now Editable */}
                     <div className="flex items-center gap-3">
                       {state.analysis.hero.cards === 'hidden' ? (
                         <div className="flex items-center gap-2">
                           <CardDisplay cards="??" size="md" />
                           <span className="text-sm text-muted-foreground">Cards not visible</span>
                         </div>
-                      ) : Array.isArray(state.analysis.hero.cards) && state.analysis.hero.cards.length > 0 ? (
-                        <>
-                          {(() => {
-                            const parsedCards = parseCards(state.analysis.hero.cards);
-                            const cardString = parsedCards
-                              .map(c => `${c.rank}${normalizeSuit(c.suit)}`)
-                              .join('');
-                            
-                            return (
-                              <div className="flex items-center gap-3">
-                                <CardDisplay cards={cardString || '??'} size="md" showCardNames={false} />
-                                <div className="flex flex-col gap-0.5">
-                                  <span className="text-sm font-mono font-semibold">
-                                    {parsedCards.map(c => `${c.rank}${c.suit.toUpperCase()}`).join(' ')}
-                                  </span>
-                                  {state.analysis.hero.confidence < 0.7 && (
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-xs text-yellow-600 dark:text-yellow-500 font-medium">
-                                        ⚠ Low confidence: {Math.round(state.analysis.hero.confidence * 100)}%
-                                      </span>
-                                      <span className="text-xs text-muted-foreground">
-                                        (Verify bottom-center player)
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })()}
-                        </>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <CardDisplay cards="??" size="md" />
-                          <span className="text-sm text-red-600 dark:text-red-400 font-medium">
-                            ⚠ Detection failed - Please verify bottom-center player cards
-                          </span>
+                      ) : Array.isArray(state.analysis.hero.cards) ? (
+                        <div className="flex items-center gap-3">
+                          <div className="flex gap-1">
+                            {[0, 1].map(idx => {
+                              const effectiveCard = getEffectiveCard('hero', idx);
+                              const isEdited = editedHeroCards[idx] !== null;
+                              return (
+                                <EditableCard
+                                  key={idx}
+                                  card={effectiveCard}
+                                  onClick={() => handleCardClick('hero', idx)}
+                                  isEdited={isEdited}
+                                  size="md"
+                                />
+                              );
+                            })}
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-sm font-mono font-semibold">
+                              {[0, 1].map(idx => {
+                                const card = getEffectiveCard('hero', idx);
+                                return card ? `${card.rank}${card.suit.toUpperCase()}` : '?';
+                              }).join(' ')}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              Click cards to edit
+                            </span>
+                          </div>
                         </div>
-                    )}
+                      ) : (
+                        <span className="text-sm text-red-600">Detection failed</span>
+                      )}
+                    </div>
                     
                     {/* Dealer Button Info */}
                     {state.analysis.dealerButton && (
@@ -501,7 +700,6 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                         )}
                       </div>
                     )}
-                  </div>
 
                     {/* Stack Info */}
                     {state.analysis.hero.stack && (
@@ -512,66 +710,72 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                   </div>
                 </div>
 
-                {/* Board Cards */}
+                {/* Board Cards - Now Editable */}
                 <div className="bg-muted/30 rounded-lg p-3">
                   <h4 className="font-semibold mb-2">Board</h4>
                   {state.analysis.board.flop && Array.isArray(state.analysis.board.flop) && state.analysis.board.flop.length > 0 ? (
                     <div className="flex items-start gap-6">
-                      {/* Flop */}
+                      {/* Flop - Editable */}
                       <div className="flex flex-col gap-1">
                         <span className="text-sm font-medium text-muted-foreground">Flop</span>
-                        {(() => {
-                          const parsedFlop = parseCards(state.analysis.board.flop);
-                          const flopString = parsedFlop
-                            .map(c => `${c.rank}${normalizeSuit(c.suit)}`)
-                            .join('');
-                          
-                          return (
-                            <>
-                              <CardDisplay cards={flopString || '??????'} size="sm" showCardNames={false} />
-                              {flopString && (
-                                <span className="text-xs font-mono text-muted-foreground text-center">
-                                  {parsedFlop.map(c => `${c.rank}${c.suit.toUpperCase()}`).join(' ')}
-                                </span>
-                              )}
-                            </>
-                          );
-                        })()}
+                        <div className="flex gap-1">
+                          {[0, 1, 2].map(idx => {
+                            const effectiveCard = getEffectiveCard('flop', idx);
+                            const isEdited = editedBoardFlop[idx] !== null;
+                            return (
+                              <EditableCard
+                                key={idx}
+                                card={effectiveCard}
+                                onClick={() => handleCardClick('flop', idx)}
+                                isEdited={isEdited}
+                                size="sm"
+                              />
+                            );
+                          })}
+                        </div>
+                        <span className="text-xs font-mono text-muted-foreground text-center">
+                          {[0, 1, 2].map(idx => {
+                            const card = getEffectiveCard('flop', idx);
+                            return card ? `${card.rank}${card.suit.toUpperCase()}` : '?';
+                          }).join(' ')}
+                        </span>
                       </div>
                       
-                      {/* Turn */}
-                      {state.analysis.board.turn?.rank && state.analysis.board.turn?.suit && (
+                      {/* Turn - Editable */}
+                      {(state.analysis.board.turn || editedBoardTurn) && (
                         <div className="flex flex-col gap-1">
                           <span className="text-sm font-medium text-muted-foreground">Turn</span>
-                          {(() => {
-                            const turnCard = `${state.analysis.board.turn.rank}${normalizeSuit(state.analysis.board.turn.suit)}`;
-                            return (
-                              <>
-                                <CardDisplay cards={turnCard} size="sm" showCardNames={false} />
-                                <span className="text-xs font-mono text-muted-foreground text-center">
-                                  {state.analysis.board.turn.rank}{state.analysis.board.turn.suit.toUpperCase()}
-                                </span>
-                              </>
-                            );
-                          })()}
+                          <EditableCard
+                            card={getEffectiveCard('turn', 0)}
+                            onClick={() => handleCardClick('turn', 0)}
+                            isEdited={editedBoardTurn !== null}
+                            size="sm"
+                          />
+                          <span className="text-xs font-mono text-muted-foreground text-center">
+                            {(() => {
+                              const card = getEffectiveCard('turn', 0);
+                              return card ? `${card.rank}${card.suit.toUpperCase()}` : '?';
+                            })()}
+                          </span>
                         </div>
                       )}
                       
-                      {/* River */}
-                      {state.analysis.board.river?.rank && state.analysis.board.river?.suit && (
+                      {/* River - Editable */}
+                      {(state.analysis.board.river || editedBoardRiver) && (
                         <div className="flex flex-col gap-1">
                           <span className="text-sm font-medium text-muted-foreground">River</span>
-                          {(() => {
-                            const riverCard = `${state.analysis.board.river.rank}${normalizeSuit(state.analysis.board.river.suit)}`;
-                            return (
-                              <>
-                                <CardDisplay cards={riverCard} size="sm" showCardNames={false} />
-                                <span className="text-xs font-mono text-muted-foreground text-center">
-                                  {state.analysis.board.river.rank}{state.analysis.board.river.suit.toUpperCase()}
-                                </span>
-                              </>
-                            );
-                          })()}
+                          <EditableCard
+                            card={getEffectiveCard('river', 0)}
+                            onClick={() => handleCardClick('river', 0)}
+                            isEdited={editedBoardRiver !== null}
+                            size="sm"
+                          />
+                          <span className="text-xs font-mono text-muted-foreground text-center">
+                            {(() => {
+                              const card = getEffectiveCard('river', 0);
+                              return card ? `${card.rank}${card.suit.toUpperCase()}` : '?';
+                            })()}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -717,6 +921,31 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
           )}
         </DialogFooter>
       </DialogContent>
+
+      {/* Card Editor Modal */}
+      {cardBeingEdited && (
+        <Dialog open={!!cardBeingEdited} onOpenChange={() => setCardBeingEdited(null)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Card</DialogTitle>
+              <DialogDescription>
+                Select a new card or clear the slot
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <CardSlotPicker
+                slots={1}
+                selectedCards={(() => {
+                  const card = getEffectiveCard(cardBeingEdited.type, cardBeingEdited.index);
+                  return card ? [{ id: 0, rank: card.rank, suit: card.suit }] : [{ id: 0 }];
+                })()}
+                onChange={handleCardEdit}
+                excludedCards={getAllSelectedCards()}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Full-size Image Modal */}
       <Dialog open={showFullImage} onOpenChange={setShowFullImage}>
