@@ -275,7 +275,13 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
         <PopoverTrigger asChild>
           {cardButton}
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-4" align="center" side="bottom" sideOffset={8}>
+        <PopoverContent 
+          className="w-auto p-4 pointer-events-auto" 
+          align="center" 
+          side="bottom" 
+          sideOffset={8}
+          onInteractOutside={() => setOpen(false)}
+        >
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="font-semibold text-sm">Edit Card</h4>
