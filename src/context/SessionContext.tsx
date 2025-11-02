@@ -435,7 +435,40 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 export function useSessionContext() {
   const context = useContext(SessionContext);
   if (context === undefined) {
-    throw new Error('useSessionContext must be used within a SessionProvider');
+    console.warn('useSessionContext used outside SessionProvider - returning safe defaults');
+    const safeDefaults: SessionContextType = {
+      sessions: [],
+      activeSession: null,
+      filters: { gameType: 'All', format: 'All', location: '' },
+      showStorageWarning: false,
+      isLoading: false,
+      dismissStorageWarning: () => {},
+      addSession: async () => {},
+      updateSession: async () => {},
+      deleteSession: async () => {},
+      startSession: async (session: any) => session,
+      endSession: async () => {},
+      pauseSession: async () => {},
+      resumeSession: async () => {},
+      updateSessionDuration: async () => {},
+      addRebuy: async () => {},
+      setFilters: () => {},
+      addHand: async () => {},
+      updateHand: async () => {},
+      deleteHand: async () => {},
+      addTableHand: async () => {},
+      updateTableHand: async () => {},
+      deleteTableHand: async () => {},
+      addTable: async () => {},
+      updateTable: async () => {},
+      endTable: async () => {},
+      addTableRebuy: async () => {},
+      getTableById: () => undefined,
+      deleteTable: async () => {},
+      clearAllUserData: () => {},
+      refreshSessionsFromDatabase: async () => {},
+    };
+    return safeDefaults;
   }
   return context;
 }
