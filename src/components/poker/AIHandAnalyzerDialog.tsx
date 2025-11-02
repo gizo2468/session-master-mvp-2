@@ -7,6 +7,7 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -82,7 +83,6 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
   const [editedBoardFlop, setEditedBoardFlop] = useState<Array<{rank: string, suit: string} | null>>([null, null, null]);
   const [editedBoardTurn, setEditedBoardTurn] = useState<{rank: string, suit: string} | null>(null);
   const [editedBoardRiver, setEditedBoardRiver] = useState<{rank: string, suit: string} | null>(null);
-  const [cardBeingEdited, setCardBeingEdited] = useState<{type: 'hero' | 'flop' | 'turn' | 'river', index: number} | null>(null);
 
   const handleClose = () => {
     reset();
@@ -92,7 +92,6 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     setEditedBoardFlop([null, null, null]);
     setEditedBoardTurn(null);
     setEditedBoardRiver(null);
-    setCardBeingEdited(null);
     onOpenChange(false);
   };
 
@@ -162,35 +161,6 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     return cards;
   };
 
-  // Handle card click to open editor
-  const handleCardClick = (type: 'hero' | 'flop' | 'turn' | 'river', index: number) => {
-    setCardBeingEdited({ type, index });
-  };
-
-  // Handle card edit completion
-  const handleCardEdit = (cards: Array<{id?: number, rank?: string, suit?: string}>) => {
-    if (!cardBeingEdited) return;
-    
-    const card = cards[0]; // Single card editor
-    const { type, index } = cardBeingEdited;
-    
-    if (type === 'hero') {
-      const newHeroCards = [...editedHeroCards];
-      newHeroCards[index] = card.rank && card.suit ? { rank: card.rank, suit: card.suit } : null;
-      setEditedHeroCards(newHeroCards);
-    } else if (type === 'flop') {
-      const newFlopCards = [...editedBoardFlop];
-      newFlopCards[index] = card.rank && card.suit ? { rank: card.rank, suit: card.suit } : null;
-      setEditedBoardFlop(newFlopCards);
-    } else if (type === 'turn') {
-      setEditedBoardTurn(card.rank && card.suit ? { rank: card.rank, suit: card.suit } : null);
-    } else if (type === 'river') {
-      setEditedBoardRiver(card.rank && card.suit ? { rank: card.rank, suit: card.suit } : null);
-    }
-    
-    setCardBeingEdited(null);
-  };
-
   // Get effective card (edited or original)
   const getEffectiveCard = (type: 'hero' | 'flop' | 'turn' | 'river', index: number) => {
     if (type === 'hero') {
@@ -205,13 +175,15 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     return null;
   };
 
-  // Editable Card Component
-  const EditableCard: React.FC<{
+  // Editable Card Component with Popover
+  const EditableCardWithPopover: React.FC<{
     card: {rank: string, suit: string} | null;
-    onClick: () => void;
+    type: 'hero' | 'flop' | 'turn' | 'river';
+    index: number;
     isEdited: boolean;
     size?: 'sm' | 'md';
-  }> = ({ card, onClick, isEdited, size = 'md' }) => {
+  }> = ({ card, type, index, isEdited, size = 'md' }) => {
+    const [open, setOpen] = useState(false);
     const sizeClasses = {
       sm: { card: 'w-7 h-10 text-xs', suit: 'text-base' },
       md: { card: 'w-9 h-12 text-sm', suit: 'text-lg' }
@@ -219,72 +191,116 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     
     const styles = sizeClasses[size];
     
-    if (!card || !card.rank || !card.suit) {
-      // Empty slot - show placeholder
-      return (
-        <button
-          type="button"
-          onClick={onClick}
-          className={cn(
-            styles.card,
-            "inline-flex bg-muted border-2 border-dashed border-muted-foreground/30 rounded-md flex-col items-center justify-center",
-            "hover:border-poker-gold hover:bg-poker-gold/5 transition-all cursor-pointer group"
-          )}
-        >
-          <span className="text-muted-foreground group-hover:text-poker-gold">?</span>
-        </button>
-      );
-    }
+    const handleCardSelection = (cards: Array<{id?: number, rank?: string, suit?: string}>) => {
+      const selectedCard = cards[0];
+      
+      if (type === 'hero') {
+        const newHeroCards = [...editedHeroCards];
+        newHeroCards[index] = selectedCard.rank && selectedCard.suit ? { rank: selectedCard.rank, suit: selectedCard.suit } : null;
+        setEditedHeroCards(newHeroCards);
+      } else if (type === 'flop') {
+        const newFlopCards = [...editedBoardFlop];
+        newFlopCards[index] = selectedCard.rank && selectedCard.suit ? { rank: selectedCard.rank, suit: selectedCard.suit } : null;
+        setEditedBoardFlop(newFlopCards);
+      } else if (type === 'turn') {
+        setEditedBoardTurn(selectedCard.rank && selectedCard.suit ? { rank: selectedCard.rank, suit: selectedCard.suit } : null);
+      } else if (type === 'river') {
+        setEditedBoardRiver(selectedCard.rank && selectedCard.suit ? { rank: selectedCard.rank, suit: selectedCard.suit } : null);
+      }
+      
+      setOpen(false);
+    };
     
     let suitSymbol = '?';
     let suitColor = 'text-muted-foreground';
-    const suit = card.suit.toLowerCase();
     
-    switch (suit) {
-      case 'h':
-        suitSymbol = '♥';
-        suitColor = 'text-red-600';
-        break;
-      case 'd':
-        suitSymbol = '♦';
-        suitColor = 'text-red-600';
-        break;
-      case 's':
-        suitSymbol = '♠';
-        suitColor = 'text-foreground';
-        break;
-      case 'c':
-        suitSymbol = '♣';
-        suitColor = 'text-foreground';
-        break;
+    if (card?.suit) {
+      const suit = card.suit.toLowerCase();
+      switch (suit) {
+        case 'h':
+          suitSymbol = '♥';
+          suitColor = 'text-red-600';
+          break;
+        case 'd':
+          suitSymbol = '♦';
+          suitColor = 'text-red-600';
+          break;
+        case 's':
+          suitSymbol = '♠';
+          suitColor = 'text-foreground';
+          break;
+        case 'c':
+          suitSymbol = '♣';
+          suitColor = 'text-foreground';
+          break;
+      }
     }
     
-    return (
+    const cardButton = (
       <button
         type="button"
-        onClick={onClick}
         className={cn(
           styles.card,
-          "relative inline-flex bg-card rounded-md shadow-md flex-col items-center justify-between py-1 px-0.5",
+          "relative inline-flex rounded-md shadow-md flex-col items-center justify-between py-1 px-0.5",
           "hover:scale-105 transition-all cursor-pointer group",
-          isEdited 
-            ? "border-2 border-green-500" 
-            : "border-2 border-border hover:border-poker-gold"
+          !card || !card.rank || !card.suit
+            ? "bg-muted border-2 border-dashed border-muted-foreground/30 hover:border-poker-gold hover:bg-poker-gold/5"
+            : cn(
+                "bg-card",
+                isEdited 
+                  ? "border-2 border-green-500" 
+                  : "border-2 border-border hover:border-poker-gold"
+              )
         )}
       >
-        <div className="font-bold leading-none">{card.rank}</div>
-        <div className={cn(suitColor, styles.suit, "leading-none")}>{suitSymbol}</div>
-        {/* Edit indicator on hover */}
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-poker-gold text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="text-[10px]">✎</span>
-        </div>
-        {/* Edited badge */}
-        {isEdited && (
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-green-500 text-white text-[8px] px-1 rounded">
-            Edited
-          </div>
+        {!card || !card.rank || !card.suit ? (
+          <span className="text-muted-foreground group-hover:text-poker-gold">?</span>
+        ) : (
+          <>
+            <div className="font-bold leading-none">{card.rank}</div>
+            <div className={cn(suitColor, styles.suit, "leading-none")}>{suitSymbol}</div>
+            {/* Edited badge */}
+            {isEdited && (
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-green-500 text-white text-[8px] px-1 rounded">
+                Edited
+              </div>
+            )}
+          </>
         )}
       </button>
+    );
+    
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          {cardButton}
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-4" align="center" side="bottom" sideOffset={8}>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-sm">Edit Card</h4>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                onClick={() => {
+                  handleCardSelection([{ id: 0 }]);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Select a new card or clear the slot</p>
+            <CardSlotPicker
+              slots={1}
+              selectedCards={card ? [{ id: 0, rank: card.rank, suit: card.suit }] : [{ id: 0 }]}
+              onChange={handleCardSelection}
+              excludedCards={getAllSelectedCards()}
+            />
+          </div>
+        </PopoverContent>
+      </Popover>
     );
   };
 
@@ -659,10 +675,11 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                               const effectiveCard = getEffectiveCard('hero', idx);
                               const isEdited = editedHeroCards[idx] !== null;
                               return (
-                                <EditableCard
+                                <EditableCardWithPopover
                                   key={idx}
                                   card={effectiveCard}
-                                  onClick={() => handleCardClick('hero', idx)}
+                                  type="hero"
+                                  index={idx}
                                   isEdited={isEdited}
                                   size="md"
                                 />
@@ -723,10 +740,11 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                             const effectiveCard = getEffectiveCard('flop', idx);
                             const isEdited = editedBoardFlop[idx] !== null;
                             return (
-                              <EditableCard
+                              <EditableCardWithPopover
                                 key={idx}
                                 card={effectiveCard}
-                                onClick={() => handleCardClick('flop', idx)}
+                                type="flop"
+                                index={idx}
                                 isEdited={isEdited}
                                 size="sm"
                               />
@@ -745,9 +763,10 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                       {(state.analysis.board.turn || editedBoardTurn) && (
                         <div className="flex flex-col gap-1">
                           <span className="text-sm font-medium text-muted-foreground">Turn</span>
-                          <EditableCard
+                          <EditableCardWithPopover
                             card={getEffectiveCard('turn', 0)}
-                            onClick={() => handleCardClick('turn', 0)}
+                            type="turn"
+                            index={0}
                             isEdited={editedBoardTurn !== null}
                             size="sm"
                           />
@@ -764,9 +783,10 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                       {(state.analysis.board.river || editedBoardRiver) && (
                         <div className="flex flex-col gap-1">
                           <span className="text-sm font-medium text-muted-foreground">River</span>
-                          <EditableCard
+                          <EditableCardWithPopover
                             card={getEffectiveCard('river', 0)}
-                            onClick={() => handleCardClick('river', 0)}
+                            type="river"
+                            index={0}
                             isEdited={editedBoardRiver !== null}
                             size="sm"
                           />
@@ -922,30 +942,6 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
         </DialogFooter>
       </DialogContent>
 
-      {/* Card Editor Modal */}
-      {cardBeingEdited && (
-        <Dialog open={!!cardBeingEdited} onOpenChange={() => setCardBeingEdited(null)}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Edit Card</DialogTitle>
-              <DialogDescription>
-                Select a new card or clear the slot
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <CardSlotPicker
-                slots={1}
-                selectedCards={(() => {
-                  const card = getEffectiveCard(cardBeingEdited.type, cardBeingEdited.index);
-                  return card ? [{ id: 0, rank: card.rank, suit: card.suit }] : [{ id: 0 }];
-                })()}
-                onChange={handleCardEdit}
-                excludedCards={getAllSelectedCards()}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
 
       {/* Full-size Image Modal */}
       <Dialog open={showFullImage} onOpenChange={setShowFullImage}>
