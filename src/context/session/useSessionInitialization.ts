@@ -50,6 +50,21 @@ export const useSessionInitialization = () => {
     let loadedSessions: PokerSession[] = [];
     let loadedActiveSession: PokerSession | null = null;
 
+    // Log localStorage state for debugging
+    console.log('🔍 Checking localStorage state...');
+    try {
+      const localStorageKey = userId ? `pokerSessions_${userId}` : 'pokerSessions_anonymous';
+      const localData = localStorage.getItem(localStorageKey);
+      if (localData) {
+        const parsed = JSON.parse(localData);
+        console.log('📦 localStorage contains:', parsed.length, 'sessions');
+      } else {
+        console.log('📦 localStorage is empty for key:', localStorageKey);
+      }
+    } catch (e) {
+      console.error('❌ Failed to read localStorage:', e);
+    }
+
     if (userId) {
       try {
         console.log('🔄 Loading sessions from database for user:', userId);
@@ -73,6 +88,14 @@ export const useSessionInitialization = () => {
         if (sessionsResult.status === 'fulfilled') {
           loadedSessions = sessionsResult.value as PokerSession[];
           console.log(`✅ Loaded ${loadedSessions.length} sessions from database`);
+          if (loadedSessions.length > 0) {
+            console.log('📋 First session details:', {
+              id: loadedSessions[0].id,
+              startTime: loadedSessions[0].startTime,
+              isActive: loadedSessions[0].isActive,
+              gameType: loadedSessions[0].gameType
+            });
+          }
         } else {
           console.error('❌ Failed to load sessions from database:', sessionsResult.reason);
           throw new Error('Database query failed');

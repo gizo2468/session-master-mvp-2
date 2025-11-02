@@ -11,7 +11,7 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
       return [];
     }
 
-    console.log('🔄 Fetching user sessions with optimized query');
+    console.log('🔄 Fetching user sessions with optimized query for user:', user.id);
 
     // Fetch sessions with related tables and hands
     const { data: sessions, error: sessionError } = await supabase
@@ -26,15 +26,22 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
 
     if (sessionError) {
       console.error('❌ Error fetching sessions:', sessionError);
+      console.error('❌ Error details:', {
+        message: sessionError.message,
+        details: sessionError.details,
+        hint: sessionError.hint,
+        code: sessionError.code
+      });
       return [];
     }
 
     if (!sessions || sessions.length === 0) {
-      console.log('📋 No sessions found');
+      console.log('📋 No sessions found in database for user:', user.id);
       return [];
     }
 
     console.log(`✅ Fetched ${sessions.length} sessions with related data in single query`);
+    console.log('📋 Session IDs:', sessions.map(s => s.id).slice(0, 5));
 
     // Convert all sessions in batch
     const pokerSessions: PokerSession[] = sessions.map(session => {
