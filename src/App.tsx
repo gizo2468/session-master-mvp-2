@@ -48,32 +48,32 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <CoachStudentProvider>
-            <AuthGuard>
-              <SessionProvider>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/new-session" element={<SessionForm />} />
-                {/* FIXED: Change route parameter from :sessionId to :id to match useParams */}
-                <Route path="/session/:id" element={<LiveSession />} />
-                <Route path="/session/:sessionId/edit" element={<EditSession />} />
-                <Route path="/session/:sessionId/details" element={<SessionDetail />} />
-                <Route path="/history" element={<SessionHistory />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/player/:playerId" element={<PlayerProfile />} />
-                <Route path="/coach/:coachId" element={<CoachProfile />} />
-                <Route path="/focus-mode" element={<FocusModePage />} />
-                <Route path="/legal/privacy" element={<PrivacyPolicy />} />
-                <Route path="/help" element={<Help />} />
-                <Route path="/auth/login" element={<Login />} />
-                <Route path="/auth/signup" element={<Signup />} />
-                <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-                <Route path="/subscription" element={<Subscription />} />
-                <Route path="/subscription/success" element={<SubscriptionSuccess />} />
-                <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
-              </Routes>
-              </SessionProvider>
-            </AuthGuard>
+            <SessionProvider>
+              <AuthGuard>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/new-session" element={<SessionForm />} />
+                  {/* FIXED: Change route parameter from :sessionId to :id to match useParams */}
+                  <Route path="/session/:id" element={<LiveSession />} />
+                  <Route path="/session/:sessionId/edit" element={<EditSession />} />
+                  <Route path="/session/:sessionId/details" element={<SessionDetail />} />
+                  <Route path="/history" element={<SessionHistory />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/player/:playerId" element={<PlayerProfile />} />
+                  <Route path="/coach/:coachId" element={<CoachProfile />} />
+                  <Route path="/focus-mode" element={<FocusModePage />} />
+                  <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/help" element={<Help />} />
+                  <Route path="/auth/login" element={<Login />} />
+                  <Route path="/auth/signup" element={<Signup />} />
+                  <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/subscription" element={<Subscription />} />
+                  <Route path="/subscription/success" element={<SubscriptionSuccess />} />
+                  <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
+                </Routes>
+              </AuthGuard>
+            </SessionProvider>
           </CoachStudentProvider>
         </AuthProvider>
       </BrowserRouter>
