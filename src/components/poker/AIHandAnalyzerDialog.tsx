@@ -451,13 +451,15 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
         <PopoverTrigger asChild>
           {cardButton}
         </PopoverTrigger>
-        <PopoverContent 
-          className="w-[320px] p-4 pointer-events-auto" 
-          align="center" 
-          side="bottom" 
-          sideOffset={8}
-          onInteractOutside={() => setOpen(false)}
-        >
+      <PopoverContent 
+        className="w-[320px] p-4 pointer-events-auto" 
+        align="center" 
+        side="bottom" 
+        sideOffset={8}
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onFocusOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={() => setOpen(false)}
+      >
           <InlineCardGrid
             currentCard={card}
             excludedCards={getAllSelectedCards().filter(c => {
