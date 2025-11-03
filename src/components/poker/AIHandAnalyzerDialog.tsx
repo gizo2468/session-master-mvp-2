@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +8,7 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+// Using a custom persistent floating panel instead of Radix Popover to prevent auto-closures
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -345,6 +346,8 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
   }> = ({ card, type, index, isEdited, size = 'md' }) => {
     const [open, setOpen] = useState(false);
     const justOpenedAtRef = useRef<number>(0);
+    const btnRef = useRef<HTMLButtonElement>(null);
+    const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
     const sizeClasses = {
       sm: { card: 'w-7 h-10 text-xs', suit: 'text-base' },
       md: { card: 'w-9 h-12 text-sm', suit: 'text-lg' }
@@ -464,50 +467,38 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     );
     
     return (
-      <Popover modal open={open}>
-        <PopoverTrigger asChild>
-          {cardButton}
-        </PopoverTrigger>
-      <PopoverContent 
-        className="w-[320px] p-4 pointer-events-auto" 
-        align="center" 
-        side="bottom" 
-        sideOffset={8}
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        onCloseAutoFocus={(e) => e.preventDefault()}
-        onFocusOutside={(e) => e.preventDefault()}
-        onPointerDownOutside={(e) => {
-          const dt = performance.now() - justOpenedAtRef.current;
-          if (dt < 250) {
-            e.preventDefault();
-          } else {
-            e.preventDefault();
-            setOpen(false);
-          }
-        }}
-        onInteractOutside={(e) => {
-          const dt = performance.now() - justOpenedAtRef.current;
-          if (dt < 250) {
-            e.preventDefault();
-          } else {
-            e.preventDefault();
-            setOpen(false);
-          }
-        }}
-        onEscapeKeyDown={() => setOpen(false)}
-      >
-          <InlineCardGrid
-            currentCard={card}
-            excludedCards={getAllSelectedCards().filter(c => {
-              // Exclude current card's position so user can re-select same card
-              const currentCardStr = card ? `${card.rank}${card.suit}` : null;
-              return c !== currentCardStr;
-            })}
-            onSelect={handleCardSelection}
-            onClear={handleClear}
-          />
-        </PopoverContent>
-      </Popover>
+      <>
+        {cardButton}
+        {open && createPortal(
+          <>
+            <div
+              className="fixed inset-0 z-[49]"
+              onMouseDown={(e) => { e.preventDefault(); setOpen(false); }}
+              onTouchStart={(e) => { e.preventDefault(); setOpen(false); }}
+            />
+            <div
+              className="fixed z-50"
+              style={{ top: pos.top, left: pos.left, transform: 'translateX(-50%)' }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+            >
+              <div className="w-[320px] p-4 pointer-events-auto rounded-md border bg-popover text-popover-foreground shadow-md">
+                <InlineCardGrid
+                  currentCard={card}
+                  excludedCards={getAllSelectedCards().filter(c => {
+                    // Exclude current card's position so user can re-select same card
+                    const currentCardStr = card ? `${card.rank}${card.suit}` : null;
+                    return c !== currentCardStr;
+                  })}
+                  onSelect={handleCardSelection}
+                  onClear={handleClear}
+                />
+              </div>
+            </div>
+          </>,
+          document.body
+        )}
+      </>
     );
   };
 
