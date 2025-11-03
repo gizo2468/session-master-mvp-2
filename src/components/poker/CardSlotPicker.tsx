@@ -262,12 +262,22 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
       <Dialog open={isPickerOpen} onOpenChange={setIsPickerOpen}>
         <DialogContent
             className="sm:max-w-md"
-            onInteractOutside={(e) => {
-              const dt = performance.now() - openAtRef.current;
-              if (dt < 200) e.preventDefault();
-            }}
             onOpenAutoFocus={(e) => {
               e.preventDefault();
+            }}
+            onCloseAutoFocus={(e) => {
+              e.preventDefault();
+            }}
+            onFocusOutside={(e) => {
+              e.preventDefault();
+            }}
+            onPointerDownOutside={(e) => {
+              const dt = performance.now() - openAtRef.current;
+              if (dt < 250) e.preventDefault();
+            }}
+            onInteractOutside={(e) => {
+              const dt = performance.now() - openAtRef.current;
+              if (dt < 250) e.preventDefault();
             }}
           >
           <DialogHeader>

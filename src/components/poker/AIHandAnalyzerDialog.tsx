@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -344,6 +344,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     size?: 'sm' | 'md';
   }> = ({ card, type, index, isEdited, size = 'md' }) => {
     const [open, setOpen] = useState(false);
+    const justOpenedAtRef = useRef<number>(0);
     const sizeClasses = {
       sm: { card: 'w-7 h-10 text-xs', suit: 'text-base' },
       md: { card: 'w-9 h-12 text-sm', suit: 'text-lg' }
@@ -447,7 +448,12 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     );
     
     return (
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={(nextOpen) => {
+        if (nextOpen) {
+          justOpenedAtRef.current = performance.now();
+        }
+        setOpen(nextOpen);
+      }}>
         <PopoverTrigger asChild>
           {cardButton}
         </PopoverTrigger>
@@ -457,7 +463,16 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
         side="bottom" 
         sideOffset={8}
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onCloseAutoFocus={(e) => e.preventDefault()}
         onFocusOutside={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => {
+          const dt = performance.now() - justOpenedAtRef.current;
+          if (dt < 250) e.preventDefault();
+        }}
+        onInteractOutside={(e) => {
+          const dt = performance.now() - justOpenedAtRef.current;
+          if (dt < 250) e.preventDefault();
+        }}
         onEscapeKeyDown={() => setOpen(false)}
       >
           <InlineCardGrid
