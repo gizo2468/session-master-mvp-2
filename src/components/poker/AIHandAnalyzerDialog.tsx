@@ -416,6 +416,22 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     const cardButton = (
       <button
         type="button"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          justOpenedAtRef.current = performance.now();
+          setOpen(true);
+        }}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          justOpenedAtRef.current = performance.now();
+          setOpen(true);
+        }}
+        onClick={(e) => {
+          // Prevent Radix default toggle; we control open state manually
+          e.preventDefault();
+        }}
         className={cn(
           styles.card,
           "relative inline-flex rounded-md shadow-md flex-col items-center justify-between py-1 px-0.5",
@@ -448,12 +464,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     );
     
     return (
-      <Popover open={open} onOpenChange={(nextOpen) => {
-        if (nextOpen) {
-          justOpenedAtRef.current = performance.now();
-        }
-        setOpen(nextOpen);
-      }}>
+      <Popover modal open={open}>
         <PopoverTrigger asChild>
           {cardButton}
         </PopoverTrigger>
@@ -467,11 +478,21 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
         onFocusOutside={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => {
           const dt = performance.now() - justOpenedAtRef.current;
-          if (dt < 250) e.preventDefault();
+          if (dt < 250) {
+            e.preventDefault();
+          } else {
+            e.preventDefault();
+            setOpen(false);
+          }
         }}
         onInteractOutside={(e) => {
           const dt = performance.now() - justOpenedAtRef.current;
-          if (dt < 250) e.preventDefault();
+          if (dt < 250) {
+            e.preventDefault();
+          } else {
+            e.preventDefault();
+            setOpen(false);
+          }
         }}
         onEscapeKeyDown={() => setOpen(false)}
       >
