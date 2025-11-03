@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -36,6 +36,8 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
     suit: null
   });
   
+  const openAtRef = useRef<number>(0);
+
   const { toast } = useToast();
 
   const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
@@ -85,6 +87,7 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
       // Open picker for this slot
       setActiveSlotIndex(slotIndex);
       setCurrentSelection({ rank: null, suit: null }); // Reset selection state
+      openAtRef.current = performance.now();
       setIsPickerOpen(true);
     }
   };
@@ -257,7 +260,16 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
 
       {/* Card Picker Modal */}
       <Dialog open={isPickerOpen} onOpenChange={setIsPickerOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent
+            className="sm:max-w-md"
+            onInteractOutside={(e) => {
+              const dt = performance.now() - openAtRef.current;
+              if (dt < 200) e.preventDefault();
+            }}
+            onOpenAutoFocus={(e) => {
+              e.preventDefault();
+            }}
+          >
           <DialogHeader>
             <DialogTitle>Select Card</DialogTitle>
           </DialogHeader>
