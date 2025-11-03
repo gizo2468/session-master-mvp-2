@@ -63,7 +63,8 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
   };
 
   // Handle slot tap - open picker for empty slots, clear for filled slots
-  const handleSlotTap = (slotIndex: number) => {
+  const handleSlotTap = (slotIndex: number, event: React.MouseEvent) => {
+    event.stopPropagation();
     if (disabled) return;
     
     const slot = selectedCards[slotIndex];
@@ -198,7 +199,7 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
         <button
           key={slot.id ?? index}
           type="button"
-          onClick={() => handleSlotTap(index)}
+          onClick={(e) => handleSlotTap(index, e)}
           disabled={disabled}
           className={cn(
             "w-12 h-16 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center transition-all",
