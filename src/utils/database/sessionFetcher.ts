@@ -11,9 +11,9 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
       return [];
     }
 
-    console.log('🔄 Fetching user sessions with optimized query for user:', user.id);
+    console.log('🔄 Fetching user sessions for user:', user.id);
 
-    // Fetch sessions with related tables and hands
+    // Fast path: try single-embed query
     const { data: sessions, error: sessionError } = await supabase
       .from('sessions')
       .select(`
@@ -25,14 +25,67 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
       .order('start_time', { ascending: false });
 
     if (sessionError) {
-      console.error('❌ Error fetching sessions:', sessionError);
-      console.error('❌ Error details:', {
+      console.warn('⚠️ Embedded query failed, using fallback stitching:', {
         message: sessionError.message,
         details: sessionError.details,
         hint: sessionError.hint,
         code: sessionError.code
       });
-      return [];
+
+      // Fallback: fetch separately and stitch in memory
+      const { data: baseSessions, error: baseError } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('start_time', { ascending: false });
+
+      if (baseError) {
+        console.error('❌ Fallback base sessions fetch failed:', baseError);
+        return [];
+      }
+
+      if (!baseSessions || baseSessions.length === 0) {
+        console.log('📋 No sessions found in database for user:', user.id);
+        return [];
+      }
+
+      const ids = baseSessions.map((s: any) => s.id);
+
+      const [{ data: tables, error: tablesError }, { data: hands, error: handsError }] = await Promise.all([
+        supabase.from('session_tables').select('*').in('session_id', ids).eq('user_id', user.id),
+        supabase.from('session_hands_new').select('*').in('session_id', ids).eq('user_id', user.id)
+      ]);
+
+      if (tablesError || handsError) {
+        console.error('❌ Fallback related data fetch failed:', { tablesError, handsError });
+        return [];
+      }
+
+      const tablesBySession = new Map<string, any[]>();
+      const handsBySession = new Map<string, any[]>();
+
+      (tables || []).forEach((t: any) => {
+        const arr = tablesBySession.get(t.session_id) || [];
+        arr.push(t);
+        tablesBySession.set(t.session_id, arr);
+      });
+      (hands || []).forEach((h: any) => {
+        const arr = handsBySession.get(h.session_id) || [];
+        arr.push(h);
+        handsBySession.set(h.session_id, arr);
+      });
+
+      console.log(`🧵 Fallback stitched ${baseSessions.length} sessions, ${(tables||[]).length} tables, ${(hands||[]).length} hands`);
+
+      const stitched: PokerSession[] = baseSessions.map((s: any) =>
+        convertDatabaseSessionToPokerSession(
+          s,
+          tablesBySession.get(s.id) || [],
+          handsBySession.get(s.id) || []
+        )
+      );
+
+      return stitched;
     }
 
     if (!sessions || sessions.length === 0) {
@@ -40,11 +93,9 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
       return [];
     }
 
-    console.log(`✅ Fetched ${sessions.length} sessions with related data in single query`);
-    console.log('📋 Session IDs:', sessions.map(s => s.id).slice(0, 5));
+    console.log(`✅ Fetched ${sessions.length} sessions (embedded)`);
 
-    // Convert all sessions in batch
-    const pokerSessions: PokerSession[] = sessions.map(session => {
+    const pokerSessions: PokerSession[] = sessions.map((session: any) => {
       return convertDatabaseSessionToPokerSession(
         session,
         session.session_tables || [],
@@ -67,9 +118,9 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
       return [];
     }
 
-    console.log('🔄 Fetching active sessions with optimized query');
+    console.log('🔄 Fetching active sessions');
 
-    // Fetch active sessions with related tables and hands
+    // Fast path: try single-embed query
     const { data: sessions, error: sessionError } = await supabase
       .from('sessions')
       .select(`
@@ -82,8 +133,68 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
       .order('start_time', { ascending: false });
 
     if (sessionError) {
-      console.error('❌ Error fetching active sessions:', sessionError);
-      return [];
+      console.warn('⚠️ Embedded active sessions query failed, using fallback:', {
+        message: sessionError.message,
+        details: sessionError.details,
+        hint: sessionError.hint,
+        code: sessionError.code
+      });
+
+      // Fallback: fetch separately and stitch in memory
+      const { data: baseSessions, error: baseError } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('start_time', { ascending: false });
+
+      if (baseError) {
+        console.error('❌ Fallback base active sessions fetch failed:', baseError);
+        return [];
+      }
+
+      if (!baseSessions || baseSessions.length === 0) {
+        console.log('📋 No active sessions found');
+        return [];
+      }
+
+      const ids = baseSessions.map((s: any) => s.id);
+
+      const [{ data: tables, error: tablesError }, { data: hands, error: handsError }] = await Promise.all([
+        supabase.from('session_tables').select('*').in('session_id', ids).eq('user_id', user.id),
+        supabase.from('session_hands_new').select('*').in('session_id', ids).eq('user_id', user.id)
+      ]);
+
+      if (tablesError || handsError) {
+        console.error('❌ Fallback related data fetch for active sessions failed:', { tablesError, handsError });
+        return [];
+      }
+
+      const tablesBySession = new Map<string, any[]>();
+      const handsBySession = new Map<string, any[]>();
+
+      (tables || []).forEach((t: any) => {
+        const arr = tablesBySession.get(t.session_id) || [];
+        arr.push(t);
+        tablesBySession.set(t.session_id, arr);
+      });
+      (hands || []).forEach((h: any) => {
+        const arr = handsBySession.get(h.session_id) || [];
+        arr.push(h);
+        handsBySession.set(h.session_id, arr);
+      });
+
+      console.log(`🧵 Fallback stitched active: ${baseSessions.length} sessions, ${(tables||[]).length} tables, ${(hands||[]).length} hands`);
+
+      const stitched: PokerSession[] = baseSessions.map((s: any) =>
+        convertDatabaseSessionToPokerSession(
+          s,
+          tablesBySession.get(s.id) || [],
+          handsBySession.get(s.id) || []
+        )
+      );
+
+      return stitched;
     }
 
     if (!sessions || sessions.length === 0) {
@@ -93,8 +204,7 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
 
     console.log(`✅ Found ${sessions.length} active sessions`);
 
-    // Convert all sessions in batch
-    const activeSessions: PokerSession[] = sessions.map(session => {
+    const activeSessions: PokerSession[] = sessions.map((session: any) => {
       return convertDatabaseSessionToPokerSession(
         session,
         session.session_tables || [],
