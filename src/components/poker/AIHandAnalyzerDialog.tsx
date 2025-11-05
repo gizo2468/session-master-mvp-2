@@ -78,6 +78,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
   const [editBeforeApplying, setEditBeforeApplying] = useState(false);
   const [selectedDealer, setSelectedDealer] = useState<string>('');
   const [showFullImage, setShowFullImage] = useState(false);
+  const [openEditor, setOpenEditor] = useState<{ type: 'hero' | 'flop' | 'turn' | 'river'; index: number } | null>(null);
   
   // Editable card states
   const [editedHeroCards, setEditedHeroCards] = useState<Array<{rank: string, suit: string} | null>>([null, null]);
@@ -344,8 +345,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     isEdited: boolean;
     size?: 'sm' | 'md';
   }> = ({ card, type, index, isEdited, size = 'md' }) => {
-    const [open, setOpen] = useState(false);
-const btnRef = useRef<HTMLButtonElement>(null);
+    const btnRef = useRef<HTMLButtonElement>(null);
     const sizeClasses = {
       sm: { card: 'w-7 h-10 text-xs', suit: 'text-base' },
       md: { card: 'w-9 h-12 text-sm', suit: 'text-lg' }
@@ -368,7 +368,7 @@ const btnRef = useRef<HTMLButtonElement>(null);
         setEditedBoardRiver({ rank, suit });
       }
       
-      setOpen(false);
+      setOpenEditor(null);
     };
 
     const handleClear = () => {
@@ -386,7 +386,7 @@ const btnRef = useRef<HTMLButtonElement>(null);
         setEditedBoardRiver(null);
       }
       
-      setOpen(false);
+      setOpenEditor(null);
     };
     
     let suitSymbol = '?';
@@ -420,7 +420,7 @@ const btnRef = useRef<HTMLButtonElement>(null);
         type="button"
           onClick={(e) => {
             e.stopPropagation();
-            setOpen(true);
+            setOpenEditor({ type, index });
           }}
         className={cn(
           styles.card,
@@ -457,8 +457,8 @@ const btnRef = useRef<HTMLButtonElement>(null);
       <>
         {cardButton}
         <FloatingCardSelector
-          open={open}
-          onClose={() => setOpen(false)}
+          open={openEditor?.type === type && openEditor?.index === index}
+          onClose={() => setOpenEditor(null)}
           anchorRef={btnRef}
           offset={8}
           width={320}
