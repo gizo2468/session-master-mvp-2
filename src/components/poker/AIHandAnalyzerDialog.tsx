@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import FloatingCardSelector from '@/components/ui/FloatingCardSelector';
 import {
   Dialog,
   DialogContent,
@@ -345,9 +345,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     size?: 'sm' | 'md';
   }> = ({ card, type, index, isEdited, size = 'md' }) => {
     const [open, setOpen] = useState(false);
-    const justOpenedAtRef = useRef<number>(0);
-    const btnRef = useRef<HTMLButtonElement>(null);
-    const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+const btnRef = useRef<HTMLButtonElement>(null);
     const sizeClasses = {
       sm: { card: 'w-7 h-10 text-xs', suit: 'text-base' },
       md: { card: 'w-9 h-12 text-sm', suit: 'text-lg' }
@@ -418,22 +416,12 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     
     const cardButton = (
       <button
+        ref={btnRef}
         type="button"
-        onMouseDown={(e) => {
+        onPointerDown={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          justOpenedAtRef.current = performance.now();
           setOpen(true);
-        }}
-        onTouchStart={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          justOpenedAtRef.current = performance.now();
-          setOpen(true);
-        }}
-        onClick={(e) => {
-          // Prevent Radix default toggle; we control open state manually
-          e.preventDefault();
         }}
         className={cn(
           styles.card,
@@ -469,35 +457,25 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     return (
       <>
         {cardButton}
-        {open && createPortal(
-          <>
-            <div
-              className="fixed inset-0 z-[49]"
-              onMouseDown={(e) => { e.preventDefault(); setOpen(false); }}
-              onTouchStart={(e) => { e.preventDefault(); setOpen(false); }}
-            />
-            <div
-              className="fixed z-50"
-              style={{ top: pos.top, left: pos.left, transform: 'translateX(-50%)' }}
-              onMouseDown={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
-            >
-              <div className="w-[320px] p-4 pointer-events-auto rounded-md border bg-popover text-popover-foreground shadow-md">
-                <InlineCardGrid
-                  currentCard={card}
-                  excludedCards={getAllSelectedCards().filter(c => {
-                    // Exclude current card's position so user can re-select same card
-                    const currentCardStr = card ? `${card.rank}${card.suit}` : null;
-                    return c !== currentCardStr;
-                  })}
-                  onSelect={handleCardSelection}
-                  onClear={handleClear}
-                />
-              </div>
-            </div>
-          </>,
-          document.body
-        )}
+        <FloatingCardSelector
+          open={open}
+          onClose={() => setOpen(false)}
+          anchorRef={btnRef}
+          offset={8}
+          width={320}
+          placement="bottom"
+          zIndex={1000}
+        >
+          <InlineCardGrid
+            currentCard={card}
+            excludedCards={getAllSelectedCards().filter(c => {
+              const currentCardStr = card ? `${card.rank}${card.suit}` : null;
+              return c !== currentCardStr;
+            })}
+            onSelect={handleCardSelection}
+            onClear={handleClear}
+          />
+        </FloatingCardSelector>
       </>
     );
   };
