@@ -23,6 +23,7 @@ const FloatingCardSelector: React.FC<FloatingCardSelectorProps> = ({
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0, place: placement as 'bottom' | 'top' });
+  const openedAtRef = useRef<number>(0);
 
   const compute = () => {
     const anchor = anchorRef.current as HTMLElement | null;
@@ -51,6 +52,9 @@ const FloatingCardSelector: React.FC<FloatingCardSelectorProps> = ({
 
   useLayoutEffect(() => {
     if (!open) return;
+    // mark open timestamp to ignore the initial opening gesture
+    openedAtRef.current = performance.now();
+
     compute();
 
     let raf = 0;
@@ -86,8 +90,17 @@ const FloatingCardSelector: React.FC<FloatingCardSelectorProps> = ({
       <div
         className="fixed inset-0"
         style={{ zIndex }}
-        onPointerDown={onClose}
-        onTouchStart={(e) => { e.preventDefault(); onClose(); }}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          if (performance.now() - openedAtRef.current < 250) return; // ignore the opening gesture
+          onClose();
+        }}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (performance.now() - openedAtRef.current < 250) return;
+          onClose();
+        }}
       />
       {/* Floating panel anchored to the button */}
       <div

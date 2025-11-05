@@ -418,11 +418,10 @@ const btnRef = useRef<HTMLButtonElement>(null);
       <button
         ref={btnRef}
         type="button"
-        onPointerDown={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setOpen(true);
-        }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen(true);
+          }}
         className={cn(
           styles.card,
           "relative inline-flex rounded-md shadow-md flex-col items-center justify-between py-1 px-0.5",
