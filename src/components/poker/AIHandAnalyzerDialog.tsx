@@ -329,9 +329,16 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
 
         {/* Selection hint */}
         {selectedRank && selectedSuit && (
-          <p className="text-xs text-muted-foreground text-center">
-            Selected: {selectedRank}{suits.find(s => s.symbol === selectedSuit)?.display}
-          </p>
+          <div className="text-xs text-center space-y-1">
+            <p className="text-muted-foreground">
+              Selected: {selectedRank}{suits.find(s => s.symbol === selectedSuit)?.display}
+            </p>
+            {isCardExcluded(selectedRank, selectedSuit) && (
+              <p className="text-red-600 dark:text-red-500 font-medium">
+                * This card is already selected.
+              </p>
+            )}
+          </div>
         )}
       </div>
     );
