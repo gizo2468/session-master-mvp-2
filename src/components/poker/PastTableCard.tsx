@@ -300,6 +300,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
           const updatedHands = [...(table.hands || []), newHand];
           handleTableUpdate(updatedHands);
         }}
+        sessionId={table.session_id || table.id}
         tableId={table.id}
         tableFormat={table.format}
       />

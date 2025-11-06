@@ -193,6 +193,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
             open={isAddHandOpen}
             onOpenChange={setIsAddHandOpen}
             onSubmit={handleAddHand}
+            sessionId={sessionId}
             tableId={tableId}
             tableFormat={tableFormat}
           />
@@ -203,6 +204,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
               onOpenChange={setIsEditHandOpen}
               onSubmit={handleEditHand}
               initialData={editingHand}
+              sessionId={sessionId}
               tableId={editingHand.tableId}
               tableFormat={editingHand.tableId ? getTableById(sessionId, editingHand.tableId)?.format : undefined}
               isEditing

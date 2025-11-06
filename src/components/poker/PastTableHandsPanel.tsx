@@ -157,6 +157,7 @@ const PastTableHandsPanel: React.FC<PastTableHandsPanelProps> = ({
         open={isAddHandOpen}
         onOpenChange={setIsAddHandOpen}
         onSubmit={handleAddHand}
+        sessionId={table.session_id || table.id}
         tableId={table.id}
         tableFormat={table.format}
       />
@@ -167,6 +168,7 @@ const PastTableHandsPanel: React.FC<PastTableHandsPanelProps> = ({
           onOpenChange={setIsEditHandOpen}
           onSubmit={handleEditHand}
           initialData={editingHand}
+          sessionId={table.session_id || table.id}
           tableId={editingHand.tableId}
           tableFormat={table.format}
           isEditing

@@ -118,6 +118,7 @@ const HandTableSelectionModal: React.FC<HandTableSelectionModalProps> = ({
         open={showHandForm}
         onOpenChange={setShowHandForm}
         onSubmit={handleAddHand}
+        sessionId={sessionId}
         tableId={selectedTableId || ''}
       />
     </>

@@ -21,6 +21,7 @@ interface HandFormProps {
   onSubmit: (data: Partial<HandData>) => void;
   initialData?: Partial<HandData>;
   isEditing?: boolean;
+  sessionId: string;
   tableId?: string;
   tableFormat?: 'Cash' | 'Tournament';
 }
@@ -31,6 +32,7 @@ const HandForm: React.FC<HandFormProps> = ({
   onSubmit,
   initialData = {},
   isEditing = false,
+  sessionId,
   tableId,
   tableFormat
 }) => {
@@ -131,8 +133,10 @@ const HandForm: React.FC<HandFormProps> = ({
               <AIHandAnalyzerDialog
                 open={showAIAnalyzer}
                 onOpenChange={setShowAIAnalyzer}
-                setValue={form.setValue}
-                currentFormValues={form.getValues()}
+                sessionId={sessionId}
+                tableId={tableId}
+                tableFormat={tableFormat}
+                onHandAdded={() => onOpenChange(false)}
               />
               
               {/* Street-by-Street Analysis */}

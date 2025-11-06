@@ -16,10 +16,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Loader2, Upload, CheckCircle2, AlertTriangle, Info, X } from 'lucide-react';
 import { useAIHandAnalyzer } from '@/hooks/useAIHandAnalyzer';
-import { UseFormSetValue } from 'react-hook-form';
-import { FormValues } from '@/utils/handFormHelpers';
+import { useSessionContext } from '@/context/SessionContext';
+import { HandData } from '@/types/poker';
 import { cn } from '@/lib/utils';
 import CardDisplay from './CardDisplay';
+import { toast } from 'sonner';
 
 
 const normalizeSuit = (suit: string): string => {
@@ -64,16 +65,21 @@ const parseCards = (cards: any): Array<{rank: string, suit: string}> => {
 interface AIHandAnalyzerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  setValue: UseFormSetValue<FormValues>;
-  currentFormValues: Partial<FormValues>;
+  sessionId: string;
+  tableId?: string;
+  tableFormat?: 'Cash' | 'Tournament';
+  onHandAdded?: () => void;
 }
 
 const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
   open,
   onOpenChange,
-  setValue,
-  currentFormValues
+  sessionId,
+  tableId,
+  tableFormat,
+  onHandAdded
 }) => {
+  const { addTableHand, addHand } = useSessionContext();
   const { state, handleImageUpload, analyzeHand, setManualOverride, reset } = useAIHandAnalyzer();
   const [editBeforeApplying, setEditBeforeApplying] = useState(false);
   const [selectedDealer, setSelectedDealer] = useState<string>('');
@@ -486,110 +492,84 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     );
   };
 
-  const handleApplyToForm = () => {
-    if (!state.analysis) return;
+  const handleApplyToForm = async () => {
+    if (!state.analysis) {
+      toast.error('No analysis data available');
+      return;
+    }
 
-    const analysis = state.analysis;
-    
-    // Helper: only apply if field is truly empty
-    const isEmpty = (val: any) => 
-      val === undefined || 
-      val === null || 
-      val === '' || 
-      (Array.isArray(val) && val.length === 0);
+    try {
+      const analysis = state.analysis;
 
-    // Hero cards - prioritize edited cards
-    if (isEmpty(currentFormValues.cards)) {
+      // Build hero cards - prioritize edited cards
       const heroCards = [0, 1].map(idx => getEffectiveCard('hero', idx)).filter(c => c);
-      if (heroCards.length === 2) {
-        const cardsString = heroCards
-          .map(c => c!.rank + normalizeSuit(c!.suit))
-          .join('');
-        setValue('cards', cardsString, { shouldValidate: true });
-      }
-    }
+      const heroCardsString = heroCards.length === 2
+        ? heroCards.map(c => c!.rank + normalizeSuit(c!.suit)).join('')
+        : '';
 
-    // Position
-    if (isEmpty(currentFormValues.position) && analysis.hero.position !== 'UNKNOWN') {
-      setValue('position', analysis.hero.position, { shouldValidate: true });
-    }
-
-    // Board cards - Flop - prioritize edited cards
-    if (isEmpty(currentFormValues.flopCards)) {
+      // Build flop cards - prioritize edited
       const flopCards = [0, 1, 2]
         .map(idx => getEffectiveCard('flop', idx))
         .filter(c => c)
-        .map((c, idx) => ({
-          id: idx,
-          rank: c!.rank,
-          suit: normalizeSuit(c!.suit)
-        }));
-      if (flopCards.length === 3) {
-        setValue('flopCards', flopCards, { shouldValidate: true });
-      }
-    }
+        .map(c => `${c!.rank}${normalizeSuit(c!.suit)}`);
 
-    // Turn - prioritize edited
-    if (isEmpty(currentFormValues.turnCards)) {
+      // Build turn card - prioritize edited
       const turnCard = getEffectiveCard('turn', 0);
-      if (turnCard) {
-        setValue('turnCards', [{
-          id: 0,
-          rank: turnCard.rank,
-          suit: normalizeSuit(turnCard.suit)
-        }], { shouldValidate: true });
-      }
-    }
+      const turnCardString = turnCard ? `${turnCard.rank}${normalizeSuit(turnCard.suit)}` : '';
 
-    // River - prioritize edited
-    if (isEmpty(currentFormValues.riverCards)) {
+      // Build river card - prioritize edited
       const riverCard = getEffectiveCard('river', 0);
-      if (riverCard) {
-        setValue('riverCards', [{
-          id: 0,
-          rank: riverCard.rank,
-          suit: normalizeSuit(riverCard.suit)
-        }], { shouldValidate: true });
+      const riverCardString = riverCard ? `${riverCard.rank}${normalizeSuit(riverCard.suit)}` : '';
+
+      // Build villains data
+      const villainsData = analysis.villains && analysis.villains.length > 0
+        ? analysis.villains
+            .filter(v => v.cards !== 'hidden' && Array.isArray(v.cards) && v.cards.length > 0)
+            .map(v => ({
+              position: v.position !== 'UNKNOWN' ? v.position : '',
+              hand: Array.isArray(v.cards) ? v.cards.map(c => `${c.rank}${normalizeSuit(c.suit)}`).join('') : undefined,
+              bigBlind: v.stackUnit === 'BB' ? v.stack : undefined
+            }))
+        : [];
+
+      // Extract actions
+      const flopAction = analysis.actions.find(a => a.street === 'flop');
+      const turnAction = analysis.actions.find(a => a.street === 'turn');
+      const riverAction = analysis.actions.find(a => a.street === 'river');
+
+      // Create hand data object
+      const handData: Omit<HandData, 'id' | 'createdAt' | 'tableId'> = {
+        cards: heroCardsString,
+        position: analysis.hero?.position !== 'UNKNOWN' ? analysis.hero.position : '',
+        action: '', // Preflop action not tracked in current AI response
+        flopCards,
+        flopAction: flopAction?.description || '',
+        turnCard: turnCardString,
+        turnAction: turnAction?.description || '',
+        riverCard: riverCardString,
+        riverAction: riverAction?.description || '',
+        result: analysis.result?.outcome !== 'unknown' ? analysis.result.outcome : '',
+        villains: villainsData,
+        notes: '',
+        image: state.image || undefined
+      };
+
+      // Add hand to table or session
+      if (tableId) {
+        addTableHand(sessionId, tableId, handData);
+      } else {
+        addHand(sessionId, handData);
       }
-    }
 
-    // Actions by street
-    const flopAction = analysis.actions.find(a => a.street === 'flop');
-    if (flopAction && isEmpty(currentFormValues.flopAction)) {
-      setValue('flopAction', flopAction.description, { shouldValidate: true });
-    }
-
-    const turnAction = analysis.actions.find(a => a.street === 'turn');
-    if (turnAction && isEmpty(currentFormValues.turnAction)) {
-      setValue('turnAction', turnAction.description, { shouldValidate: true });
-    }
-
-    const riverAction = analysis.actions.find(a => a.street === 'river');
-    if (riverAction && isEmpty(currentFormValues.riverAction)) {
-      setValue('riverAction', riverAction.description, { shouldValidate: true });
-    }
-
-    // Villains
-    if (isEmpty(currentFormValues.villains) && analysis.villains.length > 0) {
-      const villainsData = analysis.villains
-        .filter(v => v.cards !== 'hidden' && Array.isArray(v.cards) && v.cards.length > 0)
-        .map(v => ({
-          hand: Array.isArray(v.cards) ? v.cards.map(c => `${c.rank}${c.suit.charAt(0).toLowerCase()}`).join('') : undefined,
-          position: v.position !== 'UNKNOWN' ? v.position : undefined,
-          bigBlind: v.stackUnit === 'BB' ? v.stack : undefined
-        }));
+      toast.success('Hand added successfully');
       
-      if (villainsData.length > 0) {
-        setValue('villains', villainsData, { shouldValidate: true });
-      }
+      // Close both dialogs
+      handleClose();
+      onHandAdded?.();
+    } catch (error) {
+      console.error('Error adding hand:', error);
+      toast.error('Failed to add hand. Please try again.');
     }
-
-    // Result
-    if (isEmpty(currentFormValues.result) && analysis.result.outcome !== 'unknown') {
-      setValue('result', analysis.result.outcome, { shouldValidate: true });
-    }
-
-    handleClose();
   };
 
   const positions = ['BTN', 'SB', 'BB', 'UTG', 'MP', 'CO'];
@@ -1117,7 +1097,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                 onClick={handleApplyToForm}
                 className="bg-poker-gold hover:bg-poker-darkGold text-white"
               >
-                Apply to Form
+                {tableId ? 'Add to Table' : 'Add Hand'}
               </Button>
             </>
           )}

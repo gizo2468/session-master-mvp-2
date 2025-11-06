@@ -369,6 +369,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
         onSubmit={handleHandSubmit}
         initialData={editingHand || {}}
         isEditing={!!editingHand}
+        sessionId={selectedTableForHand?.session_id || selectedTableForHand?.id || ''}
         tableId={selectedTableForHand?.id}
         tableFormat={selectedTableForHand?.format}
       />
