@@ -81,7 +81,6 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
 }) => {
   const { addTableHand, addHand } = useSessionContext();
   const { state, handleImageUpload, analyzeHand, setManualOverride, reset } = useAIHandAnalyzer();
-  const [editBeforeApplying, setEditBeforeApplying] = useState(false);
   const [selectedDealer, setSelectedDealer] = useState<string>('');
   const [showFullImage, setShowFullImage] = useState(false);
   const [openEditor, setOpenEditor] = useState<{ type: 'hero' | 'flop' | 'turn' | 'river'; index: number } | null>(null);
@@ -94,7 +93,6 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
 
   const handleClose = () => {
     reset();
-    setEditBeforeApplying(false);
     setSelectedDealer('');
     setEditedHeroCards([null, null]);
     setEditedBoardFlop([null, null, null]);
@@ -1044,17 +1042,6 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                     </AlertDescription>
                   </Alert>
                 )}
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="edit-before-apply"
-                  checked={editBeforeApplying}
-                  onCheckedChange={(checked) => setEditBeforeApplying(checked as boolean)}
-                />
-                <Label htmlFor="edit-before-apply" className="text-sm cursor-pointer">
-                  Review and edit before applying to form
-                </Label>
               </div>
             </div>
           )}
