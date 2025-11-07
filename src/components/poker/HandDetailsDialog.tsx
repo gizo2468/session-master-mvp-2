@@ -106,35 +106,26 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
             <CardHeader>
               <CardTitle className="text-lg">Hand History</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Flop */}
+            <CardContent>
+              {/* All community cards in one row */}
               <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-muted-foreground w-20">Flop:</span>
-                {hand.flopCards && hand.flopCards.length > 0 ? (
-                  <CardDisplay cards={hand.flopCards.join('')} size="sm" />
-                ) : (
-                  <span className="text-sm text-muted-foreground italic">No data available</span>
-                )}
-              </div>
-              
-              {/* Turn */}
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-muted-foreground w-20">Turn:</span>
-                {hand.turnCard ? (
-                  <CardDisplay cards={hand.turnCard} size="sm" />
-                ) : (
-                  <span className="text-sm text-muted-foreground italic">No data available</span>
-                )}
-              </div>
-              
-              {/* River */}
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-muted-foreground w-20">River:</span>
-                {hand.riverCard ? (
-                  <CardDisplay cards={hand.riverCard} size="sm" />
-                ) : (
-                  <span className="text-sm text-muted-foreground italic">No data available</span>
-                )}
+                <span className="text-sm font-medium text-muted-foreground w-20">Board:</span>
+                <div className="flex gap-1">
+                  {hand.flopCards && hand.flopCards.length > 0 ? (
+                    <CardDisplay cards={hand.flopCards.join('')} size="sm" />
+                  ) : (
+                    <span className="text-sm text-muted-foreground italic">No flop</span>
+                  )}
+                  {hand.turnCard && (
+                    <CardDisplay cards={hand.turnCard} size="sm" />
+                  )}
+                  {hand.riverCard && (
+                    <CardDisplay cards={hand.riverCard} size="sm" />
+                  )}
+                  {!hand.flopCards?.length && !hand.turnCard && !hand.riverCard && (
+                    <span className="text-sm text-muted-foreground italic">No data available</span>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
