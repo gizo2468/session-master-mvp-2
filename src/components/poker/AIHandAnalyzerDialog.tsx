@@ -21,6 +21,7 @@ import { HandData } from '@/types/poker';
 import { cn } from '@/lib/utils';
 import CardDisplay from './CardDisplay';
 import { toast } from 'sonner';
+import { evaluatePokerHand } from '@/utils/pokerHandEvaluator';
 
 
 const normalizeSuit = (suit: string): string => {
@@ -90,6 +91,9 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
   const [editedBoardFlop, setEditedBoardFlop] = useState<Array<{rank: string, suit: string} | null>>([null, null, null]);
   const [editedBoardTurn, setEditedBoardTurn] = useState<{rank: string, suit: string} | null>(null);
   const [editedBoardRiver, setEditedBoardRiver] = useState<{rank: string, suit: string} | null>(null);
+  
+  // Calculated result state
+  const [calculatedResult, setCalculatedResult] = useState<string | null>(null);
 
   const handleClose = () => {
     reset();
@@ -98,6 +102,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     setEditedBoardFlop([null, null, null]);
     setEditedBoardTurn(null);
     setEditedBoardRiver(null);
+    setCalculatedResult(null);
     onOpenChange(false);
   };
 
@@ -178,8 +183,55 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
     } else if (type === 'river') {
       return editedBoardRiver || state.analysis?.board.river || null;
     }
-    return null;
   };
+
+  // Auto-calculate result when cards change
+  useEffect(() => {
+    if (!state.analysis) {
+      setCalculatedResult(null);
+      return;
+    }
+
+    // Collect hole cards
+    const holeCards: string[] = [];
+    for (let i = 0; i < 2; i++) {
+      const card = getEffectiveCard('hero', i);
+      if (card?.rank && card?.suit) {
+        holeCards.push(`${card.rank}${card.suit}`);
+      }
+    }
+
+    // Collect board cards
+    const boardCards: string[] = [];
+    
+    // Flop
+    for (let i = 0; i < 3; i++) {
+      const card = getEffectiveCard('flop', i);
+      if (card?.rank && card?.suit) {
+        boardCards.push(`${card.rank}${card.suit}`);
+      }
+    }
+    
+    // Turn
+    const turn = getEffectiveCard('turn', 0);
+    if (turn?.rank && turn?.suit) {
+      boardCards.push(`${turn.rank}${turn.suit}`);
+    }
+    
+    // River
+    const river = getEffectiveCard('river', 0);
+    if (river?.rank && river?.suit) {
+      boardCards.push(`${river.rank}${river.suit}`);
+    }
+
+    // Evaluate hand
+    if (holeCards.length === 2) {
+      const result = evaluatePokerHand(holeCards, boardCards);
+      setCalculatedResult(result);
+    } else {
+      setCalculatedResult(null);
+    }
+  }, [editedHeroCards, editedBoardFlop, editedBoardTurn, editedBoardRiver, state.analysis]);
 
   // Inline Card Grid Component for direct card selection
   const InlineCardGrid: React.FC<{
@@ -1012,12 +1064,12 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                 )}
 
                 {/* Result */}
-                {state.analysis.result.summary && (
+                {(calculatedResult || state.analysis.result.summary) && (
                   <div>
                     <h4 className="font-semibold mb-1">Result</h4>
                     <p className="text-muted-foreground">
-                      {state.analysis.result.summary}
-                      {state.analysis.result.amount && state.analysis.result.outcome !== 'unknown' && (
+                      {calculatedResult || state.analysis.result.summary}
+                      {!calculatedResult && state.analysis.result.amount && state.analysis.result.outcome !== 'unknown' && (
                         <span className={cn(
                           "ml-2 font-medium",
                           state.analysis.result.outcome === 'win' ? "text-green-600" : "text-red-600"
