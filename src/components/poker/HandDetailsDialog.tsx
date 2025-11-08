@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { HandData } from '@/types/poker';
 import CardDisplay from './CardDisplay';
-import { CircleDollarSign } from 'lucide-react';
+import { CircleDollarSign, Image as ImageIcon } from 'lucide-react';
 import { PokerChip } from '../Icons';
 import { Badge } from '@/components/ui/badge';
 
@@ -23,6 +23,8 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
   sessionBuyIn,
   tables = []
 }) => {
+  const [showImageModal, setShowImageModal] = useState(false);
+  
   if (!hand) return null;
 
   // Find the table this hand belongs to
@@ -158,7 +160,7 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
             </Card>
           )}
           
-          {/* Hand Image */}
+          {/* Hand Screenshot */}
           {(hand.image || hand.handImage) && (
             <Card>
               <CardHeader>
@@ -166,33 +168,12 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
               </CardHeader>
               <CardContent>
                 <button
-                  onClick={() => {
-                    const imgSrc = hand.image || hand.handImage;
-                    if (imgSrc) {
-                      const newWindow = window.open();
-                      if (newWindow) {
-                        newWindow.document.write(`
-                          <html>
-                            <head><title>Hand Screenshot</title></head>
-                            <body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#000;">
-                              <img src="${imgSrc}" style="max-width:100%;max-height:100vh;object-fit:contain;" />
-                            </body>
-                          </html>
-                        `);
-                      }
-                    }
-                  }}
-                  className="cursor-pointer hover:opacity-90 transition-opacity w-full"
+                  onClick={() => setShowImageModal(true)}
+                  className="flex items-center gap-2 p-3 rounded-lg border border-border hover:bg-accent transition-colors"
                 >
-                  <img 
-                    src={hand.image || hand.handImage} 
-                    alt="Hand screenshot" 
-                    className="w-full rounded-md border"
-                  />
+                  <ImageIcon className="h-5 w-5 text-primary" />
+                  <span className="text-sm text-muted-foreground">Click to view screenshot</span>
                 </button>
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Click image to view full size
-                </p>
               </CardContent>
             </Card>
           )}
@@ -207,6 +188,26 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Image Modal */}
+      <Dialog open={showImageModal} onOpenChange={setShowImageModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+          <div className="relative w-full h-full flex items-center justify-center bg-black">
+            <img 
+              src={hand?.image || hand?.handImage || ''} 
+              alt="Hand screenshot" 
+              className="max-w-full max-h-[90vh] object-contain"
+            />
+          </div>
+          <Button 
+            onClick={() => setShowImageModal(false)}
+            className="absolute top-4 right-4"
+            variant="secondary"
+          >
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
