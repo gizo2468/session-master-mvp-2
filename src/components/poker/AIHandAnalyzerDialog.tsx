@@ -583,21 +583,52 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
         : [];
 
       // Extract actions
+      const preflopAction = analysis.actions.find(a => a.street === 'preflop');
       const flopAction = analysis.actions.find(a => a.street === 'flop');
       const turnAction = analysis.actions.find(a => a.street === 'turn');
       const riverAction = analysis.actions.find(a => a.street === 'river');
+
+      // Extract action sequences (remove confidence for storage)
+      const preflopActionSequence = preflopAction?.sequence?.map(a => ({
+        player: a.player,
+        action: a.action,
+        amount: a.amount
+      })) || [];
+
+      const flopActionSequence = flopAction?.sequence?.map(a => ({
+        player: a.player,
+        action: a.action,
+        amount: a.amount
+      })) || [];
+
+      const turnActionSequence = turnAction?.sequence?.map(a => ({
+        player: a.player,
+        action: a.action,
+        amount: a.amount
+      })) || [];
+
+      const riverActionSequence = riverAction?.sequence?.map(a => ({
+        player: a.player,
+        action: a.action,
+        amount: a.amount
+      })) || [];
 
       // Create hand data object
       const handData: Omit<HandData, 'id' | 'createdAt' | 'tableId'> = {
         cards: heroCardsString,
         position: analysis.hero?.position !== 'UNKNOWN' ? analysis.hero.position : '',
-        action: '', // Preflop action not tracked in current AI response
+        action: preflopAction?.description || '',
         flopCards,
         flopAction: flopAction?.description || '',
         turnCard: turnCardString,
         turnAction: turnAction?.description || '',
         riverCard: riverCardString,
         riverAction: riverAction?.description || '',
+        // Add action sequences
+        preflopActionSequence,
+        flopActionSequence,
+        turnActionSequence,
+        riverActionSequence,
         result: analysis.result?.outcome !== 'unknown' ? analysis.result.outcome : '',
         resultAmount: analysis.result?.amount || 0,
         showdownResult: calculatedResult || analysis.result?.summary || '',

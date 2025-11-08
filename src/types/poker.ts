@@ -15,6 +15,27 @@ export interface HandData {
   turnAction?: string;
   riverCard?: string;
   riverAction?: string;
+  // Action sequences from AI analysis
+  preflopActionSequence?: Array<{
+    player: string;
+    action: 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in';
+    amount?: number;
+  }>;
+  flopActionSequence?: Array<{
+    player: string;
+    action: 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in';
+    amount?: number;
+  }>;
+  turnActionSequence?: Array<{
+    player: string;
+    action: 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in';
+    amount?: number;
+  }>;
+  riverActionSequence?: Array<{
+    player: string;
+    action: 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in';
+    amount?: number;
+  }>;
   // Multi-villain support
   villains?: Array<{
     hand?: string;
