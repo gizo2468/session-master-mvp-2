@@ -48,7 +48,18 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
               {/* Cards */}
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-muted-foreground w-20">Cards:</span>
-                <CardDisplay cards={hand.cards} size="md" />
+                <div className="flex items-center gap-2">
+                  <CardDisplay cards={hand.cards} size="md" />
+                  {(hand.image || hand.handImage) && (
+                    <button
+                      onClick={() => setShowImageModal(true)}
+                      className="p-1.5 rounded hover:bg-accent transition-colors"
+                      title="View hand screenshot"
+                    >
+                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  )}
+                </div>
               </div>
               
               {/* Position */}
@@ -160,23 +171,6 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
             </Card>
           )}
           
-          {/* Hand Screenshot */}
-          {(hand.image || hand.handImage) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Hand Screenshot</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <button
-                  onClick={() => setShowImageModal(true)}
-                  className="flex items-center gap-2 p-3 rounded-lg border border-border hover:bg-accent transition-colors"
-                >
-                  <ImageIcon className="h-5 w-5 text-primary" />
-                  <span className="text-sm text-muted-foreground">Click to view screenshot</span>
-                </button>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         <DialogFooter className="flex gap-2">
