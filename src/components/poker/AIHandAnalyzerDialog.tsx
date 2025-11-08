@@ -599,9 +599,16 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
         riverCard: riverCardString,
         riverAction: riverAction?.description || '',
         result: analysis.result?.outcome !== 'unknown' ? analysis.result.outcome : '',
+        resultAmount: analysis.result?.amount || 0,
+        showdownResult: calculatedResult || analysis.result?.summary || '',
+        gameType: analysis.gameContext?.gameType !== 'UNKNOWN' ? analysis.gameContext.gameType as 'NLH' | 'PLO' : undefined,
+        smallBlind: analysis.gameContext?.blindLevel?.sb || undefined,
+        bigBlind: analysis.gameContext?.blindLevel?.bb || undefined,
+        currencyType: analysis.result?.unit === 'BB' ? 'chips' : 'currency',
         villains: villainsData,
         notes: '',
-        image: state.image || undefined
+        image: state.image || undefined,
+        handImage: state.image || undefined
       };
 
       // Add hand to table or session

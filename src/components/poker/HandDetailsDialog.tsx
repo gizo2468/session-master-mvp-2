@@ -55,6 +55,14 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                 <Badge variant="secondary">{hand.position}</Badge>
               </div>
               
+              {/* Game Type */}
+              {hand.gameType && (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-muted-foreground w-20">Game Type:</span>
+                  <Badge variant="secondary">{hand.gameType}</Badge>
+                </div>
+              )}
+              
               {/* Action */}
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-muted-foreground w-20">Action:</span>
@@ -94,12 +102,20 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                         {hand.bigBlind !== undefined ? Number(hand.bigBlind).toString() : '0'}
                         )
                       </span>
-                    )}
-                  </div>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            )}
+            
+            {/* Showdown Result */}
+            {hand.showdownResult && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-muted-foreground w-20">Hand Made:</span>
+                <span className="text-sm">{hand.showdownResult}</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
           {/* Additional Details - Placeholders */}
           <Card>
@@ -138,6 +154,45 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
               </CardHeader>
               <CardContent>
                 <p className="text-sm">{hand.notes}</p>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Hand Image */}
+          {(hand.image || hand.handImage) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Hand Screenshot</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <button
+                  onClick={() => {
+                    const imgSrc = hand.image || hand.handImage;
+                    if (imgSrc) {
+                      const newWindow = window.open();
+                      if (newWindow) {
+                        newWindow.document.write(`
+                          <html>
+                            <head><title>Hand Screenshot</title></head>
+                            <body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#000;">
+                              <img src="${imgSrc}" style="max-width:100%;max-height:100vh;object-fit:contain;" />
+                            </body>
+                          </html>
+                        `);
+                      }
+                    }
+                  }}
+                  className="cursor-pointer hover:opacity-90 transition-opacity w-full"
+                >
+                  <img 
+                    src={hand.image || hand.handImage} 
+                    alt="Hand screenshot" 
+                    className="w-full rounded-md border"
+                  />
+                </button>
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  Click image to view full size
+                </p>
               </CardContent>
             </Card>
           )}
