@@ -107,35 +107,19 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                 </div>
               )}
               
-              {/* Result */}
-              {hand.resultAmount !== undefined && (
+              {/* Blinds */}
+              {(hand.smallBlind !== undefined || hand.bigBlind !== undefined) && (hand.smallBlind || hand.bigBlind) !== 0 && (
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-muted-foreground w-20">Result:</span>
-                  <div className="flex items-center gap-2">
-                    {hand.currencyType === 'currency' ? (
-                      <CircleDollarSign className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
-                    ) : (
-                      <PokerChip className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
-                    )}
-                    <span className={`font-medium ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {hand.resultAmount >= 0 ? '+' : ''}
-                      {hand.currencyType === 'currency' ? '$' : ''}
-                      {Math.abs(hand.resultAmount).toFixed(2)}
-                    </span>
-                    {(hand.smallBlind !== undefined || hand.bigBlind !== undefined) && (hand.smallBlind || hand.bigBlind) !== 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        (
-                        {hand.currencyType === 'currency' ? '$' : ''}
-                        {hand.smallBlind !== undefined ? Number(hand.smallBlind).toString() : '0'}
-                        /
-                        {hand.currencyType === 'currency' ? '$' : ''}
-                        {hand.bigBlind !== undefined ? Number(hand.bigBlind).toString() : '0'}
-                        )
-                      </span>
-                  )}
+                  <span className="text-sm font-medium text-muted-foreground w-20">Blinds:</span>
+                  <span className="text-sm">
+                    {hand.currencyType === 'currency' ? '$' : ''}
+                    {hand.smallBlind !== undefined ? Number(hand.smallBlind).toString() : '0'}
+                    /
+                    {hand.currencyType === 'currency' ? '$' : ''}
+                    {hand.bigBlind !== undefined ? Number(hand.bigBlind).toString() : '0'}
+                  </span>
                 </div>
-              </div>
-            )}
+              )}
             
             {/* Showdown Result */}
             {hand.showdownResult && (
@@ -347,11 +331,43 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                       </Collapsible>
                     )}
                     
+                    {/* Result display when hand goes to showdown */}
+                    {lastStreetWithActions === 3 && hand.resultAmount !== undefined && (
+                      <div className="flex items-center gap-2 pl-2 pt-2">
+                        {hand.currencyType === 'currency' ? (
+                          <CircleDollarSign className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                        ) : (
+                          <PokerChip className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                        )}
+                        <span className={`font-medium ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {hand.resultAmount >= 0 ? '+' : ''}
+                          {hand.currencyType === 'currency' ? '$' : ''}
+                          {Math.abs(hand.resultAmount).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    
                     {/* Hand ended note */}
                     {lastStreetWithActions >= 0 && lastStreetWithActions < 3 && (
-                      <p className="text-sm text-muted-foreground italic pl-2 pt-2">
-                        Hand ended here – no further actions.
-                      </p>
+                      <div className="space-y-2 pl-2 pt-2">
+                        <p className="text-sm text-muted-foreground italic">
+                          Hand ended here – no further actions.
+                        </p>
+                        {hand.resultAmount !== undefined && (
+                          <div className="flex items-center gap-2">
+                            {hand.currencyType === 'currency' ? (
+                              <CircleDollarSign className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                            ) : (
+                              <PokerChip className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                            )}
+                            <span className={`font-medium ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {hand.resultAmount >= 0 ? '+' : ''}
+                              {hand.currencyType === 'currency' ? '$' : ''}
+                              {Math.abs(hand.resultAmount).toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 );
