@@ -147,12 +147,12 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
           </CardContent>
         </Card>
 
-          {/* Additional Details - Placeholders */}
+          {/* Hand History with Actions */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Hand History</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               {/* All community cards in one row */}
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-muted-foreground w-20">Board:</span>
@@ -173,16 +173,10 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                   )}
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Actions */}
-          {(hand.preflopActionSequence || hand.flopActionSequence || hand.turnActionSequence || hand.riverActionSequence) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
+              {/* Actions */}
+              {(hand.preflopActionSequence || hand.flopActionSequence || hand.turnActionSequence || hand.riverActionSequence) && (
+                <div className="space-y-2">
                 {/* Preflop */}
                 <Collapsible>
                   <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent rounded transition-colors">
@@ -326,9 +320,10 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                     )}
                   </CollapsibleContent>
                 </Collapsible>
-              </CardContent>
-            </Card>
-          )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Notes */}
           {hand.notes && (
