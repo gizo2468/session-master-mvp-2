@@ -24,9 +24,9 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
   sessionBuyIn,
   tables = []
 }) => {
-  const [showImageModal, setShowImageModal] = useState(false);
-  
   if (!hand) return null;
+  
+  const [showImageModal, setShowImageModal] = useState(false);
 
   // Find the table this hand belongs to
   const handTable = tables.find(table => table.id === hand.tableId);
