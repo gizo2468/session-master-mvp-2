@@ -582,41 +582,45 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
             }))
         : [];
 
+      // Create a map of player names to positions
+      const playerPositionMap: Record<string, string> = {
+        'Hero': analysis.hero?.position || ''
+      };
+
+      // Add villains to the map
+      if (analysis.villains && analysis.villains.length > 0) {
+        analysis.villains.forEach(villain => {
+          if (villain.name && villain.position !== 'UNKNOWN') {
+            playerPositionMap[villain.name] = villain.position;
+          }
+        });
+      }
+
+      // Helper function to enrich action with position
+      const enrichActionWithPosition = (action: any) => ({
+        player: action.player,
+        position: playerPositionMap[action.player] || undefined,
+        action: action.action,
+        amount: action.amount
+      });
+
       // Extract actions
       const preflopAction = analysis.actions.find(a => a.street === 'preflop');
       const flopAction = analysis.actions.find(a => a.street === 'flop');
       const turnAction = analysis.actions.find(a => a.street === 'turn');
       const riverAction = analysis.actions.find(a => a.street === 'river');
 
-      // Extract action sequences (remove confidence for storage)
-      const preflopActionSequence = preflopAction?.sequence?.map(a => ({
-        player: a.player,
-        action: a.action,
-        amount: a.amount
-      })) || [];
-
-      const flopActionSequence = flopAction?.sequence?.map(a => ({
-        player: a.player,
-        action: a.action,
-        amount: a.amount
-      })) || [];
-
-      const turnActionSequence = turnAction?.sequence?.map(a => ({
-        player: a.player,
-        action: a.action,
-        amount: a.amount
-      })) || [];
-
-      const riverActionSequence = riverAction?.sequence?.map(a => ({
-        player: a.player,
-        action: a.action,
-        amount: a.amount
-      })) || [];
+      // Extract action sequences (add position data)
+      const preflopActionSequence = preflopAction?.sequence?.map(enrichActionWithPosition) || [];
+      const flopActionSequence = flopAction?.sequence?.map(enrichActionWithPosition) || [];
+      const turnActionSequence = turnAction?.sequence?.map(enrichActionWithPosition) || [];
+      const riverActionSequence = riverAction?.sequence?.map(enrichActionWithPosition) || [];
 
       // Create hand data object
       const handData: Omit<HandData, 'id' | 'createdAt' | 'tableId'> = {
         cards: heroCardsString,
         position: analysis.hero?.position !== 'UNKNOWN' ? analysis.hero.position : '',
+        heroNickname: analysis.hero?.name || undefined,
         action: preflopAction?.description || '',
         flopCards,
         flopAction: flopAction?.description || '',

@@ -18,21 +18,25 @@ export interface HandData {
   // Action sequences from AI analysis
   preflopActionSequence?: Array<{
     player: string;
+    position?: string;
     action: 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in';
     amount?: number;
   }>;
   flopActionSequence?: Array<{
     player: string;
+    position?: string;
     action: 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in';
     amount?: number;
   }>;
   turnActionSequence?: Array<{
     player: string;
+    position?: string;
     action: 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in';
     amount?: number;
   }>;
   riverActionSequence?: Array<{
     player: string;
+    position?: string;
     action: 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in';
     amount?: number;
   }>;
@@ -60,6 +64,7 @@ export interface HandData {
   bigBlind?: number; // Added back for form and display components
   pokercraftLink?: string; // Added back for video link functionality
   gameType?: 'NLH' | 'PLO'; // Added back for game type selection
+  heroNickname?: string; // Hero's display name from AI analysis
   createdAt: Date;
 }
 

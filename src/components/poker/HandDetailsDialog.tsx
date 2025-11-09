@@ -32,6 +32,22 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
   const handTable = tables.find(table => table.id === hand.tableId);
   const buyIn = handTable?.buyIn || sessionBuyIn;
 
+  // Helper to format player name with position
+  const formatPlayerName = (
+    playerName: string, 
+    position: string | undefined, 
+    heroNickname: string | undefined
+  ): string => {
+    const positionPrefix = position ? `(${position}) ` : '';
+    
+    if (playerName === 'Hero') {
+      const nickname = heroNickname ? ` (${heroNickname})` : '';
+      return `${positionPrefix}Hero${nickname}`;
+    }
+    
+    return `${positionPrefix}${playerName}`;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -177,8 +193,17 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                     {hand.preflopActionSequence && hand.preflopActionSequence.length > 0 ? (
                       <ul className="space-y-1 text-sm">
                         {hand.preflopActionSequence.map((action, idx) => (
-                          <li key={idx} className="flex items-center gap-2">
-                            <span className="text-muted-foreground">{action.player}:</span>
+                          <li 
+                            key={idx} 
+                            className={`flex items-center gap-2 ${
+                              action.player === 'Hero' 
+                                ? 'bg-yellow-100 dark:bg-yellow-900/30 -mx-2 px-2 py-1 rounded' 
+                                : ''
+                            }`}
+                          >
+                            <span className={`text-muted-foreground ${action.player === 'Hero' ? 'font-medium text-yellow-700 dark:text-yellow-300' : ''}`}>
+                              {formatPlayerName(action.player, action.position, hand.heroNickname)}:
+                            </span>
                             <span className="font-medium capitalize">{action.action}</span>
                             {action.amount !== undefined && (
                               <span className="text-muted-foreground">
@@ -204,8 +229,17 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                     {hand.flopActionSequence && hand.flopActionSequence.length > 0 ? (
                       <ul className="space-y-1 text-sm">
                         {hand.flopActionSequence.map((action, idx) => (
-                          <li key={idx} className="flex items-center gap-2">
-                            <span className="text-muted-foreground">{action.player}:</span>
+                          <li 
+                            key={idx} 
+                            className={`flex items-center gap-2 ${
+                              action.player === 'Hero' 
+                                ? 'bg-yellow-100 dark:bg-yellow-900/30 -mx-2 px-2 py-1 rounded' 
+                                : ''
+                            }`}
+                          >
+                            <span className={`text-muted-foreground ${action.player === 'Hero' ? 'font-medium text-yellow-700 dark:text-yellow-300' : ''}`}>
+                              {formatPlayerName(action.player, action.position, hand.heroNickname)}:
+                            </span>
                             <span className="font-medium capitalize">{action.action}</span>
                             {action.amount !== undefined && (
                               <span className="text-muted-foreground">
@@ -231,8 +265,17 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                     {hand.turnActionSequence && hand.turnActionSequence.length > 0 ? (
                       <ul className="space-y-1 text-sm">
                         {hand.turnActionSequence.map((action, idx) => (
-                          <li key={idx} className="flex items-center gap-2">
-                            <span className="text-muted-foreground">{action.player}:</span>
+                          <li 
+                            key={idx} 
+                            className={`flex items-center gap-2 ${
+                              action.player === 'Hero' 
+                                ? 'bg-yellow-100 dark:bg-yellow-900/30 -mx-2 px-2 py-1 rounded' 
+                                : ''
+                            }`}
+                          >
+                            <span className={`text-muted-foreground ${action.player === 'Hero' ? 'font-medium text-yellow-700 dark:text-yellow-300' : ''}`}>
+                              {formatPlayerName(action.player, action.position, hand.heroNickname)}:
+                            </span>
                             <span className="font-medium capitalize">{action.action}</span>
                             {action.amount !== undefined && (
                               <span className="text-muted-foreground">
@@ -258,8 +301,17 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                     {hand.riverActionSequence && hand.riverActionSequence.length > 0 ? (
                       <ul className="space-y-1 text-sm">
                         {hand.riverActionSequence.map((action, idx) => (
-                          <li key={idx} className="flex items-center gap-2">
-                            <span className="text-muted-foreground">{action.player}:</span>
+                          <li 
+                            key={idx} 
+                            className={`flex items-center gap-2 ${
+                              action.player === 'Hero' 
+                                ? 'bg-yellow-100 dark:bg-yellow-900/30 -mx-2 px-2 py-1 rounded' 
+                                : ''
+                            }`}
+                          >
+                            <span className={`text-muted-foreground ${action.player === 'Hero' ? 'font-medium text-yellow-700 dark:text-yellow-300' : ''}`}>
+                              {formatPlayerName(action.player, action.position, hand.heroNickname)}:
+                            </span>
                             <span className="font-medium capitalize">{action.action}</span>
                             {action.amount !== undefined && (
                               <span className="text-muted-foreground">
