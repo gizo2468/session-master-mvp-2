@@ -175,153 +175,187 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
               </div>
 
               {/* Actions */}
-              {(hand.preflopActionSequence || hand.flopActionSequence || hand.turnActionSequence || hand.riverActionSequence) && (
-                <div className="space-y-2">
-                {/* Preflop */}
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent rounded transition-colors">
-                    <span className="text-sm font-medium">Preflop</span>
-                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-2 pl-4">
-                    {hand.preflopActionSequence && hand.preflopActionSequence.length > 0 ? (
-                      <ul className="space-y-1 text-sm">
-                        {hand.preflopActionSequence.map((action, idx) => (
-                          <li 
-                            key={idx} 
-                            className={`flex items-center gap-2 ${
-                              action.player === 'Hero' 
-                                ? 'bg-yellow-100 dark:bg-yellow-900/30 -mx-2 px-2 py-1 rounded' 
-                                : ''
-                            }`}
-                          >
-                            <span className={`text-muted-foreground ${action.player === 'Hero' ? 'font-medium text-yellow-700 dark:text-yellow-300' : ''}`}>
-                              {formatPlayerName(action.player, action.position, hand.heroNickname)}:
-                            </span>
-                            <span className="font-medium capitalize">{action.action}</span>
-                            {action.amount !== undefined && (
-                              <span className="text-muted-foreground">
-                                {hand.currencyType === 'currency' ? '$' : ''}{action.amount}
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic">No actions</p>
+              {(hand.preflopActionSequence || hand.flopActionSequence || hand.turnActionSequence || hand.riverActionSequence) && (() => {
+                // Determine the last street with actions
+                const streets = [
+                  { name: 'preflop', actions: hand.preflopActionSequence },
+                  { name: 'flop', actions: hand.flopActionSequence },
+                  { name: 'turn', actions: hand.turnActionSequence },
+                  { name: 'river', actions: hand.riverActionSequence }
+                ];
+                
+                let lastStreetWithActions = -1;
+                streets.forEach((street, idx) => {
+                  if (street.actions && street.actions.length > 0) {
+                    lastStreetWithActions = idx;
+                  }
+                });
+                
+                const shouldShowStreet = (idx: number) => idx <= lastStreetWithActions;
+                
+                return (
+                  <div className="space-y-2">
+                    {/* Preflop */}
+                    {shouldShowStreet(0) && (
+                      <Collapsible>
+                        <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent rounded transition-colors">
+                          <span className="text-sm font-medium">Preflop</span>
+                          <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pt-2 pl-4">
+                          {hand.preflopActionSequence && hand.preflopActionSequence.length > 0 ? (
+                            <ul className="space-y-1 text-sm">
+                              {hand.preflopActionSequence.map((action, idx) => (
+                                <li 
+                                  key={idx} 
+                                  className={`flex items-center gap-2 ${
+                                    action.player === 'Hero' 
+                                      ? 'bg-yellow-100 dark:bg-yellow-900/30 -mx-2 px-2 py-1 rounded' 
+                                      : ''
+                                  }`}
+                                >
+                                  <span className={`text-muted-foreground ${action.player === 'Hero' ? 'font-medium text-yellow-700 dark:text-yellow-300' : ''}`}>
+                                    {formatPlayerName(action.player, action.position, hand.heroNickname)}:
+                                  </span>
+                                  <span className="font-medium capitalize">{action.action}</span>
+                                  {action.amount !== undefined && (
+                                    <span className="text-muted-foreground">
+                                      {hand.currencyType === 'currency' ? '$' : ''}{action.amount}
+                                    </span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">No actions</p>
+                          )}
+                        </CollapsibleContent>
+                      </Collapsible>
                     )}
-                  </CollapsibleContent>
-                </Collapsible>
 
-                {/* Flop */}
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent rounded transition-colors">
-                    <span className="text-sm font-medium">Flop</span>
-                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-2 pl-4">
-                    {hand.flopActionSequence && hand.flopActionSequence.length > 0 ? (
-                      <ul className="space-y-1 text-sm">
-                        {hand.flopActionSequence.map((action, idx) => (
-                          <li 
-                            key={idx} 
-                            className={`flex items-center gap-2 ${
-                              action.player === 'Hero' 
-                                ? 'bg-yellow-100 dark:bg-yellow-900/30 -mx-2 px-2 py-1 rounded' 
-                                : ''
-                            }`}
-                          >
-                            <span className={`text-muted-foreground ${action.player === 'Hero' ? 'font-medium text-yellow-700 dark:text-yellow-300' : ''}`}>
-                              {formatPlayerName(action.player, action.position, hand.heroNickname)}:
-                            </span>
-                            <span className="font-medium capitalize">{action.action}</span>
-                            {action.amount !== undefined && (
-                              <span className="text-muted-foreground">
-                                {hand.currencyType === 'currency' ? '$' : ''}{action.amount}
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic">No actions</p>
+                    {/* Flop */}
+                    {shouldShowStreet(1) && (
+                      <Collapsible>
+                        <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent rounded transition-colors">
+                          <span className="text-sm font-medium">Flop</span>
+                          <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pt-2 pl-4">
+                          {hand.flopActionSequence && hand.flopActionSequence.length > 0 ? (
+                            <ul className="space-y-1 text-sm">
+                              {hand.flopActionSequence.map((action, idx) => (
+                                <li 
+                                  key={idx} 
+                                  className={`flex items-center gap-2 ${
+                                    action.player === 'Hero' 
+                                      ? 'bg-yellow-100 dark:bg-yellow-900/30 -mx-2 px-2 py-1 rounded' 
+                                      : ''
+                                  }`}
+                                >
+                                  <span className={`text-muted-foreground ${action.player === 'Hero' ? 'font-medium text-yellow-700 dark:text-yellow-300' : ''}`}>
+                                    {formatPlayerName(action.player, action.position, hand.heroNickname)}:
+                                  </span>
+                                  <span className="font-medium capitalize">{action.action}</span>
+                                  {action.amount !== undefined && (
+                                    <span className="text-muted-foreground">
+                                      {hand.currencyType === 'currency' ? '$' : ''}{action.amount}
+                                    </span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">No actions</p>
+                          )}
+                        </CollapsibleContent>
+                      </Collapsible>
                     )}
-                  </CollapsibleContent>
-                </Collapsible>
 
-                {/* Turn */}
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent rounded transition-colors">
-                    <span className="text-sm font-medium">Turn</span>
-                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-2 pl-4">
-                    {hand.turnActionSequence && hand.turnActionSequence.length > 0 ? (
-                      <ul className="space-y-1 text-sm">
-                        {hand.turnActionSequence.map((action, idx) => (
-                          <li 
-                            key={idx} 
-                            className={`flex items-center gap-2 ${
-                              action.player === 'Hero' 
-                                ? 'bg-yellow-100 dark:bg-yellow-900/30 -mx-2 px-2 py-1 rounded' 
-                                : ''
-                            }`}
-                          >
-                            <span className={`text-muted-foreground ${action.player === 'Hero' ? 'font-medium text-yellow-700 dark:text-yellow-300' : ''}`}>
-                              {formatPlayerName(action.player, action.position, hand.heroNickname)}:
-                            </span>
-                            <span className="font-medium capitalize">{action.action}</span>
-                            {action.amount !== undefined && (
-                              <span className="text-muted-foreground">
-                                {hand.currencyType === 'currency' ? '$' : ''}{action.amount}
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic">No actions</p>
+                    {/* Turn */}
+                    {shouldShowStreet(2) && (
+                      <Collapsible>
+                        <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent rounded transition-colors">
+                          <span className="text-sm font-medium">Turn</span>
+                          <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pt-2 pl-4">
+                          {hand.turnActionSequence && hand.turnActionSequence.length > 0 ? (
+                            <ul className="space-y-1 text-sm">
+                              {hand.turnActionSequence.map((action, idx) => (
+                                <li 
+                                  key={idx} 
+                                  className={`flex items-center gap-2 ${
+                                    action.player === 'Hero' 
+                                      ? 'bg-yellow-100 dark:bg-yellow-900/30 -mx-2 px-2 py-1 rounded' 
+                                      : ''
+                                  }`}
+                                >
+                                  <span className={`text-muted-foreground ${action.player === 'Hero' ? 'font-medium text-yellow-700 dark:text-yellow-300' : ''}`}>
+                                    {formatPlayerName(action.player, action.position, hand.heroNickname)}:
+                                  </span>
+                                  <span className="font-medium capitalize">{action.action}</span>
+                                  {action.amount !== undefined && (
+                                    <span className="text-muted-foreground">
+                                      {hand.currencyType === 'currency' ? '$' : ''}{action.amount}
+                                    </span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">No actions</p>
+                          )}
+                        </CollapsibleContent>
+                      </Collapsible>
                     )}
-                  </CollapsibleContent>
-                </Collapsible>
 
-                {/* River */}
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent rounded transition-colors">
-                    <span className="text-sm font-medium">River</span>
-                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-2 pl-4">
-                    {hand.riverActionSequence && hand.riverActionSequence.length > 0 ? (
-                      <ul className="space-y-1 text-sm">
-                        {hand.riverActionSequence.map((action, idx) => (
-                          <li 
-                            key={idx} 
-                            className={`flex items-center gap-2 ${
-                              action.player === 'Hero' 
-                                ? 'bg-yellow-100 dark:bg-yellow-900/30 -mx-2 px-2 py-1 rounded' 
-                                : ''
-                            }`}
-                          >
-                            <span className={`text-muted-foreground ${action.player === 'Hero' ? 'font-medium text-yellow-700 dark:text-yellow-300' : ''}`}>
-                              {formatPlayerName(action.player, action.position, hand.heroNickname)}:
-                            </span>
-                            <span className="font-medium capitalize">{action.action}</span>
-                            {action.amount !== undefined && (
-                              <span className="text-muted-foreground">
-                                {hand.currencyType === 'currency' ? '$' : ''}{action.amount}
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic">No actions</p>
+                    {/* River */}
+                    {shouldShowStreet(3) && (
+                      <Collapsible>
+                        <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent rounded transition-colors">
+                          <span className="text-sm font-medium">River</span>
+                          <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pt-2 pl-4">
+                          {hand.riverActionSequence && hand.riverActionSequence.length > 0 ? (
+                            <ul className="space-y-1 text-sm">
+                              {hand.riverActionSequence.map((action, idx) => (
+                                <li 
+                                  key={idx} 
+                                  className={`flex items-center gap-2 ${
+                                    action.player === 'Hero' 
+                                      ? 'bg-yellow-100 dark:bg-yellow-900/30 -mx-2 px-2 py-1 rounded' 
+                                      : ''
+                                  }`}
+                                >
+                                  <span className={`text-muted-foreground ${action.player === 'Hero' ? 'font-medium text-yellow-700 dark:text-yellow-300' : ''}`}>
+                                    {formatPlayerName(action.player, action.position, hand.heroNickname)}:
+                                  </span>
+                                  <span className="font-medium capitalize">{action.action}</span>
+                                  {action.amount !== undefined && (
+                                    <span className="text-muted-foreground">
+                                      {hand.currencyType === 'currency' ? '$' : ''}{action.amount}
+                                    </span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">No actions</p>
+                          )}
+                        </CollapsibleContent>
+                      </Collapsible>
                     )}
-                  </CollapsibleContent>
-                </Collapsible>
-                </div>
-              )}
+                    
+                    {/* Hand ended note */}
+                    {lastStreetWithActions >= 0 && lastStreetWithActions < 3 && (
+                      <p className="text-sm text-muted-foreground italic pl-2 pt-2">
+                        Hand ended here – no further actions.
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
 
