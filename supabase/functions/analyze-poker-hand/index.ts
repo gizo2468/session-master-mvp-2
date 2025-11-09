@@ -45,6 +45,50 @@ function mapDealerSeatToHeroPos(seat: string, playerCount = 6): string | null {
   }
 }
 
+// Calculate all player positions based on dealer button location and player count
+function calculatePlayerPositions(dealerSeat: string, playerCount: number): Record<string, string> {
+  const positions: Record<string, string> = {};
+  
+  // Define seat order clockwise (starting from hero at bottom center)
+  const seatOrder = [
+    'BOTTOM_CENTER',  // 0
+    'BOTTOM_RIGHT',   // 1
+    'RIGHT',          // 2
+    'TOP_RIGHT',      // 3
+    'TOP_CENTER',     // 4
+    'TOP_LEFT',       // 5
+    'LEFT',           // 6
+    'BOTTOM_LEFT'     // 7
+  ];
+  
+  // Define position names for different player counts
+  const positionNames: Record<number, string[]> = {
+    2: ['BTN', 'BB'],
+    3: ['BTN', 'SB', 'BB'],
+    4: ['BTN', 'SB', 'BB', 'UTG'],
+    5: ['BTN', 'SB', 'BB', 'UTG', 'CO'],
+    6: ['BTN', 'SB', 'BB', 'UTG', 'MP', 'CO'],
+    7: ['BTN', 'SB', 'BB', 'UTG', 'MP', 'HJ', 'CO'],
+    8: ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'MP', 'HJ', 'CO'],
+    9: ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO'],
+    10: ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'LJ', 'HJ', 'CO']
+  };
+  
+  const posNames = positionNames[playerCount] || positionNames[6];
+  
+  // Find dealer seat index
+  const dealerIdx = seatOrder.indexOf(dealerSeat);
+  if (dealerIdx === -1) return positions;
+  
+  // Assign positions clockwise from dealer
+  for (let i = 0; i < playerCount && i < seatOrder.length; i++) {
+    const seatIdx = (dealerIdx + i) % seatOrder.length;
+    positions[seatOrder[seatIdx]] = posNames[i];
+  }
+  
+  return positions;
+}
+
 // Server-side EXIF stripping by re-encoding
 async function stripEXIF(base64Image: string): Promise<string> {
   try {
@@ -277,7 +321,24 @@ CRITICAL CARD DETECTION INSTRUCTIONS:
      * river: {"rank": "6", "suit": "s"}
    - Critical: ALWAYS detect board cards if present, even if partially hidden
 
-3. VILLAIN CARDS:
+3. VILLAIN NAME/NICKNAME EXTRACTION (HIGH PRIORITY):
+   For EACH visible opponent (villain) at the table:
+   - Location: Look at avatars/player boxes at positions: top-left, top-center, top-right, left, right, bottom-left, bottom-right
+   - Extract Strategy:
+     * Locate the player avatar/box at each position
+     * Find the username/nickname text displayed above, on, or near the avatar
+     * Extract the EXACT visible username (examples: "xiaofei_888", "PokerStar99", "ChipLeader", etc.)
+     * If multiple players are visible, extract ALL their names
+     * Pay special attention to names used in action sequences (e.g., if you see "xiaofei_888: Fold" in actions, that player must be identified)
+   - Spatial Mapping:
+     * Record which screen position each villain occupies (TOP_LEFT, TOP_RIGHT, etc.)
+     * This position will be used to calculate their poker position (UTG, MP, CO, etc.)
+   - Name Matching:
+     * The names you extract here MUST match the player names you see in the action sequences
+     * If an action says "xiaofei_888: Fold", you must find and report a villain named "xiaofei_888"
+   - Format: Include in villains array with name, position (screen location), cards, stack
+
+4. VILLAIN CARDS:
    - All other visible hole cards belong to villains (not the hero)
    - Typically located at: top-left, top-center, top-right, bottom-left, bottom-right
    - May be face-down (hidden) or revealed at showdown
@@ -633,7 +694,15 @@ Return structured data with confidence scores for every field.`;
               items: {
                 type: "object",
                 properties: {
-                  position: { type: "string" },
+                  name: { 
+                    type: "string",
+                    nullable: true,
+                    description: "Player's exact username/nickname visible on screen. CRITICAL: Must match names used in action sequences."
+                  },
+                  position: { 
+                    type: "string",
+                    description: "Screen position: BOTTOM_CENTER, BOTTOM_RIGHT, RIGHT, TOP_RIGHT, TOP_CENTER, TOP_LEFT, LEFT, BOTTOM_LEFT"
+                  },
               cards: {
                 oneOf: [
                   { type: "string", enum: ["hidden"] },
@@ -657,7 +726,8 @@ Return structured data with confidence scores for every field.`;
                   stack: { type: "number" },
                   stackUnit: { type: "string" },
                   confidence: { type: "number" }
-                }
+                },
+                required: ["position", "cards", "stack", "stackUnit", "confidence"]
               }
             },
             board: {
@@ -1076,6 +1146,47 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
               analysisResult.metadata.warnings.push(
                 'Low confidence in hero card detection. Please verify the bottom-center player cards.'
               );
+            }
+          }
+
+          // Calculate all player positions if dealer button was detected
+          if (analysisResult.dealerButton?.position) {
+            const dealerSeat = normalizeDealerSeat(analysisResult.dealerButton.position);
+            const playerCount = analysisResult.metadata?.playerCount || 6;
+            
+            if (dealerSeat) {
+              // Calculate position map (screen location -> poker position)
+              const positionMap = calculatePlayerPositions(dealerSeat, playerCount);
+              
+              console.log('Position calculation:', {
+                dealerSeat,
+                playerCount,
+                positionMap
+              });
+              
+              // Update hero position
+              if (analysisResult.hero && positionMap['BOTTOM_CENTER']) {
+                analysisResult.hero.position = positionMap['BOTTOM_CENTER'];
+              }
+              
+              // Update villain positions based on their screen location
+              if (analysisResult.villains && Array.isArray(analysisResult.villains)) {
+                analysisResult.villains = analysisResult.villains.map(villain => {
+                  const screenPos = villain.position; // This is their screen position (TOP_LEFT, etc.)
+                  const pokerPos = positionMap[screenPos] || 'UNKNOWN';
+                  
+                  console.log('Villain position mapping:', {
+                    name: villain.name,
+                    screenPos,
+                    pokerPos
+                  });
+                  
+                  return {
+                    ...villain,
+                    position: pokerPos // Replace with calculated poker position (UTG, MP, CO, etc.)
+                  };
+                });
+              }
             }
           }
 

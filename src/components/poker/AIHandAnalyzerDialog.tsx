@@ -582,19 +582,42 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
             }))
         : [];
 
-      // Create a map of player names to positions
+      // Create a comprehensive map of player names to positions
       const playerPositionMap: Record<string, string> = {
         'Hero': analysis.hero?.position || ''
       };
 
-      // Add villains to the map
+      // Add villains to the map by name
       if (analysis.villains && analysis.villains.length > 0) {
         analysis.villains.forEach(villain => {
+          // Map by name if available
           if (villain.name && villain.position !== 'UNKNOWN') {
             playerPositionMap[villain.name] = villain.position;
           }
         });
       }
+
+      // Try to infer missing positions from action sequences with fuzzy matching
+      analysis.actions?.forEach(actionGroup => {
+        actionGroup.sequence?.forEach(action => {
+          if (!playerPositionMap[action.player] && action.player !== 'Hero') {
+            // Check if any villain name partially matches
+            const matchingVillain = analysis.villains?.find(v => 
+              v.name && (
+                v.name.toLowerCase() === action.player.toLowerCase() ||
+                action.player.toLowerCase().includes(v.name.toLowerCase()) ||
+                v.name.toLowerCase().includes(action.player.toLowerCase())
+              )
+            );
+            
+            if (matchingVillain && matchingVillain.position !== 'UNKNOWN') {
+              playerPositionMap[action.player] = matchingVillain.position;
+            }
+          }
+        });
+      });
+
+      console.log('Player position map:', playerPositionMap);
 
       // Helper function to enrich action with position
       const enrichActionWithPosition = (action: any) => ({
