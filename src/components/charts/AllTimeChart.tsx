@@ -60,4 +60,4 @@ const AllTimeChart: React.FC = () => {
   );
 };
 
-export default AllTimeChart;
+export default React.memo(AllTimeChart);

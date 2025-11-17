@@ -43,7 +43,7 @@ function MobileStackTitle({ text }: { text: string }) {
   );
 }
 
-export default function StatsQuickView({ showExtendedMetrics = false }: { showExtendedMetrics?: boolean }) {
+const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?: boolean }) => {
   const { sessions, isLoading: sessionsLoading } = useSessionContext();
   const [showCurrencyBreakdown, setShowCurrencyBreakdown] = useState(false);
   const { defaultCurrency } = useDefaultCurrency();
@@ -327,4 +327,7 @@ export default function StatsQuickView({ showExtendedMetrics = false }: { showEx
       </Dialog>
     </div>
   );
-}
+};
+
+// Memoize to prevent unnecessary re-renders
+export default React.memo(StatsQuickView);

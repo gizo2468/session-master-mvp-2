@@ -232,7 +232,7 @@ export type Database = {
           action: string
           created_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_values: Json | null
           old_values: Json | null
           record_id: string | null
@@ -244,7 +244,7 @@ export type Database = {
           action: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id?: string | null
@@ -256,7 +256,7 @@ export type Database = {
           action?: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id?: string | null
@@ -1043,10 +1043,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_email_available: {
-        Args: { p_email: string }
-        Returns: boolean
-      }
+      check_email_available: { Args: { p_email: string }; Returns: boolean }
       check_username_available: {
         Args: { p_username: string }
         Returns: boolean
@@ -1067,10 +1064,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      generate_connection_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_connection_code: { Args: never; Returns: string }
       get_active_session_tables: {
         Args: { p_session_id: string }
         Returns: {
@@ -1134,10 +1128,7 @@ export type Database = {
           profile_picture: string
         }[]
       }
-      get_current_user_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_id: { Args: never; Returns: string }
       get_safe_profile_data: {
         Args: { profile_user_id: string }
         Returns: {
@@ -1189,44 +1180,61 @@ export type Database = {
           win_ratio: number
         }[]
       }
-      get_user_role: {
-        Args: { user_id: string }
-        Returns: string
-      }
-      get_user_session_statistics: {
-        Args:
-          | {
+      get_user_role: { Args: { user_id: string }; Returns: string }
+      get_user_session_statistics:
+        | {
+            Args: {
               p_currency?: string
               p_end_date?: string
               p_start_date?: string
               p_timeframe?: string
               p_user_id: string
             }
-          | {
+            Returns: {
+              average_bb100: number
+              average_duration: number
+              average_net_result: number
+              final_tables: number
+              first_place_finish: number
+              hands_count: number
+              net_hourly_rate: number
+              net_result: number
+              number_of_sessions: number
+              profit_loss_ratio: number
+              scope: string
+              total_buy_ins: number
+              total_duration: number
+              total_payouts: number
+              total_tables: number
+              win_ratio: number
+            }[]
+          }
+        | {
+            Args: {
               p_end_date?: string
               p_start_date?: string
               p_timeframe?: string
               p_user_id: string
             }
-        Returns: {
-          average_bb100: number
-          average_duration: number
-          average_net_result: number
-          final_tables: number
-          first_place_finish: number
-          hands_count: number
-          net_hourly_rate: number
-          net_result: number
-          number_of_sessions: number
-          profit_loss_ratio: number
-          scope: string
-          total_buy_ins: number
-          total_duration: number
-          total_payouts: number
-          total_tables: number
-          win_ratio: number
-        }[]
-      }
+            Returns: {
+              average_bb100: number
+              average_duration: number
+              average_net_result: number
+              final_tables: number
+              first_place_finish: number
+              hands_count: number
+              net_hourly_rate: number
+              net_result: number
+              number_of_sessions: number
+              profit_loss_ratio: number
+              scope: string
+              total_buy_ins: number
+              total_duration: number
+              total_payouts: number
+              total_tables: number
+              win_ratio: number
+            }[]
+          }
       is_coach_for_student: {
         Args: { coach_user_id: string; student_user_id: string }
         Returns: boolean
