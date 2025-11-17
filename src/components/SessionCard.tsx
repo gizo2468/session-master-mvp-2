@@ -14,12 +14,11 @@ interface SessionCardProps {
   showActions?: boolean;
 }
 
-export default function SessionCard({ session, onClick, showActions = false }: SessionCardProps) {
+const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps) => {
   const { stats, loading } = useSessionStats(session.id, session);
   
-  // Calculate net profit from database-fetched stats to ensure consistency
-  // This ensures the profit shown on Home matches the session detail page
-  const netProfit = stats.totalPayout - stats.totalBuyIns;
+  // Memoize net profit calculation
+  const netProfit = React.useMemo(() => stats.totalPayout - stats.totalBuyIns, [stats.totalPayout, stats.totalBuyIns]);
   
   const calculateDuration = () => {
     try {
@@ -61,7 +60,8 @@ export default function SessionCard({ session, onClick, showActions = false }: S
     }
   };
 
-  const duration = calculateDuration();
+  // Memoize duration calculation
+  const duration = React.useMemo(() => calculateDuration(), [session.startTime, session.endTime]);
   
   // Determine display format based on tables played
   const getDisplayFormat = () => {
@@ -87,7 +87,8 @@ export default function SessionCard({ session, onClick, showActions = false }: S
     }
   };
 
-  const displayFormat = getDisplayFormat();
+  // Memoize display format
+  const displayFormat = React.useMemo(() => getDisplayFormat(), [session.tables]);
   
   // CRITICAL FIX: Format dates with proper timezone handling and error checking
   const getFormattedDate = () => {
@@ -116,8 +117,8 @@ export default function SessionCard({ session, onClick, showActions = false }: S
     }
   };
 
-  const formattedDate = getFormattedDate();
-  const formattedTime = getFormattedTime();
+  const formattedDate = React.useMemo(() => getFormattedDate(), [session.startTime]);
+  const formattedTime = React.useMemo(() => getFormattedTime(), [session.startTime]);
 
   const handleCardClick = (e: React.MouseEvent) => {
     try {
@@ -206,4 +207,11 @@ export default function SessionCard({ session, onClick, showActions = false }: S
       )}
     </div>
   );
-}
+};
+
+// Memoize component to prevent unnecessary re-renders
+export default React.memo(SessionCard, (prevProps, nextProps) => {
+  return prevProps.session.id === nextProps.session.id &&
+         prevProps.session.isActive === nextProps.session.isActive &&
+         prevProps.showActions === nextProps.showActions;
+});

@@ -50,23 +50,28 @@ export default function Index() {
   }, [user]);
   
 
-  const filteredSessions = sessions.filter(session => {
-    if (filters.gameType && filters.gameType !== 'All' && session.gameType !== filters.gameType) {
-      return false;
-    }
-    if (filters.format && filters.format !== 'All' && session.format !== filters.format) {
-      return false;
-    }
-    if (filters.location && !session.location.toLowerCase().includes(filters.location.toLowerCase())) {
-      return false;
-    }
-    return true;
-  });
+  // Memoize filtered sessions
+  const filteredSessions = React.useMemo(() => {
+    return sessions.filter(session => {
+      if (filters.gameType && filters.gameType !== 'All' && session.gameType !== filters.gameType) {
+        return false;
+      }
+      if (filters.format && filters.format !== 'All' && session.format !== filters.format) {
+        return false;
+      }
+      if (filters.location && !session.location.toLowerCase().includes(filters.location.toLowerCase())) {
+        return false;
+      }
+      return true;
+    });
+  }, [sessions, filters]);
 
   // Only show completed sessions (not active ones) in recent sessions
-  const recentSessions = filteredSessions
-    .filter(session => !session.isActive)
-    .slice(0, 10);
+  const recentSessions = React.useMemo(() => {
+    return filteredSessions
+      .filter(session => !session.isActive)
+      .slice(0, 10);
+  }, [filteredSessions]);
   
   // Check if we should show a second "View All" button
   const totalCompletedSessions = filteredSessions.filter(session => !session.isActive).length;

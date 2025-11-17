@@ -20,12 +20,8 @@ interface ActiveSessionsListProps {
   onResume: (sessionId: string) => void;
 }
 
-export default function ActiveSessionsList({ sessions, onResume }: ActiveSessionsListProps) {
-  const { toast } = useToast();
-  const { deleteSession } = useSessionContext();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [sessionToDelete, setSessionToDelete] = useState<PokerSession | null>(null);
-  
+// Memoize individual session items
+const ActiveSessionItem = React.memo(({ session, onResume, handleDeleteClick }: { session: PokerSession, onResume: (id: string) => Promise<void>, handleDeleteClick: (session: PokerSession) => void }) => {
   const formatDuration = (startTime: Date) => {
     try {
       const now = new Date();
@@ -43,15 +39,73 @@ export default function ActiveSessionsList({ sessions, onResume }: ActiveSession
     }
   };
 
-  // Filter and validate sessions
-  const validSessions = sessions.filter(session => {
-    return session && 
-           session.id && 
-           session.location && 
-           session.startTime && 
-           session.gameType && 
-           session.format;
-  });
+  return (
+    <div key={session.id} className="bg-green-50 border border-green-200 rounded-lg p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <h4 className="text-md font-bold text-green-800">{session.location || 'Unknown Location'}</h4>
+          </div>
+          <div className="flex items-center gap-3 text-sm text-gray-600 mb-2">
+            <div className="flex items-center gap-1">
+              <Icon name="MapPin" size={14} />
+              <span>{session.location || 'N/A'}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Icon name="Clock" size={14} />
+              <span>{formatDuration(session.startTime)}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-gray-600">{session.gameType || 'N/A'}</span>
+            <span className="text-gray-400">|</span>
+            <span className="text-gray-600">{session.format || 'N/A'}</span>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Button 
+            onClick={() => onResume(session.id)}
+            size="sm"
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Icon name="Play" size={16} className="mr-1" />
+            Resume
+          </Button>
+          <Button 
+            onClick={() => handleDeleteClick(session)}
+            variant="ghost"
+            size="sm"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <Icon name="Trash2" size={16} className="mr-1" />
+            Delete
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+ActiveSessionItem.displayName = 'ActiveSessionItem';
+
+function ActiveSessionsList({ sessions, onResume }: ActiveSessionsListProps) {
+  const { toast } = useToast();
+  const { deleteSession } = useSessionContext();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<PokerSession | null>(null);
+  
+  // Memoize filtered valid sessions
+  const validSessions = React.useMemo(() => {
+    return sessions.filter(session => {
+      return session && 
+             session.id && 
+             session.location && 
+             session.startTime && 
+             session.gameType && 
+             session.format;
+    });
+  }, [sessions]);
 
   if (validSessions.length === 0) {
     return null;
@@ -114,45 +168,12 @@ export default function ActiveSessionsList({ sessions, onResume }: ActiveSession
       </h3>
       
       {validSessions.map((session) => (
-        <div key={session.id} className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <h4 className="text-md font-bold text-green-800">{session.location || 'Unknown Location'}</h4>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-green-600">
-                <span>{session.gameType} • {session.format}</span>
-                <span>Duration: {formatDuration(session.startTime)}</span>
-              </div>
-              {session.tables && session.tables.length > 0 && (
-                <p className="text-xs text-green-600 mt-1">
-                  {session.tables.filter(t => t && t.isActive).length} active tables
-                </p>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                onClick={() => handleResume(session.id)}
-                className="bg-green-600 hover:bg-green-700 text-white"
-                size="sm"
-                disabled={!session.id}
-              >
-                <Icon name="Play" size={16} className="mr-1" />
-                Resume
-              </Button>
-              <Button
-                onClick={() => handleDeleteClick(session)}
-                variant="ghost"
-                size="sm"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2"
-                disabled={!session.id}
-              >
-                <Icon name="Trash2" size={16} />
-              </Button>
-            </div>
-          </div>
-        </div>
+        <ActiveSessionItem
+          key={session.id}
+          session={session}
+          onResume={handleResume}
+          handleDeleteClick={handleDeleteClick}
+        />
       ))}
       
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -177,3 +198,6 @@ export default function ActiveSessionsList({ sessions, onResume }: ActiveSession
     </div>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+export default React.memo(ActiveSessionsList);
