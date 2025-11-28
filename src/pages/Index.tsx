@@ -41,13 +41,8 @@ export default function Index() {
   
   const [showPastSessionForm, setShowPastSessionForm] = useState(false);
 
-  // Automatically refresh data whenever returning to home screen
-  useEffect(() => {
-    if (user) {
-      refreshSessionsFromDatabase();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  // Removed duplicate refresh - SessionContext already loads data on initialization
+  // The refresh will happen automatically via the context's useEffect
   
 
   // Memoize filtered sessions

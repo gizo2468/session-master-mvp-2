@@ -32,7 +32,7 @@ export const useSessionInitialization = () => {
   };
 
   // Load active session from database with timeout and error handling
-  const loadActiveSessionFromDatabase = async (userId: string | null, timeout: number = 30000) => {
+  const loadActiveSessionFromDatabase = async (userId: string | null, timeout: number = 15000) => {
     if (!userId) return null;
     
     try {
@@ -88,7 +88,7 @@ export const useSessionInitialization = () => {
       while (attemptCount < maxAttempts) {
         attemptCount++;
         const isRetry = attemptCount > 1;
-        const timeout = isRetry ? 60000 : 40000; // 40s first attempt, 60s retry
+        const timeout = isRetry ? 25000 : 15000; // 15s first attempt, 25s retry
         
         if (isRetry) {
           console.log('⏱️ First attempt timed out, retrying with extended timeout...');
@@ -97,7 +97,7 @@ export const useSessionInitialization = () => {
         try {
           console.log(`🔄 Loading sessions from database for user: ${userId} (attempt ${attemptCount}/${maxAttempts})`);
           
-          // Add timeout to prevent hanging on slow queries (increased to 40s, 60s on retry)
+          // Add timeout to prevent hanging on slow queries (15s first, 25s retry)
           const timeoutPromise = new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Sessions fetch timeout')), timeout)
           );
@@ -218,14 +218,14 @@ export const useSessionInitialization = () => {
       console.log('🔄 Refreshing sessions from database');
       setIsLoadingFromDatabase(true);
       
-      // Add timeout to prevent hanging (increased to 30s)
+      // Add timeout to prevent hanging (15s)
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Refresh timeout')), 30000)
+        setTimeout(() => reject(new Error('Refresh timeout')), 15000)
       );
       
       const [sessionsResult, activeSessionResult] = await Promise.allSettled([
         Promise.race([fetchUserSessions(), timeoutPromise]),
-        Promise.race([loadActiveSessionFromDatabase(user.id, 30000), timeoutPromise])
+        Promise.race([loadActiveSessionFromDatabase(user.id, 15000), timeoutPromise])
       ]);
       
       let databaseSessions: PokerSession[] = [];
@@ -276,12 +276,12 @@ export const useSessionInitialization = () => {
       try {
         console.log('🔄 User changed, reinitializing sessions. User:', user?.id);
         
-        // Set timeout for initialization (30 seconds max)
+        // Set timeout for initialization (20 seconds max)
         timeoutId = setTimeout(() => {
           console.error('❌ Session initialization timeout');
           setInitializationError('Initialization timeout. Please refresh the page.');
           setIsInitialized(true);
-        }, 30000);
+        }, 20000);
         
         if (currentUserId !== user?.id) {
           console.log('👤 User switch detected, clearing sessions');
