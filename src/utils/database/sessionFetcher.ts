@@ -3,32 +3,48 @@ import { supabase } from '@/integrations/supabase/client';
 import { PokerSession } from '@/types/poker';
 import { convertDatabaseSessionToPokerSession } from './sessionConverter';
 
+// Cache authenticated user to avoid redundant auth calls
+let cachedUserId: string | null = null;
+
+const getAuthenticatedUserId = async (): Promise<string | null> => {
+  if (cachedUserId) return cachedUserId;
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    cachedUserId = user.id;
+  }
+  return user?.id || null;
+};
+
+// Reset cache on auth state change
+supabase.auth.onAuthStateChange(() => {
+  cachedUserId = null;
+});
+
 export const fetchUserSessions = async (): Promise<PokerSession[]> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const userId = await getAuthenticatedUserId();
+    if (!userId) {
       console.error('❌ No authenticated user found');
       return [];
     }
 
-    console.log('🔄 Fetching user sessions for user:', user.id);
+    console.log('🔄 Fetching user sessions for user:', userId);
 
-    // Fast path: try single-embed query
+    // Fast path: use disambiguated FK for embedded query
     const { data: sessions, error: sessionError } = await supabase
       .from('sessions')
       .select(`
         *,
         session_tables(*),
-        session_hands_new(*)
+        session_hands_new!fk_session_hands_session_id(*)
       `)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('start_time', { ascending: false });
 
     if (sessionError) {
       console.warn('⚠️ Embedded query failed, using fallback stitching:', {
         message: sessionError.message,
-        details: sessionError.details,
-        hint: sessionError.hint,
         code: sessionError.code
       });
 
@@ -36,7 +52,7 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
       const { data: baseSessions, error: baseError } = await supabase
         .from('sessions')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('start_time', { ascending: false });
 
       if (baseError) {
@@ -45,15 +61,15 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
       }
 
       if (!baseSessions || baseSessions.length === 0) {
-        console.log('📋 No sessions found in database for user:', user.id);
+        console.log('📋 No sessions found in database for user:', userId);
         return [];
       }
 
       const ids = baseSessions.map((s: any) => s.id);
 
       const [{ data: tables, error: tablesError }, { data: hands, error: handsError }] = await Promise.all([
-        supabase.from('session_tables').select('*').in('session_id', ids).eq('user_id', user.id),
-        supabase.from('session_hands_new').select('*').in('session_id', ids).eq('user_id', user.id)
+        supabase.from('session_tables').select('*').in('session_id', ids).eq('user_id', userId),
+        supabase.from('session_hands_new').select('*').in('session_id', ids).eq('user_id', userId)
       ]);
 
       if (tablesError || handsError) {
@@ -89,7 +105,7 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
     }
 
     if (!sessions || sessions.length === 0) {
-      console.log('📋 No sessions found in database for user:', user.id);
+      console.log('📋 No sessions found in database for user:', userId);
       return [];
     }
 
@@ -112,31 +128,29 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
 
 export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const userId = await getAuthenticatedUserId();
+    if (!userId) {
       console.error('❌ No authenticated user found');
       return [];
     }
 
     console.log('🔄 Fetching active sessions');
 
-    // Fast path: try single-embed query
+    // Fast path: use disambiguated FK for embedded query
     const { data: sessions, error: sessionError } = await supabase
       .from('sessions')
       .select(`
         *,
         session_tables(*),
-        session_hands_new(*)
+        session_hands_new!fk_session_hands_session_id(*)
       `)
       .eq('is_active', true)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('start_time', { ascending: false });
 
     if (sessionError) {
       console.warn('⚠️ Embedded active sessions query failed, using fallback:', {
         message: sessionError.message,
-        details: sessionError.details,
-        hint: sessionError.hint,
         code: sessionError.code
       });
 
@@ -144,7 +158,7 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
       const { data: baseSessions, error: baseError } = await supabase
         .from('sessions')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('is_active', true)
         .order('start_time', { ascending: false });
 
@@ -161,8 +175,8 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
       const ids = baseSessions.map((s: any) => s.id);
 
       const [{ data: tables, error: tablesError }, { data: hands, error: handsError }] = await Promise.all([
-        supabase.from('session_tables').select('*').in('session_id', ids).eq('user_id', user.id),
-        supabase.from('session_hands_new').select('*').in('session_id', ids).eq('user_id', user.id)
+        supabase.from('session_tables').select('*').in('session_id', ids).eq('user_id', userId),
+        supabase.from('session_hands_new').select('*').in('session_id', ids).eq('user_id', userId)
       ]);
 
       if (tablesError || handsError) {
@@ -219,7 +233,43 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
   }
 };
 
+// Optimized: Direct query for single active session instead of fetching all
 export const fetchActiveSession = async (): Promise<PokerSession | null> => {
-  const activeSessions = await fetchActiveSessions();
-  return activeSessions.length > 0 ? activeSessions[0] : null;
+  try {
+    const userId = await getAuthenticatedUserId();
+    if (!userId) {
+      return null;
+    }
+
+    const { data: session, error } = await supabase
+      .from('sessions')
+      .select(`
+        *,
+        session_tables(*),
+        session_hands_new!fk_session_hands_session_id(*)
+      `)
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('⚠️ Direct active session query failed, using fallback');
+      const activeSessions = await fetchActiveSessions();
+      return activeSessions.length > 0 ? activeSessions[0] : null;
+    }
+
+    if (!session) {
+      return null;
+    }
+
+    return convertDatabaseSessionToPokerSession(
+      session,
+      session.session_tables || [],
+      session.session_hands_new || []
+    );
+  } catch (error) {
+    console.error('❌ Failed to fetch active session:', error);
+    return null;
+  }
 };

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -69,8 +69,8 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Track initialization to prevent duplicate loads
   const [initialized, setInitialized] = useState(false);
 
-  // Real-time subscriptions
-  const handleConnectionUpdate = async () => {
+  // Real-time subscriptions - memoized to prevent subscription churning
+  const handleConnectionUpdate = useCallback(async () => {
     console.log('🔄 Real-time connection update detected');
     if (isCoach) {
       await Promise.all([loadPendingRequests(), loadStudents()]);
@@ -78,7 +78,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (isStudent) {
       await loadConnectedCoaches();
     }
-  };
+  }, [isCoach, isStudent]);
 
   useRealtimeSubscriptions(handleConnectionUpdate, isCoach, isStudent);
 
