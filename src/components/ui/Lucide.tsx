@@ -18,6 +18,12 @@ const Icon = ({ name, ...props }: IconProps) => {
     "edit": "Pencil",
     "trash-2": "Trash2",
     "trash": "Trash2",
+    "UserCircle2": "CircleUser",
+    "HelpCircle": "CircleHelp",
+    "Loader2": "LoaderCircle",
+    "loader-2": "LoaderCircle",
+    "help-circle": "CircleHelp",
+    "user-circle-2": "CircleUser",
   };
   
   // Check if this is a special case name that needs mapping
