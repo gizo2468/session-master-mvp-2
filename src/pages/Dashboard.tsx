@@ -6,6 +6,7 @@ import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
 import PlayerAllTimeChart from '@/components/PlayerAllTimeChart';
 import StatsQuickView from '@/components/StatsQuickView';
 import MyCoachingNetwork from '@/components/coaching/MyCoachingNetwork';
+import MyNotesCard from '@/components/notes/MyNotesCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatisticsFilterModal, FilterOptions } from '@/components/StatisticsFilterModal';
 import { generateStatisticsPDF } from '@/utils/pdfExport';
@@ -124,6 +125,7 @@ const Dashboard: React.FC = () => {
               <div className="space-y-6">
                 <p className="text-lg font-medium text-poker-feltGreen">Player Dashboard</p>
                 <MyCoachingNetwork />
+                <MyNotesCard />
                 <StatsQuickView showExtendedMetrics />
                 <PlayerAllTimeChart />
                 <MyStatisticsSection 
