@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect, useMemo, useCallback } from 'react';
 import { PokerSession, SessionFilter, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
@@ -68,7 +68,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     refreshSessionsFromDatabase: async () => {},
   };
 
-  const sessionOperations = createSessionOperations(
+  const sessionOperations = useMemo(() => createSessionOperations(
     sessions,
     setSessions,
     activeSession,
@@ -76,10 +76,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     user,
     toast,
     refreshSessionsFromDatabase
-  );
+  ), [sessions, activeSession, user, toast, refreshSessionsFromDatabase]);
 
   // Clear all user data function
-  const clearAllUserData = () => {
+  const clearAllUserData = useCallback(() => {
     console.log('🧹 Clearing all user data');
     setSessions([]);
     setActiveSession(null);
@@ -90,12 +90,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     });
     setShowStorageWarning(false);
     clearUserData(currentUserId);
-  };
+  }, [currentUserId]);
 
-  const dismissStorageWarning = () => {
+  const dismissStorageWarning = useCallback(() => {
     setShowStorageWarning(false);
     sessionStorage.setItem('storageWarningDismissed', 'true');
-  };
+  }, []);
 
   // Save sessions when they change - with debouncing to prevent excessive saves
   useEffect(() => {
