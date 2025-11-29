@@ -14,6 +14,7 @@ interface PlayerNote {
   id: string;
   opponent_name: string;
   note_body: string;
+  opponent_image?: string;
   created_at: string;
   updated_at: string;
 }
