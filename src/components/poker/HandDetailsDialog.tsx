@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { HandData } from '@/types/poker';
 import CardDisplay from './CardDisplay';
-import { CircleDollarSign, Image as ImageIcon, ChevronDown } from 'lucide-react';
+import { CircleDollarSign, Image as ImageIcon, ChevronDown, Loader2 } from 'lucide-react';
 import { PokerChip } from '../Icons';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { fetchHandImage } from '@/utils/database/sessionFetcher';
 
 interface HandDetailsDialogProps {
   open: boolean;
@@ -24,9 +25,37 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
   sessionBuyIn,
   tables = []
 }) => {
-  if (!hand) return null;
-  
   const [showImageModal, setShowImageModal] = useState(false);
+  const [handImage, setHandImage] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+
+  // Lazy load hand image when dialog opens
+  useEffect(() => {
+    if (open && hand?.id && !hand.image && !hand.handImage && !handImage) {
+      // Only fetch if image isn't already in hand data
+      setImageLoading(true);
+      fetchHandImage(hand.id)
+        .then((image) => {
+          setHandImage(image);
+        })
+        .finally(() => {
+          setImageLoading(false);
+        });
+    } else if (hand?.image || hand?.handImage) {
+      // Use existing image from hand data
+      setHandImage(hand.image || hand.handImage || null);
+    }
+  }, [open, hand?.id, hand?.image, hand?.handImage]);
+
+  // Reset state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setHandImage(null);
+      setShowImageModal(false);
+    }
+  }, [open]);
+
+  if (!hand) return null;
 
   // Find the table this hand belongs to
   const handTable = tables.find(table => table.id === hand.tableId);
@@ -67,7 +96,11 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                 <span className="text-sm font-medium text-muted-foreground w-20">Cards:</span>
                 <div className="flex items-center gap-2">
                   <CardDisplay cards={hand.cards} size="md" />
-                  {(hand.image || hand.handImage) && (
+                  {imageLoading ? (
+                    <div className="p-1.5">
+                      <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
+                    </div>
+                  ) : handImage ? (
                     <button
                       onClick={() => setShowImageModal(true)}
                       className="p-1.5 rounded hover:bg-accent transition-colors"
@@ -75,7 +108,7 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                     >
                       <ImageIcon className="h-4 w-4 text-muted-foreground" />
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
               
@@ -404,7 +437,7 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
           <div className="relative w-full h-full flex items-center justify-center bg-black">
             <img 
-              src={hand?.image || hand?.handImage || ''} 
+              src={handImage || ''} 
               alt="Hand screenshot" 
               className="max-w-full max-h-[90vh] object-contain"
             />
