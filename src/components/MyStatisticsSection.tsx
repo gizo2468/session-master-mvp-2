@@ -53,8 +53,8 @@ interface MyStatisticsSectionProps {
 export const MyStatisticsSection: React.FC<MyStatisticsSectionProps> = ({ onFilterClick, onExportPDF, onRegisterExportFunction, filters }) => {
   return (
     <PremiumFeatureGate
-      featureName="My Finance"
-      description="Unlock detailed financial analytics and advanced statistics for your poker sessions."
+      featureName="My Finance & My Notes"
+      description="Unlock more powerful tools and insights to improve your game with Premium."
     >
       <MyStatisticsContent onFilterClick={onFilterClick} onExportPDF={onExportPDF} onRegisterExportFunction={onRegisterExportFunction} filters={filters} />
     </PremiumFeatureGate>
