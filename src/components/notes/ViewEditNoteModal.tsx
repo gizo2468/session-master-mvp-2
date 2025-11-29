@@ -7,11 +7,10 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2 } from 'lucide-react';
+import { Save, Loader2, Pencil, User } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface PlayerNote {
@@ -39,10 +38,12 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   const { toast } = useToast();
   const [noteBody, setNoteBody] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (note) {
       setNoteBody(note.note_body);
+      setIsEditing(false); // Always start in view mode
     }
   }, [note]);
 
@@ -94,48 +95,84 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
     }
   };
 
+  const handleCancelEdit = () => {
+    if (note) {
+      setNoteBody(note.note_body); // Revert changes
+    }
+    setIsEditing(false);
+  };
+
   if (!note) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+        <DialogHeader className="sr-only">
           <DialogTitle>{note.opponent_name}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          <div className="text-sm text-muted-foreground">
-            {format(new Date(note.created_at), 'MMMM d, yyyy')}
+        {/* Profile Header */}
+        <div className="flex flex-col items-center gap-3 pt-2">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <User className="h-8 w-8 text-muted-foreground" />
           </div>
+          <h2 className="text-lg font-semibold">{note.opponent_name}</h2>
+          <span className="text-sm text-muted-foreground">
+            {format(new Date(note.created_at), 'MMMM d, yyyy')}
+          </span>
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="note-body">Note</Label>
+        {/* Note Content */}
+        <div className="py-4">
+          {isEditing ? (
             <Textarea
-              id="note-body"
               value={noteBody}
               onChange={(e) => setNoteBody(e.target.value)}
               rows={6}
               disabled={isSaving}
+              className="resize-none"
             />
-          </div>
+          ) : (
+            <div className="bg-muted/30 rounded-lg p-4 min-h-[120px]">
+              <p className="text-sm whitespace-pre-wrap">{note.note_body}</p>
+            </div>
+          )}
         </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSaving}
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4 mr-2" />
-            )}
-            Save
-          </Button>
+        {/* Footer Buttons */}
+        <div className="flex justify-end gap-2">
+          {isEditing ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleCancelEdit}
+                disabled={isSaving}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={isSaving}>
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Save
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Close
+              </Button>
+              <Button onClick={() => setIsEditing(true)}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
