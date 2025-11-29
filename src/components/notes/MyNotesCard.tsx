@@ -9,12 +9,14 @@ import { useNavigate } from 'react-router-dom';
 import AddNoteModal from './AddNoteModal';
 import ViewEditNoteModal from './ViewEditNoteModal';
 import { format } from 'date-fns';
+import { getColorById } from './playerColors';
 
 interface PlayerNote {
   id: string;
   opponent_name: string;
   note_body: string;
   opponent_image?: string;
+  color?: string;
   created_at: string;
   updated_at: string;
 }
@@ -137,25 +139,39 @@ const MyNotesCard: React.FC = () => {
             </p>
           ) : (
             <div className="space-y-2">
-              {notes.map((note) => (
-                <div
-                  key={note.id}
-                  onClick={() => handleNoteClick(note)}
-                  className="p-3 bg-muted/50 rounded-lg border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-sm truncate">
-                      {note.opponent_name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(note.created_at), 'MMM d')}
-                    </span>
+              {notes.map((note) => {
+                const colorData = getColorById(note.color);
+                return (
+                  <div
+                    key={note.id}
+                    onClick={() => handleNoteClick(note)}
+                    className="p-3 bg-muted/50 rounded-lg border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {/* Color indicator */}
+                        <div 
+                          className="w-3 h-3 rounded-sm flex-shrink-0"
+                          style={{ 
+                            backgroundColor: colorData.hex,
+                            border: colorData.border ? `1px solid ${colorData.border}` : '1px solid transparent'
+                          }}
+                          title={colorData.label}
+                        />
+                        <span className="font-medium text-sm truncate">
+                          {note.opponent_name}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+                        {format(new Date(note.created_at), 'MMM d')}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {note.note_body}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {note.note_body}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

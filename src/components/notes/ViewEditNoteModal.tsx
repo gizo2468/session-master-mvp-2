@@ -7,18 +7,21 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2, Pencil, User, Camera, X } from 'lucide-react';
+import { Save, Loader2, Pencil, User, Camera, X, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
+import { PLAYER_COLORS, DEFAULT_COLOR, PlayerColorId, getColorById } from './playerColors';
 
 interface PlayerNote {
   id: string;
   opponent_name: string;
   note_body: string;
   opponent_image?: string;
+  color?: string;
   created_at: string;
   updated_at: string;
 }
@@ -44,10 +47,12 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
+  const [selectedColor, setSelectedColor] = useState<PlayerColorId>(DEFAULT_COLOR);
 
   useEffect(() => {
     if (note) {
       setNoteBody(note.note_body);
+      setSelectedColor((note.color as PlayerColorId) || DEFAULT_COLOR);
       setIsEditing(false);
       setImageFile(null);
       setImagePreview(null);
@@ -119,7 +124,8 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
         .from('player_notes')
         .update({ 
           note_body: noteBody.trim(),
-          opponent_image: imageUrl 
+          opponent_image: imageUrl,
+          color: selectedColor,
         })
         .eq('id', note.id)
         .eq('user_id', user.id);
@@ -148,6 +154,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   const handleCancelEdit = () => {
     if (note) {
       setNoteBody(note.note_body);
+      setSelectedColor((note.color as PlayerColorId) || DEFAULT_COLOR);
       setImageFile(null);
       setImagePreview(null);
     }
@@ -156,6 +163,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
 
   // Get the current display image (preview takes priority over saved)
   const displayImage = imagePreview || note?.opponent_image;
+  const colorData = getColorById(note?.color);
 
   if (!note) return null;
 
@@ -216,11 +224,59 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
               onChange={handleImageChange}
               className="hidden"
             />
-            <h2 className="text-lg font-semibold">{note.opponent_name}</h2>
+            
+            {/* Opponent name with color indicator (View Mode only) */}
+            <div className="flex items-center gap-2">
+              {!isEditing && (
+                <div 
+                  className="w-4 h-4 rounded-sm flex-shrink-0"
+                  style={{ 
+                    backgroundColor: colorData.hex,
+                    border: colorData.border ? `1px solid ${colorData.border}` : '1px solid transparent'
+                  }}
+                  title={colorData.label}
+                />
+              )}
+              <h2 className="text-lg font-semibold">{note.opponent_name}</h2>
+            </div>
             <span className="text-sm text-muted-foreground">
               {format(new Date(note.created_at), 'MMMM d, yyyy')}
             </span>
           </div>
+
+          {/* Color Selector (Edit Mode only) */}
+          {isEditing && (
+            <div className="space-y-2">
+              <Label>Player Color Tag</Label>
+              <div className="flex flex-wrap gap-2">
+                {PLAYER_COLORS.map((color) => (
+                  <button
+                    key={color.id}
+                    type="button"
+                    onClick={() => setSelectedColor(color.id)}
+                    disabled={isSaving}
+                    className={`w-8 h-8 rounded-md flex items-center justify-center transition-all duration-150 ${
+                      selectedColor === color.id 
+                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
+                        : 'hover:scale-105'
+                    }`}
+                    style={{ 
+                      backgroundColor: color.hex,
+                      border: color.border ? `2px solid ${color.border}` : '2px solid transparent'
+                    }}
+                    title={color.label}
+                  >
+                    {selectedColor === color.id && (
+                      <Check 
+                        className="h-4 w-4" 
+                        style={{ color: ['white', 'yellow', 'neongreen', 'lightpink', 'lightblue'].includes(color.id) ? '#000' : '#fff' }}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Note Content */}
           <div className="py-4">
