@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Save, Loader2, Pencil, User, Camera, X, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
-import { PLAYER_COLORS, DEFAULT_COLOR, PlayerColorId, getColorById } from './playerColors';
+import { SELECTABLE_COLORS, DEFAULT_COLOR, PlayerColorId, getColorById } from './playerColors';
 
 interface PlayerNote {
   id: string;
@@ -264,8 +264,8 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
             {isEditing && (
               <div className="space-y-2 mt-4">
                 <Label>Player Color Tag</Label>
-                <div className="flex flex-wrap gap-2">
-                  {PLAYER_COLORS.map((color) => (
+                <div className="grid grid-cols-5 gap-2">
+                  {SELECTABLE_COLORS.map((color) => (
                     <button
                       key={color.id}
                       type="button"
@@ -285,7 +285,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                       {selectedColor === color.id && (
                         <Check 
                           className="h-4 w-4" 
-                          style={{ color: ['white', 'yellow', 'neongreen', 'lightpink', 'lightblue'].includes(color.id) ? '#000' : '#fff' }}
+                          style={{ color: ['yellow', 'neongreen', 'lightpink', 'lightblue'].includes(color.id) ? '#000' : '#fff' }}
                         />
                       )}
                     </button>
