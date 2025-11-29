@@ -944,7 +944,7 @@ const MyCoachingNetwork: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Icon name="Network" className="h-5 w-5" />
-          <span>My Coaching Network</span>
+          <span>My Player Network</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
