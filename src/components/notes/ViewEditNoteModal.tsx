@@ -175,7 +175,18 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
             <DialogTitle>{note.opponent_name}</DialogTitle>
           </DialogHeader>
 
-          <form autoComplete="off" data-form-type="other" onSubmit={(e) => e.preventDefault()}>
+          {/* Hidden decoy fields to trick Safari autofill detection */}
+          <div style={{ position: 'absolute', top: -9999, left: -9999, height: 0, width: 0, overflow: 'hidden' }} aria-hidden="true">
+            <input type="text" name="fakeusernameremembered" tabIndex={-1} />
+            <input type="password" name="fakepasswordremembered" tabIndex={-1} />
+          </div>
+
+          <form 
+            autoComplete="off" 
+            data-form-type="other" 
+            role="presentation"
+            onSubmit={(e) => e.preventDefault()}
+          >
             {/* Profile Header */}
             <div className="flex flex-col items-center gap-3 pt-2">
               {isEditing ? (
@@ -292,7 +303,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                   rows={6}
                   disabled={isSaving}
                   className="resize-none"
-                  autoComplete="off"
+                  autoComplete="new-password"
                   data-form-type="other"
                   data-1p-ignore="true"
                   data-lpignore="true"
