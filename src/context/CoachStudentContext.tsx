@@ -69,7 +69,118 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Track initialization to prevent duplicate loads
   const [initialized, setInitialized] = useState(false);
 
-  // Real-time subscriptions - memoized to prevent subscription churning
+  // Define load functions as callbacks first (before they're used)
+  const loadPendingRequests = useCallback(async () => {
+    if (!user?.id) return;
+
+    setRequestsLoading(true);
+    try {
+      const { data: requests, error } = await supabase
+        .from('coach_student_connections')
+        .select('*')
+        .or(`coach_id.eq.${user.id},student_id.eq.${user.id}`)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading pending requests:', error);
+        setPendingRequests([]);
+        return;
+      }
+
+      const connectionRequests = (requests || []).map(req => ({
+        id: req.id,
+        coachId: req.coach_id,
+        studentId: req.student_id,
+        status: req.status as 'pending' | 'approved' | 'rejected',
+        createdAt: new Date(req.created_at),
+        updatedAt: new Date(req.updated_at),
+      }));
+
+      setPendingRequests(connectionRequests);
+    } catch (error) {
+      console.error('Error in loadPendingRequests:', error);
+      setPendingRequests([]);
+    } finally {
+      setRequestsLoading(false);
+    }
+  }, [user?.id]);
+
+  const loadStudents = useCallback(async () => {
+    if (!user?.id) return;
+
+    setStudentsLoading(true);
+    try {
+      setStudents([]);
+    } catch (error) {
+      console.error('Error in loadStudents:', error);
+    } finally {
+      setStudentsLoading(false);
+    }
+  }, [user?.id]);
+
+  const loadConnectedCoaches = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data: connections, error } = await supabase
+        .from('coach_student_connections')
+        .select('coach_id, status')
+        .eq('student_id', user.id)
+        .eq('status', 'approved');
+
+      if (error) {
+        console.error('Error loading connected coaches:', error);
+        return;
+      }
+
+      if (!connections || connections.length === 0) {
+        setConnectedCoaches([]);
+        return;
+      }
+
+      const coachIds = connections.map(conn => conn.coach_id);
+      const [profilesResult, privateResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, username, online_nickname')
+          .in('id', coachIds),
+        supabase
+          .from('user_private_data')
+          .select('id, full_name')
+          .in('id', coachIds)
+      ]);
+
+      if (profilesResult.error) {
+        console.error('Error loading coach profiles:', profilesResult.error);
+        return;
+      }
+
+      const profileMap = new Map(profilesResult.data?.map(p => [p.id, p]) || []);
+      const privateMap = new Map(privateResult.data?.map(p => [p.id, p]) || []);
+
+      const coaches: CoachProfile[] = coachIds.map(id => {
+        const profile = profileMap.get(id);
+        const privateInfo = privateMap.get(id);
+        
+        return {
+          id,
+          userId: id,
+          displayName: privateInfo?.full_name || profile?.username || 'Unknown Coach',
+          bio: profile?.online_nickname || '',
+          students: [],
+          comments: [],
+          createdAt: new Date(),
+        };
+      });
+
+      setConnectedCoaches(coaches);
+    } catch (error) {
+      console.error('Error in loadConnectedCoaches:', error);
+    }
+  }, [user?.id]);
+
+  // Real-time subscriptions - memoized callback using the load functions
   const handleConnectionUpdate = useCallback(async () => {
     console.log('🔄 Real-time connection update detected');
     if (isCoach) {
@@ -78,7 +189,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (isStudent) {
       await loadConnectedCoaches();
     }
-  }, [isCoach, isStudent]);
+  }, [isCoach, isStudent, loadPendingRequests, loadStudents, loadConnectedCoaches]);
 
   useRealtimeSubscriptions(handleConnectionUpdate, isCoach, isStudent);
 
@@ -173,122 +284,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
     } finally {
       setProfileLoading(false);
-    }
-  };
-
-  const loadPendingRequests = async () => {
-    if (!user?.id) return;
-
-    setRequestsLoading(true);
-    try {
-      // Load pending requests where the current user is involved
-      const { data: requests, error } = await supabase
-        .from('coach_student_connections')
-        .select('*')
-        .or(`coach_id.eq.${user.id},student_id.eq.${user.id}`)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error loading pending requests:', error);
-        setPendingRequests([]);
-        return;
-      }
-
-      // Convert to ConnectionRequest format
-      const connectionRequests = (requests || []).map(req => ({
-        id: req.id,
-        coachId: req.coach_id,
-        studentId: req.student_id,
-        status: req.status as 'pending' | 'approved' | 'rejected',
-        createdAt: new Date(req.created_at),
-        updatedAt: new Date(req.updated_at),
-      }));
-
-      setPendingRequests(connectionRequests);
-    } catch (error) {
-      console.error('Error in loadPendingRequests:', error);
-      setPendingRequests([]);
-    } finally {
-      setRequestsLoading(false);
-    }
-  };
-
-  const loadStudents = async () => {
-    if (!user?.id) return;
-
-    setStudentsLoading(true);
-    try {
-      // Student connection system not implemented yet
-      setStudents([]);
-    } catch (error) {
-      console.error('Error in loadStudents:', error);
-    } finally {
-      setStudentsLoading(false);
-    }
-  };
-
-  const loadConnectedCoaches = async () => {
-    if (!user?.id) return;
-
-    try {
-      // Load coaches connected to this student
-      const { data: connections, error } = await supabase
-        .from('coach_student_connections')
-        .select('coach_id, status')
-        .eq('student_id', user.id)
-        .eq('status', 'approved');
-
-      if (error) {
-        console.error('Error loading connected coaches:', error);
-        return;
-      }
-
-      if (!connections || connections.length === 0) {
-        setConnectedCoaches([]);
-        return;
-      }
-
-      // Get coach profiles
-      const coachIds = connections.map(conn => conn.coach_id);
-      // Get profiles and private data
-      const [profilesResult, privateResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('id, username, online_nickname')
-          .in('id', coachIds),
-        supabase
-          .from('user_private_data')
-          .select('id, full_name')
-          .in('id', coachIds)
-      ]);
-
-      if (profilesResult.error) {
-        console.error('Error loading coach profiles:', profilesResult.error);
-        return;
-      }
-
-      const profileMap = new Map(profilesResult.data?.map(p => [p.id, p]) || []);
-      const privateMap = new Map(privateResult.data?.map(p => [p.id, p]) || []);
-
-      const coaches: CoachProfile[] = coachIds.map(id => {
-        const profile = profileMap.get(id);
-        const privateInfo = privateMap.get(id);
-        
-        return {
-          id,
-          userId: id,
-          displayName: privateInfo?.full_name || profile?.username || 'Unknown Coach',
-          bio: profile?.online_nickname || '',
-          students: [],
-          comments: [],
-          createdAt: new Date(),
-        };
-      });
-
-      setConnectedCoaches(coaches);
-    } catch (error) {
-      console.error('Error in loadConnectedCoaches:', error);
     }
   };
 
