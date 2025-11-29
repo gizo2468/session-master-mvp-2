@@ -98,7 +98,7 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="opponent-name">Opponent Name</Label>
+            <Label htmlFor="opponent-name">Opponent Name / Online Nickname</Label>
             <Input
               id="opponent-name"
               placeholder="Enter opponent name..."
