@@ -3,23 +3,35 @@ import { supabase } from '@/integrations/supabase/client';
 import { PokerSession } from '@/types/poker';
 import { convertDatabaseSessionToPokerSession } from './sessionConverter';
 
-// Cache authenticated user to avoid redundant auth calls
+// Cache authenticated user to avoid redundant auth calls within same request cycle
 let cachedUserId: string | null = null;
+let cacheTimestamp: number = 0;
+const CACHE_TTL = 30000; // 30 seconds cache
 
 const getAuthenticatedUserId = async (): Promise<string | null> => {
-  if (cachedUserId) return cachedUserId;
+  const now = Date.now();
+  
+  // Use cached value if still valid
+  if (cachedUserId && (now - cacheTimestamp) < CACHE_TTL) {
+    return cachedUserId;
+  }
   
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
     cachedUserId = user.id;
+    cacheTimestamp = now;
+  } else {
+    cachedUserId = null;
+    cacheTimestamp = 0;
   }
   return user?.id || null;
 };
 
-// Reset cache on auth state change
-supabase.auth.onAuthStateChange(() => {
+// Export function to clear cache (call on logout)
+export const clearAuthCache = () => {
   cachedUserId = null;
-});
+  cacheTimestamp = 0;
+};
 
 export const fetchUserSessions = async (): Promise<PokerSession[]> => {
   try {

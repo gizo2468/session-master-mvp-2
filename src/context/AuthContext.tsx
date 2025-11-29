@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserRole, CoachTier } from '@/types/poker';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { clearAuthCache } from '@/utils/database/sessionFetcher';
 
 export interface User {
   id: string;
@@ -198,6 +199,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setSession(null);
     setSessionId(null);
+    
+    // Clear auth cache from session fetcher
+    clearAuthCache();
     
     // Clear any user-specific localStorage data
     const keys = Object.keys(localStorage);
