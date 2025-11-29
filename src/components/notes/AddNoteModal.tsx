@@ -148,7 +148,18 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
           <DialogTitle>Add Note</DialogTitle>
         </DialogHeader>
 
-        <form autoComplete="off" data-form-type="other" onSubmit={(e) => e.preventDefault()}>
+        {/* Hidden decoy fields to trick Safari autofill detection - must be outside visible form */}
+        <div style={{ position: 'absolute', top: -9999, left: -9999, height: 0, width: 0, overflow: 'hidden' }} aria-hidden="true">
+          <input type="text" name="fakeusernameremembered" tabIndex={-1} />
+          <input type="password" name="fakepasswordremembered" tabIndex={-1} />
+        </div>
+
+        <form 
+          autoComplete="off" 
+          data-form-type="other" 
+          role="presentation"
+          onSubmit={(e) => e.preventDefault()}
+        >
           <div className="space-y-4 py-2">
             {/* Profile Image Upload */}
             <div className="flex flex-col items-center gap-2">
@@ -190,11 +201,12 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
             <div className="space-y-2">
               <Label>Opponent Name / Online Nickname</Label>
               <Input
-                placeholder="Enter opponent name..."
+                placeholder="Enter player nickname..."
                 value={opponentName}
                 onChange={(e) => setOpponentName(e.target.value)}
                 disabled={isSaving}
-                autoComplete="off"
+                type="text"
+                autoComplete="new-password"
                 data-form-type="other"
                 data-1p-ignore="true"
                 data-lpignore="true"
@@ -236,12 +248,12 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
             <div className="space-y-2">
               <Label>Note</Label>
               <Textarea
-                placeholder="Write your note about this opponent..."
+                placeholder="Write your thoughts about this player..."
                 value={noteBody}
                 onChange={(e) => setNoteBody(e.target.value)}
                 rows={4}
                 disabled={isSaving}
-                autoComplete="off"
+                autoComplete="new-password"
                 data-form-type="other"
                 data-1p-ignore="true"
                 data-lpignore="true"
