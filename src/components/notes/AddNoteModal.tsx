@@ -12,7 +12,8 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2 } from 'lucide-react';
+import { Save, Loader2, Camera } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
 interface AddNoteModalProps {
   open: boolean;
@@ -30,6 +31,40 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
   const [opponentName, setOpponentName] = useState('');
   const [noteBody, setNoteBody] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    if (!user?.id) return null;
+    
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${uuidv4()}.${fileExt}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('opponent-avatars')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      console.error('Error uploading image:', uploadError);
+      throw uploadError;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('opponent-avatars')
+      .getPublicUrl(fileName);
+
+    return urlData.publicUrl;
+  };
 
   const handleSave = async () => {
     if (!user?.id) {
@@ -52,10 +87,18 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
 
     try {
       setIsSaving(true);
+      
+      // Upload image if selected
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+      }
+
       const { error } = await supabase.from('player_notes').insert({
         user_id: user.id,
         opponent_name: opponentName.trim(),
         note_body: noteBody.trim(),
+        opponent_image: imageUrl,
       });
 
       if (error) throw error;
@@ -68,6 +111,8 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
       // Reset form and close
       setOpponentName('');
       setNoteBody('');
+      setImageFile(null);
+      setImagePreview(null);
       onNoteSaved();
     } catch (error) {
       console.error('Error saving note:', error);
@@ -85,6 +130,8 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
     if (!isOpen) {
       setOpponentName('');
       setNoteBody('');
+      setImageFile(null);
+      setImagePreview(null);
     }
     onOpenChange(isOpen);
   };
@@ -97,6 +144,39 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {/* Profile Image Upload */}
+          <div className="flex flex-col items-center gap-2">
+            <div 
+              className="relative w-20 h-20 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all duration-200 cursor-pointer group bg-muted/20 hover:bg-muted/40 flex items-center justify-center overflow-hidden"
+              onClick={() => document.getElementById('avatar-upload')?.click()}
+            >
+              {imagePreview ? (
+                <>
+                  <img 
+                    src={imagePreview} 
+                    alt="Opponent avatar" 
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                  <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                    <Camera className="h-6 w-6 text-white" />
+                  </div>
+                </>
+              ) : (
+                <Camera className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {imagePreview ? "Change Image" : "Add Profile Image"}
+            </span>
+            <input
+              id="avatar-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="opponent-name">Opponent Name / Online Nickname</Label>
             <Input
