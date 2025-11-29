@@ -143,118 +143,131 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" data-form-type="other">
         <DialogHeader>
           <DialogTitle>Add Note</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          {/* Profile Image Upload */}
-          <div className="flex flex-col items-center gap-2">
-            <div 
-              className="relative w-20 h-20 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all duration-200 cursor-pointer group bg-muted/20 hover:bg-muted/40 flex items-center justify-center overflow-hidden"
-              onClick={() => document.getElementById('avatar-upload')?.click()}
-            >
-              {imagePreview ? (
-                <>
-                  <img 
-                    src={imagePreview} 
-                    alt="Opponent avatar" 
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                  <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                    <Camera className="h-6 w-6 text-white" />
-                  </div>
-                </>
-              ) : (
-                <Camera className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
-              )}
-            </div>
-            <span className="text-xs text-muted-foreground">
-              {imagePreview ? "Change Image" : "Add Profile Image"}
-            </span>
-            <input
-              id="avatar-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="opponent-name">Opponent Name / Online Nickname</Label>
-            <Input
-              id="opponent-name"
-              placeholder="Enter opponent name..."
-              value={opponentName}
-              onChange={(e) => setOpponentName(e.target.value)}
-              disabled={isSaving}
-            />
-          </div>
-
-          {/* Player Color Tag */}
-          <div className="space-y-2">
-            <Label>Player Color Tag</Label>
-            <div className="flex flex-wrap gap-2">
-              {PLAYER_COLORS.map((color) => (
-                <button
-                  key={color.id}
-                  type="button"
-                  onClick={() => setSelectedColor(color.id)}
-                  disabled={isSaving}
-                  className={`w-8 h-8 rounded-md flex items-center justify-center transition-all duration-150 ${
-                    selectedColor === color.id 
-                      ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
-                      : 'hover:scale-105'
-                  }`}
-                  style={{ 
-                    backgroundColor: color.hex,
-                    border: color.border ? `2px solid ${color.border}` : '2px solid transparent'
-                  }}
-                  title={color.label}
-                >
-                  {selectedColor === color.id && (
-                    <Check 
-                      className="h-4 w-4" 
-                      style={{ color: ['white', 'yellow', 'neongreen', 'lightpink', 'lightblue'].includes(color.id) ? '#000' : '#fff' }}
+        <form autoComplete="off" data-form-type="other" onSubmit={(e) => e.preventDefault()}>
+          <div className="space-y-4 py-2">
+            {/* Profile Image Upload */}
+            <div className="flex flex-col items-center gap-2">
+              <div 
+                className="relative w-20 h-20 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all duration-200 cursor-pointer group bg-muted/20 hover:bg-muted/40 flex items-center justify-center overflow-hidden"
+                onClick={() => document.getElementById('avatar-upload-add')?.click()}
+              >
+                {imagePreview ? (
+                  <>
+                    <img 
+                      src={imagePreview} 
+                      alt="Opponent avatar" 
+                      className="w-full h-full rounded-full object-cover"
                     />
-                  )}
-                </button>
-              ))}
+                    <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                      <Camera className="h-6 w-6 text-white" />
+                    </div>
+                  </>
+                ) : (
+                  <Camera className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
+                )}
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {imagePreview ? "Change Image" : "Add Profile Image"}
+              </span>
+              <input
+                id="avatar-upload-add"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+                autoComplete="off"
+                data-form-type="other"
+                data-1p-ignore="true"
+                data-lpignore="true"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Opponent Name / Online Nickname</Label>
+              <Input
+                placeholder="Enter opponent name..."
+                value={opponentName}
+                onChange={(e) => setOpponentName(e.target.value)}
+                disabled={isSaving}
+                autoComplete="off"
+                data-form-type="other"
+                data-1p-ignore="true"
+                data-lpignore="true"
+              />
+            </div>
+
+            {/* Player Color Tag */}
+            <div className="space-y-2">
+              <Label>Player Color Tag</Label>
+              <div className="flex flex-wrap gap-2">
+                {PLAYER_COLORS.map((color) => (
+                  <button
+                    key={color.id}
+                    type="button"
+                    onClick={() => setSelectedColor(color.id)}
+                    disabled={isSaving}
+                    className={`w-8 h-8 rounded-md flex items-center justify-center transition-all duration-150 ${
+                      selectedColor === color.id 
+                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
+                        : 'hover:scale-105'
+                    }`}
+                    style={{ 
+                      backgroundColor: color.hex,
+                      border: color.border ? `2px solid ${color.border}` : '2px solid transparent'
+                    }}
+                    title={color.label}
+                  >
+                    {selectedColor === color.id && (
+                      <Check 
+                        className="h-4 w-4" 
+                        style={{ color: ['white', 'yellow', 'neongreen', 'lightpink', 'lightblue'].includes(color.id) ? '#000' : '#fff' }}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Note</Label>
+              <Textarea
+                placeholder="Write your note about this opponent..."
+                value={noteBody}
+                onChange={(e) => setNoteBody(e.target.value)}
+                rows={4}
+                disabled={isSaving}
+                autoComplete="off"
+                data-form-type="other"
+                data-1p-ignore="true"
+                data-lpignore="true"
+              />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="note-body">Note</Label>
-            <Textarea
-              id="note-body"
-              placeholder="Write your note about this opponent..."
-              value={noteBody}
-              onChange={(e) => setNoteBody(e.target.value)}
-              rows={4}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleClose(false)}
               disabled={isSaving}
-            />
+            >
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Save Note
+            </Button>
           </div>
-        </div>
-
-        <div className="flex justify-end gap-2 pt-2">
-          <Button
-            variant="outline"
-            onClick={() => handleClose(false)}
-            disabled={isSaving}
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4 mr-2" />
-            )}
-            Save Note
-          </Button>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

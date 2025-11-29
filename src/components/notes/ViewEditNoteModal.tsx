@@ -170,166 +170,178 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" data-form-type="other">
           <DialogHeader className="sr-only">
             <DialogTitle>{note.opponent_name}</DialogTitle>
           </DialogHeader>
 
-          {/* Profile Header */}
-          <div className="flex flex-col items-center gap-3 pt-2">
-            {isEditing ? (
-              // Editable avatar in edit mode
-              <div 
-                className="relative w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all duration-200 cursor-pointer group bg-muted flex items-center justify-center overflow-hidden"
-                onClick={() => document.getElementById('edit-avatar-upload')?.click()}
-              >
-                {displayImage ? (
-                  <>
+          <form autoComplete="off" data-form-type="other" onSubmit={(e) => e.preventDefault()}>
+            {/* Profile Header */}
+            <div className="flex flex-col items-center gap-3 pt-2">
+              {isEditing ? (
+                // Editable avatar in edit mode
+                <div 
+                  className="relative w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all duration-200 cursor-pointer group bg-muted flex items-center justify-center overflow-hidden"
+                  onClick={() => document.getElementById('edit-avatar-upload')?.click()}
+                >
+                  {displayImage ? (
+                    <>
+                      <img 
+                        src={displayImage} 
+                        alt="Opponent avatar" 
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                      <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <Camera className="h-5 w-5 text-white" />
+                      </div>
+                    </>
+                  ) : (
+                    <Camera className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
+                  )}
+                </div>
+              ) : (
+                // View-only avatar - clickable to enlarge if image exists
+                <div 
+                  className={`w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden ${
+                    note.opponent_image ? 'cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all duration-200' : ''
+                  }`}
+                  onClick={() => note.opponent_image && setIsImageFullscreen(true)}
+                >
+                  {note.opponent_image ? (
                     <img 
-                      src={displayImage} 
+                      src={note.opponent_image} 
                       alt="Opponent avatar" 
                       className="w-full h-full rounded-full object-cover"
                     />
-                    <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                      <Camera className="h-5 w-5 text-white" />
-                    </div>
-                  </>
-                ) : (
-                  <Camera className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
-                )}
-              </div>
-            ) : (
-              // View-only avatar - clickable to enlarge if image exists
-              <div 
-                className={`w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden ${
-                  note.opponent_image ? 'cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all duration-200' : ''
-                }`}
-                onClick={() => note.opponent_image && setIsImageFullscreen(true)}
-              >
-                {note.opponent_image ? (
-                  <img 
-                    src={note.opponent_image} 
-                    alt="Opponent avatar" 
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <User className="h-8 w-8 text-muted-foreground" />
-                )}
-              </div>
-            )}
-            <input
-              id="edit-avatar-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-            
-            {/* Opponent name with color indicator (View Mode only) */}
-            <div className="flex items-center gap-2">
-              {!isEditing && (
-                <div 
-                  className="w-4 h-4 rounded-sm flex-shrink-0"
-                  style={{ 
-                    backgroundColor: colorData.hex,
-                    border: colorData.border ? `1px solid ${colorData.border}` : '1px solid transparent'
-                  }}
-                  title={colorData.label}
-                />
-              )}
-              <h2 className="text-lg font-semibold">{note.opponent_name}</h2>
-            </div>
-            <span className="text-sm text-muted-foreground">
-              {format(new Date(note.created_at), 'MMMM d, yyyy')}
-            </span>
-          </div>
-
-          {/* Color Selector (Edit Mode only) */}
-          {isEditing && (
-            <div className="space-y-2">
-              <Label>Player Color Tag</Label>
-              <div className="flex flex-wrap gap-2">
-                {PLAYER_COLORS.map((color) => (
-                  <button
-                    key={color.id}
-                    type="button"
-                    onClick={() => setSelectedColor(color.id)}
-                    disabled={isSaving}
-                    className={`w-8 h-8 rounded-md flex items-center justify-center transition-all duration-150 ${
-                      selectedColor === color.id 
-                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
-                        : 'hover:scale-105'
-                    }`}
-                    style={{ 
-                      backgroundColor: color.hex,
-                      border: color.border ? `2px solid ${color.border}` : '2px solid transparent'
-                    }}
-                    title={color.label}
-                  >
-                    {selectedColor === color.id && (
-                      <Check 
-                        className="h-4 w-4" 
-                        style={{ color: ['white', 'yellow', 'neongreen', 'lightpink', 'lightblue'].includes(color.id) ? '#000' : '#fff' }}
-                      />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Note Content */}
-          <div className="py-4">
-            {isEditing ? (
-              <Textarea
-                value={noteBody}
-                onChange={(e) => setNoteBody(e.target.value)}
-                rows={6}
-                disabled={isSaving}
-                className="resize-none"
-              />
-            ) : (
-              <div className="bg-muted/30 rounded-lg p-4 min-h-[120px]">
-                <p className="text-sm whitespace-pre-wrap">{note.note_body}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Footer Buttons */}
-          <div className="flex justify-end gap-2">
-            {isEditing ? (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={handleCancelEdit}
-                  disabled={isSaving}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleSave} disabled={isSaving}>
-                  {isSaving ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Save className="h-4 w-4 mr-2" />
+                    <User className="h-8 w-8 text-muted-foreground" />
                   )}
-                  Save
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                >
-                  Close
-                </Button>
-                <Button onClick={() => setIsEditing(true)}>
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              </>
+                </div>
+              )}
+              <input
+                id="edit-avatar-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+                autoComplete="off"
+                data-form-type="other"
+                data-1p-ignore="true"
+                data-lpignore="true"
+              />
+              
+              {/* Opponent name with color indicator (View Mode only) */}
+              <div className="flex items-center gap-2">
+                {!isEditing && (
+                  <div 
+                    className="w-4 h-4 rounded-sm flex-shrink-0"
+                    style={{ 
+                      backgroundColor: colorData.hex,
+                      border: colorData.border ? `1px solid ${colorData.border}` : '1px solid transparent'
+                    }}
+                    title={colorData.label}
+                  />
+                )}
+                <h2 className="text-lg font-semibold">{note.opponent_name}</h2>
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {format(new Date(note.created_at), 'MMMM d, yyyy')}
+              </span>
+            </div>
+
+            {/* Color Selector (Edit Mode only) */}
+            {isEditing && (
+              <div className="space-y-2 mt-4">
+                <Label>Player Color Tag</Label>
+                <div className="flex flex-wrap gap-2">
+                  {PLAYER_COLORS.map((color) => (
+                    <button
+                      key={color.id}
+                      type="button"
+                      onClick={() => setSelectedColor(color.id)}
+                      disabled={isSaving}
+                      className={`w-8 h-8 rounded-md flex items-center justify-center transition-all duration-150 ${
+                        selectedColor === color.id 
+                          ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
+                          : 'hover:scale-105'
+                      }`}
+                      style={{ 
+                        backgroundColor: color.hex,
+                        border: color.border ? `2px solid ${color.border}` : '2px solid transparent'
+                      }}
+                      title={color.label}
+                    >
+                      {selectedColor === color.id && (
+                        <Check 
+                          className="h-4 w-4" 
+                          style={{ color: ['white', 'yellow', 'neongreen', 'lightpink', 'lightblue'].includes(color.id) ? '#000' : '#fff' }}
+                        />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
-          </div>
+
+            {/* Note Content */}
+            <div className="py-4">
+              {isEditing ? (
+                <Textarea
+                  value={noteBody}
+                  onChange={(e) => setNoteBody(e.target.value)}
+                  rows={6}
+                  disabled={isSaving}
+                  className="resize-none"
+                  autoComplete="off"
+                  data-form-type="other"
+                  data-1p-ignore="true"
+                  data-lpignore="true"
+                />
+              ) : (
+                <div className="bg-muted/30 rounded-lg p-4 min-h-[120px]">
+                  <p className="text-sm whitespace-pre-wrap">{note.note_body}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex justify-end gap-2">
+              {isEditing ? (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                    disabled={isSaving}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="button" onClick={handleSave} disabled={isSaving}>
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    Save
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    Close
+                  </Button>
+                  <Button type="button" onClick={() => setIsEditing(true)}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                </>
+              )}
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 
