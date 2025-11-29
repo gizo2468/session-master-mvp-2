@@ -108,46 +108,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timeoutId);
   }, [sessions, user?.id, isInitialized]);
 
-  // Show error state if initialization failed
-  if (initializationError) {
-    const errorContextValue: SessionContextType = {
-      ...defaultContextValue,
-      isLoading: false,
-    };
-
-    return (
-      <SessionContext.Provider value={errorContextValue}>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md">
-            <div className="text-red-500 mb-4">
-              <Icon name="AlertCircle" size={48} className="mx-auto" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Initialization Error</h2>
-            <p className="text-gray-600 mb-4">{initializationError}</p>
-            <div className="space-y-2">
-              <button
-                onClick={() => window.location.reload()}
-                className="w-full bg-poker-feltGreen text-white px-4 py-2 rounded hover:bg-poker-darkGreen transition-colors"
-              >
-                Refresh Page
-              </button>
-              <button
-                onClick={() => {
-                  clearAllUserData();
-                  window.location.reload();
-                }}
-                className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
-              >
-                Clear Data & Refresh
-              </button>
-            </div>
-          </div>
-        </div>
-      </SessionContext.Provider>
-    );
-  }
-
-  // Create the full context value
+  // Create the full context value - always compute this to maintain consistent hook order
   const contextValue: SessionContextType = isInitialized ? {
     sessions,
     activeSession,
@@ -426,10 +387,37 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [isInitialized, sessions.length, activeSession?.id, isLoadingFromDatabase, user?.id]);
 
-  // Always provide the context, but show loading UI when not initialized
+  // Always provide the context, but show loading/error UI when appropriate
   return (
     <SessionContext.Provider value={contextValue}>
-      {!isInitialized ? (
+      {initializationError ? (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md">
+            <div className="text-red-500 mb-4">
+              <Icon name="AlertCircle" size={48} className="mx-auto" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Initialization Error</h2>
+            <p className="text-gray-600 mb-4">{initializationError}</p>
+            <div className="space-y-2">
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full bg-poker-feltGreen text-white px-4 py-2 rounded hover:bg-poker-darkGreen transition-colors"
+              >
+                Refresh Page
+              </button>
+              <button
+                onClick={() => {
+                  clearAllUserData();
+                  window.location.reload();
+                }}
+                className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+              >
+                Clear Data & Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : !isInitialized ? (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
