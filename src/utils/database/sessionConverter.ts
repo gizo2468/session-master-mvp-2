@@ -102,7 +102,7 @@ export const convertDatabaseSessionToPokerSession = (
           amountInvested: parseFloat(hand.amount_invested || '0'),
           amountWon: parseFloat(hand.amount_won || '0'),
           notes: hand.hand_notes,
-          image: hand.hand_image,
+          image: hand.hand_image || undefined, // May be undefined if not fetched (lazy loading)
           currencyType: hand.currency_type || 'currency',
           createdAt: new Date(hand.created_at)
         };

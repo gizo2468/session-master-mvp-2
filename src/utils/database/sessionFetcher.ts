@@ -44,12 +44,36 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
     console.log('🔄 Fetching user sessions for user:', userId);
 
     // Fast path: use disambiguated FK for embedded query
+    // CRITICAL: Exclude hand_image to avoid massive base64 data transfer
     const { data: sessions, error: sessionError } = await supabase
       .from('sessions')
       .select(`
         *,
         session_tables(*),
-        session_hands_new!fk_session_hands_session_id(*)
+        session_hands_new!fk_session_hands_session_id(
+          id,
+          session_id,
+          table_id,
+          user_id,
+          hand_number,
+          position,
+          hole_cards,
+          preflop_action,
+          flop_cards,
+          flop_action,
+          turn_card,
+          turn_action,
+          river_card,
+          river_action,
+          showdown_result,
+          pot_size,
+          amount_invested,
+          amount_won,
+          currency_type,
+          hand_notes,
+          created_at,
+          updated_at
+        )
       `)
       .eq('user_id', userId)
       .order('start_time', { ascending: false });
@@ -79,9 +103,12 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
 
       const ids = baseSessions.map((s: any) => s.id);
 
+      // CRITICAL: Exclude hand_image from fallback query too
+      const handsColumns = 'id,session_id,table_id,user_id,hand_number,position,hole_cards,preflop_action,flop_cards,flop_action,turn_card,turn_action,river_card,river_action,showdown_result,pot_size,amount_invested,amount_won,currency_type,hand_notes,created_at,updated_at';
+      
       const [{ data: tables, error: tablesError }, { data: hands, error: handsError }] = await Promise.all([
         supabase.from('session_tables').select('*').in('session_id', ids).eq('user_id', userId),
-        supabase.from('session_hands_new').select('*').in('session_id', ids).eq('user_id', userId)
+        supabase.from('session_hands_new').select(handsColumns).in('session_id', ids).eq('user_id', userId)
       ]);
 
       if (tablesError || handsError) {
@@ -149,12 +176,36 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
     console.log('🔄 Fetching active sessions');
 
     // Fast path: use disambiguated FK for embedded query
+    // CRITICAL: Exclude hand_image to avoid massive base64 data transfer
     const { data: sessions, error: sessionError } = await supabase
       .from('sessions')
       .select(`
         *,
         session_tables(*),
-        session_hands_new!fk_session_hands_session_id(*)
+        session_hands_new!fk_session_hands_session_id(
+          id,
+          session_id,
+          table_id,
+          user_id,
+          hand_number,
+          position,
+          hole_cards,
+          preflop_action,
+          flop_cards,
+          flop_action,
+          turn_card,
+          turn_action,
+          river_card,
+          river_action,
+          showdown_result,
+          pot_size,
+          amount_invested,
+          amount_won,
+          currency_type,
+          hand_notes,
+          created_at,
+          updated_at
+        )
       `)
       .eq('is_active', true)
       .eq('user_id', userId)
@@ -186,9 +237,12 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
 
       const ids = baseSessions.map((s: any) => s.id);
 
+      // CRITICAL: Exclude hand_image from fallback query too
+      const handsColumns = 'id,session_id,table_id,user_id,hand_number,position,hole_cards,preflop_action,flop_cards,flop_action,turn_card,turn_action,river_card,river_action,showdown_result,pot_size,amount_invested,amount_won,currency_type,hand_notes,created_at,updated_at';
+      
       const [{ data: tables, error: tablesError }, { data: hands, error: handsError }] = await Promise.all([
         supabase.from('session_tables').select('*').in('session_id', ids).eq('user_id', userId),
-        supabase.from('session_hands_new').select('*').in('session_id', ids).eq('user_id', userId)
+        supabase.from('session_hands_new').select(handsColumns).in('session_id', ids).eq('user_id', userId)
       ]);
 
       if (tablesError || handsError) {
@@ -253,12 +307,36 @@ export const fetchActiveSession = async (): Promise<PokerSession | null> => {
       return null;
     }
 
+    // CRITICAL: Exclude hand_image to avoid massive base64 data transfer
     const { data: session, error } = await supabase
       .from('sessions')
       .select(`
         *,
         session_tables(*),
-        session_hands_new!fk_session_hands_session_id(*)
+        session_hands_new!fk_session_hands_session_id(
+          id,
+          session_id,
+          table_id,
+          user_id,
+          hand_number,
+          position,
+          hole_cards,
+          preflop_action,
+          flop_cards,
+          flop_action,
+          turn_card,
+          turn_action,
+          river_card,
+          river_action,
+          showdown_result,
+          pot_size,
+          amount_invested,
+          amount_won,
+          currency_type,
+          hand_notes,
+          created_at,
+          updated_at
+        )
       `)
       .eq('user_id', userId)
       .eq('is_active', true)
@@ -282,6 +360,27 @@ export const fetchActiveSession = async (): Promise<PokerSession | null> => {
     );
   } catch (error) {
     console.error('❌ Failed to fetch active session:', error);
+    return null;
+  }
+};
+
+// Lazy load hand image on demand - only fetch when viewing hand details
+export const fetchHandImage = async (handId: string): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('session_hands_new')
+      .select('hand_image')
+      .eq('id', handId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('❌ Failed to fetch hand image:', error);
+      return null;
+    }
+
+    return data?.hand_image || null;
+  } catch (error) {
+    console.error('❌ Error fetching hand image:', error);
     return null;
   }
 };
