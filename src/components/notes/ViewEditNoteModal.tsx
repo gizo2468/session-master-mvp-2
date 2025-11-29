@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2, Pencil, User, Camera } from 'lucide-react';
+import { Save, Loader2, Pencil, User, Camera, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -43,6 +43,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isImageFullscreen, setIsImageFullscreen] = useState(false);
 
   useEffect(() => {
     if (note) {
@@ -50,6 +51,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
       setIsEditing(false);
       setImageFile(null);
       setImagePreview(null);
+      setIsImageFullscreen(false);
     }
   }, [note]);
 
@@ -158,116 +160,151 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   if (!note) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader className="sr-only">
-          <DialogTitle>{note.opponent_name}</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{note.opponent_name}</DialogTitle>
+          </DialogHeader>
 
-        {/* Profile Header */}
-        <div className="flex flex-col items-center gap-3 pt-2">
-          {isEditing ? (
-            // Editable avatar in edit mode
-            <div 
-              className="relative w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all duration-200 cursor-pointer group bg-muted flex items-center justify-center overflow-hidden"
-              onClick={() => document.getElementById('edit-avatar-upload')?.click()}
-            >
-              {displayImage ? (
-                <>
+          {/* Profile Header */}
+          <div className="flex flex-col items-center gap-3 pt-2">
+            {isEditing ? (
+              // Editable avatar in edit mode
+              <div 
+                className="relative w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all duration-200 cursor-pointer group bg-muted flex items-center justify-center overflow-hidden"
+                onClick={() => document.getElementById('edit-avatar-upload')?.click()}
+              >
+                {displayImage ? (
+                  <>
+                    <img 
+                      src={displayImage} 
+                      alt="Opponent avatar" 
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                    <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                      <Camera className="h-5 w-5 text-white" />
+                    </div>
+                  </>
+                ) : (
+                  <Camera className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
+                )}
+              </div>
+            ) : (
+              // View-only avatar - clickable to enlarge if image exists
+              <div 
+                className={`w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden ${
+                  note.opponent_image ? 'cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all duration-200' : ''
+                }`}
+                onClick={() => note.opponent_image && setIsImageFullscreen(true)}
+              >
+                {note.opponent_image ? (
                   <img 
-                    src={displayImage} 
+                    src={note.opponent_image} 
                     alt="Opponent avatar" 
                     className="w-full h-full rounded-full object-cover"
                   />
-                  <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                    <Camera className="h-5 w-5 text-white" />
-                  </div>
-                </>
-              ) : (
-                <Camera className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
-              )}
-            </div>
-          ) : (
-            // View-only avatar
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-              {note.opponent_image ? (
-                <img 
-                  src={note.opponent_image} 
-                  alt="Opponent avatar" 
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <User className="h-8 w-8 text-muted-foreground" />
-              )}
-            </div>
-          )}
-          <input
-            id="edit-avatar-upload"
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-          />
-          <h2 className="text-lg font-semibold">{note.opponent_name}</h2>
-          <span className="text-sm text-muted-foreground">
-            {format(new Date(note.created_at), 'MMMM d, yyyy')}
-          </span>
-        </div>
-
-        {/* Note Content */}
-        <div className="py-4">
-          {isEditing ? (
-            <Textarea
-              value={noteBody}
-              onChange={(e) => setNoteBody(e.target.value)}
-              rows={6}
-              disabled={isSaving}
-              className="resize-none"
-            />
-          ) : (
-            <div className="bg-muted/30 rounded-lg p-4 min-h-[120px]">
-              <p className="text-sm whitespace-pre-wrap">{note.note_body}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Footer Buttons */}
-        <div className="flex justify-end gap-2">
-          {isEditing ? (
-            <>
-              <Button
-                variant="outline"
-                onClick={handleCancelEdit}
-                disabled={isSaving}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleSave} disabled={isSaving}>
-                {isSaving ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
-                  <Save className="h-4 w-4 mr-2" />
+                  <User className="h-8 w-8 text-muted-foreground" />
                 )}
-                Save
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Close
-              </Button>
-              <Button onClick={() => setIsEditing(true)}>
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-            </>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+              </div>
+            )}
+            <input
+              id="edit-avatar-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+            <h2 className="text-lg font-semibold">{note.opponent_name}</h2>
+            <span className="text-sm text-muted-foreground">
+              {format(new Date(note.created_at), 'MMMM d, yyyy')}
+            </span>
+          </div>
+
+          {/* Note Content */}
+          <div className="py-4">
+            {isEditing ? (
+              <Textarea
+                value={noteBody}
+                onChange={(e) => setNoteBody(e.target.value)}
+                rows={6}
+                disabled={isSaving}
+                className="resize-none"
+              />
+            ) : (
+              <div className="bg-muted/30 rounded-lg p-4 min-h-[120px]">
+                <p className="text-sm whitespace-pre-wrap">{note.note_body}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Footer Buttons */}
+          <div className="flex justify-end gap-2">
+            {isEditing ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Save
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Close
+                </Button>
+                <Button onClick={() => setIsEditing(true)}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Fullscreen Image Viewer */}
+      <Dialog open={isImageFullscreen} onOpenChange={setIsImageFullscreen}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 bg-transparent border-none shadow-none [&>button]:hidden">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Opponent profile image</DialogTitle>
+          </DialogHeader>
+          <div className="relative flex items-center justify-center">
+            {/* Close button */}
+            <button
+              onClick={() => setIsImageFullscreen(false)}
+              className="absolute -top-2 -right-2 z-10 p-2 rounded-full bg-black/60 hover:bg-black/80 transition-colors"
+              aria-label="Close fullscreen image"
+            >
+              <X className="h-5 w-5 text-white" />
+            </button>
+            
+            {/* Enlarged image */}
+            {note.opponent_image && (
+              <img 
+                src={note.opponent_image} 
+                alt={`${note.opponent_name} profile`}
+                className="max-w-full max-h-[85vh] rounded-lg object-contain animate-scale-in"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
