@@ -31,6 +31,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     isLoadingFromDatabase,
     initializationError,
     currentUserId,
+    loadingStage,
     refreshSessionsFromDatabase
   } = useSessionInitialization();
 
@@ -391,17 +392,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   return (
     <SessionContext.Provider value={contextValue}>
       {initializationError ? (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md">
-            <div className="text-red-500 mb-4">
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center p-8 bg-card rounded-lg shadow-md max-w-md border border-border">
+            <div className="text-destructive mb-4">
               <Icon name="AlertCircle" size={48} className="mx-auto" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Initialization Error</h2>
-            <p className="text-gray-600 mb-4">{initializationError}</p>
+            <h2 className="text-xl font-bold text-foreground mb-2">Initialization Error</h2>
+            <p className="text-muted-foreground mb-4">{initializationError}</p>
             <div className="space-y-2">
               <button
                 onClick={() => window.location.reload()}
-                className="w-full bg-poker-feltGreen text-white px-4 py-2 rounded hover:bg-poker-darkGreen transition-colors"
+                className="w-full bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90 transition-colors"
               >
                 Refresh Page
               </button>
@@ -410,7 +411,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
                   clearAllUserData();
                   window.location.reload();
                 }}
-                className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+                className="w-full bg-destructive text-destructive-foreground px-4 py-2 rounded hover:bg-destructive/90 transition-colors"
               >
                 Clear Data & Refresh
               </button>
@@ -418,11 +419,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           </div>
         </div>
       ) : !isInitialized ? (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
-            <p className="text-gray-600">
-              {isLoadingFromDatabase ? 'Loading your sessions...' : 'Initializing...'}
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">
+              {loadingStage || 'Initializing...'}
             </p>
           </div>
         </div>

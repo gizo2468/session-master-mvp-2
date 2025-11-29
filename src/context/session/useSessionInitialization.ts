@@ -13,6 +13,7 @@ export const useSessionInitialization = () => {
   const [isLoadingFromDatabase, setIsLoadingFromDatabase] = useState(false);
   const [initializationError, setInitializationError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [loadingStage, setLoadingStage] = useState<string>('Initializing...');
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -32,13 +33,13 @@ export const useSessionInitialization = () => {
   };
 
   // Load active session from database with timeout and error handling
-  const loadActiveSessionFromDatabase = async (userId: string | null, timeout: number = 15000) => {
+  const loadActiveSessionFromDatabase = async (userId: string | null, timeout: number = 10000) => {
     if (!userId) return null;
     
     try {
       console.log('🔄 Loading active session from database for user:', userId);
+      setLoadingStage('Checking for active sessions...');
       
-      // Add timeout to prevent hanging (increased to 30s)
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Active session fetch timeout')), timeout)
       );
@@ -88,20 +89,22 @@ export const useSessionInitialization = () => {
       while (attemptCount < maxAttempts) {
         attemptCount++;
         const isRetry = attemptCount > 1;
-        const timeout = isRetry ? 25000 : 15000; // 15s first attempt, 25s retry
+        const timeout = isRetry ? 15000 : 10000; // 10s first attempt, 15s retry (reduced for faster feedback)
         
         if (isRetry) {
           console.log('⏱️ First attempt timed out, retrying with extended timeout...');
+          setLoadingStage('Retrying connection...');
         }
         
         try {
           console.log(`🔄 Loading sessions from database for user: ${userId} (attempt ${attemptCount}/${maxAttempts})`);
+          setLoadingStage('Connecting to database...');
           
-          // Add timeout to prevent hanging on slow queries (15s first, 25s retry)
           const timeoutPromise = new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Sessions fetch timeout')), timeout)
           );
           
+          setLoadingStage('Loading your sessions...');
           const [activeSessionResult, sessionsResult] = await Promise.allSettled([
             Promise.race([loadActiveSessionFromDatabase(userId, timeout), timeoutPromise]),
             Promise.race([fetchUserSessions(), timeoutPromise])
@@ -275,13 +278,14 @@ export const useSessionInitialization = () => {
     const initializeSessions = async () => {
       try {
         console.log('🔄 User changed, reinitializing sessions. User:', user?.id);
+        setLoadingStage('Starting up...');
         
-        // Set timeout for initialization (20 seconds max)
+        // Set timeout for initialization (60 seconds max - safe buffer)
         timeoutId = setTimeout(() => {
           console.error('❌ Session initialization timeout');
           setInitializationError('Initialization timeout. Please refresh the page.');
           setIsInitialized(true);
-        }, 20000);
+        }, 60000);
         
         if (currentUserId !== user?.id) {
           console.log('👤 User switch detected, clearing sessions');
@@ -335,6 +339,7 @@ export const useSessionInitialization = () => {
     isLoadingFromDatabase,
     initializationError,
     currentUserId,
+    loadingStage,
     refreshSessionsFromDatabase
   };
 };
