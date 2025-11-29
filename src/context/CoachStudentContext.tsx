@@ -180,7 +180,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [user?.id]);
 
-  // Real-time subscriptions - memoized callback using the load functions
+  // Real-time subscriptions - pass auth info as params to avoid hook issues
   const handleConnectionUpdate = useCallback(async () => {
     console.log('🔄 Real-time connection update detected');
     if (isCoach) {
@@ -191,7 +191,7 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [isCoach, isStudent, loadPendingRequests, loadStudents, loadConnectedCoaches]);
 
-  useRealtimeSubscriptions(handleConnectionUpdate, isCoach, isStudent);
+  useRealtimeSubscriptions(handleConnectionUpdate, isCoach, isStudent, user?.id, isAuthenticated);
 
   // Load user profile and related data when user changes or becomes authenticated
   useEffect(() => {
