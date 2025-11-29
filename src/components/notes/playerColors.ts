@@ -1,6 +1,6 @@
 // Player color tag constants for opponent notes
 
-interface PlayerColor {
+export interface PlayerColor {
   id: string;
   label: string;
   hex: string;
@@ -23,6 +23,6 @@ export type PlayerColorId = string;
 
 export const DEFAULT_COLOR: PlayerColorId = 'yellow';
 
-export const getColorById = (id: string | undefined | null): PlayerColor => {
+export function getColorById(id: string | undefined | null): PlayerColor {
   return PLAYER_COLORS.find(c => c.id === id) || PLAYER_COLORS.find(c => c.id === DEFAULT_COLOR)!;
-};
+}
