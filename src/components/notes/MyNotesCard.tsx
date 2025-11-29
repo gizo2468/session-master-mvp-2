@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import AddNoteModal from './AddNoteModal';
+import ViewEditNoteModal from './ViewEditNoteModal';
 import { format } from 'date-fns';
 
 interface PlayerNote {
@@ -23,7 +24,9 @@ const MyNotesCard: React.FC = () => {
   const navigate = useNavigate();
   const [notes, setNotes] = useState<PlayerNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<PlayerNote | null>(null);
 
   const fetchNotes = async () => {
     if (!user?.id) return;
@@ -56,7 +59,16 @@ const MyNotesCard: React.FC = () => {
 
   const handleNoteSaved = () => {
     fetchNotes();
-    setIsModalOpen(false);
+    setIsAddModalOpen(false);
+  };
+
+  const handleNoteUpdated = () => {
+    fetchNotes();
+  };
+
+  const handleNoteClick = (note: PlayerNote) => {
+    setSelectedNote(note);
+    setIsViewModalOpen(true);
   };
 
   // Locked state for non-premium users
@@ -108,7 +120,7 @@ const MyNotesCard: React.FC = () => {
           <Button
             variant="outline"
             className="w-full justify-center gap-2"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsAddModalOpen(true)}
           >
             <Plus className="h-4 w-4" />
             Add Note
@@ -127,7 +139,8 @@ const MyNotesCard: React.FC = () => {
               {notes.map((note) => (
                 <div
                   key={note.id}
-                  className="p-3 bg-muted/50 rounded-lg border border-border/30"
+                  onClick={() => handleNoteClick(note)}
+                  className="p-3 bg-muted/50 rounded-lg border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors"
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-medium text-sm truncate">
@@ -148,9 +161,16 @@ const MyNotesCard: React.FC = () => {
       </Card>
 
       <AddNoteModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
+        open={isAddModalOpen}
+        onOpenChange={setIsAddModalOpen}
         onNoteSaved={handleNoteSaved}
+      />
+
+      <ViewEditNoteModal
+        open={isViewModalOpen}
+        onOpenChange={setIsViewModalOpen}
+        note={selectedNote}
+        onNoteSaved={handleNoteUpdated}
       />
     </>
   );
