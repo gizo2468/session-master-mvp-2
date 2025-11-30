@@ -948,6 +948,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_color_labels: {
+        Row: {
+          color_id: string
+          created_at: string
+          custom_label: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color_id: string
+          created_at?: string
+          custom_label: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          color_id?: string
+          created_at?: string
+          custom_label?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_feedback: {
         Row: {
           created_at: string

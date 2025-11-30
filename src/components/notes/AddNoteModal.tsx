@@ -12,9 +12,11 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2, Camera, Check } from 'lucide-react';
+import { Save, Loader2, Camera, Check, MoreHorizontal } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { SELECTABLE_COLORS, DEFAULT_COLOR, PlayerColorId } from './playerColors';
+import EditColorCategoriesModal from './EditColorCategoriesModal';
+import { useColorLabels } from '@/hooks/useColorLabels';
 
 interface AddNoteModalProps {
   open: boolean;
@@ -35,6 +37,8 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<PlayerColorId | null>(null);
+  const [editColorsOpen, setEditColorsOpen] = useState(false);
+  const { getLabel } = useColorLabels();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -216,32 +220,76 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
             {/* Player Color Tag */}
             <div className="space-y-2">
               <Label>Player Color Tag</Label>
-              <div className="grid grid-cols-5 gap-x-1 gap-y-2 w-fit">
-                {SELECTABLE_COLORS.map((color) => (
+              <div className="flex flex-col gap-y-2 w-fit">
+                {/* Row 1: First 5 colors */}
+                <div className="flex gap-x-1">
+                  {SELECTABLE_COLORS.slice(0, 5).map((color) => (
+                    <button
+                      key={color.id}
+                      type="button"
+                      onClick={() => setSelectedColor(color.id)}
+                      disabled={isSaving}
+                      className={`w-8 h-8 rounded-md flex items-center justify-center transition-all duration-150 ${
+                        selectedColor === color.id 
+                          ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
+                          : 'hover:scale-105'
+                      }`}
+                      style={{ 
+                        backgroundColor: color.hex,
+                        border: color.border ? `2px solid ${color.border}` : '2px solid transparent'
+                      }}
+                      title={getLabel(color.id)}
+                    >
+                      {selectedColor === color.id && (
+                        <Check 
+                          className="h-4 w-4" 
+                          style={{ color: ['yellow', 'neongreen', 'lightpink', 'lightblue'].includes(color.id) ? '#000' : '#fff' }}
+                        />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Edit color categories button - centered between rows */}
+                <div className="flex justify-center">
                   <button
-                    key={color.id}
                     type="button"
-                    onClick={() => setSelectedColor(color.id)}
-                    disabled={isSaving}
-                    className={`w-8 h-8 rounded-md flex items-center justify-center transition-all duration-150 ${
-                      selectedColor === color.id 
-                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
-                        : 'hover:scale-105'
-                    }`}
-                    style={{ 
-                      backgroundColor: color.hex,
-                      border: color.border ? `2px solid ${color.border}` : '2px solid transparent'
-                    }}
-                    title={color.label}
+                    onClick={() => setEditColorsOpen(true)}
+                    className="w-8 h-8 rounded-md bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                    title="Edit color categories"
                   >
-                    {selectedColor === color.id && (
-                      <Check 
-                        className="h-4 w-4" 
-                        style={{ color: ['yellow', 'neongreen', 'lightpink', 'lightblue'].includes(color.id) ? '#000' : '#fff' }}
-                      />
-                    )}
+                    <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
                   </button>
-                ))}
+                </div>
+                
+                {/* Row 2: Last 5 colors */}
+                <div className="flex gap-x-1">
+                  {SELECTABLE_COLORS.slice(5, 10).map((color) => (
+                    <button
+                      key={color.id}
+                      type="button"
+                      onClick={() => setSelectedColor(color.id)}
+                      disabled={isSaving}
+                      className={`w-8 h-8 rounded-md flex items-center justify-center transition-all duration-150 ${
+                        selectedColor === color.id 
+                          ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' 
+                          : 'hover:scale-105'
+                      }`}
+                      style={{ 
+                        backgroundColor: color.hex,
+                        border: color.border ? `2px solid ${color.border}` : '2px solid transparent'
+                      }}
+                      title={getLabel(color.id)}
+                    >
+                      {selectedColor === color.id && (
+                        <Check 
+                          className="h-4 w-4" 
+                          style={{ color: ['yellow', 'neongreen', 'lightpink', 'lightblue'].includes(color.id) ? '#000' : '#fff' }}
+                        />
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -281,6 +329,12 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
           </div>
         </form>
       </DialogContent>
+      
+      {/* Edit Color Categories Modal */}
+      <EditColorCategoriesModal 
+        open={editColorsOpen} 
+        onOpenChange={setEditColorsOpen} 
+      />
     </Dialog>
   );
 };
