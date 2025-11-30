@@ -232,7 +232,7 @@ const MyCoachingNetwork: React.FC = () => {
       const { data: allRequests, error } = await supabase
         .from('coach_student_connections')
         .select(`
-          id, coach_id, student_id, created_at, status
+          id, coach_id, student_id, created_at, status, initiated_by
         `)
         .or(`coach_id.eq.${user.id},student_id.eq.${user.id}`)
         .eq('status', 'pending')
@@ -274,21 +274,20 @@ const MyCoachingNetwork: React.FC = () => {
       const outgoing: PendingRequest[] = [];
 
       (allRequests || []).forEach(conn => {
-        // Determine who is the "other user" in this connection
+        // Determine direction based on who initiated the request
         let otherUserId: string;
         let direction: 'incoming' | 'outgoing';
         
-        if (conn.coach_id === user.id) {
-          // Current user is the coach, so the other user is the student
-          otherUserId = conn.student_id;
-          direction = 'incoming';
-        } else if (conn.student_id === user.id) {
-          // Current user is the student, so the other user is the coach
-          otherUserId = conn.coach_id;
+        if (conn.initiated_by === user.id) {
+          // I created this request - it's outgoing
           direction = 'outgoing';
+          // The other user is whoever I'm NOT in this connection
+          otherUserId = conn.coach_id === user.id ? conn.student_id : conn.coach_id;
         } else {
-          // This shouldn't happen, but skip if it does
-          return;
+          // Someone else created this request to me - it's incoming
+          direction = 'incoming';
+          // The other user is the initiator
+          otherUserId = conn.initiated_by;
         }
         
         const profile = profileMap.get(otherUserId);
@@ -487,13 +486,14 @@ const MyCoachingNetwork: React.FC = () => {
         return;
       }
 
-      // Create new connection request
+      // Create new connection request (student -> coach)
       const { error: insertError } = await supabase
         .from('coach_student_connections')
         .insert({
           coach_id: coachProfile.id,
           student_id: user?.id,
-          status: 'pending'
+          status: 'pending',
+          initiated_by: user?.id
         });
 
       if (insertError) {
@@ -619,6 +619,7 @@ const MyCoachingNetwork: React.FC = () => {
           coach_id: user?.id,
           student_id: playerProfile.id,
           status: 'pending',
+          initiated_by: user?.id
         });
 
       if (insertError) {
@@ -743,7 +744,8 @@ const MyCoachingNetwork: React.FC = () => {
         .insert({
           coach_id: coachProfile.id,
           student_id: user?.id,
-          status: 'pending'
+          status: 'pending',
+          initiated_by: user?.id
         });
 
       if (insertError) {
