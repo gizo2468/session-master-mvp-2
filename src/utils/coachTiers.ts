@@ -8,7 +8,7 @@ export const coachTiers: Record<CoachTier, CoachTierDetails> = {
     tier: 'free',
     price: 0,
     maxStudents: 5,
-    features: ['Student Management'],
+    features: ['Student Management', 'Comment Tagging'],
   },
   starter: {
     name: 'Starter Coach',
