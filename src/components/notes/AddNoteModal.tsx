@@ -216,7 +216,7 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
             {/* Player Color Tag */}
             <div className="space-y-2">
               <Label>Player Color Tag</Label>
-              <div className="flex flex-wrap gap-x-1 gap-y-2">
+              <div className="grid grid-cols-5 gap-x-1 gap-y-2 w-fit">
                 {SELECTABLE_COLORS.map((color) => (
                   <button
                     key={color.id}
