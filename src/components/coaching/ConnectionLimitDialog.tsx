@@ -33,7 +33,7 @@ const ConnectionLimitDialog: React.FC<ConnectionLimitDialogProps> = ({
   };
 
   const limitText = userRole === 'coach' 
-    ? `Free coaches can connect with up to ${maxConnections} students/coaches`
+    ? `Free coaches can connect with up to ${maxConnections} players`
     : `Free players can connect with up to ${maxConnections} coach`;
 
   return (
@@ -46,7 +46,7 @@ const ConnectionLimitDialog: React.FC<ConnectionLimitDialogProps> = ({
           </DialogTitle>
           <DialogDescription className="text-left space-y-2">
             <p>{limitText}.</p>
-            <p>To connect with additional {userRole === 'coach' ? 'players or coaches' : 'coaches'}, upgrade to Premium for unlimited connections.</p>
+            <p>To connect with more {userRole === 'coach' ? 'players' : 'coaches'}, upgrade to Premium for unlimited connections.</p>
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-2 sm:gap-0">
