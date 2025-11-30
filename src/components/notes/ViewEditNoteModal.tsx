@@ -268,7 +268,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
             {isEditing && (
               <div className="space-y-2 mt-4">
                 <Label>Player Color Tag</Label>
-                <div className="flex flex-col gap-y-2 w-fit">
+                <div className="relative flex flex-col gap-y-4 w-fit">
                   {/* Row 1: First 5 colors */}
                   <div className="flex gap-x-1">
                     {SELECTABLE_COLORS.slice(0, 5).map((color) => (
@@ -296,18 +296,6 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                         )}
                       </button>
                     ))}
-                  </div>
-                  
-                  {/* Edit color categories button - centered between rows */}
-                  <div className="flex justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setEditColorsOpen(true)}
-                      className="w-8 h-8 rounded-md bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                      title="Edit color categories"
-                    >
-                      <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                    </button>
                   </div>
                   
                   {/* Row 2: Last 5 colors */}
@@ -338,6 +326,16 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                       </button>
                     ))}
                   </div>
+
+                  {/* Edit color categories button - positioned in the gap */}
+                  <button
+                    type="button"
+                    onClick={() => setEditColorsOpen(true)}
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-md bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10"
+                    title="Edit color categories"
+                  >
+                    <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                  </button>
                 </div>
               </div>
             )}
