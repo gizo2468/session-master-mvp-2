@@ -548,11 +548,11 @@ const MyCoachingNetwork: React.FC = () => {
       return;
     }
 
-    // Check connection limits for non-premium coaches
+    // Check connection limits for non-premium coaches (only count player connections)
     if (!isPremium) {
       const limits = getConnectionLimits();
-      const currentConnections = connectedUsers.length;
-      if (currentConnections >= limits.maxStudentsForCoach) {
+      const currentPlayerConnections = connectedPlayers.length;
+      if (currentPlayerConnections >= limits.maxStudentsForCoach) {
         setLimitDialogRole('coach');
         setShowLimitDialog(true);
         return;
@@ -674,17 +674,7 @@ const MyCoachingNetwork: React.FC = () => {
       return;
     }
 
-    // Check connection limits for non-premium coaches
-    if (!isPremium) {
-      const limits = getConnectionLimits();
-      const currentConnections = connectedUsers.length;
-      if (currentConnections >= limits.maxStudentsForCoach) {
-        setLimitDialogRole('coach');
-        setShowLimitDialog(true);
-        return;
-      }
-    }
-
+    // Coach-to-coach connections are not limited (coach becomes student in that relationship)
     setConnectingCoach(true);
     try {
       // Search for coach by username

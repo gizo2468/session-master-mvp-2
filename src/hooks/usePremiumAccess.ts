@@ -20,7 +20,7 @@ export const usePremiumAccess = () => {
     }
     
     return { 
-      maxStudentsForCoach: 5,  // Free coaches can connect to max 5 students
+      maxStudentsForCoach: 3,  // Free coaches can connect to max 3 players
       maxCoachesForStudent: 1  // Free students can connect to max 1 coach
     };
   };
