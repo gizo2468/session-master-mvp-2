@@ -41,13 +41,16 @@ export const CurrencySelector: React.FC<CurrencySelectorProps> = ({
     );
   }
 
-  // For non-premium users, show USD only with upgrade prompt
+  // Free currency codes
+  const freeCurrencies = ['USD', 'EUR'];
+  
+  // For non-premium users, show USD and EUR with upgrade prompt for others
   return (
     <Select 
       value={value} 
       onValueChange={(val) => {
-        // Only allow USD selection
-        if (val === 'USD') {
+        // Only allow free currency selection
+        if (freeCurrencies.includes(val)) {
           onValueChange(val);
         }
       }}
@@ -60,6 +63,9 @@ export const CurrencySelector: React.FC<CurrencySelectorProps> = ({
       <SelectContent className="bg-background border-border z-[100] w-[280px] sm:w-[320px]">
         <SelectItem value="USD">
           {getCurrencySymbol('USD')} USD ($)
+        </SelectItem>
+        <SelectItem value="EUR">
+          {getCurrencySymbol('EUR')} EUR (€)
         </SelectItem>
         <div className="px-4 py-4 border-t border-border bg-background">
           <p className="text-sm text-muted-foreground mb-3 text-center leading-relaxed">
