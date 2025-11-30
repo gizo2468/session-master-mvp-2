@@ -414,7 +414,7 @@ const MyCoachingNetwork: React.FC = () => {
       return;
     }
 
-    if (coachUsername.trim() === user?.username) {
+    if (coachUsername.trim().toLowerCase() === user?.username?.toLowerCase()) {
       toast({
         title: "Error",
         description: "You cannot send a request to yourself.",
@@ -445,6 +445,16 @@ const MyCoachingNetwork: React.FC = () => {
         toast({
           title: "Coach not found",
           description: "No coach found with that username.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Double-check: prevent self-connection by ID
+      if (coachProfile.id === user?.id) {
+        toast({
+          title: "Error",
+          description: "You cannot send a request to yourself.",
           variant: "destructive",
         });
         return;
@@ -529,7 +539,7 @@ const MyCoachingNetwork: React.FC = () => {
       return;
     }
 
-    if (playerUsername.trim() === user?.username) {
+    if (playerUsername.trim().toLowerCase() === user?.username?.toLowerCase()) {
       toast({
         title: "Error",
         description: "You cannot send a request to yourself.",
@@ -560,6 +570,16 @@ const MyCoachingNetwork: React.FC = () => {
         toast({
           title: "Player not found",
           description: "No player found with that username.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Double-check: prevent self-connection by ID
+      if (playerProfile.id === user?.id) {
+        toast({
+          title: "Error",
+          description: "You cannot send a request to yourself.",
           variant: "destructive",
         });
         return;
@@ -644,7 +664,7 @@ const MyCoachingNetwork: React.FC = () => {
       return;
     }
 
-    if (coachAsCoachUsername.trim() === user?.username) {
+    if (coachAsCoachUsername.trim().toLowerCase() === user?.username?.toLowerCase()) {
       toast({
         title: "Error",
         description: "You cannot send a request to yourself.",
@@ -675,6 +695,16 @@ const MyCoachingNetwork: React.FC = () => {
         toast({
           title: "Coach not found",
           description: "No coach found with that username.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Double-check: prevent self-connection by ID
+      if (coachProfile.id === user?.id) {
+        toast({
+          title: "Error",
+          description: "You cannot send a request to yourself.",
           variant: "destructive",
         });
         return;
