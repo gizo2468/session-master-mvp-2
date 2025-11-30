@@ -16,19 +16,22 @@ const CurrencyGate: React.FC<CurrencyGateProps> = ({ children, selectedCurrency 
     return <>{children}</>;
   }
   
-  // If free user and selecting non-USD currency, show gate
-  if (selectedCurrency !== 'USD') {
+  // Free currency codes
+  const freeCurrencies = ['USD', 'EUR'];
+  
+  // If free user and selecting a premium currency, show gate
+  if (!freeCurrencies.includes(selectedCurrency)) {
     return (
       <PremiumFeatureGate
         featureName="Multiple Currencies"
-        description="Upgrade to Premium to track your sessions in multiple currencies beyond USD."
+        description="Upgrade to Premium to track your sessions in multiple currencies beyond USD and EUR."
       >
         {children}
       </PremiumFeatureGate>
     );
   }
   
-  // Free users can access USD, show filtered options
+  // Free users can access USD and EUR, show filtered options
   return <>{children}</>;
 };
 
@@ -37,8 +40,8 @@ export const getAvailableCurrencies = (isPremium: boolean) => {
     return CURRENCIES;
   }
   
-  // Free users only get USD
-  return CURRENCIES.filter(currency => currency.code === 'USD');
+  // Free users get USD and EUR
+  return CURRENCIES.filter(currency => ['USD', 'EUR'].includes(currency.code));
 };
 
 export default CurrencyGate;
