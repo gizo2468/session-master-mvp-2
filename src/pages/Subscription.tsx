@@ -137,7 +137,7 @@ const Subscription: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Unlimited coach connections</span>
+                  <span>Unlimited Player to Coach connections</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
