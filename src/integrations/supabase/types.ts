@@ -48,11 +48,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "coach_student_connections_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "user_overview"
+            referencedColumns: ["uid"]
+          },
+          {
             foreignKeyName: "coach_student_connections_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_student_connections_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "user_overview"
+            referencedColumns: ["uid"]
           },
         ]
       }
@@ -1033,6 +1047,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_private_data_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "user_overview"
+            referencedColumns: ["uid"]
+          },
         ]
       }
       user_subscriptions: {
@@ -1073,7 +1094,19 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_overview: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          email: string | null
+          is_active: boolean | null
+          is_premium: boolean | null
+          role: string | null
+          uid: string | null
+          username: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_email_available: { Args: { p_email: string }; Returns: boolean }
