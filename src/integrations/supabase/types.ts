@@ -436,6 +436,7 @@ export type Database = {
           hand_number: number | null
           hole_cards: string | null
           id: string
+          opponent_profile_id: string | null
           position: string | null
           pot_size: number | null
           preflop_action: string | null
@@ -461,6 +462,7 @@ export type Database = {
           hand_number?: number | null
           hole_cards?: string | null
           id?: string
+          opponent_profile_id?: string | null
           position?: string | null
           pot_size?: number | null
           preflop_action?: string | null
@@ -486,6 +488,7 @@ export type Database = {
           hand_number?: number | null
           hole_cards?: string | null
           id?: string
+          opponent_profile_id?: string | null
           position?: string | null
           pot_size?: number | null
           preflop_action?: string | null
@@ -512,6 +515,13 @@ export type Database = {
             columns: ["table_id"]
             isOneToOne: false
             referencedRelation: "session_tables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_hands_new_opponent_profile_id_fkey"
+            columns: ["opponent_profile_id"]
+            isOneToOne: false
+            referencedRelation: "opponent_profiles"
             referencedColumns: ["id"]
           },
           {

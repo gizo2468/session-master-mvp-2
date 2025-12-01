@@ -14,6 +14,8 @@ import StreetByStreetSection from './HandFormSections/StreetByStreetSection';
 import NotesSection from './HandFormSections/NotesSection';
 import AIHandAnalyzerBanner from './AIHandAnalyzerBanner';
 import AIHandAnalyzerDialog from './AIHandAnalyzerDialog';
+import OpponentLinkSection from './HandFormSections/OpponentLinkSection';
+import HandDetailGate from '@/components/ui/HandDetailGate';
 
 interface HandFormProps {
   open: boolean;
@@ -158,6 +160,11 @@ const HandForm: React.FC<HandFormProps> = ({
                 riverCards={riverCards}
                 villains={villains}
               />
+              
+              {/* Link to Opponent from My Notes */}
+              <HandDetailGate>
+                <OpponentLinkSection control={form.control} />
+              </HandDetailGate>
               
               {/* Notes */}
               <NotesSection control={form.control} />

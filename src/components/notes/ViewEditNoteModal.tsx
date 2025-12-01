@@ -11,12 +11,13 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2, Pencil, User, Camera, X, Check, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Save, Loader2, Pencil, User, Camera, X, Check, MoreHorizontal, Trash2, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { SELECTABLE_COLORS, DEFAULT_COLOR, PlayerColorId, getColorById } from './playerColors';
 import EditColorCategoriesModal from './EditColorCategoriesModal';
 import { useColorLabels } from '@/hooks/useColorLabels';
+import { useNavigate } from 'react-router-dom';
 
 interface OpponentProfile {
   id: string;
@@ -61,11 +62,15 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   const [selectedColor, setSelectedColor] = useState<PlayerColorId>(DEFAULT_COLOR);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [currentProfile, setCurrentProfile] = useState<OpponentProfile | null>(null);
+  const [linkedHands, setLinkedHands] = useState<any[]>([]);
+  const [isLoadingHands, setIsLoadingHands] = useState(false);
+  const navigate = useNavigate();
 
   // Fetch all notes for this opponent when modal opens
   useEffect(() => {
     if (open && opponentProfile?.id && user?.id) {
       fetchNotesForOpponent();
+      fetchLinkedHands();
       setCurrentProfile(opponentProfile);
       setSelectedColor((opponentProfile.color as PlayerColorId) || DEFAULT_COLOR);
       setIsEditingProfile(false);
@@ -93,6 +98,36 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
       console.error('Error fetching notes for opponent:', error);
     } finally {
       setIsLoadingNotes(false);
+    }
+  };
+
+  const fetchLinkedHands = async () => {
+    if (!opponentProfile?.id || !user?.id) return;
+
+    try {
+      setIsLoadingHands(true);
+      const { data, error } = await supabase
+        .from('session_hands_new')
+        .select(`
+          id,
+          hole_cards,
+          position,
+          preflop_action,
+          created_at,
+          session_id,
+          sessions!inner(start_time)
+        `)
+        .eq('user_id', user.id)
+        .eq('opponent_profile_id', opponentProfile.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setLinkedHands(data || []);
+    } catch (error) {
+      console.error('Error fetching linked hands:', error);
+    } finally {
+      setIsLoadingHands(false);
     }
   };
 
@@ -585,6 +620,61 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
               )}
             </div>
           </form>
+
+          {/* Linked Hands Section */}
+          {linkedHands.length > 0 && (
+            <div className="border-t pt-4 mt-4 px-6 pb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  Linked Hands
+                  <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
+                    {linkedHands.length}
+                  </span>
+                </h3>
+              </div>
+              
+              <div className="space-y-2">
+                {isLoadingHands ? (
+                  <p className="text-sm text-muted-foreground">Loading hands...</p>
+                ) : (
+                  linkedHands.map((hand) => (
+                    <div
+                      key={hand.id}
+                      onClick={() => {
+                        navigate(`/session/${hand.session_id}`);
+                        onOpenChange(false);
+                      }}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(hand.sessions.start_time).toLocaleDateString()}
+                          </span>
+                          {hand.position && (
+                            <span className="text-xs font-medium px-1.5 py-0.5 bg-primary/10 text-primary rounded">
+                              {hand.position}
+                            </span>
+                          )}
+                        </div>
+                        {hand.hole_cards && (
+                          <div className="text-sm font-medium">
+                            {hand.hole_cards}
+                          </div>
+                        )}
+                        {hand.preflop_action && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {hand.preflop_action}
+                          </div>
+                        )}
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
