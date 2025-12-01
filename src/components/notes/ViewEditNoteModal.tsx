@@ -18,14 +18,20 @@ import { SELECTABLE_COLORS, DEFAULT_COLOR, PlayerColorId, getColorById } from '.
 import EditColorCategoriesModal from './EditColorCategoriesModal';
 import { useColorLabels } from '@/hooks/useColorLabels';
 
+interface OpponentProfile {
+  id: string;
+  nickname: string;
+  image_url?: string | null;
+  color?: string | null;
+}
+
 interface PlayerNote {
   id: string;
-  opponent_name: string;
   note_body: string;
-  opponent_image?: string;
-  color?: string;
   created_at: string;
   updated_at: string;
+  opponent_profile_id: string;
+  opponent_profile: OpponentProfile;
 }
 
 interface ViewEditNoteModalProps {
@@ -56,7 +62,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   useEffect(() => {
     if (note) {
       setNoteBody(note.note_body);
-      setSelectedColor((note.color as PlayerColorId) || DEFAULT_COLOR);
+      setSelectedColor((note.opponent_profile?.color as PlayerColorId) || DEFAULT_COLOR);
       setIsEditing(false);
       setImageFile(null);
       setImagePreview(null);
@@ -119,22 +125,33 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
       setIsSaving(true);
 
       // Upload new image if changed
-      let imageUrl = note.opponent_image;
+      let imageUrl = note.opponent_profile?.image_url;
       if (imageFile) {
         imageUrl = await uploadImage(imageFile);
       }
 
-      const { error } = await supabase
+      // Update opponent profile (image, color)
+      const { error: profileError } = await supabase
+        .from('opponent_profiles')
+        .update({ 
+          image_url: imageUrl,
+          color: selectedColor,
+        })
+        .eq('id', note.opponent_profile_id)
+        .eq('user_id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Update note body
+      const { error: noteError } = await supabase
         .from('player_notes')
         .update({ 
           note_body: noteBody.trim(),
-          opponent_image: imageUrl,
-          color: selectedColor,
         })
         .eq('id', note.id)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (noteError) throw noteError;
 
       toast({
         title: 'Note updated',
@@ -158,7 +175,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   const handleCancelEdit = () => {
     if (note) {
       setNoteBody(note.note_body);
-      setSelectedColor((note.color as PlayerColorId) || DEFAULT_COLOR);
+      setSelectedColor((note.opponent_profile?.color as PlayerColorId) || DEFAULT_COLOR);
       setImageFile(null);
       setImagePreview(null);
     }
@@ -166,8 +183,8 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   };
 
   // Get the current display image (preview takes priority over saved)
-  const displayImage = imagePreview || note?.opponent_image;
-  const colorData = getColorById(note?.color);
+  const displayImage = imagePreview || note?.opponent_profile?.image_url;
+  const colorData = getColorById(note?.opponent_profile?.color);
 
   if (!note) return null;
 
@@ -176,7 +193,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md" data-form-type="other">
           <DialogHeader className="sr-only">
-            <DialogTitle>{note.opponent_name}</DialogTitle>
+            <DialogTitle>{note.opponent_profile?.nickname || 'Opponent'}</DialogTitle>
           </DialogHeader>
 
           {/* Hidden decoy fields to trick Safari autofill detection */}
@@ -218,13 +235,13 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                 // View-only avatar - clickable to enlarge if image exists
                 <div 
                   className={`w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden ${
-                    note.opponent_image ? 'cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all duration-200' : ''
+                    note.opponent_profile?.image_url ? 'cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all duration-200' : ''
                   }`}
-                  onClick={() => note.opponent_image && setIsImageFullscreen(true)}
+                  onClick={() => note.opponent_profile?.image_url && setIsImageFullscreen(true)}
                 >
-                  {note.opponent_image ? (
+                  {note.opponent_profile?.image_url ? (
                     <img 
-                      src={note.opponent_image} 
+                      src={note.opponent_profile.image_url} 
                       alt="Opponent avatar" 
                       className="w-full h-full rounded-full object-cover"
                     />
@@ -257,7 +274,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                     title={colorData.label}
                   />
                 )}
-                <h2 className="text-lg font-semibold">{note.opponent_name}</h2>
+                <h2 className="text-lg font-semibold">{note.opponent_profile?.nickname || 'Unknown'}</h2>
               </div>
               <span className="text-sm text-muted-foreground">
                 {format(new Date(note.created_at), 'MMMM d, yyyy')}
@@ -422,10 +439,10 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
             </button>
             
             {/* Enlarged image */}
-            {note.opponent_image && (
+            {note.opponent_profile?.image_url && (
               <img 
-                src={note.opponent_image} 
-                alt={`${note.opponent_name} profile`}
+                src={note.opponent_profile.image_url} 
+                alt={`${note.opponent_profile?.nickname || 'Opponent'} profile`}
                 className="max-w-full max-h-[85vh] rounded-lg object-contain animate-scale-in"
               />
             )}

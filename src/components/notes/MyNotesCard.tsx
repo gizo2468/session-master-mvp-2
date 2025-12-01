@@ -11,14 +11,20 @@ import ViewEditNoteModal from './ViewEditNoteModal';
 import { format } from 'date-fns';
 import { getColorById } from './playerColors';
 
+interface OpponentProfile {
+  id: string;
+  nickname: string;
+  image_url?: string | null;
+  color?: string | null;
+}
+
 interface PlayerNote {
   id: string;
-  opponent_name: string;
   note_body: string;
-  opponent_image?: string;
-  color?: string;
   created_at: string;
   updated_at: string;
+  opponent_profile_id: string;
+  opponent_profile: OpponentProfile;
 }
 
 const MyNotesCard: React.FC = () => {
@@ -38,13 +44,36 @@ const MyNotesCard: React.FC = () => {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('player_notes')
-        .select('*')
+        .select(`
+          id,
+          note_body,
+          created_at,
+          updated_at,
+          opponent_profile_id,
+          opponent_profiles!player_notes_opponent_profile_id_fkey (
+            id,
+            nickname,
+            image_url,
+            color
+          )
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(5);
 
       if (error) throw error;
-      setNotes(data || []);
+      
+      // Transform the data to match our interface
+      const transformedNotes: PlayerNote[] = (data || []).map((note: any) => ({
+        id: note.id,
+        note_body: note.note_body,
+        created_at: note.created_at,
+        updated_at: note.updated_at,
+        opponent_profile_id: note.opponent_profile_id,
+        opponent_profile: note.opponent_profiles,
+      }));
+      
+      setNotes(transformedNotes);
     } catch (error) {
       console.error('Error fetching notes:', error);
     } finally {
@@ -140,7 +169,7 @@ const MyNotesCard: React.FC = () => {
           ) : (
             <div className="space-y-2">
               {notes.map((note) => {
-                const colorData = getColorById(note.color);
+                const colorData = getColorById(note.opponent_profile?.color);
                 return (
                   <div
                     key={note.id}
@@ -159,7 +188,7 @@ const MyNotesCard: React.FC = () => {
                           title={colorData.label}
                         />
                         <span className="font-medium text-sm truncate">
-                          {note.opponent_name}
+                          {note.opponent_profile?.nickname || 'Unknown'}
                         </span>
                       </div>
                       <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">

@@ -133,6 +133,36 @@ export type Database = {
         }
         Relationships: []
       }
+      opponent_profiles: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          nickname: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          nickname: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          nickname?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       player_goals: {
         Row: {
           coach_id: string
@@ -177,36 +207,38 @@ export type Database = {
       }
       player_notes: {
         Row: {
-          color: string | null
           created_at: string
           id: string
           note_body: string
-          opponent_image: string | null
-          opponent_name: string
+          opponent_profile_id: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          color?: string | null
           created_at?: string
           id?: string
           note_body: string
-          opponent_image?: string | null
-          opponent_name: string
+          opponent_profile_id: string
           updated_at?: string
           user_id?: string
         }
         Update: {
-          color?: string | null
           created_at?: string
           id?: string
           note_body?: string
-          opponent_image?: string | null
-          opponent_name?: string
+          opponent_profile_id?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "player_notes_opponent_profile_id_fkey"
+            columns: ["opponent_profile_id"]
+            isOneToOne: false
+            referencedRelation: "opponent_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
