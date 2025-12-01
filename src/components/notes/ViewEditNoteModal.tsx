@@ -11,13 +11,16 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2, Pencil, User, Camera, X, Check, MoreHorizontal, Trash2, ExternalLink } from 'lucide-react';
+import { Save, Loader2, Pencil, User, Camera, X, Check, MoreHorizontal, Trash2, ExternalLink, FileText, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { SELECTABLE_COLORS, DEFAULT_COLOR, PlayerColorId, getColorById } from './playerColors';
 import EditColorCategoriesModal from './EditColorCategoriesModal';
 import { useColorLabels } from '@/hooks/useColorLabels';
 import { useNavigate } from 'react-router-dom';
+import HandDetailsDialog from '@/components/poker/HandDetailsDialog';
+import CardDisplay from '@/components/poker/CardDisplay';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface OpponentProfile {
   id: string;
@@ -64,6 +67,9 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   const [currentProfile, setCurrentProfile] = useState<OpponentProfile | null>(null);
   const [linkedHands, setLinkedHands] = useState<any[]>([]);
   const [isLoadingHands, setIsLoadingHands] = useState(false);
+  const [showLinkedHands, setShowLinkedHands] = useState(false);
+  const [selectedHand, setSelectedHand] = useState<any>(null);
+  const [showHandDetails, setShowHandDetails] = useState(false);
   const navigate = useNavigate();
 
   // Fetch all notes for this opponent when modal opens
@@ -77,6 +83,9 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
       setEditingNoteId(null);
       setImageFile(null);
       setImagePreview(null);
+      setShowLinkedHands(false);
+      setSelectedHand(null);
+      setShowHandDetails(false);
     }
   }, [open, opponentProfile?.id, user?.id]);
 
@@ -111,16 +120,26 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
         .select(`
           id,
           hole_cards,
+          flop_cards,
+          turn_card,
+          river_card,
           position,
           preflop_action,
+          flop_action,
+          turn_action,
+          river_action,
+          showdown_result,
+          pot_size,
+          amount_invested,
+          amount_won,
+          currency_type,
           created_at,
           session_id,
-          sessions!inner(start_time)
+          table_id
         `)
         .eq('user_id', user.id)
         .eq('opponent_profile_id', opponentProfile.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setLinkedHands(data || []);
@@ -406,6 +425,20 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
               <span className="text-sm text-muted-foreground">
                 {notes.length} {notes.length === 1 ? 'note' : 'notes'}
               </span>
+              
+              {/* View Hands Button */}
+              {!isEditingProfile && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowLinkedHands(true)}
+                  className="mt-1"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  View Hands ({linkedHands.length})
+                </Button>
+              )}
             </div>
 
             {/* Color Selector (Profile Edit Mode only) */}
@@ -510,98 +543,171 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
               </div>
             )}
 
-            {/* Notes List */}
-            <div className="py-4 space-y-3">
-              {isLoadingNotes ? (
-                <div className="py-4 text-center">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
-                </div>
-              ) : notes.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No notes for this opponent.
-                </p>
-              ) : (
-                notes.map((note) => (
-                  <div key={note.id} className="bg-muted/30 rounded-lg p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(note.created_at), 'MMM d, yyyy')}
-                      </span>
-                      {editingNoteId !== note.id && (
-                        <div className="flex items-center gap-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0"
-                            onClick={() => handleStartEditNote(note)}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteNote(note.id)}
+            {/* Content - toggle between Notes and Linked Hands */}
+            {!showLinkedHands ? (
+              /* Notes List */
+              <div className="py-4 space-y-3">
+                {isLoadingNotes ? (
+                  <div className="py-4 text-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+                  </div>
+                ) : notes.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No notes for this opponent.
+                  </p>
+                ) : (
+                  notes.map((note) => (
+                    <div key={note.id} className="bg-muted/30 rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(note.created_at), 'MMM d, yyyy')}
+                        </span>
+                        {editingNoteId !== note.id && (
+                          <div className="flex items-center gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0"
+                              onClick={() => handleStartEditNote(note)}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                              onClick={() => handleDeleteNote(note.id)}
+                              disabled={isSaving}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {editingNoteId === note.id ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            value={editingNoteBody}
+                            onChange={(e) => setEditingNoteBody(e.target.value)}
+                            rows={4}
                             disabled={isSaving}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                            className="resize-none"
+                            autoComplete="new-password"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck={false}
+                            data-form-type="other"
+                            data-1p-ignore="true"
+                            data-lpignore="true"
+                            data-bwignore="true"
+                            data-protonpass-ignore="true"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleCancelNoteEdit}
+                              disabled={isSaving}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => handleSaveNote(note.id)}
+                              disabled={isSaving}
+                            >
+                              {isSaving ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              ) : (
+                                <Save className="h-4 w-4 mr-2" />
+                              )}
+                              Save
+                            </Button>
+                          </div>
                         </div>
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">{note.note_body}</p>
                       )}
                     </div>
-                    
-                    {editingNoteId === note.id ? (
-                      <div className="space-y-2">
-                        <Textarea
-                          value={editingNoteBody}
-                          onChange={(e) => setEditingNoteBody(e.target.value)}
-                          rows={4}
-                          disabled={isSaving}
-                          className="resize-none"
-                          autoComplete="new-password"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck={false}
-                          data-form-type="other"
-                          data-1p-ignore="true"
-                          data-lpignore="true"
-                          data-bwignore="true"
-                          data-protonpass-ignore="true"
-                        />
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleCancelNoteEdit}
-                            disabled={isSaving}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={() => handleSaveNote(note.id)}
-                            disabled={isSaving}
-                          >
-                            {isSaving ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <Save className="h-4 w-4 mr-2" />
+                  ))
+                )}
+              </div>
+            ) : (
+              /* Linked Hands List */
+              <div className="py-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowLinkedHands(false)}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Notes
+                  </Button>
+                </div>
+                
+                <ScrollArea className="h-[400px] pr-4">
+                  {isLoadingHands ? (
+                    <div className="py-8 text-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+                    </div>
+                  ) : linkedHands.length === 0 ? (
+                    <div className="text-center py-8 space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        No hands linked yet
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Link hands when adding them in the Street-by-Street form
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {linkedHands.map((hand) => (
+                        <div
+                          key={hand.id}
+                          onClick={() => {
+                            setSelectedHand(hand);
+                            setShowHandDetails(true);
+                          }}
+                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                        >
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(hand.created_at), 'MMM d, yyyy')}
+                              </span>
+                              {hand.position && (
+                                <span className="text-xs font-medium px-1.5 py-0.5 bg-primary/10 text-primary rounded">
+                                  {hand.position}
+                                </span>
+                              )}
+                            </div>
+                            {hand.hole_cards && (
+                              <div className="flex items-center gap-2">
+                                <CardDisplay cards={hand.hole_cards} size="sm" />
+                              </div>
                             )}
-                            Save
-                          </Button>
+                            {hand.preflop_action && (
+                              <div className="text-xs text-muted-foreground">
+                                {hand.preflop_action.substring(0, 50)}
+                                {hand.preflop_action.length > 50 ? '...' : ''}
+                              </div>
+                            )}
+                          </div>
+                          <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0 ml-2" />
                         </div>
-                      </div>
-                    ) : (
-                      <p className="text-sm whitespace-pre-wrap">{note.note_body}</p>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </div>
+            )}
 
             {/* Footer Buttons */}
             <div className="flex justify-end gap-2">
@@ -612,7 +718,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
               >
                 Close
               </Button>
-              {!isEditingProfile && (
+              {!isEditingProfile && !showLinkedHands && (
                 <Button type="button" onClick={() => setIsEditingProfile(true)}>
                   <Pencil className="h-4 w-4 mr-2" />
                   Edit Profile
@@ -620,63 +726,51 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
               )}
             </div>
           </form>
-
-          {/* Linked Hands Section */}
-          {linkedHands.length > 0 && (
-            <div className="border-t pt-4 mt-4 px-6 pb-6">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  Linked Hands
-                  <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
-                    {linkedHands.length}
-                  </span>
-                </h3>
-              </div>
-              
-              <div className="space-y-2">
-                {isLoadingHands ? (
-                  <p className="text-sm text-muted-foreground">Loading hands...</p>
-                ) : (
-                  linkedHands.map((hand) => (
-                    <div
-                      key={hand.id}
-                      onClick={() => {
-                        navigate(`/session/${hand.session_id}`);
-                        onOpenChange(false);
-                      }}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(hand.sessions.start_time).toLocaleDateString()}
-                          </span>
-                          {hand.position && (
-                            <span className="text-xs font-medium px-1.5 py-0.5 bg-primary/10 text-primary rounded">
-                              {hand.position}
-                            </span>
-                          )}
-                        </div>
-                        {hand.hole_cards && (
-                          <div className="text-sm font-medium">
-                            {hand.hole_cards}
-                          </div>
-                        )}
-                        {hand.preflop_action && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {hand.preflop_action}
-                          </div>
-                        )}
-                      </div>
-                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
         </DialogContent>
       </Dialog>
+
+      {/* Hand Details Dialog */}
+      <HandDetailsDialog
+        open={showHandDetails}
+        onOpenChange={setShowHandDetails}
+        hand={selectedHand ? {
+          id: selectedHand.id,
+          cards: selectedHand.hole_cards || '',
+          position: selectedHand.position || '',
+          action: selectedHand.preflop_action || '',
+          flopCards: selectedHand.flop_cards ? selectedHand.flop_cards.match(/.{1,2}/g) || [] : [],
+          turnCard: selectedHand.turn_card || '',
+          riverCard: selectedHand.river_card || '',
+          preflopActionSequence: selectedHand.preflop_action ? 
+            selectedHand.preflop_action.split('\n').map((line: string) => {
+              const parts = line.split(':');
+              return { player: parts[0]?.trim(), action: parts[1]?.trim() };
+            }).filter((a: any) => a.player && a.action) : [],
+          flopActionSequence: selectedHand.flop_action ? 
+            selectedHand.flop_action.split('\n').map((line: string) => {
+              const parts = line.split(':');
+              return { player: parts[0]?.trim(), action: parts[1]?.trim() };
+            }).filter((a: any) => a.player && a.action) : [],
+          turnActionSequence: selectedHand.turn_action ? 
+            selectedHand.turn_action.split('\n').map((line: string) => {
+              const parts = line.split(':');
+              return { player: parts[0]?.trim(), action: parts[1]?.trim() };
+            }).filter((a: any) => a.player && a.action) : [],
+          riverActionSequence: selectedHand.river_action ? 
+            selectedHand.river_action.split('\n').map((line: string) => {
+              const parts = line.split(':');
+              return { player: parts[0]?.trim(), action: parts[1]?.trim() };
+            }).filter((a: any) => a.player && a.action) : [],
+          showdownResult: selectedHand.showdown_result || '',
+          potSize: selectedHand.pot_size || 0,
+          amountInvested: selectedHand.amount_invested || 0,
+          amountWon: selectedHand.amount_won || 0,
+          currencyType: selectedHand.currency_type || 'currency',
+          tableId: selectedHand.table_id,
+          sessionId: selectedHand.session_id,
+          createdAt: new Date(selectedHand.created_at),
+        } : null}
+      />
 
       {/* Fullscreen Image Viewer */}
       <Dialog open={isImageFullscreen} onOpenChange={setIsImageFullscreen}>
