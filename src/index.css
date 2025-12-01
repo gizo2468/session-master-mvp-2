@@ -6,13 +6,11 @@
 
 /* Hide Safari/WebKit credentials autofill button globally */
 input::-webkit-credentials-auto-fill-button,
-input::-webkit-contacts-auto-fill-button,
-input::-webkit-textfield-decoration-container {
+input::-webkit-contacts-auto-fill-button {
   visibility: hidden !important;
   pointer-events: none !important;
   position: absolute !important;
   right: 0 !important;
-  display: none !important;
 }
 
 /* Override browser autofill styling to maintain proper colors */
