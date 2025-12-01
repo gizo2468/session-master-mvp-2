@@ -70,6 +70,7 @@ export const handFormSchema = z.object({
   ),
   villainPosition: z.string().optional(),
   result: z.string().optional(),
+  opponentProfileId: z.string().uuid().optional(),
 });
 
 export type FormValues = z.infer<typeof handFormSchema>;

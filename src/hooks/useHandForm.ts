@@ -217,6 +217,7 @@ export const useHandForm = ({
       riverCard: riverCardsString || undefined,
       villains: villainsData.length > 0 ? villainsData : undefined,
       showdownResult: values.result || undefined,
+      opponentProfileId: values.opponentProfileId,
     });
     onOpenChange(false);
   };

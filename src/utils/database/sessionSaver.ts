@@ -203,6 +203,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           hand_notes: hand.notes,
           hand_image: hand.image,
           currency_type: hand.currencyType || 'currency',
+          opponent_profile_id: hand.opponentProfileId || null,
           created_at: hand.createdAt.toISOString()
         };
 
