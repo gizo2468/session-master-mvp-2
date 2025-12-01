@@ -33,6 +33,8 @@ const OpponentAutocomplete: React.FC<OpponentAutocompleteProps> = ({
   const [profiles, setProfiles] = useState<OpponentProfile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Safari autofill workaround - start readonly then enable on focus
+  const [isReadOnly, setIsReadOnly] = useState(true);
 
   // Fetch existing opponent profiles when component mounts or user changes
   useEffect(() => {
@@ -76,6 +78,18 @@ const OpponentAutocomplete: React.FC<OpponentAutocompleteProps> = ({
     }
   };
 
+  const handleFocus = () => {
+    // Safari autofill workaround - remove readonly on first focus
+    if (isReadOnly) {
+      setIsReadOnly(false);
+      setTimeout(() => inputRef.current?.focus(), 10);
+      return;
+    }
+    if (value.length > 0) {
+      setOpen(true);
+    }
+  };
+
   const handleSelectProfile = (profile: OpponentProfile) => {
     onChange(profile.nickname);
     onSelectProfile(profile);
@@ -97,23 +111,31 @@ const OpponentAutocomplete: React.FC<OpponentAutocompleteProps> = ({
             type="text"
             value={value}
             onChange={handleInputChange}
-            onFocus={() => value.length > 0 && setOpen(true)}
+            onFocus={handleFocus}
             disabled={disabled}
             placeholder={placeholder}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            // Aggressive autofill blocking
-            name={`opponent-nickname-${Date.now()}`}
-            autoComplete="off"
+            // Safari autofill workaround - start readonly
+            readOnly={isReadOnly}
+            // Static neutral name to avoid credential detection
+            name="opponent_search_field"
+            id="opponent-nickname-input"
+            // Multiple autocomplete blocking strategies
+            autoComplete="new-password"
             autoCorrect="off"
             autoCapitalize="off"
-            spellCheck="false"
+            spellCheck={false}
             inputMode="text"
+            // ARIA attributes to signal this is NOT a login field
             role="combobox"
             aria-autocomplete="list"
             aria-expanded={open}
+            // Block all password managers
             data-form-type="other"
             data-1p-ignore="true"
             data-lpignore="true"
+            data-bwignore="true"
+            data-protonpass-ignore="true"
           />
           {/* Status indicator */}
           {value.trim() && !disabled && (

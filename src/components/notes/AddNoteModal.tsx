@@ -254,13 +254,7 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
           <DialogTitle>Add Note</DialogTitle>
         </DialogHeader>
 
-        {/* Hidden decoy fields to trick Safari autofill detection - must be outside visible form */}
-        <div style={{ position: 'absolute', top: -9999, left: -9999, height: 0, width: 0, overflow: 'hidden' }} aria-hidden="true">
-          <input type="text" name="fakeusernameremembered" tabIndex={-1} />
-          <input type="password" name="fakepasswordremembered" tabIndex={-1} />
-        </div>
-
-        <form 
+        <form
           autoComplete="off" 
           data-form-type="other" 
           role="presentation"
