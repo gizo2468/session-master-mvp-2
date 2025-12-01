@@ -3,6 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 /* Hide Safari/WebKit credentials autofill button globally */
 input::-webkit-credentials-auto-fill-button,
 input::-webkit-contacts-auto-fill-button,
