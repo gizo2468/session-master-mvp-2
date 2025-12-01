@@ -72,6 +72,56 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
     return urlData.publicUrl;
   };
 
+  const findOrCreateOpponentProfile = async (
+    nickname: string,
+    imageUrl: string | null,
+    color: string
+  ): Promise<string> => {
+    if (!user?.id) throw new Error('User not authenticated');
+
+    // Check if profile exists (case-insensitive)
+    const { data: existingProfile, error: fetchError } = await supabase
+      .from('opponent_profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .ilike('nickname', nickname.trim())
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    if (existingProfile) {
+      // Profile exists, optionally update image/color if provided
+      if (imageUrl || color !== DEFAULT_COLOR) {
+        const updates: Record<string, string | null> = {};
+        if (imageUrl) updates.image_url = imageUrl;
+        if (color !== DEFAULT_COLOR) updates.color = color;
+        
+        if (Object.keys(updates).length > 0) {
+          await supabase
+            .from('opponent_profiles')
+            .update(updates)
+            .eq('id', existingProfile.id);
+        }
+      }
+      return existingProfile.id;
+    }
+
+    // Create new profile
+    const { data: newProfile, error: insertError } = await supabase
+      .from('opponent_profiles')
+      .insert({
+        user_id: user.id,
+        nickname: nickname.trim(),
+        image_url: imageUrl,
+        color: color,
+      })
+      .select('id')
+      .single();
+
+    if (insertError) throw insertError;
+    return newProfile.id;
+  };
+
   const handleSave = async () => {
     if (!user?.id) {
       toast({
@@ -100,12 +150,18 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
         imageUrl = await uploadImage(imageFile);
       }
 
+      // Find or create opponent profile
+      const profileId = await findOrCreateOpponentProfile(
+        opponentName,
+        imageUrl,
+        selectedColor || DEFAULT_COLOR
+      );
+
+      // Create the note linked to the profile
       const { error } = await supabase.from('player_notes').insert({
         user_id: user.id,
-        opponent_name: opponentName.trim(),
+        opponent_profile_id: profileId,
         note_body: noteBody.trim(),
-        opponent_image: imageUrl,
-        color: selectedColor || DEFAULT_COLOR, // Default to white if no color selected
       });
 
       if (error) throw error;
