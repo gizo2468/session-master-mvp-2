@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StickyNote, Plus, Lock, Crown } from 'lucide-react';
@@ -27,6 +27,13 @@ interface PlayerNote {
   opponent_profile: OpponentProfile;
 }
 
+interface GroupedOpponent {
+  profile: OpponentProfile;
+  notes: PlayerNote[];
+  latestNote: PlayerNote;
+  noteCount: number;
+}
+
 const MyNotesCard: React.FC = () => {
   const { isPremium } = usePremiumAccess();
   const { user } = useAuth();
@@ -35,7 +42,7 @@ const MyNotesCard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<PlayerNote | null>(null);
+  const [selectedOpponentProfile, setSelectedOpponentProfile] = useState<OpponentProfile | null>(null);
 
   const fetchNotes = async () => {
     if (!user?.id) return;
@@ -58,8 +65,7 @@ const MyNotesCard: React.FC = () => {
           )
         `)
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       
@@ -81,6 +87,29 @@ const MyNotesCard: React.FC = () => {
     }
   };
 
+  // Group notes by opponent profile
+  const groupedOpponents = useMemo(() => {
+    const groups: Record<string, GroupedOpponent> = {};
+    
+    notes.forEach(note => {
+      const profileId = note.opponent_profile_id;
+      if (!groups[profileId]) {
+        groups[profileId] = {
+          profile: note.opponent_profile,
+          notes: [],
+          latestNote: note,
+          noteCount: 0,
+        };
+      }
+      groups[profileId].notes.push(note);
+      groups[profileId].noteCount++;
+      // latestNote is already set to the first note (most recent due to ordering)
+    });
+    
+    // Return as array, limited to 5 unique opponents for the card preview
+    return Object.values(groups).slice(0, 5);
+  }, [notes]);
+
   useEffect(() => {
     if (isPremium && user?.id) {
       fetchNotes();
@@ -98,8 +127,8 @@ const MyNotesCard: React.FC = () => {
     fetchNotes();
   };
 
-  const handleNoteClick = (note: PlayerNote) => {
-    setSelectedNote(note);
+  const handleOpponentClick = (opponent: GroupedOpponent) => {
+    setSelectedOpponentProfile(opponent.profile);
     setIsViewModalOpen(true);
   };
 
@@ -162,18 +191,18 @@ const MyNotesCard: React.FC = () => {
             <div className="py-4 text-center">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
             </div>
-          ) : notes.length === 0 ? (
+          ) : groupedOpponents.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               No notes yet. Add your first note!
             </p>
           ) : (
             <div className="space-y-2">
-              {notes.map((note) => {
-                const colorData = getColorById(note.opponent_profile?.color);
+              {groupedOpponents.map((opponent) => {
+                const colorData = getColorById(opponent.profile?.color);
                 return (
                   <div
-                    key={note.id}
-                    onClick={() => handleNoteClick(note)}
+                    key={opponent.profile.id}
+                    onClick={() => handleOpponentClick(opponent)}
                     className="p-3 bg-muted/50 rounded-lg border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors"
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -188,15 +217,21 @@ const MyNotesCard: React.FC = () => {
                           title={colorData.label}
                         />
                         <span className="font-medium text-sm truncate">
-                          {note.opponent_profile?.nickname || 'Unknown'}
+                          {opponent.profile?.nickname || 'Unknown'}
                         </span>
+                        {/* Note count badge */}
+                        {opponent.noteCount > 1 && (
+                          <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full flex-shrink-0">
+                            {opponent.noteCount} notes
+                          </span>
+                        )}
                       </div>
                       <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                        {format(new Date(note.created_at), 'MMM d')}
+                        {format(new Date(opponent.latestNote.created_at), 'MMM d')}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-2">
-                      {note.note_body}
+                      {opponent.latestNote.note_body}
                     </p>
                   </div>
                 );
@@ -215,7 +250,7 @@ const MyNotesCard: React.FC = () => {
       <ViewEditNoteModal
         open={isViewModalOpen}
         onOpenChange={setIsViewModalOpen}
-        note={selectedNote}
+        opponentProfile={selectedOpponentProfile}
         onNoteSaved={handleNoteUpdated}
       />
     </>
