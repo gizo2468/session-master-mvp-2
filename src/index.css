@@ -14,6 +14,21 @@ input::-webkit-textfield-decoration-container {
   display: none !important;
 }
 
+/* Override browser autofill styling to maintain proper colors */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+textarea:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px hsl(var(--background)) inset !important;
+  -webkit-text-fill-color: hsl(var(--foreground)) !important;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: hsl(var(--foreground)) !important;
+}
+
 @layer utilities {
   .grid-cols-13 {
     grid-template-columns: repeat(13, minmax(0, 1fr));
