@@ -6,7 +6,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
@@ -17,11 +16,19 @@ import { v4 as uuidv4 } from 'uuid';
 import { SELECTABLE_COLORS, DEFAULT_COLOR, PlayerColorId } from './playerColors';
 import EditColorCategoriesModal from './EditColorCategoriesModal';
 import { useColorLabels } from '@/hooks/useColorLabels';
+import OpponentAutocomplete from './OpponentAutocomplete';
 
 interface AddNoteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onNoteSaved: () => void;
+}
+
+interface OpponentProfile {
+  id: string;
+  nickname: string;
+  image_url: string | null;
+  color: string | null;
 }
 
 const AddNoteModal: React.FC<AddNoteModalProps> = ({
@@ -38,6 +45,7 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<PlayerColorId | null>(null);
   const [editColorsOpen, setEditColorsOpen] = useState(false);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const { getLabel } = useColorLabels();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,12 +80,48 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
     return urlData.publicUrl;
   };
 
+  const handleSelectExistingProfile = (profile: OpponentProfile) => {
+    setSelectedProfileId(profile.id);
+    // Auto-fill image and color from existing profile
+    if (profile.image_url) {
+      setImagePreview(profile.image_url);
+      setImageFile(null); // Clear any new file since we're using existing
+    }
+    if (profile.color) {
+      setSelectedColor(profile.color as PlayerColorId);
+    }
+  };
+
+  const handleNameChange = (name: string) => {
+    setOpponentName(name);
+    // Clear selected profile if user is typing a different name
+    if (selectedProfileId) {
+      setSelectedProfileId(null);
+    }
+  };
+
   const findOrCreateOpponentProfile = async (
     nickname: string,
     imageUrl: string | null,
     color: string
   ): Promise<string> => {
     if (!user?.id) throw new Error('User not authenticated');
+
+    // If we already selected an existing profile, use it
+    if (selectedProfileId) {
+      // Optionally update image/color if user provided new ones
+      const updates: Record<string, string | null> = {};
+      if (imageUrl) updates.image_url = imageUrl;
+      if (color !== DEFAULT_COLOR) updates.color = color;
+      
+      if (Object.keys(updates).length > 0) {
+        await supabase
+          .from('opponent_profiles')
+          .update(updates)
+          .eq('id', selectedProfileId);
+      }
+      return selectedProfileId;
+    }
 
     // Check if profile exists (case-insensitive)
     const { data: existingProfile, error: fetchError } = await supabase
@@ -144,7 +188,7 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
     try {
       setIsSaving(true);
       
-      // Upload image if selected
+      // Upload image if a new file was selected
       let imageUrl: string | null = null;
       if (imageFile) {
         imageUrl = await uploadImage(imageFile);
@@ -177,6 +221,7 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
       setImageFile(null);
       setImagePreview(null);
       setSelectedColor(null);
+      setSelectedProfileId(null);
       onNoteSaved();
     } catch (error) {
       console.error('Error saving note:', error);
@@ -197,6 +242,7 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
       setImageFile(null);
       setImagePreview(null);
       setSelectedColor(null);
+      setSelectedProfileId(null);
     }
     onOpenChange(isOpen);
   };
@@ -260,17 +306,18 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
 
             <div className="space-y-2">
               <Label>Opponent Name / Online Nickname</Label>
-              <Input
-                placeholder="Enter player nickname..."
+              <OpponentAutocomplete
                 value={opponentName}
-                onChange={(e) => setOpponentName(e.target.value)}
+                onChange={handleNameChange}
+                onSelectProfile={handleSelectExistingProfile}
                 disabled={isSaving}
-                type="text"
-                autoComplete="new-password"
-                data-form-type="other"
-                data-1p-ignore="true"
-                data-lpignore="true"
+                placeholder="Enter player nickname..."
               />
+              {selectedProfileId && (
+                <p className="text-xs text-green-600">
+                  Adding note to existing opponent profile
+                </p>
+              )}
             </div>
 
             {/* Player Color Tag */}
