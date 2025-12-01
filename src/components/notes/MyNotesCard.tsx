@@ -8,78 +8,74 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import AddNoteModal from './AddNoteModal';
 import ViewEditNoteModal from './ViewEditNoteModal';
+import { format } from 'date-fns';
 import { getColorById } from './playerColors';
 
-interface OpponentWithNotes {
+interface OpponentProfile {
   id: string;
   nickname: string;
-  image_url: string | null;
-  color: string | null;
-  note_count: number;
-  latest_note_preview: string;
-  latest_note_date: string;
+  image_url?: string | null;
+  color?: string | null;
+}
+
+interface PlayerNote {
+  id: string;
+  note_body: string;
+  created_at: string;
+  updated_at: string;
+  opponent_profile_id: string;
+  opponent_profile: OpponentProfile;
 }
 
 const MyNotesCard: React.FC = () => {
   const { isPremium } = usePremiumAccess();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [opponents, setOpponents] = useState<OpponentWithNotes[]>([]);
+  const [notes, setNotes] = useState<PlayerNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [selectedOpponent, setSelectedOpponent] = useState<OpponentWithNotes | null>(null);
+  const [selectedNote, setSelectedNote] = useState<PlayerNote | null>(null);
 
-  const fetchOpponentsWithNotes = async () => {
+  const fetchNotes = async () => {
     if (!user?.id) return;
     
     try {
       setIsLoading(true);
+      const { data, error } = await supabase
+        .from('player_notes')
+        .select(`
+          id,
+          note_body,
+          created_at,
+          updated_at,
+          opponent_profile_id,
+          opponent_profiles!player_notes_opponent_profile_id_fkey (
+            id,
+            nickname,
+            image_url,
+            color
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
       
-      // Fetch opponent profiles that have notes, with note count and latest note info
-      const { data: opponentProfiles, error: profilesError } = await supabase
-        .from('opponent_profiles')
-        .select('id, nickname, image_url, color')
-        .eq('user_id', user.id);
-
-      if (profilesError) throw profilesError;
-
-      // For each opponent, get their note count and latest note
-      const opponentsWithNotes: OpponentWithNotes[] = [];
+      // Transform the data to match our interface
+      const transformedNotes: PlayerNote[] = (data || []).map((note: any) => ({
+        id: note.id,
+        note_body: note.note_body,
+        created_at: note.created_at,
+        updated_at: note.updated_at,
+        opponent_profile_id: note.opponent_profile_id,
+        opponent_profile: note.opponent_profiles,
+      }));
       
-      for (const profile of opponentProfiles || []) {
-        const { data: notes, error: notesError } = await supabase
-          .from('player_notes')
-          .select('note_body, created_at')
-          .eq('opponent_profile_id', profile.id)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (notesError) throw notesError;
-
-        // Only include opponents that have at least one note
-        if (notes && notes.length > 0) {
-          opponentsWithNotes.push({
-            id: profile.id,
-            nickname: profile.nickname,
-            image_url: profile.image_url,
-            color: profile.color,
-            note_count: notes.length,
-            latest_note_preview: notes[0].note_body,
-            latest_note_date: notes[0].created_at,
-          });
-        }
-      }
-
-      // Sort by latest note date descending
-      opponentsWithNotes.sort((a, b) => 
-        new Date(b.latest_note_date).getTime() - new Date(a.latest_note_date).getTime()
-      );
-
-      // Limit to 5 for display
-      setOpponents(opponentsWithNotes.slice(0, 5));
+      setNotes(transformedNotes);
     } catch (error) {
-      console.error('Error fetching opponents with notes:', error);
+      console.error('Error fetching notes:', error);
     } finally {
       setIsLoading(false);
     }
@@ -87,23 +83,23 @@ const MyNotesCard: React.FC = () => {
 
   useEffect(() => {
     if (isPremium && user?.id) {
-      fetchOpponentsWithNotes();
+      fetchNotes();
     } else {
       setIsLoading(false);
     }
   }, [isPremium, user?.id]);
 
   const handleNoteSaved = () => {
-    fetchOpponentsWithNotes();
+    fetchNotes();
     setIsAddModalOpen(false);
   };
 
-  const handleOpponentUpdated = () => {
-    fetchOpponentsWithNotes();
+  const handleNoteUpdated = () => {
+    fetchNotes();
   };
 
-  const handleOpponentClick = (opponent: OpponentWithNotes) => {
-    setSelectedOpponent(opponent);
+  const handleNoteClick = (note: PlayerNote) => {
+    setSelectedNote(note);
     setIsViewModalOpen(true);
   };
 
@@ -166,18 +162,18 @@ const MyNotesCard: React.FC = () => {
             <div className="py-4 text-center">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
             </div>
-          ) : opponents.length === 0 ? (
+          ) : notes.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               No notes yet. Add your first note!
             </p>
           ) : (
             <div className="space-y-2">
-              {opponents.map((opponent) => {
-                const colorData = getColorById(opponent.color);
+              {notes.map((note) => {
+                const colorData = getColorById(note.opponent_profile?.color);
                 return (
                   <div
-                    key={opponent.id}
-                    onClick={() => handleOpponentClick(opponent)}
+                    key={note.id}
+                    onClick={() => handleNoteClick(note)}
                     className="p-3 bg-muted/50 rounded-lg border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors"
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -192,18 +188,15 @@ const MyNotesCard: React.FC = () => {
                           title={colorData.label}
                         />
                         <span className="font-medium text-sm truncate">
-                          {opponent.nickname}
+                          {note.opponent_profile?.nickname || 'Unknown'}
                         </span>
-                        {/* Note count badge */}
-                        {opponent.note_count > 1 && (
-                          <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full flex-shrink-0">
-                            {opponent.note_count} notes
-                          </span>
-                        )}
                       </div>
+                      <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+                        {format(new Date(note.created_at), 'MMM d')}
+                      </span>
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-2">
-                      {opponent.latest_note_preview}
+                      {note.note_body}
                     </p>
                   </div>
                 );
@@ -222,8 +215,8 @@ const MyNotesCard: React.FC = () => {
       <ViewEditNoteModal
         open={isViewModalOpen}
         onOpenChange={setIsViewModalOpen}
-        opponentProfile={selectedOpponent}
-        onNoteSaved={handleOpponentUpdated}
+        note={selectedNote}
+        onNoteSaved={handleNoteUpdated}
       />
     </>
   );
