@@ -108,34 +108,36 @@ const OpponentAutocomplete: React.FC<OpponentAutocompleteProps> = ({
         <div className="relative w-full">
           <input
             ref={inputRef}
-            type="text"
+            type="search"
             value={value}
             onChange={handleInputChange}
             onFocus={handleFocus}
             disabled={disabled}
             placeholder={placeholder}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
             // Safari autofill workaround - start readonly
             readOnly={isReadOnly}
-            // Static neutral name to avoid credential detection
-            name="opponent_search_field"
+            // Random name on each render to avoid credential detection
+            name={`search_${Math.random().toString(36).substring(7)}`}
             id="opponent-nickname-input"
             // Multiple autocomplete blocking strategies
-            autoComplete="new-password"
+            autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
-            inputMode="text"
+            inputMode="search"
             // ARIA attributes to signal this is NOT a login field
             role="combobox"
-            aria-autocomplete="list"
+            aria-autocomplete="none"
             aria-expanded={open}
-            // Block all password managers
+            // Block all password managers and Safari autofill
             data-form-type="other"
+            data-credential="false"
             data-1p-ignore="true"
             data-lpignore="true"
             data-bwignore="true"
             data-protonpass-ignore="true"
+            x-autocompletetype="off"
           />
           {/* Status indicator */}
           {value.trim() && !disabled && (

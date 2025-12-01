@@ -256,7 +256,8 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
 
         <form
           autoComplete="off" 
-          data-form-type="other" 
+          data-form-type="other"
+          data-credential="false"
           role="presentation"
           onSubmit={(e) => e.preventDefault()}
         >
@@ -293,8 +294,11 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
                 className="hidden"
                 autoComplete="off"
                 data-form-type="other"
+                data-credential="false"
                 data-1p-ignore="true"
                 data-lpignore="true"
+                data-bwignore="true"
+                data-protonpass-ignore="true"
               />
             </div>
 
@@ -399,10 +403,16 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
                 onChange={(e) => setNoteBody(e.target.value)}
                 rows={4}
                 disabled={isSaving}
-                autoComplete="new-password"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
                 data-form-type="other"
+                data-credential="false"
                 data-1p-ignore="true"
                 data-lpignore="true"
+                data-bwignore="true"
+                data-protonpass-ignore="true"
               />
             </div>
           </div>

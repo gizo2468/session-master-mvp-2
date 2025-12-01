@@ -3,6 +3,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide Safari/WebKit credentials autofill button globally */
+input::-webkit-credentials-auto-fill-button,
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-textfield-decoration-container {
+  visibility: hidden !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  right: 0 !important;
+  display: none !important;
+}
+
 @layer utilities {
   .grid-cols-13 {
     grid-template-columns: repeat(13, minmax(0, 1fr));

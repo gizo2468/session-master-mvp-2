@@ -198,7 +198,8 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
 
           <form
             autoComplete="off" 
-            data-form-type="other" 
+            data-form-type="other"
+            data-credential="false"
             role="presentation"
             onSubmit={(e) => e.preventDefault()}
           >
