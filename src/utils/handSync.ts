@@ -68,6 +68,7 @@ export const syncHandToSupabase = async (hand: HandData, supabaseSessionId: stri
         hand_notes: hand.notes || null,
         hand_image: hand.handImage || hand.image || null,
         currency_type: hand.currencyType || 'currency',
+        opponent_profile_id: hand.opponentProfileId || null,
         created_at: hand.createdAt.toISOString()
       })
       .select('id')
@@ -157,6 +158,7 @@ export const syncHandUpdateToSupabase = async (hand: HandData, supabaseSessionId
       hand_notes: hand.notes || null,
       hand_image: hand.handImage || hand.image || null,
       currency_type: hand.currencyType || 'currency',
+      opponent_profile_id: hand.opponentProfileId || null,
       updated_at: new Date().toISOString()
     };
 

@@ -48,6 +48,7 @@ export const useHandForm = ({
       // Legacy fields for backward compatibility
       villainBigBlind: initialData.villainBigBlind || undefined,
       villainPosition: initialData.villainPosition || '',
+      opponentProfileId: initialData.opponentProfileId || undefined,
     }
   });
   
@@ -146,6 +147,7 @@ export const useHandForm = ({
         villainBigBlind: undefined,
         villainPosition: '',
         result: '',
+        opponentProfileId: undefined,
       });
       setImagePreview(null);
       setSelectedPositionIndex(0);
