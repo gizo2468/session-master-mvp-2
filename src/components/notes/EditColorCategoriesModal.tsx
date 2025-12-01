@@ -77,42 +77,56 @@ const EditColorCategoriesModal: React.FC<EditColorCategoriesModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" data-form-type="other">
         <DialogHeader>
           <DialogTitle>Edit Color Categories</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-3 py-4 max-h-[60vh] overflow-y-auto">
-          {SELECTABLE_COLORS.map((color) => (
-            <div key={color.id} className="flex items-center gap-3">
-              {/* Color square */}
-              <div
-                className="w-8 h-8 rounded-md flex-shrink-0"
-                style={{
-                  backgroundColor: color.hex,
-                  border: color.border ? `1px solid ${color.border}` : undefined,
-                }}
-              />
-              
-              {/* Label input */}
-              <Input
-                value={labels[color.id] || ''}
-                onChange={(e) => handleLabelChange(color.id, e.target.value)}
-                placeholder={color.label}
-                className="flex-1"
-                autoComplete="off"
-                data-form-type="other"
-              />
-              
-              {/* Default label hint */}
-              <span className="text-xs text-muted-foreground w-20 text-right">
-                {color.label}
-              </span>
-            </div>
-          ))}
-        </div>
+        <form
+          autoComplete="off"
+          data-form-type="other"
+          role="presentation"
+          onSubmit={(e) => e.preventDefault()}
+        >
+          <div className="space-y-3 py-4 max-h-[60vh] overflow-y-auto">
+            {SELECTABLE_COLORS.map((color) => (
+              <div key={color.id} className="flex items-center gap-3">
+                {/* Color square */}
+                <div
+                  className="w-8 h-8 rounded-md flex-shrink-0"
+                  style={{
+                    backgroundColor: color.hex,
+                    border: color.border ? `1px solid ${color.border}` : undefined,
+                  }}
+                />
+                
+                {/* Label input */}
+                <Input
+                  value={labels[color.id] || ''}
+                  onChange={(e) => handleLabelChange(color.id, e.target.value)}
+                  placeholder={color.label}
+                  className="flex-1"
+                  name={`color-label-${color.id}`}
+                  autoComplete="new-password"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  data-form-type="other"
+                  data-1p-ignore="true"
+                  data-lpignore="true"
+                  data-bwignore="true"
+                  data-protonpass-ignore="true"
+                />
+                
+                {/* Default label hint */}
+                <span className="text-xs text-muted-foreground w-20 text-right">
+                  {color.label}
+                </span>
+              </div>
+            ))}
+          </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 sm:gap-0">
           <Button
             type="button"
             variant="outline"
@@ -129,6 +143,7 @@ const EditColorCategoriesModal: React.FC<EditColorCategoriesModalProps> = ({
             {saving ? 'Saving...' : 'Save Changes'}
           </Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

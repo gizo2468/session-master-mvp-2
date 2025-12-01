@@ -196,13 +196,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
             <DialogTitle>{note.opponent_profile?.nickname || 'Opponent'}</DialogTitle>
           </DialogHeader>
 
-          {/* Hidden decoy fields to trick Safari autofill detection */}
-          <div style={{ position: 'absolute', top: -9999, left: -9999, height: 0, width: 0, overflow: 'hidden' }} aria-hidden="true">
-            <input type="text" name="fakeusernameremembered" tabIndex={-1} />
-            <input type="password" name="fakepasswordremembered" tabIndex={-1} />
-          </div>
-
-          <form 
+          <form
             autoComplete="off" 
             data-form-type="other" 
             role="presentation"
@@ -260,6 +254,8 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                 data-form-type="other"
                 data-1p-ignore="true"
                 data-lpignore="true"
+                data-bwignore="true"
+                data-protonpass-ignore="true"
               />
               
               {/* Opponent name with color indicator (View Mode only) */}
@@ -370,9 +366,14 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                   disabled={isSaving}
                   className="resize-none"
                   autoComplete="new-password"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
                   data-form-type="other"
                   data-1p-ignore="true"
                   data-lpignore="true"
+                  data-bwignore="true"
+                  data-protonpass-ignore="true"
                 />
               ) : (
                 <div className="bg-muted/30 rounded-lg p-4 min-h-[120px]">
