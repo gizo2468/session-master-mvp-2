@@ -466,13 +466,14 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
         )}
         
         <div className="mt-6 pt-4 border-t border-gray-100">
-          <HandManagementPanel 
-            sessionId={sessionId}
-            tableId={table.id}
-            tableFormat={table.format}
-            hands={table.hands || []}
-            readOnly={!table.isActive}
-          />
+        <HandManagementPanel 
+          sessionId={sessionId}
+          tableId={table.id}
+          tableFormat={table.format}
+          hands={table.hands || []}
+          readOnly={!table.isActive}
+          previewLimit={2}
+        />
         </div>
       </Card>
 
