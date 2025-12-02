@@ -95,7 +95,14 @@ const HandForm: React.FC<HandFormProps> = ({
               }
               
               form.handleSubmit(handleSubmit)(e);
-            }} className="space-y-6" autoComplete="off">
+            }} 
+            className="space-y-6" 
+            autoComplete="off"
+            data-form-type="other"
+            data-credential="false"
+            data-1p-ignore="true"
+            data-lpignore="true"
+            data-bwignore="true">
               
               {/* Circular Image Upload Button */}
               <ImageUploadSection 
