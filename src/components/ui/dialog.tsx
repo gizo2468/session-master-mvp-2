@@ -43,6 +43,21 @@ const DialogContent = React.forwardRef<
       )}
       {...props}
     >
+      {/* Hidden honeypot to confuse password managers */}
+      <input
+        type="password"
+        autoComplete="off"
+        tabIndex={-1}
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          width: '1px',
+          height: '1px',
+          opacity: 0,
+          pointerEvents: 'none'
+        }}
+        aria-hidden="true"
+      />
       {children}
       <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
         <X className="h-5 w-5" />

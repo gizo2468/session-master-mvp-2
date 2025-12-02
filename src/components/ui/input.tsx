@@ -36,7 +36,10 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input"> &
         inputMode={props.inputMode ?? (type === 'number' ? 'decimal' : type === 'email' ? 'email' : type === 'tel' ? 'tel' : 'text')}
         data-1p-ignore={enableAutofill ? undefined : true}
         data-lpignore={enableAutofill ? undefined : true}
+        data-bwignore={enableAutofill ? undefined : true}
+        data-protonpass-ignore={enableAutofill ? undefined : true}
         data-form-type={enableAutofill ? undefined : 'other'}
+        data-credential={enableAutofill ? undefined : 'false'}
         x-autocompletetype={enableAutofill ? undefined : 'off' as any}
         data-autocompletetype={enableAutofill ? undefined : 'off'}
         role={enableAutofill ? undefined : 'textbox'}
