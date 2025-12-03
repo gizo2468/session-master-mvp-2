@@ -16,6 +16,8 @@ interface HandDetailsDialogProps {
   hand: HandData | null;
   sessionBuyIn?: number;
   tables?: any[];
+  onEdit?: (hand: HandData) => void;
+  readOnly?: boolean;
 }
 
 const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
@@ -23,7 +25,9 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
   onOpenChange,
   hand,
   sessionBuyIn,
-  tables = []
+  tables = [],
+  onEdit,
+  readOnly = false
 }) => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [handImage, setHandImage] = useState<string | null>(null);
@@ -423,9 +427,19 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
         </div>
 
         <DialogFooter className="flex gap-2">
-          <Button variant="outline" disabled className="opacity-50">
-            Edit
-          </Button>
+          {!readOnly && onEdit && (
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                if (hand) {
+                  onEdit(hand);
+                  onOpenChange(false);
+                }
+              }}
+            >
+              Edit
+            </Button>
+          )}
           <Button onClick={() => onOpenChange(false)}>
             Close
           </Button>

@@ -263,6 +263,8 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
         hand={selectedHand}
         sessionBuyIn={sessionBuyIn}
         tables={tables}
+        onEdit={!readOnly ? onEditHand : undefined}
+        readOnly={readOnly}
       />
     </div>
   );
