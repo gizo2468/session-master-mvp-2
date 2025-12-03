@@ -110,8 +110,10 @@ const HandForm: React.FC<HandFormProps> = ({
                 onImageChange={handleImageChange}
               />
 
-              {/* AI Hand Analyzer */}
-              <AIHandAnalyzerBanner onClick={() => setShowAIAnalyzer(true)} />
+              {/* AI Hand Analyzer - only show when adding new hand, not editing */}
+              {!isEditing && (
+                <AIHandAnalyzerBanner onClick={() => setShowAIAnalyzer(true)} />
+              )}
 
               {/* Game Type Selection */}
               <GameTypeSection 
