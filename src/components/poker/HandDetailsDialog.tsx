@@ -427,7 +427,7 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
         </div>
 
         <DialogFooter className="flex gap-2">
-          {!readOnly && onEdit && (
+          {onEdit && (
             <Button 
               variant="outline" 
               onClick={() => {

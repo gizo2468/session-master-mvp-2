@@ -333,7 +333,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
         hand={selectedHandForDetails}
         sessionBuyIn={sessionBuyIn}
         tables={tables}
-        onEdit={!readOnly ? onEditHand : undefined}
+        onEdit={onEditHand}
         readOnly={readOnly}
       />
     </div>
