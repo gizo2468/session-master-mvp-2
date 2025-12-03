@@ -70,8 +70,9 @@ const CoachProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  const [reviewHandData, setReviewHandData] = useState<any | null>(null);
-  const [reviewSessionDetails, setReviewSessionDetails] = useState<any | null>(null);
+  // For instant modal open with lazy loading
+  const [reviewHandId, setReviewHandId] = useState<string | null>(null);
+  const [reviewSessionId, setReviewSessionId] = useState<string | null>(null);
   const [handReviewOpen, setHandReviewOpen] = useState(false);
 
   useEffect(() => {
@@ -344,44 +345,11 @@ const CoachProfile: React.FC = () => {
     }
   };
 
-  const handleHandClick = async (reviewedHand: CoachReviewedHand) => {
-    try {
-      // Fetch full hand data and session details in parallel
-      const [handResult, sessionResult] = await Promise.all([
-        supabase
-          .from('session_hands_new')
-          .select('*')
-          .eq('id', reviewedHand.id)
-          .single(),
-        supabase
-          .from('sessions')
-          .select('game_type, currency, small_blind, big_blind')
-          .eq('id', reviewedHand.session_id)
-          .single()
-      ]);
-
-      if (handResult.error || !handResult.data) {
-        console.error('Error loading hand details:', handResult.error);
-        toast({
-          title: "Error",
-          description: "Failed to load hand details.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Set hand data for the review modal
-      setReviewHandData(handResult.data);
-      setReviewSessionDetails(sessionResult.data || null);
-      setHandReviewOpen(true);
-    } catch (error) {
-      console.error('Error in handleHandClick:', error);
-      toast({
-        title: "Error",
-        description: "Something went wrong loading the hand.",
-        variant: "destructive",
-      });
-    }
+  // Open modal instantly - data loads inside the modal
+  const handleHandClick = (reviewedHand: CoachReviewedHand) => {
+    setReviewHandId(reviewedHand.id);
+    setReviewSessionId(reviewedHand.session_id);
+    setHandReviewOpen(true);
   };
 
   useEffect(() => {
@@ -616,16 +584,17 @@ const CoachProfile: React.FC = () => {
         {/* Coach Goals & Tasks */}
         {user?.id && coachId && <PlayerGoalsTasks studentId={user.id} mode="player" coachId={coachId} />}
 
-        {/* Hand Review Modal with Coach Feedback */}
+        {/* Hand Review Modal with Coach Feedback - opens instantly with loading skeleton */}
         <HandReviewModal
           open={handReviewOpen}
           onClose={() => {
             setHandReviewOpen(false);
-            setReviewHandData(null);
-            setReviewSessionDetails(null);
+            setReviewHandId(null);
+            setReviewSessionId(null);
           }}
-          hand={reviewHandData}
-          sessionDetails={reviewSessionDetails}
+          handId={reviewHandId || undefined}
+          sessionId={reviewSessionId || undefined}
+          currentUserId={user?.id}
           playerId={user?.id || ''}
           coachId={coachId}
           isCoach={false}
