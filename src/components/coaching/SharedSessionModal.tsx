@@ -108,6 +108,8 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isCoach, setIsCoach] = useState(false);
   const [tableBBUpdates, setTableBBUpdates] = useState<Map<string, any>>(new Map());
+  const [reviewHandImage, setReviewHandImage] = useState<string | null>(null);
+  const [loadingHandImage, setLoadingHandImage] = useState(false);
   
   const { toast } = useToast();
   
@@ -193,42 +195,60 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
       // Always use the session owner's user_id for fetching hands and tables
       const sessionOwnerId = sessionData.user_id;
 
-      // Load session hands using session owner's ID
-      const { data: handsData, error: handsError } = await supabase
-        .from('session_hands_new')
-        .select('id, table_id, hand_number, pot_size, amount_invested, amount_won, position, hole_cards, preflop_action, flop_cards, flop_action, turn_card, turn_action, river_card, river_action, showdown_result, hand_notes, hand_image, created_at')
-        .eq('session_id', sessionId)
-        .eq('user_id', sessionOwnerId)
-        .order('created_at', { ascending: true });
+      // Fetch hands, tables, and BB/Stack updates in parallel for performance
+      // Note: hand_image excluded from initial query - lazy loaded on demand
+      const [handsResult, tablesResult, bbStackUpdates] = await Promise.all([
+        supabase
+          .from('session_hands_new')
+          .select('id, table_id, hand_number, pot_size, amount_invested, amount_won, position, hole_cards, preflop_action, flop_cards, flop_action, turn_card, turn_action, river_card, river_action, showdown_result, hand_notes, created_at')
+          .eq('session_id', sessionId)
+          .eq('user_id', sessionOwnerId)
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('session_tables')
+          .select('*')
+          .eq('session_id', sessionId)
+          .eq('user_id', sessionOwnerId)
+          .order('start_time', { ascending: true }),
+        !isSessionOwner 
+          ? BBStackUpdateService.getLatestBBStackForSharedSession(sessionId) 
+          : Promise.resolve(new Map())
+      ]);
 
-      if (handsError) {
-        console.error('Error loading session hands:', handsError);
+      if (handsResult.error) {
+        console.error('Error loading session hands:', handsResult.error);
       } else {
-        setSessionHands(handsData || []);
+        setSessionHands(handsResult.data || []);
       }
 
-      // Load session tables using session owner's ID  
-      const { data: tablesData, error: tablesError } = await supabase
-        .from('session_tables')
-        .select('*')
-        .eq('session_id', sessionId)
-        .eq('user_id', sessionOwnerId)
-        .order('start_time', { ascending: true });
-
-      if (tablesError) {
-        console.error('Error loading session tables:', tablesError);
+      if (tablesResult.error) {
+        console.error('Error loading session tables:', tablesResult.error);
       } else {
-        setSessionTables(tablesData || []);
+        setSessionTables(tablesResult.data || []);
       }
 
-      // Load BB/Stack updates if viewing as coach
       if (!isSessionOwner) {
-        await loadBBStackUpdates();
+        setTableBBUpdates(bbStackUpdates);
       }
     } catch (error) {
       console.error('Error in loadSessionData:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Lazy load hand image on demand
+  const loadHandImage = async (handId: string): Promise<string | null> => {
+    try {
+      const { data } = await supabase
+        .from('session_hands_new')
+        .select('hand_image')
+        .eq('id', handId)
+        .single();
+      return data?.hand_image || null;
+    } catch (error) {
+      console.error('Error loading hand image:', error);
+      return null;
     }
   };
 
@@ -452,13 +472,21 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
     }
   };
 
-  // Load feedback when hand is selected for review
+  // Load feedback and hand image when hand is selected for review
   useEffect(() => {
     if (reviewHandId) {
       loadFeedback(reviewHandId);
+      // Lazy load hand image
+      setLoadingHandImage(true);
+      setReviewHandImage(null);
+      loadHandImage(reviewHandId).then(image => {
+        setReviewHandImage(image);
+        setLoadingHandImage(false);
+      });
     } else {
       setFeedback('');
       setFeedbackEntries([]);
+      setReviewHandImage(null);
     }
   }, [reviewHandId, currentUserId, isCoach]);
 
@@ -800,11 +828,18 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                   
                   return (
                     <div className="space-y-6">
-                      {/* Image attachment at top */}
-                      {hand.hand_image && (
+                      {/* Image attachment at top - lazy loaded */}
+                      {loadingHandImage ? (
+                        <div className="flex justify-center">
+                          <div className="flex items-center gap-2 p-3 rounded-lg border border-muted text-muted-foreground">
+                            <Icon name="Loader" size={20} className="animate-spin" />
+                            <span>Loading image...</span>
+                          </div>
+                        </div>
+                      ) : reviewHandImage && (
                         <div className="flex justify-center">
                           <button
-                            onClick={() => setSelectedImage(hand.hand_image || null)}
+                            onClick={() => setSelectedImage(reviewHandImage)}
                             className="flex items-center gap-2 p-3 rounded-lg border border-muted hover:bg-muted/20 transition-colors"
                             aria-label="View hand screenshot"
                           >
