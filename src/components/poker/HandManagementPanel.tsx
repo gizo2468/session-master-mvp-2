@@ -203,72 +203,26 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
         )}
       </div>
       
-      {/* Show card-style preview if previewLimit is set */}
-      {previewLimit ? (
-        <div className="space-y-3">
-          {previewHands.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No hands recorded yet
-            </p>
-          ) : (
-            <>
-              {previewHands.map((hand) => (
-                <div
-                  key={hand.id}
-                  onClick={() => handleHandClick(hand)}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                >
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(hand.createdAt), 'MMM d, yyyy')}
-                      </span>
-                      {hand.position && (
-                        <span className="text-xs font-medium px-1.5 py-0.5 bg-primary/10 text-primary rounded">
-                          {hand.position}
-                        </span>
-                      )}
-                    </div>
-                    {hand.cards && (
-                      <div className="flex items-center gap-2">
-                        <CardDisplay cards={hand.cards} size="sm" />
-                      </div>
-                    )}
-                    {hand.action && (
-                      <div className="text-xs text-muted-foreground">
-                        {hand.action.substring(0, 50)}
-                        {hand.action.length > 50 ? '...' : ''}
-                      </div>
-                    )}
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-              ))}
-              
-              {hasMoreHands && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowAllHandsModal(true)}
-                  className="w-full"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  View all hands ({sortedHands.length})
-                </Button>
-              )}
-            </>
-          )}
-        </div>
-      ) : (
-        /* Original table view for backward compatibility */
-        <HandsList 
-          hands={sortedHands} 
-          onEditHand={onEditHand}
-          onDeleteHand={onDeleteHand}
-          readOnly={readOnly}
-          sessionBuyIn={sessionBuyIn}
-          tables={tables}
-        />
+      {/* Always use original HandsList - with limited hands when previewLimit is set */}
+      <HandsList 
+        hands={previewHands} 
+        onEditHand={onEditHand}
+        onDeleteHand={onDeleteHand}
+        readOnly={readOnly}
+        sessionBuyIn={sessionBuyIn}
+        tables={tables}
+      />
+      
+      {hasMoreHands && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowAllHandsModal(true)}
+          className="w-full mt-2"
+        >
+          <FileText className="h-4 w-4 mr-2" />
+          View all hands ({sortedHands.length})
+        </Button>
       )}
       
       {!readOnly && ( // Only render form components if not in read-only mode
