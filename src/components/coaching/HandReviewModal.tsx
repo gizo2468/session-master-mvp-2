@@ -8,6 +8,7 @@ import Icon from '@/components/ui/Lucide';
 import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 import CardDisplay from '@/components/poker/CardDisplay';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface HandData {
   id: string;
@@ -39,8 +40,14 @@ interface SessionDetails {
 interface HandReviewModalProps {
   open: boolean;
   onClose: () => void;
-  hand: HandData | null;
+  // Option A: Pass full data directly (used by SharedSessionModal)
+  hand?: HandData | null;
   sessionDetails?: SessionDetails | null;
+  // Option B: Pass IDs for lazy loading (used by CoachProfile for instant open)
+  handId?: string;
+  sessionId?: string;
+  // Common props
+  currentUserId?: string;
   playerId: string;
   coachId?: string;
   isCoach?: boolean;
@@ -49,8 +56,11 @@ interface HandReviewModalProps {
 export const HandReviewModal: React.FC<HandReviewModalProps> = ({
   open,
   onClose,
-  hand,
-  sessionDetails,
+  hand: propHand,
+  sessionDetails: propSessionDetails,
+  handId,
+  sessionId,
+  currentUserId,
   playerId,
   coachId,
   isCoach = false
@@ -63,21 +73,20 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
     coach_id: string;
   }>>([]);
   const [isSavingFeedback, setIsSavingFeedback] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [handImage, setHandImage] = useState<string | null>(null);
   const [loadingHandImage, setLoadingHandImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  
+  // Internal loading state for lazy-loaded data
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [internalHand, setInternalHand] = useState<HandData | null>(null);
+  const [internalSessionDetails, setInternalSessionDetails] = useState<SessionDetails | null>(null);
 
   const { toast } = useToast();
 
-  // Get current user on mount
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id || null);
-    };
-    getCurrentUser();
-  }, []);
+  // Use prop data if provided, otherwise use internally loaded data
+  const hand = propHand || internalHand;
+  const sessionDetails = propSessionDetails || internalSessionDetails;
 
   const getCurrencySymbol = (currency?: string) => {
     switch (currency) {
@@ -90,12 +99,12 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
   };
 
   // Lazy load hand image on demand
-  const loadHandImage = async (handId: string): Promise<string | null> => {
+  const loadHandImage = async (id: string): Promise<string | null> => {
     try {
       const { data } = await supabase
         .from('session_hands_new')
         .select('hand_image')
-        .eq('id', handId)
+        .eq('id', id)
         .single();
       return data?.hand_image || null;
     } catch (error) {
@@ -104,15 +113,58 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
     }
   };
 
+  // Load hand and session data when using lazy loading mode (handId + sessionId)
+  useEffect(() => {
+    if (!open || propHand || !handId) {
+      // Either closed, or already have prop data, or no handId for lazy load
+      return;
+    }
+
+    const loadData = async () => {
+      setIsLoadingData(true);
+      try {
+        // Fetch hand and session details in parallel
+        const [handResult, sessionResult] = await Promise.all([
+          supabase
+            .from('session_hands_new')
+            .select('*')
+            .eq('id', handId)
+            .single(),
+          sessionId 
+            ? supabase
+                .from('sessions')
+                .select('game_type, currency, small_blind, big_blind')
+                .eq('id', sessionId)
+                .single()
+            : Promise.resolve({ data: null, error: null })
+        ]);
+
+        if (handResult.error || !handResult.data) {
+          console.error('Error loading hand details:', handResult.error);
+          return;
+        }
+
+        setInternalHand(handResult.data);
+        setInternalSessionDetails(sessionResult.data || null);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadData();
+  }, [open, propHand, handId, sessionId]);
+
   // Load existing feedback when modal opens
-  const loadFeedback = async (handId: string) => {
+  const loadFeedback = async (id: string) => {
     if (!currentUserId) return;
     
     try {
       let query = supabase
         .from('hand_feedback')
         .select('*')
-        .eq('hand_id', handId);
+        .eq('hand_id', id);
 
       if (isCoach && coachId) {
         // Coach: load only their own feedback for this hand
@@ -212,7 +264,7 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
     }
   };
 
-  // Load feedback and hand image when modal opens
+  // Load feedback and hand image when modal opens and hand data is available
   useEffect(() => {
     if (open && hand?.id && currentUserId) {
       loadFeedback(hand.id);
@@ -232,12 +284,51 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
       setFeedbackEntries([]);
       setHandImage(null);
       setSelectedImage(null);
+      setInternalHand(null);
+      setInternalSessionDetails(null);
     }
   }, [open, hand?.id, currentUserId]);
 
   const currencySymbol = getCurrencySymbol(sessionDetails?.currency);
 
-  if (!hand) return null;
+  // Loading skeleton
+  const LoadingSkeleton = () => (
+    <div className="p-6 space-y-6">
+      <div className="flex justify-center">
+        <Skeleton className="h-10 w-48" />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-6 w-24" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-6 w-24" />
+        </div>
+      </div>
+      <div>
+        <Skeleton className="h-4 w-20 mb-2" />
+        <Skeleton className="h-12 w-32" />
+      </div>
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-16 w-full" />
+      </div>
+      <Skeleton className="h-px w-full" />
+      <div className="text-center">
+        <Skeleton className="h-4 w-20 mx-auto mb-2" />
+        <Skeleton className="h-8 w-24 mx-auto" />
+      </div>
+      <Skeleton className="h-px w-full" />
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -249,272 +340,277 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
               Hand Review
             </DialogTitle>
           </DialogHeader>
-          <div className="p-6">
-            <div className="space-y-6">
-              {/* Image attachment at top - lazy loaded */}
-              {loadingHandImage ? (
-                <div className="flex justify-center">
-                  <div className="flex items-center gap-2 p-3 rounded-lg border border-muted text-muted-foreground">
-                    <Icon name="Loader" size={20} className="animate-spin" />
-                    <span>Loading image...</span>
-                  </div>
-                </div>
-              ) : handImage && (
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => setSelectedImage(handImage)}
-                    className="flex items-center gap-2 p-3 rounded-lg border border-muted hover:bg-muted/20 transition-colors"
-                    aria-label="View hand screenshot"
-                  >
-                    <Icon name="Image" size={20} />
-                    <span>View Hand Screenshot</span>
-                  </button>
-                </div>
-              )}
-
-              {/* Hand details grid */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Hand number and position */}
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-sm text-muted-foreground">Hand #</span>
-                    <p className="font-medium">{hand.hand_number || 'N/A'}</p>
-                  </div>
-                  {hand.position && (
-                    <div>
-                      <span className="text-sm text-muted-foreground">Position</span>
-                      <p className="font-medium">{hand.position}</p>
+          
+          {isLoadingData ? (
+            <LoadingSkeleton />
+          ) : !hand ? (
+            <div className="p-6 text-center text-muted-foreground">
+              <Icon name="AlertCircle" className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>Hand data not available</p>
+            </div>
+          ) : (
+            <div className="p-6">
+              <div className="space-y-6">
+                {/* Image attachment at top - lazy loaded */}
+                {loadingHandImage ? (
+                  <div className="flex justify-center">
+                    <div className="flex items-center gap-2 p-3 rounded-lg border border-muted text-muted-foreground">
+                      <Icon name="Loader" size={20} className="animate-spin" />
+                      <span>Loading image...</span>
                     </div>
-                  )}
-                </div>
-
-                {/* Game type and stakes */}
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-sm text-muted-foreground">Game Type</span>
-                    <p className="font-medium">{sessionDetails?.game_type || 'N/A'}</p>
                   </div>
-                  {sessionDetails?.small_blind && sessionDetails?.big_blind && (
+                ) : handImage && (
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => setSelectedImage(handImage)}
+                      className="flex items-center gap-2 p-3 rounded-lg border border-muted hover:bg-muted/20 transition-colors"
+                      aria-label="View hand screenshot"
+                    >
+                      <Icon name="Image" size={20} />
+                      <span>View Hand Screenshot</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Hand details grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Hand number and position */}
+                  <div className="space-y-2">
                     <div>
-                      <span className="text-sm text-muted-foreground">Stakes</span>
-                      <p className="font-medium">{currencySymbol}{sessionDetails.small_blind}/{currencySymbol}{sessionDetails.big_blind}</p>
+                      <span className="text-sm text-muted-foreground">Hand #</span>
+                      <p className="font-medium">{hand.hand_number || 'N/A'}</p>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Cards */}
-              {hand.hole_cards && (
-                <div>
-                  <span className="text-sm text-muted-foreground">Hole Cards</span>
-                  <div className="mt-2">
-                    <CardDisplay cards={hand.hole_cards} size="lg" />
-                  </div>
-                </div>
-              )}
-
-              {/* Community cards - all 5 board cards in one row */}
-              {(hand.flop_cards || hand.turn_card || hand.river_card) && (
-                <div>
-                  <span className="text-sm text-muted-foreground">Board</span>
-                  <div className="mt-2 flex items-center gap-2">
-                    {hand.flop_cards && <CardDisplay cards={hand.flop_cards} size="md" />}
-                    {hand.turn_card && <CardDisplay cards={hand.turn_card} size="md" />}
-                    {hand.river_card && <CardDisplay cards={hand.river_card} size="md" />}
-                  </div>
-                </div>
-              )}
-
-              {/* Financial details */}
-              <div className="grid grid-cols-2 gap-4">
-                {typeof hand.pot_size === 'number' && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Pot Size</span>
-                    <p className="font-medium">{currencySymbol}{hand.pot_size.toFixed(2)}</p>
-                  </div>
-                )}
-                {typeof hand.amount_invested === 'number' && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Amount Invested</span>
-                    <p className="font-medium">{currencySymbol}{hand.amount_invested.toFixed(2)}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Action details */}
-              <div className="space-y-3">
-                {hand.preflop_action && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Preflop Action</span>
-                    <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.preflop_action}</p>
-                  </div>
-                )}
-                {hand.flop_action && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Flop Action</span>
-                    <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.flop_action}</p>
-                  </div>
-                )}
-                {hand.turn_action && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Turn Action</span>
-                    <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.turn_action}</p>
-                  </div>
-                )}
-                {hand.river_action && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">River Action</span>
-                    <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.river_action}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Player notes */}
-              {hand.hand_notes && (
-                <div>
-                  <span className="text-sm text-muted-foreground">Player Notes</span>
-                  <div className="mt-2 p-3 bg-muted rounded-lg">
-                    <p className="text-sm">{hand.hand_notes}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Result - emphasized at bottom */}
-              <div className="border-t pt-4">
-                <div className="text-center">
-                  <span className="text-sm text-muted-foreground">Hand Result</span>
-                  <div className="mt-2">
-                    {typeof hand.amount_won === 'number' && typeof hand.amount_invested === 'number' ? (
-                      <div className="flex justify-center">
-                        <ProfitLossBadge 
-                          profit={hand.amount_won - hand.amount_invested}
-                          currency={sessionDetails?.currency || 'USD'}
-                        />
+                    {hand.position && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Position</span>
+                        <p className="font-medium">{hand.position}</p>
                       </div>
-                    ) : hand.showdown_result ? (
-                      <Badge variant="outline" className="text-base px-4 py-2">
-                        {hand.showdown_result}
-                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Game type and stakes */}
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-sm text-muted-foreground">Game Type</span>
+                      <p className="font-medium">{sessionDetails?.game_type || 'N/A'}</p>
+                    </div>
+                    {sessionDetails?.small_blind && sessionDetails?.big_blind && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Stakes</span>
+                        <p className="font-medium">{currencySymbol}{sessionDetails.small_blind}/{currencySymbol}{sessionDetails.big_blind}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Cards */}
+                {hand.hole_cards && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Hole Cards</span>
+                    <div className="mt-2">
+                      <CardDisplay cards={hand.hole_cards} size="lg" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Community cards - all 5 board cards in one row */}
+                {(hand.flop_cards || hand.turn_card || hand.river_card) && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Board</span>
+                    <div className="mt-2 flex items-center gap-2">
+                      {hand.flop_cards && <CardDisplay cards={hand.flop_cards} size="md" />}
+                      {hand.turn_card && <CardDisplay cards={hand.turn_card} size="md" />}
+                      {hand.river_card && <CardDisplay cards={hand.river_card} size="md" />}
+                    </div>
+                  </div>
+                )}
+
+                {/* Financial details */}
+                <div className="grid grid-cols-2 gap-4">
+                  {typeof hand.pot_size === 'number' && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Pot Size</span>
+                      <p className="font-medium">{currencySymbol}{hand.pot_size.toFixed(2)}</p>
+                    </div>
+                  )}
+                  {typeof hand.amount_invested === 'number' && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Amount Invested</span>
+                      <p className="font-medium">{currencySymbol}{hand.amount_invested.toFixed(2)}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action details */}
+                <div className="space-y-3">
+                  {hand.preflop_action && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Preflop Action</span>
+                      <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.preflop_action}</p>
+                    </div>
+                  )}
+                  {hand.flop_action && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Flop Action</span>
+                      <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.flop_action}</p>
+                    </div>
+                  )}
+                  {hand.turn_action && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Turn Action</span>
+                      <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.turn_action}</p>
+                    </div>
+                  )}
+                  {hand.river_action && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">River Action</span>
+                      <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.river_action}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Player notes */}
+                {hand.hand_notes && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Player Notes</span>
+                    <div className="mt-2 p-3 bg-muted rounded-lg">
+                      <p className="text-sm">{hand.hand_notes}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Result - emphasized at bottom */}
+                <div className="border-t pt-4">
+                  <div className="text-center">
+                    <span className="text-sm text-muted-foreground">Hand Result</span>
+                    <div className="mt-2">
+                      {typeof hand.amount_won === 'number' && typeof hand.amount_invested === 'number' ? (
+                        <div className="flex justify-center">
+                          <ProfitLossBadge 
+                            profit={hand.amount_won - hand.amount_invested}
+                            currency={sessionDetails?.currency || 'USD'}
+                          />
+                        </div>
+                      ) : hand.showdown_result ? (
+                        <Badge variant="outline" className="text-base px-4 py-2">
+                          {hand.showdown_result}
+                        </Badge>
+                      ) : (
+                        <p className="text-muted-foreground">No result recorded</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Coach feedback section */}
+                <div className="border-t pt-4 space-y-3">
+                  <div>
+                    <span className="text-sm font-medium">Coach Feedback</span>
+                    
+                    {/* Display existing feedback entries */}
+                    {feedbackEntries.length > 0 && (
+                      <div className="mt-3 space-y-3">
+                        <div className="text-sm text-muted-foreground">Previous Feedback:</div>
+                        {feedbackEntries.map((entry, index) => (
+                          <div key={entry.id} className="p-3 bg-muted rounded-lg">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-xs text-muted-foreground">
+                                #{index + 1} • {new Date(entry.created_at).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                              {isCoach && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteFeedback(entry.id)}
+                                  className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                                >
+                                  <Icon name="trash-2" className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                            <p className="text-sm whitespace-pre-wrap">{entry.feedback_content}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {isCoach ? (
+                      // Coach view: Input for adding new feedback
+                      <>
+                        <Textarea
+                          value={feedback}
+                          onChange={(e) => setFeedback(e.target.value)}
+                          placeholder="Add your feedback for this hand..."
+                          className="mt-3 min-h-[100px] resize-none"
+                        />
+                        <div className="flex justify-end gap-2 mt-2">
+                          <Button variant="outline" onClick={onClose}>
+                            Cancel
+                          </Button>
+                          <Button 
+                            onClick={saveFeedback}
+                            disabled={!feedback.trim() || isSavingFeedback}
+                          >
+                            {isSavingFeedback ? (
+                              <>
+                                <Icon name="Loader" className="h-4 w-4 animate-spin mr-2" />
+                                Saving...
+                              </>
+                            ) : (
+                              'Add Feedback'
+                            )}
+                          </Button>
+                        </div>
+                      </>
                     ) : (
-                      <p className="text-muted-foreground">No result recorded</p>
+                      // Player view: Read-only feedback display
+                      <>
+                        {feedbackEntries.length === 0 && (
+                          <div className="mt-2 p-3 bg-muted/50 rounded-lg text-center">
+                            <p className="text-sm text-muted-foreground">No coach feedback yet</p>
+                          </div>
+                        )}
+                        <div className="flex justify-end mt-3">
+                          <Button variant="outline" onClick={onClose}>
+                            Close
+                          </Button>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
               </div>
-
-              {/* Coach feedback section */}
-              <div className="border-t pt-4 space-y-3">
-                <div>
-                  <span className="text-sm font-medium">Coach Feedback</span>
-                  
-                  {/* Display existing feedback entries */}
-                  {feedbackEntries.length > 0 && (
-                    <div className="mt-3 space-y-3">
-                      <div className="text-sm text-muted-foreground">Previous Feedback:</div>
-                      {feedbackEntries.map((entry, index) => (
-                        <div key={entry.id} className="p-3 bg-muted rounded-lg">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="text-xs text-muted-foreground">
-                              #{index + 1} • {new Date(entry.created_at).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                            {isCoach && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => deleteFeedback(entry.id)}
-                                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                              >
-                                <Icon name="trash-2" className="h-3 w-3" />
-                              </Button>
-                            )}
-                          </div>
-                          <p className="text-sm whitespace-pre-wrap">{entry.feedback_content}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {isCoach ? (
-                    // Coach view: Input for adding new feedback
-                    <>
-                      <Textarea
-                        value={feedback}
-                        onChange={(e) => setFeedback(e.target.value)}
-                        placeholder="Add your feedback for this hand..."
-                        className="mt-3 min-h-[100px] resize-none"
-                      />
-                      <div className="flex justify-end gap-2 mt-2">
-                        <Button variant="outline" onClick={onClose}>
-                          Cancel
-                        </Button>
-                        <Button 
-                          onClick={saveFeedback}
-                          disabled={!feedback.trim() || isSavingFeedback}
-                        >
-                          {isSavingFeedback ? (
-                            <>
-                              <Icon name="Loader" className="h-4 w-4 animate-spin mr-2" />
-                              Saving...
-                            </>
-                          ) : (
-                            'Add Feedback'
-                          )}
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    // Player view: Read-only feedback display
-                    <>
-                      {feedbackEntries.length === 0 && (
-                        <div className="mt-2 p-3 bg-muted/50 rounded-lg text-center">
-                          <p className="text-sm text-muted-foreground">No coach feedback yet</p>
-                        </div>
-                      )}
-                      <div className="flex justify-end mt-3">
-                        <Button variant="outline" onClick={onClose}>
-                          Close
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
             </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
 
       {/* Full-screen image viewer */}
-      {selectedImage && (
-        <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
-          <DialogContent className="max-w-4xl p-0 bg-black/90 border-none">
-            <div className="relative flex items-center justify-center p-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 text-white hover:bg-white/10"
-                onClick={() => setSelectedImage(null)}
-              >
-                <Icon name="X" className="h-6 w-6" />
-              </Button>
-              <img
-                src={selectedImage}
-                alt="Hand screenshot"
-                className="w-full h-auto max-h-[70vh] object-contain rounded"
-                onError={(e) => {
-                  console.error('Failed to load image:', selectedImage);
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-transparent border-none">
+          <button
+            onClick={() => setSelectedImage(null)}
+            className="absolute top-2 right-2 z-10 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+            aria-label="Close image viewer"
+          >
+            <Icon name="X" className="h-6 w-6 text-white" />
+          </button>
+          {selectedImage && (
+            <img
+              src={selectedImage}
+              alt="Hand screenshot"
+              className="max-w-full max-h-[90vh] object-contain mx-auto rounded-lg"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
+
+export default HandReviewModal;
