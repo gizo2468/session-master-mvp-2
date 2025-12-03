@@ -12,9 +12,8 @@ import PageContainer from '@/components/ui/PageContainer';
 import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
 import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
-import HandDetailsDialog from '@/components/poker/HandDetailsDialog';
+import { HandReviewModal } from '@/components/coaching/HandReviewModal';
 import CardDisplay from '@/components/poker/CardDisplay';
-import { HandData } from '@/types/poker';
 
 interface CoachData {
   id: string;
@@ -71,8 +70,9 @@ const CoachProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  const [selectedHand, setSelectedHand] = useState<HandData | null>(null);
-  const [handDialogOpen, setHandDialogOpen] = useState(false);
+  const [reviewHandData, setReviewHandData] = useState<any | null>(null);
+  const [reviewSessionDetails, setReviewSessionDetails] = useState<any | null>(null);
+  const [handReviewOpen, setHandReviewOpen] = useState(false);
 
   useEffect(() => {
     const loadCoachData = async () => {
@@ -346,15 +346,22 @@ const CoachProfile: React.FC = () => {
 
   const handleHandClick = async (reviewedHand: CoachReviewedHand) => {
     try {
-      // Fetch full hand data for the dialog
-      const { data: handData, error } = await supabase
-        .from('session_hands_new')
-        .select('*')
-        .eq('id', reviewedHand.id)
-        .single();
+      // Fetch full hand data and session details in parallel
+      const [handResult, sessionResult] = await Promise.all([
+        supabase
+          .from('session_hands_new')
+          .select('*')
+          .eq('id', reviewedHand.id)
+          .single(),
+        supabase
+          .from('sessions')
+          .select('game_type, currency, small_blind, big_blind')
+          .eq('id', reviewedHand.session_id)
+          .single()
+      ]);
 
-      if (error || !handData) {
-        console.error('Error loading hand details:', error);
+      if (handResult.error || !handResult.data) {
+        console.error('Error loading hand details:', handResult.error);
         toast({
           title: "Error",
           description: "Failed to load hand details.",
@@ -363,35 +370,10 @@ const CoachProfile: React.FC = () => {
         return;
       }
 
-      // Convert to HandData format
-      const handForDialog: HandData = {
-        id: handData.id,
-        sessionId: handData.session_id,
-        tableId: handData.table_id,
-        handNumber: handData.hand_number,
-        position: handData.position,
-        cards: handData.hole_cards,
-        holeCards: handData.hole_cards ? handData.hole_cards.split(',') : undefined,
-        preflopAction: handData.preflop_action,
-        flopCards: handData.flop_cards ? handData.flop_cards.split(',') : undefined,
-        flopAction: handData.flop_action,
-        turnCard: handData.turn_card,
-        turnAction: handData.turn_action,
-        riverCard: handData.river_card,
-        riverAction: handData.river_action,
-        showdownResult: handData.showdown_result,
-        resultAmount: handData.amount_won,
-        potSize: handData.pot_size,
-        amountInvested: handData.amount_invested,
-        amountWon: handData.amount_won,
-        notes: handData.hand_notes,
-        handImage: handData.hand_image,
-        currencyType: handData.currency_type as 'currency' | 'chips',
-        createdAt: new Date(handData.created_at)
-      };
-
-      setSelectedHand(handForDialog);
-      setHandDialogOpen(true);
+      // Set hand data for the review modal
+      setReviewHandData(handResult.data);
+      setReviewSessionDetails(sessionResult.data || null);
+      setHandReviewOpen(true);
     } catch (error) {
       console.error('Error in handleHandClick:', error);
       toast({
@@ -634,11 +616,19 @@ const CoachProfile: React.FC = () => {
         {/* Coach Goals & Tasks */}
         {user?.id && coachId && <PlayerGoalsTasks studentId={user.id} mode="player" coachId={coachId} />}
 
-        {/* Hand Details Dialog */}
-        <HandDetailsDialog
-          open={handDialogOpen}
-          onOpenChange={setHandDialogOpen}
-          hand={selectedHand}
+        {/* Hand Review Modal with Coach Feedback */}
+        <HandReviewModal
+          open={handReviewOpen}
+          onClose={() => {
+            setHandReviewOpen(false);
+            setReviewHandData(null);
+            setReviewSessionDetails(null);
+          }}
+          hand={reviewHandData}
+          sessionDetails={reviewSessionDetails}
+          playerId={user?.id || ''}
+          coachId={coachId}
+          isCoach={false}
         />
     </PageContainer>
   );

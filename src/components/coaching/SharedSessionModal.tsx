@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import Icon from '@/components/ui/Lucide';
 import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
@@ -12,6 +11,7 @@ import { useSessionStats } from '@/hooks/useSessionStats';
 import CardDisplay from '@/components/poker/CardDisplay';
 import { useToast } from '@/hooks/use-toast';
 import { BBStackUpdateService } from '@/services/bbStackUpdateService';
+import { HandReviewModal } from '@/components/coaching/HandReviewModal';
 
 interface SessionDetails {
   id: string;
@@ -97,14 +97,6 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [liveDuration, setLiveDuration] = useState<number | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [reviewHandId, setReviewHandId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState('');
-  const [feedbackEntries, setFeedbackEntries] = useState<Array<{
-    id: string;
-    feedback_content: string;
-    created_at: string;
-    coach_id: string;
-  }>>([]);
-  const [isSavingFeedback, setIsSavingFeedback] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isCoach, setIsCoach] = useState(false);
   const [tableBBUpdates, setTableBBUpdates] = useState<Map<string, any>>(new Map());
@@ -360,122 +352,9 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
     return tableIndex !== -1 ? tableIndex + 1 : null;
   };
 
-  // Load existing feedback when a hand is selected for review
-  const loadFeedback = async (handId: string) => {
-    if (!currentUserId || !sessionDetails) return;
-    
-    try {
-      let query = supabase
-        .from('hand_feedback')
-        .select('*')
-        .eq('hand_id', handId);
-
-      if (isCoach) {
-        // Coach: load only their own feedback for this hand
-        query = query
-          .eq('coach_id', currentUserId)
-          .eq('student_id', playerId);
-      } else {
-        // Player: load all feedback for this hand where they are the student
-        query = query.eq('student_id', currentUserId);
-      }
-
-      const { data: feedbackData, error } = await query.order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Error loading feedback:', error);
-        return;
-      }
-
-      setFeedbackEntries(feedbackData || []);
-      setFeedback(''); // Clear input field
-    } catch (error) {
-      console.error('Error in loadFeedback:', error);
-    }
-  };
-
-  // Delete feedback
-  const deleteFeedback = async (feedbackId: string) => {
-    if (!currentUserId || !isCoach) return;
-
-    try {
-      const { error } = await supabase
-        .from('hand_feedback')
-        .delete()
-        .eq('id', feedbackId)
-        .eq('coach_id', currentUserId); // Only allow coaches to delete their own feedback
-
-      if (error) throw error;
-
-      // Remove from local state
-      setFeedbackEntries(prev => prev.filter(entry => entry.id !== feedbackId));
-      
-      toast({
-        title: "Feedback deleted",
-        description: "The feedback has been successfully removed.",
-      });
-    } catch (error) {
-      console.error('Error deleting feedback:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete feedback. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Save feedback
-  const saveFeedback = async () => {
-    if (!reviewHandId || !currentUserId || !sessionDetails || !isCoach || !feedback.trim()) {
-      return;
-    }
-
-    setIsSavingFeedback(true);
-    try {
-      const feedbackData = {
-        hand_id: reviewHandId,
-        coach_id: currentUserId,
-        student_id: playerId,
-        feedback_content: feedback.trim()
-      };
-
-      // Always insert new feedback (no more updating existing)
-      const { data: newFeedback, error } = await supabase
-        .from('hand_feedback')
-        .insert(feedbackData)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Add the new feedback to our local state
-      if (newFeedback) {
-        setFeedbackEntries(prev => [...prev, newFeedback]);
-      }
-
-      // Clear the input field
-      setFeedback('');
-      
-      toast({
-        title: "Feedback saved",
-        description: "Your feedback has been saved successfully."
-      });
-    } catch (error) {
-      console.error('Error saving feedback:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save feedback. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSavingFeedback(false);
-    }
-  };
-
-  // Load feedback and hand image when hand is selected for review
+  // Load hand image when hand is selected for review
   useEffect(() => {
     if (reviewHandId) {
-      loadFeedback(reviewHandId);
       // Lazy load hand image
       setLoadingHandImage(true);
       setReviewHandImage(null);
@@ -484,11 +363,9 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
         setLoadingHandImage(false);
       });
     } else {
-      setFeedback('');
-      setFeedbackEntries([]);
       setReviewHandImage(null);
     }
-  }, [reviewHandId, currentUserId, isCoach]);
+  }, [reviewHandId]);
 
   const profit = sessionDetails ? (sessionDetails.cash_out || 0) - sessionDetails.buy_in : 0;
   const currencySymbol = getCurrencySymbol(sessionDetails?.currency);
@@ -811,263 +688,44 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
           </Dialog>
         )}
 
-        {/* Hand Review Modal */}
-        {reviewHandId && (
-          <Dialog open={!!reviewHandId} onOpenChange={() => setReviewHandId(null)}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Icon name="Eye" size={20} />
-                  Hand Review
-                </DialogTitle>
-              </DialogHeader>
-              <div className="p-6">
-                {(() => {
-                  const hand = sessionHands.find(h => h.id === reviewHandId);
-                  if (!hand) return <p>Hand not found</p>;
-                  
-                  return (
-                    <div className="space-y-6">
-                      {/* Image attachment at top - lazy loaded */}
-                      {loadingHandImage ? (
-                        <div className="flex justify-center">
-                          <div className="flex items-center gap-2 p-3 rounded-lg border border-muted text-muted-foreground">
-                            <Icon name="Loader" size={20} className="animate-spin" />
-                            <span>Loading image...</span>
-                          </div>
-                        </div>
-                      ) : reviewHandImage && (
-                        <div className="flex justify-center">
-                          <button
-                            onClick={() => setSelectedImage(reviewHandImage)}
-                            className="flex items-center gap-2 p-3 rounded-lg border border-muted hover:bg-muted/20 transition-colors"
-                            aria-label="View hand screenshot"
-                          >
-                            <Icon name="Image" size={20} />
-                            <span>View Hand Screenshot</span>
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Hand details grid */}
-                      <div className="grid grid-cols-2 gap-4">
-                        {/* Hand number and position */}
-                        <div className="space-y-2">
-                          <div>
-                            <span className="text-sm text-muted-foreground">Hand #</span>
-                            <p className="font-medium">{hand.hand_number || 'N/A'}</p>
-                          </div>
-                          {hand.position && (
-                            <div>
-                              <span className="text-sm text-muted-foreground">Position</span>
-                              <p className="font-medium">{hand.position}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Game type and stakes */}
-                        <div className="space-y-2">
-                          <div>
-                            <span className="text-sm text-muted-foreground">Game Type</span>
-                            <p className="font-medium">{sessionDetails?.game_type || 'N/A'}</p>
-                          </div>
-                          {sessionDetails?.small_blind && sessionDetails?.big_blind && (
-                            <div>
-                              <span className="text-sm text-muted-foreground">Stakes</span>
-                              <p className="font-medium">{getCurrencySymbol()}{sessionDetails.small_blind}/{getCurrencySymbol()}{sessionDetails.big_blind}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Cards */}
-                      {hand.hole_cards && (
-                        <div>
-                          <span className="text-sm text-muted-foreground">Hole Cards</span>
-                          <div className="mt-2">
-                            <CardDisplay cards={hand.hole_cards} size="lg" />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Community cards - all 5 board cards in one row */}
-                      {(hand.flop_cards || hand.turn_card || hand.river_card) && (
-                        <div>
-                          <span className="text-sm text-muted-foreground">Board</span>
-                          <div className="mt-2 flex items-center gap-2">
-                            {hand.flop_cards && <CardDisplay cards={hand.flop_cards} size="md" />}
-                            {hand.turn_card && <CardDisplay cards={hand.turn_card} size="md" />}
-                            {hand.river_card && <CardDisplay cards={hand.river_card} size="md" />}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Financial details */}
-                      <div className="grid grid-cols-2 gap-4">
-                        {typeof hand.pot_size === 'number' && (
-                          <div>
-                            <span className="text-sm text-muted-foreground">Pot Size</span>
-                            <p className="font-medium">{getCurrencySymbol()}{hand.pot_size.toFixed(2)}</p>
-                          </div>
-                        )}
-                        {typeof hand.amount_invested === 'number' && (
-                          <div>
-                            <span className="text-sm text-muted-foreground">Amount Invested</span>
-                            <p className="font-medium">{getCurrencySymbol()}{hand.amount_invested.toFixed(2)}</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Action details */}
-                      <div className="space-y-3">
-                        {hand.preflop_action && (
-                          <div>
-                            <span className="text-sm text-muted-foreground">Preflop Action</span>
-                            <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.preflop_action}</p>
-                          </div>
-                        )}
-                        {hand.flop_action && (
-                          <div>
-                            <span className="text-sm text-muted-foreground">Flop Action</span>
-                            <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.flop_action}</p>
-                          </div>
-                        )}
-                        {hand.turn_action && (
-                          <div>
-                            <span className="text-sm text-muted-foreground">Turn Action</span>
-                            <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.turn_action}</p>
-                          </div>
-                        )}
-                        {hand.river_action && (
-                          <div>
-                            <span className="text-sm text-muted-foreground">River Action</span>
-                            <p className="mt-1 text-sm bg-muted p-2 rounded">{hand.river_action}</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Player notes */}
-                      {hand.hand_notes && (
-                        <div>
-                          <span className="text-sm text-muted-foreground">Player Notes</span>
-                          <div className="mt-2 p-3 bg-muted rounded-lg">
-                            <p className="text-sm">{hand.hand_notes}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Result - emphasized at bottom */}
-                      <div className="border-t pt-4">
-                        <div className="text-center">
-                          <span className="text-sm text-muted-foreground">Hand Result</span>
-                          <div className="mt-2">
-                            {typeof hand.amount_won === 'number' && typeof hand.amount_invested === 'number' ? (
-                              <div className="flex justify-center">
-                                <ProfitLossBadge 
-                                  profit={hand.amount_won - hand.amount_invested}
-                                  currency={sessionDetails?.currency || 'USD'}
-                                />
-                              </div>
-                            ) : hand.showdown_result ? (
-                              <Badge variant="outline" className="text-base px-4 py-2">
-                                {hand.showdown_result}
-                              </Badge>
-                            ) : (
-                              <p className="text-muted-foreground">No result recorded</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Coach feedback section */}
-                      <div className="border-t pt-4 space-y-3">
-                        <div>
-                          <span className="text-sm font-medium">Coach Feedback</span>
-                          
-                           {/* Display existing feedback entries */}
-                           {feedbackEntries.length > 0 && (
-                             <div className="mt-3 space-y-3">
-                               <div className="text-sm text-muted-foreground">Previous Feedback:</div>
-                                {feedbackEntries.map((entry, index) => (
-                                  <div key={entry.id} className="p-3 bg-muted rounded-lg">
-                                    <div className="flex justify-between items-start mb-2">
-                                      <span className="text-xs text-muted-foreground">
-                                        #{index + 1} • {new Date(entry.created_at).toLocaleDateString('en-US', {
-                                          month: 'short',
-                                          day: 'numeric',
-                                          hour: '2-digit',
-                                          minute: '2-digit'
-                                        })}
-                                      </span>
-                                      {isCoach && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => deleteFeedback(entry.id)}
-                                          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                                        >
-                                          <Icon name="trash-2" className="h-3 w-3" />
-                                        </Button>
-                                      )}
-                                    </div>
-                                    <p className="text-sm whitespace-pre-wrap">{entry.feedback_content}</p>
-                                  </div>
-                                ))}
-                             </div>
-                           )}
-
-                           {isCoach ? (
-                             // Coach view: Input for adding new feedback
-                             <>
-                               <Textarea
-                                 value={feedback}
-                                 onChange={(e) => setFeedback(e.target.value)}
-                                 placeholder="Add your feedback for this hand..."
-                                 className="mt-3 min-h-[100px] resize-none"
-                               />
-                               <div className="flex justify-end gap-2 mt-2">
-                                 <Button variant="outline" onClick={() => setReviewHandId(null)}>
-                                   Cancel
-                                 </Button>
-                                 <Button 
-                                   onClick={saveFeedback}
-                                   disabled={!feedback.trim() || isSavingFeedback}
-                                 >
-                                   {isSavingFeedback ? (
-                                     <>
-                                       <Icon name="Loader" className="h-4 w-4 animate-spin mr-2" />
-                                       Saving...
-                                     </>
-                                   ) : (
-                                     'Add Feedback'
-                                   )}
-                                 </Button>
-                               </div>
-                             </>
-                           ) : (
-                             // Player view: Read-only feedback display
-                             <>
-                               {feedbackEntries.length === 0 && (
-                                 <div className="mt-2 p-3 bg-muted/50 rounded-lg text-center">
-                                   <p className="text-sm text-muted-foreground">No coach feedback yet</p>
-                                 </div>
-                               )}
-                               <div className="flex justify-end mt-3">
-                                 <Button variant="outline" onClick={() => setReviewHandId(null)}>
-                                   Close
-                                 </Button>
-                               </div>
-                             </>
-                           )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+        {/* Hand Review Modal - uses reusable component */}
+        {reviewHandId && (() => {
+          const hand = sessionHands.find(h => h.id === reviewHandId);
+          return (
+            <HandReviewModal
+              open={!!reviewHandId}
+              onClose={() => setReviewHandId(null)}
+              hand={hand ? {
+                id: hand.id,
+                hand_number: hand.hand_number,
+                position: hand.position,
+                hole_cards: hand.hole_cards,
+                preflop_action: hand.preflop_action,
+                flop_cards: hand.flop_cards,
+                flop_action: hand.flop_action,
+                turn_card: hand.turn_card,
+                turn_action: hand.turn_action,
+                river_card: hand.river_card,
+                river_action: hand.river_action,
+                showdown_result: hand.showdown_result,
+                hand_notes: hand.hand_notes,
+                hand_image: reviewHandImage || undefined,
+                pot_size: hand.pot_size,
+                amount_invested: hand.amount_invested,
+                amount_won: hand.amount_won
+              } : null}
+              sessionDetails={sessionDetails ? {
+                game_type: sessionDetails.game_type,
+                currency: sessionDetails.currency,
+                small_blind: sessionDetails.small_blind,
+                big_blind: sessionDetails.big_blind
+              } : null}
+              playerId={playerId}
+              coachId={isCoach ? currentUserId || undefined : undefined}
+              isCoach={isCoach}
+            />
+          );
+        })()}
       </DialogContent>
     </Dialog>
   );
