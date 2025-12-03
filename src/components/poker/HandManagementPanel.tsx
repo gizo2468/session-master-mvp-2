@@ -290,22 +290,17 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
                   }}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
                 >
-                  <div className="flex-1 space-y-2">
+                  <div className="flex-1 space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(hand.createdAt), 'MMM d, yyyy')}
-                      </span>
+                      {hand.cards && (
+                        <CardDisplay cards={hand.cards} size="sm" />
+                      )}
                       {hand.position && (
                         <span className="text-xs font-medium px-1.5 py-0.5 bg-primary/10 text-primary rounded">
                           {hand.position}
                         </span>
                       )}
                     </div>
-                    {hand.cards && (
-                      <div className="flex items-center gap-2">
-                        <CardDisplay cards={hand.cards} size="sm" />
-                      </div>
-                    )}
                     {hand.action && (
                       <div className="text-xs text-muted-foreground">
                         {hand.action.substring(0, 50)}
