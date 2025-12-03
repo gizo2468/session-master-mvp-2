@@ -639,8 +639,8 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
               </div>
             ) : (
               /* Linked Hands List */
-              <div className="flex flex-col h-[calc(85vh-220px)]">
-                <div className="flex items-center gap-2 mb-4 flex-shrink-0">
+              <div className="py-4">
+                <div className="flex items-center gap-2 mb-4">
                   <Button
                     type="button"
                     variant="ghost"
@@ -652,7 +652,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                   </Button>
                 </div>
                 
-                <ScrollArea className="flex-1 pr-4">
+                <ScrollArea className="h-[300px] pr-4">
                   {isLoadingHands ? (
                     <div className="py-8 text-center">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
