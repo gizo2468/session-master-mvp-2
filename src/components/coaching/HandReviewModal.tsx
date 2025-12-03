@@ -612,5 +612,3 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
     </>
   );
 };
-
-export default HandReviewModal;
