@@ -102,6 +102,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [tableBBUpdates, setTableBBUpdates] = useState<Map<string, any>>(new Map());
   const [reviewHandImage, setReviewHandImage] = useState<string | null>(null);
   const [loadingHandImage, setLoadingHandImage] = useState(false);
+  const [handsWithFeedback, setHandsWithFeedback] = useState<Set<string>>(new Set());
   
   const { toast } = useToast();
   
@@ -211,6 +212,20 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
         console.error('Error loading session hands:', handsResult.error);
       } else {
         setSessionHands(handsResult.data || []);
+        
+        // Fetch feedback status for all hands
+        const handIds = (handsResult.data || []).map(h => h.id);
+        if (handIds.length > 0) {
+          const { data: feedbackData } = await supabase
+            .from('hand_feedback')
+            .select('hand_id')
+            .in('hand_id', handIds);
+          
+          const feedbackSet = new Set((feedbackData || []).map(f => f.hand_id));
+          setHandsWithFeedback(feedbackSet);
+        } else {
+          setHandsWithFeedback(new Set());
+        }
       }
 
       if (tablesResult.error) {
@@ -609,6 +624,16 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                                )}
                                {hand.position && (
                                  <Badge variant="secondary">{hand.position}</Badge>
+                               )}
+                               {/* Coach feedback status indicator */}
+                               {handsWithFeedback.has(hand.id) ? (
+                                 <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border border-green-400 bg-green-50/30 text-green-600 dark:text-green-400 shadow-[0_0_6px_rgba(74,222,128,0.4)]">
+                                   Reviewed
+                                 </span>
+                               ) : (
+                                 <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border border-red-400 bg-red-50/30 text-red-600 dark:text-red-400 shadow-[0_0_6px_rgba(248,113,113,0.4)]">
+                                   Pending
+                                 </span>
                                )}
                              {hand.hand_image && (
                                <button
