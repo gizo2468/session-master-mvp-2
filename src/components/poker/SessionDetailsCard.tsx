@@ -3,9 +3,10 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession, TableData } from '@/types/poker';
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe, Calendar, CreditCard } from "lucide-react";
+import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe, Calendar, CreditCard, Share2 } from "lucide-react";
 import { format } from 'date-fns';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
+import { useSessionSharing } from '@/hooks/useSessionSharing';
 
 interface SessionDetailsCardProps {
   session: PokerSession;
@@ -14,6 +15,15 @@ interface SessionDetailsCardProps {
 const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   const tables = session.tables || [];
   const currencySymbol = getCurrencySymbol(session.currency);
+  
+  // Get session sharing status
+  const { isShared, sharedCoaches, connectedCoaches } = useSessionSharing(session.id);
+  
+  // Get coach display names for shared coaches
+  const sharedCoachNames = sharedCoaches
+    .map(coachId => connectedCoaches.find(c => c.id === coachId)?.displayName)
+    .filter(Boolean)
+    .join(', ');
 
   // Calculate total initial buy-ins and rebuys across all tables
   let totalInitialBuyin = 0, totalRebuyAmount = 0, rebuyCount = 0;
@@ -97,6 +107,17 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             <span className="text-gray-500">Game Type:</span>
             <span className="font-medium">{session.gameType}</span>
           </div>
+          
+          {/* Session Sharing Status - only show if shared */}
+          {isShared && sharedCoachNames && (
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-1.5">
+                <Share2 className="h-4 w-4 text-muted-foreground" />
+                <span className="text-gray-500">Shared With:</span>
+              </div>
+              <span className="font-medium text-amber-700">{sharedCoachNames}</span>
+            </div>
+          )}
           
           {/* Center-aligned summary pills */}
           <div className="flex flex-row flex-wrap items-start justify-center gap-2 mt-1 mb-1">
