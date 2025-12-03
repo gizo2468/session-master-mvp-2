@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession, TableData } from '@/types/poker';
 import { Badge } from "@/components/ui/badge";
@@ -13,17 +14,12 @@ interface SessionDetailsCardProps {
 }
 
 const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
+  const navigate = useNavigate();
   const tables = session.tables || [];
   const currencySymbol = getCurrencySymbol(session.currency);
   
   // Get session sharing status
   const { isShared, sharedCoaches, connectedCoaches } = useSessionSharing(session.id);
-  
-  // Get coach display names for shared coaches
-  const sharedCoachNames = sharedCoaches
-    .map(coachId => connectedCoaches.find(c => c.id === coachId)?.displayName)
-    .filter(Boolean)
-    .join(', ');
 
   // Calculate total initial buy-ins and rebuys across all tables
   let totalInitialBuyin = 0, totalRebuyAmount = 0, rebuyCount = 0;
@@ -109,13 +105,29 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           </div>
           
           {/* Session Sharing Status - only show if shared */}
-          {isShared && sharedCoachNames && (
+          {isShared && sharedCoaches.length > 0 && (
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-1.5">
                 <Share2 className="h-4 w-4 text-muted-foreground" />
                 <span className="text-gray-500">Shared With:</span>
               </div>
-              <span className="font-medium text-amber-700">{sharedCoachNames}</span>
+              <div className="font-medium text-amber-700">
+                {sharedCoaches.map((coachId, index) => {
+                  const coach = connectedCoaches.find(c => c.id === coachId);
+                  if (!coach) return null;
+                  return (
+                    <span key={coachId}>
+                      <span 
+                        className="cursor-pointer hover:underline"
+                        onClick={() => navigate(`/coach/${coachId}`)}
+                      >
+                        {coach.displayName}
+                      </span>
+                      {index < sharedCoaches.length - 1 && ', '}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           )}
           
