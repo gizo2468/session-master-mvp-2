@@ -210,6 +210,22 @@ const MyNotesCard: React.FC = () => {
             Add Note
           </Button>
 
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search opponents..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+              autoComplete="off"
+              data-form-type="other"
+              data-1p-ignore="true"
+              data-lpignore="true"
+            />
+          </div>
+
           <Button
             variant="outline"
             className="w-full justify-center gap-2"
@@ -238,10 +254,7 @@ const MyNotesCard: React.FC = () => {
       {/* All Notes Modal */}
       <Dialog 
         open={isAllNotesModalOpen} 
-        onOpenChange={(open) => {
-          setIsAllNotesModalOpen(open);
-          if (!open) setSearchQuery('');
-        }}
+        onOpenChange={setIsAllNotesModalOpen}
       >
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -250,22 +263,6 @@ const MyNotesCard: React.FC = () => {
               All Notes
             </DialogTitle>
           </DialogHeader>
-          
-          {/* Search Input */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search opponents..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-              autoComplete="off"
-              data-form-type="other"
-              data-1p-ignore="true"
-              data-lpignore="true"
-            />
-          </div>
           
           {filteredOpponents.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
