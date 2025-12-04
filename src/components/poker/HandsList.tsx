@@ -54,11 +54,11 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-2/5 md:py-2">Cards</TableHead>
-                <TableHead className="w-[20%] md:py-2">Position</TableHead>
-                <TableHead className="w-1/4 md:py-2">Result</TableHead>
+                <TableHead className="w-[35%] md:py-2">Cards</TableHead>
+                <TableHead className="w-[15%] md:py-2">Position</TableHead>
+                <TableHead className="w-[30%] md:py-2">Result</TableHead>
                 {!readOnly && (
-                  <TableHead className="w-[15%] text-right md:py-2">Actions</TableHead>
+                  <TableHead className="w-[20%] text-right md:py-2">Actions</TableHead>
                 )}
               </TableRow>
             </TableHeader>
