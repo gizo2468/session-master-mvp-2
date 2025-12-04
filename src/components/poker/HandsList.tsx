@@ -54,13 +54,13 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-1/5">Cards</TableHead>
-                <TableHead className="w-[10%]">Position</TableHead>
-                <TableHead className="w-1/4">Action</TableHead>
-                <TableHead className="w-[15%]">Buy-In</TableHead>
-                <TableHead className="w-1/5">Result</TableHead>
+                <TableHead className="w-1/5 md:py-2">Cards</TableHead>
+                <TableHead className="w-[10%] md:py-2">Position</TableHead>
+                <TableHead className="w-1/4 md:py-2">Action</TableHead>
+                <TableHead className="w-[15%] md:py-2">Buy-In</TableHead>
+                <TableHead className="w-1/5 md:py-2">Result</TableHead>
                 {!readOnly && (
-                  <TableHead className="w-[100px] text-right">Actions</TableHead>
+                  <TableHead className="w-[100px] text-right md:py-2">Actions</TableHead>
                 )}
               </TableRow>
             </TableHeader>
@@ -71,7 +71,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                   className="group cursor-pointer hover:bg-muted/50"
                   onClick={() => handleRowClick(hand)}
                 >
-                  <TableCell className="py-3">
+                  <TableCell className="py-3 md:py-1.5">
                     <div className="flex items-center gap-0.5">
                       <CardDisplay cards={hand.cards} size="sm" />
                       <div className="ml-1 flex items-center space-x-1">
@@ -130,12 +130,12 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="md:py-1.5">
                     <span className="inline-flex items-center justify-center px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
                       {hand.position}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="md:py-1.5">
                     <div className="space-y-1">
                       <AdaptiveTooltip content={<p>{hand.action}</p>}>
                         <div className="text-sm font-medium line-clamp-2">
@@ -153,7 +153,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                     </div>
                   </TableCell>
                   
-                  <TableCell>
+                  <TableCell className="md:py-1.5">
                     {(() => {
                       // Find the table this hand belongs to
                       const handTable = tables.find(table => table.id === hand.tableId);
@@ -169,7 +169,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                     })()}
                   </TableCell>
                   
-                  <TableCell>
+                  <TableCell className="md:py-1.5">
                     {hand.resultAmount !== undefined && (
                       <div className="flex flex-col items-center gap-0.5">
                         <div className="flex items-center gap-1">
@@ -199,7 +199,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                     )}
                   </TableCell>
                   {!readOnly && (
-                    <TableCell className="text-right">
+                    <TableCell className="text-right md:py-1.5">
                       <div className="flex justify-end space-x-1">
                         <Button 
                           size="sm" 
