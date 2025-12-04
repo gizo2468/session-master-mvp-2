@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { StickyNote, Plus, Lock, Crown } from 'lucide-react';
+import { StickyNote, Plus, Lock, Crown, List } from 'lucide-react';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,12 @@ import AddNoteModal from './AddNoteModal';
 import ViewEditNoteModal from './ViewEditNoteModal';
 import { format } from 'date-fns';
 import { getColorById } from './playerColors';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface OpponentProfile {
   id: string;
@@ -42,6 +48,7 @@ const MyNotesCard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isAllNotesModalOpen, setIsAllNotesModalOpen] = useState(false);
   const [selectedOpponentProfile, setSelectedOpponentProfile] = useState<OpponentProfile | null>(null);
 
   const fetchNotes = async () => {
@@ -87,7 +94,7 @@ const MyNotesCard: React.FC = () => {
     }
   };
 
-  // Group notes by opponent profile
+  // Group notes by opponent profile (no limit for modal display)
   const groupedOpponents = useMemo(() => {
     const groups: Record<string, GroupedOpponent> = {};
     
@@ -106,9 +113,12 @@ const MyNotesCard: React.FC = () => {
       // latestNote is already set to the first note (most recent due to ordering)
     });
     
-    // Return as array, limited to 5 unique opponents for the card preview
-    return Object.values(groups).slice(0, 5);
+    return Object.values(groups);
   }, [notes]);
+
+  // Calculate totals for summary display
+  const totalOpponents = groupedOpponents.length;
+  const totalNotes = notes.length;
 
   useEffect(() => {
     if (isPremium && user?.id) {
@@ -187,11 +197,42 @@ const MyNotesCard: React.FC = () => {
             Add Note
           </Button>
 
+          <Button
+            variant="outline"
+            className="w-full justify-center gap-2"
+            onClick={() => setIsAllNotesModalOpen(true)}
+          >
+            <List className="h-4 w-4" />
+            View All Notes
+          </Button>
+
           {isLoading ? (
-            <div className="py-4 text-center">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+            <div className="py-2 text-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mx-auto"></div>
             </div>
-          ) : groupedOpponents.length === 0 ? (
+          ) : totalNotes === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-2">
+              No notes yet. Add your first note!
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-2">
+              {totalOpponents} opponent{totalOpponents !== 1 ? 's' : ''} • {totalNotes} note{totalNotes !== 1 ? 's' : ''}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* All Notes Modal */}
+      <Dialog open={isAllNotesModalOpen} onOpenChange={setIsAllNotesModalOpen}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <StickyNote className="h-5 w-5" />
+              All Notes
+            </DialogTitle>
+          </DialogHeader>
+          
+          {groupedOpponents.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               No notes yet. Add your first note!
             </p>
@@ -202,7 +243,10 @@ const MyNotesCard: React.FC = () => {
                 return (
                   <div
                     key={opponent.profile.id}
-                    onClick={() => handleOpponentClick(opponent)}
+                    onClick={() => {
+                      setIsAllNotesModalOpen(false);
+                      handleOpponentClick(opponent);
+                    }}
                     className="p-3 bg-muted/50 rounded-lg border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors"
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -238,8 +282,8 @@ const MyNotesCard: React.FC = () => {
               })}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
 
       <AddNoteModal
         open={isAddModalOpen}
