@@ -235,18 +235,70 @@ const MyNotesCard: React.FC = () => {
             View All Notes
           </Button>
 
-          {isLoading ? (
-            <div className="py-2 text-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mx-auto"></div>
+          {/* Search Results - only show when searching */}
+          {searchQuery.trim() && (
+            <div className="space-y-2">
+              {filteredOpponents.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-2">
+                  No opponents match your search.
+                </p>
+              ) : (
+                filteredOpponents.map((opponent) => {
+                  const colorData = getColorById(opponent.profile?.color);
+                  return (
+                    <div
+                      key={opponent.profile.id}
+                      onClick={() => handleOpponentClick(opponent)}
+                      className="p-3 bg-muted/50 rounded-lg border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div 
+                            className="w-3 h-3 rounded-sm flex-shrink-0"
+                            style={{ 
+                              backgroundColor: colorData.hex,
+                              border: colorData.border ? `1px solid ${colorData.border}` : '1px solid transparent'
+                            }}
+                            title={colorData.label}
+                          />
+                          <span className="font-medium text-sm truncate">
+                            {opponent.profile?.nickname || 'Unknown'}
+                          </span>
+                          {opponent.noteCount > 1 && (
+                            <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full flex-shrink-0">
+                              {opponent.noteCount} notes
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+                          {format(new Date(opponent.latestNote.created_at), 'MMM d')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {opponent.latestNote.note_body}
+                      </p>
+                    </div>
+                  );
+                })
+              )}
             </div>
-          ) : totalNotes === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-2">
-              No notes yet. Add your first note!
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-2">
-              {totalOpponents} opponent{totalOpponents !== 1 ? 's' : ''} • {totalNotes} note{totalNotes !== 1 ? 's' : ''}
-            </p>
+          )}
+
+          {/* Summary - only show when NOT searching */}
+          {!searchQuery.trim() && (
+            isLoading ? (
+              <div className="py-2 text-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mx-auto"></div>
+              </div>
+            ) : totalNotes === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-2">
+                No notes yet. Add your first note!
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-2">
+                {totalOpponents} opponent{totalOpponents !== 1 ? 's' : ''} • {totalNotes} note{totalNotes !== 1 ? 's' : ''}
+              </p>
+            )
           )}
         </CardContent>
       </Card>
@@ -264,15 +316,13 @@ const MyNotesCard: React.FC = () => {
             </DialogTitle>
           </DialogHeader>
           
-          {filteredOpponents.length === 0 ? (
+          {groupedOpponents.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              {searchQuery.trim() 
-                ? 'No opponents match your search.'
-                : 'No notes yet. Add your first note!'}
+              No notes yet. Add your first note!
             </p>
           ) : (
             <div className="space-y-2">
-              {filteredOpponents.map((opponent) => {
+              {groupedOpponents.map((opponent) => {
                 const colorData = getColorById(opponent.profile?.color);
                 return (
                   <div
