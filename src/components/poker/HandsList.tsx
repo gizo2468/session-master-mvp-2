@@ -54,9 +54,8 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-1/3 md:py-2">Cards</TableHead>
-                <TableHead className="w-[15%] md:py-2">Position</TableHead>
-                <TableHead className="w-[20%] md:py-2">Buy-In</TableHead>
+                <TableHead className="w-2/5 md:py-2">Cards</TableHead>
+                <TableHead className="w-[20%] md:py-2">Position</TableHead>
                 <TableHead className="w-1/4 md:py-2">Result</TableHead>
                 {!readOnly && (
                   <TableHead className="w-[15%] text-right md:py-2">Actions</TableHead>
@@ -135,21 +134,6 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                     </span>
                   </TableCell>
                   
-                  <TableCell className="md:py-2">
-                    {(() => {
-                      // Find the table this hand belongs to
-                      const handTable = tables.find(table => table.id === hand.tableId);
-                      const buyIn = handTable?.buyIn || sessionBuyIn;
-                      
-                      return buyIn !== undefined ? (
-                        <div className="flex items-center justify-center">
-                          <span className="text-sm font-medium">
-                            ${buyIn.toFixed(2)}
-                          </span>
-                        </div>
-                      ) : null;
-                    })()}
-                  </TableCell>
                   
                   <TableCell className="md:py-2">
                     {hand.resultAmount !== undefined && (
