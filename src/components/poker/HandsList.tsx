@@ -70,7 +70,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                   className="group cursor-pointer hover:bg-muted/50"
                   onClick={() => handleRowClick(hand)}
                 >
-                  <TableCell className="py-3 md:py-1">
+                  <TableCell className="py-3 md:py-2">
                     <div className="flex items-center gap-0.5">
                       <CardDisplay cards={hand.cards} size="sm" />
                       <div className="ml-1 flex items-center space-x-1">
@@ -129,13 +129,13 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="md:py-1">
+                  <TableCell className="md:py-2">
                     <span className="inline-flex items-center justify-center px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
                       {hand.position}
                     </span>
                   </TableCell>
                   
-                  <TableCell className="md:py-1">
+                  <TableCell className="md:py-2">
                     {(() => {
                       // Find the table this hand belongs to
                       const handTable = tables.find(table => table.id === hand.tableId);
@@ -151,7 +151,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                     })()}
                   </TableCell>
                   
-                  <TableCell className="md:py-1">
+                  <TableCell className="md:py-2">
                     {hand.resultAmount !== undefined && (
                       <div className="flex flex-col items-center gap-0.5">
                         <div className="flex items-center gap-1">
@@ -181,7 +181,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                     )}
                   </TableCell>
                   {!readOnly && (
-                    <TableCell className="text-right md:py-1">
+                    <TableCell className="text-right md:py-2">
                       <div className="flex justify-end space-x-1">
                         <Button 
                           size="sm" 
