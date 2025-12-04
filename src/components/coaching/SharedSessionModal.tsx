@@ -625,13 +625,13 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                                {hand.position && (
                                  <Badge variant="secondary">{hand.position}</Badge>
                                )}
-                               {/* Coach feedback status indicator */}
+                               {/* Coach feedback status indicator - hidden on mobile */}
                                {handsWithFeedback.has(hand.id) ? (
-                                 <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border border-green-400 bg-green-50/30 text-green-600 dark:text-green-400 shadow-[0_0_6px_rgba(74,222,128,0.4)]">
+                                 <span className="hidden sm:inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border border-green-400 bg-green-50/30 text-green-600 dark:text-green-400 shadow-[0_0_6px_rgba(74,222,128,0.4)]">
                                    Reviewed
                                  </span>
                                ) : (
-                                 <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border border-red-400 bg-red-50/30 text-red-600 dark:text-red-400 shadow-[0_0_6px_rgba(248,113,113,0.4)]">
+                                 <span className="hidden sm:inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border border-red-400 bg-red-50/30 text-red-600 dark:text-red-400 shadow-[0_0_6px_rgba(248,113,113,0.4)]">
                                    Pending
                                  </span>
                                )}
@@ -656,6 +656,18 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                                 size="sm"
                               />
                             )}
+                            {/* Mobile-only feedback status indicator - below result */}
+                            <div className="sm:hidden mt-1">
+                              {handsWithFeedback.has(hand.id) ? (
+                                <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border border-green-400 bg-green-50/30 text-green-600 dark:text-green-400 shadow-[0_0_6px_rgba(74,222,128,0.4)]">
+                                  Reviewed
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border border-red-400 bg-red-50/30 text-red-600 dark:text-red-400 shadow-[0_0_6px_rgba(248,113,113,0.4)]">
+                                  Pending
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
 
