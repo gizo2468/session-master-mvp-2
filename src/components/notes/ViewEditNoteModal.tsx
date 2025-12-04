@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+// Layout: Position chip + hole cards on same row
 import {
   Dialog,
   DialogContent,
