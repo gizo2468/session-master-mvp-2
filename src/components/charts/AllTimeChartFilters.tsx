@@ -71,7 +71,7 @@ export const AllTimeChartFilters: React.FC<AllTimeChartFiltersProps> = ({
 
   return (
     <div className="flex flex-col gap-4 mt-4">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="startDate" className="text-sm">Start Date</Label>
           <Input
