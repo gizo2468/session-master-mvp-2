@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { StickyNote, Plus, Lock, Crown, List } from 'lucide-react';
+import { StickyNote, Plus, Lock, Crown, List, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,6 +51,7 @@ const MyNotesCard: React.FC = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAllNotesModalOpen, setIsAllNotesModalOpen] = useState(false);
   const [selectedOpponentProfile, setSelectedOpponentProfile] = useState<OpponentProfile | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchNotes = async () => {
     if (!user?.id) return;
@@ -119,6 +121,17 @@ const MyNotesCard: React.FC = () => {
   // Calculate totals for summary display
   const totalOpponents = groupedOpponents.length;
   const totalNotes = notes.length;
+
+  // Filter grouped opponents by search query (matches against nickname)
+  const filteredOpponents = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return groupedOpponents;
+    }
+    const query = searchQuery.toLowerCase().trim();
+    return groupedOpponents.filter(opponent => 
+      opponent.profile?.nickname?.toLowerCase().includes(query)
+    );
+  }, [groupedOpponents, searchQuery]);
 
   useEffect(() => {
     if (isPremium && user?.id) {
@@ -223,7 +236,13 @@ const MyNotesCard: React.FC = () => {
       </Card>
 
       {/* All Notes Modal */}
-      <Dialog open={isAllNotesModalOpen} onOpenChange={setIsAllNotesModalOpen}>
+      <Dialog 
+        open={isAllNotesModalOpen} 
+        onOpenChange={(open) => {
+          setIsAllNotesModalOpen(open);
+          if (!open) setSearchQuery('');
+        }}
+      >
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -232,13 +251,31 @@ const MyNotesCard: React.FC = () => {
             </DialogTitle>
           </DialogHeader>
           
-          {groupedOpponents.length === 0 ? (
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search opponents..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+              autoComplete="off"
+              data-form-type="other"
+              data-1p-ignore="true"
+              data-lpignore="true"
+            />
+          </div>
+          
+          {filteredOpponents.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              No notes yet. Add your first note!
+              {searchQuery.trim() 
+                ? 'No opponents match your search.'
+                : 'No notes yet. Add your first note!'}
             </p>
           ) : (
             <div className="space-y-2">
-              {groupedOpponents.map((opponent) => {
+              {filteredOpponents.map((opponent) => {
                 const colorData = getColorById(opponent.profile?.color);
                 return (
                   <div
