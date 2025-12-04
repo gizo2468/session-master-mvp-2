@@ -9,7 +9,7 @@ import { PokerChip } from '../Icons';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
+
 import HandDetailsDialog from './HandDetailsDialog';
 
 interface HandsListProps {
@@ -54,13 +54,12 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-1/5 md:py-2">Cards</TableHead>
-                <TableHead className="w-[10%] md:py-2">Position</TableHead>
-                <TableHead className="w-1/4 md:py-2">Action</TableHead>
-                <TableHead className="w-[15%] md:py-2">Buy-In</TableHead>
-                <TableHead className="w-1/5 md:py-2">Result</TableHead>
+                <TableHead className="w-1/3 md:py-2">Cards</TableHead>
+                <TableHead className="w-[15%] md:py-2">Position</TableHead>
+                <TableHead className="w-[20%] md:py-2">Buy-In</TableHead>
+                <TableHead className="w-1/4 md:py-2">Result</TableHead>
                 {!readOnly && (
-                  <TableHead className="w-[100px] text-right md:py-2">Actions</TableHead>
+                  <TableHead className="w-[15%] text-right md:py-2">Actions</TableHead>
                 )}
               </TableRow>
             </TableHeader>
@@ -134,23 +133,6 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                     <span className="inline-flex items-center justify-center px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
                       {hand.position}
                     </span>
-                  </TableCell>
-                  <TableCell className="md:py-1">
-                    <div className="space-y-1">
-                      <AdaptiveTooltip content={<p>{hand.action}</p>}>
-                        <div className="text-sm font-medium line-clamp-2">
-                          {hand.action}
-                        </div>
-                      </AdaptiveTooltip>
-                      
-                      {hand.notes && (
-                        <AdaptiveTooltip content={<p>{hand.notes}</p>}>
-                          <div className="text-xs text-gray-500 italic line-clamp-1">
-                            {hand.notes}
-                          </div>
-                        </AdaptiveTooltip>
-                      )}
-                    </div>
                   </TableCell>
                   
                   <TableCell className="md:py-1">
