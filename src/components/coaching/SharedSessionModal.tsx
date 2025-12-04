@@ -656,8 +656,17 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                                 size="sm"
                               />
                             )}
-                            {/* Mobile-only feedback status indicator - below result */}
-                            <div className="sm:hidden mt-1">
+                          </div>
+                        </div>
+
+                        {hand.hole_cards && (
+                          <div className="mb-2 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">Cards:</span>
+                              <CardDisplay cards={hand.hole_cards} size="sm" />
+                            </div>
+                            {/* Mobile-only feedback status indicator - aligned with hole cards */}
+                            <div className="sm:hidden">
                               {handsWithFeedback.has(hand.id) ? (
                                 <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border border-green-400 bg-green-50/30 text-green-600 dark:text-green-400 shadow-[0_0_6px_rgba(74,222,128,0.4)]">
                                   Reviewed
@@ -668,13 +677,6 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                                 </span>
                               )}
                             </div>
-                          </div>
-                        </div>
-
-                        {hand.hole_cards && (
-                          <div className="mb-2 flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">Cards:</span>
-                            <CardDisplay cards={hand.hole_cards} size="sm" />
                           </div>
                         )}
 
