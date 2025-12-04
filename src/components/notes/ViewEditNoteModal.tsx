@@ -679,20 +679,15 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                         >
                           <div className="flex-1 space-y-2">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground">
-                                {format(new Date(hand.created_at), 'MMM d, yyyy')}
-                              </span>
                               {hand.position && (
                                 <span className="text-xs font-medium px-1.5 py-0.5 bg-primary/10 text-primary rounded">
                                   {hand.position}
                                 </span>
                               )}
-                            </div>
-                            {hand.hole_cards && (
-                              <div className="flex items-center gap-2">
+                              {hand.hole_cards && (
                                 <CardDisplay cards={hand.hole_cards} size="sm" />
-                              </div>
-                            )}
+                              )}
+                            </div>
                             {hand.preflop_action && (
                               <div className="text-xs text-muted-foreground">
                                 {hand.preflop_action.substring(0, 50)}
