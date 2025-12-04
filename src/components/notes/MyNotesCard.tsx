@@ -210,6 +210,15 @@ const MyNotesCard: React.FC = () => {
             Add Note
           </Button>
 
+          <Button
+            variant="outline"
+            className="w-full justify-center gap-2"
+            onClick={() => setIsAllNotesModalOpen(true)}
+          >
+            <List className="h-4 w-4" />
+            View All Notes
+          </Button>
+
           {/* Search Input */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -225,15 +234,6 @@ const MyNotesCard: React.FC = () => {
               data-lpignore="true"
             />
           </div>
-
-          <Button
-            variant="outline"
-            className="w-full justify-center gap-2"
-            onClick={() => setIsAllNotesModalOpen(true)}
-          >
-            <List className="h-4 w-4" />
-            View All Notes
-          </Button>
 
           {/* Search Results - only show when searching */}
           {searchQuery.trim() && (
