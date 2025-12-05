@@ -39,37 +39,37 @@ const CardSelectionSection: React.FC<CardSelectionSectionProps> = ({
             </AdaptiveTooltip>
           </div>
           
-          {/* Right side: BB input field */}
+          {/* Right side: Hero Stack BB input field (separate from table blinds) */}
           <FormField
             control={control}
-            name="bigBlind"
-            render={({ field: bbField }) => (
+            name="heroStackBB"
+            render={({ field: stackField }) => (
               <div className="flex items-center gap-1.5 self-center translate-y-[24px]">
                 <Input
                   type="number"
                   inputMode="decimal"
-                  step="0.01"
-                  min="0.01"
+                  step="0.5"
+                  min="0.5"
                   placeholder="0"
-                  aria-label="Big Blind amount"
+                  aria-label="Hero stack in BB"
                   autoComplete="off"
                   data-lpignore="true"
                   data-1p-ignore="true"
                   data-bwignore="true"
-                  name="bb-amount"
+                  name="hero-stack-bb"
                   spellCheck={false}
                   autoCapitalize="off"
                   autoCorrect="off"
-                  {...bbField}
-                  value={bbField.value ?? ''}
+                  {...stackField}
+                  value={stackField.value ?? ''}
                   onChange={(e) => {
                     const value = e.target.value;
                     if (value === '') {
-                      bbField.onChange(undefined);
+                      stackField.onChange(undefined);
                     } else {
                       const num = parseFloat(value);
                       if (!isNaN(num) && isFinite(num) && num >= 0) {
-                        bbField.onChange(num);
+                        stackField.onChange(num);
                       }
                     }
                   }}

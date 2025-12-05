@@ -19,6 +19,15 @@ export const handFormSchema = z.object({
     },
     z.number().positive().finite().optional()
   ),
+  // Hero's stack size in BB units (separate from table blinds)
+  heroStackBB: z.preprocess(
+    (val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    },
+    z.number().positive().finite().optional()
+  ),
   position: z.string().optional(),
   action: z.string().optional(),
   notes: z.string().max(1000, 'Notes are too long').optional(),

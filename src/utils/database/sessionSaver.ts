@@ -208,6 +208,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           villains: hand.villains ? JSON.stringify(hand.villains) : null,
           small_blind: hand.smallBlind || null,
           big_blind: hand.bigBlind || null,
+          hero_stack_bb: hand.heroStackBB || null,
           game_type: hand.gameType || 'NLH',
           flop_actions: hand.flopActions ? JSON.stringify(hand.flopActions) : null,
           turn_actions: hand.turnActions ? JSON.stringify(hand.turnActions) : null,

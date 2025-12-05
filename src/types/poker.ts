@@ -88,8 +88,9 @@ export interface HandData {
   image?: string;
   handImage?: string;
   currencyType?: 'currency' | 'chips';
-  smallBlind?: number; // Added back for form and display components
-  bigBlind?: number; // Added back for form and display components
+  smallBlind?: number; // Table small blind (chips) - from Set Blinds modal
+  bigBlind?: number; // Table big blind (chips) - from Set Blinds modal
+  heroStackBB?: number; // Hero's stack size (in BB units) - separate from table blinds
   pokercraftLink?: string; // Added back for video link functionality
   gameType?: 'NLH' | 'PLO'; // Added back for game type selection
   heroNickname?: string; // Hero's display name from AI analysis
