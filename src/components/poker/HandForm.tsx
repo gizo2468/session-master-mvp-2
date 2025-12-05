@@ -53,6 +53,8 @@ const HandForm: React.FC<HandFormProps> = ({
     setIsRiverOpen,
     isShowdownOpen,
     setIsShowdownOpen,
+    isNotesOpen,
+    setIsNotesOpen,
     imagePreview,
     gameType,
     selectedCards,
@@ -176,7 +178,11 @@ const HandForm: React.FC<HandFormProps> = ({
               </HandDetailGate>
               
               {/* Notes */}
-              <NotesSection control={form.control} />
+              <NotesSection 
+                control={form.control} 
+                isNotesOpen={isNotesOpen}
+                setIsNotesOpen={setIsNotesOpen}
+              />
             </form>
           </Form>
         
