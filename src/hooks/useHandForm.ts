@@ -63,6 +63,7 @@ export const useHandForm = ({
   const [isTurnOpen, setIsTurnOpen] = useState(false);
   const [isRiverOpen, setIsRiverOpen] = useState(false);
   const [isShowdownOpen, setIsShowdownOpen] = useState(false);
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
   
   // Image preview state
   const [imagePreview, setImagePreview] = useState<string | null>(
@@ -251,6 +252,8 @@ export const useHandForm = ({
     setIsRiverOpen,
     isShowdownOpen,
     setIsShowdownOpen,
+    isNotesOpen,
+    setIsNotesOpen,
     imagePreview,
     setImagePreview,
     gameType,
