@@ -70,7 +70,8 @@ const HandForm: React.FC<HandFormProps> = ({
     resultUnit,
     handlePositionSelect,
     handleSubmit,
-    handleImageChange
+    handleImageChange,
+    handleGlobalUnitChange
   } = useHandForm({
     open,
     isEditing,
@@ -172,6 +173,7 @@ const HandForm: React.FC<HandFormProps> = ({
                 turnCards={turnCards}
                 riverCards={riverCards}
                 villains={villains}
+                onGlobalUnitChange={handleGlobalUnitChange}
               />
               
               {/* Link to Opponent from My Notes */}
@@ -187,7 +189,11 @@ const HandForm: React.FC<HandFormProps> = ({
               />
               
               {/* Hand Result */}
-              <HandResultSection control={form.control} />
+              <HandResultSection 
+                control={form.control} 
+                setValue={form.setValue}
+                onUnitChange={handleGlobalUnitChange}
+              />
             </form>
           </Form>
         

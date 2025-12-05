@@ -84,6 +84,59 @@ export const useHandForm = ({
   const villains = form.watch('villains');
   const resultValue = form.watch('resultValue');
   const resultUnit = form.watch('resultUnit');
+  const bigBlind = form.watch('bigBlind');
+  
+  // Handle global unit change - convert all values across the hand
+  const handleGlobalUnitChange = (newUnit: 'BB' | 'Chips') => {
+    const bb = bigBlind || 1;
+    const currentUnit = form.getValues('resultUnit');
+    
+    if (currentUnit === newUnit) return;
+    
+    // Helper to convert value
+    const convert = (val: number | undefined): number | undefined => {
+      if (val === undefined) return undefined;
+      if (newUnit === 'Chips') {
+        return Math.round(val * bb);
+      } else {
+        return Math.round((val / bb) * 100) / 100;
+      }
+    };
+    
+    // Helper to convert actions array
+    const convertActions = (actions: any[]) => {
+      if (!actions) return [];
+      return actions.map(action => ({
+        ...action,
+        unit: newUnit,
+        size: action.size !== undefined ? convert(action.size) : undefined
+      }));
+    };
+    
+    // Convert result value
+    const currentResultValue = form.getValues('resultValue');
+    if (currentResultValue !== undefined) {
+      form.setValue('resultValue', convert(currentResultValue) ?? 0);
+    }
+    
+    // Convert all street actions
+    const flopActionsVal = form.getValues('flopActions');
+    const turnActionsVal = form.getValues('turnActions');
+    const riverActionsVal = form.getValues('riverActions');
+    
+    if (flopActionsVal) {
+      form.setValue('flopActions', convertActions(flopActionsVal));
+    }
+    if (turnActionsVal) {
+      form.setValue('turnActions', convertActions(turnActionsVal));
+    }
+    if (riverActionsVal) {
+      form.setValue('riverActions', convertActions(riverActionsVal));
+    }
+    
+    // Update global unit
+    form.setValue('resultUnit', newUnit);
+  };
   
   // Set initial position index if editing
   useEffect(() => {
@@ -273,6 +326,7 @@ export const useHandForm = ({
     resultUnit,
     handlePositionSelect,
     handleSubmit,
-    handleImageChange
+    handleImageChange,
+    handleGlobalUnitChange
   };
 };
