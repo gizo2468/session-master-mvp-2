@@ -84,7 +84,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
         <Collapsible open={isShowdownOpen} onOpenChange={setIsShowdownOpen}>
           <CollapsibleTrigger className="w-full">
             <div className="flex items-center justify-between w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
-              <span>Showdown Result</span>
+              <span>Board & Villains</span>
               <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isShowdownOpen ? 'rotate-180' : ''}`} />
             </div>
           </CollapsibleTrigger>
