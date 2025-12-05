@@ -32,6 +32,7 @@ export const useHandForm = ({
       image: initialData.image || undefined,
       gameType: initialData.gameType || 'NLH',
       tableId: tableId || initialData.tableId,
+      smallBlind: initialData.smallBlind || undefined,
       bigBlind: initialData.bigBlind || undefined,
       // Multi-villain support - convert legacy data if present
       villains: initialData.villains ? initialData.villains.map(v => ({
@@ -84,6 +85,7 @@ export const useHandForm = ({
   const villains = form.watch('villains');
   const resultValue = form.watch('resultValue');
   const resultUnit = form.watch('resultUnit');
+  const smallBlind = form.watch('smallBlind');
   const bigBlind = form.watch('bigBlind');
   
   // Handle global unit change - convert all values across the hand
@@ -191,6 +193,7 @@ export const useHandForm = ({
         image: undefined,
         gameType: 'NLH',
         tableId: tableId,
+        smallBlind: undefined,
         bigBlind: undefined,
         flopCards: [{ id: 0 }, { id: 1 }, { id: 2 }],
         flopAction: '',
@@ -324,6 +327,8 @@ export const useHandForm = ({
     villains,
     resultValue,
     resultUnit,
+    smallBlind,
+    bigBlind,
     handlePositionSelect,
     handleSubmit,
     handleImageChange,
