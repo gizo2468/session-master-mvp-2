@@ -117,6 +117,7 @@ export const convertDatabaseSessionToPokerSession = (
           opponentProfileId: hand.opponent_profile_id || undefined,
           smallBlind: hand.small_blind ? parseFloat(hand.small_blind) : undefined,
           bigBlind: hand.big_blind ? parseFloat(hand.big_blind) : undefined,
+          heroStackBB: hand.hero_stack_bb ? parseFloat(hand.hero_stack_bb) : undefined,
           gameType: hand.game_type || 'NLH',
           villains: parseJsonField(hand.villains),
           flopActions: parseJsonField(hand.flop_actions),

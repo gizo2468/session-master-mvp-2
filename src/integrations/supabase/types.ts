@@ -437,6 +437,7 @@ export type Database = {
           hand_image: string | null
           hand_notes: string | null
           hand_number: number | null
+          hero_stack_bb: number | null
           hole_cards: string | null
           id: string
           opponent_profile_id: string | null
@@ -472,6 +473,7 @@ export type Database = {
           hand_image?: string | null
           hand_notes?: string | null
           hand_number?: number | null
+          hero_stack_bb?: number | null
           hole_cards?: string | null
           id?: string
           opponent_profile_id?: string | null
@@ -507,6 +509,7 @@ export type Database = {
           hand_image?: string | null
           hand_notes?: string | null
           hand_number?: number | null
+          hero_stack_bb?: number | null
           hole_cards?: string | null
           id?: string
           opponent_profile_id?: string | null

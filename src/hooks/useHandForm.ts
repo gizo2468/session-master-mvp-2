@@ -86,6 +86,7 @@ export const useHandForm = ({
       tableId: tableId || initialData.tableId,
       smallBlind: initialData.smallBlind || undefined,
       bigBlind: initialData.bigBlind || undefined,
+      heroStackBB: initialData.heroStackBB || undefined,
       // Board cards for edit mode
       flopCards: parseFlopCards(),
       turnCards: parseTurnCards(),
@@ -248,6 +249,7 @@ export const useHandForm = ({
         tableId: tableId,
         smallBlind: undefined,
         bigBlind: undefined,
+        heroStackBB: undefined,
         flopCards: [{ id: 0 }, { id: 1 }, { id: 2 }],
         flopAction: '',
         turnCards: [{ id: 0 }],
@@ -326,6 +328,7 @@ export const useHandForm = ({
       position: positions[selectedPositionIndex], // Use the position from our wheel picker
       smallBlind: values.smallBlind,
       bigBlind: values.bigBlind,
+      heroStackBB: values.heroStackBB,
       gameType: values.gameType,
       // Store the card data in the expected format
       flopCards: flopCardsString ? [flopCardsString] : undefined,
