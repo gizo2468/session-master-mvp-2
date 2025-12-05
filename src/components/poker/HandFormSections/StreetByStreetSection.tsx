@@ -356,47 +356,46 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
             </div>
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-4 pt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={control}
-                name="turnCards"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Turn Card</FormLabel>
-                    <FormControl>
-                      <CardSlotPicker
-                        slots={1}
-                        selectedCards={field.value || [{ id: 0 }]}
-                        onChange={field.onChange}
-                        excludedCards={[
-                          ...(selectedCards.match(/.{2}/g) || []),
-                          ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                          ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                          ...(villains?.flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit)) || [])
-                        ].filter(card => 
-                          !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
-                        )}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={control}
-                name="turnActions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Turn Action</FormLabel>
-                    <FormControl>
-                      <StreetActionEntry
-                        actions={field.value || []}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={control}
+              name="turnCards"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Turn Card</FormLabel>
+                  <FormControl>
+                    <CardSlotPicker
+                      slots={1}
+                      selectedCards={field.value || [{ id: 0 }]}
+                      onChange={field.onChange}
+                      excludedCards={[
+                        ...(selectedCards.match(/.{2}/g) || []),
+                        ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                        ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                        ...(villains?.flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit)) || [])
+                      ].filter(card => 
+                        !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                      )}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={control}
+              name="turnActions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Turn Action</FormLabel>
+                  <FormControl>
+                    <StreetActionEntry
+                      actions={field.value || []}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
           </CollapsibleContent>
         </Collapsible>
 
@@ -409,47 +408,46 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
             </div>
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-4 pt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={control}
-                name="riverCards"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>River Card</FormLabel>
-                    <FormControl>
-                      <CardSlotPicker
-                        slots={1}
-                        selectedCards={field.value || [{ id: 0 }]}
-                        onChange={field.onChange}
-                        excludedCards={[
-                          ...(selectedCards.match(/.{2}/g) || []),
-                          ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                          ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                          ...(villains?.flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit)) || [])
-                        ].filter(card => 
-                          !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
-                        )}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={control}
-                name="riverActions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>River Action</FormLabel>
-                    <FormControl>
-                      <StreetActionEntry
-                        actions={field.value || []}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={control}
+              name="riverCards"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>River Card</FormLabel>
+                  <FormControl>
+                    <CardSlotPicker
+                      slots={1}
+                      selectedCards={field.value || [{ id: 0 }]}
+                      onChange={field.onChange}
+                      excludedCards={[
+                        ...(selectedCards.match(/.{2}/g) || []),
+                        ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                        ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                        ...(villains?.flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit)) || [])
+                      ].filter(card => 
+                        !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                      )}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={control}
+              name="riverActions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>River Action</FormLabel>
+                  <FormControl>
+                    <StreetActionEntry
+                      actions={field.value || []}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
           </CollapsibleContent>
         </Collapsible>
 
