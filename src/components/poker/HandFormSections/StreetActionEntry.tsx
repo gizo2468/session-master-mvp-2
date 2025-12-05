@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export interface StreetAction {
   id: string;
-  actor: 'Hero' | 'Villain';
+  actor: string; // "Hero", "Villain 1", "Villain 2", etc.
   action: 'Check' | 'Bet' | 'Call' | 'Raise' | 'Fold' | 'All-in' | 'Other';
   size?: number;
   unit: 'BB' | 'Chips';
@@ -19,6 +19,7 @@ interface StreetActionEntryProps {
   onChange: (actions: StreetAction[]) => void;
   globalUnit?: 'BB' | 'Chips';
   onUnitChange?: (unit: 'BB' | 'Chips') => void;
+  villainCount?: number;
 }
 
 const actionOptions = ['Check', 'Bet', 'Call', 'Raise', 'Fold', 'All-in', 'Other'] as const;
@@ -37,10 +38,20 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({
   actions, 
   onChange,
   globalUnit = 'BB',
-  onUnitChange 
+  onUnitChange,
+  villainCount = 1
 }) => {
   // Filter to only valid actions
   const validActions = (actions || []).filter(isValidAction);
+  
+  // Dynamically generate actor options based on villain count
+  const actorOptions = useMemo(() => {
+    const options = ['Hero'];
+    for (let i = 1; i <= villainCount; i++) {
+      options.push(`Villain ${i}`);
+    }
+    return options;
+  }, [villainCount]);
   
   const [isAdding, setIsAdding] = useState(false);
   const [newAction, setNewAction] = useState<Partial<StreetAction>>({
@@ -125,14 +136,15 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({
             {/* Actor */}
             <Select
               value={newAction.actor}
-              onValueChange={(value) => setNewAction({ ...newAction, actor: value as 'Hero' | 'Villain' })}
+              onValueChange={(value) => setNewAction({ ...newAction, actor: value })}
             >
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="Actor" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Hero">Hero</SelectItem>
-                <SelectItem value="Villain">Villain</SelectItem>
+                {actorOptions.map(actor => (
+                  <SelectItem key={actor} value={actor}>{actor}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
 

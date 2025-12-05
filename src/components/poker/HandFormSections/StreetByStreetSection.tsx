@@ -60,6 +60,9 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
     name: 'villains'
   });
   
+  // Get form context for accessing/updating action fields
+  const { getValues, setValue: setFormValue } = useFormContext<FormValues>();
+  
   // Watch global unit from Hand Result section
   const resultUnit = useWatch({ control, name: 'resultUnit' }) as 'BB' | 'Chips';
   
@@ -68,6 +71,41 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
     if (onGlobalUnitChange) {
       onGlobalUnitChange(newUnit);
     }
+  };
+  
+  // Handle villain removal with action cleanup
+  const handleRemoveVillain = (index: number) => {
+    const removedVillainName = `Villain ${index + 1}`;
+    
+    // Helper to clean up actions for a removed villain
+    const cleanupActions = (actions: any[] | undefined): any[] => {
+      if (!actions || !Array.isArray(actions)) return [];
+      return actions
+        // Filter out actions from deleted villain
+        .filter(a => a.actor !== removedVillainName)
+        // Re-number remaining villains (if Villain 2 deleted, Villain 3 → Villain 2)
+        .map(a => {
+          if (a.actor && a.actor.startsWith('Villain ')) {
+            const villainNum = parseInt(a.actor.split(' ')[1]);
+            if (villainNum > index + 1) {
+              return { ...a, actor: `Villain ${villainNum - 1}` };
+            }
+          }
+          return a;
+        });
+    };
+    
+    // Get current actions and clean them
+    const currentFlopActions = getValues('flopActions');
+    const currentTurnActions = getValues('turnActions');
+    const currentRiverActions = getValues('riverActions');
+    
+    setFormValue('flopActions', cleanupActions(currentFlopActions));
+    setFormValue('turnActions', cleanupActions(currentTurnActions));
+    setFormValue('riverActions', cleanupActions(currentRiverActions));
+    
+    // Remove the villain
+    remove(index);
   };
 
   return (
@@ -189,7 +227,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                       {fields.length > 1 && (
                         <button
                           type="button"
-                          onClick={() => remove(index)}
+                          onClick={() => handleRemoveVillain(index)}
                           className="absolute top-2 right-2 text-muted-foreground hover:text-destructive transition-colors"
                           aria-label={`Remove villain ${index + 1}`}
                         >
@@ -340,6 +378,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                       onChange={field.onChange}
                       globalUnit={resultUnit}
                       onUnitChange={handleUnitChange}
+                      villainCount={fields.length}
                     />
                   </FormControl>
                 </FormItem>
@@ -394,6 +433,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                       onChange={field.onChange}
                       globalUnit={resultUnit}
                       onUnitChange={handleUnitChange}
+                      villainCount={fields.length}
                     />
                   </FormControl>
                 </FormItem>
@@ -448,6 +488,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                       onChange={field.onChange}
                       globalUnit={resultUnit}
                       onUnitChange={handleUnitChange}
+                      villainCount={fields.length}
                     />
                   </FormControl>
                 </FormItem>
