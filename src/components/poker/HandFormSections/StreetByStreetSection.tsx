@@ -1,6 +1,5 @@
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -11,6 +10,7 @@ import { Control, UseFormSetValue, useFieldArray } from 'react-hook-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import HandDetailGate from '@/components/ui/HandDetailGate';
 import CardSlotPicker from '../CardSlotPicker';
+import StreetActionEntry from './StreetActionEntry';
 import { FormValues, positions } from '@/utils/handFormHelpers';
 
 interface StreetByStreetSectionProps {
@@ -331,16 +331,14 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
             
             <FormField
               control={control}
-              name="flopAction"
+              name="flopActions"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Flop Action</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Describe the action on the flop..."
-                      className="resize-none"
-                      rows={2}
-                      {...field}
+                    <StreetActionEntry
+                      actions={field.value || []}
+                      onChange={field.onChange}
                     />
                   </FormControl>
                 </FormItem>
@@ -385,12 +383,15 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
               />
               <FormField
                 control={control}
-                name="turnAction"
+                name="turnActions"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Turn Action</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <StreetActionEntry
+                        actions={field.value || []}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -435,12 +436,15 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
               />
               <FormField
                 control={control}
-                name="riverAction"
+                name="riverActions"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>River Action</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <StreetActionEntry
+                        actions={field.value || []}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
