@@ -12,6 +12,7 @@ import PositionSection from './HandFormSections/PositionSection';
 import ActionSection from './HandFormSections/ActionSection';
 import StreetByStreetSection from './HandFormSections/StreetByStreetSection';
 import NotesSection from './HandFormSections/NotesSection';
+import HandResultSection from './HandFormSections/HandResultSection';
 import AIHandAnalyzerBanner from './AIHandAnalyzerBanner';
 import AIHandAnalyzerDialog from './AIHandAnalyzerDialog';
 import OpponentLinkSection from './HandFormSections/OpponentLinkSection';
@@ -65,7 +66,8 @@ const HandForm: React.FC<HandFormProps> = ({
     riverCards,
     riverAction,
     villains,
-    result,
+    resultValue,
+    resultUnit,
     handlePositionSelect,
     handleSubmit,
     handleImageChange
@@ -183,6 +185,9 @@ const HandForm: React.FC<HandFormProps> = ({
                 isNotesOpen={isNotesOpen}
                 setIsNotesOpen={setIsNotesOpen}
               />
+              
+              {/* Hand Result */}
+              <HandResultSection control={form.control} />
             </form>
           </Form>
         

@@ -278,19 +278,6 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                 </Button>
               </div>
               
-              {/* Hand Result */}
-              <FormField
-                control={control}
-                name="result"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Hand Result</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g., +$150, -2 buy-ins, Won with top pair" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
             </div>
           </CollapsibleContent>
         </Collapsible>
