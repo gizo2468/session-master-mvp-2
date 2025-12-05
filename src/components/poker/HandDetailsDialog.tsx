@@ -195,6 +195,33 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                 </div>
               </div>
 
+              {/* Villains */}
+              {(() => {
+                const villainsWithCards = (hand.villains || []).filter(v => v.hand && v.hand.trim() !== '');
+                
+                if (villainsWithCards.length === 0) return null;
+                
+                return (
+                  <div className="flex items-start gap-3">
+                    <span className="text-sm font-medium text-muted-foreground w-20">Villains:</span>
+                    <div className="flex flex-col gap-2">
+                      {villainsWithCards.map((villain, index) => {
+                        const villainLabel = villainsWithCards.length === 1 
+                          ? 'Villain' 
+                          : `Villain ${index + 1}`;
+                        
+                        return (
+                          <div key={index} className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground min-w-[60px]">{villainLabel}:</span>
+                            <CardDisplay cards={villain.hand!} size="sm" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Actions */}
               {(hand.preflopActionSequence || hand.flopActionSequence || hand.turnActionSequence || hand.riverActionSequence) && (() => {
                 // Determine the last street with actions
