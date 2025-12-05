@@ -28,7 +28,6 @@ const SetBlindsSection: React.FC<SetBlindsSectionProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [tempSmallBlind, setTempSmallBlind] = useState<string>(smallBlind?.toString() || '');
   const [tempBigBlind, setTempBigBlind] = useState<string>(bigBlind?.toString() || '');
-  const [blindUnit, setBlindUnit] = useState<'BB' | 'Chips'>('Chips');
 
   const handleOpenModal = () => {
     setTempSmallBlind(smallBlind?.toString() || '');
@@ -52,7 +51,7 @@ const SetBlindsSection: React.FC<SetBlindsSectionProps> = ({
   const hasBlindsSet = smallBlind !== undefined || bigBlind !== undefined;
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col items-center space-y-2">
       <Button
         type="button"
         variant="outline"
@@ -66,12 +65,12 @@ const SetBlindsSection: React.FC<SetBlindsSectionProps> = ({
       
       {hasBlindsSet && (
         <p className="text-xs text-muted-foreground">
-          Blinds set: SB {smallBlind ?? '-'} / BB {bigBlind ?? '-'} {blindUnit}
+          Blinds set: SB {smallBlind ?? '-'} / BB {bigBlind ?? '-'}
         </p>
       )}
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[350px]">
+        <DialogContent className="sm:max-w-[300px]">
           <DialogHeader>
             <DialogTitle>Set Blinds</DialogTitle>
           </DialogHeader>
@@ -80,89 +79,35 @@ const SetBlindsSection: React.FC<SetBlindsSectionProps> = ({
             {/* Small Blind */}
             <div className="space-y-2">
               <Label htmlFor="smallBlind">Small Blind</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="smallBlind"
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="e.g. 1"
-                  value={tempSmallBlind}
-                  onChange={(e) => setTempSmallBlind(e.target.value)}
-                  className="flex-1"
-                  autoComplete="off"
-                  data-form-type="other"
-                  data-1p-ignore="true"
-                  data-lpignore="true"
-                />
-                <div className="flex rounded-md border border-input overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={() => setBlindUnit('BB')}
-                    className={`px-3 py-2 text-sm transition-colors ${
-                      blindUnit === 'BB'
-                        ? 'bg-poker-gold text-white'
-                        : 'bg-background text-foreground hover:bg-muted'
-                    }`}
-                  >
-                    BB
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBlindUnit('Chips')}
-                    className={`px-3 py-2 text-sm transition-colors ${
-                      blindUnit === 'Chips'
-                        ? 'bg-poker-gold text-white'
-                        : 'bg-background text-foreground hover:bg-muted'
-                    }`}
-                  >
-                    Chips
-                  </button>
-                </div>
-              </div>
+              <Input
+                id="smallBlind"
+                type="number"
+                inputMode="decimal"
+                placeholder="e.g. 500"
+                value={tempSmallBlind}
+                onChange={(e) => setTempSmallBlind(e.target.value)}
+                autoComplete="off"
+                data-form-type="other"
+                data-1p-ignore="true"
+                data-lpignore="true"
+              />
             </div>
 
             {/* Big Blind */}
             <div className="space-y-2">
               <Label htmlFor="bigBlind">Big Blind</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="bigBlind"
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="e.g. 2"
-                  value={tempBigBlind}
-                  onChange={(e) => setTempBigBlind(e.target.value)}
-                  className="flex-1"
-                  autoComplete="off"
-                  data-form-type="other"
-                  data-1p-ignore="true"
-                  data-lpignore="true"
-                />
-                <div className="flex rounded-md border border-input overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={() => setBlindUnit('BB')}
-                    className={`px-3 py-2 text-sm transition-colors ${
-                      blindUnit === 'BB'
-                        ? 'bg-poker-gold text-white'
-                        : 'bg-background text-foreground hover:bg-muted'
-                    }`}
-                  >
-                    BB
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBlindUnit('Chips')}
-                    className={`px-3 py-2 text-sm transition-colors ${
-                      blindUnit === 'Chips'
-                        ? 'bg-poker-gold text-white'
-                        : 'bg-background text-foreground hover:bg-muted'
-                    }`}
-                  >
-                    Chips
-                  </button>
-                </div>
-              </div>
+              <Input
+                id="bigBlind"
+                type="number"
+                inputMode="decimal"
+                placeholder="e.g. 1000"
+                value={tempBigBlind}
+                onChange={(e) => setTempBigBlind(e.target.value)}
+                autoComplete="off"
+                data-form-type="other"
+                data-1p-ignore="true"
+                data-lpignore="true"
+              />
             </div>
           </div>
 
