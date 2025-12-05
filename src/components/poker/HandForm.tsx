@@ -13,6 +13,7 @@ import ActionSection from './HandFormSections/ActionSection';
 import StreetByStreetSection from './HandFormSections/StreetByStreetSection';
 import NotesSection from './HandFormSections/NotesSection';
 import HandResultSection from './HandFormSections/HandResultSection';
+import SetBlindsSection from './HandFormSections/SetBlindsSection';
 import AIHandAnalyzerBanner from './AIHandAnalyzerBanner';
 import AIHandAnalyzerDialog from './AIHandAnalyzerDialog';
 import OpponentLinkSection from './HandFormSections/OpponentLinkSection';
@@ -68,6 +69,8 @@ const HandForm: React.FC<HandFormProps> = ({
     villains,
     resultValue,
     resultUnit,
+    smallBlind,
+    bigBlind,
     handlePositionSelect,
     handleSubmit,
     handleImageChange,
@@ -134,6 +137,14 @@ const HandForm: React.FC<HandFormProps> = ({
                 turnCards={turnCards}
                 riverCards={riverCards}
                 villains={villains}
+              />
+              
+              {/* Set Blinds Button */}
+              <SetBlindsSection 
+                control={form.control}
+                setValue={form.setValue}
+                smallBlind={smallBlind}
+                bigBlind={bigBlind}
               />
               
               {/* Position Wheel Selector */}
