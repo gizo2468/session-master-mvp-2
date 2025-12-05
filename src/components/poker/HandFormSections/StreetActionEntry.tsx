@@ -47,8 +47,12 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({
   // Dynamically generate actor options based on villain count
   const actorOptions = useMemo(() => {
     const options = ['Hero'];
-    for (let i = 1; i <= villainCount; i++) {
-      options.push(`Villain ${i}`);
+    if (villainCount === 1) {
+      options.push('Villain');
+    } else {
+      for (let i = 1; i <= villainCount; i++) {
+        options.push(`Villain ${i}`);
+      }
     }
     return options;
   }, [villainCount]);
