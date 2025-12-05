@@ -181,18 +181,18 @@ const HandForm: React.FC<HandFormProps> = ({
                 <OpponentLinkSection control={form.control} />
               </HandDetailGate>
               
-              {/* Notes */}
-              <NotesSection 
-                control={form.control} 
-                isNotesOpen={isNotesOpen}
-                setIsNotesOpen={setIsNotesOpen}
-              />
-              
               {/* Hand Result */}
               <HandResultSection 
                 control={form.control} 
                 setValue={form.setValue}
                 onUnitChange={handleGlobalUnitChange}
+              />
+              
+              {/* Notes */}
+              <NotesSection 
+                control={form.control} 
+                isNotesOpen={isNotesOpen}
+                setIsNotesOpen={setIsNotesOpen}
               />
             </form>
           </Form>
