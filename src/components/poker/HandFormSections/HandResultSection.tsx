@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,9 +10,26 @@ interface HandResultSectionProps {
   control: Control<FormValues>;
 }
 
-const ROLLER_VALUES = [-100, -50, -25, -10, -5, -2, -1, 0, 1, 2, 5, 10, 25, 50, 100];
+const ROLLER_VALUES = [
+  -100, -75, -50, -40, -30, -25, -20, -15, -10, -8, -6, -5, -4, -3, -2.5, -2, -1.5, -1, -0.5,
+  0,
+  0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100
+];
+
+const getValueColor = (val: number, isSelected: boolean) => {
+  if (val > 0) return isSelected ? 'text-green-500 font-bold text-lg' : 'text-green-400/70 text-sm';
+  if (val < 0) return isSelected ? 'text-red-500 font-bold text-lg' : 'text-red-400/70 text-sm';
+  return isSelected ? 'text-muted-foreground font-bold text-lg' : 'text-muted-foreground/70 text-sm';
+};
+
+const formatValue = (val: number) => {
+  if (val > 0) return `+${val}`;
+  return val.toString();
+};
 
 const HandResultSection: React.FC<HandResultSectionProps> = ({ control }) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -61,10 +78,22 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control }) => {
         control={control}
         name="resultValue"
         render={({ field }) => {
-          const value = field.value ?? 0;
-          const colorClass = value > 0 
+          const currentValue = field.value ?? 0;
+          const selectedIndex = ROLLER_VALUES.findIndex(v => v === currentValue);
+          
+          // Scroll to selected value on mount
+          useEffect(() => {
+            if (scrollContainerRef.current && selectedIndex !== -1) {
+              const itemHeight = 30;
+              const containerHeight = 130;
+              const scrollTop = (selectedIndex * itemHeight) - (containerHeight / 2) + (itemHeight / 2);
+              scrollContainerRef.current.scrollTop = Math.max(0, scrollTop);
+            }
+          }, []);
+
+          const inputColorClass = currentValue > 0 
             ? 'text-green-500' 
-            : value < 0 
+            : currentValue < 0 
               ? 'text-red-500' 
               : 'text-muted-foreground';
           
@@ -72,8 +101,39 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control }) => {
             <FormItem>
               <FormControl>
                 <div className="space-y-3">
+                  {/* Scrollable Roller */}
+                  <div className="relative rounded-lg border border-border bg-muted/20">
+                    {/* Selection indicator */}
+                    <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[30px] border-y-2 border-primary/50 bg-primary/10 pointer-events-none z-10" />
+                    
+                    <div
+                      ref={scrollContainerRef}
+                      className="h-[130px] overflow-y-auto snap-y snap-mandatory scrollbar-thin"
+                      style={{ scrollbarWidth: 'thin' }}
+                    >
+                      <div className="py-[50px]">
+                        {ROLLER_VALUES.map((val) => {
+                          const isSelected = currentValue === val;
+                          return (
+                            <div
+                              key={val}
+                              onClick={() => field.onChange(val)}
+                              className={cn(
+                                "h-[30px] flex items-center justify-center cursor-pointer snap-center transition-all",
+                                getValueColor(val, isSelected)
+                              )}
+                            >
+                              {formatValue(val)}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Manual Input */}
                   <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Or type:</span>
                     <Input
                       type="number"
                       step="0.5"
@@ -84,8 +144,8 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control }) => {
                         field.onChange(val === '' ? undefined : parseFloat(val));
                       }}
                       className={cn(
-                        "text-center text-lg font-bold h-12 flex-1",
-                        colorClass
+                        "text-center text-lg font-bold h-10 w-24",
+                        inputColorClass
                       )}
                       autoComplete="off"
                       data-form-type="other"
@@ -93,37 +153,6 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control }) => {
                       data-1p-ignore="true"
                       data-lpignore="true"
                     />
-                  </div>
-                  
-                  {/* Roller Quick Select */}
-                  <div className="flex flex-wrap gap-1.5 justify-center">
-                    {ROLLER_VALUES.map((rollerVal) => {
-                      const isSelected = field.value === rollerVal;
-                      const btnColorClass = rollerVal > 0 
-                        ? 'hover:bg-green-500/20 hover:text-green-500 hover:border-green-500/50' 
-                        : rollerVal < 0 
-                          ? 'hover:bg-red-500/20 hover:text-red-500 hover:border-red-500/50' 
-                          : 'hover:bg-muted';
-                      const selectedClass = rollerVal > 0 
-                        ? 'bg-green-500/20 text-green-500 border-green-500/50' 
-                        : rollerVal < 0 
-                          ? 'bg-red-500/20 text-red-500 border-red-500/50' 
-                          : 'bg-muted text-muted-foreground border-border';
-                      
-                      return (
-                        <button
-                          key={rollerVal}
-                          type="button"
-                          onClick={() => field.onChange(rollerVal)}
-                          className={cn(
-                            "px-2.5 py-1 text-xs font-medium rounded-md border transition-all",
-                            isSelected ? selectedClass : cn("border-border text-muted-foreground", btnColorClass)
-                          )}
-                        >
-                          {rollerVal > 0 ? `+${rollerVal}` : rollerVal}
-                        </button>
-                      );
-                    })}
                   </div>
                 </div>
               </FormControl>
