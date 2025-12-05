@@ -427,10 +427,13 @@ export type Database = {
         Row: {
           amount_invested: number | null
           amount_won: number | null
+          big_blind: number | null
           created_at: string | null
           currency_type: string | null
           flop_action: string | null
+          flop_actions: Json | null
           flop_cards: string | null
+          game_type: string | null
           hand_image: string | null
           hand_notes: string | null
           hand_number: number | null
@@ -440,23 +443,32 @@ export type Database = {
           position: string | null
           pot_size: number | null
           preflop_action: string | null
+          result_unit: string | null
+          result_value: number | null
           river_action: string | null
+          river_actions: Json | null
           river_card: string | null
           session_id: string
           showdown_result: string | null
+          small_blind: number | null
           table_id: string | null
           turn_action: string | null
+          turn_actions: Json | null
           turn_card: string | null
           updated_at: string | null
           user_id: string
+          villains: Json | null
         }
         Insert: {
           amount_invested?: number | null
           amount_won?: number | null
+          big_blind?: number | null
           created_at?: string | null
           currency_type?: string | null
           flop_action?: string | null
+          flop_actions?: Json | null
           flop_cards?: string | null
+          game_type?: string | null
           hand_image?: string | null
           hand_notes?: string | null
           hand_number?: number | null
@@ -466,23 +478,32 @@ export type Database = {
           position?: string | null
           pot_size?: number | null
           preflop_action?: string | null
+          result_unit?: string | null
+          result_value?: number | null
           river_action?: string | null
+          river_actions?: Json | null
           river_card?: string | null
           session_id: string
           showdown_result?: string | null
+          small_blind?: number | null
           table_id?: string | null
           turn_action?: string | null
+          turn_actions?: Json | null
           turn_card?: string | null
           updated_at?: string | null
           user_id?: string
+          villains?: Json | null
         }
         Update: {
           amount_invested?: number | null
           amount_won?: number | null
+          big_blind?: number | null
           created_at?: string | null
           currency_type?: string | null
           flop_action?: string | null
+          flop_actions?: Json | null
           flop_cards?: string | null
+          game_type?: string | null
           hand_image?: string | null
           hand_notes?: string | null
           hand_number?: number | null
@@ -492,15 +513,21 @@ export type Database = {
           position?: string | null
           pot_size?: number | null
           preflop_action?: string | null
+          result_unit?: string | null
+          result_value?: number | null
           river_action?: string | null
+          river_actions?: Json | null
           river_card?: string | null
           session_id?: string
           showdown_result?: string | null
+          small_blind?: number | null
           table_id?: string | null
           turn_action?: string | null
+          turn_actions?: Json | null
           turn_card?: string | null
           updated_at?: string | null
           user_id?: string
+          villains?: Json | null
         }
         Relationships: [
           {
