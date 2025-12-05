@@ -222,7 +222,98 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                 );
               })()}
 
-              {/* Actions */}
+              {/* User-Entered Street Actions */}
+              {(() => {
+                const formatStructuredAction = (action: any): string => {
+                  let actorDisplay = action.actor;
+                  
+                  // Add position if available
+                  if (action.actor === 'Hero' && hand.position) {
+                    actorDisplay = `Hero (${hand.position})`;
+                  } else if (action.actor.startsWith('Villain')) {
+                    const villainIndex = action.actor === 'Villain' ? 0 : parseInt(action.actor.split(' ')[1]) - 1;
+                    const villainPosition = hand.villains?.[villainIndex]?.position;
+                    if (villainPosition) {
+                      actorDisplay = `${action.actor} (${villainPosition})`;
+                    }
+                  }
+                  
+                  // Format the action text
+                  if (action.action === 'Other') {
+                    return `${actorDisplay}: ${action.customDescription || 'Other'}`;
+                  }
+                  if (action.action === 'Check' || action.action === 'Fold') {
+                    return `${actorDisplay}: ${action.action}`;
+                  }
+                  if (action.size) {
+                    return `${actorDisplay}: ${action.action} ${action.size}${action.unit}`;
+                  }
+                  return `${actorDisplay}: ${action.action}`;
+                };
+
+                const hasFlopActions = hand.flopActions && hand.flopActions.length > 0;
+                const hasTurnActions = hand.turnActions && hand.turnActions.length > 0;
+                const hasRiverActions = hand.riverActions && hand.riverActions.length > 0;
+                const hasAnyActions = hasFlopActions || hasTurnActions || hasRiverActions;
+                
+                return (
+                  <div className="space-y-3">
+                    <span className="text-sm font-medium text-muted-foreground">Actions:</span>
+                    
+                    {!hasAnyActions ? (
+                      <p className="text-sm text-muted-foreground italic pl-4">
+                        No actions were recorded for this hand.
+                      </p>
+                    ) : (
+                      <div className="space-y-3 pl-4">
+                        {/* Flop Actions */}
+                        {hasFlopActions && (
+                          <div>
+                            <span className="text-xs font-medium text-muted-foreground uppercase">Flop</span>
+                            <ul className="mt-1 space-y-0.5">
+                              {hand.flopActions!.map((action: any, idx: number) => (
+                                <li key={idx} className={`text-sm ${action.actor === 'Hero' ? 'text-yellow-600 dark:text-yellow-400 font-medium' : ''}`}>
+                                  {formatStructuredAction(action)}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {/* Turn Actions */}
+                        {hasTurnActions && (
+                          <div>
+                            <span className="text-xs font-medium text-muted-foreground uppercase">Turn</span>
+                            <ul className="mt-1 space-y-0.5">
+                              {hand.turnActions!.map((action: any, idx: number) => (
+                                <li key={idx} className={`text-sm ${action.actor === 'Hero' ? 'text-yellow-600 dark:text-yellow-400 font-medium' : ''}`}>
+                                  {formatStructuredAction(action)}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {/* River Actions */}
+                        {hasRiverActions && (
+                          <div>
+                            <span className="text-xs font-medium text-muted-foreground uppercase">River</span>
+                            <ul className="mt-1 space-y-0.5">
+                              {hand.riverActions!.map((action: any, idx: number) => (
+                                <li key={idx} className={`text-sm ${action.actor === 'Hero' ? 'text-yellow-600 dark:text-yellow-400 font-medium' : ''}`}>
+                                  {formatStructuredAction(action)}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* AI-Detected Actions */}
               {(hand.preflopActionSequence || hand.flopActionSequence || hand.turnActionSequence || hand.riverActionSequence) && (() => {
                 // Determine the last street with actions
                 const streets = [
