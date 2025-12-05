@@ -1,7 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import { Control } from 'react-hook-form';
 import { FormValues } from '@/utils/handFormHelpers';
 import { cn } from '@/lib/utils';
@@ -10,26 +11,12 @@ interface HandResultSectionProps {
   control: Control<FormValues>;
 }
 
-const ROLLER_VALUES = [
-  -100, -75, -50, -40, -30, -25, -20, -15, -10, -8, -6, -5, -4, -3, -2.5, -2, -1.5, -1, -0.5,
-  0,
-  0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100
-];
-
-const getValueColor = (val: number, isSelected: boolean) => {
-  if (val > 0) return isSelected ? 'text-green-500 font-bold text-lg' : 'text-green-400/70 text-sm';
-  if (val < 0) return isSelected ? 'text-red-500 font-bold text-lg' : 'text-red-400/70 text-sm';
-  return isSelected ? 'text-muted-foreground font-bold text-lg' : 'text-muted-foreground/70 text-sm';
-};
-
 const formatValue = (val: number) => {
   if (val > 0) return `+${val}`;
   return val.toString();
 };
 
 const HandResultSection: React.FC<HandResultSectionProps> = ({ control }) => {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -79,60 +66,64 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control }) => {
         name="resultValue"
         render={({ field }) => {
           const currentValue = field.value ?? 0;
-          const selectedIndex = ROLLER_VALUES.findIndex(v => v === currentValue);
-          
-          // Scroll to selected value on mount
-          useEffect(() => {
-            if (scrollContainerRef.current && selectedIndex !== -1) {
-              const itemHeight = 30;
-              const containerHeight = 130;
-              const scrollTop = (selectedIndex * itemHeight) - (containerHeight / 2) + (itemHeight / 2);
-              scrollContainerRef.current.scrollTop = Math.max(0, scrollTop);
-            }
-          }, []);
-
-          const inputColorClass = currentValue > 0 
-            ? 'text-green-500' 
-            : currentValue < 0 
-              ? 'text-red-500' 
-              : 'text-muted-foreground';
           
           return (
             <FormItem>
               <FormControl>
-                <div className="space-y-3">
-                  {/* Scrollable Roller */}
-                  <div className="relative rounded-lg border border-border bg-muted/20">
-                    {/* Selection indicator */}
-                    <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[30px] border-y-2 border-primary/50 bg-primary/10 pointer-events-none z-10" />
+                <div className="space-y-4">
+                  {/* Live Value Display */}
+                  <div className="text-center">
+                    <span className={cn(
+                      "text-3xl font-bold transition-colors",
+                      currentValue > 0 
+                        ? "text-green-500" 
+                        : currentValue < 0 
+                          ? "text-red-500" 
+                          : "text-muted-foreground"
+                    )}>
+                      {formatValue(currentValue)}
+                    </span>
+                    <FormField
+                      control={control}
+                      name="resultUnit"
+                      render={({ field: unitField }) => (
+                        <span className="text-sm text-muted-foreground ml-1">
+                          {unitField.value || 'BB'}
+                        </span>
+                      )}
+                    />
+                  </div>
+
+                  {/* Horizontal Slider */}
+                  <div className="px-2">
+                    <div className="relative">
+                      {/* Custom gradient track background */}
+                      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-gradient-to-r from-red-500 via-gray-300 to-green-500 pointer-events-none" />
+                      
+                      {/* Center tick mark */}
+                      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-0.5 h-4 bg-border pointer-events-none z-10" />
+                      
+                      {/* Slider component */}
+                      <Slider
+                        value={[currentValue]}
+                        onValueChange={(vals) => field.onChange(vals[0])}
+                        min={-100}
+                        max={100}
+                        step={0.5}
+                        className="relative z-20 [&_[data-slot=track]]:bg-transparent [&_[data-slot=range]]:bg-transparent [&_[data-slot=thumb]]:h-6 [&_[data-slot=thumb]]:w-6 [&_[data-slot=thumb]]:border-2 [&_[data-slot=thumb]]:border-primary [&_[data-slot=thumb]]:bg-background [&_[data-slot=thumb]]:shadow-md"
+                      />
+                    </div>
                     
-                    <div
-                      ref={scrollContainerRef}
-                      className="h-[130px] overflow-y-auto snap-y snap-mandatory scrollbar-thin"
-                      style={{ scrollbarWidth: 'thin' }}
-                    >
-                      <div className="py-[50px]">
-                        {ROLLER_VALUES.map((val) => {
-                          const isSelected = currentValue === val;
-                          return (
-                            <div
-                              key={val}
-                              onClick={() => field.onChange(val)}
-                              className={cn(
-                                "h-[30px] flex items-center justify-center cursor-pointer snap-center transition-all",
-                                getValueColor(val, isSelected)
-                              )}
-                            >
-                              {formatValue(val)}
-                            </div>
-                          );
-                        })}
-                      </div>
+                    {/* Scale labels */}
+                    <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                      <span className="text-red-400">-100</span>
+                      <span>0</span>
+                      <span className="text-green-400">+100</span>
                     </div>
                   </div>
 
                   {/* Manual Input */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     <span className="text-xs text-muted-foreground">Or type:</span>
                     <Input
                       type="number"
@@ -145,7 +136,11 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control }) => {
                       }}
                       className={cn(
                         "text-center text-lg font-bold h-10 w-24",
-                        inputColorClass
+                        currentValue > 0 
+                          ? "text-green-500" 
+                          : currentValue < 0 
+                            ? "text-red-500" 
+                            : "text-muted-foreground"
                       )}
                       autoComplete="off"
                       data-form-type="other"
