@@ -90,6 +90,7 @@ const SetBlindsSection: React.FC<SetBlindsSectionProps> = ({
                 data-form-type="other"
                 data-1p-ignore="true"
                 data-lpignore="true"
+                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
 
@@ -107,6 +108,7 @@ const SetBlindsSection: React.FC<SetBlindsSectionProps> = ({
                 data-form-type="other"
                 data-1p-ignore="true"
                 data-lpignore="true"
+                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
           </div>
