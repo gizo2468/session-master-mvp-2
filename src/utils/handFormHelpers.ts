@@ -34,7 +34,7 @@ export const handFormSchema = z.object({
   // Structured street actions
   flopActions: z.array(z.object({
     id: z.string(),
-    actor: z.enum(['Hero', 'Villain']),
+    actor: z.string(),
     action: z.enum(['Check', 'Bet', 'Call', 'Raise', 'Fold', 'All-in', 'Other']),
     size: z.number().optional(),
     unit: z.enum(['BB', 'Chips']).default('BB'),
@@ -42,7 +42,7 @@ export const handFormSchema = z.object({
   })).default([]),
   turnActions: z.array(z.object({
     id: z.string(),
-    actor: z.enum(['Hero', 'Villain']),
+    actor: z.string(),
     action: z.enum(['Check', 'Bet', 'Call', 'Raise', 'Fold', 'All-in', 'Other']),
     size: z.number().optional(),
     unit: z.enum(['BB', 'Chips']).default('BB'),
@@ -50,7 +50,7 @@ export const handFormSchema = z.object({
   })).default([]),
   riverActions: z.array(z.object({
     id: z.string(),
-    actor: z.enum(['Hero', 'Villain']),
+    actor: z.string(),
     action: z.enum(['Check', 'Bet', 'Call', 'Raise', 'Fold', 'All-in', 'Other']),
     size: z.number().optional(),
     unit: z.enum(['BB', 'Chips']).default('BB'),
