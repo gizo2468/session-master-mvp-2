@@ -94,7 +94,15 @@ export const handFormSchema = z.object({
     z.number().positive().finite().optional()
   ),
   villainPosition: z.string().optional(),
-  result: z.string().optional(),
+  resultValue: z.preprocess(
+    (val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    },
+    z.number().optional()
+  ),
+  resultUnit: z.enum(['BB', 'Chips']).default('BB'),
   opponentProfileId: z.string().uuid().optional(),
 });
 

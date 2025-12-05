@@ -82,7 +82,8 @@ export const useHandForm = ({
   const riverCards = form.watch('riverCards');
   const riverAction = form.watch('riverAction');
   const villains = form.watch('villains');
-  const result = form.watch('result');
+  const resultValue = form.watch('resultValue');
+  const resultUnit = form.watch('resultUnit');
   
   // Set initial position index if editing
   useEffect(() => {
@@ -116,8 +117,8 @@ export const useHandForm = ({
   
   useEffect(() => {
     const hasVillainData = villains?.some(v => v.cards?.some((c: any) => c.rank && c.suit));
-    if (hasVillainData || result) setIsShowdownOpen(true);
-  }, [villains, result]);
+    if (hasVillainData) setIsShowdownOpen(true);
+  }, [villains]);
 
   // Clear cards when game type changes to prevent validation issues
   useEffect(() => {
@@ -147,7 +148,8 @@ export const useHandForm = ({
         villains: [{ cards: [], position: '', bigBlind: undefined }],
         villainBigBlind: undefined,
         villainPosition: '',
-        result: '',
+        resultValue: undefined,
+        resultUnit: 'BB',
         opponentProfileId: undefined,
       });
       setImagePreview(null);
@@ -219,7 +221,9 @@ export const useHandForm = ({
       turnCard: turnCardsString || undefined,
       riverCard: riverCardsString || undefined,
       villains: villainsData.length > 0 ? villainsData : undefined,
-      showdownResult: values.result || undefined,
+      showdownResult: values.resultValue !== undefined 
+        ? `${values.resultValue > 0 ? '+' : ''}${values.resultValue} ${values.resultUnit}` 
+        : undefined,
       opponentProfileId: values.opponentProfileId,
     });
     onOpenChange(false);
@@ -265,7 +269,8 @@ export const useHandForm = ({
     riverCards,
     riverAction,
     villains,
-    result,
+    resultValue,
+    resultUnit,
     handlePositionSelect,
     handleSubmit,
     handleImageChange
