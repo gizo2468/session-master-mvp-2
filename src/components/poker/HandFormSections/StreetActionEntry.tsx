@@ -17,6 +17,8 @@ export interface StreetAction {
 interface StreetActionEntryProps {
   actions: any[];
   onChange: (actions: StreetAction[]) => void;
+  globalUnit?: 'BB' | 'Chips';
+  onUnitChange?: (unit: 'BB' | 'Chips') => void;
 }
 
 const actionOptions = ['Check', 'Bet', 'Call', 'Raise', 'Fold', 'All-in', 'Other'] as const;
@@ -31,7 +33,12 @@ const isValidAction = (action: any): action is StreetAction => {
     typeof action.unit === 'string';
 };
 
-const StreetActionEntry: React.FC<StreetActionEntryProps> = ({ actions, onChange }) => {
+const StreetActionEntry: React.FC<StreetActionEntryProps> = ({ 
+  actions, 
+  onChange,
+  globalUnit = 'BB',
+  onUnitChange 
+}) => {
   // Filter to only valid actions
   const validActions = (actions || []).filter(isValidAction);
   
@@ -39,8 +46,13 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({ actions, onChange
   const [newAction, setNewAction] = useState<Partial<StreetAction>>({
     actor: 'Hero',
     action: 'Bet',
-    unit: 'BB',
+    unit: globalUnit,
   });
+  
+  // Sync newAction unit when globalUnit changes
+  React.useEffect(() => {
+    setNewAction(prev => ({ ...prev, unit: globalUnit }));
+  }, [globalUnit]);
 
   const handleAdd = () => {
     if (!newAction.actor || !newAction.action) return;
@@ -154,7 +166,14 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({ actions, onChange
               />
               <Select
                 value={newAction.unit}
-                onValueChange={(value) => setNewAction({ ...newAction, unit: value as 'BB' | 'Chips' })}
+                onValueChange={(value) => {
+                  const newUnit = value as 'BB' | 'Chips';
+                  setNewAction({ ...newAction, unit: newUnit });
+                  // Propagate unit change globally
+                  if (onUnitChange) {
+                    onUnitChange(newUnit);
+                  }
+                }}
               >
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="Unit" />

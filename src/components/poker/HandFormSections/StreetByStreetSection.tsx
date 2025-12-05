@@ -6,7 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { CircleHelp, ChevronDown, Trash2, Plus, X } from 'lucide-react';
-import { Control, UseFormSetValue, useFieldArray } from 'react-hook-form';
+import { Control, UseFormSetValue, useFieldArray, useWatch, useFormContext } from 'react-hook-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import HandDetailGate from '@/components/ui/HandDetailGate';
 import CardSlotPicker from '../CardSlotPicker';
@@ -30,6 +30,7 @@ interface StreetByStreetSectionProps {
   turnCards: any[];
   riverCards: any[];
   villains: any[];
+  onGlobalUnitChange?: (unit: 'BB' | 'Chips') => void;
 }
 
 const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
@@ -48,7 +49,8 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
   flopCards,
   turnCards,
   riverCards,
-  villains
+  villains,
+  onGlobalUnitChange
 }) => {
   const isMobile = useIsMobile();
   
@@ -57,6 +59,16 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
     control,
     name: 'villains'
   });
+  
+  // Watch global unit from Hand Result section
+  const resultUnit = useWatch({ control, name: 'resultUnit' }) as 'BB' | 'Chips';
+  
+  // Handle global unit change - delegate to parent handler
+  const handleUnitChange = (newUnit: 'BB' | 'Chips') => {
+    if (onGlobalUnitChange) {
+      onGlobalUnitChange(newUnit);
+    }
+  };
 
   return (
         <HandDetailGate>
@@ -326,6 +338,8 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                     <StreetActionEntry
                       actions={field.value || []}
                       onChange={field.onChange}
+                      globalUnit={resultUnit}
+                      onUnitChange={handleUnitChange}
                     />
                   </FormControl>
                 </FormItem>
@@ -378,6 +392,8 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                     <StreetActionEntry
                       actions={field.value || []}
                       onChange={field.onChange}
+                      globalUnit={resultUnit}
+                      onUnitChange={handleUnitChange}
                     />
                   </FormControl>
                 </FormItem>
@@ -430,6 +446,8 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                     <StreetActionEntry
                       actions={field.value || []}
                       onChange={field.onChange}
+                      globalUnit={resultUnit}
+                      onUnitChange={handleUnitChange}
                     />
                   </FormControl>
                 </FormItem>

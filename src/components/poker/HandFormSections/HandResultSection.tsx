@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Control, useWatch } from 'react-hook-form';
+import { Control, useWatch, UseFormSetValue } from 'react-hook-form';
 import { FormValues } from '@/utils/handFormHelpers';
 import { cn } from '@/lib/utils';
 
 interface HandResultSectionProps {
   control: Control<FormValues>;
+  setValue?: UseFormSetValue<FormValues>;
+  onUnitChange?: (newUnit: 'BB' | 'Chips') => void;
 }
 
 const formatDisplayValue = (val: number) => {
@@ -18,7 +20,7 @@ const formatDisplayValue = (val: number) => {
   return `${sign}${val}`;
 };
 
-const HandResultSection: React.FC<HandResultSectionProps> = ({ control }) => {
+const HandResultSection: React.FC<HandResultSectionProps> = ({ control, setValue, onUnitChange }) => {
   const resultUnit = useWatch({ control, name: 'resultUnit' });
   const resultValue = useWatch({ control, name: 'resultValue' });
   
@@ -32,6 +34,15 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control }) => {
   useEffect(() => {
     setSign(currentValue >= 0 ? '+' : '-');
   }, [resultUnit]);
+  
+  // Handle unit toggle with conversion
+  const handleUnitToggle = (newUnit: 'BB' | 'Chips', fieldOnChange: (value: string) => void) => {
+    if (onUnitChange) {
+      onUnitChange(newUnit);
+    } else {
+      fieldOnChange(newUnit);
+    }
+  };
 
   return (
     <div className="space-y-3">
@@ -54,7 +65,7 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control }) => {
                     ? "bg-background shadow-sm text-foreground" 
                     : "text-muted-foreground hover:text-foreground"
                 )}
-                onClick={() => field.onChange('BB')}
+                onClick={() => handleUnitToggle('BB', field.onChange)}
               >
                 BB
               </Button>
@@ -68,7 +79,7 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control }) => {
                     ? "bg-background shadow-sm text-foreground" 
                     : "text-muted-foreground hover:text-foreground"
                 )}
-                onClick={() => field.onChange('Chips')}
+                onClick={() => handleUnitToggle('Chips', field.onChange)}
               >
                 Chips
               </Button>
