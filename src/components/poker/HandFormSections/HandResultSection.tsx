@@ -47,7 +47,7 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control, setValue
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <FormLabel className="text-base font-semibold">Hand Result (Net)</FormLabel>
+        <FormLabel className="text-base font-bold text-poker-gold">Hand Result</FormLabel>
         
         {/* BB/Chips Toggle */}
         <FormField
