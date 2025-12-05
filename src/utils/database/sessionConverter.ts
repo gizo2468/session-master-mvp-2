@@ -80,6 +80,15 @@ export const convertDatabaseSessionToPokerSession = (
           return;
         }
 
+        // Parse JSONB fields safely
+        const parseJsonField = (field: any) => {
+          if (!field) return undefined;
+          if (typeof field === 'string') {
+            try { return JSON.parse(field); } catch { return undefined; }
+          }
+          return field;
+        };
+
         const convertedHand: HandData = {
           id: hand.id, // Use Supabase ID as local ID
           supabaseId: hand.id, // CRITICAL: Store Supabase ID for future updates
@@ -89,9 +98,9 @@ export const convertDatabaseSessionToPokerSession = (
           position: hand.position,
           cards: hand.hole_cards || '',
           action: hand.preflop_action || '',
-          holeCards: hand.hole_cards ? hand.hole_cards.split(',').filter(card => card.trim()) : [],
+          holeCards: hand.hole_cards ? hand.hole_cards.split(',').filter((card: string) => card.trim()) : [],
           preflopAction: hand.preflop_action,
-          flopCards: hand.flop_cards ? hand.flop_cards.split(',').filter(card => card.trim()) : [],
+          flopCards: hand.flop_cards ? hand.flop_cards.split(',').filter((card: string) => card.trim()) : [],
           flopAction: hand.flop_action,
           turnCard: hand.turn_card,
           turnAction: hand.turn_action,
@@ -104,6 +113,17 @@ export const convertDatabaseSessionToPokerSession = (
           notes: hand.hand_notes,
           image: hand.hand_image || undefined, // May be undefined if not fetched (lazy loading)
           currencyType: hand.currency_type || 'currency',
+          // New fields for complete hand data persistence
+          opponentProfileId: hand.opponent_profile_id || undefined,
+          smallBlind: hand.small_blind ? parseFloat(hand.small_blind) : undefined,
+          bigBlind: hand.big_blind ? parseFloat(hand.big_blind) : undefined,
+          gameType: hand.game_type || 'NLH',
+          villains: parseJsonField(hand.villains),
+          flopActions: parseJsonField(hand.flop_actions),
+          turnActions: parseJsonField(hand.turn_actions),
+          riverActions: parseJsonField(hand.river_actions),
+          resultValue: hand.result_value != null ? parseFloat(hand.result_value) : undefined,
+          resultUnit: hand.result_unit || 'BB',
           createdAt: new Date(hand.created_at)
         };
         

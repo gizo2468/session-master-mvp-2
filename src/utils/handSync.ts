@@ -69,6 +69,16 @@ export const syncHandToSupabase = async (hand: HandData, supabaseSessionId: stri
         hand_image: hand.handImage || hand.image || null,
         currency_type: hand.currencyType || 'currency',
         opponent_profile_id: hand.opponentProfileId || null,
+        // New fields for complete hand data persistence
+        villains: hand.villains ? JSON.stringify(hand.villains) : null,
+        small_blind: hand.smallBlind || null,
+        big_blind: hand.bigBlind || null,
+        game_type: hand.gameType || 'NLH',
+        flop_actions: hand.flopActions ? JSON.stringify(hand.flopActions) : null,
+        turn_actions: hand.turnActions ? JSON.stringify(hand.turnActions) : null,
+        river_actions: hand.riverActions ? JSON.stringify(hand.riverActions) : null,
+        result_value: hand.resultValue ?? null,
+        result_unit: hand.resultUnit || 'BB',
         created_at: hand.createdAt.toISOString()
       })
       .select('id')
@@ -159,6 +169,16 @@ export const syncHandUpdateToSupabase = async (hand: HandData, supabaseSessionId
       hand_image: hand.handImage || hand.image || null,
       currency_type: hand.currencyType || 'currency',
       opponent_profile_id: hand.opponentProfileId || null,
+      // New fields for complete hand data persistence
+      villains: hand.villains ? JSON.stringify(hand.villains) : null,
+      small_blind: hand.smallBlind || null,
+      big_blind: hand.bigBlind || null,
+      game_type: hand.gameType || 'NLH',
+      flop_actions: hand.flopActions ? JSON.stringify(hand.flopActions) : null,
+      turn_actions: hand.turnActions ? JSON.stringify(hand.turnActions) : null,
+      river_actions: hand.riverActions ? JSON.stringify(hand.riverActions) : null,
+      result_value: hand.resultValue ?? null,
+      result_unit: hand.resultUnit || 'BB',
       updated_at: new Date().toISOString()
     };
 

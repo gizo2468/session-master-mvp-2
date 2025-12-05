@@ -53,6 +53,34 @@ export interface HandData {
   showdownResult?: string;
   result?: string | number;
   resultAmount?: number;
+  // Structured street actions for persistence (matches form structure)
+  flopActions?: Array<{
+    id?: string;
+    actor?: string;
+    action?: string;
+    size?: number;
+    unit?: 'BB' | 'Chips';
+    customDescription?: string;
+  }>;
+  turnActions?: Array<{
+    id?: string;
+    actor?: string;
+    action?: string;
+    size?: number;
+    unit?: 'BB' | 'Chips';
+    customDescription?: string;
+  }>;
+  riverActions?: Array<{
+    id?: string;
+    actor?: string;
+    action?: string;
+    size?: number;
+    unit?: 'BB' | 'Chips';
+    customDescription?: string;
+  }>;
+  // Hand result fields
+  resultValue?: number;
+  resultUnit?: 'BB' | 'Chips';
   potSize?: number;
   amountInvested?: number;
   amountWon?: number;

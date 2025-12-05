@@ -21,6 +21,58 @@ export const useHandForm = ({
   onSubmit,
   onOpenChange
 }: UseHandFormProps) => {
+  // Helper to parse card string like "AsKh" into card slot array
+  const parseCardString = (cardStr: string | undefined): Array<{ id: number; rank?: string; suit?: string }> => {
+    if (!cardStr) return [];
+    const cards: Array<{ id: number; rank?: string; suit?: string }> = [];
+    for (let i = 0; i < cardStr.length; i += 2) {
+      if (i + 1 < cardStr.length) {
+        cards.push({ id: cards.length, rank: cardStr[i], suit: cardStr[i + 1] });
+      }
+    }
+    return cards;
+  };
+
+  // Helper to convert villain data from DB format to form format
+  const parseVillainsForForm = (villains: any[] | undefined) => {
+    if (!villains || villains.length === 0) {
+      return [{ cards: [], position: '', bigBlind: undefined }];
+    }
+    return villains.map(v => ({
+      cards: parseCardString(v.hand),
+      position: v.position || '',
+      bigBlind: v.bigBlind
+    }));
+  };
+
+  // Parse board cards from initialData
+  const parseFlopCards = () => {
+    if (initialData.flopCards && initialData.flopCards.length > 0) {
+      const flopStr = Array.isArray(initialData.flopCards) ? initialData.flopCards[0] : initialData.flopCards;
+      const parsed = parseCardString(flopStr as string);
+      // Ensure exactly 3 slots for flop
+      while (parsed.length < 3) parsed.push({ id: parsed.length });
+      return parsed.slice(0, 3);
+    }
+    return [{ id: 0 }, { id: 1 }, { id: 2 }];
+  };
+
+  const parseTurnCards = () => {
+    if (initialData.turnCard) {
+      const parsed = parseCardString(initialData.turnCard);
+      return parsed.length > 0 ? parsed : [{ id: 0 }];
+    }
+    return [{ id: 0 }];
+  };
+
+  const parseRiverCards = () => {
+    if (initialData.riverCard) {
+      const parsed = parseCardString(initialData.riverCard);
+      return parsed.length > 0 ? parsed : [{ id: 0 }];
+    }
+    return [{ id: 0 }];
+  };
+
   const form = useForm<FormValues>({
     resolver: zodResolver(handFormSchema),
     defaultValues: {
@@ -34,18 +86,19 @@ export const useHandForm = ({
       tableId: tableId || initialData.tableId,
       smallBlind: initialData.smallBlind || undefined,
       bigBlind: initialData.bigBlind || undefined,
-      // Multi-villain support - convert legacy data if present
-      villains: initialData.villains ? initialData.villains.map(v => ({
-        cards: [],
-        position: v.position || '',
-        bigBlind: v.bigBlind
-      })) : (initialData.villainHand || initialData.villainPosition || initialData.villainBigBlind) ? 
-        [{
-          cards: [],
-          position: initialData.villainPosition || '',
-          bigBlind: initialData.villainBigBlind
-        }] : 
-        [{ cards: [], position: '', bigBlind: undefined }],
+      // Board cards for edit mode
+      flopCards: parseFlopCards(),
+      turnCards: parseTurnCards(),
+      riverCards: parseRiverCards(),
+      // Structured actions for edit mode (cast to any to handle DB string types)
+      flopActions: (initialData.flopActions as any) || [],
+      turnActions: (initialData.turnActions as any) || [],
+      riverActions: (initialData.riverActions as any) || [],
+      // Hand result
+      resultValue: initialData.resultValue,
+      resultUnit: initialData.resultUnit || 'BB',
+      // Multi-villain support - convert from DB format
+      villains: parseVillainsForForm(initialData.villains),
       // Legacy fields for backward compatibility
       villainBigBlind: initialData.villainBigBlind || undefined,
       villainPosition: initialData.villainPosition || '',
@@ -271,12 +324,21 @@ export const useHandForm = ({
       id: initialData.id,
       image: imagePreview,
       position: positions[selectedPositionIndex], // Use the position from our wheel picker
+      smallBlind: values.smallBlind,
       bigBlind: values.bigBlind,
+      gameType: values.gameType,
       // Store the card data in the expected format
       flopCards: flopCardsString ? [flopCardsString] : undefined,
       turnCard: turnCardsString || undefined,
       riverCard: riverCardsString || undefined,
       villains: villainsData.length > 0 ? villainsData : undefined,
+      // Structured actions (cast to match HandData type)
+      flopActions: values.flopActions as any,
+      turnActions: values.turnActions as any,
+      riverActions: values.riverActions as any,
+      // Hand result
+      resultValue: values.resultValue,
+      resultUnit: values.resultUnit,
       showdownResult: values.resultValue !== undefined 
         ? `${values.resultValue > 0 ? '+' : ''}${values.resultValue} ${values.resultUnit}` 
         : undefined,
