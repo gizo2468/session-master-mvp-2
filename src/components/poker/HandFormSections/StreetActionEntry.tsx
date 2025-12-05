@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { useToast } from '@/hooks/use-toast';
 
 export interface StreetAction {
   id: string;
@@ -41,6 +42,8 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({
   onUnitChange,
   villainCount = 1
 }) => {
+  const { toast } = useToast();
+  
   // Filter to only valid actions
   const validActions = (actions || []).filter(isValidAction);
   
@@ -72,6 +75,19 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({
   const handleAdd = () => {
     if (!newAction.actor || !newAction.action) return;
     
+    // Validation: Check if same actor is acting twice in a row
+    if (validActions.length > 0) {
+      const lastAction = validActions[validActions.length - 1];
+      if (lastAction.actor === newAction.actor) {
+        toast({
+          title: "Action order invalid",
+          description: "Another player must act before this player can act again.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     const action: StreetAction = {
       id: uuidv4(),
       actor: newAction.actor as 'Hero' | 'Villain',
@@ -82,7 +98,7 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({
     };
     
     onChange([...validActions, action]);
-    setNewAction({ actor: 'Hero', action: 'Bet', unit: 'BB' });
+    setNewAction({ actor: 'Hero', action: 'Bet', unit: globalUnit });
     setIsAdding(false);
   };
 
