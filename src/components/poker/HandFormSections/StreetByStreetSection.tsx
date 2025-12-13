@@ -391,6 +391,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                           globalUnit={resultUnit}
                           onUnitChange={handleUnitChange}
                           villainCount={fields.length}
+                          onCancel={() => setIsFlopOpen(false)}
                         />
                       </FormControl>
                     </FormItem>
@@ -446,6 +447,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                           globalUnit={resultUnit}
                           onUnitChange={handleUnitChange}
                           villainCount={fields.length}
+                          onCancel={() => setIsTurnOpen(false)}
                         />
                       </FormControl>
                     </FormItem>
@@ -501,6 +503,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                           globalUnit={resultUnit}
                           onUnitChange={handleUnitChange}
                           villainCount={fields.length}
+                          onCancel={() => setIsRiverOpen(false)}
                         />
                       </FormControl>
                     </FormItem>
