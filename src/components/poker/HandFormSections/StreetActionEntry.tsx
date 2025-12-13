@@ -21,6 +21,7 @@ interface StreetActionEntryProps {
   globalUnit?: 'BB' | 'Chips';
   onUnitChange?: (unit: 'BB' | 'Chips') => void;
   villainCount?: number;
+  onCancel?: () => void;
 }
 
 const actionOptions = ['Check', 'Bet', 'Call', 'Raise', 'Fold', 'All-in', 'Other'] as const;
@@ -40,7 +41,8 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({
   onChange,
   globalUnit = 'BB',
   onUnitChange,
-  villainCount = 1
+  villainCount = 1,
+  onCancel
 }) => {
   const { toast } = useToast();
   
@@ -245,8 +247,10 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({
               variant="outline"
               size="sm"
               onClick={() => {
-                setIsAdding(false);
-                setNewAction({ actor: 'Hero', action: 'Bet', unit: 'BB' });
+                setNewAction({ actor: 'Hero', action: 'Bet', unit: globalUnit });
+                if (onCancel) {
+                  onCancel();
+                }
               }}
               className="flex-1 h-7 text-xs"
             >
