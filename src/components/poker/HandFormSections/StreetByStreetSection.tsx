@@ -54,6 +54,9 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
+  // Local state for parent Actions collapsible
+  const [isActionsOpen, setIsActionsOpen] = React.useState(false);
+  
   // Use field array for dynamic villain management
   const { fields, append, remove } = useFieldArray({
     control,
@@ -332,168 +335,179 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
           </CollapsibleContent>
         </Collapsible>
 
-        {/* Flop Section */}
-        <Collapsible open={isFlopOpen} onOpenChange={setIsFlopOpen}>
+        {/* Actions Section - Groups Flop/Turn/River */}
+        <Collapsible open={isActionsOpen} onOpenChange={setIsActionsOpen}>
           <CollapsibleTrigger className="w-full">
             <div className="flex items-center justify-between w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
-              <span>Flop</span>
-              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isFlopOpen ? 'rotate-180' : ''}`} />
+              <span>Actions</span>
+              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isActionsOpen ? 'rotate-180' : ''}`} />
             </div>
           </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-4 pt-4">
-            <FormField
-              control={control}
-              name="flopCards"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Flop Cards</FormLabel>
-                  <FormControl>
-                    <CardSlotPicker
-                      slots={3}
-                      selectedCards={field.value || []}
-                      onChange={field.onChange}
-                      excludedCards={[
-                        ...(selectedCards.match(/.{2}/g) || []),
-                        ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                        ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                        ...(villains?.flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit)) || [])
-                      ].filter(card => 
-                        !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
-                      )}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={control}
-              name="flopActions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Flop Action</FormLabel>
-                  <FormControl>
-                    <StreetActionEntry
-                      actions={field.value || []}
-                      onChange={field.onChange}
-                      globalUnit={resultUnit}
-                      onUnitChange={handleUnitChange}
-                      villainCount={fields.length}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </CollapsibleContent>
-        </Collapsible>
+          <CollapsibleContent className="space-y-0 pt-2">
+            {/* Flop Section */}
+            <Collapsible open={isFlopOpen} onOpenChange={setIsFlopOpen}>
+              <CollapsibleTrigger className="w-full">
+                <div className="flex items-center justify-between w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
+                  <span>Flop</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isFlopOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-4">
+                <FormField
+                  control={control}
+                  name="flopCards"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Flop Cards</FormLabel>
+                      <FormControl>
+                        <CardSlotPicker
+                          slots={3}
+                          selectedCards={field.value || []}
+                          onChange={field.onChange}
+                          excludedCards={[
+                            ...(selectedCards.match(/.{2}/g) || []),
+                            ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                            ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                            ...(villains?.flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit)) || [])
+                          ].filter(card => 
+                            !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                          )}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={control}
+                  name="flopActions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Flop Action</FormLabel>
+                      <FormControl>
+                        <StreetActionEntry
+                          actions={field.value || []}
+                          onChange={field.onChange}
+                          globalUnit={resultUnit}
+                          onUnitChange={handleUnitChange}
+                          villainCount={fields.length}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </CollapsibleContent>
+            </Collapsible>
 
-        {/* Turn Analysis - Collapsible */}
-        <Collapsible open={isTurnOpen} onOpenChange={setIsTurnOpen}>
-          <CollapsibleTrigger className="w-full">
-            <div className="flex items-center justify-between w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
-              <span>Turn</span>
-              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isTurnOpen ? 'rotate-180' : ''}`} />
-            </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-4 pt-4">
-            <FormField
-              control={control}
-              name="turnCards"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Turn Card</FormLabel>
-                  <FormControl>
-                    <CardSlotPicker
-                      slots={1}
-                      selectedCards={field.value || [{ id: 0 }]}
-                      onChange={field.onChange}
-                      excludedCards={[
-                        ...(selectedCards.match(/.{2}/g) || []),
-                        ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                        ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                        ...(villains?.flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit)) || [])
-                      ].filter(card => 
-                        !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
-                      )}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={control}
-              name="turnActions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Turn Action</FormLabel>
-                  <FormControl>
-                    <StreetActionEntry
-                      actions={field.value || []}
-                      onChange={field.onChange}
-                      globalUnit={resultUnit}
-                      onUnitChange={handleUnitChange}
-                      villainCount={fields.length}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </CollapsibleContent>
-        </Collapsible>
+            {/* Turn Analysis - Collapsible */}
+            <Collapsible open={isTurnOpen} onOpenChange={setIsTurnOpen}>
+              <CollapsibleTrigger className="w-full">
+                <div className="flex items-center justify-between w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
+                  <span>Turn</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isTurnOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-4">
+                <FormField
+                  control={control}
+                  name="turnCards"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Turn Card</FormLabel>
+                      <FormControl>
+                        <CardSlotPicker
+                          slots={1}
+                          selectedCards={field.value || [{ id: 0 }]}
+                          onChange={field.onChange}
+                          excludedCards={[
+                            ...(selectedCards.match(/.{2}/g) || []),
+                            ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                            ...((riverCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                            ...(villains?.flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit)) || [])
+                          ].filter(card => 
+                            !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                          )}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={control}
+                  name="turnActions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Turn Action</FormLabel>
+                      <FormControl>
+                        <StreetActionEntry
+                          actions={field.value || []}
+                          onChange={field.onChange}
+                          globalUnit={resultUnit}
+                          onUnitChange={handleUnitChange}
+                          villainCount={fields.length}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </CollapsibleContent>
+            </Collapsible>
 
-        {/* River Analysis - Collapsible */}
-        <Collapsible open={isRiverOpen} onOpenChange={setIsRiverOpen}>
-          <CollapsibleTrigger className="w-full">
-            <div className="flex items-center justify-between w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
-              <span>River</span>
-              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isRiverOpen ? 'rotate-180' : ''}`} />
-            </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-4 pt-4">
-            <FormField
-              control={control}
-              name="riverCards"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>River Card</FormLabel>
-                  <FormControl>
-                    <CardSlotPicker
-                      slots={1}
-                      selectedCards={field.value || [{ id: 0 }]}
-                      onChange={field.onChange}
-                      excludedCards={[
-                        ...(selectedCards.match(/.{2}/g) || []),
-                        ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                        ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
-                        ...(villains?.flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit)) || [])
-                      ].filter(card => 
-                        !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
-                      )}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={control}
-              name="riverActions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>River Action</FormLabel>
-                  <FormControl>
-                    <StreetActionEntry
-                      actions={field.value || []}
-                      onChange={field.onChange}
-                      globalUnit={resultUnit}
-                      onUnitChange={handleUnitChange}
-                      villainCount={fields.length}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            {/* River Analysis - Collapsible */}
+            <Collapsible open={isRiverOpen} onOpenChange={setIsRiverOpen}>
+              <CollapsibleTrigger className="w-full">
+                <div className="flex items-center justify-between w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
+                  <span>River</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isRiverOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-4">
+                <FormField
+                  control={control}
+                  name="riverCards"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>River Card</FormLabel>
+                      <FormControl>
+                        <CardSlotPicker
+                          slots={1}
+                          selectedCards={field.value || [{ id: 0 }]}
+                          onChange={field.onChange}
+                          excludedCards={[
+                            ...(selectedCards.match(/.{2}/g) || []),
+                            ...((flopCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                            ...((turnCards?.filter(c => c.rank && c.suit).map(c => c.rank + c.suit)) || []),
+                            ...(villains?.flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit)) || [])
+                          ].filter(card => 
+                            !field.value?.some(c => c.rank && c.suit && (c.rank + c.suit === card))
+                          )}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={control}
+                  name="riverActions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>River Action</FormLabel>
+                      <FormControl>
+                        <StreetActionEntry
+                          actions={field.value || []}
+                          onChange={field.onChange}
+                          globalUnit={resultUnit}
+                          onUnitChange={handleUnitChange}
+                          villainCount={fields.length}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </CollapsibleContent>
+            </Collapsible>
           </CollapsibleContent>
         </Collapsible>
 
