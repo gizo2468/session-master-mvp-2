@@ -124,8 +124,8 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
         {/* Showdown Result - Collapsible */}
         <Collapsible open={isShowdownOpen} onOpenChange={setIsShowdownOpen}>
           <CollapsibleTrigger className="w-full">
-            <div className="flex flex-col items-center w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
-              <span>Board & Villains</span>
+          <div className="flex flex-col items-center w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
+              <span className="text-lg">Board & Villains</span>
               <ChevronDown className={`h-4 w-4 transition-transform duration-200 mt-1 ${isShowdownOpen ? 'rotate-180' : ''}`} />
             </div>
           </CollapsibleTrigger>
@@ -339,7 +339,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
         <Collapsible open={isActionsOpen} onOpenChange={setIsActionsOpen}>
         <CollapsibleTrigger className="w-full">
           <div className="flex flex-col items-center w-full py-2 text-poker-gold font-bold hover:text-poker-darkGold transition-colors">
-            <span>Actions</span>
+            <span className="text-lg">Actions</span>
             <ChevronDown className={`h-4 w-4 transition-transform duration-200 mt-1 ${isActionsOpen ? 'rotate-180' : ''}`} />
             </div>
           </CollapsibleTrigger>
