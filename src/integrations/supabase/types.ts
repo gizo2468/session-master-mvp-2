@@ -1352,7 +1352,6 @@ export type Database = {
       get_user_session_statistics:
         | {
             Args: {
-              p_currency?: string
               p_end_date?: string
               p_start_date?: string
               p_timeframe?: string
@@ -1379,6 +1378,7 @@ export type Database = {
           }
         | {
             Args: {
+              p_currency?: string
               p_end_date?: string
               p_start_date?: string
               p_timeframe?: string
