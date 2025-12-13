@@ -60,7 +60,7 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({
     return options;
   }, [villainCount]);
   
-  const [isAdding, setIsAdding] = useState(false);
+  const [isAdding, setIsAdding] = useState(true);
   const [newAction, setNewAction] = useState<Partial<StreetAction>>({
     actor: 'Hero',
     action: 'Bet',
