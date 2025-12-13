@@ -108,23 +108,6 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control, setValue
             <FormItem>
               <FormControl>
                 <div className="space-y-4">
-                  {/* Live Value Display */}
-                  <div className="text-center">
-                    <span className={cn(
-                      "text-3xl font-bold transition-colors",
-                      currentValue > 0 
-                        ? "text-green-500" 
-                        : currentValue < 0 
-                          ? "text-red-500" 
-                          : "text-muted-foreground"
-                    )}>
-                      {formatDisplayValue(currentValue)}
-                    </span>
-                    <span className="text-sm text-muted-foreground ml-1">
-                      {unitLabel}
-                    </span>
-                  </div>
-
                   {/* Sign Toggle + Amount Input (same for BB and Chips) */}
                   <div className="flex flex-col items-center gap-4 py-2">
                     <div className="flex items-center gap-4">
@@ -192,6 +175,23 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control, setValue
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Live Value Display */}
+                  <div className="text-center">
+                    <span className={cn(
+                      "text-3xl font-bold transition-colors",
+                      currentValue > 0 
+                        ? "text-green-500" 
+                        : currentValue < 0 
+                          ? "text-red-500" 
+                          : "text-muted-foreground"
+                    )}>
+                      {formatDisplayValue(currentValue)}
+                    </span>
+                    <span className="text-sm text-muted-foreground ml-1">
+                      {unitLabel}
+                    </span>
                   </div>
                 </div>
               </FormControl>
