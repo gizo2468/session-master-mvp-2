@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { CircleHelp } from 'lucide-react';
@@ -11,11 +11,72 @@ interface PositionSectionProps {
   onPositionSelect: (index: number) => void;
 }
 
+const ITEM_HEIGHT = 30;
+const CONTAINER_HEIGHT = 130;
+const TOP_PADDING = 50;
+
 const PositionSection: React.FC<PositionSectionProps> = ({
   control,
   selectedPositionIndex,
   onPositionSelect
 }) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitialMount = useRef(true);
+
+  // Calculate centered index from scroll position
+  const getCenteredIndex = useCallback(() => {
+    if (!scrollContainerRef.current) return 0;
+    const scrollTop = scrollContainerRef.current.scrollTop;
+    const centerOffset = (CONTAINER_HEIGHT / 2) - (ITEM_HEIGHT / 2);
+    const index = Math.round((scrollTop - TOP_PADDING + centerOffset) / ITEM_HEIGHT);
+    return Math.max(0, Math.min(positions.length - 1, index));
+  }, []);
+
+  // Scroll to specific position index
+  const scrollToPosition = useCallback((index: number, smooth = true) => {
+    if (!scrollContainerRef.current) return;
+    const targetScrollTop = (index * ITEM_HEIGHT) + TOP_PADDING - (CONTAINER_HEIGHT / 2) + (ITEM_HEIGHT / 2);
+    scrollContainerRef.current.scrollTo({
+      top: targetScrollTop,
+      behavior: smooth ? 'smooth' : 'auto'
+    });
+  }, []);
+
+  // Handle scroll end - select centered item
+  const handleScroll = useCallback(() => {
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => {
+      const centeredIndex = getCenteredIndex();
+      if (centeredIndex !== selectedPositionIndex) {
+        onPositionSelect(centeredIndex);
+      }
+    }, 100);
+  }, [getCenteredIndex, selectedPositionIndex, onPositionSelect]);
+
+  // Handle tap - scroll to that position (selection happens on scroll end)
+  const handlePositionTap = useCallback((index: number) => {
+    scrollToPosition(index);
+  }, [scrollToPosition]);
+
+  // Initial scroll positioning on mount
+  useEffect(() => {
+    if (isInitialMount.current) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        scrollToPosition(selectedPositionIndex, false);
+        isInitialMount.current = false;
+      }, 50);
+    }
+  }, [selectedPositionIndex, scrollToPosition]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
+  }, []);
+
   return (
     <FormField
       control={control}
@@ -36,7 +97,11 @@ const PositionSection: React.FC<PositionSectionProps> = ({
                 <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/2 h-[30px] border-y border-transparent"></div>
               </div>
               
-              <div className="absolute inset-0 overflow-y-auto snap-y snap-mandatory scrollbar-none">
+              <div 
+                ref={scrollContainerRef}
+                onScroll={handleScroll}
+                className="absolute inset-0 overflow-y-auto snap-y snap-mandatory scrollbar-none"
+              >
                 {/* Empty spaces at top and bottom to allow centering */}
                 <div className="h-[50px]" aria-hidden="true"></div>
                 
@@ -48,7 +113,7 @@ const PositionSection: React.FC<PositionSectionProps> = ({
                         ? 'text-poker-gold font-bold text-lg' 
                         : 'text-gray-600 text-base hover:text-gray-800'
                     }`}
-                    onClick={() => onPositionSelect(index)}
+                    onClick={() => handlePositionTap(index)}
                   >
                     {position}
                   </div>
