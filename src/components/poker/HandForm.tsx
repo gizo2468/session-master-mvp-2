@@ -185,6 +185,7 @@ const HandForm: React.FC<HandFormProps> = ({
                 riverCards={riverCards}
                 villains={villains}
                 onGlobalUnitChange={handleGlobalUnitChange}
+                heroPosition={form.watch('position')}
               />
               
               {/* Hand Result */}

@@ -31,6 +31,7 @@ interface StreetByStreetSectionProps {
   riverCards: any[];
   villains: any[];
   onGlobalUnitChange?: (unit: 'BB' | 'Chips') => void;
+  heroPosition?: string;
 }
 
 const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
@@ -50,7 +51,8 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
   turnCards,
   riverCards,
   villains,
-  onGlobalUnitChange
+  onGlobalUnitChange,
+  heroPosition
 }) => {
   const isMobile = useIsMobile();
   
@@ -224,6 +226,15 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                     ?.filter((_, i) => i !== index)
                     .flatMap(v => v.cards?.filter((c: any) => c.rank && c.suit).map((c: any) => c.rank + c.suit) || []) || [];
                   
+                  // Get all taken positions (Hero + other villains)
+                  const takenPositions = [
+                    heroPosition,
+                    ...villains
+                      ?.filter((_, i) => i !== index)
+                      .map(v => v.position)
+                      .filter(Boolean) || []
+                  ].filter(Boolean);
+                  
                   return (
                     <div key={field.id} className="relative border border-border rounded-md p-3 bg-card">
                       {/* Remove button (only show if more than 1 villain) */}
@@ -283,7 +294,14 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                                   </FormControl>
                                   <SelectContent>
                                     {positions.map(pos => (
-                                      <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                                      <SelectItem 
+                                        key={pos} 
+                                        value={pos}
+                                        disabled={takenPositions.includes(pos)}
+                                        className={takenPositions.includes(pos) ? 'opacity-50' : ''}
+                                      >
+                                        {pos}
+                                      </SelectItem>
                                     ))}
                                   </SelectContent>
                                 </Select>
