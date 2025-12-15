@@ -136,7 +136,19 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
           currency_type,
           created_at,
           session_id,
-          table_id
+          table_id,
+          hand_notes,
+          opponent_profile_id,
+          villains,
+          small_blind,
+          big_blind,
+          hero_stack_bb,
+          game_type,
+          flop_actions,
+          turn_actions,
+          river_actions,
+          result_value,
+          result_unit
         `)
         .eq('user_id', user.id)
         .eq('opponent_profile_id', opponentProfile.id)
@@ -765,6 +777,19 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
           tableId: selectedHand.table_id,
           sessionId: selectedHand.session_id,
           createdAt: new Date(selectedHand.created_at),
+          // Additional fields for complete hand data
+          villains: selectedHand.villains || [],
+          gameType: selectedHand.game_type,
+          smallBlind: selectedHand.small_blind,
+          bigBlind: selectedHand.big_blind,
+          heroStackBB: selectedHand.hero_stack_bb,
+          flopActions: selectedHand.flop_actions || [],
+          turnActions: selectedHand.turn_actions || [],
+          riverActions: selectedHand.river_actions || [],
+          resultValue: selectedHand.result_value,
+          resultUnit: selectedHand.result_unit,
+          notes: selectedHand.hand_notes,
+          opponentProfileId: selectedHand.opponent_profile_id,
         } : null}
       />
 
