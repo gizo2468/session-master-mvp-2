@@ -162,7 +162,14 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
             {hand.showdownResult && (
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-muted-foreground w-24">Hand Result:</span>
-                <span className="text-sm">{hand.showdownResult}</span>
+                <span className={`text-lg font-semibold ${
+                  (hand.resultValue !== undefined && hand.resultValue >= 0) || 
+                  (hand.showdownResult && hand.showdownResult.startsWith('+')) 
+                    ? 'text-green-600' 
+                    : 'text-red-600'
+                }`}>
+                  {hand.showdownResult}
+                </span>
               </div>
             )}
           </CardContent>
