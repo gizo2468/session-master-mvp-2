@@ -139,6 +139,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
           table_id,
           hand_notes,
           opponent_profile_id,
+          opponent_profile_ids,
           villains,
           small_blind,
           big_blind,
@@ -151,7 +152,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
           result_unit
         `)
         .eq('user_id', user.id)
-        .eq('opponent_profile_id', opponentProfile.id)
+        .or(`opponent_profile_id.eq.${opponentProfile.id},opponent_profile_ids.cs.["${opponentProfile.id}"]`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -798,6 +799,9 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
           resultUnit: selectedHand.result_unit,
           notes: selectedHand.hand_notes,
           opponentProfileId: selectedHand.opponent_profile_id,
+          opponentProfileIds: Array.isArray(selectedHand.opponent_profile_ids) 
+            ? selectedHand.opponent_profile_ids 
+            : (typeof selectedHand.opponent_profile_ids === 'string' ? JSON.parse(selectedHand.opponent_profile_ids) : []),
         } : null}
       />
 
