@@ -9,6 +9,7 @@ import { PokerChip } from '../Icons';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { fetchHandImage } from '@/utils/database/sessionFetcher';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HandDetailsDialogProps {
   open: boolean;
@@ -32,6 +33,7 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
   const [showImageModal, setShowImageModal] = useState(false);
   const [handImage, setHandImage] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
+  const [opponentName, setOpponentName] = useState<string | null>(null);
 
   // Lazy load hand image when dialog opens
   useEffect(() => {
@@ -51,11 +53,35 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
     }
   }, [open, hand?.id, hand?.image, hand?.handImage]);
 
+  // Fetch linked opponent name when dialog opens
+  useEffect(() => {
+    const fetchOpponentName = async () => {
+      if (open && hand?.opponentProfileId) {
+        try {
+          const { data, error } = await supabase
+            .from('opponent_profiles')
+            .select('nickname')
+            .eq('id', hand.opponentProfileId)
+            .maybeSingle();
+          
+          if (!error && data) {
+            setOpponentName(data.nickname);
+          }
+        } catch (error) {
+          console.error('Error fetching opponent name:', error);
+        }
+      }
+    };
+    
+    fetchOpponentName();
+  }, [open, hand?.opponentProfileId]);
+
   // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
       setHandImage(null);
       setShowImageModal(false);
+      setOpponentName(null);
     }
   }, [open]);
 
@@ -170,6 +196,14 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                 }`}>
                   {hand.showdownResult}
                 </span>
+              </div>
+            )}
+            
+            {/* Linked Opponent */}
+            {opponentName && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-muted-foreground w-24">Played vs:</span>
+                <span className="text-sm font-medium">{opponentName}</span>
               </div>
             )}
           </CardContent>
