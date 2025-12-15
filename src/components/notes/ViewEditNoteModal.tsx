@@ -777,15 +777,23 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
           tableId: selectedHand.table_id,
           sessionId: selectedHand.session_id,
           createdAt: new Date(selectedHand.created_at),
-          // Additional fields for complete hand data
-          villains: selectedHand.villains || [],
+          // Additional fields for complete hand data - parse JSONB safely
+          villains: Array.isArray(selectedHand.villains) 
+            ? selectedHand.villains 
+            : (typeof selectedHand.villains === 'string' ? JSON.parse(selectedHand.villains) : []),
           gameType: selectedHand.game_type,
           smallBlind: selectedHand.small_blind,
           bigBlind: selectedHand.big_blind,
           heroStackBB: selectedHand.hero_stack_bb,
-          flopActions: selectedHand.flop_actions || [],
-          turnActions: selectedHand.turn_actions || [],
-          riverActions: selectedHand.river_actions || [],
+          flopActions: Array.isArray(selectedHand.flop_actions) 
+            ? selectedHand.flop_actions 
+            : (typeof selectedHand.flop_actions === 'string' ? JSON.parse(selectedHand.flop_actions) : []),
+          turnActions: Array.isArray(selectedHand.turn_actions) 
+            ? selectedHand.turn_actions 
+            : (typeof selectedHand.turn_actions === 'string' ? JSON.parse(selectedHand.turn_actions) : []),
+          riverActions: Array.isArray(selectedHand.river_actions) 
+            ? selectedHand.river_actions 
+            : (typeof selectedHand.river_actions === 'string' ? JSON.parse(selectedHand.river_actions) : []),
           resultValue: selectedHand.result_value,
           resultUnit: selectedHand.result_unit,
           notes: selectedHand.hand_notes,
