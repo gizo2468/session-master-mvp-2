@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { fetchHandImage } from '@/utils/database/sessionFetcher';
 import { supabase } from '@/integrations/supabase/client';
+import ViewEditNoteModal from '@/components/notes/ViewEditNoteModal';
 
 interface HandDetailsDialogProps {
   open: boolean;
@@ -33,7 +34,13 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
   const [showImageModal, setShowImageModal] = useState(false);
   const [handImage, setHandImage] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
-  const [opponentName, setOpponentName] = useState<string | null>(null);
+  const [opponentProfile, setOpponentProfile] = useState<{
+    id: string;
+    nickname: string;
+    image_url?: string | null;
+    color?: string | null;
+  } | null>(null);
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
 
   // Lazy load hand image when dialog opens
   useEffect(() => {
@@ -53,27 +60,27 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
     }
   }, [open, hand?.id, hand?.image, hand?.handImage]);
 
-  // Fetch linked opponent name when dialog opens
+  // Fetch linked opponent profile when dialog opens
   useEffect(() => {
-    const fetchOpponentName = async () => {
+    const fetchOpponentProfile = async () => {
       if (open && hand?.opponentProfileId) {
         try {
           const { data, error } = await supabase
             .from('opponent_profiles')
-            .select('nickname')
+            .select('id, nickname, image_url, color')
             .eq('id', hand.opponentProfileId)
             .maybeSingle();
           
           if (!error && data) {
-            setOpponentName(data.nickname);
+            setOpponentProfile(data);
           }
         } catch (error) {
-          console.error('Error fetching opponent name:', error);
+          console.error('Error fetching opponent profile:', error);
         }
       }
     };
     
-    fetchOpponentName();
+    fetchOpponentProfile();
   }, [open, hand?.opponentProfileId]);
 
   // Reset state when dialog closes
@@ -81,7 +88,8 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
     if (!open) {
       setHandImage(null);
       setShowImageModal(false);
-      setOpponentName(null);
+      setOpponentProfile(null);
+      setIsNoteModalOpen(false);
     }
   }, [open]);
 
@@ -199,13 +207,6 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
               </div>
             )}
             
-            {/* Linked Opponent */}
-            {opponentName && (
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-muted-foreground w-24">Played vs:</span>
-                <span className="text-sm font-medium">{opponentName}</span>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -568,6 +569,16 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                   </div>
                 );
               })()}
+              {/* Linked Opponent - Clickable */}
+              {opponentProfile && (
+                <div 
+                  className="flex items-center gap-3 pt-4 border-t mt-4 cursor-pointer hover:bg-muted/50 -mx-6 px-6 py-2 transition-colors"
+                  onClick={() => setIsNoteModalOpen(true)}
+                >
+                  <span className="text-sm font-medium text-muted-foreground">Played vs:</span>
+                  <span className="text-sm font-medium text-primary underline">{opponentProfile.nickname}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -624,6 +635,16 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* Opponent Note Modal */}
+      {opponentProfile && (
+        <ViewEditNoteModal
+          open={isNoteModalOpen}
+          onOpenChange={setIsNoteModalOpen}
+          opponentProfile={opponentProfile}
+          onNoteSaved={() => {}}
+        />
+      )}
     </Dialog>
   );
 };
