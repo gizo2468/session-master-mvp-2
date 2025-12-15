@@ -203,7 +203,8 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           hand_notes: hand.notes,
           hand_image: hand.image,
           currency_type: hand.currencyType || 'currency',
-          opponent_profile_id: hand.opponentProfileId || null,
+          opponent_profile_id: hand.opponentProfileIds?.[0] || hand.opponentProfileId || null, // Keep legacy single for backward compatibility
+          opponent_profile_ids: hand.opponentProfileIds || (hand.opponentProfileId ? [hand.opponentProfileId] : []), // Store as array
           // New fields for complete hand data persistence
           villains: hand.villains ? JSON.stringify(hand.villains) : null,
           small_blind: hand.smallBlind || null,

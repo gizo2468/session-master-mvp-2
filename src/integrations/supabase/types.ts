@@ -441,6 +441,7 @@ export type Database = {
           hole_cards: string | null
           id: string
           opponent_profile_id: string | null
+          opponent_profile_ids: Json | null
           position: string | null
           pot_size: number | null
           preflop_action: string | null
@@ -477,6 +478,7 @@ export type Database = {
           hole_cards?: string | null
           id?: string
           opponent_profile_id?: string | null
+          opponent_profile_ids?: Json | null
           position?: string | null
           pot_size?: number | null
           preflop_action?: string | null
@@ -513,6 +515,7 @@ export type Database = {
           hole_cards?: string | null
           id?: string
           opponent_profile_id?: string | null
+          opponent_profile_ids?: Json | null
           position?: string | null
           pot_size?: number | null
           preflop_action?: string | null

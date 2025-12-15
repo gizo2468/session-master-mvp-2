@@ -94,7 +94,8 @@ export interface HandData {
   pokercraftLink?: string; // Added back for video link functionality
   gameType?: 'NLH' | 'PLO'; // Added back for game type selection
   heroNickname?: string; // Hero's display name from AI analysis
-  opponentProfileId?: string; // Link to opponent profile from My Notes
+  opponentProfileId?: string; // Link to single opponent profile (legacy, for backward compatibility)
+  opponentProfileIds?: string[]; // Links to multiple opponent profiles from My Notes (for multi-way hands)
   createdAt: Date;
 }
 

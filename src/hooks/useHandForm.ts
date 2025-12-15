@@ -104,6 +104,7 @@ export const useHandForm = ({
       villainBigBlind: initialData.villainBigBlind || undefined,
       villainPosition: initialData.villainPosition || '',
       opponentProfileId: initialData.opponentProfileId || undefined,
+      opponentProfileIds: initialData.opponentProfileIds || [],
     }
   });
   
@@ -261,6 +262,7 @@ export const useHandForm = ({
         villainPosition: '',
         resultValue: undefined,
         resultUnit: 'BB',
+        opponentProfileIds: [],
         opponentProfileId: undefined,
       });
       setImagePreview(null);
@@ -345,7 +347,8 @@ export const useHandForm = ({
       showdownResult: values.resultValue !== undefined 
         ? `${values.resultValue > 0 ? '+' : ''}${values.resultValue} ${values.resultUnit}` 
         : undefined,
-      opponentProfileId: values.opponentProfileId,
+      opponentProfileId: values.opponentProfileIds?.[0] || values.opponentProfileId, // Keep first for legacy compatibility
+      opponentProfileIds: values.opponentProfileIds,
     });
     onOpenChange(false);
   };

@@ -120,7 +120,8 @@ export const handFormSchema = z.object({
     z.number().optional()
   ),
   resultUnit: z.enum(['BB', 'Chips']).default('BB'),
-  opponentProfileId: z.string().uuid().optional(),
+  opponentProfileId: z.string().uuid().optional(), // Legacy single opponent
+  opponentProfileIds: z.array(z.string().uuid()).default([]), // Multiple opponents
 });
 
 export type FormValues = z.infer<typeof handFormSchema>;

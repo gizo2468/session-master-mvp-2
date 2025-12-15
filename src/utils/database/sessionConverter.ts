@@ -115,6 +115,8 @@ export const convertDatabaseSessionToPokerSession = (
           currencyType: hand.currency_type || 'currency',
           // New fields for complete hand data persistence
           opponentProfileId: hand.opponent_profile_id || undefined,
+          opponentProfileIds: parseJsonField(hand.opponent_profile_ids) || 
+            (hand.opponent_profile_id ? [hand.opponent_profile_id] : []),
           smallBlind: hand.small_blind ? parseFloat(hand.small_blind) : undefined,
           bigBlind: hand.big_blind ? parseFloat(hand.big_blind) : undefined,
           heroStackBB: hand.hero_stack_bb ? parseFloat(hand.hero_stack_bb) : undefined,

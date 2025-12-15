@@ -34,13 +34,19 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
   const [showImageModal, setShowImageModal] = useState(false);
   const [handImage, setHandImage] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
-  const [opponentProfile, setOpponentProfile] = useState<{
+  const [opponentProfiles, setOpponentProfiles] = useState<Array<{
+    id: string;
+    nickname: string;
+    image_url?: string | null;
+    color?: string | null;
+  }>>([]);
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [selectedOpponentProfile, setSelectedOpponentProfile] = useState<{
     id: string;
     nickname: string;
     image_url?: string | null;
     color?: string | null;
   } | null>(null);
-  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
 
   // Lazy load hand image when dialog opens
   useEffect(() => {
@@ -60,35 +66,40 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
     }
   }, [open, hand?.id, hand?.image, hand?.handImage]);
 
-  // Fetch linked opponent profile when dialog opens
+  // Fetch linked opponent profiles when dialog opens
   useEffect(() => {
-    const fetchOpponentProfile = async () => {
-      if (open && hand?.opponentProfileId) {
+    const fetchOpponentProfiles = async () => {
+      // Support both new array field and legacy single field
+      const opponentIds = hand?.opponentProfileIds?.length 
+        ? hand.opponentProfileIds 
+        : (hand?.opponentProfileId ? [hand.opponentProfileId] : []);
+      
+      if (open && opponentIds.length > 0) {
         try {
           const { data, error } = await supabase
             .from('opponent_profiles')
             .select('id, nickname, image_url, color')
-            .eq('id', hand.opponentProfileId)
-            .maybeSingle();
+            .in('id', opponentIds);
           
           if (!error && data) {
-            setOpponentProfile(data);
+            setOpponentProfiles(data);
           }
         } catch (error) {
-          console.error('Error fetching opponent profile:', error);
+          console.error('Error fetching opponent profiles:', error);
         }
       }
     };
     
-    fetchOpponentProfile();
-  }, [open, hand?.opponentProfileId]);
+    fetchOpponentProfiles();
+  }, [open, hand?.opponentProfileId, hand?.opponentProfileIds]);
 
   // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
       setHandImage(null);
       setShowImageModal(false);
-      setOpponentProfile(null);
+      setOpponentProfiles([]);
+      setSelectedOpponentProfile(null);
       setIsNoteModalOpen(false);
     }
   }, [open]);
@@ -569,14 +580,24 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                   </div>
                 );
               })()}
-              {/* Linked Opponent - Clickable */}
-              {opponentProfile && (
-                <div 
-                  className="flex items-center gap-3 pt-4 border-t mt-4 cursor-pointer hover:bg-muted/50 -mx-6 px-6 py-2 transition-colors"
-                  onClick={() => setIsNoteModalOpen(true)}
-                >
+              {/* Linked Opponents - Clickable list */}
+              {opponentProfiles.length > 0 && (
+                <div className="pt-4 border-t mt-4">
                   <span className="text-sm font-medium text-muted-foreground">Played vs:</span>
-                  <span className="text-sm font-medium text-primary underline">{opponentProfile.nickname}</span>
+                  <div className="mt-2 space-y-1">
+                    {opponentProfiles.map((opponent) => (
+                      <div 
+                        key={opponent.id}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 -mx-6 px-6 py-2 transition-colors"
+                        onClick={() => {
+                          setSelectedOpponentProfile(opponent);
+                          setIsNoteModalOpen(true);
+                        }}
+                      >
+                        <span className="text-sm font-medium text-primary underline">{opponent.nickname}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -637,11 +658,14 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
       </Dialog>
 
       {/* Opponent Note Modal */}
-      {opponentProfile && (
+      {selectedOpponentProfile && (
         <ViewEditNoteModal
           open={isNoteModalOpen}
-          onOpenChange={setIsNoteModalOpen}
-          opponentProfile={opponentProfile}
+          onOpenChange={(open) => {
+            setIsNoteModalOpen(open);
+            if (!open) setSelectedOpponentProfile(null);
+          }}
+          opponentProfile={selectedOpponentProfile}
           onNoteSaved={() => {}}
         />
       )}
