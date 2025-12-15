@@ -161,7 +161,7 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
             {/* Showdown Result */}
             {hand.showdownResult && (
               <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-muted-foreground w-20">Hand Made:</span>
+                <span className="text-sm font-medium text-muted-foreground w-24">Hand Result:</span>
                 <span className="text-sm">{hand.showdownResult}</span>
               </div>
             )}
