@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, FileText, ChevronRight } from 'lucide-react';
 import { HandData, TableData } from '@/types/poker';
@@ -59,6 +59,18 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   
   const { addHand, updateHand, deleteHand, addTableHand, updateTableHand, deleteTableHand, getTableById } = useSessionContext();
   const { toast } = useToast();
+  
+  // Sync selectedHandForDetails with latest data when hands array updates
+  useEffect(() => {
+    if (selectedHandForDetails) {
+      const updatedHand = hands.find(h => h.id === selectedHandForDetails.id) ||
+        tables?.flatMap(t => t.hands || []).find(h => h.id === selectedHandForDetails.id);
+      
+      if (updatedHand) {
+        setSelectedHandForDetails(updatedHand);
+      }
+    }
+  }, [hands, tables]);
   
   // Get hands based on the specified table or show all hands
   const getDisplayedHands = (): HandData[] => {

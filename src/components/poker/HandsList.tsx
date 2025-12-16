@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, Video, CircleDollarSign, Image, X, MessageSquare } from 'lucide-react';
@@ -32,6 +32,16 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [handDetailsOpen, setHandDetailsOpen] = useState(false);
   const [selectedHand, setSelectedHand] = useState<HandData | null>(null);
+
+  // Sync selectedHand with latest data when hands prop updates
+  useEffect(() => {
+    if (selectedHand) {
+      const updatedHand = hands.find(h => h.id === selectedHand.id);
+      if (updatedHand) {
+        setSelectedHand(updatedHand);
+      }
+    }
+  }, [hands]);
 
   const openImageModal = (imageData: string) => {
     setSelectedImage(imageData);
