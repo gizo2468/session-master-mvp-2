@@ -56,6 +56,33 @@ export default function Notifications() {
   const playerId = isCoachView ? selectedNotification?.sender_user_id : user?.id;
   const coachId = isCoachView ? user?.id : selectedNotification?.sender_user_id;
 
+  // Helper to render notification title with highlighted username
+  const renderTitle = (title: string) => {
+    // Pattern: "Username action..." or "Feedback from Username"
+    const feedbackMatch = title.match(/^(Feedback from )(.+)$/);
+    if (feedbackMatch) {
+      return (
+        <>
+          {feedbackMatch[1]}
+          <span className="text-primary">{feedbackMatch[2]}</span>
+        </>
+      );
+    }
+    
+    // Pattern: "Username shared/uploaded..."
+    const actionMatch = title.match(/^(\S+)( .+)$/);
+    if (actionMatch) {
+      return (
+        <>
+          <span className="text-primary">{actionMatch[1]}</span>
+          {actionMatch[2]}
+        </>
+      );
+    }
+    
+    return title;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
@@ -112,7 +139,7 @@ export default function Notifications() {
                       <h3 className={`font-medium line-clamp-2 md:truncate md:line-clamp-none ${
                         notification.is_read ? 'text-gray-700' : 'text-gray-900'
                       }`}>
-                        {notification.title}
+                        {renderTitle(notification.title)}
                       </h3>
                       <span className={`text-xs whitespace-nowrap ${
                         notification.is_read ? 'text-green-600' : 'text-red-600'
