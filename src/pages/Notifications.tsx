@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import { useNotifications } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { HandReviewModal } from '@/components/coaching/HandReviewModal';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Notifications() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { notifications, loading, markAsRead } = useNotifications();
+  const [selectedNotification, setSelectedNotification] = useState<typeof notifications[0] | null>(null);
 
   const handleNotificationClick = async (notification: typeof notifications[0]) => {
     // Mark as read first
@@ -17,27 +20,9 @@ export default function Notifications() {
       await markAsRead(notification.id);
     }
 
-    // Navigate to the related content if we have a hand_id
-    if (notification.hand_id) {
-      let sessionId = notification.session_id;
-      
-      // If no session_id stored, fetch it from the hand
-      if (!sessionId) {
-        const { data: handData } = await supabase
-          .from('session_hands_new')
-          .select('session_id')
-          .eq('id', notification.hand_id)
-          .maybeSingle();
-        sessionId = handData?.session_id;
-      }
-      
-      if (sessionId) {
-        navigate(`/session/${sessionId}/details`, {
-          state: { openHandId: notification.hand_id }
-        });
-      } else {
-        toast({ title: "Could not find hand details", variant: "destructive" });
-      }
+    // For coach_feedback notifications, open Hand Review modal directly
+    if (notification.type === 'coach_feedback' && notification.hand_id) {
+      setSelectedNotification(notification);
     }
   };
 
@@ -132,6 +117,18 @@ export default function Notifications() {
           </div>
         )}
       </main>
+
+      {/* Hand Review Modal for coach feedback notifications */}
+      <HandReviewModal
+        open={!!selectedNotification}
+        onClose={() => setSelectedNotification(null)}
+        handId={selectedNotification?.hand_id || undefined}
+        sessionId={selectedNotification?.session_id || undefined}
+        currentUserId={user?.id}
+        playerId={user?.id || ''}
+        coachId={selectedNotification?.sender_user_id || undefined}
+        isCoach={false}
+      />
     </div>
   );
 }
