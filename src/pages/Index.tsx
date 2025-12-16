@@ -18,6 +18,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import FilterBar from '@/components/ui/FilterBar';
 import PastSessionForm from '@/components/poker/PastSessionForm';
 import { SessionFilter } from '@/types/poker';
+import NotificationBell from '@/components/NotificationBell';
 
 export default function Index() {
   const navigate = useNavigate();
@@ -122,7 +123,8 @@ export default function Index() {
             <div className="flex-1 flex justify-center">
               <Logo />
             </div>
-            <div className="flex-1 flex justify-end">
+            <div className="flex-1 flex justify-end gap-2">
+              <NotificationBell />
               <FocusModeButton />
             </div>
           </div>

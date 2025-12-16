@@ -37,6 +37,7 @@ interface HandManagementPanelProps {
   readOnly?: boolean;
   sessionBuyIn?: number;
   previewLimit?: number; // When set, shows only this many hands + "View all" button
+  initialOpenHandId?: string; // Auto-open this hand's details on mount
 }
 
 const HandManagementPanel: React.FC<HandManagementPanelProps> = ({ 
@@ -47,7 +48,8 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   tableFormat,
   readOnly = false,
   sessionBuyIn,
-  previewLimit
+  previewLimit,
+  initialOpenHandId
 }) => {
   const [isAddHandOpen, setIsAddHandOpen] = useState(false);
   const [isEditHandOpen, setIsEditHandOpen] = useState(false);
@@ -71,6 +73,18 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
       }
     }
   }, [hands, tables]);
+  
+  // Auto-open hand details if initialOpenHandId is provided
+  useEffect(() => {
+    if (initialOpenHandId && hands.length > 0) {
+      const allHands = [...hands, ...(tables?.flatMap(t => t.hands || []) || [])];
+      const handToOpen = allHands.find(h => h.id === initialOpenHandId);
+      if (handToOpen) {
+        setSelectedHandForDetails(handToOpen);
+        setShowHandDetails(true);
+      }
+    }
+  }, [initialOpenHandId, hands, tables]);
   
   // Get hands based on the specified table or show all hands
   const getDisplayedHands = (): HandData[] => {

@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
 import { useSessionLoader } from '@/hooks/useSessionLoader';
 import { useToast } from '@/hooks/use-toast';
@@ -18,11 +18,15 @@ import SessionModals from '@/components/poker/SessionModals';
 export default function SessionDetail() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { updateSession, deleteSession, endSession, addTable, deleteTable, addTableHand, updateTableHand, deleteTableHand } = useSessionContext();
   const { toast } = useToast();
   
   // Use the session loader hook to properly load sessions from database
   const { currentSession: session, isLoadingSession, loadingError } = useSessionLoader(sessionId);
+  
+  // Get openHandId from navigation state for deep linking
+  const openHandId = (location.state as { openHandId?: string })?.openHandId;
   
   const isMobile = useIsMobile();
   
@@ -392,6 +396,7 @@ export default function SessionDetail() {
             tables={session.tables}
             readOnly={!session.isActive}
             sessionBuyIn={session.buyIn}
+            initialOpenHandId={openHandId}
           />
         </div>
 

@@ -133,6 +133,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          hand_id: string | null
+          id: string
+          is_read: boolean
+          recipient_user_id: string
+          sender_user_id: string | null
+          session_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          hand_id?: string | null
+          id?: string
+          is_read?: boolean
+          recipient_user_id: string
+          sender_user_id?: string | null
+          session_id?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          hand_id?: string | null
+          id?: string
+          is_read?: boolean
+          recipient_user_id?: string
+          sender_user_id?: string | null
+          session_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       opponent_profiles: {
         Row: {
           color: string | null

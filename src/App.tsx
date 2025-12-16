@@ -31,6 +31,7 @@ const CoachProfile = lazy(() => import("./pages/CoachProfile"));
 const Subscription = lazy(() => import("./pages/Subscription"));
 const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionSuccess"));
 const SubscriptionCancel = lazy(() => import("./pages/SubscriptionCancel"));
+const Notifications = lazy(() => import("./pages/Notifications"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +79,7 @@ const App = () => (
                     <Route path="/subscription" element={<Subscription />} />
                     <Route path="/subscription/success" element={<SubscriptionSuccess />} />
                     <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
+                    <Route path="/notifications" element={<Notifications />} />
                   </Routes>
                 </Suspense>
               </AuthGuard>

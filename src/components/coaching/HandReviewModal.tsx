@@ -9,6 +9,7 @@ import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 import CardDisplay from '@/components/poker/CardDisplay';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { createNotification } from '@/services/notificationService';
 
 interface HandData {
   id: string;
@@ -244,6 +245,17 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
 
       if (newFeedback) {
         setFeedbackEntries(prev => [...prev, newFeedback]);
+        
+        // Create notification for the player
+        await createNotification({
+          recipient_user_id: playerId,
+          sender_user_id: coachId,
+          type: 'coach_feedback',
+          title: 'New coach feedback',
+          body: 'Your coach has added feedback on one of your hands',
+          hand_id: hand.id,
+          session_id: sessionId || null
+        });
       }
 
       setFeedback('');
