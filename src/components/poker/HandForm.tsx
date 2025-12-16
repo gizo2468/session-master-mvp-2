@@ -17,12 +17,9 @@ import SetBlindsSection from './HandFormSections/SetBlindsSection';
 import AIHandAnalyzerBanner from './AIHandAnalyzerBanner';
 import AIHandAnalyzerDialog from './AIHandAnalyzerDialog';
 import OpponentLinkSection from './HandFormSections/OpponentLinkSection';
-import HandDetailGate from '@/components/ui/HandDetailGate';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 import StreetActionEntry from './HandFormSections/StreetActionEntry';
-import { usePremiumAccess } from '@/hooks/usePremiumAccess';
-import { useNavigate } from 'react-router-dom';
 
 interface HandFormProps {
   open: boolean;
@@ -47,8 +44,6 @@ const HandForm: React.FC<HandFormProps> = ({
 }) => {
   const [showAIAnalyzer, setShowAIAnalyzer] = useState(false);
   const [isPreflopOpen, setIsPreflopOpen] = useState(false);
-  const { isPremium } = usePremiumAccess();
-  const navigate = useNavigate();
   
   const {
     form,
@@ -183,10 +178,8 @@ const HandForm: React.FC<HandFormProps> = ({
                             onChange={field.onChange}
                             globalUnit={resultUnit}
                             onUnitChange={handleGlobalUnitChange}
-                            villainCount={isPremium ? (villains?.filter(v => v.cards?.some((c: any) => c.rank && c.suit) || v.position)?.length || 0) : 0}
+                            villainCount={villains?.filter(v => v.cards?.some((c: any) => c.rank && c.suit) || v.position)?.length || 0}
                             onCancel={() => setIsPreflopOpen(false)}
-                            heroOnly={!isPremium}
-                            onUpgradeClick={() => navigate('/subscription')}
                           />
                         </FormControl>
                       </FormItem>
@@ -241,9 +234,7 @@ const HandForm: React.FC<HandFormProps> = ({
               />
               
               {/* Link to Opponent from My Notes */}
-              <HandDetailGate>
-                <OpponentLinkSection control={form.control} />
-              </HandDetailGate>
+              <OpponentLinkSection control={form.control} />
             </form>
           </Form>
         
