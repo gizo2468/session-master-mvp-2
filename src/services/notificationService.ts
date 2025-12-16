@@ -24,23 +24,52 @@ export interface CreateNotificationData {
 }
 
 export const createNotification = async (data: CreateNotificationData): Promise<Notification | null> => {
-  console.log('Creating notification:', data);
+  // Validate required fields
+  if (!data.recipient_user_id || !data.type || !data.title) {
+    console.error('createNotification: Missing required fields', { 
+      hasRecipient: !!data.recipient_user_id, 
+      hasType: !!data.type, 
+      hasTitle: !!data.title 
+    });
+    return null;
+  }
+  
+  console.log('Creating notification with data:', data);
   
   try {
+    // Build clean payload - only include defined fields to avoid null UUID issues
+    const payload = {
+      recipient_user_id: data.recipient_user_id,
+      type: data.type,
+      title: data.title,
+      ...(data.sender_user_id && { sender_user_id: data.sender_user_id }),
+      ...(data.body && { body: data.body }),
+      ...(data.hand_id && { hand_id: data.hand_id }),
+      ...(data.session_id && { session_id: data.session_id })
+    };
+    
+    console.log('Inserting notification payload:', payload);
+    
     const { data: notification, error } = await supabase
       .from('notifications')
-      .insert(data)
+      .insert(payload)
       .select()
       .single();
 
     if (error) {
-      console.error('Error creating notification:', error);
+      console.error('Supabase error creating notification:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return null;
     }
 
+    console.log('Notification created successfully:', notification?.id);
     return notification as Notification;
   } catch (error) {
-    console.error('Error in createNotification:', error);
+    console.error('Exception in createNotification:', error);
     return null;
   }
 };
