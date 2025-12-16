@@ -246,19 +246,39 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
       if (newFeedback) {
         setFeedbackEntries(prev => [...prev, newFeedback]);
         
+        // Fetch coach username for personalized notification
+        let coachUsername = 'Your coach';
+        try {
+          const { data: coachProfile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', coachId)
+            .single();
+          if (coachProfile?.username) {
+            coachUsername = coachProfile.username;
+          }
+        } catch (err) {
+          console.warn('Could not fetch coach username:', err);
+        }
+        
         // Create notification for the player
+        console.log('Attempting to create notification for player:', playerId, 'from coach:', coachId);
         const notificationResult = await createNotification({
           recipient_user_id: playerId,
           sender_user_id: coachId,
           type: 'coach_feedback',
-          title: 'New coach feedback',
+          title: `Feedback from ${coachUsername}`,
           body: 'Your coach has reviewed one of your hands',
           hand_id: hand.id,
-          session_id: sessionId || null
+          ...(sessionId && { session_id: sessionId })
         });
         
         if (!notificationResult) {
-          console.warn('Failed to create notification for player:', playerId);
+          console.error('Failed to create notification for player:', playerId);
+          toast({
+            title: "Note",
+            description: "Feedback saved, but notification to player may have failed.",
+          });
         } else {
           console.log('Notification created successfully:', notificationResult.id);
         }
