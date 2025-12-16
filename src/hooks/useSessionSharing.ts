@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { createNotification } from '@/services/notificationService';
 
 export const useSessionSharing = (sessionId: string) => {
   const { user } = useAuth();
@@ -106,6 +107,19 @@ export const useSessionSharing = (sessionId: string) => {
       } else {
         const verifiedCoachIds = verificationData?.map(item => item.coach_id) || [];
         setSharedCoaches(verifiedCoachIds);
+      }
+
+      // Create notifications for each coach
+      for (const coachId of coachIds) {
+        await createNotification({
+          recipient_user_id: coachId,
+          sender_user_id: user.id,
+          type: 'session_shared',
+          title: 'Session shared with you',
+          body: 'A player has shared a session with you for review',
+          session_id: sessionId,
+          hand_id: null
+        });
       }
 
       toast({
