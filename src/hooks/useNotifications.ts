@@ -1,12 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Notification, 
-  fetchUserNotifications, 
-  markNotificationAsRead,
-  getUnreadCount 
-} from '@/services/notificationService';
+import type { Notification } from '@/services/notificationService';
 
 export const useNotifications = () => {
   const { user } = useAuth();
@@ -19,6 +14,9 @@ export const useNotifications = () => {
 
     setLoading(true);
     try {
+      // Import dynamically to avoid issues during SSR/initial load
+      const { fetchUserNotifications, getUnreadCount } = await import('@/services/notificationService');
+      
       const [notifs, count] = await Promise.all([
         fetchUserNotifications(user.id),
         getUnreadCount(user.id)
@@ -33,20 +31,28 @@ export const useNotifications = () => {
   }, [user?.id]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
-    const success = await markNotificationAsRead(notificationId);
-    if (success) {
-      setNotifications(prev => 
-        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+    try {
+      const { markNotificationAsRead } = await import('@/services/notificationService');
+      const success = await markNotificationAsRead(notificationId);
+      if (success) {
+        setNotifications(prev => 
+          prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
+        );
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+      return success;
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      return false;
     }
-    return success;
   }, []);
 
   // Initial load
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    if (user?.id) {
+      refresh();
+    }
+  }, [user?.id, refresh]);
 
   // Real-time subscription for new notifications
   useEffect(() => {
