@@ -69,10 +69,8 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
   // Fetch linked opponent profiles when dialog opens
   useEffect(() => {
     const fetchOpponentProfiles = async () => {
-      // Support both new array field and legacy single field
-      const opponentIds = hand?.opponentProfileIds?.length 
-        ? hand.opponentProfileIds 
-        : (hand?.opponentProfileId ? [hand.opponentProfileId] : []);
+      // Only use opponentProfileIds as source of truth - never fall back to legacy field
+      const opponentIds = hand?.opponentProfileIds || [];
       
       if (open && opponentIds.length > 0) {
         try {
