@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -66,6 +67,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   const [selectedColor, setSelectedColor] = useState<PlayerColorId>(DEFAULT_COLOR);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [currentProfile, setCurrentProfile] = useState<OpponentProfile | null>(null);
+  const [editingNickname, setEditingNickname] = useState('');
   const [linkedHands, setLinkedHands] = useState<any[]>([]);
   const [isLoadingHands, setIsLoadingHands] = useState(false);
   const [showLinkedHands, setShowLinkedHands] = useState(false);
@@ -80,6 +82,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
       fetchLinkedHands();
       setCurrentProfile(opponentProfile);
       setSelectedColor((opponentProfile.color as PlayerColorId) || DEFAULT_COLOR);
+      setEditingNickname(opponentProfile.nickname || '');
       setIsEditingProfile(false);
       setEditingNoteId(null);
       setImageFile(null);
@@ -199,6 +202,16 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   const handleSaveProfile = async () => {
     if (!user?.id || !currentProfile) return;
 
+    // Validate nickname
+    if (!editingNickname.trim()) {
+      toast({
+        title: 'Name required',
+        description: 'Opponent name cannot be empty.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       setIsSaving(true);
 
@@ -212,6 +225,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
       const { error: profileError } = await supabase
         .from('opponent_profiles')
         .update({ 
+          nickname: editingNickname.trim(),
           image_url: imageUrl,
           color: selectedColor,
         })
@@ -223,6 +237,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
       // Update local state
       setCurrentProfile({
         ...currentProfile,
+        nickname: editingNickname.trim(),
         image_url: imageUrl,
         color: selectedColor,
       });
@@ -330,6 +345,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
 
   const handleCancelProfileEdit = () => {
     setIsEditingProfile(false);
+    setEditingNickname(currentProfile?.nickname || '');
     setSelectedColor((currentProfile?.color as PlayerColorId) || DEFAULT_COLOR);
     setImageFile(null);
     setImagePreview(null);
@@ -422,7 +438,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                 data-protonpass-ignore="true"
               />
               
-              {/* Opponent name with color indicator (View Mode only) */}
+              {/* Opponent name with color indicator */}
               <div className="flex items-center gap-2">
                 {!isEditingProfile && (
                   <div 
@@ -434,7 +450,23 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                     title={colorData.label}
                   />
                 )}
-                <h2 className="text-lg font-semibold">{currentProfile?.nickname || 'Unknown'}</h2>
+                {isEditingProfile ? (
+                  <Input
+                    value={editingNickname}
+                    onChange={(e) => setEditingNickname(e.target.value)}
+                    placeholder="Opponent name"
+                    className="text-center text-lg font-semibold h-9 w-48"
+                    disabled={isSaving}
+                    autoComplete="off"
+                    data-form-type="other"
+                    data-1p-ignore="true"
+                    data-lpignore="true"
+                    data-bwignore="true"
+                    data-protonpass-ignore="true"
+                  />
+                ) : (
+                  <h2 className="text-lg font-semibold">{currentProfile?.nickname || 'Unknown'}</h2>
+                )}
               </div>
               <span className="text-sm text-muted-foreground">
                 {notes.length} {notes.length === 1 ? 'note' : 'notes'}
