@@ -50,11 +50,11 @@ export const createNotification = async (data: CreateNotificationData): Promise<
     
     console.log('Inserting notification payload:', payload);
     
-    const { data: notification, error } = await supabase
+    // Insert without .select().single() to avoid RLS conflict
+    // (sender can INSERT but cannot SELECT recipient's notification)
+    const { error } = await supabase
       .from('notifications')
-      .insert(payload)
-      .select()
-      .single();
+      .insert(payload);
 
     if (error) {
       console.error('Supabase error creating notification:', {
@@ -66,8 +66,8 @@ export const createNotification = async (data: CreateNotificationData): Promise<
       return null;
     }
 
-    console.log('Notification created successfully:', notification?.id);
-    return notification as Notification;
+    console.log('Notification created successfully');
+    return { ...payload, id: 'pending', is_read: false, created_at: new Date().toISOString() } as Notification;
   } catch (error) {
     console.error('Exception in createNotification:', error);
     return null;
