@@ -20,8 +20,13 @@ export default function Notifications() {
       await markAsRead(notification.id);
     }
 
-    // For coach_feedback notifications, open Hand Review modal directly
+    // For coach_feedback notifications, open Hand Review modal directly (player viewing)
     if (notification.type === 'coach_feedback' && notification.hand_id) {
+      setSelectedNotification(notification);
+    }
+    
+    // For hand_uploaded notifications, open Hand Review modal (coach viewing)
+    if (notification.type === 'hand_uploaded' && notification.hand_id) {
       setSelectedNotification(notification);
     }
   };
@@ -30,12 +35,19 @@ export default function Notifications() {
     switch (type) {
       case 'coach_feedback':
         return 'MessageSquare';
+      case 'hand_uploaded':
+        return 'Plus';
       case 'session_shared':
         return 'Share2';
       default:
         return 'Bell';
     }
   };
+  
+  // Determine if current user is viewing as coach (they received hand_uploaded notification)
+  const isCoachView = selectedNotification?.type === 'hand_uploaded';
+  const playerId = isCoachView ? selectedNotification?.sender_user_id : user?.id;
+  const coachId = isCoachView ? user?.id : selectedNotification?.sender_user_id;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -125,9 +137,9 @@ export default function Notifications() {
         handId={selectedNotification?.hand_id || undefined}
         sessionId={selectedNotification?.session_id || undefined}
         currentUserId={user?.id}
-        playerId={user?.id || ''}
-        coachId={selectedNotification?.sender_user_id || undefined}
-        isCoach={false}
+        playerId={playerId || ''}
+        coachId={coachId || undefined}
+        isCoach={isCoachView}
       />
     </div>
   );
