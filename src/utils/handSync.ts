@@ -68,8 +68,10 @@ export const syncHandToSupabase = async (hand: HandData, supabaseSessionId: stri
         hand_notes: hand.notes || null,
         hand_image: hand.handImage || hand.image || null,
         currency_type: hand.currencyType || 'currency',
-        opponent_profile_id: hand.opponentProfileIds?.[0] || hand.opponentProfileId || null,
-        opponent_profile_ids: hand.opponentProfileIds || (hand.opponentProfileId ? [hand.opponentProfileId] : []),
+        opponent_profile_id: hand.opponentProfileIds && hand.opponentProfileIds.length > 0 
+          ? hand.opponentProfileIds[0] 
+          : null,
+        opponent_profile_ids: hand.opponentProfileIds || [],
         // New fields for complete hand data persistence
         villains: hand.villains ? JSON.stringify(hand.villains) : null,
         small_blind: hand.smallBlind || null,
@@ -171,8 +173,10 @@ export const syncHandUpdateToSupabase = async (hand: HandData, supabaseSessionId
       hand_notes: hand.notes || null,
       hand_image: hand.handImage || hand.image || null,
       currency_type: hand.currencyType || 'currency',
-      opponent_profile_id: hand.opponentProfileIds?.[0] || hand.opponentProfileId || null,
-      opponent_profile_ids: hand.opponentProfileIds || (hand.opponentProfileId ? [hand.opponentProfileId] : []),
+      opponent_profile_id: hand.opponentProfileIds && hand.opponentProfileIds.length > 0 
+        ? hand.opponentProfileIds[0] 
+        : null,
+      opponent_profile_ids: hand.opponentProfileIds || [],
       // New fields for complete hand data persistence
       villains: hand.villains ? JSON.stringify(hand.villains) : null,
       small_blind: hand.smallBlind || null,
