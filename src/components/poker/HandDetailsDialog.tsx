@@ -175,10 +175,10 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                 </div>
               )}
               
-              {/* Action */}
+              {/* Action Type */}
               <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-muted-foreground w-20">Action:</span>
-                <span className="text-sm">{hand.action}</span>
+                <span className="text-sm font-medium text-muted-foreground w-20">Action Type:</span>
+                <Badge variant="default">{hand.action}</Badge>
               </div>
               
               {/* Buy-in */}
