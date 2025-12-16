@@ -24,63 +24,70 @@ const CardSelectionSection: React.FC<CardSelectionSectionProps> = ({
   riverCards,
   villains
 }) => {
+  const isOmaha = gameType !== 'NLH';
+
+  const renderHeroStackInput = (withTranslate: boolean) => (
+    <FormField
+      control={control}
+      name="heroStackBB"
+      render={({ field: stackField }) => (
+        <div className={`flex items-center gap-1.5 ${withTranslate ? 'translate-y-[24px]' : ''}`}>
+          {!withTranslate && <span className="text-sm text-muted-foreground">Hero Stack:</span>}
+          <Input
+            type="number"
+            inputMode="decimal"
+            step="0.5"
+            min="0.5"
+            placeholder="0"
+            aria-label="Hero stack in BB"
+            autoComplete="off"
+            data-lpignore="true"
+            data-1p-ignore="true"
+            data-bwignore="true"
+            name="hero-stack-bb"
+            spellCheck={false}
+            autoCapitalize="off"
+            autoCorrect="off"
+            {...stackField}
+            value={stackField.value ?? ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '') {
+                stackField.onChange(undefined);
+              } else {
+                const num = parseFloat(value);
+                if (!isNaN(num) && isFinite(num) && num >= 0) {
+                  stackField.onChange(num);
+                }
+              }
+            }}
+            className="w-20 h-8 text-sm"
+          />
+          <span className="text-sm text-muted-foreground font-medium">BB</span>
+        </div>
+      )}
+    />
+  );
+
   return (
     <FormField
       control={control}
       name="cards"
       render={({ field }) => (
-      <FormItem>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* Left side: Cards label + help icon */}
-          <div className="flex items-center gap-2">
-            <FormLabel>Cards</FormLabel>
-            <AdaptiveTooltip content={tooltipContent.cards}>
-              <CircleHelp className="h-4 w-4 text-gray-500" />
-            </AdaptiveTooltip>
+        <FormItem>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Left side: Cards label + help icon */}
+            <div className="flex items-center gap-2">
+              <FormLabel>Cards</FormLabel>
+              <AdaptiveTooltip content={tooltipContent.cards}>
+                <CircleHelp className="h-4 w-4 text-gray-500" />
+              </AdaptiveTooltip>
+            </div>
+            
+            {/* Right side: Hero Stack BB input - only for Hold'em (same row) */}
+            {!isOmaha && renderHeroStackInput(true)}
           </div>
-          
-          {/* Right side: Hero Stack BB input field (separate from table blinds) */}
-          <FormField
-            control={control}
-            name="heroStackBB"
-            render={({ field: stackField }) => (
-              <div className="flex items-center gap-1.5 self-center translate-y-[24px]">
-                <Input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.5"
-                  min="0.5"
-                  placeholder="0"
-                  aria-label="Hero stack in BB"
-                  autoComplete="off"
-                  data-lpignore="true"
-                  data-1p-ignore="true"
-                  data-bwignore="true"
-                  name="hero-stack-bb"
-                  spellCheck={false}
-                  autoCapitalize="off"
-                  autoCorrect="off"
-                  {...stackField}
-                  value={stackField.value ?? ''}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === '') {
-                      stackField.onChange(undefined);
-                    } else {
-                      const num = parseFloat(value);
-                      if (!isNaN(num) && isFinite(num) && num >= 0) {
-                        stackField.onChange(num);
-                      }
-                    }
-                  }}
-                  className="w-20 h-8 text-sm"
-                />
-                <span className="text-sm text-muted-foreground font-medium">BB</span>
-              </div>
-            )}
-          />
-        </div>
-        <FormControl>
+          <FormControl>
             <CardSelector 
               selectedCards={field.value} 
               onChange={field.onChange}
@@ -88,6 +95,14 @@ const CardSelectionSection: React.FC<CardSelectionSectionProps> = ({
               excludedCards={getExcludedCardsForMain(flopCards, turnCards, riverCards, villains)}
             />
           </FormControl>
+          
+          {/* Hero Stack BB input - below cards for Omaha */}
+          {isOmaha && (
+            <div className="mt-2">
+              {renderHeroStackInput(false)}
+            </div>
+          )}
+          
           <FormDescription>
             {gameType === 'NLH' 
               ? 'Select exactly 2 cards - click a card to remove it' 
