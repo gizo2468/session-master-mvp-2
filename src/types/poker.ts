@@ -54,6 +54,14 @@ export interface HandData {
   result?: string | number;
   resultAmount?: number;
   // Structured street actions for persistence (matches form structure)
+  preflopActions?: Array<{
+    id?: string;
+    actor?: string;
+    action?: string;
+    size?: number;
+    unit?: 'BB' | 'Chips';
+    customDescription?: string;
+  }>;
   flopActions?: Array<{
     id?: string;
     actor?: string;

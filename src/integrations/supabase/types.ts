@@ -445,6 +445,7 @@ export type Database = {
           position: string | null
           pot_size: number | null
           preflop_action: string | null
+          preflop_actions: Json | null
           result_unit: string | null
           result_value: number | null
           river_action: string | null
@@ -482,6 +483,7 @@ export type Database = {
           position?: string | null
           pot_size?: number | null
           preflop_action?: string | null
+          preflop_actions?: Json | null
           result_unit?: string | null
           result_value?: number | null
           river_action?: string | null
@@ -519,6 +521,7 @@ export type Database = {
           position?: string | null
           pot_size?: number | null
           preflop_action?: string | null
+          preflop_actions?: Json | null
           result_unit?: string | null
           result_value?: number | null
           river_action?: string | null

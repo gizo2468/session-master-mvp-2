@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
+import { Form, FormField, FormItem, FormControl } from '@/components/ui/form';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { HandData } from '@/types/poker';
 import { useHandForm } from '@/hooks/useHandForm';
@@ -18,6 +18,9 @@ import AIHandAnalyzerBanner from './AIHandAnalyzerBanner';
 import AIHandAnalyzerDialog from './AIHandAnalyzerDialog';
 import OpponentLinkSection from './HandFormSections/OpponentLinkSection';
 import HandDetailGate from '@/components/ui/HandDetailGate';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
+import StreetActionEntry from './HandFormSections/StreetActionEntry';
 
 interface HandFormProps {
   open: boolean;
@@ -41,6 +44,7 @@ const HandForm: React.FC<HandFormProps> = ({
   tableFormat
 }) => {
   const [showAIAnalyzer, setShowAIAnalyzer] = useState(false);
+  const [isPreflopOpen, setIsPreflopOpen] = useState(false);
   
   const {
     form,
@@ -156,6 +160,36 @@ const HandForm: React.FC<HandFormProps> = ({
               
               {/* Action Type */}
               <ActionSection control={form.control} />
+              
+              {/* Pre-Flop Action Section (Free - Not in HandDetailGate) */}
+              <Collapsible open={isPreflopOpen} onOpenChange={setIsPreflopOpen}>
+                <CollapsibleTrigger className="flex items-center justify-center w-full py-2 px-4 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors">
+                  <div className="flex flex-col items-center">
+                    <span className="text-lg font-medium text-primary">Pre-Flop</span>
+                    <ChevronDown className={`h-4 w-4 text-primary transition-transform duration-200 ${isPreflopOpen ? 'rotate-180' : ''}`} />
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-4 space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="preflopActions"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <StreetActionEntry
+                            actions={field.value || []}
+                            onChange={field.onChange}
+                            globalUnit={resultUnit}
+                            onUnitChange={handleGlobalUnitChange}
+                            villainCount={villains?.filter(v => v.cards?.some((c: any) => c.rank && c.suit) || v.position)?.length || 0}
+                            onCancel={() => setIsPreflopOpen(false)}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
               
               <AIHandAnalyzerDialog
                 open={showAIAnalyzer}

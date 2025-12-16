@@ -122,6 +122,7 @@ export const convertDatabaseSessionToPokerSession = (
           heroStackBB: hand.hero_stack_bb ? parseFloat(hand.hero_stack_bb) : undefined,
           gameType: hand.game_type || 'NLH',
           villains: parseJsonField(hand.villains),
+          preflopActions: parseJsonField(hand.preflop_actions),
           flopActions: parseJsonField(hand.flop_actions),
           turnActions: parseJsonField(hand.turn_actions),
           riverActions: parseJsonField(hand.river_actions),

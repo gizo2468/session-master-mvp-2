@@ -32,6 +32,14 @@ export const handFormSchema = z.object({
   action: z.string().optional(),
   notes: z.string().max(1000, 'Notes are too long').optional(),
   // Structured street actions
+  preflopActions: z.array(z.object({
+    id: z.string(),
+    actor: z.string(),
+    action: z.enum(['Check', 'Bet', 'Call', 'Raise', 'Fold', 'All-in', 'Other']),
+    size: z.number().optional(),
+    unit: z.enum(['BB', 'Chips']).default('BB'),
+    customDescription: z.string().optional(),
+  })).default([]),
   flopActions: z.array(z.object({
     id: z.string(),
     actor: z.string(),

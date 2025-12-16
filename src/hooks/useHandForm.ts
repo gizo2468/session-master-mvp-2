@@ -92,6 +92,7 @@ export const useHandForm = ({
       turnCards: parseTurnCards(),
       riverCards: parseRiverCards(),
       // Structured actions for edit mode (cast to any to handle DB string types)
+      preflopActions: (initialData.preflopActions as any) || [],
       flopActions: (initialData.flopActions as any) || [],
       turnActions: (initialData.turnActions as any) || [],
       riverActions: (initialData.riverActions as any) || [],
@@ -177,10 +178,14 @@ export const useHandForm = ({
     }
     
     // Convert all street actions
+    const preflopActionsVal = form.getValues('preflopActions');
     const flopActionsVal = form.getValues('flopActions');
     const turnActionsVal = form.getValues('turnActions');
     const riverActionsVal = form.getValues('riverActions');
     
+    if (preflopActionsVal) {
+      form.setValue('preflopActions', convertActions(preflopActionsVal));
+    }
     if (flopActionsVal) {
       form.setValue('flopActions', convertActions(flopActionsVal));
     }
@@ -251,6 +256,7 @@ export const useHandForm = ({
         smallBlind: undefined,
         bigBlind: undefined,
         heroStackBB: undefined,
+        preflopActions: [],
         flopCards: [{ id: 0 }, { id: 1 }, { id: 2 }],
         flopAction: '',
         turnCards: [{ id: 0 }],
@@ -338,6 +344,7 @@ export const useHandForm = ({
       riverCard: riverCardsString || undefined,
       villains: villainsData.length > 0 ? villainsData : undefined,
       // Structured actions (cast to match HandData type)
+      preflopActions: values.preflopActions as any,
       flopActions: values.flopActions as any,
       turnActions: values.turnActions as any,
       riverActions: values.riverActions as any,

@@ -310,10 +310,11 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                   return `${actorDisplay}: ${action.action}`;
                 };
 
+                const hasPreflopActions = hand.preflopActions && hand.preflopActions.length > 0;
                 const hasFlopActions = hand.flopActions && hand.flopActions.length > 0;
                 const hasTurnActions = hand.turnActions && hand.turnActions.length > 0;
                 const hasRiverActions = hand.riverActions && hand.riverActions.length > 0;
-                const hasAnyActions = hasFlopActions || hasTurnActions || hasRiverActions;
+                const hasAnyActions = hasPreflopActions || hasFlopActions || hasTurnActions || hasRiverActions;
                 
                 return (
                   <div className="space-y-3">
@@ -325,6 +326,20 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                       </p>
                     ) : (
                       <div className="space-y-3 pl-4">
+                        {/* Pre-Flop Actions */}
+                        {hasPreflopActions && (
+                          <div>
+                            <span className="text-xs font-medium text-muted-foreground uppercase">Pre-Flop</span>
+                            <ul className="mt-1 space-y-0.5">
+                              {hand.preflopActions!.map((action: any, idx: number) => (
+                                <li key={idx} className={`text-sm ${action.actor === 'Hero' ? 'text-yellow-600 dark:text-yellow-400 font-medium' : ''}`}>
+                                  {formatStructuredAction(action)}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
                         {/* Flop Actions */}
                         {hasFlopActions && (
                           <div>

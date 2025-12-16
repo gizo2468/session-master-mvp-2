@@ -80,6 +80,7 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
           big_blind,
           hero_stack_bb,
           game_type,
+          preflop_actions,
           flop_actions,
           turn_actions,
           river_actions,
@@ -116,7 +117,7 @@ export const fetchUserSessions = async (): Promise<PokerSession[]> => {
       const ids = baseSessions.map((s: any) => s.id);
 
       // CRITICAL: Exclude hand_image from fallback query too
-      const handsColumns = 'id,session_id,table_id,user_id,hand_number,position,hole_cards,preflop_action,flop_cards,flop_action,turn_card,turn_action,river_card,river_action,showdown_result,pot_size,amount_invested,amount_won,currency_type,hand_notes,created_at,updated_at,opponent_profile_id,opponent_profile_ids,villains,small_blind,big_blind,hero_stack_bb,game_type,flop_actions,turn_actions,river_actions,result_value,result_unit';
+      const handsColumns = 'id,session_id,table_id,user_id,hand_number,position,hole_cards,preflop_action,flop_cards,flop_action,turn_card,turn_action,river_card,river_action,showdown_result,pot_size,amount_invested,amount_won,currency_type,hand_notes,created_at,updated_at,opponent_profile_id,opponent_profile_ids,villains,small_blind,big_blind,hero_stack_bb,game_type,preflop_actions,flop_actions,turn_actions,river_actions,result_value,result_unit';
       
       const [{ data: tables, error: tablesError }, { data: hands, error: handsError }] = await Promise.all([
         supabase.from('session_tables').select('*').in('session_id', ids).eq('user_id', userId),
@@ -224,6 +225,7 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
           big_blind,
           hero_stack_bb,
           game_type,
+          preflop_actions,
           flop_actions,
           turn_actions,
           river_actions,
@@ -262,7 +264,7 @@ export const fetchActiveSessions = async (): Promise<PokerSession[]> => {
       const ids = baseSessions.map((s: any) => s.id);
 
       // CRITICAL: Exclude hand_image from fallback query too
-      const handsColumns = 'id,session_id,table_id,user_id,hand_number,position,hole_cards,preflop_action,flop_cards,flop_action,turn_card,turn_action,river_card,river_action,showdown_result,pot_size,amount_invested,amount_won,currency_type,hand_notes,created_at,updated_at,opponent_profile_id,opponent_profile_ids,villains,small_blind,big_blind,hero_stack_bb,game_type,flop_actions,turn_actions,river_actions,result_value,result_unit';
+      const handsColumns = 'id,session_id,table_id,user_id,hand_number,position,hole_cards,preflop_action,flop_cards,flop_action,turn_card,turn_action,river_card,river_action,showdown_result,pot_size,amount_invested,amount_won,currency_type,hand_notes,created_at,updated_at,opponent_profile_id,opponent_profile_ids,villains,small_blind,big_blind,hero_stack_bb,game_type,preflop_actions,flop_actions,turn_actions,river_actions,result_value,result_unit';
       
       const [{ data: tables, error: tablesError }, { data: hands, error: handsError }] = await Promise.all([
         supabase.from('session_tables').select('*').in('session_id', ids).eq('user_id', userId),
@@ -367,6 +369,7 @@ export const fetchActiveSession = async (): Promise<PokerSession | null> => {
           big_blind,
           hero_stack_bb,
           game_type,
+          preflop_actions,
           flop_actions,
           turn_actions,
           river_actions,
