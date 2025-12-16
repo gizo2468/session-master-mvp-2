@@ -21,6 +21,8 @@ import HandDetailGate from '@/components/ui/HandDetailGate';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 import StreetActionEntry from './HandFormSections/StreetActionEntry';
+import { usePremiumAccess } from '@/hooks/usePremiumAccess';
+import { useNavigate } from 'react-router-dom';
 
 interface HandFormProps {
   open: boolean;
@@ -45,6 +47,8 @@ const HandForm: React.FC<HandFormProps> = ({
 }) => {
   const [showAIAnalyzer, setShowAIAnalyzer] = useState(false);
   const [isPreflopOpen, setIsPreflopOpen] = useState(false);
+  const { isPremium } = usePremiumAccess();
+  const navigate = useNavigate();
   
   const {
     form,
@@ -163,11 +167,9 @@ const HandForm: React.FC<HandFormProps> = ({
               
               {/* Pre-Flop Action Section (Free - Not in HandDetailGate) */}
               <Collapsible open={isPreflopOpen} onOpenChange={setIsPreflopOpen}>
-                <CollapsibleTrigger className="flex items-center justify-center w-full py-2 px-4 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors">
-                  <div className="flex flex-col items-center">
-                    <span className="text-lg font-medium text-primary">Pre-Flop</span>
-                    <ChevronDown className={`h-4 w-4 text-primary transition-transform duration-200 ${isPreflopOpen ? 'rotate-180' : ''}`} />
-                  </div>
+                <CollapsibleTrigger className="flex items-center gap-2 w-full hover:text-poker-darkGold transition-colors">
+                  <span className="text-lg font-bold text-poker-gold">Pre-Flop</span>
+                  <ChevronDown className={`h-4 w-4 text-poker-gold transition-transform duration-200 ${isPreflopOpen ? 'rotate-180' : ''}`} />
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-4 space-y-4">
                   <FormField
@@ -181,8 +183,10 @@ const HandForm: React.FC<HandFormProps> = ({
                             onChange={field.onChange}
                             globalUnit={resultUnit}
                             onUnitChange={handleGlobalUnitChange}
-                            villainCount={villains?.filter(v => v.cards?.some((c: any) => c.rank && c.suit) || v.position)?.length || 0}
+                            villainCount={isPremium ? (villains?.filter(v => v.cards?.some((c: any) => c.rank && c.suit) || v.position)?.length || 0) : 0}
                             onCancel={() => setIsPreflopOpen(false)}
+                            heroOnly={!isPremium}
+                            onUpgradeClick={() => navigate('/subscription')}
                           />
                         </FormControl>
                       </FormItem>

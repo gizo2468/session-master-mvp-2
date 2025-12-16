@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Crown } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';
 
@@ -22,6 +22,8 @@ interface StreetActionEntryProps {
   onUnitChange?: (unit: 'BB' | 'Chips') => void;
   villainCount?: number;
   onCancel?: () => void;
+  heroOnly?: boolean;
+  onUpgradeClick?: () => void;
 }
 
 const actionOptions = ['Check', 'Bet', 'Call', 'Raise', 'Fold', 'All-in', 'Other'] as const;
@@ -42,16 +44,21 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({
   globalUnit = 'BB',
   onUnitChange,
   villainCount = 1,
-  onCancel
+  onCancel,
+  heroOnly = false,
+  onUpgradeClick
 }) => {
   const { toast } = useToast();
   
   // Filter to only valid actions
   const validActions = (actions || []).filter(isValidAction);
   
-  // Dynamically generate actor options based on villain count
+  // Dynamically generate actor options based on villain count and heroOnly mode
   const actorOptions = useMemo(() => {
     const options = ['Hero'];
+    if (heroOnly) {
+      return options; // Only Hero for free users
+    }
     if (villainCount === 1) {
       options.push('Villain');
     } else {
@@ -60,7 +67,7 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({
       }
     }
     return options;
-  }, [villainCount]);
+  }, [villainCount, heroOnly]);
   
   const [isAdding, setIsAdding] = useState(true);
   const [newAction, setNewAction] = useState<Partial<StreetAction>>({
@@ -149,6 +156,18 @@ const StreetActionEntry: React.FC<StreetActionEntryProps> = ({
             </div>
           ))}
         </div>
+      )}
+
+      {/* Upgrade Prompt for Free Users */}
+      {heroOnly && (
+        <button
+          type="button"
+          onClick={onUpgradeClick}
+          className="w-full flex items-center justify-center gap-2 p-2 rounded-md bg-primary/10 border border-primary/30 text-primary text-xs hover:bg-primary/20 transition-colors"
+        >
+          <Crown className="h-3.5 w-3.5" />
+          <span>Upgrade to add Villain actions</span>
+        </button>
       )}
 
       {/* Add Action Form */}
