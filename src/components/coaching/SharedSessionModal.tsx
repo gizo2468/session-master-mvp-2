@@ -759,6 +759,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                 small_blind: sessionDetails.small_blind,
                 big_blind: sessionDetails.big_blind
               } : null}
+              sessionId={sessionId}
               currentUserId={currentUserId || undefined}
               playerId={playerId}
               coachId={isCoach ? currentUserId || undefined : undefined}
