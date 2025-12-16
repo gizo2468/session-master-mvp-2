@@ -163,7 +163,7 @@ const HandForm: React.FC<HandFormProps> = ({
               {/* Pre-Flop Action Section (Free - Not in HandDetailGate) */}
               <Collapsible open={isPreflopOpen} onOpenChange={setIsPreflopOpen}>
                 <CollapsibleTrigger className="flex items-center gap-2 w-full hover:text-poker-darkGold transition-colors">
-                  <span className="text-lg font-bold text-poker-gold">Pre-Flop</span>
+                  <span className="text-lg font-bold text-poker-gold">Pre-Flop Action</span>
                   <ChevronDown className={`h-4 w-4 text-poker-gold transition-transform duration-200 ${isPreflopOpen ? 'rotate-180' : ''}`} />
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-4 space-y-4">
