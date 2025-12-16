@@ -145,6 +145,9 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                 <span className="text-sm font-medium text-muted-foreground w-20">Cards:</span>
                 <div className="flex items-center gap-2">
                   <CardDisplay cards={hand.cards} size="md" />
+                  {hand.heroStackBB !== undefined && hand.heroStackBB > 0 && (
+                    <span className="text-sm text-muted-foreground">({hand.heroStackBB} BB)</span>
+                  )}
                   {imageLoading ? (
                     <div className="p-1.5">
                       <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
@@ -267,6 +270,9 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
                           <div key={index} className="flex items-center gap-2">
                             <span className="text-sm text-muted-foreground min-w-[60px]">{villainLabel}:</span>
                             <CardDisplay cards={villain.hand!} size="sm" />
+                            {villain.bigBlind !== undefined && villain.bigBlind > 0 && (
+                              <span className="text-sm text-muted-foreground">({villain.bigBlind} BB)</span>
+                            )}
                           </div>
                         );
                       })}
