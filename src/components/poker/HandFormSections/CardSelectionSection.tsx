@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { CircleHelp } from 'lucide-react';
 import { Control } from 'react-hook-form';
@@ -89,11 +89,6 @@ const CardSelectionSection: React.FC<CardSelectionSectionProps> = ({
             )}
           />
           
-          <FormDescription>
-            {gameType === 'NLH' 
-              ? 'Select exactly 2 cards - click a card to remove it' 
-              : 'Select between 4-6 cards - click a card to remove it'}
-          </FormDescription>
           <FormMessage />
         </FormItem>
       )}
