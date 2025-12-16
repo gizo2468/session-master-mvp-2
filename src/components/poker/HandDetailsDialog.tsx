@@ -164,14 +164,14 @@ const HandDetailsDialog: React.FC<HandDetailsDialogProps> = ({
               {/* Position */}
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-muted-foreground w-20">Position:</span>
-                <Badge variant="secondary">{hand.position}</Badge>
+                <Badge variant="default">{hand.position}</Badge>
               </div>
               
               {/* Game Type */}
               {hand.gameType && (
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-muted-foreground w-20">Game Type:</span>
-                  <Badge variant="secondary">{hand.gameType}</Badge>
+                  <Badge variant="default">{hand.gameType}</Badge>
                 </div>
               )}
               
