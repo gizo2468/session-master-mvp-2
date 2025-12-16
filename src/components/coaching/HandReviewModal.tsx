@@ -247,15 +247,21 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
         setFeedbackEntries(prev => [...prev, newFeedback]);
         
         // Create notification for the player
-        await createNotification({
+        const notificationResult = await createNotification({
           recipient_user_id: playerId,
           sender_user_id: coachId,
           type: 'coach_feedback',
           title: 'New coach feedback',
-          body: 'Your coach has added feedback on one of your hands',
+          body: 'Your coach has reviewed one of your hands',
           hand_id: hand.id,
           session_id: sessionId || null
         });
+        
+        if (!notificationResult) {
+          console.warn('Failed to create notification for player:', playerId);
+        } else {
+          console.log('Notification created successfully:', notificationResult.id);
+        }
       }
 
       setFeedback('');

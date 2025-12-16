@@ -24,6 +24,8 @@ export interface CreateNotificationData {
 }
 
 export const createNotification = async (data: CreateNotificationData): Promise<Notification | null> => {
+  console.log('Creating notification:', data);
+  
   try {
     const { data: notification, error } = await supabase
       .from('notifications')
