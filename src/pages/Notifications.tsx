@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import { useNotifications } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 export default function Notifications() {
   const navigate = useNavigate();
@@ -15,11 +17,27 @@ export default function Notifications() {
       await markAsRead(notification.id);
     }
 
-    // Navigate to the related content
-    if (notification.session_id) {
-      navigate(`/session/${notification.session_id}/details`, {
-        state: { openHandId: notification.hand_id }
-      });
+    // Navigate to the related content if we have a hand_id
+    if (notification.hand_id) {
+      let sessionId = notification.session_id;
+      
+      // If no session_id stored, fetch it from the hand
+      if (!sessionId) {
+        const { data: handData } = await supabase
+          .from('session_hands_new')
+          .select('session_id')
+          .eq('id', notification.hand_id)
+          .maybeSingle();
+        sessionId = handData?.session_id;
+      }
+      
+      if (sessionId) {
+        navigate(`/session/${sessionId}/details`, {
+          state: { openHandId: notification.hand_id }
+        });
+      } else {
+        toast({ title: "Could not find hand details", variant: "destructive" });
+      }
     }
   };
 
