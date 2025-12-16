@@ -108,8 +108,8 @@ export default function Notifications() {
                     <Icon name={getNotificationIcon(notification.type)} size={16} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className={`font-medium truncate ${
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className={`font-medium line-clamp-2 md:truncate md:line-clamp-none ${
                         notification.is_read ? 'text-gray-700' : 'text-gray-900'
                       }`}>
                         {notification.title}
