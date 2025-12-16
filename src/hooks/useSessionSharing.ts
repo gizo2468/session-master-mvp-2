@@ -109,14 +109,23 @@ export const useSessionSharing = (sessionId: string) => {
         setSharedCoaches(verifiedCoachIds);
       }
 
+      // Fetch player username for personalized notification
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single();
+
+      const playerUsername = profileData?.username || 'A player';
+
       // Create notifications for each coach
       for (const coachId of coachIds) {
         await createNotification({
           recipient_user_id: coachId,
           sender_user_id: user.id,
           type: 'session_shared',
-          title: 'Session shared with you',
-          body: 'A player has shared a session with you for review',
+          title: `${playerUsername} shared a game session with you`,
+          body: 'A new game session is available for review',
           session_id: sessionId,
           hand_id: null
         });

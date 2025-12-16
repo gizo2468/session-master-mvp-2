@@ -6,6 +6,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { HandReviewModal } from '@/components/coaching/HandReviewModal';
+import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Notifications() {
@@ -13,6 +14,7 @@ export default function Notifications() {
   const { user } = useAuth();
   const { notifications, loading, markAsRead } = useNotifications();
   const [selectedNotification, setSelectedNotification] = useState<typeof notifications[0] | null>(null);
+  const [selectedSessionNotification, setSelectedSessionNotification] = useState<typeof notifications[0] | null>(null);
 
   const handleNotificationClick = async (notification: typeof notifications[0]) => {
     // Mark as read first
@@ -28,6 +30,11 @@ export default function Notifications() {
     // For hand_uploaded notifications, open Hand Review modal (coach viewing)
     if (notification.type === 'hand_uploaded' && notification.hand_id) {
       setSelectedNotification(notification);
+    }
+    
+    // For session_shared notifications, open Session Summary modal (coach viewing)
+    if (notification.type === 'session_shared' && notification.session_id) {
+      setSelectedSessionNotification(notification);
     }
   };
 
@@ -140,6 +147,14 @@ export default function Notifications() {
         playerId={playerId || ''}
         coachId={coachId || undefined}
         isCoach={isCoachView}
+      />
+
+      {/* Session Summary Modal for session_shared notifications */}
+      <SharedSessionModal
+        isOpen={!!selectedSessionNotification}
+        onClose={() => setSelectedSessionNotification(null)}
+        sessionId={selectedSessionNotification?.session_id || ''}
+        playerId={selectedSessionNotification?.sender_user_id || ''}
       />
     </div>
   );
