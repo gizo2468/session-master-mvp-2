@@ -136,6 +136,7 @@ export type Database = {
       notifications: {
         Row: {
           body: string | null
+          connection_id: string | null
           created_at: string
           hand_id: string | null
           id: string
@@ -148,6 +149,7 @@ export type Database = {
         }
         Insert: {
           body?: string | null
+          connection_id?: string | null
           created_at?: string
           hand_id?: string | null
           id?: string
@@ -160,6 +162,7 @@ export type Database = {
         }
         Update: {
           body?: string | null
+          connection_id?: string | null
           created_at?: string
           hand_id?: string | null
           id?: string
