@@ -45,12 +45,12 @@ export default function Notifications() {
     
     // For connection_request notifications, navigate to Dashboard incoming requests
     if (notification.type === 'connection_request') {
-      navigate('/', { state: { focusSection: 'incoming-requests' } });
+      navigate('/dashboard', { state: { focusSection: 'incoming-requests' } });
     }
     
     // For connection_approved notifications, navigate to Dashboard
     if (notification.type === 'connection_approved') {
-      navigate('/');
+      navigate('/dashboard');
     }
   };
 
