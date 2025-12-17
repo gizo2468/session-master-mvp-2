@@ -47,6 +47,41 @@ export const useNotifications = () => {
     }
   }, []);
 
+  const markAsUnread = useCallback(async (notificationId: string) => {
+    try {
+      const { markNotificationAsUnread } = await import('@/services/notificationService');
+      const success = await markNotificationAsUnread(notificationId);
+      if (success) {
+        setNotifications(prev => 
+          prev.map(n => n.id === notificationId ? { ...n, is_read: false } : n)
+        );
+        setUnreadCount(prev => prev + 1);
+      }
+      return success;
+    } catch (error) {
+      console.error('Error marking notification as unread:', error);
+      return false;
+    }
+  }, []);
+
+  const removeNotification = useCallback(async (notificationId: string) => {
+    try {
+      const { deleteNotification } = await import('@/services/notificationService');
+      const notification = notifications.find(n => n.id === notificationId);
+      const success = await deleteNotification(notificationId);
+      if (success) {
+        setNotifications(prev => prev.filter(n => n.id !== notificationId));
+        if (notification && !notification.is_read) {
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+      }
+      return success;
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      return false;
+    }
+  }, [notifications]);
+
   // Initial load
   useEffect(() => {
     if (user?.id) {
@@ -86,6 +121,8 @@ export const useNotifications = () => {
     unreadCount,
     loading,
     markAsRead,
+    markAsUnread,
+    removeNotification,
     refresh
   };
 };
