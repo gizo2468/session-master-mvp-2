@@ -128,13 +128,13 @@ export default function Notifications() {
               <button
                 key={notification.id}
                 onClick={() => handleNotificationClick(notification)}
-                className={`w-full text-left p-4 rounded-lg border transition-colors ${
+                className={`w-full text-left p-4 rounded-lg border transition-colors relative ${
                   notification.is_read
                     ? 'bg-white border-green-200 hover:border-green-300'
                     : 'bg-white border-red-200 hover:border-red-300'
                 }`}
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 pr-6">
                   <div className={`p-2 rounded-full ${
                     notification.is_read ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
                   }`}>
@@ -147,49 +147,14 @@ export default function Notifications() {
                       }`}>
                         {renderTitle(notification.title)}
                       </h3>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs whitespace-nowrap ${
-                          notification.is_read ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {notification.is_read ? 'Read' : 'New'}
-                        </span>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              onClick={(e) => e.stopPropagation()}
-                              className="p-1 rounded hover:bg-gray-100 transition-colors"
-                            >
-                              <Icon name="MoreVertical" size={16} className="text-gray-400" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                            <DropdownMenuItem
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                await markAsUnread(notification.id);
-                                toast({ title: 'Marked as unread' });
-                              }}
-                            >
-                              <Icon name="MailOpen" size={16} className="mr-2" />
-                              Mark as Unread
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                await removeNotification(notification.id);
-                                toast({ title: 'Notification deleted' });
-                              }}
-                              className="text-red-600 focus:text-red-600"
-                            >
-                              <Icon name="Trash2" size={16} className="mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                      <span className={`text-xs whitespace-nowrap ${
+                        notification.is_read ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {notification.is_read ? 'Read' : 'New'}
+                      </span>
                     </div>
                     {notification.body && (
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                      <p className="text-sm text-gray-500 mt-1 line-clamp-2 pr-8">
                         {notification.body}
                       </p>
                     )}
@@ -198,6 +163,43 @@ export default function Notifications() {
                     </p>
                   </div>
                   <Icon name="ChevronRight" size={16} className="text-gray-400 flex-shrink-0" />
+                </div>
+                
+                {/* 3-dot menu - positioned bottom-right */}
+                <div className="absolute bottom-3 right-3">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1 rounded hover:bg-gray-100 transition-colors"
+                      >
+                        <Icon name="MoreHorizontal" size={16} className="text-gray-400" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuItem
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await markAsUnread(notification.id);
+                          toast({ title: 'Marked as unread' });
+                        }}
+                      >
+                        <Icon name="MailOpen" size={16} className="mr-2" />
+                        Mark as Unread
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await removeNotification(notification.id);
+                          toast({ title: 'Notification deleted' });
+                        }}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Icon name="Trash2" size={16} className="mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </button>
             ))}
