@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -37,10 +37,15 @@ interface PendingRequest {
   };
 }
 
-const MyCoachingNetwork: React.FC = () => {
+interface MyCoachingNetworkProps {
+  highlightIncomingRequests?: boolean;
+}
+
+const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncomingRequests }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isPremium, getConnectionLimits } = usePremiumAccess();
+  const incomingRequestsRef = useRef<HTMLDivElement>(null);
   const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
   const [connectedPlayers, setConnectedPlayers] = useState<ConnectedUser[]>([]);
   const [connectedCoaches, setConnectedCoaches] = useState<ConnectedUser[]>([]);
@@ -332,6 +337,18 @@ const MyCoachingNetwork: React.FC = () => {
       loadPendingRequests(); // Load for both coaches and students now
     }
   }, [user?.id, isCoach, isStudent]);
+
+  // Auto-scroll to incoming requests when navigating from notification
+  useEffect(() => {
+    if (highlightIncomingRequests && incomingRequestsRef.current) {
+      setTimeout(() => {
+        incomingRequestsRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 300);
+    }
+  }, [highlightIncomingRequests, incomingRequests]);
 
 
   const handleApproveRequest = async (requestId: string, studentUsername: string) => {
@@ -1174,7 +1191,7 @@ const MyCoachingNetwork: React.FC = () => {
         
         {/* Incoming Requests (for approval) */}
         {incomingRequests.length > 0 && (
-          <div className="mb-6">
+          <div ref={incomingRequestsRef} className="mb-6">
             <h3 className="text-lg font-semibold mb-3 flex items-center space-x-2">
               <Icon name="UserCheck" className="h-4 w-4" />
               <span>Incoming Requests ({incomingRequests.length})</span>
