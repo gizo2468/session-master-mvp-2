@@ -113,6 +113,44 @@ export const markNotificationAsRead = async (notificationId: string): Promise<bo
   }
 };
 
+export const markNotificationAsUnread = async (notificationId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: false })
+      .eq('id', notificationId);
+
+    if (error) {
+      console.error('Error marking notification as unread:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in markNotificationAsUnread:', error);
+    return false;
+  }
+};
+
+export const deleteNotification = async (notificationId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', notificationId);
+
+    if (error) {
+      console.error('Error deleting notification:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in deleteNotification:', error);
+    return false;
+  }
+};
+
 export const getUnreadCount = async (userId: string): Promise<number> => {
   try {
     const { count, error } = await supabase

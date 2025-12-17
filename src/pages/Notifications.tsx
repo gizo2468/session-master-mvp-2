@@ -8,11 +8,17 @@ import { toast } from '@/hooks/use-toast';
 import { HandReviewModal } from '@/components/coaching/HandReviewModal';
 import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
 import { useAuth } from '@/context/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function Notifications() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { notifications, loading, markAsRead } = useNotifications();
+  const { notifications, loading, markAsRead, markAsUnread, removeNotification } = useNotifications();
   const [selectedNotification, setSelectedNotification] = useState<typeof notifications[0] | null>(null);
   const [selectedSessionNotification, setSelectedSessionNotification] = useState<typeof notifications[0] | null>(null);
 
@@ -141,11 +147,46 @@ export default function Notifications() {
                       }`}>
                         {renderTitle(notification.title)}
                       </h3>
-                      <span className={`text-xs whitespace-nowrap ${
-                        notification.is_read ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {notification.is_read ? 'Read' : 'New'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs whitespace-nowrap ${
+                          notification.is_read ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {notification.is_read ? 'Read' : 'New'}
+                        </span>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-1 rounded hover:bg-gray-100 transition-colors"
+                            >
+                              <Icon name="MoreVertical" size={16} className="text-gray-400" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                await markAsUnread(notification.id);
+                                toast({ title: 'Marked as unread' });
+                              }}
+                            >
+                              <Icon name="MailOpen" size={16} className="mr-2" />
+                              Mark as Unread
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                await removeNotification(notification.id);
+                                toast({ title: 'Notification deleted' });
+                              }}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Icon name="Trash2" size={16} className="mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                     {notification.body && (
                       <p className="text-sm text-gray-500 mt-1 line-clamp-2">
