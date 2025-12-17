@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
@@ -15,6 +16,8 @@ import { Plus } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
+  const location = useLocation();
+  const focusIncomingRequests = (location.state as any)?.focusSection === 'incoming-requests';
   const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [exportPDFFunction, setExportPDFFunction] = useState<(() => void) | null>(null);
@@ -111,7 +114,7 @@ const Dashboard: React.FC = () => {
             {user.role === 'coach' ? (
               <div className="space-y-6">
                 <p className="text-lg font-medium text-poker-feltGreen">Coach Dashboard</p>
-                <MyCoachingNetwork />
+                <MyCoachingNetwork highlightIncomingRequests={focusIncomingRequests} />
                 <StatsQuickView showExtendedMetrics />
                 <PlayerAllTimeChart />
                 <MyStatisticsSection 
@@ -124,7 +127,7 @@ const Dashboard: React.FC = () => {
             ) : (
               <div className="space-y-6">
                 <p className="text-lg font-medium text-poker-feltGreen">Dashboard</p>
-                <MyCoachingNetwork />
+                <MyCoachingNetwork highlightIncomingRequests={focusIncomingRequests} />
                 <MyNotesCard />
                 <StatsQuickView showExtendedMetrics />
                 <PlayerAllTimeChart />

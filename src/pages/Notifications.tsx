@@ -42,6 +42,16 @@ export default function Notifications() {
     if (notification.type === 'session_shared' && notification.session_id) {
       setSelectedSessionNotification(notification);
     }
+    
+    // For connection_request notifications, navigate to Dashboard incoming requests
+    if (notification.type === 'connection_request') {
+      navigate('/', { state: { focusSection: 'incoming-requests' } });
+    }
+    
+    // For connection_approved notifications, navigate to Dashboard
+    if (notification.type === 'connection_approved') {
+      navigate('/');
+    }
   };
 
   const getNotificationIcon = (type: string) => {
@@ -52,6 +62,10 @@ export default function Notifications() {
         return 'Plus';
       case 'session_shared':
         return 'Share2';
+      case 'connection_request':
+        return 'UserPlus';
+      case 'connection_approved':
+        return 'UserCheck';
       default:
         return 'Bell';
     }
