@@ -168,8 +168,9 @@ export default function Notifications() {
                             <button
                               onClick={(e) => e.stopPropagation()}
                               className="p-1 rounded hover:bg-gray-100 transition-colors"
+                              aria-label="More options"
                             >
-                              <Icon name="MoreHorizontal" size={16} className="text-gray-400" />
+                              <Icon name="Ellipsis" size={16} className="text-gray-400" />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
