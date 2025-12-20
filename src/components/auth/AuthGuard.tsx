@@ -18,13 +18,14 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
   // If not authenticated and not on auth pages, redirect to login
   const isAuthPage = location.pathname.startsWith('/auth/');
+  const isResetPasswordPage = location.pathname === '/auth/reset-password';
   
   if (!isAuthenticated && !isAuthPage) {
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
-  // If authenticated and on auth pages, redirect to home
-  if (isAuthenticated && isAuthPage) {
+  // If authenticated and on auth pages, redirect to home (except reset-password page)
+  if (isAuthenticated && isAuthPage && !isResetPasswordPage) {
     return <Navigate to="/" replace />;
   }
 
