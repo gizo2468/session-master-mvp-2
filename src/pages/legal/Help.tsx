@@ -176,6 +176,23 @@ const faqItems: FaqItem[] = [
         The <strong>Dashboard</strong> is designed to give you a clear, high-level view of your poker activity while keeping all key features easily accessible.
       </>
     )
+  },
+  {
+    id: "who-is-this-for",
+    question: "WHO IS THIS APP FOR?",
+    answer: (
+      <>
+        This app is designed to support a wide range of poker players and professionals, from beginners to experienced players and coaches.
+        <br /><br />
+        <strong>Beginner players</strong> can use the app to track sessions, record hands, understand results, and build good habits from the start without needing to fill in every detail.
+        <br /><br />
+        <strong>Professional players</strong> can take advantage of advanced session tracking, detailed statistics, hand history management, multi-table and MTT support, and financial analysis to review performance and optimize long-term results.
+        <br /><br />
+        <strong>Coaches</strong> can connect with players, review shared sessions and hands, leave notes, and follow player progress over time using the built-in network and analysis tools.
+        <br /><br />
+        The app is built to scale with your skill level, allowing you to use it as simply or as deeply as you choose.
+      </>
+    )
   }
 ];
 
