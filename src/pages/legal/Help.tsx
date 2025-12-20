@@ -197,7 +197,7 @@ const Help: React.FC = () => {
                 <AccordionTrigger className="px-6 py-4 text-left text-sm font-medium text-foreground hover:no-underline hover:bg-muted/50 transition-colors">
                   {item.question}
                 </AccordionTrigger>
-                <AccordionContent className="px-6 pb-4 text-sm text-gray-600 leading-relaxed">
+                <AccordionContent className="px-6 pb-4 text-sm text-gray-600 leading-relaxed [&_strong]:text-poker-gold">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>
