@@ -115,6 +115,7 @@ const Dashboard: React.FC = () => {
               <div className="space-y-6">
                 <p className="text-lg font-medium text-poker-feltGreen">Coach Dashboard</p>
                 <MyCoachingNetwork highlightIncomingRequests={focusIncomingRequests} />
+                <MyNotesCard />
                 <StatsQuickView showExtendedMetrics />
                 <PlayerAllTimeChart />
                 <MyStatisticsSection 
