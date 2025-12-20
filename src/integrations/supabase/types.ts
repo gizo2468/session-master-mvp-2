@@ -1293,6 +1293,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_with_subscription_status: {
+        Row: {
+          email: string | null
+          full_name: string | null
+          has_subscription: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          email?: string | null
+          full_name?: string | null
+          has_subscription?: never
+          user_id?: string | null
+        }
+        Update: {
+          email?: string | null
+          full_name?: string | null
+          has_subscription?: never
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_private_data_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_private_data_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user_overview"
+            referencedColumns: ["uid"]
+          },
+        ]
+      }
     }
     Functions: {
       check_email_available: { Args: { p_email: string }; Returns: boolean }
