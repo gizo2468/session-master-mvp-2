@@ -103,11 +103,41 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'card-flip-front': {
+					'0%': { transform: 'rotateY(0deg)' },
+					'100%': { transform: 'rotateY(-180deg)' }
+				},
+				'card-flip-back': {
+					'0%': { transform: 'rotateY(180deg)' },
+					'100%': { transform: 'rotateY(0deg)' }
+				},
+				'card-unflip-front': {
+					'0%': { transform: 'rotateY(-180deg)' },
+					'100%': { transform: 'rotateY(0deg)' }
+				},
+				'card-unflip-back': {
+					'0%': { transform: 'rotateY(0deg)' },
+					'100%': { transform: 'rotateY(180deg)' }
+				},
+				'modal-slide-in': {
+					'0%': { opacity: '0', transform: 'translateY(20px) scale(0.95)' },
+					'100%': { opacity: '1', transform: 'translateY(0) scale(1)' }
+				},
+				'modal-slide-out': {
+					'0%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+					'100%': { opacity: '0', transform: 'translateY(20px) scale(0.95)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'card-flip-front': 'card-flip-front 0.6s ease-in-out forwards',
+				'card-flip-back': 'card-flip-back 0.6s ease-in-out forwards',
+				'card-unflip-front': 'card-unflip-front 0.6s ease-in-out forwards',
+				'card-unflip-back': 'card-unflip-back 0.6s ease-in-out forwards',
+				'modal-slide-in': 'modal-slide-in 0.3s ease-out forwards',
+				'modal-slide-out': 'modal-slide-out 0.3s ease-in forwards'
 			}
 		}
 	},
