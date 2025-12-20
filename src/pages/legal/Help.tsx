@@ -17,6 +17,17 @@ interface FaqItem {
 
 const faqItems: FaqItem[] = [
   {
+    id: "start-session",
+    question: "HOW DO I START A SESSION?",
+    answer: (
+      <>
+        To start a new session, tap <strong>Start Session</strong>, choose the game type (<strong>Cash</strong> or <strong>Tournament</strong>), set the buy-in and game format, and begin playing.
+        <br /><br />
+        The session will remain active until you end it manually.
+      </>
+    )
+  },
+  {
     id: "close-session",
     question: "HOW DO I CLOSE AN ACTIVE SESSION?",
     answer: (
