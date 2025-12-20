@@ -1,4 +1,3 @@
-
 project_id = "wfmvvpbpuqbzidptxbqx"
 
 [auth]
@@ -32,4 +31,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.analyze-poker-hand]
+verify_jwt = false
+
+[functions.admin-toggle-premium]
 verify_jwt = false

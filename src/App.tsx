@@ -11,6 +11,7 @@ import AuthGuard from "@/components/auth/AuthGuard";
 import LoadingScreen from "@/components/LoadingScreen";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
+import AdminGuard from "@/components/admin/AdminGuard";
 
 // Lazy load route components for better performance (with retry on chunk load failure)
 const Index = lazyWithRetry(() => import("./pages/Index"), "Index");
@@ -33,6 +34,7 @@ const Subscription = lazyWithRetry(() => import("./pages/Subscription"), "Subscr
 const SubscriptionSuccess = lazyWithRetry(() => import("./pages/SubscriptionSuccess"), "SubscriptionSuccess");
 const SubscriptionCancel = lazyWithRetry(() => import("./pages/SubscriptionCancel"), "SubscriptionCancel");
 const Notifications = lazyWithRetry(() => import("./pages/Notifications"), "Notifications");
+const UsersManagement = lazyWithRetry(() => import("./pages/admin/UsersManagement"), "UsersManagement");
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,6 +84,7 @@ const App = () => (
                       <Route path="/subscription/success" element={<SubscriptionSuccess />} />
                       <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
                       <Route path="/notifications" element={<Notifications />} />
+                      <Route path="/admin/users" element={<AdminGuard><UsersManagement /></AdminGuard>} />
                     </Routes>
                   </Suspense>
                 </AppErrorBoundary>
