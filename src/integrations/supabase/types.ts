@@ -205,6 +205,42 @@ export type Database = {
         }
         Relationships: []
       }
+      player_cards: {
+        Row: {
+          achievements: Json | null
+          created_at: string
+          id: string
+          improvement_goals: string | null
+          primary_format: string | null
+          specialization: string | null
+          updated_at: string
+          user_id: string
+          year_started_playing: number | null
+        }
+        Insert: {
+          achievements?: Json | null
+          created_at?: string
+          id?: string
+          improvement_goals?: string | null
+          primary_format?: string | null
+          specialization?: string | null
+          updated_at?: string
+          user_id: string
+          year_started_playing?: number | null
+        }
+        Update: {
+          achievements?: Json | null
+          created_at?: string
+          id?: string
+          improvement_goals?: string | null
+          primary_format?: string | null
+          specialization?: string | null
+          updated_at?: string
+          user_id?: string
+          year_started_playing?: number | null
+        }
+        Relationships: []
+      }
       player_goals: {
         Row: {
           coach_id: string

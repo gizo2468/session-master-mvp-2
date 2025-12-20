@@ -26,7 +26,6 @@ const Help = lazyWithRetry(() => import("./pages/legal/Help"), "Help");
 const Login = lazyWithRetry(() => import("./pages/auth/Login"), "Login");
 const Signup = lazyWithRetry(() => import("./pages/auth/Signup"), "Signup");
 const ForgotPassword = lazyWithRetry(() => import("./pages/auth/ForgotPassword"), "ForgotPassword");
-const FocusModePage = lazyWithRetry(() => import("./pages/FocusModePage"), "FocusModePage");
 const PlayerProfile = lazyWithRetry(() => import("./pages/PlayerProfile"), "PlayerProfile");
 const CoachProfile = lazyWithRetry(() => import("./pages/CoachProfile"), "CoachProfile");
 const Subscription = lazyWithRetry(() => import("./pages/Subscription"), "Subscription");
@@ -72,7 +71,6 @@ const App = () => (
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/player/:playerId" element={<PlayerProfile />} />
                       <Route path="/coach/:coachId" element={<CoachProfile />} />
-                      <Route path="/focus-mode" element={<FocusModePage />} />
                       <Route path="/legal/privacy" element={<PrivacyPolicy />} />
                       <Route path="/help" element={<Help />} />
                       <Route path="/auth/login" element={<Login />} />

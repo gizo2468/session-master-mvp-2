@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Focus } from '@/components/Icons';
-import { FocusModeDialog } from '@/components/FocusMode/FocusModeDialog';
+import { PlayerCardModal } from '@/components/PlayerCard/PlayerCardModal';
 
-export default function FocusModeButton() {
+export default function PlayerCardButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const [scrollTimeout, setScrollTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -45,12 +44,12 @@ export default function FocusModeButton() {
           isScrolling ? 'opacity-100' : 'opacity-30'
         }`}
         onClick={() => setIsOpen(true)}
-        aria-label="Focus mode"
+        aria-label="Player card"
       >
         <Focus />
       </Button>
       
-      <FocusModeDialog open={isOpen} onOpenChange={setIsOpen} />
+      <PlayerCardModal open={isOpen} onOpenChange={setIsOpen} />
     </>
   );
 }
