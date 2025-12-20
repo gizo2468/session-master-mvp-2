@@ -121,7 +121,7 @@ const SupportSettings: React.FC = () => {
                  aria-label="View help">
               <div className="flex items-center">
                 <Icon name="HelpCircle" className="mr-3 text-gray-500 h-4 w-4" />
-                <span>Help</span>
+                <span>FAQ</span>
               </div>
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
             </div>

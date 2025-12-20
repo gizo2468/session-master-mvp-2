@@ -125,7 +125,7 @@ const Help: React.FC = () => {
             <Icon name="ArrowLeft" size={16} />
             <span>Back</span>
           </Button>
-          <h1 className="text-2xl font-serif font-bold text-foreground mb-6">Help</h1>
+          <h1 className="text-2xl font-serif font-bold text-poker-gold mb-6 text-center">FAQ</h1>
         </header>
 
         <div className="bg-card rounded-lg shadow-sm">
@@ -139,7 +139,7 @@ const Help: React.FC = () => {
                 <AccordionTrigger className="px-6 py-4 text-left text-sm font-medium text-foreground hover:no-underline hover:bg-muted/50 transition-colors">
                   {item.question}
                 </AccordionTrigger>
-                <AccordionContent className="px-6 pb-4 text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                <AccordionContent className="px-6 pb-4 text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>
