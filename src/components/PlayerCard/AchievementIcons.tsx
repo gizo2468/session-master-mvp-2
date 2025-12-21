@@ -1,4 +1,5 @@
 import React from 'react';
+import championshipRingImg from '@/assets/championship-ring.png';
 
 // Championship Trophy - ornate cup with handles and base
 export const TrophyIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -25,27 +26,14 @@ export const TrophyIcon = ({ className = "w-4 h-4" }: { className?: string }) =>
   </svg>
 );
 
-// Championship Ring - WSOP style with gem setting
+// Championship Ring - using actual ring image
 export const RingIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="1.5" 
-    strokeLinecap="round" 
-    strokeLinejoin="round"
+  <img 
+    src={championshipRingImg}
+    alt="Championship Ring"
     className={className}
-  >
-    {/* Ring band - perspective oval */}
-    <ellipse cx="12" cy="15" rx="7" ry="4" />
-    {/* Inner band line */}
-    <path d="M5 15c0-1.5 3.13-2.5 7-2.5s7 1 7 2.5" />
-    {/* Gem setting base */}
-    <path d="M8 11l4-6 4 6" />
-    {/* Gem facets */}
-    <path d="M8 11h8" />
-    <path d="M12 5v6" />
-  </svg>
+    style={{ objectFit: 'contain' }}
+  />
 );
 
 // Championship Bracelet - WSOP style with center medallion
