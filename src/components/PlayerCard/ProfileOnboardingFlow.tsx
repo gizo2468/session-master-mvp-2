@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Check, SkipForward } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, SkipForward, Plus, X } from 'lucide-react';
 import type { PlayerCardData, PlayerPrivateData, Achievement } from '@/hooks/usePlayerCard';
 
 interface ProfileOnboardingFlowProps {
@@ -17,7 +16,19 @@ interface ProfileOnboardingFlowProps {
 
 type GameFormat = 'cash' | 'tournaments' | 'both';
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 3;
+
+const POKER_BACKGROUND_OPTIONS = [
+  'High Stakes Player',
+  'Mid Stakes Player',
+  'Online Player',
+  'Semi-Professional Player',
+  'Professional Player',
+  'GTO Expert',
+  'Poker Coach'
+];
+
+const ACHIEVEMENT_EMOJIS = ['🏆', '🎯', '💎', '🔥', '⭐', '👑', '🃏', '💰'];
 
 export function ProfileOnboardingFlow({
   cardData,
@@ -32,14 +43,39 @@ export function ProfileOnboardingFlow({
   // Local form state
   const [displayName, setDisplayName] = useState(privateData?.full_name || '');
   const [gameFormat, setGameFormat] = useState<GameFormat>(cardData?.primary_format || 'both');
-  const [specialization, setSpecialization] = useState(cardData?.specialization || '');
-  const [workingOn, setWorkingOn] = useState(cardData?.improvement_goals || '');
-  const [achievementTitle, setAchievementTitle] = useState('');
+  const [pokerBackground, setPokerBackground] = useState<string[]>(cardData?.poker_background || []);
+  const [achievements, setAchievements] = useState<Achievement[]>(cardData?.achievements || []);
+  const [newAchievementTitle, setNewAchievementTitle] = useState('');
+  const [selectedEmoji, setSelectedEmoji] = useState('🏆');
 
   const formatLabels = {
     cash: 'Cash Games',
     tournaments: 'Tournaments',
     both: 'Cash & MTT'
+  };
+
+  const togglePokerBackground = (option: string) => {
+    if (pokerBackground.includes(option)) {
+      setPokerBackground(pokerBackground.filter(bg => bg !== option));
+    } else if (pokerBackground.length < 3) {
+      setPokerBackground([...pokerBackground, option]);
+    }
+  };
+
+  const addAchievement = () => {
+    if (!newAchievementTitle.trim()) return;
+    const newAchievement: Achievement = {
+      id: crypto.randomUUID(),
+      title: newAchievementTitle.trim(),
+      icon: selectedEmoji
+    };
+    setAchievements([...achievements, newAchievement]);
+    setNewAchievementTitle('');
+    setSelectedEmoji('🏆');
+  };
+
+  const removeAchievement = (id: string) => {
+    setAchievements(achievements.filter(a => a.id !== id));
   };
 
   const handleNext = () => {
@@ -50,9 +86,7 @@ export function ProfileOnboardingFlow({
       }
       onUpdateCard({ primary_format: gameFormat });
     } else if (currentStep === 2) {
-      onUpdateCard({ specialization: specialization.trim() });
-    } else if (currentStep === 3) {
-      onUpdateCard({ improvement_goals: workingOn.trim() });
+      onUpdateCard({ poker_background: pokerBackground });
     }
     
     if (currentStep < TOTAL_STEPS) {
@@ -67,17 +101,15 @@ export function ProfileOnboardingFlow({
   };
 
   const handleComplete = () => {
-    // Save final step data and complete
-    if (currentStep === 4 && achievementTitle.trim()) {
-      const newAchievement: Achievement = {
-        id: crypto.randomUUID(),
-        title: achievementTitle.trim(),
-        icon: '🏆'
-      };
-      onUpdateCard({ 
-        achievements: [...(cardData?.achievements || []), newAchievement] 
-      });
+    // Save all data on complete
+    if (displayName.trim()) {
+      onUpdatePrivate({ full_name: displayName.trim() });
     }
+    onUpdateCard({ 
+      primary_format: gameFormat,
+      poker_background: pokerBackground,
+      achievements: achievements
+    });
     onComplete();
   };
 
@@ -85,7 +117,7 @@ export function ProfileOnboardingFlow({
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
     } else {
-      onComplete();
+      handleComplete();
     }
   };
 
@@ -153,72 +185,113 @@ export function ProfileOnboardingFlow({
   const renderStep2 = () => (
     <div className="space-y-5">
       <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold text-white mb-1">Specialization</h3>
-        <p className="text-sm text-zinc-400">What's your poker specialty?</p>
+        <h3 className="text-lg font-semibold text-white mb-1">Poker Background</h3>
+        <p className="text-sm text-zinc-400">Select up to 3 options</p>
       </div>
       
-      <div>
-        <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
-          Your Specialization
-        </label>
-        <Input
-          value={specialization}
-          onChange={(e) => setSpecialization(e.target.value)}
-          placeholder="e.g., NLH Cash Game Specialist"
-          className="bg-zinc-700 border-poker-gold/40 text-white"
-          maxLength={100}
-        />
-        <p className="text-xs text-zinc-500 mt-2">
-          Describe your main focus or expertise in poker
-        </p>
+      <div className="flex flex-wrap gap-2">
+        {POKER_BACKGROUND_OPTIONS.map((option) => {
+          const isSelected = pokerBackground.includes(option);
+          const isDisabled = !isSelected && pokerBackground.length >= 3;
+          
+          return (
+            <Badge
+              key={option}
+              variant={isSelected ? 'default' : 'outline'}
+              className={`cursor-pointer transition-all py-2 px-3 ${
+                isSelected
+                  ? 'bg-poker-gold text-black hover:bg-poker-darkGold'
+                  : isDisabled
+                  ? 'border-zinc-600 text-zinc-600 cursor-not-allowed'
+                  : 'border-poker-gold/40 text-zinc-400 hover:border-poker-gold hover:text-white'
+              }`}
+              onClick={() => !isDisabled && togglePokerBackground(option)}
+            >
+              {option}
+            </Badge>
+          );
+        })}
       </div>
+      
+      <p className="text-xs text-zinc-500 text-center">
+        {pokerBackground.length}/3 selected
+      </p>
     </div>
   );
 
   const renderStep3 = () => (
     <div className="space-y-5">
       <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold text-white mb-1">Currently Working On</h3>
-        <p className="text-sm text-zinc-400">What are you trying to improve?</p>
+        <h3 className="text-lg font-semibold text-white mb-1">Achievements</h3>
+        <p className="text-sm text-zinc-400">Add your poker achievements</p>
       </div>
       
-      <div>
-        <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
-          Your Current Focus
-        </label>
-        <Textarea
-          value={workingOn}
-          onChange={(e) => setWorkingOn(e.target.value)}
-          placeholder="e.g., Improving my 3-bet ranges and post-flop aggression"
-          className="bg-zinc-700 border-poker-gold/40 text-white resize-none"
-          maxLength={200}
-          rows={3}
-        />
-      </div>
-    </div>
-  );
+      {/* Existing achievements */}
+      {achievements.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {achievements.map((ach) => (
+            <Badge 
+              key={ach.id}
+              className="bg-zinc-700 text-poker-gold border-poker-gold/20 pr-1"
+            >
+              {ach.icon} {ach.title}
+              <button
+                onClick={() => removeAchievement(ach.id)}
+                className="ml-2 hover:bg-zinc-600 rounded p-0.5"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
 
-  const renderStep4 = () => (
-    <div className="space-y-5">
-      <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold text-white mb-1">First Achievement</h3>
-        <p className="text-sm text-zinc-400">Add your first poker achievement (optional)</p>
-      </div>
-      
-      <div>
-        <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
-          Achievement Title
-        </label>
-        <Input
-          value={achievementTitle}
-          onChange={(e) => setAchievementTitle(e.target.value)}
-          placeholder="e.g., WSOP Circuit Winner, 100k hands played"
-          className="bg-zinc-700 border-poker-gold/40 text-white"
-          maxLength={50}
-        />
-        <p className="text-xs text-zinc-500 mt-2">
-          You can skip this and add achievements later
-        </p>
+      {/* Add new achievement */}
+      <div className="space-y-3">
+        <div>
+          <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
+            Achievement Title
+          </label>
+          <div className="flex gap-2">
+            <Input
+              value={newAchievementTitle}
+              onChange={(e) => setNewAchievementTitle(e.target.value)}
+              placeholder="e.g., WSOP Circuit Winner"
+              className="bg-zinc-700 border-poker-gold/40 text-white flex-1"
+              maxLength={50}
+              onKeyDown={(e) => e.key === 'Enter' && addAchievement()}
+            />
+            <Button
+              size="sm"
+              onClick={addAchievement}
+              disabled={!newAchievementTitle.trim()}
+              className="bg-poker-gold text-black hover:bg-poker-darkGold"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
+            Icon
+          </label>
+          <div className="flex gap-2 flex-wrap">
+            {ACHIEVEMENT_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => setSelectedEmoji(emoji)}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-all ${
+                  selectedEmoji === emoji
+                    ? 'bg-poker-gold/20 ring-2 ring-poker-gold'
+                    : 'bg-zinc-700 hover:bg-zinc-600'
+                }`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -228,7 +301,6 @@ export function ProfileOnboardingFlow({
       case 1: return renderStep1();
       case 2: return renderStep2();
       case 3: return renderStep3();
-      case 4: return renderStep4();
       default: return null;
     }
   };
@@ -241,7 +313,7 @@ export function ProfileOnboardingFlow({
       <div className="p-6 flex flex-col flex-1">
         {renderStepIndicators()}
         
-        <div className="flex-1">
+        <div className="flex-1 overflow-y-auto">
           {renderCurrentStep()}
         </div>
 
