@@ -329,10 +329,10 @@ export function ProfileOnboardingFlow({
         </div>
 
         <div>
-          <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
+          <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block text-center">
             Icon
           </label>
-          <div className="flex gap-2">
+          <div className="flex gap-3 justify-center">
             {ACHIEVEMENT_ICONS.map(({ id, Icon, label }) => (
               <button
                 key={id}
