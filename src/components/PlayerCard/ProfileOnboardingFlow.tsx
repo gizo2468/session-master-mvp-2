@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Check, SkipForward, Plus, X } from 'lucide-react';
+import { ACHIEVEMENT_ICONS, getAchievementIcon } from './AchievementIcons';
 import type { PlayerCardData, PlayerPrivateData, Achievement } from '@/hooks/usePlayerCard';
 
 interface ProfileOnboardingFlowProps {
@@ -28,7 +29,11 @@ const POKER_BACKGROUND_OPTIONS = [
   'Poker Coach'
 ];
 
-const ACHIEVEMENT_EMOJIS = ['🏆', '🎯', '💎', '🔥', '⭐', '👑', '🃏', '💰'];
+const COACHING_EXPERIENCE_OPTIONS = [
+  { value: '1-5', label: '1–5 years' },
+  { value: '5-10', label: '5–10 years' },
+  { value: '10+', label: '10+ years' }
+];
 
 export function ProfileOnboardingFlow({
   cardData,
@@ -44,9 +49,19 @@ export function ProfileOnboardingFlow({
   const [displayName, setDisplayName] = useState(privateData?.full_name || '');
   const [gameFormat, setGameFormat] = useState<GameFormat>(cardData?.primary_format || 'both');
   const [pokerBackground, setPokerBackground] = useState<string[]>(cardData?.poker_background || []);
+  const [coachingExperience, setCoachingExperience] = useState<string | null>(cardData?.coaching_experience || null);
   const [achievements, setAchievements] = useState<Achievement[]>(cardData?.achievements || []);
   const [newAchievementTitle, setNewAchievementTitle] = useState('');
-  const [selectedEmoji, setSelectedEmoji] = useState('🏆');
+  const [selectedIcon, setSelectedIcon] = useState<string>('trophy');
+
+  const isPokerCoachSelected = pokerBackground.includes('Poker Coach');
+
+  // Clear coaching experience when Poker Coach is unselected
+  useEffect(() => {
+    if (!isPokerCoachSelected && coachingExperience) {
+      setCoachingExperience(null);
+    }
+  }, [isPokerCoachSelected]);
 
   const formatLabels = {
     cash: 'Cash Games',
@@ -67,16 +82,19 @@ export function ProfileOnboardingFlow({
     const newAchievement: Achievement = {
       id: crypto.randomUUID(),
       title: newAchievementTitle.trim(),
-      icon: selectedEmoji
+      icon: selectedIcon
     };
     setAchievements([...achievements, newAchievement]);
     setNewAchievementTitle('');
-    setSelectedEmoji('🏆');
+    setSelectedIcon('trophy');
   };
 
   const removeAchievement = (id: string) => {
     setAchievements(achievements.filter(a => a.id !== id));
   };
+
+  // Check if step 2 can proceed (coaching experience required if Poker Coach selected)
+  const canProceedFromStep2 = !isPokerCoachSelected || (isPokerCoachSelected && coachingExperience);
 
   const handleNext = () => {
     // Save data for current step before moving on
@@ -86,7 +104,10 @@ export function ProfileOnboardingFlow({
       }
       onUpdateCard({ primary_format: gameFormat });
     } else if (currentStep === 2) {
-      onUpdateCard({ poker_background: pokerBackground });
+      onUpdateCard({ 
+        poker_background: pokerBackground,
+        coaching_experience: isPokerCoachSelected ? coachingExperience : null
+      });
     }
     
     if (currentStep < TOTAL_STEPS) {
@@ -108,6 +129,7 @@ export function ProfileOnboardingFlow({
     onUpdateCard({ 
       primary_format: gameFormat,
       poker_background: pokerBackground,
+      coaching_experience: isPokerCoachSelected ? coachingExperience : null,
       achievements: achievements
     });
     onComplete();
@@ -216,6 +238,36 @@ export function ProfileOnboardingFlow({
       <p className="text-xs text-zinc-500 text-center">
         {pokerBackground.length}/3 selected
       </p>
+
+      {/* Coaching Experience - only shown when Poker Coach is selected */}
+      {isPokerCoachSelected && (
+        <div className="pt-4 border-t border-zinc-700">
+          <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
+            Coaching Experience <span className="text-poker-gold">*</span>
+          </label>
+          <div className="flex gap-2 flex-wrap">
+            {COACHING_EXPERIENCE_OPTIONS.map((option) => (
+              <Badge
+                key={option.value}
+                variant={coachingExperience === option.value ? 'default' : 'outline'}
+                className={`cursor-pointer transition-all py-2 px-3 ${
+                  coachingExperience === option.value
+                    ? 'bg-poker-gold text-black hover:bg-poker-darkGold'
+                    : 'border-poker-gold/40 text-zinc-400 hover:border-poker-gold hover:text-white'
+                }`}
+                onClick={() => setCoachingExperience(option.value)}
+              >
+                {option.label}
+              </Badge>
+            ))}
+          </div>
+          {!coachingExperience && (
+            <p className="text-xs text-amber-500 mt-2">
+              Please select your coaching experience to continue
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 
@@ -229,20 +281,24 @@ export function ProfileOnboardingFlow({
       {/* Existing achievements */}
       {achievements.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
-          {achievements.map((ach) => (
-            <Badge 
-              key={ach.id}
-              className="bg-zinc-700 text-poker-gold border-poker-gold/20 pr-1"
-            >
-              {ach.icon} {ach.title}
-              <button
-                onClick={() => removeAchievement(ach.id)}
-                className="ml-2 hover:bg-zinc-600 rounded p-0.5"
+          {achievements.map((ach) => {
+            const IconComponent = getAchievementIcon(ach.icon);
+            return (
+              <Badge 
+                key={ach.id}
+                className="bg-zinc-700 text-poker-gold border-poker-gold/20 pr-1 flex items-center gap-1.5"
               >
-                <X className="w-3 h-3" />
-              </button>
-            </Badge>
-          ))}
+                <IconComponent className="w-3.5 h-3.5" />
+                {ach.title}
+                <button
+                  onClick={() => removeAchievement(ach.id)}
+                  className="ml-1 hover:bg-zinc-600 rounded p-0.5"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            );
+          })}
         </div>
       )}
 
@@ -276,18 +332,19 @@ export function ProfileOnboardingFlow({
           <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
             Icon
           </label>
-          <div className="flex gap-2 flex-wrap">
-            {ACHIEVEMENT_EMOJIS.map((emoji) => (
+          <div className="flex gap-2">
+            {ACHIEVEMENT_ICONS.map(({ id, Icon, label }) => (
               <button
-                key={emoji}
-                onClick={() => setSelectedEmoji(emoji)}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-all ${
-                  selectedEmoji === emoji
-                    ? 'bg-poker-gold/20 ring-2 ring-poker-gold'
-                    : 'bg-zinc-700 hover:bg-zinc-600'
+                key={id}
+                onClick={() => setSelectedIcon(id)}
+                title={label}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
+                  selectedIcon === id
+                    ? 'bg-poker-gold/20 ring-2 ring-poker-gold text-poker-gold'
+                    : 'bg-zinc-700 hover:bg-zinc-600 text-zinc-400'
                 }`}
               >
-                {emoji}
+                <Icon className="w-5 h-5" />
               </button>
             ))}
           </div>
@@ -304,6 +361,9 @@ export function ProfileOnboardingFlow({
       default: return null;
     }
   };
+
+  // Disable Next button on step 2 if coaching experience is required but not selected
+  const isNextDisabled = currentStep === 2 && !canProceedFromStep2;
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 rounded-2xl border-2 border-poker-gold/40 shadow-2xl overflow-hidden flex flex-col">
@@ -351,7 +411,7 @@ export function ProfileOnboardingFlow({
                   size="sm"
                   onClick={handleNext}
                   className="bg-poker-gold text-black hover:bg-poker-darkGold"
-                  disabled={isSaving}
+                  disabled={isSaving || isNextDisabled}
                 >
                   Next
                   <ChevronRight className="w-4 h-4 ml-1" />

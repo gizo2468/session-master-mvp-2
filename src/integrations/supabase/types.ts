@@ -208,6 +208,7 @@ export type Database = {
       player_cards: {
         Row: {
           achievements: Json | null
+          coaching_experience: string | null
           created_at: string
           id: string
           improvement_goals: string | null
@@ -220,6 +221,7 @@ export type Database = {
         }
         Insert: {
           achievements?: Json | null
+          coaching_experience?: string | null
           created_at?: string
           id?: string
           improvement_goals?: string | null
@@ -232,6 +234,7 @@ export type Database = {
         }
         Update: {
           achievements?: Json | null
+          coaching_experience?: string | null
           created_at?: string
           id?: string
           improvement_goals?: string | null
