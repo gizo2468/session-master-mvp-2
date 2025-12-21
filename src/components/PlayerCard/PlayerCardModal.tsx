@@ -14,6 +14,7 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [flipKey, setFlipKey] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
   
   const {
     isLoading,
@@ -26,15 +27,19 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
     userId,
     updateCardData,
     updatePrivateData,
-    uploadPhoto
+    uploadPhoto,
+    isFirstTimeUser
   } = usePlayerCard();
 
-  // Reset flip state when modal opens
+  // Reset state when modal opens
   useEffect(() => {
     if (open) {
       setIsFlipped(false);
       setIsClosing(false);
       setFlipKey(0);
+      // Only auto-show onboarding for first-time users
+      // Otherwise stay in view mode
+      setIsEditing(false);
     }
   }, [open]);
 
@@ -112,6 +117,9 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
                 onUpdatePrivate={updatePrivateData}
                 onUploadPhoto={uploadPhoto}
                 isSaving={isSaving}
+                isEditing={isEditing}
+                onEditingChange={setIsEditing}
+                isFirstTimeUser={isFirstTimeUser}
               />
             </div>
 

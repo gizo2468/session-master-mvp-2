@@ -46,6 +46,12 @@ export function usePlayerCard() {
   // Generate unique barcode string from user ID
   const barcodeValue = user?.id ? `SMPLAYER-${user.id.slice(0, 8).toUpperCase()}` : '';
 
+  // Detect first-time user (no profile data set yet)
+  const isFirstTimeUser = !cardData?.specialization && 
+                          !cardData?.improvement_goals && 
+                          (!cardData?.achievements || cardData.achievements.length === 0) &&
+                          !privateData?.full_name;
+
   const fetchData = useCallback(async () => {
     if (!user?.id) return;
     
@@ -217,6 +223,7 @@ export function usePlayerCard() {
     updateCardData,
     updatePrivateData,
     uploadPhoto,
-    refetch: fetchData
+    refetch: fetchData,
+    isFirstTimeUser
   };
 }
