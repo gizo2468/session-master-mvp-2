@@ -18,6 +18,7 @@ export interface PlayerCardData {
   year_started_playing: number | null;
   achievements: Achievement[];
   poker_background: string[];
+  coaching_experience: string | null;
 }
 
 export interface PlayerProfile {
@@ -86,7 +87,8 @@ export function usePlayerCard() {
           improvement_goals: data.improvement_goals || '',
           year_started_playing: data.year_started_playing,
           achievements: Array.isArray(data.achievements) ? (data.achievements as unknown as Achievement[]) : [],
-          poker_background: Array.isArray(data.poker_background) ? data.poker_background : []
+          poker_background: Array.isArray(data.poker_background) ? data.poker_background : [],
+          coaching_experience: data.coaching_experience || null
         });
       } else {
         // Create default card data
@@ -97,7 +99,8 @@ export function usePlayerCard() {
           improvement_goals: '',
           year_started_playing: null,
           achievements: [],
-          poker_background: []
+          poker_background: [],
+          coaching_experience: null
         });
       }
 
@@ -135,7 +138,8 @@ export function usePlayerCard() {
           improvement_goals: updatedData.improvement_goals || null,
           year_started_playing: updatedData.year_started_playing,
           achievements: JSON.parse(JSON.stringify(updatedData.achievements)),
-          poker_background: updatedData.poker_background || []
+          poker_background: updatedData.poker_background || [],
+          coaching_experience: updatedData.coaching_experience || null
         }], { onConflict: 'user_id' });
 
       if (error) throw error;

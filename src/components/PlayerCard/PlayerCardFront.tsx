@@ -3,6 +3,7 @@ import { Camera, RotateCcw, Award, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProfileOnboardingFlow } from './ProfileOnboardingFlow';
+import { getAchievementIcon } from './AchievementIcons';
 import type { PlayerCardData, PlayerProfile, PlayerPrivateData } from '@/hooks/usePlayerCard';
 
 interface PlayerCardFrontProps {
@@ -19,6 +20,16 @@ interface PlayerCardFrontProps {
   onEditingChange: (editing: boolean) => void;
   isFirstTimeUser: boolean;
 }
+
+// Helper to format coaching experience for display
+const formatCoachingExperience = (exp: string | null): string => {
+  switch (exp) {
+    case '1-5': return '1-5y';
+    case '5-10': return '5-10y';
+    case '10+': return '10+y';
+    default: return '';
+  }
+};
 
 export function PlayerCardFront({
   cardData,
@@ -73,6 +84,14 @@ export function PlayerCardFront({
       />
     );
   }
+
+  // Format poker background items for display (add coaching experience to Poker Coach)
+  const formatPokerBackgroundItem = (bg: string): string => {
+    if (bg === 'Poker Coach' && cardData?.coaching_experience) {
+      return `Poker Coach (${formatCoachingExperience(cardData.coaching_experience)})`;
+    }
+    return bg;
+  };
 
   // View Mode - Static display
   return (
@@ -154,7 +173,7 @@ export function PlayerCardFront({
                   variant="outline"
                   className="border-poker-gold/40 text-zinc-300"
                 >
-                  {bg}
+                  {formatPokerBackgroundItem(bg)}
                 </Badge>
               ))}
             </div>
@@ -169,14 +188,18 @@ export function PlayerCardFront({
           </label>
           <div className="flex flex-wrap gap-2">
             {cardData?.achievements && cardData.achievements.length > 0 ? (
-              cardData.achievements.map((ach) => (
-                <Badge 
-                  key={ach.id}
-                  className="bg-zinc-700 text-poker-gold border-poker-gold/20"
-                >
-                  {ach.icon} {ach.title}
-                </Badge>
-              ))
+              cardData.achievements.map((ach) => {
+                const IconComponent = getAchievementIcon(ach.icon);
+                return (
+                  <Badge 
+                    key={ach.id}
+                    className="bg-zinc-700 text-poker-gold border-poker-gold/20 flex items-center gap-1.5"
+                  >
+                    <IconComponent className="w-3.5 h-3.5" />
+                    {ach.title}
+                  </Badge>
+                );
+              })
             ) : (
               <p className="text-zinc-500 text-sm italic">No achievements yet</p>
             )}
