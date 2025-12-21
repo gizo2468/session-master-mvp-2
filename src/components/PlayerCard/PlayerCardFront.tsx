@@ -1,10 +1,9 @@
-import React, { useRef, useState } from 'react';
-import { Camera, RotateCcw, Award, Pencil, Plus } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Camera, RotateCcw, Award, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProfileOnboardingFlow } from './ProfileOnboardingFlow';
-import { AddAchievementModal } from './AddAchievementModal';
-import type { PlayerCardData, PlayerProfile, PlayerPrivateData, Achievement } from '@/hooks/usePlayerCard';
+import type { PlayerCardData, PlayerProfile, PlayerPrivateData } from '@/hooks/usePlayerCard';
 
 interface PlayerCardFrontProps {
   cardData: PlayerCardData | null;
@@ -36,7 +35,6 @@ export function PlayerCardFront({
   isFirstTimeUser
 }: PlayerCardFrontProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showAchievementModal, setShowAchievementModal] = useState(false);
 
   // If first-time user or editing, show onboarding flow
   const showOnboarding = isFirstTimeUser || isEditing;
@@ -54,13 +52,6 @@ export function PlayerCardFront({
 
   const handleOnboardingComplete = () => {
     onEditingChange(false);
-  };
-
-  const handleAddAchievement = (achievement: Achievement) => {
-    if (!cardData) return;
-    onUpdateCard({ 
-      achievements: [...(cardData.achievements || []), achievement] 
-    });
   };
 
   const formatLabels = {
@@ -150,57 +141,55 @@ export function PlayerCardFront({
           )}
         </div>
 
-        {/* Specialization - static display */}
-        <div className="mb-4">
-          <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">Specialization</label>
-          <p className="text-white">
-            {cardData?.specialization || 
-              <span className="text-zinc-500 italic">Not set</span>}
-          </p>
-        </div>
+        {/* Poker Background - static display */}
+        {cardData?.poker_background && cardData.poker_background.length > 0 && (
+          <div className="mb-4">
+            <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
+              Poker Background
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {cardData.poker_background.map((bg) => (
+                <Badge 
+                  key={bg}
+                  variant="outline"
+                  className="border-poker-gold/40 text-zinc-300"
+                >
+                  {bg}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
 
-        {/* Improvement goals - static display */}
-        <div className="mb-4">
-          <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">Working On</label>
-          <p className="text-zinc-300 text-sm">
-            {cardData?.improvement_goals || 
-              <span className="text-zinc-500 italic">Not set</span>}
-          </p>
-        </div>
-
-        {/* Achievements - static display with add button */}
+        {/* Achievements - static display only */}
         <div className="flex-1 min-h-0">
           <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block flex items-center gap-2">
             <Award className="w-3 h-3" />
             Achievements
           </label>
           <div className="flex flex-wrap gap-2">
-            {cardData?.achievements?.map((ach) => (
-              <Badge 
-                key={ach.id}
-                className="bg-zinc-700 text-poker-gold border-poker-gold/20"
-              >
-                {ach.icon} {ach.title}
-              </Badge>
-            ))}
-            <Badge
-              variant="outline"
-              className="border-dashed border-zinc-600 text-zinc-400 cursor-pointer hover:border-poker-gold hover:text-poker-gold transition-colors"
-              onClick={() => setShowAchievementModal(true)}
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              Add Achievement
-            </Badge>
+            {cardData?.achievements && cardData.achievements.length > 0 ? (
+              cardData.achievements.map((ach) => (
+                <Badge 
+                  key={ach.id}
+                  className="bg-zinc-700 text-poker-gold border-poker-gold/20"
+                >
+                  {ach.icon} {ach.title}
+                </Badge>
+              ))
+            ) : (
+              <p className="text-zinc-500 text-sm italic">No achievements yet</p>
+            )}
           </div>
         </div>
 
         {/* Action buttons */}
         <div className="flex justify-between items-center mt-4 pt-4 border-t border-zinc-700">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => onEditingChange(true)}
-            className="border-poker-gold/40 text-poker-gold hover:bg-poker-gold/10"
+            className="bg-transparent border border-poker-gold/40 text-poker-gold hover:bg-poker-gold/10 hover:text-poker-gold"
           >
             <Pencil className="w-4 h-4 mr-2" />
             Edit Profile
@@ -216,13 +205,6 @@ export function PlayerCardFront({
           </Button>
         </div>
       </div>
-
-      {/* Achievement modal */}
-      <AddAchievementModal
-        open={showAchievementModal}
-        onOpenChange={setShowAchievementModal}
-        onAdd={handleAddAchievement}
-      />
     </div>
   );
 }

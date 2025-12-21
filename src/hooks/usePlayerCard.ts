@@ -17,6 +17,7 @@ export interface PlayerCardData {
   improvement_goals: string;
   year_started_playing: number | null;
   achievements: Achievement[];
+  poker_background: string[];
 }
 
 export interface PlayerProfile {
@@ -47,8 +48,7 @@ export function usePlayerCard() {
   const barcodeValue = user?.id ? `SMPLAYER-${user.id.slice(0, 8).toUpperCase()}` : '';
 
   // Detect first-time user (no profile data set yet)
-  const isFirstTimeUser = !cardData?.specialization && 
-                          !cardData?.improvement_goals && 
+  const isFirstTimeUser = !cardData?.poker_background?.length && 
                           (!cardData?.achievements || cardData.achievements.length === 0) &&
                           !privateData?.full_name;
 
@@ -85,7 +85,8 @@ export function usePlayerCard() {
           specialization: data.specialization || '',
           improvement_goals: data.improvement_goals || '',
           year_started_playing: data.year_started_playing,
-          achievements: Array.isArray(data.achievements) ? (data.achievements as unknown as Achievement[]) : []
+          achievements: Array.isArray(data.achievements) ? (data.achievements as unknown as Achievement[]) : [],
+          poker_background: Array.isArray(data.poker_background) ? data.poker_background : []
         });
       } else {
         // Create default card data
@@ -95,7 +96,8 @@ export function usePlayerCard() {
           specialization: '',
           improvement_goals: '',
           year_started_playing: null,
-          achievements: []
+          achievements: [],
+          poker_background: []
         });
       }
 
@@ -132,7 +134,8 @@ export function usePlayerCard() {
           specialization: updatedData.specialization || null,
           improvement_goals: updatedData.improvement_goals || null,
           year_started_playing: updatedData.year_started_playing,
-          achievements: JSON.parse(JSON.stringify(updatedData.achievements))
+          achievements: JSON.parse(JSON.stringify(updatedData.achievements)),
+          poker_background: updatedData.poker_background || []
         }], { onConflict: 'user_id' });
 
       if (error) throw error;

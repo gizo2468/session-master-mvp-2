@@ -211,6 +211,7 @@ export type Database = {
           created_at: string
           id: string
           improvement_goals: string | null
+          poker_background: string[] | null
           primary_format: string | null
           specialization: string | null
           updated_at: string
@@ -222,6 +223,7 @@ export type Database = {
           created_at?: string
           id?: string
           improvement_goals?: string | null
+          poker_background?: string[] | null
           primary_format?: string | null
           specialization?: string | null
           updated_at?: string
@@ -233,6 +235,7 @@ export type Database = {
           created_at?: string
           id?: string
           improvement_goals?: string | null
+          poker_background?: string[] | null
           primary_format?: string | null
           specialization?: string | null
           updated_at?: string
