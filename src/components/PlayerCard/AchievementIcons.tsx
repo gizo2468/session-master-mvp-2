@@ -1,5 +1,6 @@
 import React from 'react';
 import championshipRingImg from '@/assets/championship-ring.png';
+import championshipBraceletImg from '@/assets/championship-bracelet.png';
 
 // Championship Trophy - ornate cup with handles and base
 export const TrophyIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -26,41 +27,26 @@ export const TrophyIcon = ({ className = "w-4 h-4" }: { className?: string }) =>
   </svg>
 );
 
-// Championship Ring - using actual ring image
+// Championship Ring - using actual ring image (scaled up for clarity)
 export const RingIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <img 
-    src={championshipRingImg}
-    alt="Championship Ring"
-    className={className}
-    style={{ objectFit: 'contain' }}
-  />
+  <div className={`${className} flex items-center justify-center overflow-hidden`}>
+    <img 
+      src={championshipRingImg}
+      alt="Championship Ring"
+      className="w-full h-full scale-[1.8] object-contain"
+    />
+  </div>
 );
 
-// Championship Bracelet - WSOP style with center medallion
+// Championship Bracelet - using actual bracelet image (scaled up for clarity)
 export const BraceletIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="1.5" 
-    strokeLinecap="round" 
-    strokeLinejoin="round"
-    className={className}
-  >
-    {/* Bracelet band - curved perspective */}
-    <path d="M3 14c0 2.5 4 4.5 9 4.5s9-2 9-4.5" />
-    <path d="M3 14c0-2.5 4-4.5 9-4.5s9 2 9 4.5" />
-    {/* Center medallion */}
-    <circle cx="12" cy="14" r="3" />
-    {/* Medallion detail */}
-    <circle cx="12" cy="14" r="1.5" />
-    {/* Band links left */}
-    <path d="M5 12.5v3" />
-    <path d="M7 11v6" />
-    {/* Band links right */}
-    <path d="M19 12.5v3" />
-    <path d="M17 11v6" />
-  </svg>
+  <div className={`${className} flex items-center justify-center overflow-hidden`}>
+    <img 
+      src={championshipBraceletImg}
+      alt="Championship Bracelet"
+      className="w-full h-full scale-[1.8] object-contain"
+    />
+  </div>
 );
 
 export const ACHIEVEMENT_ICONS = [
