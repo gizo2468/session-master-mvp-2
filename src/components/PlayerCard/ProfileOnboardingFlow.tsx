@@ -330,7 +330,7 @@ export function ProfileOnboardingFlow({
 
         <div>
           <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block text-center">
-            Icon
+            {ACHIEVEMENT_ICONS.find(icon => icon.id === selectedIcon)?.label || 'Icon'}
           </label>
           <div className="flex gap-3 justify-center">
             {ACHIEVEMENT_ICONS.map(({ id, Icon, label }) => (
