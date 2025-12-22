@@ -1061,7 +1061,7 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
                           Enter the coach's username to request mentoring.
                         </p>
                         <Input
-                          placeholder="Coach handle"
+                          placeholder="Coach / Player handle"
                           value={coachAsCoachUsername}
                           onChange={(e) => setCoachAsCoachUsername(e.target.value)}
                           name="search-coach-as-coach"
@@ -1071,8 +1071,6 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
                           spellCheck={false}
                           autoComplete="off"
                           data-form-type="other"
-                          readOnly
-                          onFocus={(e) => e.currentTarget.removeAttribute('readonly')}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !connectingCoach && coachAsCoachUsername.trim()) {
                               setShowCoachConfirmation(true);
@@ -1143,7 +1141,7 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
                       Enter your coach's username to request a connection.
                     </p>
                     <Input
-                       placeholder="Coach handle"
+                       placeholder="Coach / Player handle"
                        value={coachUsername}
                        onChange={(e) => setCoachUsername(e.target.value)}
                        name="search-coach"
@@ -1153,8 +1151,6 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
                        spellCheck={false}
                        autoComplete="off"
                        data-form-type="other"
-                       readOnly
-                       onFocus={(e) => e.currentTarget.removeAttribute('readonly')}
                        onKeyDown={(e) => {
                          if (e.key === 'Enter' && !connecting) {
                            handleConnectToCoach();
