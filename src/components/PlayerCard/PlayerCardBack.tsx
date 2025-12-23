@@ -1,53 +1,169 @@
 import React from 'react';
-import { RotateCcw } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { RotateCcw, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Achievement } from '@/hooks/usePlayerCard';
+import braceletImg from '@/assets/championship-bracelet.png';
+import ringImg from '@/assets/championship-ring.png';
+import trophyImg from '@/assets/championship-trophy.png';
 
 interface PlayerCardBackProps {
   barcodeValue: string;
-  userId: string;
+  primaryFormat: 'cash' | 'tournaments' | 'both' | null;
+  isCoach: boolean;
+  coachingExperience: string | null;
+  activeStudentsCount: number;
+  achievements: Achievement[];
   onFlip: () => void;
 }
 
-export function PlayerCardBack({ barcodeValue, userId, onFlip }: PlayerCardBackProps) {
+function getFormatLabel(format: 'cash' | 'tournaments' | 'both' | null): string {
+  switch (format) {
+    case 'cash':
+      return 'Cash Games';
+    case 'tournaments':
+      return 'Tournaments';
+    case 'both':
+    default:
+      return 'Cash & MTT';
+  }
+}
+
+function getCoachingExperienceLabel(experience: string | null): string {
+  switch (experience) {
+    case '1-5':
+      return '1–5 Years';
+    case '5-10':
+      return '5–10 Years';
+    case '10+':
+      return '10+ Years';
+    default:
+      return '';
+  }
+}
+
+export function PlayerCardBack({ 
+  barcodeValue, 
+  primaryFormat,
+  isCoach,
+  coachingExperience,
+  activeStudentsCount,
+  achievements,
+  onFlip 
+}: PlayerCardBackProps) {
+  // Count achievements by type
+  const achievementCounts = {
+    trophy: achievements.filter(a => a.icon === 'trophy').length,
+    ring: achievements.filter(a => a.icon === 'ring').length,
+    bracelet: achievements.filter(a => a.icon === 'bracelet').length,
+  };
+
+  const hasAnyAchievements = achievementCounts.trophy > 0 || 
+                              achievementCounts.ring > 0 || 
+                              achievementCounts.bracelet > 0;
+
   return (
     <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 rounded-2xl border-2 border-poker-gold/40 shadow-2xl overflow-hidden">
       {/* Gold accent line at top */}
       <div className="h-1.5 bg-gradient-to-r from-transparent via-poker-gold to-transparent" />
       
-      <div className="p-6 flex flex-col h-full items-center justify-center">
-        {/* Logo/Title */}
-        <div className="text-center mb-8">
+      <div className="p-5 flex flex-col h-full">
+        {/* Header */}
+        <div className="text-center mb-4">
           <h3 className="text-poker-gold font-bold text-lg tracking-wider uppercase">
             Session Master
           </h3>
-          <p className="text-zinc-500 text-xs tracking-widest">PLAYER ID</p>
+          <p className="text-zinc-500 text-xs tracking-widest">CAREER SNAPSHOT</p>
         </div>
 
-        {/* QR Code */}
-        <div className="bg-zinc-800/50 p-6 rounded-xl border border-poker-gold/20">
-          <QRCodeSVG
-            value={`${window.location.origin}/player/${userId}`}
-            size={150}
-            bgColor="transparent"
-            fgColor="#D4AF37"
-            level="M"
-          />
+        {/* Playing Focus */}
+        <div className="mb-4">
+          <p className="text-zinc-500 text-[10px] tracking-widest uppercase mb-1.5">Playing Focus</p>
+          <div className="inline-block px-3 py-1.5 rounded-full border border-poker-gold/30 bg-zinc-800/50">
+            <span className="text-poker-gold text-sm font-medium">
+              {getFormatLabel(primaryFormat)}
+            </span>
+          </div>
         </div>
 
-        {/* Unique Player Code Display */}
-        <div className="mt-6 text-center">
-          <p className="text-zinc-500 text-xs mb-1">UNIQUE PLAYER CODE</p>
+        {/* Coach Information - Only for coaches */}
+        {isCoach && (
+          <div className="mb-4 p-3 rounded-lg bg-zinc-800/30 border border-zinc-700/50">
+            <p className="text-zinc-500 text-[10px] tracking-widest uppercase mb-2">Coach Info</p>
+            
+            {coachingExperience && (
+              <div className="flex items-center gap-2 mb-2">
+                <div className="px-2.5 py-1 rounded-md bg-poker-gold/10 border border-poker-gold/30">
+                  <span className="text-poker-gold text-xs font-medium">
+                    {getCoachingExperienceLabel(coachingExperience)}
+                  </span>
+                </div>
+              </div>
+            )}
+            
+            <p className="text-zinc-400 text-sm">
+              Coaching <span className="text-poker-gold font-semibold">{activeStudentsCount}</span> player{activeStudentsCount !== 1 ? 's' : ''}
+            </p>
+          </div>
+        )}
+
+        {/* Achievements Summary */}
+        {hasAnyAchievements && (
+          <div className="mb-4">
+            <p className="text-zinc-500 text-[10px] tracking-widest uppercase mb-2">Achievements</p>
+            <div className="flex items-center justify-center gap-6">
+              {achievementCounts.trophy > 0 && (
+                <div className="flex flex-col items-center">
+                  <img 
+                    src={trophyImg} 
+                    alt="Trophy" 
+                    className="w-10 h-10 object-contain"
+                  />
+                  <span className="text-poker-gold font-bold text-lg mt-1">
+                    {achievementCounts.trophy}
+                  </span>
+                </div>
+              )}
+              {achievementCounts.ring > 0 && (
+                <div className="flex flex-col items-center">
+                  <img 
+                    src={ringImg} 
+                    alt="Ring" 
+                    className="w-10 h-10 object-contain"
+                  />
+                  <span className="text-poker-gold font-bold text-lg mt-1">
+                    {achievementCounts.ring}
+                  </span>
+                </div>
+              )}
+              {achievementCounts.bracelet > 0 && (
+                <div className="flex flex-col items-center">
+                  <img 
+                    src={braceletImg} 
+                    alt="Bracelet" 
+                    className="w-10 h-10 object-contain"
+                  />
+                  <span className="text-poker-gold font-bold text-lg mt-1">
+                    {achievementCounts.bracelet}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Unique Player Code */}
+        <div className="text-center mb-4">
+          <p className="text-zinc-500 text-[10px] tracking-widest uppercase mb-1">Unique Player Code</p>
           <p className="text-poker-gold font-mono text-sm tracking-wider">
             {barcodeValue}
           </p>
         </div>
 
-        {/* Spacer */}
-        <div className="flex-1" />
-
         {/* Flip button */}
-        <div className="w-full flex justify-end pt-4 border-t border-zinc-700">
+        <div className="w-full flex justify-end pt-3 border-t border-zinc-700">
           <Button
             variant="ghost"
             size="sm"
