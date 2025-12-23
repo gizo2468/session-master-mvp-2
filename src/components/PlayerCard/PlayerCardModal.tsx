@@ -24,7 +24,7 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
     privateData,
     yearsOfExperience,
     barcodeValue,
-    userId,
+    activeStudentsCount,
     updateCardData,
     updatePrivateData,
     uploadPhoto,
@@ -137,7 +137,11 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
             >
               <PlayerCardBack
                 barcodeValue={barcodeValue}
-                userId={userId}
+                primaryFormat={cardData?.primary_format || 'both'}
+                isCoach={profile?.role === 'coach'}
+                coachingExperience={cardData?.coaching_experience || null}
+                activeStudentsCount={activeStudentsCount}
+                achievements={cardData?.achievements || []}
                 onFlip={handleFlip}
               />
             </div>

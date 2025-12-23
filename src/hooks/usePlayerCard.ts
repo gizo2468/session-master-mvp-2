@@ -24,6 +24,7 @@ export interface PlayerCardData {
 export interface PlayerProfile {
   username: string | null;
   online_nickname: string | null;
+  role: string;
 }
 
 export interface PlayerPrivateData {
@@ -39,6 +40,7 @@ export function usePlayerCard() {
   const [cardData, setCardData] = useState<PlayerCardData | null>(null);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [privateData, setPrivateData] = useState<PlayerPrivateData | null>(null);
+  const [activeStudentsCount, setActiveStudentsCount] = useState<number>(0);
 
   // Calculate years of experience
   const yearsOfExperience = cardData?.year_started_playing 
@@ -67,7 +69,7 @@ export function usePlayerCard() {
           .maybeSingle(),
         supabase
           .from('profiles')
-          .select('username, online_nickname')
+          .select('username, online_nickname, role')
           .eq('id', user.id)
           .single(),
         supabase
@@ -76,6 +78,16 @@ export function usePlayerCard() {
           .eq('id', user.id)
           .single()
       ]);
+
+      // If user is a coach, fetch active students count
+      if (profileResult.data?.role === 'coach') {
+        const { count } = await supabase
+          .from('coach_student_connections')
+          .select('*', { count: 'exact', head: true })
+          .eq('coach_id', user.id)
+          .eq('status', 'approved');
+        setActiveStudentsCount(count || 0);
+      }
 
       if (cardResult.data) {
         const data = cardResult.data;
@@ -105,7 +117,11 @@ export function usePlayerCard() {
       }
 
       if (profileResult.data) {
-        setProfile(profileResult.data);
+        setProfile({
+          username: profileResult.data.username,
+          online_nickname: profileResult.data.online_nickname,
+          role: profileResult.data.role
+        });
       }
 
       if (privateResult.data) {
@@ -227,6 +243,7 @@ export function usePlayerCard() {
     yearsOfExperience,
     barcodeValue,
     userId: user?.id || '',
+    activeStudentsCount,
     updateCardData,
     updatePrivateData,
     uploadPhoto,
