@@ -202,9 +202,9 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                 >
                   {card ? (
                     /* Filled card slot with white background and border */
-                    <div className="relative w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-0.5 sm:p-1">
-                      <div className="font-bold text-xs sm:text-sm">{card.rank}</div>
-                      <div className={`${color} text-base sm:text-lg`}>{display}</div>
+                    <div className="relative w-full h-full bg-white border border-gray-400 rounded-lg flex flex-col items-center justify-center gap-0.5 p-1">
+                      <div className="font-bold text-xs leading-tight">{card.rank}</div>
+                      <div className={`${color} text-xs leading-tight`}>{display}</div>
                     </div>
                   ) : (
                     /* Empty card slot - yellow card back with white diamond pattern */
