@@ -106,10 +106,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
       return false;
     }
     
-    if (format === 'Tournament' && !tournamentType) {
-      setValidationError('Please select a Tournament Type before continuing');
-      return false;
-    }
+    // Tournament Type is optional - no validation required
     
     return true;
   };
@@ -206,7 +203,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
 
             {/* Game Type - Moved up after Table Name */}
             <div className="space-y-2">
-              <Label>Game Type</Label>
+              <Label>Game Type <span className="text-red-500">*</span></Label>
               <RadioGroup 
                 value={gameType} 
                 onValueChange={(value) => setGameType(value as 'NLH' | 'PLO')}
@@ -226,7 +223,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
             {/* Format Selection */}
             {!fixedFormat && (
               <div className="space-y-2">
-                <Label>Format</Label>
+                <Label>Format <span className="text-red-500">*</span></Label>
                 <RadioGroup 
                   value={format} 
                   onValueChange={(value) => setFormat(value as 'Cash' | 'Tournament')}
@@ -248,7 +245,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
             {format === 'Tournament' && (
               <Collapsible open={isTournamentTypeOpen} onOpenChange={setIsTournamentTypeOpen}>
                 <CollapsibleTrigger className="flex items-center justify-center gap-2 w-full py-2">
-                  <span className={`text-base font-medium text-poker-gold ${!tournamentType ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ''}`}>
+                  <span className="text-base font-medium text-poker-gold">
                     Tournament Type{tournamentType ? ` - ${tournamentType}` : ''}
                   </span>
                   <ChevronDown className={`h-4 w-4 text-poker-gold transition-transform duration-200 ${isTournamentTypeOpen ? 'rotate-180' : ''}`} />
@@ -258,7 +255,6 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
                     value={tournamentType}
                     onValueChange={(value) => {
                       setTournamentType(value);
-                      setIsTournamentTypeOpen(false);
                     }}
                     className="flex flex-wrap gap-2"
                   >
@@ -282,16 +278,13 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
                       </div>
                     ))}
                   </RadioGroup>
-                  {validationError && validationError.includes('Tournament Type') && (
-                    <p className="text-sm font-medium text-destructive mt-2">{validationError}</p>
-                  )}
                 </CollapsibleContent>
               </Collapsible>
             )}
 
             {/* Currency */}
             <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
+              <Label htmlFor="currency">Currency <span className="text-red-500">*</span></Label>
               <CurrencySelector
                 value={currency}
                 onValueChange={setCurrency}
@@ -301,7 +294,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
 
             {/* Buy-in */}
             <div className="space-y-2">
-              <Label htmlFor="buyIn">Buy-in Amount ({getCurrencySymbol(currency)})</Label>
+              <Label htmlFor="buyIn">Buy-in Amount ({getCurrencySymbol(currency)}) <span className="text-red-500">*</span></Label>
               <Input
                 id="buyIn"
                 type="number"
