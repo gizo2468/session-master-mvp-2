@@ -148,6 +148,7 @@ export default function SessionForm() {
         initialBuyIn: buyInAmount,
         startTime: new Date(),
         isActive: true,
+        isOnline: values.isOnline,
         rebuys: 0,
         addOns: 0,
         ...(values.format === 'Cash' && {
@@ -158,6 +159,7 @@ export default function SessionForm() {
           startingBB: values.startingBB ? parseInt(values.startingBB) : undefined,
           tournamentTypes: values.tournamentType ? [values.tournamentType] : undefined,
           isMultiDay: values.isMultiDay,
+          lateRegistration: values.lateRegistration,
         }),
       };
 
