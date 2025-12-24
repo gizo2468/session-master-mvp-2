@@ -409,7 +409,7 @@ const CoachProfile: React.FC = () => {
       {/* Shared Sessions */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="flex items-center justify-center gap-2 text-poker-gold">
+          <CardTitle className="flex items-center justify-center gap-2">
             <Icon name="Share2" size={18} />
             <span>Shared Sessions</span>
             <Badge variant="secondary">{sharedSessions.length}</Badge>
