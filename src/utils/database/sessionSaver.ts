@@ -126,7 +126,9 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           bounty_amount: table.bountyAmount || 0,
           final_position: table.finalPosition,
           table_notes: table.notes,
-          tournament_type: table.tournamentTypes?.[0] // Save single tournament type for this table
+          tournament_type: table.tournamentTypes?.[0], // Save single tournament type for this table
+          is_multi_day: table.isMultiDay || false,
+          late_registration: table.lateRegistration || false
         };
 
         // CRITICAL FIX: Consistent UTC handling for table times (now timestamptz)

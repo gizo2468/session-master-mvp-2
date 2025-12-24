@@ -763,6 +763,8 @@ export type Database = {
           game_format: string | null
           id: string
           is_active: boolean | null
+          is_multi_day: boolean | null
+          late_registration: boolean | null
           players_eliminated: number | null
           rebuy_amount: number | null
           rebuys: number | null
@@ -791,6 +793,8 @@ export type Database = {
           game_format?: string | null
           id?: string
           is_active?: boolean | null
+          is_multi_day?: boolean | null
+          late_registration?: boolean | null
           players_eliminated?: number | null
           rebuy_amount?: number | null
           rebuys?: number | null
@@ -819,6 +823,8 @@ export type Database = {
           game_format?: string | null
           id?: string
           is_active?: boolean | null
+          is_multi_day?: boolean | null
+          late_registration?: boolean | null
           players_eliminated?: number | null
           rebuy_amount?: number | null
           rebuys?: number | null

@@ -248,6 +248,8 @@ export const convertDatabaseSessionToPokerSession = (
           finalPosition: table.final_position,
           notes: table.table_notes,
           tournamentTypes: table.tournament_type ? [table.tournament_type] : undefined, // Load tournament type from database
+          isMultiDay: table.is_multi_day || false,
+          lateRegistration: table.late_registration || false,
           hands: tableHands // Properly assign hands with consistent IDs
         };
 
