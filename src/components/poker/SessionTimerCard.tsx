@@ -6,6 +6,7 @@ import { format as dateFormat } from 'date-fns';
 import { useSessionContext } from '@/context/SessionContext';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useStackCheckReminder } from '@/hooks/useStackCheckReminder';
+import { useAuth } from '@/context/AuthContext';
 import BBStackUpdateModal from './BBStackUpdateModal';
 import HandTableSelectionModal from './HandTableSelectionModal';
 import { TableData } from '@/types/poker';
@@ -23,6 +24,7 @@ interface SessionTimerCardProps {
   onAddTable?: () => void;
   onBBStackUpdate?: () => void;
   activeTables?: TableData[];
+  autoOpenBBStackModal?: boolean; // Auto-open modal when navigating from notification
 }
 
 const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
@@ -37,16 +39,25 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   onEndSession,
   onAddTable,
   onBBStackUpdate,
-  activeTables = []
+  activeTables = [],
+  autoOpenBBStackModal = false
 }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showBBStackModal, setShowBBStackModal] = useState(false);
   const [showHandTableModal, setShowHandTableModal] = useState(false);
   const { updateSessionDuration, activeSession } = useSessionContext();
+  const { user } = useAuth();
   const updateCounterRef = useRef(0);
 
-  // Stack check reminder - reads interval from user settings
-  useStackCheckReminder(true, startTimeUTC);
+  // Stack check reminder - reads interval from user settings, now creates notifications too
+  useStackCheckReminder(true, startTimeUTC, sessionId, user?.id);
+
+  // Auto-open BB/Stack modal when navigating from notification
+  useEffect(() => {
+    if (autoOpenBBStackModal && activeTables.length > 0) {
+      setShowBBStackModal(true);
+    }
+  }, [autoOpenBBStackModal, activeTables.length]);
   
   // CRITICAL FIX: Calculate duration from actual start time, not accumulated state
   const calculateActualElapsedTime = useCallback(() => {
