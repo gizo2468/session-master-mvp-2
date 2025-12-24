@@ -188,15 +188,39 @@ const Signup: React.FC = () => {
       });
 
       if (error) {
-        // Log detailed error server-side only (console.error goes to server logs)
-        console.error("Signup error:", error.code);
+        console.error("Signup error:", error);
         
-        // Generic error message to prevent user enumeration
-        toast({
-          title: "Signup Failed",
-          description: "Unable to create account. Please check your information and try again.",
-          variant: "destructive",
-        });
+        // Check for specific error types and provide clear messages
+        if (error.message.includes('User already registered') || 
+            error.message.includes('already been registered') ||
+            error.message.includes('email address not authorized') ||
+            error.code === 'user_already_exists') {
+          toast({
+            title: "Email Already Registered",
+            description: "This email is already registered. Please sign in instead or try resetting your password.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('username') || 
+                   error.message.includes('unique') ||
+                   error.message.includes('already taken')) {
+          toast({
+            title: "Username Unavailable", 
+            description: "The username you selected is already taken. Please choose a different one.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('email') && error.message.includes('already')) {
+          toast({
+            title: "Email Already Registered",
+            description: "This email is already registered. Please sign in instead.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Signup Failed",
+            description: error.message || "An error occurred during signup. Please try again.",
+            variant: "destructive",
+          });
+        }
         return;
       }
 
