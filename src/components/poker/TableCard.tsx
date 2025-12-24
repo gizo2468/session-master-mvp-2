@@ -181,12 +181,17 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
           </div>
           {table.format === 'Tournament' && table.tournamentTypes?.[0] && (
             <span className="inline-block mt-1 px-3 py-1 bg-poker-gold/10 text-poker-gold rounded-full">
-              {table.tournamentTypes[0]}
+              {table.tournamentTypes[0].replace(' Tournament', '')}
             </span>
           )}
           {table.isMultiDay && (
             <span className="inline-block mt-1 px-3 py-1 bg-poker-feltGreen/10 text-poker-feltGreen rounded-full ml-2">
               Multi-Day
+            </span>
+          )}
+          {table.lateRegistration && (
+            <span className="inline-block mt-1 px-3 py-1 bg-red-500/10 text-red-600 rounded-full ml-2">
+              Late-Reg
             </span>
           )}
         </div>
@@ -196,9 +201,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
             <div className="text-center">
               <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
               <div className="font-medium">{formattedStartTime}</div>
-              {table.lateRegistration && (
-                <div className="text-xs text-gray-500 italic mt-0.5">*Late-Reg*</div>
-              )}
             </div>
           </div>
           
