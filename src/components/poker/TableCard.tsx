@@ -161,7 +161,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
 
   return (
     <>
-      <Card className="bg-white p-4 mb-4 relative">
+      <Card className="bg-white p-4 relative border border-gray-200 shadow-md rounded-xl">
         {/* Edit Button */}
         <Button
           variant="ghost"

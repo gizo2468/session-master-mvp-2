@@ -236,7 +236,7 @@ export default function ConfirmSession() {
           {activeSession.tables && activeSession.tables.length > 0 ? (
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <h3 className="text-xl font-extrabold tracking-tight mb-4">Tables</h3>
-              <div className="space-y-3">
+              <div className="space-y-5">
                 {activeSession.tables.map((table) => (
                   <TableCard
                     key={table.id}

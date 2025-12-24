@@ -94,7 +94,7 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
             {activeTables.length > 0 && (
               <div className="mb-4">
                 <h4 className="text-lg font-bold mb-2">Active Tables ({activeTables.length})</h4>
-                <div className="space-y-3">
+                <div className="space-y-5">
                   {activeTables.map((table) => (
                     <TableCard
                       key={table.id}
