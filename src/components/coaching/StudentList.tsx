@@ -1,0 +1,127 @@
+
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCoachStudent } from '@/context/CoachStudentContext';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import Icon from '@/components/ui/Lucide';
+
+const StudentList = () => {
+  const navigate = useNavigate();
+  const { students, removeStudent } = useCoachStudent();
+
+  if (students.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <div className="mb-4">
+          <Icon name="Users" size={48} className="mx-auto text-gray-300" />
+        </div>
+        <p className="text-lg font-medium text-gray-600 mb-2">No players connected yet</p>
+        <p className="text-sm">Share your connection code to get started coaching players.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {students.map((student) => (
+          <div
+            key={student.id}
+            className="border rounded-lg p-4 hover:border-poker-gold transition-colors"
+          >
+            <div className="flex justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 bg-poker-feltGreen rounded-full flex items-center justify-center text-white">
+                  {student.displayName.substring(0, 1).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="font-medium">{student.displayName}</h3>
+                  <div className="text-xs text-gray-500">
+                    {student.sessionCount || 0} {student.sessionCount === 1 ? 'session' : 'sessions'} • 
+                    Last active: {student.lastActivity ? 
+                      new Date(student.lastActivity).toLocaleDateString() : 
+                      'Never'}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => navigate(`/coach/student/${student.id}`)}
+                >
+                  <Icon name="arrow-right" size={16} />
+                </Button>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                    >
+                      <Icon name="user-minus" size={16} />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remove player</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to remove {student.displayName} from your players list? 
+                        This will revoke their connection to you.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        className="bg-red-500 hover:bg-red-600"
+                        onClick={() => removeStudent(student.id)}
+                      >
+                        Remove
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+
+            <div className="mt-3 flex justify-between">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate(`/coach/student/${student.id}?tab=sessions`)}
+                className="text-xs"
+              >
+                View Sessions
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate(`/coach/student/${student.id}?tab=feedback`)}
+                className="text-xs"
+              >
+                View Feedback
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default StudentList;

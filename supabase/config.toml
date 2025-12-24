@@ -1,0 +1,34 @@
+project_id = "wfmvvpbpuqbzidptxbqx"
+
+[auth]
+site_url = "https://session-master-mvp.lovable.app"
+additional_redirect_urls = ["https://session-master-mvp.lovable.app/*", "capacitor://localhost", "http://localhost:3000"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+enable_phone_signup = false
+enable_phone_autoconfirm = false
+sms_provider = ""
+sms_template = ""
+email_template_forgot_password = ""
+email_template_magic_link = ""
+email_template_change_email = ""
+email_template_invite_user = ""
+auto_confirm_email = true
+disable_email_notifications = false
+email_provider = "mail"
+email_otp_expiry = 600
+disable_plaintext_mfa = false
+enable_leaked_password_protection = true
+enable_strong_password = false
+enable_phone_email_authentication = false
+
+[functions.capture-paypal-payment]
+verify_jwt = false
+
+[functions.paypal-health]
+verify_jwt = false
+
+[functions.analyze-poker-hand]
+verify_jwt = false

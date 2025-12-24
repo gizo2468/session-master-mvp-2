@@ -1,0 +1,238 @@
+
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { useSessionContext } from '@/context/SessionContext';
+import { useActiveSessionRecovery } from '@/hooks/useActiveSessionRecovery';
+import SessionCard from '@/components/SessionCard';
+import NewSessionButton from '@/components/NewSessionButton';
+import StatsQuickView from '@/components/StatsQuickView';
+import StorageWarningAlert from '@/components/StorageWarningAlert';
+
+import PlayerCardButton from '@/components/PlayerCardButton';
+import ActiveSessionsList from '@/components/ActiveSessionsList';
+import Logo from '@/components/Logo';
+import Icon from '@/components/ui/Lucide';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import FilterBar from '@/components/ui/FilterBar';
+import PastSessionForm from '@/components/poker/PastSessionForm';
+import { SessionFilter } from '@/types/poker';
+import NotificationBell from '@/components/NotificationBell';
+
+export default function Index() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { 
+    sessions, 
+    filters, 
+    setFilters, 
+    showStorageWarning, 
+    dismissStorageWarning,
+    isLoading,
+    refreshSessionsFromDatabase 
+  } = useSessionContext();
+  
+  const { 
+    activeSessions, 
+    isLoading: isRecovering, 
+    resumeSession,
+    hasActiveSessions 
+  } = useActiveSessionRecovery();
+  
+  const [showPastSessionForm, setShowPastSessionForm] = useState(false);
+
+  // Removed duplicate refresh - SessionContext already loads data on initialization
+  // The refresh will happen automatically via the context's useEffect
+  
+
+  // Memoize filtered sessions
+  const filteredSessions = React.useMemo(() => {
+    return sessions.filter(session => {
+      if (filters.gameType && filters.gameType !== 'All' && session.gameType !== filters.gameType) {
+        return false;
+      }
+      if (filters.format && filters.format !== 'All' && session.format !== filters.format) {
+        return false;
+      }
+      if (filters.location && !session.location.toLowerCase().includes(filters.location.toLowerCase())) {
+        return false;
+      }
+      return true;
+    });
+  }, [sessions, filters]);
+
+  // Only show completed sessions (not active ones) in recent sessions
+  const recentSessions = React.useMemo(() => {
+    return filteredSessions
+      .filter(session => !session.isActive)
+      .slice(0, 10);
+  }, [filteredSessions]);
+  
+  // Check if we should show a second "View All" button
+  const totalCompletedSessions = filteredSessions.filter(session => !session.isActive).length;
+  const shouldShowSecondViewAll = totalCompletedSessions >= 10;
+
+  const handleSessionClick = (sessionId: string) => {
+    // Find the session to check its status
+    const session = sessions.find(s => s.id === sessionId);
+    
+    if (session?.isActive) {
+      // Active session -> route to LiveSession
+      navigate(`/session/${sessionId}`);
+    } else {
+      // Completed session -> route to SessionDetail
+      navigate(`/session/${sessionId}/details`);
+    }
+  };
+
+  if (isLoading || isRecovering) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your poker sessions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm">
+        <div className="container mx-auto max-w-md px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex-1 flex justify-start gap-2">
+              <Button 
+                onClick={() => navigate('/settings')}
+                variant="outline" 
+                size="sm"
+                className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+              >
+                <Icon name="Settings" size={16} />
+              </Button>
+              <Button 
+                onClick={() => navigate('/dashboard')}
+                variant="outline" 
+                size="sm"
+                className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+              >
+                <Icon name="User" size={16} />
+              </Button>
+            </div>
+            <div className="flex-1 flex justify-center">
+              <Logo />
+            </div>
+            <div className="flex-1 flex justify-end gap-2">
+              <NotificationBell />
+              <PlayerCardButton />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto max-w-md px-4 py-6">
+        {showStorageWarning && <StorageWarningAlert />}
+        
+        
+        <div className="flex flex-col items-center gap-6">
+          {/* NEW SESSION button appears first, at the top */}
+          <div className="flex justify-center">
+            <NewSessionButton />
+          </div>
+
+          {/* Stats section appears after the button */}
+          <StatsQuickView />
+          
+          {/* Active Sessions List - appears after stats if there are active sessions */}
+          {hasActiveSessions && (
+            <ActiveSessionsList 
+              sessions={activeSessions}
+              onResume={resumeSession}
+            />
+          )}
+          
+          {/* Recent Sessions header - always visible */}
+          <div className="w-full space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-extrabold tracking-tight">Recent Sessions</h2>
+              <div className="flex items-center gap-2">
+                <Button 
+                  onClick={() => setShowPastSessionForm(true)}
+                  variant="outline" 
+                  size="sm"
+                  className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+                >
+                  <Icon name="Plus" size={16} />
+                </Button>
+                <Button 
+                  onClick={() => navigate('/history')}
+                  variant="outline" 
+                  size="sm"
+                  className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+                >
+                  View All
+                </Button>
+              </div>
+            </div>
+            
+            {/* Show filters and sessions only if there are sessions */}
+            {sessions.length > 0 ? (
+              <>
+                <FilterBar filters={filters} onFiltersChange={setFilters} />
+                
+                <div className="space-y-4">
+                  {recentSessions.map((session) => (
+                    <SessionCard 
+                      key={session.id} 
+                      session={session} 
+                      onClick={() => handleSessionClick(session.id)}
+                    />
+                  ))}
+                  
+                  {/* Second "View All" button when showing 10+ sessions */}
+                  {shouldShowSecondViewAll && (
+                    <div className="flex justify-center pt-4">
+                      <Button 
+                        onClick={() => navigate('/history')}
+                        variant="outline" 
+                        size="sm"
+                        className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+                      >
+                        View All
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : !hasActiveSessions ? (
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <Icon name="PlusCircle" size={48} className="mx-auto" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No sessions yet</h3>
+                <p className="text-gray-500 mb-6">Start your first poker session to begin tracking your performance.</p>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </main>
+      
+      {/* Add Past Session Form Dialog - Full screen on mobile */}
+      <Dialog open={showPastSessionForm} onOpenChange={setShowPastSessionForm}>
+        <DialogContent 
+          className="w-full h-[100dvh] max-w-none max-h-none 
+                     fixed inset-0 translate-x-0 translate-y-0 left-0 top-0
+                     sm:h-auto sm:max-h-[90vh] sm:max-w-4xl 
+                     sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%]
+                     overflow-hidden p-0 rounded-none sm:rounded-lg
+                     flex flex-col"
+        >
+          <PastSessionForm 
+            onClose={() => setShowPastSessionForm(false)} 
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
