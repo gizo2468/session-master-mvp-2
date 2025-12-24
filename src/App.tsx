@@ -33,6 +33,7 @@ const Subscription = lazyWithRetry(() => import("./pages/Subscription"), "Subscr
 const SubscriptionSuccess = lazyWithRetry(() => import("./pages/SubscriptionSuccess"), "SubscriptionSuccess");
 const SubscriptionCancel = lazyWithRetry(() => import("./pages/SubscriptionCancel"), "SubscriptionCancel");
 const Notifications = lazyWithRetry(() => import("./pages/Notifications"), "Notifications");
+const AddPastSession = lazyWithRetry(() => import("./pages/AddPastSession"), "AddPastSession");
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,6 +83,7 @@ const App = () => (
                       <Route path="/subscription/success" element={<SubscriptionSuccess />} />
                       <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
                       <Route path="/notifications" element={<Notifications />} />
+                      <Route path="/add-past-session" element={<AddPastSession />} />
                     </Routes>
                   </Suspense>
                 </AppErrorBoundary>

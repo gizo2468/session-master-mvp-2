@@ -319,16 +319,32 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
   const watchedFormat = form.watch('format');
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-y-auto overscroll-contain">
-        <div className="space-y-6 p-4 sm:p-6 pb-safe">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Add Past Session</h2>
-            <p className="text-sm text-gray-500 mt-1">Enter details for a completed poker session</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Page Header */}
+      <header className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="container mx-auto max-w-md px-4 py-4">
+          <div className="flex items-center gap-3">
+            <Button 
+              type="button"
+              onClick={onClose} 
+              variant="ghost" 
+              size="sm"
+              className="text-poker-feltGreen"
+            >
+              <Icon name="ArrowLeft" size={20} />
+            </Button>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Add Past Session</h1>
+              <p className="text-sm text-gray-500">Enter details for a completed poker session</p>
+            </div>
           </div>
+        </div>
+      </header>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      {/* Form Content */}
+      <main className="container mx-auto max-w-md px-4 py-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Game Type */}
               <FormField
               control={form.control}
@@ -768,8 +784,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               </div>
           </form>
         </Form>
-        </div>
-      </div>
+      </main>
     </div>
   );
 };
