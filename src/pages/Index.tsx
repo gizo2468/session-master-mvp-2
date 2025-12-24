@@ -14,9 +14,7 @@ import ActiveSessionsList from '@/components/ActiveSessionsList';
 import Logo from '@/components/Logo';
 import Icon from '@/components/ui/Lucide';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import FilterBar from '@/components/ui/FilterBar';
-import PastSessionForm from '@/components/poker/PastSessionForm';
 import { SessionFilter } from '@/types/poker';
 import NotificationBell from '@/components/NotificationBell';
 
@@ -40,7 +38,7 @@ export default function Index() {
     hasActiveSessions 
   } = useActiveSessionRecovery();
   
-  const [showPastSessionForm, setShowPastSessionForm] = useState(false);
+  
 
   // Removed duplicate refresh - SessionContext already loads data on initialization
   // The refresh will happen automatically via the context's useEffect
@@ -158,7 +156,7 @@ export default function Index() {
               <h2 className="text-xl font-extrabold tracking-tight">Recent Sessions</h2>
               <div className="flex items-center gap-2">
                 <Button 
-                  onClick={() => setShowPastSessionForm(true)}
+                  onClick={() => navigate('/add-past-session')}
                   variant="outline" 
                   size="sm"
                   className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
@@ -218,21 +216,6 @@ export default function Index() {
         </div>
       </main>
       
-      {/* Add Past Session Form Dialog - Full screen on mobile */}
-      <Dialog open={showPastSessionForm} onOpenChange={setShowPastSessionForm}>
-        <DialogContent 
-          className="w-full h-[100dvh] max-w-none max-h-none 
-                     fixed inset-0 translate-x-0 translate-y-0 left-0 top-0
-                     sm:h-auto sm:max-h-[90vh] sm:max-w-4xl 
-                     sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%]
-                     overflow-hidden p-0 rounded-none sm:rounded-lg
-                     flex flex-col"
-        >
-          <PastSessionForm 
-            onClose={() => setShowPastSessionForm(false)} 
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
