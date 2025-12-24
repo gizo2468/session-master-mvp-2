@@ -215,8 +215,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
   
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl font-extrabold tracking-tight">Hands Played</h3>
+      <div className="flex justify-center items-center">
         {!readOnly && (
           <Button 
             onClick={() => setIsAddHandOpen(true)}

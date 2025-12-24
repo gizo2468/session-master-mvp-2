@@ -13,7 +13,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
   showCardNames = false 
 }) => {
   const sizeClasses = {
-    sm: { card: 'w-7 h-10 text-xs', suit: 'text-base', gap: 'gap-0.5' },
+    sm: { card: 'w-7 h-10 text-xs', suit: 'text-sm sm:text-base', gap: 'gap-0.5' },
     md: { card: 'w-9 h-12 text-sm', suit: 'text-lg', gap: 'gap-1' },
     lg: { card: 'w-11 h-14 text-base', suit: 'text-xl', gap: 'gap-1.5' }
   };
@@ -55,7 +55,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
         cardArray.push(
           <div 
             key={`${rank}${suit}-${i}`}
-            className={`${styles.card} inline-flex bg-white dark:bg-gray-50 border-2 border-gray-300 rounded-md shadow-md flex-col items-center justify-between py-1 px-0.5 transition-transform hover:scale-105`}
+            className={`${styles.card} inline-flex bg-white dark:bg-gray-50 border-2 border-gray-300 rounded-md shadow-md flex-col items-center justify-between py-0.5 px-0.5 transition-transform hover:scale-105`}
           >
             <div className="font-bold leading-none">{rank}</div>
             <div className={`${suitColor} ${styles.suit} leading-none`}>{suitSymbol}</div>
