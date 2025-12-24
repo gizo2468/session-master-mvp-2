@@ -125,6 +125,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
     const tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'> = {
       format,
       gameType,
+      name: tableName || `${format} Game`,
       location: tableName || `${format} Game`,
       buyIn: parseFloat(buyIn),
       initialBuyIn: parseFloat(buyIn),
