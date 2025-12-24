@@ -219,15 +219,13 @@ serve(async (req) => {
   } catch (error) {
     const requestId = crypto.randomUUID();
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : undefined;
     
-    console.error(`[${requestId}] Capture PayPal payment error:`, error);
-    if (errorStack) {
-      console.error(`[${requestId}] Error stack:`, errorStack);
-    }
+    // Log error with request ID for debugging (server-side only)
+    console.error(`[${requestId}] Capture PayPal payment error:`, errorMessage);
     
+    // Return generic error message to client
     return new Response(JSON.stringify({ 
-      error: errorMessage,
+      error: 'Payment capture failed. Please try again.',
       requestId 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
