@@ -13,9 +13,9 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
   showCardNames = false 
 }) => {
   const sizeClasses = {
-    sm: { card: 'w-7 h-10 text-xs', suit: 'text-sm sm:text-base', gap: 'gap-0.5' },
-    md: { card: 'w-9 h-12 text-sm', suit: 'text-lg', gap: 'gap-1' },
-    lg: { card: 'w-11 h-14 text-base', suit: 'text-xl', gap: 'gap-1.5' }
+    sm: { card: 'w-8 h-11', rank: 'text-xs font-bold', suit: 'text-xs', gap: 'gap-0.5' },
+    md: { card: 'w-10 h-14', rank: 'text-sm font-bold', suit: 'text-sm', gap: 'gap-1' },
+    lg: { card: 'w-12 h-16', rank: 'text-base font-bold', suit: 'text-base', gap: 'gap-1.5' }
   };
   
   const parseCards = () => {
@@ -55,10 +55,10 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
         cardArray.push(
           <div 
             key={`${rank}${suit}-${i}`}
-            className={`${styles.card} inline-flex bg-white dark:bg-gray-50 border-2 border-gray-300 rounded-md shadow-md flex-col items-center justify-between py-0.5 px-0.5 transition-transform hover:scale-105`}
+            className={`${styles.card} inline-flex bg-white dark:bg-gray-50 border border-gray-400 rounded-lg shadow-sm flex-col items-center justify-center gap-0.5 p-1 transition-transform hover:scale-105`}
           >
-            <div className="font-bold leading-none">{rank}</div>
-            <div className={`${suitColor} ${styles.suit} leading-none`}>{suitSymbol}</div>
+            <div className={`${styles.rank} leading-tight`}>{rank}</div>
+            <div className={`${suitColor} ${styles.suit} leading-tight`}>{suitSymbol}</div>
           </div>
         );
       }

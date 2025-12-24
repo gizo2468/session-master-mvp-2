@@ -214,9 +214,9 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
           {slot.rank && slot.suit ? (
             <>
               {/* Filled card slot */}
-              <div className="relative w-full h-full bg-white border border-gray-200 rounded flex flex-col items-center justify-between p-1">
-                <div className="font-bold text-sm">{slot.rank}</div>
-                <div className={`${getSuitInfo(slot.suit).color} text-lg`}>
+              <div className="relative w-full h-full bg-white border border-gray-400 rounded-lg flex flex-col items-center justify-center gap-0.5 p-1">
+                <div className="font-bold text-xs leading-tight">{slot.rank}</div>
+                <div className={`${getSuitInfo(slot.suit).color} text-xs leading-tight`}>
                   {getSuitInfo(slot.suit).display}
                 </div>
                 {/* Small X overlay for clearing */}
