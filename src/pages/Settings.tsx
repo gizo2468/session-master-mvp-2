@@ -12,8 +12,16 @@ import { CurrencySelector } from '@/components/ui/CurrencySelector';
 import Icon from '@/components/ui/Lucide';
 import { useToast } from '@/hooks/use-toast';
 import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
+import { useStackCheckInterval, STACK_CHECK_OPTIONS } from '@/hooks/useStackCheckInterval';
 import { supabase } from '@/integrations/supabase/client';
 import SupportSettings from '@/components/settings/SupportSettings';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +29,7 @@ const Settings: React.FC = () => {
   const { user, logout, isLoading } = useAuth();
   const { toast } = useToast();
   const { defaultCurrency } = useDefaultCurrency();
+  const { interval: stackCheckInterval, updateInterval: updateStackCheckInterval, isLoading: stackCheckLoading } = useStackCheckInterval();
   const [profile, setProfile] = useState<{ username?: string; role?: string; default_currency?: string; coaching_focus?: string[]; experience?: string } | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -490,6 +499,57 @@ const Settings: React.FC = () => {
                         onValueChange={handleCurrencyChange}
                         className="min-w-[140px]"
                       />
+                    )}
+                  </div>
+                </div>
+
+                {/* Stack Check Reminder */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Icon name="Timer" className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Check my stack every</p>
+                      <p className="text-sm text-gray-500">Reminder during live sessions</p>
+                    </div>
+                  </div>
+                  <div className="min-w-[140px]">
+                    {stackCheckLoading ? (
+                      <div className="h-9 w-full bg-gray-200 rounded animate-pulse"></div>
+                    ) : (
+                      <Select
+                        value={stackCheckInterval === null ? 'never' : String(stackCheckInterval)}
+                        onValueChange={(value) => {
+                          const newInterval = value === 'never' ? null : parseInt(value, 10);
+                          updateStackCheckInterval(newInterval).then((success) => {
+                            if (success) {
+                              toast({
+                                title: "Success",
+                                description: "Stack check interval updated.",
+                              });
+                            } else {
+                              toast({
+                                title: "Error",
+                                description: "Failed to update interval.",
+                                variant: "destructive",
+                              });
+                            }
+                          });
+                        }}
+                      >
+                        <SelectTrigger className="min-w-[140px]">
+                          <SelectValue placeholder="Select interval" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STACK_CHECK_OPTIONS.map((option) => (
+                            <SelectItem 
+                              key={option.label} 
+                              value={option.value === null ? 'never' : String(option.value)}
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     )}
                   </div>
                 </div>
