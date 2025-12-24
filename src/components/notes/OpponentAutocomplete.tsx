@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Plus } from 'lucide-react';
-import { SELECTABLE_COLORS, PlayerColorId } from './playerColors';
+import { SELECTABLE_COLORS } from './playerColors';
 
 interface OpponentProfile {
   id: string;
@@ -26,21 +32,21 @@ const OpponentAutocomplete: React.FC<OpponentAutocompleteProps> = ({
   onChange,
   onSelectProfile,
   disabled = false,
-  placeholder = "Enter player nickname...",
+  placeholder = 'Enter player nickname...',
 }) => {
   const { user } = useAuth();
+
   const [open, setOpen] = useState(false);
   const [profiles, setProfiles] = useState<OpponentProfile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  // Safari autofill workaround - start readonly then enable on focus
   const [isReadOnly, setIsReadOnly] = useState(true);
 
-  // Fetch existing opponent profiles when component mounts or user changes
+  const inputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     const fetchProfiles = async () => {
       if (!user?.id) return;
-      
+
       setIsLoading(true);
       try {
         const { data, error } = await supabase
@@ -61,12 +67,10 @@ const OpponentAutocomplete: React.FC<OpponentAutocompleteProps> = ({
     fetchProfiles();
   }, [user?.id]);
 
-  // Filter profiles based on input value
   const filteredProfiles = profiles.filter((profile) =>
     profile.nickname.toLowerCase().includes(value.toLowerCase().trim())
   );
 
-  // Check if current input matches an existing profile exactly
   const exactMatch = profiles.find(
     (p) => p.nickname.toLowerCase() === value.toLowerCase().trim()
   );
@@ -79,12 +83,12 @@ const OpponentAutocomplete: React.FC<OpponentAutocompleteProps> = ({
   };
 
   const handleFocus = () => {
-    // Safari autofill workaround - remove readonly on first focus
     if (isReadOnly) {
       setIsReadOnly(false);
       setTimeout(() => inputRef.current?.focus(), 10);
       return;
     }
+
     if (value.length > 0) {
       setOpen(true);
     }
@@ -93,7 +97,14 @@ const OpponentAutocomplete: React.FC<OpponentAutocompleteProps> = ({
   const handleSelectProfile = (profile: OpponentProfile) => {
     onChange(profile.nickname);
     onSelectProfile(profile);
+
+    // Close popover first
     setOpen(false);
+
+    // Force iOS Safari to exit input focus (prevents zoom / frozen layout)
+    requestAnimationFrame(() => {
+      inputRef.current?.blur();
+    });
   };
 
   const getColorHex = (colorId: string | null): string => {
@@ -112,25 +123,21 @@ const OpponentAutocomplete: React.FC<OpponentAutocompleteProps> = ({
             value={value}
             onChange={handleInputChange}
             onFocus={handleFocus}
+            onBlur={() => setOpen(false)}
             disabled={disabled}
             placeholder={placeholder}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
-            // Safari autofill workaround - start readonly
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
             readOnly={isReadOnly}
-            // Random name on each render to avoid credential detection
             name={`search_${Math.random().toString(36).substring(7)}`}
             id="opponent-nickname-input"
-            // Multiple autocomplete blocking strategies
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
             inputMode="search"
-            // ARIA attributes to signal this is NOT a login field
             role="combobox"
             aria-autocomplete="none"
             aria-expanded={open}
-            // Block all password managers and Safari autofill
             data-form-type="other"
             data-credential="false"
             data-1p-ignore="true"
@@ -139,11 +146,13 @@ const OpponentAutocomplete: React.FC<OpponentAutocompleteProps> = ({
             data-protonpass-ignore="true"
             x-autocompletetype="off"
           />
-          {/* Status indicator */}
+
           {value.trim() && !disabled && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
               {exactMatch ? (
-                <span className="text-xs text-green-500 font-medium">Existing</span>
+                <span className="text-xs text-green-500 font-medium">
+                  Existing
+                </span>
               ) : (
                 <span className="text-xs text-blue-500 font-medium">New</span>
               )}
@@ -151,8 +160,9 @@ const OpponentAutocomplete: React.FC<OpponentAutocompleteProps> = ({
           )}
         </div>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-[--radix-popover-trigger-width] p-0" 
+
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] p-0"
         align="start"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
@@ -178,12 +188,11 @@ const OpponentAutocomplete: React.FC<OpponentAutocompleteProps> = ({
                     onSelect={() => handleSelectProfile(profile)}
                     className="flex items-center gap-3 cursor-pointer"
                   >
-                    {/* Color indicator */}
                     <div
                       className="w-3 h-3 rounded-full flex-shrink-0"
                       style={{ backgroundColor: getColorHex(profile.color) }}
                     />
-                    {/* Avatar */}
+
                     <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
                       {profile.image_url ? (
                         <img
@@ -195,14 +204,13 @@ const OpponentAutocomplete: React.FC<OpponentAutocompleteProps> = ({
                         <User className="h-4 w-4 text-muted-foreground" />
                       )}
                     </div>
-                    {/* Nickname */}
+
                     <span className="truncate">{profile.nickname}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>
             )}
-            
-            {/* Show "Create new" option when there's input but no exact match */}
+
             {value.trim() && !exactMatch && filteredProfiles.length > 0 && (
               <CommandGroup heading="Or create new">
                 <CommandItem
