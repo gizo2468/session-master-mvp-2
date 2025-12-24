@@ -35,7 +35,7 @@ const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl font-bold">Coach Profile</CardTitle>
+        <CardTitle className="text-2xl font-bold text-poker-gold">Coach Profile</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Coach Avatar and Basic Info */}
