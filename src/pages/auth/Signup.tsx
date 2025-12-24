@@ -57,6 +57,8 @@ const Signup: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -103,31 +105,54 @@ const Signup: React.FC = () => {
     }
   };
 
-  // Check email availability
-  const checkEmailAvailability = async (email: string) => {
+  // Check email availability with inline error display
+  const checkEmailAvailability = async (email: string): Promise<boolean> => {
     if (!email || !email.includes('@')) return true;
     
+    setIsCheckingEmail(true);
+    setEmailAlreadyExists(false);
+    
     try {
-      // Check if email exists in profiles table
       const { data, error } = await (supabase as any)
         .rpc('check_email_available', { p_email: email });
       
       if (error) {
-        // Permission errors are expected for unauthenticated users after security lockdown
-        // Assume available and let signup process handle uniqueness validation
-        console.log('Email check not available (unauthenticated)');
+        console.log('Email check not available:', error);
+        form.clearErrors('email');
         return true;
       }
       
-      return data === true; // true if email is available
+      if (data === false) {
+        form.setError('email', { message: 'This email is already registered' });
+        setEmailAlreadyExists(true);
+        return false;
+      } else {
+        form.clearErrors('email');
+        setEmailAlreadyExists(false);
+        return true;
+      }
     } catch (error) {
       console.log('Email check failed:', error);
-      return true; // Assume available on error
+      form.clearErrors('email');
+      return true;
+    } finally {
+      setIsCheckingEmail(false);
     }
   };
 
   const onSubmit = async (values: FormValues) => {
     if (isSubmitting) return; // Prevent double submission
+    
+    // Block submission if there are existing validation errors
+    const hasErrors = Object.keys(form.formState.errors).length > 0;
+    if (hasErrors) {
+      toast({
+        title: "Please fix errors",
+        description: "Please correct the highlighted errors before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     try {
@@ -190,30 +215,20 @@ const Signup: React.FC = () => {
       if (error) {
         console.error("Signup error:", error);
         
-        // Check for specific error types and provide clear messages
+        // Check for specific error types and set inline errors
         if (error.message.includes('User already registered') || 
             error.message.includes('already been registered') ||
             error.message.includes('email address not authorized') ||
             error.code === 'user_already_exists') {
-          toast({
-            title: "Email Already Registered",
-            description: "This email is already registered. Please sign in instead or try resetting your password.",
-            variant: "destructive",
-          });
+          form.setError('email', { message: 'This email is already registered' });
+          setEmailAlreadyExists(true);
         } else if (error.message.includes('username') || 
                    error.message.includes('unique') ||
                    error.message.includes('already taken')) {
-          toast({
-            title: "Username Unavailable", 
-            description: "The username you selected is already taken. Please choose a different one.",
-            variant: "destructive",
-          });
+          form.setError('username', { message: 'Username is already taken' });
         } else if (error.message.includes('email') && error.message.includes('already')) {
-          toast({
-            title: "Email Already Registered",
-            description: "This email is already registered. Please sign in instead.",
-            variant: "destructive",
-          });
+          form.setError('email', { message: 'This email is already registered' });
+          setEmailAlreadyExists(true);
         } else {
           toast({
             title: "Signup Failed",
@@ -426,9 +441,31 @@ const Signup: React.FC = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="your.email@example.com" {...field} enableAutofill autoComplete="email" />
+                      <div className="relative">
+                        <Input 
+                          placeholder="your.email@example.com" 
+                          {...field} 
+                          enableAutofill 
+                          autoComplete="email"
+                          onBlur={(e) => {
+                            field.onBlur();
+                            checkEmailAvailability(e.target.value);
+                          }}
+                        />
+                        {isCheckingEmail && (
+                          <Icon name="Loader" className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
+                    {emailAlreadyExists && (
+                      <Link 
+                        to="/auth/forgot-password" 
+                        className="text-sm text-poker-gold hover:underline mt-1 inline-block"
+                      >
+                        Reset your password →
+                      </Link>
+                    )}
                   </FormItem>
                 )}
               />
