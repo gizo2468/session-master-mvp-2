@@ -170,4 +170,13 @@ textarea:-webkit-autofill:active {
     font-family: 'Space Grotesk', sans-serif;
     @apply font-bold tracking-tight;
   }
+
+  /* Safe area padding for notched devices (iPhone X+) */
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+  }
+  
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0);
+  }
 }
