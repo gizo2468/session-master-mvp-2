@@ -116,70 +116,80 @@ const OpponentLinkSection: React.FC<OpponentLinkSectionProps> = ({ control }) =>
           )}
 
           {/* Add opponent button/dropdown */}
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className="w-full justify-between text-muted-foreground"
+          <div className="relative">
+            <Popover open={open} onOpenChange={setOpen} modal={true}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  className="w-full justify-between text-muted-foreground"
+                >
+                  <div className="flex items-center gap-2">
+                    {selectedOpponents.length > 0 ? (
+                      <>
+                        <Plus className="h-4 w-4" />
+                        Add another opponent...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-4 w-4" />
+                        Select opponent from My Notes...
+                      </>
+                    )}
+                  </div>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent 
+                className="w-[var(--radix-popover-trigger-width)] min-w-[280px] p-0 z-[200]" 
+                align="start"
+                sideOffset={4}
+                onOpenAutoFocus={(e) => e.preventDefault()}
               >
-                <div className="flex items-center gap-2">
-                  {selectedOpponents.length > 0 ? (
-                    <>
-                      <Plus className="h-4 w-4" />
-                      Add another opponent...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="h-4 w-4" />
-                      Select opponent from My Notes...
-                    </>
-                  )}
-                </div>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Search opponents..." />
-                <CommandList>
-                  <CommandEmpty>
-                    {loading ? 'Loading...' : availableOpponents.length === 0 
-                      ? (opponents.length === 0 ? 'No opponents found in My Notes' : 'All opponents already added')
-                      : 'No matching opponents'}
-                  </CommandEmpty>
-                  <CommandGroup>
-                    {availableOpponents.map((opponent) => (
-                      <CommandItem
-                        key={opponent.id}
-                        value={opponent.nickname}
-                        onSelect={() => handleAddOpponent(opponent.id)}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <div
-                          className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-medium"
-                          style={{ backgroundColor: opponent.color || '#ffffff' }}
+                <Command className="bg-popover border rounded-md shadow-lg">
+                  <CommandInput 
+                    placeholder="Search opponents..." 
+                    className="bg-background"
+                  />
+                  <CommandList className="max-h-[200px] bg-background">
+                    <CommandEmpty>
+                      {loading ? 'Loading...' : availableOpponents.length === 0 
+                        ? (opponents.length === 0 ? 'No opponents found in My Notes' : 'All opponents already added')
+                        : 'No matching opponents'}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {availableOpponents.map((opponent) => (
+                        <CommandItem
+                          key={opponent.id}
+                          value={opponent.nickname}
+                          onSelect={() => handleAddOpponent(opponent.id)}
+                          className="flex items-center gap-2 cursor-pointer"
                         >
-                          {opponent.image_url ? (
-                            <img
-                              src={opponent.image_url}
-                              alt={opponent.nickname}
-                              className="w-full h-full rounded-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-gray-600">
-                              {opponent.nickname.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                        <span>{opponent.nickname}</span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+                          <div
+                            className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-medium"
+                            style={{ backgroundColor: opponent.color || '#ffffff' }}
+                          >
+                            {opponent.image_url ? (
+                              <img
+                                src={opponent.image_url}
+                                alt={opponent.nickname}
+                                className="w-full h-full rounded-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-gray-600">
+                                {opponent.nickname.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <span>{opponent.nickname}</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </FormControl>
     </FormItem>
