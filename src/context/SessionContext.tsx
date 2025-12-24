@@ -356,15 +356,27 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (session && session.tables) {
         const tableToDelete = session.tables.find(t => t.id === tableId);
         if (tableToDelete) {
-          const updatedTables = session.tables.filter(table => table.id !== tableId);
+          // Import and call database deletion
+          const { deleteTableFromDatabase } = await import('@/utils/database/sessionDeleter');
+          const deleted = await deleteTableFromDatabase(tableId);
           
-          const updatedSession = {
-            ...session,
-            tables: updatedTables,
-            buyIn: session.buyIn - tableToDelete.buyIn
-          };
-          
-          await sessionOperations.updateSession(updatedSession);
+          if (deleted) {
+            const updatedTables = session.tables.filter(table => table.id !== tableId);
+            
+            const updatedSession = {
+              ...session,
+              tables: updatedTables,
+              buyIn: session.buyIn - tableToDelete.buyIn
+            };
+            
+            await sessionOperations.updateSession(updatedSession);
+          } else {
+            toast({
+              title: "Deletion Failed",
+              description: "Could not delete table. Please try again.",
+              variant: "destructive"
+            });
+          }
         }
       }
     },
