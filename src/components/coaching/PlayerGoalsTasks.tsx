@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/Lucide';
 import { useToast } from '@/hooks/use-toast';
 
@@ -87,6 +89,9 @@ export default function PlayerGoalsTasks({ studentId, mode, coachId }: PlayerGoa
   const [color, setColor] = useState<'red' | 'yellow' | 'orange' | 'green' | 'purple'>('yellow');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  
+  // View All modal
+  const [viewAllOpen, setViewAllOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const isCoach = mode === 'coach';
@@ -342,35 +347,80 @@ export default function PlayerGoalsTasks({ studentId, mode, coachId }: PlayerGoa
                 <p className="text-sm">No key points yet.</p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {goals.map((g) => (
-                   <div key={g.id} className={isCoach ? "flex items-start justify-between p-4 rounded-lg border bg-card/30" : "p-4 rounded-lg border bg-card/30"}>
-                     <div className={isCoach ? "pr-4" : ""}>
-                        <div className="mb-1 flex items-center gap-2">
-                          <span className={`h-2 w-2 rounded-full ${colorDotBgClass(g.color)}`} />
-                          <span className={`font-semibold text-base ${titleColorClass(g.color)}`}>{toTitleCase(g.title)}</span>
-                          {g.image_url && (
-                            <a href={g.image_url} target="_blank" rel="noopener noreferrer" aria-label="View attached image">
-                              <Icon name="Image" className="h-4 w-4" />
-                            </a>
-                          )}
-                        </div>
-                       {g.details && (
-                         <div className="text-sm text-muted-foreground whitespace-pre-wrap">{g.details}</div>
+              <>
+                <div className="space-y-2">
+                  {goals.slice(0, 3).map((g) => (
+                     <div key={g.id} className={isCoach ? "flex items-start justify-between p-4 rounded-lg border bg-card/30" : "p-4 rounded-lg border bg-card/30"}>
+                       <div className={isCoach ? "pr-4" : ""}>
+                          <div className="mb-1 flex items-center gap-2">
+                            <span className={`h-2 w-2 rounded-full ${colorDotBgClass(g.color)}`} />
+                            <span className={`font-semibold text-base ${titleColorClass(g.color)}`}>{toTitleCase(g.title)}</span>
+                            {g.image_url && (
+                              <a href={g.image_url} target="_blank" rel="noopener noreferrer" aria-label="View attached image">
+                                <Icon name="Image" className="h-4 w-4" />
+                              </a>
+                            )}
+                          </div>
+                         {g.details && (
+                           <div className="text-sm text-muted-foreground whitespace-pre-wrap">{g.details}</div>
+                         )}
+                       </div>
+                       {isCoach && (
+                         <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleDelete(g.id)} aria-label="Delete item">
+                           <Icon name="Trash2" className="h-4 w-4" />
+                         </Button>
                        )}
                      </div>
-                     {isCoach && (
-                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleDelete(g.id)} aria-label="Delete item">
-                         <Icon name="Trash2" className="h-4 w-4" />
-                       </Button>
-                     )}
-                   </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+                {goals.length > 3 && (
+                  <div className="flex justify-center pt-4">
+                    <Button variant="outline" size="sm" onClick={() => setViewAllOpen(true)}>
+                      View All ({goals.length})
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
       </CardContent>
+
+      {/* View All Key Focus Points Modal */}
+      <Dialog open={viewAllOpen} onOpenChange={setViewAllOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>All Key Focus Points ({goals.length})</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            <div className="space-y-2">
+              {goals.map((g) => (
+                <div key={g.id} className={isCoach ? "flex items-start justify-between p-4 rounded-lg border bg-card/30" : "p-4 rounded-lg border bg-card/30"}>
+                  <div className={isCoach ? "pr-4" : ""}>
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className={`h-2 w-2 rounded-full ${colorDotBgClass(g.color)}`} />
+                      <span className={`font-semibold text-base ${titleColorClass(g.color)}`}>{toTitleCase(g.title)}</span>
+                      {g.image_url && (
+                        <a href={g.image_url} target="_blank" rel="noopener noreferrer" aria-label="View attached image">
+                          <Icon name="Image" className="h-4 w-4" />
+                        </a>
+                      )}
+                    </div>
+                    {g.details && (
+                      <div className="text-sm text-muted-foreground whitespace-pre-wrap">{g.details}</div>
+                    )}
+                  </div>
+                  {isCoach && (
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleDelete(g.id)} aria-label="Delete item">
+                      <Icon name="Trash2" className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
