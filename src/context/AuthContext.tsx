@@ -419,19 +419,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        console.error("Login error:", error);
+        console.error("Login error:", error.code);
         throw error;
       }
 
       if (data.user) {
         isFreshLogin.current = true;
-        console.log("Login successful for user:", data.user.id, 
-                   "User metadata role:", data.user.user_metadata?.role);
+        console.log("Login successful for user:", data.user.id);
       }
     } catch (error: any) {
+      // Generic error message to prevent user enumeration
       toast({
         title: "Login failed",
-        description: error.message || "An unexpected error occurred",
+        description: "Invalid credentials. Please check your email and password.",
         variant: "destructive",
       });
       throw error;
@@ -463,17 +463,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        console.error("Signup error:", error);
+        console.error("Signup error:", error.code);
         throw error;
       }
 
       // Success message shown when user data is successfully loaded
-      console.log("Signup successful for:", email, "with role:", role, 
-                 "User ID:", data.user?.id);
+      console.log("Signup successful for:", email);
     } catch (error: any) {
+      // Generic error message to prevent user enumeration
       toast({
         title: "Sign up failed",
-        description: error.message || "An unexpected error occurred",
+        description: "Unable to create account. Please check your information and try again.",
         variant: "destructive",
       });
       throw error;
