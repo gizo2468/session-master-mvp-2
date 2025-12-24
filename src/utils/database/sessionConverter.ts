@@ -228,7 +228,7 @@ export const convertDatabaseSessionToPokerSession = (
           name: table.table_name || 'Table',
           format: table.table_type || 'Cash',
           gameType: table.game_format || 'NLH',
-          location: sessionData.location || 'Unknown',
+          location: table.table_name || 'Table',
           buyIn: parseFloat(table.buy_in || '0'),
           initialBuyIn: parseFloat(table.buy_in || '0'),
           currency: table.currency || sessionData.currency || 'USD', // Load currency from table or session
