@@ -12,6 +12,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencySelector } from '@/components/ui/CurrencySelector';
 import Icon from '@/components/ui/Lucide';
 import { Slider } from '@/components/ui/slider';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 import { useSessionContext } from '@/context/SessionContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
@@ -59,6 +61,7 @@ const formSchema = z.object({
   startingBB: z.string().optional(),
   tournamentType: z.string().optional(),
   isMultiDay: z.boolean().default(false),
+  lateRegistration: z.boolean().default(false),
   smallBlind: z.number().min(0).optional(),
   bigBlind: z.number().min(0).optional()
 });
@@ -74,6 +77,8 @@ export default function SessionForm() {
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[2]);
   const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[2] * 2);
+  const [isTournamentTypeOpen, setIsTournamentTypeOpen] = useState(false);
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -88,6 +93,7 @@ export default function SessionForm() {
       startingBB: '',
       tournamentType: undefined,
       isMultiDay: false,
+      lateRegistration: false,
       smallBlind: BLIND_PRESETS.smallBlind[2],
       bigBlind: BLIND_PRESETS.smallBlind[2] * 2
     }
@@ -414,45 +420,52 @@ export default function SessionForm() {
             />
 
             {format === 'Tournament' && (
-              <FormField
-                control={form.control}
-                name="tournamentType"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel className="text-base font-medium">Tournament Type</FormLabel>
-                    <FormControl>
-                      <RadioGroup 
-                        onValueChange={field.onChange} 
-                        value={field.value} 
-                        className="flex flex-wrap gap-2"
-                      >
-                        {TOURNAMENT_TYPES.map((type) => (
-                          <FormItem key={type} className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem 
-                                value={type}
-                                id={type}
-                                className="sr-only peer"
-                              />
-                            </FormControl>
-                            <label
-                              htmlFor={type}
-                              className={`cursor-pointer px-3 py-1 rounded-full text-sm ${
-                                field.value === type
-                                  ? 'bg-poker-gold text-white'
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                              }`}
-                            >
-                              {type}
-                            </label>
-                          </FormItem>
-                        ))}
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <Collapsible open={isTournamentTypeOpen} onOpenChange={setIsTournamentTypeOpen}>
+                <CollapsibleTrigger className="flex items-center justify-between w-full py-2">
+                  <span className="text-base font-medium">Tournament Type</span>
+                  <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isTournamentTypeOpen ? 'rotate-180' : ''}`} />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-2 overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                  <FormField
+                    control={form.control}
+                    name="tournamentType"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormControl>
+                          <RadioGroup 
+                            onValueChange={field.onChange} 
+                            value={field.value} 
+                            className="flex flex-wrap gap-2"
+                          >
+                            {TOURNAMENT_TYPES.map((type) => (
+                              <FormItem key={type} className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem 
+                                    value={type}
+                                    id={type}
+                                    className="sr-only peer"
+                                  />
+                                </FormControl>
+                                <label
+                                  htmlFor={type}
+                                  className={`cursor-pointer px-3 py-1 rounded-full text-sm ${
+                                    field.value === type
+                                      ? 'bg-poker-gold text-white'
+                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {type}
+                                </label>
+                              </FormItem>
+                            ))}
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
             )}
             
             {/* Currency Dropdown */}
@@ -474,25 +487,6 @@ export default function SessionForm() {
               )}
             />
             
-            {/* Table Name */}
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-medium">Table / Session Name</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Venue or site" 
-                      autoComplete="off"
-                      data-form-type="other"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             
             <FormField
               control={form.control}
@@ -581,68 +575,123 @@ export default function SessionForm() {
               />
             )}
             
+            {/* First Table / Session Name - moved before Advanced Options */}
             <FormField
               control={form.control}
-              name="isOnline"
+              name="location"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <FormItem>
+                  <FormLabel className="text-base font-medium">First Table / Session Name</FormLabel>
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
+                    <Input 
+                      placeholder="Venue or site" 
+                      autoComplete="off"
+                      data-form-type="other"
+                      {...field} 
                     />
                   </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Online Game</FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      Check this if you're playing online
-                    </p>
-                  </div>
+                  <FormMessage />
                 </FormItem>
               )}
             />
-            
-            {isOnline && (
-              <FormField
-                control={form.control}
-                name="physicalLocation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-medium">Physical Location</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Where are you playing from?"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
 
-            {format === 'Tournament' && (
-              <FormField
-                control={form.control}
-                name="isMultiDay"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Multi-Day Tournament</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        Check this for tournaments that span multiple days
-                      </p>
-                    </div>
-                  </FormItem>
+            {/* Advanced Options - Collapsible Section */}
+            <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full py-3 border-t pt-4">
+                <span className="text-base font-medium text-gray-700">Advanced Options</span>
+                <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isAdvancedOpen ? 'rotate-180' : ''}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-4 space-y-4 overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                {/* Online Game */}
+                <FormField
+                  control={form.control}
+                  name="isOnline"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Online Game</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          Check this if you're playing online
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                
+                {isOnline && (
+                  <FormField
+                    control={form.control}
+                    name="physicalLocation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium">Physical Location</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Where are you playing from?"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
-            )}
+
+                {/* Multi-Day Tournament - only for Tournament format */}
+                {format === 'Tournament' && (
+                  <FormField
+                    control={form.control}
+                    name="isMultiDay"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Multi-Day Tournament</FormLabel>
+                          <p className="text-sm text-muted-foreground">
+                            Check this for tournaments that span multiple days
+                          </p>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {/* Late Registration - only for Tournament format */}
+                {format === 'Tournament' && (
+                  <FormField
+                    control={form.control}
+                    name="lateRegistration"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Late Registration</FormLabel>
+                          <p className="text-sm text-muted-foreground">
+                            Enable if late registration is available
+                          </p>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </CollapsibleContent>
+            </Collapsible>
             
             <Button
               type="submit"
