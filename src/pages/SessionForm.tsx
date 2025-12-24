@@ -17,9 +17,12 @@ import { ChevronDown } from 'lucide-react';
 import { useSessionContext } from '@/context/SessionContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
+import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 import { PokerSession, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 const TOURNAMENT_TYPES = [
   'Freezeout',
@@ -73,12 +76,20 @@ export default function SessionForm() {
   const { toast } = useToast();
   const { startSession } = useSessionContext();
   const { defaultCurrency, getCurrencySymbol } = useDefaultCurrency();
+  const { isPremium } = usePremiumAccess();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[2]);
   const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[2] * 2);
   const [isTournamentTypeOpen, setIsTournamentTypeOpen] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  
+  // Premium manual blinds state
+  const [isManualBlindsOpen, setIsManualBlindsOpen] = useState(false);
+  const [tempManualSB, setTempManualSB] = useState<string>('');
+  const [tempManualBB, setTempManualBB] = useState<string>('');
+  const [manualBlindsError, setManualBlindsError] = useState<string>('');
+  const [isManualMode, setIsManualMode] = useState(false);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -106,13 +117,13 @@ export default function SessionForm() {
     }
   }, [defaultCurrency, form]);
 
-  // Update big blind whenever small blind changes for cash games
+  // Update big blind whenever small blind changes for cash games (only in auto mode)
   useEffect(() => {
-    if (form.watch('format') === 'Cash') {
+    if (form.watch('format') === 'Cash' && !isManualMode) {
       setBigBlind(smallBlind * 2);
       form.setValue('bigBlind', smallBlind * 2);
     }
-  }, [smallBlind, form]);
+  }, [smallBlind, form, isManualMode]);
   
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
@@ -279,9 +290,51 @@ export default function SessionForm() {
     setSmallBlindIndex(index);
     const newSmallBlind = BLIND_PRESETS.smallBlind[index];
     setSmallBlind(newSmallBlind);
+    setIsManualMode(false); // Reset manual mode when slider is used
     
     form.setValue('smallBlind', newSmallBlind);
     // Big blind will be automatically updated by useEffect
+  };
+
+  // Premium manual blinds handlers
+  const handleOpenManualBlinds = () => {
+    setTempManualSB(smallBlind.toString());
+    setTempManualBB(bigBlind.toString());
+    setManualBlindsError('');
+    setIsManualBlindsOpen(true);
+  };
+
+  const handleSaveManualBlinds = () => {
+    const sb = parseFloat(tempManualSB);
+    const bb = parseFloat(tempManualBB);
+    
+    // Validation: positive numbers only
+    if (isNaN(sb) || sb <= 0) {
+      setManualBlindsError('Small Blind must be a positive number');
+      return;
+    }
+    if (isNaN(bb) || bb <= 0) {
+      setManualBlindsError('Big Blind must be a positive number');
+      return;
+    }
+    // Validation: BB ≥ SB
+    if (bb < sb) {
+      setManualBlindsError('Big Blind must be ≥ Small Blind');
+      return;
+    }
+    
+    // Apply the values
+    setSmallBlind(sb);
+    setBigBlind(bb);
+    form.setValue('smallBlind', sb);
+    form.setValue('bigBlind', bb);
+    setIsManualMode(true);
+    setIsManualBlindsOpen(false);
+  };
+
+  const handleCancelManualBlinds = () => {
+    setManualBlindsError('');
+    setIsManualBlindsOpen(false);
   };
   
   return (
@@ -543,11 +596,23 @@ export default function SessionForm() {
                         <FormLabel>Big Blind</FormLabel>
                         <span className="text-sm font-medium">{getCurrentCurrencySymbol()}{bigBlind}</span>
                       </div>
-                      <div className="py-2 px-3 bg-gray-100 rounded-md border">
-                        <div className="text-sm text-gray-600 text-center">
-                          Auto-set to 2× Small Blind
+                      {isPremium ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleOpenManualBlinds}
+                          className="w-full text-sm text-poker-gold border-poker-gold hover:bg-poker-gold/10"
+                        >
+                          {isManualMode ? 'Edit Manual Blinds' : 'Enter Manual'}
+                        </Button>
+                      ) : (
+                        <div className="py-2 px-3 bg-gray-100 rounded-md border">
+                          <div className="text-sm text-gray-600 text-center">
+                            Auto-set to 2× Small Blind
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </FormItem>
                   </div>
                 </div>
@@ -709,6 +774,66 @@ export default function SessionForm() {
             </Button>
           </form>
         </Form>
+
+        {/* Premium Manual Blinds Dialog */}
+        <Dialog open={isManualBlindsOpen} onOpenChange={setIsManualBlindsOpen}>
+          <DialogContent className="sm:max-w-[320px]">
+            <DialogHeader>
+              <DialogTitle>Set Manual Blinds</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              {manualBlindsError && (
+                <p className="text-sm text-red-500">{manualBlindsError}</p>
+              )}
+              
+              {/* Small Blind */}
+              <div className="space-y-2">
+                <Label htmlFor="manualSmallBlind">Small Blind</Label>
+                <Input
+                  id="manualSmallBlind"
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="e.g. 1"
+                  value={tempManualSB}
+                  onChange={(e) => setTempManualSB(e.target.value)}
+                  min="0"
+                  step="0.01"
+                  autoComplete="off"
+                />
+              </div>
+
+              {/* Big Blind */}
+              <div className="space-y-2">
+                <Label htmlFor="manualBigBlind">Big Blind</Label>
+                <Input
+                  id="manualBigBlind"
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="e.g. 2"
+                  value={tempManualBB}
+                  onChange={(e) => setTempManualBB(e.target.value)}
+                  min="0"
+                  step="0.01"
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button type="button" variant="outline" onClick={handleCancelManualBlinds}>
+                Cancel
+              </Button>
+              <Button 
+                type="button" 
+                onClick={handleSaveManualBlinds}
+                className="bg-poker-gold hover:bg-poker-darkGold text-white"
+              >
+                Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
