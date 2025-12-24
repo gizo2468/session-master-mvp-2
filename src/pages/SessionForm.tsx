@@ -421,9 +421,9 @@ export default function SessionForm() {
 
             {format === 'Tournament' && (
               <Collapsible open={isTournamentTypeOpen} onOpenChange={setIsTournamentTypeOpen}>
-                <CollapsibleTrigger className="flex items-center justify-between w-full py-2">
-                  <span className="text-base font-medium">Tournament Type</span>
-                  <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isTournamentTypeOpen ? 'rotate-180' : ''}`} />
+                <CollapsibleTrigger className="flex items-center justify-center gap-2 w-full py-2">
+                  <span className="text-base font-medium text-poker-gold">Tournament Type</span>
+                  <ChevronDown className={`h-4 w-4 text-poker-gold transition-transform duration-200 ${isTournamentTypeOpen ? 'rotate-180' : ''}`} />
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-2 overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
                   <FormField
@@ -597,9 +597,9 @@ export default function SessionForm() {
 
             {/* Advanced Options - Collapsible Section */}
             <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
-              <CollapsibleTrigger className="flex items-center justify-between w-full py-3 border-t pt-4">
-                <span className="text-base font-medium text-gray-700">Advanced Options</span>
-                <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isAdvancedOpen ? 'rotate-180' : ''}`} />
+              <CollapsibleTrigger className="flex items-center justify-center gap-2 w-full py-3 border-t pt-4">
+                <span className="text-base font-medium text-poker-gold">Advanced Options</span>
+                <ChevronDown className={`h-4 w-4 text-poker-gold transition-transform duration-200 ${isAdvancedOpen ? 'rotate-180' : ''}`} />
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-4 space-y-4 overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
                 {/* Online Game */}
