@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
 import AddTableForm from '@/components/poker/AddTableForm';
@@ -18,16 +18,25 @@ import { useNavigate } from 'react-router-dom';
 export default function LiveSession() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Check if navigated from stack_check notification to auto-open BB/Stack modal
+  const shouldOpenBBStackModal = location.state?.openBBStackModal === true;
   
   const { currentSession, isLoadingSession, loadingError } = useSessionLoader(id);
   const sessionActions = useSessionActions(currentSession);
   const rebuyActions = useRebuyActions(currentSession?.id);
   const endTableActions = useEndTableActions(currentSession);
   
-  // Scroll to top when component mounts
+  // Scroll to top when component mounts and clear navigation state
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+    
+    // Clear the navigation state after reading it to prevent re-opening on refresh
+    if (location.state?.openBBStackModal) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
   
   // Loading state with better error handling
   if (isLoadingSession) {
@@ -139,6 +148,7 @@ export default function LiveSession() {
               window.dispatchEvent(new CustomEvent('refreshBlindHistory'));
             }}
             activeTables={currentSession.tables?.filter(table => table.isActive) || []}
+            autoOpenBBStackModal={shouldOpenBBStackModal}
           />
           
           <SessionDetailsCard 

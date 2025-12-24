@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useStackCheckInterval } from './useStackCheckInterval';
+import { createNotification } from '@/services/notificationService';
 
 /**
  * Hook that triggers stack check reminders during a live session
@@ -8,10 +9,14 @@ import { useStackCheckInterval } from './useStackCheckInterval';
  * 
  * @param isSessionActive - Whether a live session is currently running
  * @param sessionStartTimeUTC - The UTC timestamp (ms) when the session started
+ * @param sessionId - The ID of the current session (for notification linking)
+ * @param userId - The ID of the current user (for notification)
  */
 export const useStackCheckReminder = (
   isSessionActive: boolean,
-  sessionStartTimeUTC: number | undefined
+  sessionStartTimeUTC: number | undefined,
+  sessionId?: string,
+  userId?: string
 ) => {
   const { interval } = useStackCheckInterval();
   const lastReminderCountRef = useRef<number>(0);
@@ -44,6 +49,17 @@ export const useStackCheckReminder = (
           description: 'Update your chip count for accurate session tracking.',
           duration: 8000,
         });
+
+        // Also create a notification for the Notifications screen
+        if (sessionId && userId) {
+          createNotification({
+            recipient_user_id: userId,
+            type: 'stack_check',
+            title: '🔔 Time to check your stack!',
+            body: 'Update your chip count for accurate session tracking.',
+            session_id: sessionId,
+          });
+        }
 
         console.log('📊 Stack check reminder triggered:', {
           elapsedMinutes: Math.floor(elapsedMinutes),

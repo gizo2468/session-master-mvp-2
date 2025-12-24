@@ -52,6 +52,13 @@ export default function Notifications() {
     if (notification.type === 'connection_approved') {
       navigate('/dashboard');
     }
+    
+    // For stack_check notifications, navigate to Live Session and auto-open BB/Stack modal
+    if (notification.type === 'stack_check' && notification.session_id) {
+      navigate(`/session/${notification.session_id}`, { 
+        state: { openBBStackModal: true } 
+      });
+    }
   };
 
   const getNotificationIcon = (type: string) => {
@@ -66,6 +73,8 @@ export default function Notifications() {
         return 'UserPlus';
       case 'connection_approved':
         return 'UserCheck';
+      case 'stack_check':
+        return 'Clock';
       default:
         return 'Bell';
     }
