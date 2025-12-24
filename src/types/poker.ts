@@ -142,6 +142,7 @@ export interface TableData {
   nextDayStart?: Date;
   chipsCarryover?: number;
   dayEndedWithoutElimination?: boolean;
+  lateRegistration?: boolean;
 }
 
 export interface SessionData {

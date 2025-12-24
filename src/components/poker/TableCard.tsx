@@ -196,6 +196,9 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
             <div className="text-center">
               <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
               <div className="font-medium">{formattedStartTime}</div>
+              {table.lateRegistration && (
+                <div className="text-xs text-gray-500 italic mt-0.5">*Late-Reg*</div>
+              )}
             </div>
           </div>
           
