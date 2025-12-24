@@ -295,19 +295,6 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
               </>
             )}
 
-            <div>
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Table notes"
-                className="min-h-[80px]"
-                autoComplete="off"
-                data-form-type="other"
-              />
-            </div>
-
             <div className="flex gap-2 pt-4">
               {onDelete && (
                 <Button 
