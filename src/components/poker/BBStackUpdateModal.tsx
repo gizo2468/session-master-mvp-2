@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,10 +60,20 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
   const [latestByTable, setLatestByTable] = useState<Record<string, { level?: number; bb?: number; smallBlind?: number; bigBlind?: number }>>({});
   const { liveState, updateLiveState } = useSessionLiveState(sessionId);
   const { toast } = useToast();
+  
+  // Track if we've already initialized to prevent state resets while typing
+  const hasInitializedRef = useRef(false);
 
   // Use tables directly from props (already loaded in session)
   const activeTables = tables;
   const currencySymbol = getCurrencySymbol(currency);
+  
+  // Reset initialization flag when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      hasInitializedRef.current = false;
+    }
+  }, [isOpen]);
 
   // Fetch latest BB/Stack per table for this session (for prefill)
   useEffect(() => {
@@ -95,37 +105,22 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     updateData: updateData.length
   });
 
-  // Safety net: if modal is open and we have tables but no updateData yet, initialize once
+  // Initialize state when modal opens - only runs once per modal open
   useEffect(() => {
-    if (isOpen && activeTables.length > 0 && updateData.length === 0) {
-      const initialData = activeTables.map(table => {
-        const isCashTable = table.format === 'Cash';
-        const latest = latestByTable[table.id] || {};
-        if (isCashTable) {
-          const smallBlindValue = latest.smallBlind ?? table.smallBlind ?? 1;
-          const bigBlindValue = latest.bigBlind ?? table.bigBlind ?? (smallBlindValue * 2);
-          return { tableId: table.id, level: 1, stack: '', bb: '', smallBlind: smallBlindValue, bigBlind: bigBlindValue };
-        }
-        const defaultLevel = editingLevel || latest.level || 1;
-        const defaultBB = latest.bb ?? table.startingBB;
-        return { tableId: table.id, level: defaultLevel, stack: '', bb: defaultBB ? String(defaultBB) : '', smallBlind: 0, bigBlind: 0 };
-      });
-      setUpdateData(initialData);
-    }
-  }, [isOpen, activeTables, updateData.length, editingLevel, latestByTable]);
-
-  // Initialize state when modal opens - instant load with saved/default values
-  useEffect(() => {
-    if (isOpen && activeTables.length > 0) {
+    // Only initialize once when modal opens
+    if (isOpen && activeTables.length > 0 && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      
       // Initialize immediately with saved data or defaults (instant UI)
       console.log('✅ BBStackUpdateModal: Initializing with tables:', activeTables.length);
       const initialData = activeTables.map(table => {
         const isCashTable = table.format === 'Cash';
         const savedData = liveState.bbStackUpdates?.[table.id];
+        const latest = latestByTable[table.id] || {};
         
         if (isCashTable) {
-          const smallBlindValue = savedData?.smallBlind ?? table.smallBlind ?? 1;
-          const bigBlindValue = savedData?.bigBlind ?? table.bigBlind ?? (smallBlindValue * 2);
+          const smallBlindValue = savedData?.smallBlind ?? latest.smallBlind ?? table.smallBlind ?? 1;
+          const bigBlindValue = savedData?.bigBlind ?? latest.bigBlind ?? table.bigBlind ?? (smallBlindValue * 2);
           
           return {
             tableId: table.id,
@@ -137,13 +132,15 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
           };
         } else {
           // For tournaments, use editing level or saved level or default to 1
-          const defaultLevel = editingLevel || savedData?.level || 1;
+          const defaultLevel = editingLevel || savedData?.level || latest.level || 1;
+          const defaultBB = editingLevel ? initialBB : (savedData?.bb ? parseInt(savedData.bb) : latest.bb ?? table.startingBB);
+          const defaultStack = editingLevel ? initialStack : (savedData?.stack ? parseInt(savedData.stack) : table.currentStack);
           
           return {
             tableId: table.id,
             level: defaultLevel,
-            stack: editingLevel ? (initialStack?.toString() ?? '') : (savedData?.stack ?? table.currentStack?.toString() ?? ''),
-            bb: editingLevel ? (initialBB?.toString() ?? '') : (savedData?.bb ?? table.startingBB?.toString() ?? ''),
+            stack: defaultStack?.toString() ?? '',
+            bb: defaultBB?.toString() ?? '',
             smallBlind: 0,
             bigBlind: 0
           };
@@ -153,7 +150,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       setUpdateData(initialData);
       setValidationError('');
       
-      // Fetch highest levels in background (batch)
+      // Fetch highest levels in background (batch) for tournaments
       const tournamentTableIds = activeTables.filter(t => t.format !== 'Cash').map(t => t.id);
       if (tournamentTableIds.length > 0 && !editingLevel) {
         BBStackUpdateService.getHighestLevelsBatch(tournamentTableIds).then(levels => {
@@ -179,7 +176,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
         });
       }
     }
-  }, [isOpen, activeTables, liveState.bbStackUpdates, editingLevel, initialBB, initialStack]);
+  }, [isOpen, activeTables, editingLevel, initialBB, initialStack]); // Removed liveState.bbStackUpdates from deps
 
   const handleLevelChange = (tableId: string, level: string) => {
     const newLevel = parseInt(level);
