@@ -80,11 +80,21 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
   const currencySymbol = getCurrencySymbol(tableCurrency);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Edit Table</DialogTitle>
-        </DialogHeader>
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setShowDeleteConfirm(false);
+        }
+        onOpenChange(isOpen);
+      }}
+    >
+      <DialogContent className={`max-w-md max-h-[90vh] flex flex-col ${showDeleteConfirm ? '[&>button]:hidden' : ''}`}>
+        {!showDeleteConfirm && (
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle>Edit Table</DialogTitle>
+          </DialogHeader>
+        )}
 
         {!showDeleteConfirm ? (
           <div className="flex-1 overflow-y-auto space-y-4">
