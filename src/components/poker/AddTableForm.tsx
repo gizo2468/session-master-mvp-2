@@ -10,6 +10,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { getCurrencySymbol, useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 
@@ -18,9 +20,9 @@ interface AddTableFormProps {
   onOpenChange: (open: boolean) => void;
   onAddTable: (tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'>) => void;
   fixedFormat?: 'Cash' | 'Tournament';
-  sessionFormat?: 'Cash' | 'Tournament'; // New prop to auto-select format
-  isCompletedSession?: boolean; // New prop to show payout field for completed sessions
-  sessionCurrency?: string; // New prop for session currency
+  sessionFormat?: 'Cash' | 'Tournament';
+  isCompletedSession?: boolean;
+  sessionCurrency?: string;
 }
 
 const TOURNAMENT_TYPES = [
@@ -48,31 +50,31 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
   sessionCurrency = 'USD'
 }) => {
   const { defaultCurrency } = useDefaultCurrency();
-  // Auto-select format based on session format or use fixedFormat
   const [format, setFormat] = useState<'Cash' | 'Tournament'>(
     fixedFormat || sessionFormat || 'Cash'
   );
   const [gameType, setGameType] = useState<'NLH' | 'PLO'>('NLH');
-  const [tableName, setTableName] = useState(''); // Renamed from location
+  const [tableName, setTableName] = useState('');
   const [buyIn, setBuyIn] = useState('');
-  const [payout, setPayout] = useState(''); // New payout field for completed sessions
-  const [currency, setCurrency] = useState(defaultCurrency || 'USD'); // Currency field - default to user's currency
-  const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
+  const [payout, setPayout] = useState('');
+  const [currency, setCurrency] = useState(defaultCurrency || 'USD');
+  const [smallBlindIndex, setSmallBlindIndex] = useState(2);
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[smallBlindIndex]);
-  const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[smallBlindIndex] * 2); // Always 2x small blind for cash
+  const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[smallBlindIndex] * 2);
   const [startingBB, setStartingBB] = useState('');
   const [tournamentType, setTournamentType] = useState<string>('');
   const [isMultiDay, setIsMultiDay] = useState(false);
+  const [lateRegistration, setLateRegistration] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [isTournamentTypeOpen, setIsTournamentTypeOpen] = useState(false);
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
-  // Auto-select format when sessionFormat changes
   useEffect(() => {
     if (!fixedFormat && sessionFormat) {
       setFormat(sessionFormat);
     }
   }, [fixedFormat, sessionFormat]);
 
-  // Set currency to user's default when component loads
   useEffect(() => {
     if (defaultCurrency) {
       setCurrency(defaultCurrency);
@@ -85,7 +87,6 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
     }
   }, [fixedFormat]);
 
-  // Update big blind whenever small blind changes for cash games
   useEffect(() => {
     if (format === 'Cash') {
       setBigBlind(smallBlind * 2);
@@ -93,7 +94,6 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
   }, [smallBlind, format]);
   
   const validateForm = (): boolean => {
-    // Clear previous validation error
     setValidationError(null);
     
     if (!buyIn) {
@@ -125,12 +125,12 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
     const tableData: Omit<TableData, 'id' | 'startTime' | 'isActive'> = {
       format,
       gameType,
-      location: tableName || `${format} Game`, // Use tableName or default to format
+      location: tableName || `${format} Game`,
       buyIn: parseFloat(buyIn),
       initialBuyIn: parseFloat(buyIn),
-      currency, // Add currency to table data
+      currency,
       ...(isCompletedSession && payout && {
-        endTime: new Date(), // Mark as completed
+        endTime: new Date(),
         cashOut: parseFloat(payout),
       }),
       ...(format === 'Cash' && {
@@ -154,17 +154,20 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
   const resetForm = () => {
     setFormat(fixedFormat || sessionFormat || 'Cash');
     setGameType('NLH');
-    setTableName(''); // Reset tableName instead of location
+    setTableName('');
     setBuyIn('');
-    setPayout(''); // Reset payout field
-    setCurrency(defaultCurrency || 'USD'); // Reset currency to user's default currency
+    setPayout('');
+    setCurrency(defaultCurrency || 'USD');
     setSmallBlindIndex(2);
     setSmallBlind(BLIND_PRESETS.smallBlind[2]);
-    setBigBlind(BLIND_PRESETS.smallBlind[2] * 2); // Reset to 2x small blind
+    setBigBlind(BLIND_PRESETS.smallBlind[2] * 2);
     setStartingBB('');
     setTournamentType('');
     setIsMultiDay(false);
+    setLateRegistration(false);
     setValidationError(null);
+    setIsTournamentTypeOpen(false);
+    setIsAdvancedOpen(false);
   };
   
   const handleSmallBlindChange = (value: number[]) => {
@@ -172,7 +175,6 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
     setSmallBlindIndex(index);
     const newSmallBlind = BLIND_PRESETS.smallBlind[index];
     setSmallBlind(newSmallBlind);
-    // Big blind will be automatically updated by useEffect
   };
 
   return (
@@ -187,134 +189,150 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
-          <div className="space-y-2">
-            <Label htmlFor="tableName">Table Name (Optional)</Label>
-            <Input
-              id="tableName"
-              placeholder="Table identifier"
-              value={tableName}
-              onChange={(e) => setTableName(e.target.value)}
-              autoComplete="off"
-              data-form-type="other"
-            />
-          </div>
-
-          {!fixedFormat && (
+            {/* Table Name */}
             <div className="space-y-2">
-              <Label>Format</Label>
+              <Label htmlFor="tableName">Table Name (Optional)</Label>
+              <Input
+                id="tableName"
+                placeholder="Table identifier"
+                value={tableName}
+                onChange={(e) => setTableName(e.target.value)}
+                autoComplete="off"
+                data-form-type="other"
+              />
+            </div>
+
+            {/* Game Type - Moved up after Table Name */}
+            <div className="space-y-2">
+              <Label>Game Type</Label>
               <RadioGroup 
-                value={format} 
-                onValueChange={(value) => setFormat(value as 'Cash' | 'Tournament')}
+                value={gameType} 
+                onValueChange={(value) => setGameType(value as 'NLH' | 'PLO')}
                 className="flex space-x-4"
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="Cash" id="cash" />
-                  <Label htmlFor="cash" className="cursor-pointer">Cash</Label>
+                  <RadioGroupItem value="NLH" id="nlh" />
+                  <Label htmlFor="nlh" className="cursor-pointer">NLH</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="Tournament" id="tournament" />
-                  <Label htmlFor="tournament" className="cursor-pointer">Tournament</Label>
+                  <RadioGroupItem value="PLO" id="plo" />
+                  <Label htmlFor="plo" className="cursor-pointer">PLO</Label>
                 </div>
               </RadioGroup>
             </div>
-          )}
 
-          {format === 'Tournament' && (
-            <div className="space-y-2">
-              <Label className={`${format === 'Tournament' ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ''}`}>Tournament Type</Label>
-              <RadioGroup 
-                value={tournamentType}
-                onValueChange={setTournamentType}
-                className="flex flex-wrap gap-2"
-              >
-                {TOURNAMENT_TYPES.map((type) => (
-                  <div key={type} className="flex items-center">
-                    <RadioGroupItem 
-                      value={type}
-                      id={`type-${type}`}
-                      className="sr-only peer"
-                      required={format === 'Tournament'}
-                    />
-                    <Label
-                      htmlFor={`type-${type}`}
-                      className={`cursor-pointer px-3 py-1 rounded-full text-sm ${
-                        tournamentType === type
-                          ? 'bg-poker-gold text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {type}
-                    </Label>
+            {/* Format Selection */}
+            {!fixedFormat && (
+              <div className="space-y-2">
+                <Label>Format</Label>
+                <RadioGroup 
+                  value={format} 
+                  onValueChange={(value) => setFormat(value as 'Cash' | 'Tournament')}
+                  className="flex space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Cash" id="cash" />
+                    <Label htmlFor="cash" className="cursor-pointer">Cash</Label>
                   </div>
-                ))}
-              </RadioGroup>
-              {format === 'Tournament' && validationError && validationError.includes('Tournament Type') && (
-                <p className="text-sm font-medium text-destructive">{validationError}</p>
-              )}
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label>Game Type</Label>
-            <RadioGroup 
-              value={gameType} 
-              onValueChange={(value) => setGameType(value as 'NLH' | 'PLO')}
-              className="flex space-x-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="NLH" id="nlh" />
-                <Label htmlFor="nlh" className="cursor-pointer">NLH</Label>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Tournament" id="tournament" />
+                    <Label htmlFor="tournament" className="cursor-pointer">Tournament</Label>
+                  </div>
+                </RadioGroup>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="PLO" id="plo" />
-                <Label htmlFor="plo" className="cursor-pointer">PLO</Label>
-              </div>
-            </RadioGroup>
-          </div>
+            )}
 
-          <div className="space-y-2">
-            <Label htmlFor="currency">Currency</Label>
-            <CurrencySelector
-              value={currency}
-              onValueChange={setCurrency}
-              placeholder="Select currency"
-            />
-          </div>
+            {/* Tournament Type - Collapsible */}
+            {format === 'Tournament' && (
+              <Collapsible open={isTournamentTypeOpen} onOpenChange={setIsTournamentTypeOpen}>
+                <CollapsibleTrigger className="flex items-center justify-center gap-2 w-full py-2">
+                  <span className={`text-base font-medium text-poker-gold ${!tournamentType ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ''}`}>
+                    Tournament Type{tournamentType ? ` - ${tournamentType}` : ''}
+                  </span>
+                  <ChevronDown className={`h-4 w-4 text-poker-gold transition-transform duration-200 ${isTournamentTypeOpen ? 'rotate-180' : ''}`} />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-2 overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                  <RadioGroup 
+                    value={tournamentType}
+                    onValueChange={(value) => {
+                      setTournamentType(value);
+                      setIsTournamentTypeOpen(false);
+                    }}
+                    className="flex flex-wrap gap-2"
+                  >
+                    {TOURNAMENT_TYPES.map((type) => (
+                      <div key={type} className="flex items-center">
+                        <RadioGroupItem 
+                          value={type}
+                          id={`type-${type}`}
+                          className="sr-only peer"
+                        />
+                        <Label
+                          htmlFor={`type-${type}`}
+                          className={`cursor-pointer px-3 py-1 rounded-full text-sm ${
+                            tournamentType === type
+                              ? 'bg-poker-gold text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {type}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                  {validationError && validationError.includes('Tournament Type') && (
+                    <p className="text-sm font-medium text-destructive mt-2">{validationError}</p>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
 
-          <div className="space-y-2">
-            <Label htmlFor="buyIn">Buy-in Amount ({getCurrencySymbol(currency)})</Label>
-            <Input
-              id="buyIn"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="100.00"
-              value={buyIn}
-              onChange={(e) => setBuyIn(e.target.value)}
-              autoComplete="off"
-              required
-            />
-          </div>
-
-          {isCompletedSession && (
+            {/* Currency */}
             <div className="space-y-2">
-              <Label htmlFor="payout">Payout / Cash-out Amount ({getCurrencySymbol(currency)})</Label>
+              <Label htmlFor="currency">Currency</Label>
+              <CurrencySelector
+                value={currency}
+                onValueChange={setCurrency}
+                placeholder="Select currency"
+              />
+            </div>
+
+            {/* Buy-in */}
+            <div className="space-y-2">
+              <Label htmlFor="buyIn">Buy-in Amount ({getCurrencySymbol(currency)})</Label>
               <Input
-                id="payout"
+                id="buyIn"
                 type="number"
                 min="0"
                 step="0.01"
-                placeholder="0.00"
-                value={payout}
-                onChange={(e) => setPayout(e.target.value)}
+                placeholder="100.00"
+                value={buyIn}
+                onChange={(e) => setBuyIn(e.target.value)}
                 autoComplete="off"
                 required
               />
             </div>
-          )}
 
-          {format === 'Tournament' && (
-            <>
+            {/* Payout for completed sessions */}
+            {isCompletedSession && (
+              <div className="space-y-2">
+                <Label htmlFor="payout">Payout / Cash-out Amount ({getCurrencySymbol(currency)})</Label>
+                <Input
+                  id="payout"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={payout}
+                  onChange={(e) => setPayout(e.target.value)}
+                  autoComplete="off"
+                  required
+                />
+              </div>
+            )}
+
+            {/* Tournament Starting BB */}
+            {format === 'Tournament' && (
               <div className="space-y-2">
                 <Label htmlFor="startingBB">Starting BB Amount</Label>
                 <Input
@@ -327,81 +345,111 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
                   autoComplete="off"
                 />
               </div>
-              
-              <div className="flex items-center space-x-3 space-y-0 rounded-md border p-4">
-                <Checkbox
-                  id="multiDay"
-                  checked={isMultiDay}
-                  onCheckedChange={(checked) => setIsMultiDay(checked === true)}
-                />
-                <div className="space-y-1 leading-none">
-                  <Label htmlFor="multiDay" className="cursor-pointer">
-                    Multi-Day Tournament
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Check this for tournaments that span multiple days
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
+            )}
 
-          {format === 'Cash' && (
-            <div className="space-y-4">
-              <div className="flex justify-between mb-1">
-                <Label className="text-base font-medium">Blinds</Label>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <Label>Small Blind</Label>
-                    <span className="text-sm font-medium">{getCurrencySymbol(currency)}{smallBlind}</span>
-                  </div>
-                  <Slider
-                    defaultValue={[smallBlindIndex]}
-                    max={BLIND_PRESETS.smallBlind.length - 1}
-                    step={1}
-                    onValueChange={handleSmallBlindChange}
-                    className="py-2"
-                  />
+            {/* Cash Game Blinds */}
+            {format === 'Cash' && (
+              <div className="space-y-4">
+                <div className="flex justify-between mb-1">
+                  <Label className="text-base font-medium">Blinds</Label>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <Label>Big Blind</Label>
-                    <span className="text-sm font-medium">{getCurrencySymbol(currency)}{bigBlind}</span>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Label>Small Blind</Label>
+                      <span className="text-sm font-medium">{getCurrencySymbol(currency)}{smallBlind}</span>
+                    </div>
+                    <Slider
+                      defaultValue={[smallBlindIndex]}
+                      max={BLIND_PRESETS.smallBlind.length - 1}
+                      step={1}
+                      onValueChange={handleSmallBlindChange}
+                      className="py-2"
+                    />
                   </div>
-                  <div className="py-2 px-3 bg-gray-100 rounded-md border">
-                    <div className="text-sm text-gray-600 text-center">
-                      Auto-set to 2× Small Blind
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Label>Big Blind</Label>
+                      <span className="text-sm font-medium">{getCurrencySymbol(currency)}{bigBlind}</span>
+                    </div>
+                    <div className="py-2 px-3 bg-gray-100 rounded-md border">
+                      <div className="text-sm text-gray-600 text-center">
+                        Auto-set to 2× Small Blind
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => {
-                resetForm();
-                onOpenChange(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit"
-              className="bg-poker-gold hover:bg-poker-darkGold text-white"
-            >
-              Add Table
-            </Button>
-          </div>
-        </form>
-      </div>
-    </DialogContent>
-  </Dialog>
+            {/* Advanced Options - Collapsible */}
+            {format === 'Tournament' && (
+              <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
+                <CollapsibleTrigger className="flex items-center justify-center gap-2 w-full py-3">
+                  <span className="text-base font-medium text-poker-gold">Advanced Options</span>
+                  <ChevronDown className={`h-4 w-4 text-poker-gold transition-transform duration-200 ${isAdvancedOpen ? 'rotate-180' : ''}`} />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3 space-y-3 overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                  {/* Multi-Day Tournament */}
+                  <div className="flex items-center space-x-3 rounded-md border p-3">
+                    <Checkbox
+                      id="multiDay"
+                      checked={isMultiDay}
+                      onCheckedChange={(checked) => setIsMultiDay(checked === true)}
+                    />
+                    <div className="space-y-0.5 leading-none">
+                      <Label htmlFor="multiDay" className="cursor-pointer text-sm">
+                        Multi-Day Tournament
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        For tournaments spanning multiple days
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Late Registration */}
+                  <div className="flex items-center space-x-3 rounded-md border p-3">
+                    <Checkbox
+                      id="lateReg"
+                      checked={lateRegistration}
+                      onCheckedChange={(checked) => setLateRegistration(checked === true)}
+                    />
+                    <div className="space-y-0.5 leading-none">
+                      <Label htmlFor="lateReg" className="cursor-pointer text-sm">
+                        Late Registration
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Registered after the tournament started
+                      </p>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  resetForm();
+                  onOpenChange(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                className="bg-poker-gold hover:bg-poker-darkGold text-white"
+              >
+                Add Table
+              </Button>
+            </div>
+          </form>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
