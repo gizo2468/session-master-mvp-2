@@ -24,9 +24,10 @@ const config: CapacitorConfig = {
       enabled: true
     }
   },
-  // Add Supabase specific configuration
   ios: {
-    contentInset: 'automatic'
+    contentInset: 'automatic',
+    allowsLinkPreview: false,
+    swipeBackEnabled: true
   }
 };
 
