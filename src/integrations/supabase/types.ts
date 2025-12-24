@@ -343,6 +343,7 @@ export type Database = {
           notification_preferences: Json
           online_nickname: string | null
           role: string
+          stack_check_interval: number | null
           students_coached_count: number
           updated_at: string
           username: string | null
@@ -365,6 +366,7 @@ export type Database = {
           notification_preferences?: Json
           online_nickname?: string | null
           role?: string
+          stack_check_interval?: number | null
           students_coached_count?: number
           updated_at?: string
           username?: string | null
@@ -387,6 +389,7 @@ export type Database = {
           notification_preferences?: Json
           online_nickname?: string | null
           role?: string
+          stack_check_interval?: number | null
           students_coached_count?: number
           updated_at?: string
           username?: string | null

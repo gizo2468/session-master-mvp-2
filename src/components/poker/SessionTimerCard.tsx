@@ -5,6 +5,7 @@ import Icon from '@/components/ui/Lucide';
 import { format as dateFormat } from 'date-fns';
 import { useSessionContext } from '@/context/SessionContext';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
+import { useStackCheckReminder } from '@/hooks/useStackCheckReminder';
 import BBStackUpdateModal from './BBStackUpdateModal';
 import HandTableSelectionModal from './HandTableSelectionModal';
 import { TableData } from '@/types/poker';
@@ -43,6 +44,9 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   const [showHandTableModal, setShowHandTableModal] = useState(false);
   const { updateSessionDuration, activeSession } = useSessionContext();
   const updateCounterRef = useRef(0);
+
+  // Stack check reminder - reads interval from user settings
+  useStackCheckReminder(true, startTimeUTC);
   
   // CRITICAL FIX: Calculate duration from actual start time, not accumulated state
   const calculateActualElapsedTime = useCallback(() => {
