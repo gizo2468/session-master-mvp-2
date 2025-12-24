@@ -141,6 +141,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
         startingBB: startingBB ? parseInt(startingBB) : undefined,
         tournamentTypes: tournamentType ? [tournamentType] : undefined,
         isMultiDay: format === 'Tournament' ? isMultiDay : undefined,
+        lateRegistration: format === 'Tournament' ? lateRegistration : undefined,
       }),
       rebuys: 0,
       addOns: 0,
