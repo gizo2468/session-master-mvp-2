@@ -3,9 +3,26 @@ import { detectDeckType, mapColorToSuit, DeckTypeResult } from './detectDeckType
 import { detectApp } from './detectApp.ts';
 import { getAppProfile } from './appProfiles.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const getAllowedOrigins = () => {
+  return [
+    'https://session-master-mvp.lovable.app',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://localhost:3000',
+  ];
+};
+
+const getCorsHeaders = (origin: string | null) => {
+  const allowedOrigins = getAllowedOrigins();
+  const allowedOrigin = origin && allowedOrigins.includes(origin) 
+    ? origin 
+    : allowedOrigins[0];
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Credentials': 'true',
+  };
 };
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -134,6 +151,8 @@ serve(async (req) => {
     origin: origin,
     contentType: req.headers.get('content-type')
   });
+
+  const corsHeaders = getCorsHeaders(origin);
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -1845,7 +1864,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
 
   } catch (error) {
     console.error('analyze-poker-hand error:', error instanceof Error ? error.message : 'Unknown error');
-    const headers = corsHeaders;
+    
 
     return new Response(
       JSON.stringify({ 
