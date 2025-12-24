@@ -315,14 +315,27 @@ export class BBStackUpdateService {
           table_id: update.tableId,
         };
 
-        // Add tournament fields if provided
-        if (update.level !== undefined) row.level = update.level;
-        if (update.stack && update.stack !== '') row.stack = parseInt(update.stack);
-        if (update.bb && update.bb !== '') row.bb = parseInt(update.bb);
+        // Check if this is a tournament update (has level) or cash game update (has blinds)
+        const isTournament = update.level !== undefined;
+        const isCashGame = update.smallBlind !== undefined || update.bigBlind !== undefined;
 
-        // Add cash game fields if provided
-        if (update.smallBlind !== undefined) row.small_blind = update.smallBlind;
-        if (update.bigBlind !== undefined) row.big_blind = update.bigBlind;
+        if (isTournament) {
+          // For tournaments: ALL of level, stack, bb must be set (database constraint)
+          row.level = update.level;
+          row.stack = update.stack && update.stack !== '' ? parseInt(update.stack) : 0;
+          row.bb = update.bb && update.bb !== '' ? parseInt(update.bb) : 0;
+          // Ensure cash fields are null for constraint
+          row.small_blind = null;
+          row.big_blind = null;
+        } else if (isCashGame) {
+          // For cash games: both blinds must be set (database constraint)
+          row.small_blind = update.smallBlind ?? 0;
+          row.big_blind = update.bigBlind ?? 0;
+          // Ensure tournament fields are null for constraint
+          row.level = null;
+          row.stack = null;
+          row.bb = null;
+        }
 
         return row;
       });
