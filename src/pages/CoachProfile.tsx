@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -74,6 +76,10 @@ const CoachProfile: React.FC = () => {
   const [reviewHandId, setReviewHandId] = useState<string | null>(null);
   const [reviewSessionId, setReviewSessionId] = useState<string | null>(null);
   const [handReviewOpen, setHandReviewOpen] = useState(false);
+  
+  // View All modals
+  const [viewAllSessionsOpen, setViewAllSessionsOpen] = useState(false);
+  const [viewAllHandsOpen, setViewAllHandsOpen] = useState(false);
 
   useEffect(() => {
     const loadCoachData = async () => {
@@ -422,53 +428,62 @@ const CoachProfile: React.FC = () => {
               <p>No sessions have been shared with this coach yet.</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {sharedSessions.map((session) => {
-                const profit = (session.cash_out || 0) - session.buy_in;
-                const currencySymbol = getCurrencySymbol(session.currency || coach?.default_currency);
-                return (
-                  <div
-                    key={session.id}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors cursor-pointer"
-                    onClick={() => {
-                      setSelectedSessionId(session.id);
-                      setSelectedPlayerId(user.id);
-                    }}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">{session.game_type}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {session.format}
-                        </Badge>
-                        {session.is_active && (
-                          <Badge variant="default" className="text-xs">
-                            Live
+            <>
+              <div className="space-y-3">
+                {sharedSessions.slice(0, 3).map((session) => {
+                  const profit = (session.cash_out || 0) - session.buy_in;
+                  const currencySymbol = getCurrencySymbol(session.currency || coach?.default_currency);
+                  return (
+                    <div
+                      key={session.id}
+                      className="flex items-center justify-between p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setSelectedSessionId(session.id);
+                        setSelectedPlayerId(user.id);
+                      }}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium">{session.game_type}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {session.format}
                           </Badge>
+                          {session.is_active && (
+                            <Badge variant="default" className="text-xs">
+                              Live
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          <span>{formatSessionDateTime(session.start_time)}</span>
+                          {session.location && <span> • {session.location}</span>}
+                          {session.tables_played > 0 && <span> • {session.tables_played} tables</span>}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm text-muted-foreground mb-1">
+                          Buy-in: {currencySymbol}{session.buy_in.toFixed(0)}
+                        </div>
+                        {!session.is_active && session.cash_out !== undefined && (
+                          <ProfitLossBadge 
+                            profit={profit} 
+                            currency={session.currency || coach?.default_currency || 'USD'}
+                            size="sm"
+                          />
                         )}
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        <span>{formatSessionDateTime(session.start_time)}</span>
-                        {session.location && <span> • {session.location}</span>}
-                        {session.tables_played > 0 && <span> • {session.tables_played} tables</span>}
-                      </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm text-muted-foreground mb-1">
-                        Buy-in: {currencySymbol}{session.buy_in.toFixed(0)}
-                      </div>
-                      {!session.is_active && session.cash_out !== undefined && (
-                        <ProfitLossBadge 
-                          profit={profit} 
-                          currency={session.currency || coach?.default_currency || 'USD'}
-                          size="sm"
-                        />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+              {sharedSessions.length > 3 && (
+                <div className="flex justify-center pt-4">
+                  <Button variant="outline" size="sm" onClick={() => setViewAllSessionsOpen(true)}>
+                    View All ({sharedSessions.length})
+                  </Button>
+                </div>
+              )}
+            </>
           )}
           </CardContent>
         </Card>
@@ -507,24 +522,168 @@ const CoachProfile: React.FC = () => {
                 <p>No hands reviewed by this coach yet.</p>
               </div>
             ) : (
+              <>
+                <div className="space-y-3">
+                  {reviewedHands.slice(0, 3).map((hand) => (
+                    <div
+                      key={hand.id}
+                      className="flex items-center justify-between p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors cursor-pointer"
+                      onClick={() => handleHandClick(hand)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          {hand.hole_cards && (
+                            <div 
+                              className="flex-shrink-0"
+                              title={`Cards: ${hand.hole_cards.replace(/([hdsc])/gi, match => 
+                                match.toLowerCase() === 'h' ? ' hearts' :
+                                match.toLowerCase() === 'd' ? ' diamonds' :
+                                match.toLowerCase() === 's' ? ' spades' : ' clubs'
+                              )}`}
+                            >
+                              <CardDisplay cards={hand.hole_cards} size="sm" />
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className="text-xs">
+                              {hand.game_type}
+                            </Badge>
+                            {hand.position && (
+                              <Badge variant="secondary" className="text-xs">
+                                {hand.position}
+                              </Badge>
+                            )}
+                            <Badge variant="outline" className="text-xs bg-background">
+                              Feedbacks: {hand.feedback_count}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          <span>{formatSessionDateTime(hand.created_at)}</span>
+                          {hand.amount_won !== undefined && hand.amount_won !== 0 && (
+                            <span className={hand.amount_won > 0 ? 'text-green-600' : 'text-red-600'}>
+                              {' • '}
+                              {hand.amount_won > 0 ? '+' : ''}
+                              {hand.currency_type === 'currency' ? '$' : ''}
+                              {Math.abs(hand.amount_won).toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {reviewedHands.length > 3 && (
+                  <div className="flex justify-center pt-4">
+                    <Button variant="outline" size="sm" onClick={() => setViewAllHandsOpen(true)}>
+                      View All ({reviewedHands.length})
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Coach Goals & Tasks */}
+        {user?.id && coachId && <PlayerGoalsTasks studentId={user.id} mode="player" coachId={coachId} />}
+
+        {/* Hand Review Modal with Coach Feedback - opens instantly with loading skeleton */}
+        <HandReviewModal
+          open={handReviewOpen}
+          onClose={() => {
+            setHandReviewOpen(false);
+            setReviewHandId(null);
+            setReviewSessionId(null);
+          }}
+          handId={reviewHandId || undefined}
+          sessionId={reviewSessionId || undefined}
+          currentUserId={user?.id}
+          playerId={user?.id || ''}
+          coachId={coachId}
+          isCoach={false}
+        />
+
+        {/* View All Shared Sessions Modal */}
+        <Dialog open={viewAllSessionsOpen} onOpenChange={setViewAllSessionsOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>All Shared Sessions ({sharedSessions.length})</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="space-y-3">
+                {sharedSessions.map((session) => {
+                  const profit = (session.cash_out || 0) - session.buy_in;
+                  const currencySymbol = getCurrencySymbol(session.currency || coach?.default_currency);
+                  return (
+                    <div
+                      key={session.id}
+                      className="flex items-center justify-between p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setViewAllSessionsOpen(false);
+                        setSelectedSessionId(session.id);
+                        setSelectedPlayerId(user.id);
+                      }}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium">{session.game_type}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {session.format}
+                          </Badge>
+                          {session.is_active && (
+                            <Badge variant="default" className="text-xs">
+                              Live
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          <span>{formatSessionDateTime(session.start_time)}</span>
+                          {session.location && <span> • {session.location}</span>}
+                          {session.tables_played > 0 && <span> • {session.tables_played} tables</span>}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm text-muted-foreground mb-1">
+                          Buy-in: {currencySymbol}{session.buy_in.toFixed(0)}
+                        </div>
+                        {!session.is_active && session.cash_out !== undefined && (
+                          <ProfitLossBadge 
+                            profit={profit} 
+                            currency={session.currency || coach?.default_currency || 'USD'}
+                            size="sm"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* View All Reviewed Hands Modal */}
+        <Dialog open={viewAllHandsOpen} onOpenChange={setViewAllHandsOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>All Coach Reviewed Hands ({reviewedHands.length})</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] pr-4">
               <div className="space-y-3">
                 {reviewedHands.map((hand) => (
                   <div
                     key={hand.id}
                     className="flex items-center justify-between p-4 rounded-lg border bg-card/30 hover:bg-card/50 transition-colors cursor-pointer"
-                    onClick={() => handleHandClick(hand)}
+                    onClick={() => {
+                      setViewAllHandsOpen(false);
+                      handleHandClick(hand);
+                    }}
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         {hand.hole_cards && (
-                          <div 
-                            className="flex-shrink-0"
-                            title={`Cards: ${hand.hole_cards.replace(/([hdsc])/gi, match => 
-                              match.toLowerCase() === 'h' ? ' hearts' :
-                              match.toLowerCase() === 'd' ? ' diamonds' :
-                              match.toLowerCase() === 's' ? ' spades' : ' clubs'
-                            )}`}
-                          >
+                          <div className="flex-shrink-0">
                             <CardDisplay cards={hand.hole_cards} size="sm" />
                           </div>
                         )}
@@ -556,49 +715,10 @@ const CoachProfile: React.FC = () => {
                     </div>
                   </div>
                 ))}
-                
-                {hasMoreReviewedHands && (
-                  <div className="flex justify-center pt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => loadReviewedHands(reviewedHandsOffset, false)}
-                      disabled={reviewedHandsLoading}
-                    >
-                      {reviewedHandsLoading ? (
-                        <>
-                          <Icon name="Loader" className="h-4 w-4 mr-2 animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        'View more'
-                      )}
-                    </Button>
-                  </div>
-                )}
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Coach Goals & Tasks */}
-        {user?.id && coachId && <PlayerGoalsTasks studentId={user.id} mode="player" coachId={coachId} />}
-
-        {/* Hand Review Modal with Coach Feedback - opens instantly with loading skeleton */}
-        <HandReviewModal
-          open={handReviewOpen}
-          onClose={() => {
-            setHandReviewOpen(false);
-            setReviewHandId(null);
-            setReviewSessionId(null);
-          }}
-          handId={reviewHandId || undefined}
-          sessionId={reviewSessionId || undefined}
-          currentUserId={user?.id}
-          playerId={user?.id || ''}
-          coachId={coachId}
-          isCoach={false}
-        />
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
     </PageContainer>
   );
 };
