@@ -218,9 +218,16 @@ export default function Index() {
         </div>
       </main>
       
-      {/* Add Past Session Form Dialog */}
+      {/* Add Past Session Form Dialog - Full screen on mobile */}
       <Dialog open={showPastSessionForm} onOpenChange={setShowPastSessionForm}>
-        <DialogContent className="w-full max-w-[95vw] sm:max-w-4xl max-h-[95vh] overflow-y-auto p-0">
+        <DialogContent 
+          className="w-full h-[100dvh] max-w-none max-h-none 
+                     fixed inset-0 translate-x-0 translate-y-0 left-0 top-0
+                     sm:h-auto sm:max-h-[90vh] sm:max-w-4xl 
+                     sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%]
+                     overflow-hidden p-0 rounded-none sm:rounded-lg
+                     flex flex-col"
+        >
           <PastSessionForm 
             onClose={() => setShowPastSessionForm(false)} 
           />
