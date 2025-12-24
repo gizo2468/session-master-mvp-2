@@ -299,16 +299,13 @@ const EditTableForm: React.FC<EditTableFormProps> = ({
             </div>
 
             <div className="flex gap-2 pt-4">
-              <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
-                Cancel
-              </Button>
               {onDelete && (
                 <Button 
-                  variant="destructive" 
+                  variant="outline"
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="flex-1"
+                  className="flex-1 text-destructive border-destructive hover:bg-destructive/10"
                 >
-                  Delete
+                  Delete Table
                 </Button>
               )}
               <Button onClick={handleSave} className="flex-1 bg-poker-gold hover:bg-poker-darkGold">
