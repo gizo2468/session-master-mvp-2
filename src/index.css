@@ -180,3 +180,21 @@ textarea:-webkit-autofill:active {
     padding-top: env(safe-area-inset-top, 0);
   }
 }
+
+/* Hide scrollbar on mobile/touch devices while keeping scroll functionality */
+@media (max-width: 768px) {
+  /* Hide scrollbar for Chrome, Safari, Edge, Opera */
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Hide scrollbar for Firefox */
+  * {
+    scrollbar-width: none;
+  }
+  
+  /* Hide scrollbar for IE and older Edge */
+  * {
+    -ms-overflow-style: none;
+  }
+}
