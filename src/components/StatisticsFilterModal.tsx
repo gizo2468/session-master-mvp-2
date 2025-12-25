@@ -113,11 +113,12 @@ export const StatisticsFilterModal: React.FC<StatisticsFilterModalProps> = ({
     setShowConfirmation(true);
   };
 
-  const handleConfirmExport = () => {
-    onExportPDF();
-    setShowConfirmation(false);
-    onOpenChange(false);
-  };
+const handleConfirmExport = () => {
+  console.log('[PDF] Confirm export clicked');
+  onExportPDF();
+  setShowConfirmation(false);
+  onOpenChange(false);
+};
 
   const handleCancelConfirmation = () => {
     setShowConfirmation(false);

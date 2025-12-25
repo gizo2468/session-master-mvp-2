@@ -11,6 +11,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/filesystem": "^8.0.0",
+    "@capacitor/share": "^8.0.0",
     "@fontsource/playfair-display": "^5.2.5",
     "@fontsource/space-grotesk": "^5.2.6",
     "@hookform/resolvers": "^3.10.0",
