@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { PokerSession } from '@/types/poker';
+import { PokerSession, SessionSummary } from '@/types/poker';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { loadSessions, findActiveSession, clearUserData, clearOtherUserSessions } from './storage';
+import { loadSessions, findActiveSession, clearUserData, clearOtherUserSessions, loadActiveSession, loadSessionSummaries } from './storage';
 import { fetchUserSessions, fetchActiveSession } from '@/utils/database';
 
 export const useSessionInitialization = () => {
@@ -168,12 +168,53 @@ export const useSessionInitialization = () => {
             console.error('❌ Failed to load from database after retries, falling back to localStorage:', error);
             
             try {
-              loadedSessions = loadSessions(userId);
-              setActiveSession(findActiveSession(loadedSessions));
-              console.log(`✅ Loaded ${loadedSessions.length} sessions from localStorage as fallback`);
+              // NEW: Load from lightweight storage first
+              const localActiveSession = loadActiveSession(userId);
+              const localSummaries = loadSessionSummaries(userId);
+              
+              // If we have new-style storage, use it
+              if (localActiveSession || localSummaries.length > 0) {
+                // Set active session immediately for fast recovery
+                if (localActiveSession) {
+                  setActiveSession(localActiveSession);
+                  loadedSessions = [localActiveSession];
+                }
+                
+                // Convert summaries to partial PokerSession objects for list display
+                const summaryAsSessions: PokerSession[] = localSummaries.map(summary => ({
+                  id: summary.id,
+                  gameType: summary.gameType,
+                  format: summary.format as PokerSession['format'],
+                  location: summary.location,
+                  tableName: summary.tableName,
+                  buyIn: summary.buyIn,
+                  cashOut: summary.cashOut,
+                  currency: summary.currency,
+                  startTime: summary.startTime,
+                  endTime: summary.endTime,
+                  sessionDuration: summary.sessionDuration,
+                  isActive: summary.isActive,
+                  currentStatus: summary.currentStatus,
+                  smallBlind: 0,
+                  bigBlind: 0,
+                  tables: [],
+                  hands: [],
+                }));
+                
+                loadedSessions = localActiveSession 
+                  ? [localActiveSession, ...summaryAsSessions]
+                  : summaryAsSessions;
+                  
+                console.log(`✅ Loaded active session + ${localSummaries.length} summaries from new localStorage format`);
+              } else {
+                // Fallback to legacy storage
+                loadedSessions = loadSessions(userId);
+                setActiveSession(findActiveSession(loadedSessions));
+                console.log(`✅ Loaded ${loadedSessions.length} sessions from legacy localStorage`);
+              }
               
               // Determine if we should show offline banner and what message
-              const hasPartialData = loadedActiveSession !== null;
+              const hasPartialData = loadedActiveSession !== null || localActiveSession !== null;
               if (shouldShowOfflineBanner(lastError, hasPartialData)) {
                 // True offline or network error
                 toast({

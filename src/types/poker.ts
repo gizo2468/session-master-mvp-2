@@ -360,3 +360,23 @@ export interface AIAnalyzerState {
     dealerPosition?: string;
   };
 }
+
+// Lightweight session summary for localStorage (no hands, no tables)
+export interface SessionSummary {
+  id: string;
+  gameType: 'NLH' | 'PLO';
+  format: string;
+  location: string;
+  tableName?: string;
+  buyIn: number;
+  cashOut?: number;
+  currency?: string;
+  startTime: Date;
+  endTime?: Date;
+  sessionDuration?: number;
+  isActive: boolean;
+  currentStatus: 'running' | 'paused' | 'ended';
+  netResult?: number;
+  tablesCount?: number;
+  handsCount?: number;
+}
