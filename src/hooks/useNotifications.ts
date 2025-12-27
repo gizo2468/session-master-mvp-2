@@ -105,7 +105,11 @@ export const useNotifications = () => {
         },
         (payload) => {
           const newNotification = payload.new as Notification;
-          setNotifications(prev => [newNotification, ...prev]);
+          setNotifications(prev => {
+            const updated = [newNotification, ...prev];
+            // Keep only the 20 most recent notifications client-side
+            return updated.slice(0, 20);
+          });
           setUnreadCount(prev => prev + 1);
         }
       )
