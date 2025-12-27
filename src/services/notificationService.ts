@@ -67,6 +67,12 @@ export const createNotification = async (data: CreateNotificationData): Promise<
     }
 
     console.log('Notification created successfully');
+    
+    // Cleanup old notifications beyond the 20-item limit (async, non-blocking)
+    cleanupOldNotifications(data.recipient_user_id).catch(err => 
+      console.error('Background cleanup failed:', err)
+    );
+    
     return { ...payload, id: 'pending', is_read: false, created_at: new Date().toISOString() } as Notification;
   } catch (error) {
     console.error('Exception in createNotification:', error);
@@ -74,13 +80,16 @@ export const createNotification = async (data: CreateNotificationData): Promise<
   }
 };
 
+const NOTIFICATION_LIMIT = 20;
+
 export const fetchUserNotifications = async (userId: string): Promise<Notification[]> => {
   try {
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
       .eq('recipient_user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(NOTIFICATION_LIMIT);
 
     if (error) {
       console.error('Error fetching notifications:', error);
@@ -91,6 +100,45 @@ export const fetchUserNotifications = async (userId: string): Promise<Notificati
   } catch (error) {
     console.error('Error in fetchUserNotifications:', error);
     return [];
+  }
+};
+
+/**
+ * Cleans up old notifications beyond the limit.
+ * Keeps only the most recent NOTIFICATION_LIMIT notifications per user.
+ */
+export const cleanupOldNotifications = async (userId: string): Promise<void> => {
+  try {
+    // Get the IDs of the notifications to keep (the newest ones)
+    const { data: keepNotifications, error: fetchError } = await supabase
+      .from('notifications')
+      .select('id')
+      .eq('recipient_user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(NOTIFICATION_LIMIT);
+
+    if (fetchError || !keepNotifications) {
+      console.error('Error fetching notifications for cleanup:', fetchError);
+      return;
+    }
+
+    // If we have fewer than the limit, no cleanup needed
+    if (keepNotifications.length < NOTIFICATION_LIMIT) return;
+
+    const keepIds = keepNotifications.map(n => n.id);
+
+    // Delete all notifications NOT in the keep list
+    const { error: deleteError } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('recipient_user_id', userId)
+      .not('id', 'in', `(${keepIds.join(',')})`);
+
+    if (deleteError) {
+      console.error('Error deleting old notifications:', deleteError);
+    }
+  } catch (error) {
+    console.error('Error in cleanupOldNotifications:', error);
   }
 };
 
