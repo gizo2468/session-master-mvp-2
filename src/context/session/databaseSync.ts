@@ -1,22 +1,7 @@
 
 import { PokerSession } from '@/types/poker';
 import { saveSessionToDatabase } from '@/utils/database';
-import { getUserStorageKey, MAX_STORED_SESSIONS } from './storage';
-
-// Strip images from sessions to prevent localStorage quota errors
-const stripImagesFromSessions = (sessions: PokerSession[]): PokerSession[] => {
-  return sessions.map(session => ({
-    ...session,
-    tables: session.tables.map(table => ({
-      ...table,
-      hands: table.hands.map(hand => ({
-        ...hand,
-        image: undefined,
-        handImage: undefined,
-      }))
-    }))
-  }));
-};
+import { saveActiveSession, saveSessionSummaries } from './storage';
 
 export const saveSessionsToSources = async (
   sessionsToSave: PokerSession[],
@@ -24,45 +9,28 @@ export const saveSessionsToSources = async (
   setShowStorageWarning: (show: boolean) => void,
   toast: any
 ) => {
-  // Always save to localStorage for offline access
+  // Save to lightweight localStorage for offline access
   if (userId) {
     try {
-      const sortedSessions = [...sessionsToSave].sort((a, b) => 
-        new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-      );
+      // Find and save active session (full object, stripped of images)
+      const activeSession = sessionsToSave.find(s => s.isActive);
+      saveActiveSession(activeSession || null, userId);
       
-      let sessionsToStore = sortedSessions;
+      // Save last 20 sessions as lightweight summaries (no hands, no tables)
+      saveSessionSummaries(sessionsToSave, userId);
       
-      if (sortedSessions.length > MAX_STORED_SESSIONS) {
-        const activeSessions = sortedSessions.filter(s => s.isActive);
-        const inactiveSessions = sortedSessions.filter(s => !s.isActive).slice(0, MAX_STORED_SESSIONS - activeSessions.length);
-        sessionsToStore = [...activeSessions, ...inactiveSessions];
-        
-        if (sortedSessions.length !== sessionsToStore.length) {
-          const wasDismissed = sessionStorage.getItem('storageWarningDismissed') === 'true';
-          if (!wasDismissed) {
-            setShowStorageWarning(true);
-          }
-        }
-      }
-      
-      const storageKey = getUserStorageKey(userId);
-      // Strip images before saving to localStorage to prevent quota errors
-      const sessionsWithoutImages = stripImagesFromSessions(sessionsToStore);
-      localStorage.setItem(storageKey, JSON.stringify(sessionsWithoutImages));
-      console.log('💾 Saved sessions to localStorage key:', storageKey, 'Count:', sessionsToStore.length, '(images stripped)');
+      console.log('💾 Saved active session + summaries to localStorage');
     } catch (error) {
-      console.error("Failed to save sessions to localStorage:", error);
-      
+      console.error("Failed to save to localStorage:", error);
       toast({
         title: "Storage issue detected",
-        description: "There was a problem saving your sessions. Try clearing some old sessions to free up space.",
+        description: "There was a problem saving your session data.",
         variant: "destructive"
       });
     }
   }
 
-  // Save to database if user is logged in
+  // Save to database if user is logged in (full data still goes to cloud)
   if (userId) {
     for (const session of sessionsToSave) {
       try {
