@@ -13,13 +13,15 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
     addTable,
     endTable,
     addTableRebuy,
-    refreshSessionsFromDatabase
+    refreshSessionsFromDatabase,
+    updateSessionDuration
   } = useSessionContext();
   const { toast } = useToast();
 
   const [showEndSessionSheet, setShowEndSessionSheet] = useState(false);
   const [sessionNotes, setSessionNotes] = useState('');
   const [showAddTableForm, setShowAddTableForm] = useState(false);
+  const [customSessionDuration, setCustomSessionDuration] = useState<number | null>(null);
 
   const autoCashOutAmount = currentSession?.tables?.reduce((acc, table) => {
     if (table.isActive === false && typeof table.cashOut === 'number') {
@@ -44,8 +46,14 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
     }
     
     try {
+      // Update custom duration before ending the session if set
+      if (customSessionDuration !== null) {
+        await updateSessionDuration(currentSession.id, customSessionDuration);
+      }
+      
       await endSession(currentSession.id, autoCashOutAmount, sessionNotes);
       setShowEndSessionSheet(false);
+      setCustomSessionDuration(null);
       
       toast({
         title: "Session Ended",
@@ -160,6 +168,10 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
     }
   };
 
+  const handleCustomDurationChange = (durationSeconds: number) => {
+    setCustomSessionDuration(durationSeconds);
+  };
+
   return {
     showEndSessionSheet,
     setShowEndSessionSheet,
@@ -172,6 +184,7 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
     handleAddRebuy,
     handleAddTable,
     handleEndTable,
-    handleAddTableRebuy
+    handleAddTableRebuy,
+    handleCustomDurationChange
   };
 };

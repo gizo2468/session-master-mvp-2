@@ -175,6 +175,7 @@ export default function LiveSession() {
         onSessionNotesChange={sessionActions.setSessionNotes}
         onEndSession={sessionActions.handleEndSession}
         currency={currentSession.currency}
+        onCustomDurationChange={sessionActions.handleCustomDurationChange}
       />
       
       <RebuyConfirmationDialog

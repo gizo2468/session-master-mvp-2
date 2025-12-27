@@ -119,7 +119,7 @@ async function stripEXIF(base64Image: string): Promise<string> {
     const blob = new Blob([bytes], { type: 'image/jpeg' });
     const img = await createImageBitmap(blob);
     
-    const canvas = new OffscreenCanvas(img.width, img.height);
+    const canvas = new (globalThis as any).OffscreenCanvas(img.width, img.height);
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas context unavailable');
     
@@ -1105,7 +1105,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
 
           // Apply to villains
           if (analysisResult.villains && Array.isArray(analysisResult.villains)) {
-            analysisResult.villains = analysisResult.villains.map(v => ({
+            analysisResult.villains = analysisResult.villains.map((v: any) => ({
               ...v,
               cards: v.cards ? validateAndFixCards(v.cards) : 'hidden'
             }));
@@ -1190,7 +1190,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
               
               // Update villain positions based on their screen location
               if (analysisResult.villains && Array.isArray(analysisResult.villains)) {
-                analysisResult.villains = analysisResult.villains.map(villain => {
+                analysisResult.villains = analysisResult.villains.map((villain: any) => {
                   const screenPos = villain.position; // This is their screen position (TOP_LEFT, etc.)
                   const pokerPos = positionMap[screenPos] || 'UNKNOWN';
                   
@@ -1227,18 +1227,18 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             // Per-card debug for board cards (color-filled decks)
             if (deckTypeResult.deckType === 'color-filled' && deckTypeResult.cardColors) {
               const heroCardCount = Array.isArray(analysisResult.hero.cards) ? analysisResult.hero.cards.length : 0;
-              console.info('🎴 Board card color mapping (debug):', {
-                deckType: deckTypeResult.deckType,
-                flop: analysisResult.board.flop?.map((card: any, idx: number) => ({
-                  card,
-                  colorIndex: heroCardCount + idx,
-                  preAnalysisColor: deckTypeResult.cardColors[heroCardCount + idx],
-                  expectedSuit: deckTypeResult.cardColors[heroCardCount + idx] ? 
-                    { red: 'h', blue: 'd', green: 'c', black: 's' }[deckTypeResult.cardColors[heroCardCount + idx]] : 'unknown',
-                  actualSuit: card?.suit,
-                  match: deckTypeResult.cardColors[heroCardCount + idx] && card ?
-                    ({ red: 'h', blue: 'd', green: 'c', black: 's' }[deckTypeResult.cardColors[heroCardCount + idx]] === card.suit) : null
-                })),
+            console.info('🎴 Board card color mapping (debug):', {
+              deckType: deckTypeResult.deckType,
+              flop: analysisResult.board.flop?.map((card: any, idx: number) => ({
+                card,
+                colorIndex: heroCardCount + idx,
+                preAnalysisColor: deckTypeResult.cardColors?.[heroCardCount + idx],
+                expectedSuit: deckTypeResult.cardColors?.[heroCardCount + idx] ? 
+                  ({ red: 'h', blue: 'd', green: 'c', black: 's' } as Record<string, string>)[deckTypeResult.cardColors[heroCardCount + idx]] : 'unknown',
+                actualSuit: card?.suit,
+                match: deckTypeResult.cardColors?.[heroCardCount + idx] && card ?
+                  (({ red: 'h', blue: 'd', green: 'c', black: 's' } as Record<string, string>)[deckTypeResult.cardColors[heroCardCount + idx]] === card.suit) : null
+              })),
                 turn: analysisResult.board.turn ? {
                   card: analysisResult.board.turn,
                   colorIndex: heroCardCount + 3,
@@ -1306,7 +1306,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             // Pre-color-correction snapshot (Phase 4)
             console.info('🎴 Hero cards BEFORE color correction:', {
               cards: analysisResult.hero.cards,
-              detectedSuits: analysisResult.hero.cards?.map(c => c.suit),
+              detectedSuits: analysisResult.hero.cards?.map((c: any) => c.suit),
               position: analysisResult.hero.position,
               confidence: analysisResult.hero.confidence,
               preAnalysisColors: deckTypeResult.heroCardColors || deckTypeResult.cardColors?.slice(0, 2)
@@ -1317,7 +1317,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
               turn: analysisResult.board.turn,
               river: analysisResult.board.river,
               detectedSuits: [
-                ...(analysisResult.board.flop?.map(c => c.suit) || []),
+                ...(analysisResult.board.flop?.map((c: any) => c.suit) || []),
                 ...(analysisResult.board.turn ? [analysisResult.board.turn.suit] : []),
                 ...(analysisResult.board.river ? [analysisResult.board.river.suit] : [])
               ],
@@ -1326,9 +1326,9 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             
             // Capture original suits for scoring (before mapping)
             const originalHeroSuits = analysisResult.hero.cards && Array.isArray(analysisResult.hero.cards) 
-              ? analysisResult.hero.cards.map(c => c.suit) : [];
+              ? analysisResult.hero.cards.map((c: any) => c.suit) : [];
             const originalBoardSuits = [
-              ...(analysisResult.board.flop && Array.isArray(analysisResult.board.flop) ? analysisResult.board.flop.map(c => c.suit) : []),
+              ...(analysisResult.board.flop && Array.isArray(analysisResult.board.flop) ? analysisResult.board.flop.map((c: any) => c.suit) : []),
               ...(analysisResult.board.turn ? [analysisResult.board.turn.suit] : []),
               ...(analysisResult.board.river ? [analysisResult.board.river.suit] : [])
             ];
@@ -1682,9 +1682,9 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
 
           // Validate Hero action attribution
           if (analysisResult.actions && Array.isArray(analysisResult.actions)) {
-            analysisResult.actions.forEach(streetAction => {
+            analysisResult.actions.forEach((streetAction: any) => {
               if (streetAction.sequence && Array.isArray(streetAction.sequence)) {
-                const heroActions = streetAction.sequence.filter(a => a.player === "Hero");
+                const heroActions = streetAction.sequence.filter((a: any) => a.player === "Hero");
                 const totalActions = streetAction.sequence.length;
                 
                 // Warning: No Hero actions on a multi-action street (likely missed yellow detection)
@@ -1702,7 +1702,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
                 }
                 
                 // Warning: Very low confidence on Hero actions - adjusted threshold for blurred images
-                const lowConfidenceHeroActions = heroActions.filter(a => a.confidence < 0.4); // Reduced from 0.5
+                const lowConfidenceHeroActions = heroActions.filter((a: any) => a.confidence < 0.4); // Reduced from 0.5
                 if (lowConfidenceHeroActions.length > 0) {
                   analysisResult.metadata.warnings.push(
                     `Low confidence on ${lowConfidenceHeroActions.length} Hero action(s) on ${streetAction.street}. Image may be blurred or action panel partially obscured. Please verify these actions.`
@@ -1727,7 +1727,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
             if (analysisResult.hero.position !== 'BTN') {
               console.log('CORRECTING: Dealer on hero, forcing position to BTN');
               analysisResult.metadata.warnings = analysisResult.metadata.warnings.filter(
-                w => !w.includes('Position inconsistency')
+                (w: string) => !w.includes('Position inconsistency')
               );
               analysisResult.metadata.warnings.push('Position corrected to BTN (dealer button on hero).');
             }
@@ -1774,8 +1774,8 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
           } 
           // RULE 6: Fallback - use villain SB/BB positions if dealer button not detected
           else if (dealerConf < 0.4) {
-            const hasSB = (analysisResult.villains || []).some(v => (v.position || '').toUpperCase() === 'SB');
-            const hasBB = (analysisResult.villains || []).some(v => (v.position || '').toUpperCase() === 'BB');
+            const hasSB = (analysisResult.villains || []).some((v: any) => (v.position || '').toUpperCase() === 'SB');
+            const hasBB = (analysisResult.villains || []).some((v: any) => (v.position || '').toUpperCase() === 'BB');
             
             if (hasSB && hasBB) {
               if (analysisResult.hero.position !== 'BTN') {

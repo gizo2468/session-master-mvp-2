@@ -7,7 +7,7 @@
  * Deck type detection result
  */
 export interface DeckTypeResult {
-  deckType: 'standard' | 'color-filled' | 'unknown';
+  deckType: 'standard' | 'color-filled' | 'four-color-alt' | 'unknown';
   confidence: number;
   heroCardColors?: string[];  // Exactly 2 colors for hero cards (left to right)
   boardCardColors?: string[];  // 0-5 colors for board cards (flop L→R, turn, river)
@@ -34,7 +34,7 @@ export async function detectDeckType(
     : '';
 
   // Add app-specific hero identification hints
-  const heroIdentificationHint = appProfile && appName !== 'unknown' ? `
+  const heroIdentificationHint = appProfile && appName && appName !== 'unknown' ? `
 
 HERO CARD IDENTIFICATION FOR ${appName.toUpperCase()}:
 - App: ${appName}
