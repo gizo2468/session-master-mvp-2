@@ -161,20 +161,20 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
 
   return (
     <>
-      <Card className="bg-white p-4 relative border border-gray-200 shadow-md rounded-xl">
+      <Card className="bg-card p-4 relative border border-border shadow-md rounded-xl">
         {/* Edit Button */}
         <Button
           variant="ghost"
           size="sm"
-          className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-gray-100"
+          className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-muted"
           onClick={() => setShowEditForm(true)}
         >
-          <Pencil className="h-4 w-4 text-gray-600" />
+          <Pencil className="h-4 w-4 text-muted-foreground" />
         </Button>
 
         <div className="text-center mb-2 pr-8">
           <h3 className="text-xl font-bold">{table.location}</h3>
-          <div className="flex items-center justify-center gap-2 text-base text-gray-600">
+          <div className="flex items-center justify-center gap-2 text-base text-muted-foreground">
             <span>{table.gameType}</span>
             <span>•</span> 
             <span>{table.format}</span>
@@ -196,10 +196,10 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
           )}
         </div>
 
-        <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 pb-4">
+        <div className="flex justify-center items-center mb-4 text-sm border-b border-border pb-4">
           <div className="flex flex-1 justify-center items-center">
             <div className="text-center">
-              <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
+              <div className="text-muted-foreground font-medium text-xs uppercase mb-1">Start</div>
               <div className="font-medium">{formattedStartTime}</div>
             </div>
           </div>

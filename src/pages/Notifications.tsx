@@ -113,8 +113,8 @@ export default function Notifications() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card shadow-sm border-b border-border">
         <div className="container mx-auto max-w-md px-4 py-4">
           <div className="flex items-center gap-3">
             <Button
@@ -137,11 +137,11 @@ export default function Notifications() {
           </div>
         ) : notifications.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
+            <div className="text-muted-foreground mb-4">
               <Icon name="BellOff" size={48} className="mx-auto" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications yet</h3>
-            <p className="text-gray-500">
+            <h3 className="text-lg font-medium text-foreground mb-2">No notifications yet</h3>
+            <p className="text-muted-foreground">
               You'll see notifications here when coaches leave feedback or players share sessions with you.
             </p>
           </div>
@@ -153,47 +153,47 @@ export default function Notifications() {
                 onClick={() => handleNotificationClick(notification)}
                 className={`w-full text-left p-4 rounded-lg border transition-colors ${
                   notification.is_read
-                    ? 'bg-white border-green-200 hover:border-green-300'
-                    : 'bg-white border-red-200 hover:border-red-300'
+                    ? 'bg-card border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700'
+                    : 'bg-card border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <div className={`p-2 rounded-full ${
-                    notification.is_read ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                    notification.is_read ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                   }`}>
                     <Icon name={getNotificationIcon(notification.type)} size={16} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className={`font-medium line-clamp-2 md:truncate md:line-clamp-none ${
-                      notification.is_read ? 'text-gray-700' : 'text-gray-900'
+                      notification.is_read ? 'text-muted-foreground' : 'text-foreground'
                     }`}>
                       {renderTitle(notification.title)}
                     </h3>
                     {notification.body && (
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                         {notification.body}
                       </p>
                     )}
                     {/* Bottom row: Timestamp left, Status + Arrow + Menu right */}
                     <div className="flex items-center justify-between mt-2">
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                       </p>
                       <div className="flex items-center gap-2">
                         <span className={`text-xs whitespace-nowrap ${
-                          notification.is_read ? 'text-green-600' : 'text-red-600'
+                          notification.is_read ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                         }`}>
                           {notification.is_read ? 'Read' : 'New'}
                         </span>
-                        <Icon name="ChevronRight" size={16} className="text-gray-400" />
+                        <Icon name="ChevronRight" size={16} className="text-muted-foreground" />
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
                               onClick={(e) => e.stopPropagation()}
-                              className="p-1 rounded hover:bg-gray-100 transition-colors"
+                              className="p-1 rounded hover:bg-muted transition-colors"
                               aria-label="More options"
                             >
-                              <Icon name="Ellipsis" size={16} className="text-gray-400" />
+                              <Icon name="Ellipsis" size={16} className="text-muted-foreground" />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>

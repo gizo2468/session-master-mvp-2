@@ -52,14 +52,14 @@ export const AdaptiveTooltip: React.FC<AdaptiveTooltipProps> = ({
         {showTooltip && (
           <div
             ref={tooltipRef}
-            className="absolute z-50 top-full left-1/2 transform -translate-x-1/2 mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg max-w-xs"
+            className="absolute z-50 top-full left-1/2 transform -translate-x-1/2 mt-2 p-3 bg-popover border border-border rounded-lg shadow-lg max-w-xs"
             style={{ minWidth: '250px' }}
           >
-            <div className="text-sm text-gray-900">
+            <div className="text-sm text-popover-foreground">
               {content}
             </div>
             {/* Arrow pointing up */}
-            <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white border-l border-t border-gray-200 rotate-45"></div>
+            <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-popover border-l border-t border-border rotate-45"></div>
           </div>
         )}
       </div>
@@ -77,7 +77,7 @@ export const AdaptiveTooltip: React.FC<AdaptiveTooltipProps> = ({
       </div>
 
       <Dialog open={showMobileDialog} onOpenChange={setShowMobileDialog}>
-        <DialogContent className="max-w-[90vw] p-4 bg-white rounded-lg border border-gray-200 shadow-lg">
+        <DialogContent className="max-w-[90vw] p-4 bg-popover rounded-lg border border-border shadow-lg">
           <div className="relative">
             <Button 
               variant="ghost" 
