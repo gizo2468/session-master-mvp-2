@@ -1,18 +1,28 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/context/LanguageContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTheme } from 'next-themes';
+import { Sun, Moon } from 'lucide-react';
 
 const AppSettings = () => {
   const { language, setLanguage, t } = useLanguage();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => setMounted(true), []);
 
   // Define available languages directly in the component
   const availableLanguages = [
     { code: 'en', name: 'English' },
     { code: 'he', name: 'Hebrew (עברית)' }
+  ];
+
+  const themeOptions = [
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
   ];
 
   return (
@@ -44,12 +54,26 @@ const AppSettings = () => {
             </Select>
           </div>
           
-          <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="dark-mode" className="block mb-1">Dark Mode</Label>
-              <p className="text-sm text-muted-foreground">Coming soon</p>
-            </div>
-            <Switch id="dark-mode" disabled />
+          <div>
+            <Label htmlFor="theme">Appearance</Label>
+            <Select 
+              value={mounted ? theme : 'light'} 
+              onValueChange={setTheme}
+            >
+              <SelectTrigger id="theme" className="w-full">
+                <SelectValue placeholder="Select theme" />
+              </SelectTrigger>
+              <SelectContent>
+                {themeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <div className="flex items-center gap-2">
+                      <option.icon className="h-4 w-4" />
+                      {option.label}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </CardContent>
