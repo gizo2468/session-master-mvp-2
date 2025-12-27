@@ -135,8 +135,8 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
   if (!session || !session.id) {
     console.error('Invalid session data:', session);
     return (
-      <div className="bg-card rounded-lg shadow-md p-4 mb-4">
-        <div className="text-center text-muted-foreground">
+      <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+        <div className="text-center text-gray-500">
           <p>Invalid session data</p>
         </div>
       </div>
@@ -146,15 +146,15 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
   return (
     <div 
       onClick={handleCardClick}
-      className="bg-card rounded-lg shadow-md p-4 mb-4 cursor-pointer hover:shadow-lg transition-shadow border border-border"
+      className="bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer hover:shadow-lg transition-shadow"
     >
       <div className="flex justify-between items-start mb-3">
         <div>
           <h3 className="text-lg font-bold text-primary">{session.location || 'Unknown Location'}</h3>
-          <p className="text-sm text-muted-foreground">{formattedDate} at {formattedTime}</p>
+          <p className="text-sm text-gray-500">{formattedDate} at {formattedTime}</p>
         </div>
         {session.isActive ? (
-          <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-xs font-medium px-2 py-1 rounded-full">
+          <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
             Live
           </span>
         ) : (
@@ -164,20 +164,20 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
       
       <div className="grid grid-cols-2 gap-4 text-sm mb-3">
         <div>
-          <span className="text-muted-foreground">Game:</span>
+          <span className="text-gray-500">Game:</span>
           <span className="ml-1 font-medium">{session.gameType || 'Unknown'}</span>
         </div>
         <div>
-          <span className="text-muted-foreground">Format:</span>
+          <span className="text-gray-500">Format:</span>
           <span className="ml-1 font-medium">{displayFormat}</span>
         </div>
         <div>
-          <span className="text-muted-foreground">Duration:</span>
+          <span className="text-gray-500">Duration:</span>
           <span className="ml-1 font-medium">{duration}</span>
         </div>
         {session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined && (
           <div>
-            <span className="text-muted-foreground">Blinds:</span>
+            <span className="text-gray-500">Blinds:</span>
             <span className="ml-1 font-medium">{getCurrencySymbol(session.currency)}{session.smallBlind}/{getCurrencySymbol(session.currency)}{session.bigBlind}</span>
           </div>
         )}
@@ -194,14 +194,14 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
       />
       
       {session.notes && (
-        <div className="mt-3 pt-3 border-t border-border">
-          <p className="text-sm text-muted-foreground line-clamp-2">{session.notes}</p>
+        <div className="mt-3 pt-3 border-t border-gray-200">
+          <p className="text-sm text-gray-600 line-clamp-2">{session.notes}</p>
         </div>
       )}
       
       {/* Action buttons for completed sessions */}
       {showActions && !session.isActive && (
-        <div className="session-actions mt-3 pt-3 border-t border-border">
+        <div className="session-actions mt-3 pt-3 border-t border-gray-200">
           <SessionActionButtons session={session} />
         </div>
       )}

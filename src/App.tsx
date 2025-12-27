@@ -4,7 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/context/AuthContext";
 import { CoachStudentProvider } from "@/context/CoachStudentContext";
 import { SessionProvider } from "@/context/SessionContext";
@@ -51,52 +50,50 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="light" storageKey="poker-theme" disableTransitionOnChange>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <CoachStudentProvider>
-              <SessionProvider>
-                <AuthGuard>
-                  <AppErrorBoundary>
-                    <Suspense fallback={<LoadingScreen />}>
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/new-session" element={<SessionForm />} />
-                        {/* FIXED: Change route parameter from :sessionId to :id to match useParams */}
-                        <Route path="/session/:id" element={<LiveSession />} />
-                        <Route path="/session/:sessionId/edit" element={<EditSession />} />
-                        <Route path="/session/:sessionId/details" element={<SessionDetail />} />
-                        <Route path="/history" element={<SessionHistory />} />
-                        <Route path="/settings" element={<Settings />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/player/:playerId" element={<PlayerProfile />} />
-                        <Route path="/coach/:coachId" element={<CoachProfile />} />
-                        <Route path="/legal/privacy" element={<PrivacyPolicy />} />
-                        <Route path="/help" element={<Help />} />
-                        <Route path="/auth/login" element={<Login />} />
-                        <Route path="/auth/signup" element={<Signup />} />
-                        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-                        <Route path="/auth/reset-password" element={<ResetPassword />} />
-                        <Route path="/subscription" element={<Subscription />} />
-                        <Route path="/subscription/success" element={<SubscriptionSuccess />} />
-                        <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
-                        <Route path="/notifications" element={<Notifications />} />
-                        <Route path="/add-past-session" element={<AddPastSession />} />
-                      </Routes>
-                    </Suspense>
-                  </AppErrorBoundary>
-                </AuthGuard>
-              </SessionProvider>
-            </CoachStudentProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <CoachStudentProvider>
+            <SessionProvider>
+              <AuthGuard>
+                <AppErrorBoundary>
+                  <Suspense fallback={<LoadingScreen />}>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/new-session" element={<SessionForm />} />
+                      {/* FIXED: Change route parameter from :sessionId to :id to match useParams */}
+                      <Route path="/session/:id" element={<LiveSession />} />
+                      <Route path="/session/:sessionId/edit" element={<EditSession />} />
+                      <Route path="/session/:sessionId/details" element={<SessionDetail />} />
+                      <Route path="/history" element={<SessionHistory />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/player/:playerId" element={<PlayerProfile />} />
+                      <Route path="/coach/:coachId" element={<CoachProfile />} />
+                      <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+                      <Route path="/help" element={<Help />} />
+                      <Route path="/auth/login" element={<Login />} />
+                      <Route path="/auth/signup" element={<Signup />} />
+                      <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/auth/reset-password" element={<ResetPassword />} />
+                      <Route path="/subscription" element={<Subscription />} />
+                      <Route path="/subscription/success" element={<SubscriptionSuccess />} />
+                      <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
+                      <Route path="/notifications" element={<Notifications />} />
+                      <Route path="/add-past-session" element={<AddPastSession />} />
+                    </Routes>
+                  </Suspense>
+                </AppErrorBoundary>
+              </AuthGuard>
+            </SessionProvider>
+          </CoachStudentProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;

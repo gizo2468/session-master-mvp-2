@@ -24,31 +24,31 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
 
   if (loading) {
     return (
-      <div className="mt-3 pt-3 border-t border-border">
-        <div className="h-6 bg-muted rounded animate-pulse" />
+      <div className="mt-3 pt-3 border-t border-gray-100">
+        <div className="h-6 bg-gray-200 rounded animate-pulse" />
       </div>
     );
   }
 
   return (
-    <div className="mt-3 pt-3 border-t border-border">
-      <div className="bg-muted px-3 py-2 rounded-md">
+    <div className="mt-3 pt-3 border-t border-gray-100">
+      <div className="bg-gray-50 px-3 py-2 rounded-md">
         <div className="grid grid-cols-4 gap-2 text-sm">
           <div className="text-center">
-            <div className="font-medium text-xs text-foreground">Tables</div>
-            <div className="text-muted-foreground font-semibold">{tables}</div>
+            <div className="font-medium text-xs text-black">Tables</div>
+            <div className="text-gray-800 font-semibold">{tables}</div>
           </div>
           <div className="text-center">
-            <div className="font-medium text-xs text-foreground">Hands</div>
-            <div className="text-muted-foreground font-semibold">{hands}</div>
+            <div className="font-medium text-xs text-black">Hands</div>
+            <div className="text-gray-800 font-semibold">{hands}</div>
           </div>
           <div className="text-center">
-            <div className="font-medium text-xs text-foreground">Buy-ins</div>
-            <div className="text-muted-foreground font-semibold">{currencySymbol}{totalBuyIns.toFixed(0)}</div>
+            <div className="font-medium text-xs text-black">Buy-ins</div>
+            <div className="text-gray-800 font-semibold">{currencySymbol}{totalBuyIns.toFixed(0)}</div>
           </div>
           <div className="text-center">
-            <div className="font-medium text-xs text-foreground">Payout</div>
-            <div className="text-muted-foreground font-semibold">{currencySymbol}{totalPayout.toFixed(0)}</div>
+            <div className="font-medium text-xs text-black">Payout</div>
+            <div className="text-gray-800 font-semibold">{currencySymbol}{totalPayout.toFixed(0)}</div>
           </div>
         </div>
       </div>

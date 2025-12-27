@@ -24,10 +24,10 @@ export default function SessionHistory() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your sessions...</p>
+          <p className="text-gray-600">Loading your sessions...</p>
         </div>
       </div>
     );
@@ -74,8 +74,8 @@ export default function SessionHistory() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card shadow-sm border-b border-border px-4 py-4 sticky top-0 z-10">
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm px-4 py-4 sticky top-0 z-10">
         <div className="container mx-auto max-w-md">
           <div className="flex justify-between items-center">
             <Button 
@@ -98,7 +98,7 @@ export default function SessionHistory() {
           <FilterBar filters={filters} onFiltersChange={setFilters} />
           
           <div className="flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-600">
               {completedSessions.length} session{completedSessions.length !== 1 ? 's' : ''}
             </p>
             <div className="flex gap-2">
@@ -123,11 +123,11 @@ export default function SessionHistory() {
 
           {completedSessions.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-muted-foreground mb-4">
+              <div className="text-gray-400 mb-4">
                 <Icon name="FileText" size={48} className="mx-auto" />
               </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">No sessions found</h3>
-              <p className="text-muted-foreground mb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No sessions found</h3>
+              <p className="text-gray-500 mb-6">
                 {sessions.length === 0 
                   ? "You haven't completed any poker sessions yet."
                   : "No sessions match your current filters."
