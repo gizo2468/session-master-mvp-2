@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,8 @@ const Settings: React.FC = () => {
   const { toast } = useToast();
   const { defaultCurrency } = useDefaultCurrency();
   const { interval: stackCheckInterval, updateInterval: updateStackCheckInterval, isLoading: stackCheckLoading } = useStackCheckInterval();
+  const { theme, setTheme } = useTheme();
+  const [themeMounted, setThemeMounted] = useState(false);
   const [profile, setProfile] = useState<{ username?: string; role?: string; default_currency?: string; coaching_focus?: string[]; experience?: string } | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -63,6 +66,11 @@ const Settings: React.FC = () => {
       });
     }
   };
+
+  // Theme mount effect to prevent hydration mismatch
+  useEffect(() => {
+    setThemeMounted(true);
+  }, []);
 
   // Fetch user profile data
   useEffect(() => {
@@ -554,10 +562,49 @@ const Settings: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Appearance / Theme */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Icon name="Sun" className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">Appearance</p>
+                      <p className="text-sm text-muted-foreground">Light / Dark mode</p>
+                    </div>
+                  </div>
+                  <div className="min-w-[140px]">
+                    {!themeMounted ? (
+                      <div className="h-9 w-full bg-muted rounded animate-pulse"></div>
+                    ) : (
+                      <Select
+                        value={theme || 'light'}
+                        onValueChange={setTheme}
+                      >
+                        <SelectTrigger className="min-w-[140px]">
+                          <SelectValue placeholder="Select theme" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="light">
+                            <div className="flex items-center gap-2">
+                              <Icon name="Sun" className="h-4 w-4" />
+                              Light
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="dark">
+                            <div className="flex items-center gap-2">
+                              <Icon name="Moon" className="h-4 w-4" />
+                              Dark
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                </div>
+
                 {/* Subscription */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Icon name="Crown" className="h-5 w-5 text-gray-500" />
+                    <Icon name="Crown" className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <p className="font-medium">Subscription</p>
                       <p className="text-sm text-gray-500">Manage your premium plan</p>
