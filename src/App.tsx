@@ -40,8 +40,8 @@ const queryClient = new QueryClient({
     queries: {
       retry: 3,
       refetchOnWindowFocus: false,
-      staleTime: 30000, // 30 seconds
-      gcTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 30000,
+      gcTime: 5 * 60 * 1000,
     },
     mutations: {
       retry: 1,
@@ -49,51 +49,54 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <CoachStudentProvider>
-            <SessionProvider>
-              <AuthGuard>
-                <AppErrorBoundary>
-                  <Suspense fallback={<LoadingScreen />}>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/new-session" element={<SessionForm />} />
-                      {/* FIXED: Change route parameter from :sessionId to :id to match useParams */}
-                      <Route path="/session/:id" element={<LiveSession />} />
-                      <Route path="/session/:sessionId/edit" element={<EditSession />} />
-                      <Route path="/session/:sessionId/details" element={<SessionDetail />} />
-                      <Route path="/history" element={<SessionHistory />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/player/:playerId" element={<PlayerProfile />} />
-                      <Route path="/coach/:coachId" element={<CoachProfile />} />
-                      <Route path="/legal/privacy" element={<PrivacyPolicy />} />
-                      <Route path="/help" element={<Help />} />
-                      <Route path="/auth/login" element={<Login />} />
-                      <Route path="/auth/signup" element={<Signup />} />
-                      <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-                      <Route path="/auth/reset-password" element={<ResetPassword />} />
-                      <Route path="/subscription" element={<Subscription />} />
-                      <Route path="/subscription/success" element={<SubscriptionSuccess />} />
-                      <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
-                      <Route path="/notifications" element={<Notifications />} />
-                      <Route path="/add-past-session" element={<AddPastSession />} />
-                    </Routes>
-                  </Suspense>
-                </AppErrorBoundary>
-              </AuthGuard>
-            </SessionProvider>
-          </CoachStudentProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log("APP STARTED");
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <CoachStudentProvider>
+              <SessionProvider>
+                <AuthGuard>
+                  <AppErrorBoundary>
+                    <Suspense fallback={<LoadingScreen />}>
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/new-session" element={<SessionForm />} />
+                        <Route path="/session/:id" element={<LiveSession />} />
+                        <Route path="/session/:sessionId/edit" element={<EditSession />} />
+                        <Route path="/session/:sessionId/details" element={<SessionDetail />} />
+                        <Route path="/history" element={<SessionHistory />} />
+                        <Route path="/settings" element={<Settings />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/player/:playerId" element={<PlayerProfile />} />
+                        <Route path="/coach/:coachId" element={<CoachProfile />} />
+                        <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+                        <Route path="/help" element={<Help />} />
+                        <Route path="/auth/login" element={<Login />} />
+                        <Route path="/auth/signup" element={<Signup />} />
+                        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+                        <Route path="/auth/reset-password" element={<ResetPassword />} />
+                        <Route path="/subscription" element={<Subscription />} />
+                        <Route path="/subscription/success" element={<SubscriptionSuccess />} />
+                        <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
+                        <Route path="/notifications" element={<Notifications />} />
+                        <Route path="/add-past-session" element={<AddPastSession />} />
+                      </Routes>
+                    </Suspense>
+                  </AppErrorBoundary>
+                </AuthGuard>
+              </SessionProvider>
+            </CoachStudentProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
