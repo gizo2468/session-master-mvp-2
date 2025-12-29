@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# APNS keys
+push_dev.csr
+push_dev.key
