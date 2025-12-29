@@ -1,11 +1,18 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { useStackCheckInterval } from './useStackCheckInterval';
 import { createNotification } from '@/services/notificationService';
 
+// Global map to track last reminder count per session (persists across remounts)
+// This prevents duplicate notifications when multiple component instances use this hook
+const globalReminderState = new Map<string, number>();
+
 /**
  * Hook that triggers stack check reminders during a live session
  * based on the user's configured interval in Settings.
+ * 
+ * Uses a global singleton to prevent duplicate reminders when
+ * multiple components mount this hook simultaneously.
  * 
  * @param isSessionActive - Whether a live session is currently running
  * @param sessionStartTimeUTC - The UTC timestamp (ms) when the session started
@@ -19,16 +26,17 @@ export const useStackCheckReminder = (
   userId?: string
 ) => {
   const { interval } = useStackCheckInterval();
-  const lastReminderCountRef = useRef<number>(0);
-  const hasShownInitialRef = useRef<boolean>(false);
 
+  // Main reminder timer effect
   useEffect(() => {
-    // Don't run if session not active, no interval set, or no start time
-    if (!isSessionActive || interval === null || !sessionStartTimeUTC) {
-      // Reset when session ends or interval changes to "Never"
-      lastReminderCountRef.current = 0;
-      hasShownInitialRef.current = false;
+    // Don't run if session not active, no interval set, no start time, or missing IDs
+    if (!isSessionActive || interval === null || !sessionStartTimeUTC || !sessionId || !userId) {
       return;
+    }
+
+    // Initialize global state for this session if needed
+    if (!globalReminderState.has(sessionId)) {
+      globalReminderState.set(sessionId, 0);
     }
 
     // Check every 30 seconds for more responsive reminders
@@ -40,9 +48,12 @@ export const useStackCheckReminder = (
       const intervalMinutes = interval;
       const reminderCount = Math.floor(elapsedMinutes / intervalMinutes);
 
+      // Check against GLOBAL state (not component-local ref) to prevent duplicates
+      const lastCount = globalReminderState.get(sessionId) || 0;
+
       // Only trigger if we've crossed a new interval threshold
-      if (reminderCount > lastReminderCountRef.current) {
-        lastReminderCountRef.current = reminderCount;
+      if (reminderCount > lastCount) {
+        globalReminderState.set(sessionId, reminderCount);
 
         // Show stack check reminder toast
         toast.success('🔔 Time to check your stack!', {
@@ -51,15 +62,13 @@ export const useStackCheckReminder = (
         });
 
         // Also create a notification for the Notifications screen
-        if (sessionId && userId) {
-          createNotification({
-            recipient_user_id: userId,
-            type: 'stack_check',
-            title: '🔔 Time to check your stack!',
-            body: 'Update your chip count for accurate session tracking.',
-            session_id: sessionId,
-          });
-        }
+        createNotification({
+          recipient_user_id: userId,
+          type: 'stack_check',
+          title: '🔔 Time to check your stack!',
+          body: 'Update your chip count for accurate session tracking.',
+          session_id: sessionId,
+        });
 
         console.log('📊 Stack check reminder triggered:', {
           elapsedMinutes: Math.floor(elapsedMinutes),
@@ -72,5 +81,12 @@ export const useStackCheckReminder = (
     return () => {
       clearInterval(checkTimer);
     };
-  }, [isSessionActive, interval, sessionStartTimeUTC]);
+  }, [isSessionActive, interval, sessionStartTimeUTC, sessionId, userId]);
+
+  // Cleanup global state when session ends
+  useEffect(() => {
+    if (!isSessionActive && sessionId) {
+      globalReminderState.delete(sessionId);
+    }
+  }, [isSessionActive, sessionId]);
 };
