@@ -9,23 +9,9 @@ import "@fontsource/space-grotesk/700.css";
 
 import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
-
-const SUPABASE_FUNCTION_URL =
-  "https://wfmvvpbpuqbzidptxbqx.supabase.co/functions/v1/send-test-push";
+import { registerPushToken } from "./services/pushTokenService";
 
 let pushInitialized = false;
-
-async function postToSupabase(payload: Record<string, unknown>) {
-  const res = await fetch(SUPABASE_FUNCTION_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  const text = await res.text();
-  console.log("[PUSH] Supabase response status:", res.status);
-  console.log("[PUSH] Supabase response body:", text);
-}
 
 async function initPushOnce() {
   if (pushInitialized) return;
@@ -38,17 +24,14 @@ async function initPushOnce() {
 
   console.log("[PUSH] Init starting...");
 
-  // הכי חשוב: להסיר listeners ישנים כדי שלא יהיה כפול
+  // Remove old listeners to prevent duplicates
   await PushNotifications.removeAllListeners();
 
   PushNotifications.addListener("registration", async (token) => {
-    console.log("[PUSH] Push token:", token.value);
+    console.log("[PUSH] Push token received:", token.value);
 
-    // שולחים ל-Supabase כדי לבצע send-test-push / רישום / בדיקה (לפי מה שהפונקציה שלך עושה)
-    await postToSupabase({
-      token: token.value,
-      platform: "ios",
-    });
+    // Save to push_tokens table (handles auth timing automatically)
+    await registerPushToken(token.value, "ios");
   });
 
   PushNotifications.addListener("registrationError", (err) => {
