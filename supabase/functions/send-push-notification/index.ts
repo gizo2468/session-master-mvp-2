@@ -1,55 +1,27 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// APNS JWT generation using Web Crypto API
+// Generate APNS JWT using jose library for reliable ES256 signing
 async function generateAPNSToken(keyId: string, teamId: string, keyP8: string): Promise<string> {
-  // Parse the P8 key (remove headers and decode base64)
-  const pemContents = keyP8
-    .replace(/-----BEGIN PRIVATE KEY-----/, '')
-    .replace(/-----END PRIVATE KEY-----/, '')
-    .replace(/\s/g, '');
+  // Clean up the P8 key format
+  const cleanedKey = keyP8.includes('-----BEGIN PRIVATE KEY-----') 
+    ? keyP8 
+    : `-----BEGIN PRIVATE KEY-----\n${keyP8}\n-----END PRIVATE KEY-----`;
   
-  const keyData = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+  const privateKey = await importPKCS8(cleanedKey, 'ES256');
   
-  // Import the key for ES256 signing
-  const privateKey = await crypto.subtle.importKey(
-    'pkcs8',
-    keyData,
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    false,
-    ['sign']
-  );
+  const jwt = await new SignJWT({})
+    .setProtectedHeader({ alg: 'ES256', kid: keyId })
+    .setIssuedAt()
+    .setIssuer(teamId)
+    .sign(privateKey);
   
-  // Create JWT header and payload
-  const header = { alg: 'ES256', kid: keyId };
-  const now = Math.floor(Date.now() / 1000);
-  const payload = { iss: teamId, iat: now };
-  
-  const encodedHeader = btoa(JSON.stringify(header)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  const encodedPayload = btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  
-  const dataToSign = `${encodedHeader}.${encodedPayload}`;
-  const encoder = new TextEncoder();
-  
-  // Sign the data
-  const signature = await crypto.subtle.sign(
-    { name: 'ECDSA', hash: 'SHA-256' },
-    privateKey,
-    encoder.encode(dataToSign)
-  );
-  
-  // Convert signature from DER to raw format expected by APNS
-  const signatureArray = new Uint8Array(signature);
-  const encodedSignature = btoa(String.fromCharCode(...signatureArray))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-  
-  return `${dataToSign}.${encodedSignature}`;
+  return jwt;
 }
 
 async function sendAPNSPush(
@@ -60,7 +32,7 @@ async function sendAPNSPush(
   apnsToken: string,
   bundleId: string,
   isProduction: boolean
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; shouldDelete?: boolean }> {
   const host = isProduction 
     ? 'api.push.apple.com' 
     : 'api.sandbox.push.apple.com';
@@ -88,17 +60,56 @@ async function sendAPNSPush(
     });
     
     if (response.ok) {
-      console.log(`[APNS] Push sent successfully to token: ${token.substring(0, 10)}...`);
+      console.log(`[APNS] Push sent successfully to token: ${token.substring(0, 10)}... via ${host}`);
       return { success: true };
     }
     
     const errorText = await response.text();
-    console.error(`[APNS] Push failed for token ${token.substring(0, 10)}...: ${response.status} - ${errorText}`);
-    return { success: false, error: `${response.status}: ${errorText}` };
+    let errorReason = '';
+    try {
+      const errorJson = JSON.parse(errorText);
+      errorReason = errorJson.reason || '';
+    } catch {
+      errorReason = errorText;
+    }
+    
+    console.error(`[APNS] Push failed for token ${token.substring(0, 10)}...: ${response.status} - ${errorReason} (${host})`);
+    
+    // Mark token for deletion if it's invalid/unregistered
+    const shouldDelete = ['BadDeviceToken', 'Unregistered', 'ExpiredToken'].includes(errorReason);
+    
+    return { success: false, error: `${response.status}: ${errorReason}`, shouldDelete };
   } catch (error) {
     console.error(`[APNS] Network error for token ${token.substring(0, 10)}...:`, error);
     return { success: false, error: String(error) };
   }
+}
+
+// Try sending to a token with fallback between prod and sandbox
+async function sendWithFallback(
+  token: string,
+  title: string,
+  body: string,
+  data: Record<string, unknown>,
+  apnsToken: string,
+  bundleId: string,
+  preferProduction: boolean
+): Promise<{ success: boolean; error?: string; shouldDelete?: boolean }> {
+  // Try preferred environment first
+  const firstResult = await sendAPNSPush(token, title, body, data, apnsToken, bundleId, preferProduction);
+  
+  if (firstResult.success) {
+    return firstResult;
+  }
+  
+  // If BadDeviceToken, try the other environment
+  if (firstResult.error?.includes('BadDeviceToken')) {
+    console.log(`[APNS] Token failed on ${preferProduction ? 'production' : 'sandbox'}, trying ${preferProduction ? 'sandbox' : 'production'}...`);
+    const fallbackResult = await sendAPNSPush(token, title, body, data, apnsToken, bundleId, !preferProduction);
+    return fallbackResult;
+  }
+  
+  return firstResult;
 }
 
 Deno.serve(async (req) => {
@@ -146,7 +157,7 @@ Deno.serve(async (req) => {
     // Get push tokens for the user
     const { data: tokens, error: tokensError } = await supabase
       .from('push_tokens')
-      .select('push_token, platform')
+      .select('id, push_token, platform')
       .eq('user_id', recipient_user_id);
     
     if (tokensError) {
@@ -167,7 +178,7 @@ Deno.serve(async (req) => {
     
     console.log(`[send-push-notification] Found ${tokens.length} token(s) for user`);
     
-    // Generate APNS JWT token
+    // Generate APNS JWT token using jose library
     let apnsToken: string;
     try {
       apnsToken = await generateAPNSToken(keyId, teamId, keyP8);
@@ -175,32 +186,62 @@ Deno.serve(async (req) => {
     } catch (jwtError) {
       console.error('[send-push-notification] Failed to generate APNS JWT:', jwtError);
       return new Response(
-        JSON.stringify({ error: 'Failed to generate APNS token' }),
+        JSON.stringify({ error: 'Failed to generate APNS token', details: String(jwtError) }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    // Determine if production (default to production for real usage)
-    const isProduction = Deno.env.get('APNS_ENVIRONMENT') !== 'sandbox';
-    console.log(`[send-push-notification] Using APNS ${isProduction ? 'production' : 'sandbox'} environment`);
+    // Prefer production but fallback to sandbox if needed
+    const preferProduction = Deno.env.get('APNS_ENVIRONMENT') !== 'sandbox';
+    console.log(`[send-push-notification] Preferred APNS environment: ${preferProduction ? 'production' : 'sandbox'}`);
     
-    // Send push to all iOS tokens
+    // Filter iOS tokens
+    const iosTokens = tokens.filter(t => t.platform === 'ios');
+    console.log(`[send-push-notification] iOS tokens to process: ${iosTokens.length}`);
+    
+    // Send push to all iOS tokens with fallback
     const results = await Promise.all(
-      tokens
-        .filter(t => t.platform === 'ios')
-        .map(t => sendAPNSPush(t.push_token, title, body, data || {}, apnsToken, bundleId, isProduction))
+      iosTokens.map(async (t) => {
+        const result = await sendWithFallback(
+          t.push_token, 
+          title, 
+          body, 
+          data || {}, 
+          apnsToken, 
+          bundleId, 
+          preferProduction
+        );
+        return { ...result, tokenId: t.id, token: t.push_token };
+      })
     );
+    
+    // Clean up invalid tokens
+    const tokensToDelete = results.filter(r => r.shouldDelete).map(r => r.tokenId);
+    if (tokensToDelete.length > 0) {
+      console.log(`[send-push-notification] Deleting ${tokensToDelete.length} invalid token(s)`);
+      const { error: deleteError } = await supabase
+        .from('push_tokens')
+        .delete()
+        .in('id', tokensToDelete);
+      
+      if (deleteError) {
+        console.error('[send-push-notification] Failed to delete invalid tokens:', deleteError);
+      } else {
+        console.log('[send-push-notification] Invalid tokens deleted successfully');
+      }
+    }
     
     const successCount = results.filter(r => r.success).length;
     const failCount = results.filter(r => !r.success).length;
     
-    console.log(`[send-push-notification] Push results: ${successCount} sent, ${failCount} failed`);
+    console.log(`[send-push-notification] Push results: ${successCount} sent, ${failCount} failed, ${tokensToDelete.length} cleaned up`);
     
     return new Response(
       JSON.stringify({ 
         message: 'Push notifications processed',
         sent: successCount,
-        failed: failCount
+        failed: failCount,
+        cleaned: tokensToDelete.length
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -208,7 +249,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('[send-push-notification] Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: String(error) }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
