@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
     // Get push tokens for the user
     const { data: tokens, error: tokensError } = await supabase
       .from('push_tokens')
-      .select('token, platform')
+      .select('push_token, platform')
       .eq('user_id', recipient_user_id);
     
     if (tokensError) {
@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
     const results = await Promise.all(
       tokens
         .filter(t => t.platform === 'ios')
-        .map(t => sendAPNSPush(t.token, title, body, data || {}, apnsToken, bundleId, isProduction))
+        .map(t => sendAPNSPush(t.push_token, title, body, data || {}, apnsToken, bundleId, isProduction))
     );
     
     const successCount = results.filter(r => r.success).length;
