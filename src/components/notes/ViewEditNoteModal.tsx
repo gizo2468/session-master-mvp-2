@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import HandDetailsDialog from '@/components/poker/HandDetailsDialog';
 import CardDisplay from '@/components/poker/CardDisplay';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useSignedImageUrl } from '@/hooks/useSignedImageUrl';
 
 interface OpponentProfile {
   id: string;
@@ -361,8 +362,11 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
     setEditingNoteBody('');
   };
 
-  // Get the current display image
-  const displayImage = imagePreview || currentProfile?.image_url;
+  // Get signed URL for opponent avatar (private bucket)
+  const signedAvatarUrl = useSignedImageUrl('opponent-avatars', currentProfile?.image_url);
+  
+  // Get the current display image (prefer local preview, then signed URL)
+  const displayImage = imagePreview || signedAvatarUrl;
   const colorData = getColorById(currentProfile?.color);
 
   if (!opponentProfile) return null;
@@ -409,13 +413,13 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                 // View-only avatar - clickable to enlarge if image exists
                 <div 
                   className={`w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden ${
-                    currentProfile?.image_url ? 'cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all duration-200' : ''
+                    signedAvatarUrl ? 'cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all duration-200' : ''
                   }`}
-                  onClick={() => currentProfile?.image_url && setIsImageFullscreen(true)}
+                  onClick={() => signedAvatarUrl && setIsImageFullscreen(true)}
                 >
-                  {currentProfile?.image_url ? (
+                  {signedAvatarUrl ? (
                     <img 
-                      src={currentProfile.image_url} 
+                      src={signedAvatarUrl} 
                       alt="Opponent avatar" 
                       className="w-full h-full rounded-full object-cover"
                     />
@@ -854,9 +858,9 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
             </button>
             
             {/* Enlarged image */}
-            {currentProfile?.image_url && (
+            {signedAvatarUrl && (
               <img 
-                src={currentProfile.image_url} 
+                src={signedAvatarUrl} 
                 alt={`${currentProfile?.nickname || 'Opponent'} profile`}
                 className="max-w-full max-h-[85vh] rounded-lg object-contain animate-scale-in"
               />

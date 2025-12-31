@@ -25,6 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { resolveSignedUrls } from '@/hooks/useSignedImageUrl';
+import { extractFilePath, getSignedUrl } from '@/utils/storageUtils';
 
 interface OpponentProfile {
   id: string;
@@ -97,6 +99,17 @@ const MyNotesCard: React.FC = () => {
         opponent_profile_id: note.opponent_profile_id,
         opponent_profile: note.opponent_profiles,
       }));
+      
+      // Resolve signed URLs for opponent avatars (private bucket)
+      const imageUrls = transformedNotes.map(n => n.opponent_profile?.image_url);
+      const signedUrls = await resolveSignedUrls('opponent-avatars', imageUrls);
+      
+      // Update notes with signed URLs
+      transformedNotes.forEach((note, i) => {
+        if (note.opponent_profile && signedUrls[i]) {
+          note.opponent_profile.image_url = signedUrls[i];
+        }
+      });
       
       setNotes(transformedNotes);
     } catch (error) {

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-
+import { getSignedUrl, extractFilePath } from '@/utils/storageUtils';
 export interface Achievement {
   id: string;
   title: string;
@@ -125,7 +125,18 @@ export function usePlayerCard() {
       }
 
       if (privateResult.data) {
-        setPrivateData(privateResult.data);
+        // If profile picture exists, get a signed URL for the private bucket
+        let resolvedPrivateData = { ...privateResult.data };
+        if (privateResult.data.profile_picture) {
+          const filePath = extractFilePath('avatars', privateResult.data.profile_picture);
+          if (filePath) {
+            const signedUrl = await getSignedUrl('avatars', filePath);
+            if (signedUrl) {
+              resolvedPrivateData.profile_picture = signedUrl;
+            }
+          }
+        }
+        setPrivateData(resolvedPrivateData);
       }
     } catch (error) {
       console.error('Error fetching player card data:', error);
@@ -212,11 +223,20 @@ export function usePlayerCard() {
 
       if (uploadError) throw uploadError;
 
+      // Store the path reference in database (not the signed URL)
+      // We construct a reference URL that we can parse later to get the path
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
-
+      
+      // Store the reference URL in database
       await updatePrivateData({ profile_picture: publicUrl });
+      
+      // Get a signed URL for immediate display
+      const signedUrl = await getSignedUrl('avatars', fileName);
+      if (signedUrl) {
+        setPrivateData(prev => prev ? { ...prev, profile_picture: signedUrl } : null);
+      }
 
       toast({
         title: 'Photo updated',
