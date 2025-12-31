@@ -186,7 +186,9 @@ export const useAIHandAnalyzer = () => {
       }
       
       // Special handling for specific error codes
-      if (err.code === 'RATE_LIMIT' || err.message?.includes('429')) {
+      if (err.code === 'UNAUTHORIZED' || err.message?.includes('401')) {
+        errorMessage = 'Authentication required. Please log in to use AI hand analysis.';
+      } else if (err.code === 'RATE_LIMIT' || err.message?.includes('429')) {
         errorMessage = 'AI rate limit exceeded. Please try again in a moment.';
       } else if (err.code === 'CREDITS_DEPLETED' || err.message?.includes('402')) {
         errorMessage = 'AI credits depleted. Please add credits to continue using AI analysis.';
