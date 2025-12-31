@@ -21,6 +21,7 @@ export interface CreateNotificationData {
   body?: string | null;
   hand_id?: string | null;
   session_id?: string | null;
+  player_goal_id?: string | null;
 }
 
 export const createNotification = async (data: CreateNotificationData): Promise<Notification | null> => {
