@@ -17,6 +17,7 @@ import { SELECTABLE_COLORS, DEFAULT_COLOR, PlayerColorId } from './playerColors'
 import EditColorCategoriesModal from './EditColorCategoriesModal';
 import { useColorLabels } from '@/hooks/useColorLabels';
 import OpponentAutocomplete from './OpponentAutocomplete';
+import { useNativeImagePicker } from '@/hooks/useNativeImagePicker';
 
 interface AddNoteModalProps {
   open: boolean;
@@ -47,6 +48,19 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
   const [editColorsOpen, setEditColorsOpen] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const { getLabel } = useColorLabels();
+  const { pickImage, isLoading: isPickingImage, isNative } = useNativeImagePicker();
+
+  const handleImageClick = async () => {
+    if (isNative) {
+      const result = await pickImage('prompt');
+      if (result) {
+        setImagePreview(result.dataUrl);
+        setImageFile(null); // We have a dataUrl, no need for File
+      }
+    } else {
+      document.getElementById('avatar-upload-add')?.click();
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,15 +72,38 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
     }
   };
 
-  const uploadImage = async (file: File): Promise<string | null> => {
+  const uploadImage = async (fileOrDataUrl: File | string): Promise<string | null> => {
     if (!user?.id) return null;
     
-    const fileExt = file.name.split('.').pop();
+    // If it's a data URL string, convert to blob
+    if (typeof fileOrDataUrl === 'string') {
+      const response = await fetch(fileOrDataUrl);
+      const blob = await response.blob();
+      const fileName = `${user.id}/${uuidv4()}.jpg`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('opponent-avatars')
+        .upload(fileName, blob);
+
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        throw uploadError;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('opponent-avatars')
+        .getPublicUrl(fileName);
+
+      return urlData.publicUrl;
+    }
+    
+    // Otherwise it's a File
+    const fileExt = fileOrDataUrl.name.split('.').pop();
     const fileName = `${user.id}/${uuidv4()}.${fileExt}`;
     
     const { error: uploadError } = await supabase.storage
       .from('opponent-avatars')
-      .upload(fileName, file);
+      .upload(fileName, fileOrDataUrl);
 
     if (uploadError) {
       console.error('Error uploading image:', uploadError);
@@ -190,10 +227,17 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
     try {
       setIsSaving(true);
       
-      // Upload image if a new file was selected
+      // Upload image if a new file was selected or we have a dataUrl from native picker
       let imageUrl: string | null = null;
       if (imageFile) {
         imageUrl = await uploadImage(imageFile);
+      } else if (imagePreview && !selectedProfileId) {
+        // If we have a preview but no file, it's from native picker (dataUrl)
+        // Only upload if it's not from an existing profile
+        const isExistingProfileImage = selectedProfileId && imagePreview;
+        if (!isExistingProfileImage && imagePreview.startsWith('data:')) {
+          imageUrl = await uploadImage(imagePreview);
+        }
       }
 
       // Find or create opponent profile
@@ -267,10 +311,12 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
             {/* Profile Image Upload */}
             <div className="flex flex-col items-center gap-2">
               <div 
-                className="relative w-20 h-20 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all duration-200 cursor-pointer group bg-muted/20 hover:bg-muted/40 flex items-center justify-center overflow-hidden"
-                onClick={() => document.getElementById('avatar-upload-add')?.click()}
+                className={`relative w-20 h-20 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all duration-200 cursor-pointer group bg-muted/20 hover:bg-muted/40 flex items-center justify-center overflow-hidden ${isPickingImage ? 'opacity-50' : ''}`}
+                onClick={handleImageClick}
               >
-                {imagePreview ? (
+                {isPickingImage ? (
+                  <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                ) : imagePreview ? (
                   <>
                     <img 
                       src={imagePreview} 

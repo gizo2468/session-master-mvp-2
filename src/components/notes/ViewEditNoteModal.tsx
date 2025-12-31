@@ -24,6 +24,7 @@ import HandDetailsDialog from '@/components/poker/HandDetailsDialog';
 import CardDisplay from '@/components/poker/CardDisplay';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSignedImageUrl } from '@/hooks/useSignedImageUrl';
+import { useNativeImagePicker } from '@/hooks/useNativeImagePicker';
 
 interface OpponentProfile {
   id: string;
@@ -75,6 +76,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   const [selectedHand, setSelectedHand] = useState<any>(null);
   const [showHandDetails, setShowHandDetails] = useState(false);
   const navigate = useNavigate();
+  const { pickImage: nativePickImage, isLoading: isPickingImage, isNative } = useNativeImagePicker();
 
   // Fetch all notes for this opponent when modal opens
   useEffect(() => {
@@ -168,6 +170,18 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
     }
   };
 
+  const handleImageClick = async () => {
+    if (isNative) {
+      const result = await nativePickImage('prompt');
+      if (result) {
+        setImagePreview(result.dataUrl);
+        setImageFile(null);
+      }
+    } else {
+      document.getElementById('edit-avatar-upload')?.click();
+    }
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -178,15 +192,38 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
     }
   };
 
-  const uploadImage = async (file: File): Promise<string | null> => {
+  const uploadImage = async (fileOrDataUrl: File | string): Promise<string | null> => {
     if (!user?.id) return null;
     
-    const fileExt = file.name.split('.').pop();
+    // If it's a data URL string, convert to blob
+    if (typeof fileOrDataUrl === 'string') {
+      const response = await fetch(fileOrDataUrl);
+      const blob = await response.blob();
+      const fileName = `${user.id}/${uuidv4()}.jpg`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('opponent-avatars')
+        .upload(fileName, blob);
+
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        throw uploadError;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('opponent-avatars')
+        .getPublicUrl(fileName);
+
+      return urlData.publicUrl;
+    }
+    
+    // Otherwise it's a File
+    const fileExt = fileOrDataUrl.name.split('.').pop();
     const fileName = `${user.id}/${uuidv4()}.${fileExt}`;
     
     const { error: uploadError } = await supabase.storage
       .from('opponent-avatars')
-      .upload(fileName, file);
+      .upload(fileName, fileOrDataUrl);
 
     if (uploadError) {
       console.error('Error uploading image:', uploadError);
@@ -220,6 +257,9 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
       let imageUrl = currentProfile.image_url;
       if (imageFile) {
         imageUrl = await uploadImage(imageFile);
+      } else if (imagePreview && imagePreview.startsWith('data:')) {
+        // From native picker (dataUrl)
+        imageUrl = await uploadImage(imagePreview);
       }
 
       // Update opponent profile
@@ -391,10 +431,12 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
               {isEditingProfile ? (
                 // Editable avatar in edit mode
                 <div 
-                  className="relative w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all duration-200 cursor-pointer group bg-muted flex items-center justify-center overflow-hidden"
-                  onClick={() => document.getElementById('edit-avatar-upload')?.click()}
+                  className={`relative w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all duration-200 cursor-pointer group bg-muted flex items-center justify-center overflow-hidden ${isPickingImage ? 'opacity-50' : ''}`}
+                  onClick={handleImageClick}
                 >
-                  {displayImage ? (
+                  {isPickingImage ? (
+                    <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+                  ) : displayImage ? (
                     <>
                       <img 
                         src={displayImage} 
