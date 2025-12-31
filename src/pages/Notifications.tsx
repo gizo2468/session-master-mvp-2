@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
@@ -22,6 +22,20 @@ export default function Notifications() {
   const { notifications, loading, markAsRead, markAsUnread, removeNotification } = useNotifications();
   const [selectedNotification, setSelectedNotification] = useState<typeof notifications[0] | null>(null);
   const [selectedSessionNotification, setSelectedSessionNotification] = useState<typeof notifications[0] | null>(null);
+
+  // Deduplicate stack_check notifications: show only the most recent one
+  const displayNotifications = useMemo(() => {
+    const stackCheckNotifications = notifications.filter(n => n.type === 'stack_check');
+    const mostRecentStackCheck = stackCheckNotifications.length > 0 
+      ? stackCheckNotifications.reduce((latest, current) => 
+          new Date(current.created_at) > new Date(latest.created_at) ? current : latest
+        )
+      : null;
+    
+    return notifications.filter(n => 
+      n.type !== 'stack_check' || n.id === mostRecentStackCheck?.id
+    );
+  }, [notifications]);
 
   // Helper to validate session exists before navigation
   const validateSessionExists = async (sessionId: string, notificationId: string): Promise<boolean> => {
@@ -195,7 +209,7 @@ export default function Notifications() {
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen"></div>
           </div>
-        ) : notifications.length === 0 ? (
+        ) : displayNotifications.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <Icon name="BellOff" size={48} className="mx-auto" />
@@ -207,7 +221,7 @@ export default function Notifications() {
           </div>
         ) : (
           <div className="space-y-3">
-            {notifications.map((notification) => (
+            {displayNotifications.map((notification) => (
               <button
                 key={notification.id}
                 onClick={() => handleNotificationClick(notification)}
