@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { detectDeckType, mapColorToSuit, DeckTypeResult } from './detectDeckType.ts';
 import { detectApp } from './detectApp.ts';
 import { getAppProfile } from './appProfiles.ts';
@@ -157,6 +158,49 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // ============ AUTHENTICATION CHECK ============
+  // Verify the user is authenticated before proceeding
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    console.warn('[analyze-poker-hand] No Authorization header provided');
+    return new Response(
+      JSON.stringify({ 
+        code: 'UNAUTHORIZED',
+        error: 'Authentication required. Please log in to use AI hand analysis.' 
+      }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Create Supabase client with the user's auth token
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+  
+  const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } }
+  });
+
+  // Verify the user session
+  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+
+  if (authError || !user) {
+    console.warn('[analyze-poker-hand] Authentication failed:', authError?.message || 'No user found');
+    return new Response(
+      JSON.stringify({ 
+        code: 'UNAUTHORIZED',
+        error: 'Invalid or expired session. Please log in again.' 
+      }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Log authenticated request for audit
+  console.log('[analyze-poker-hand] Authenticated request', {
+    userId: user.id,
+    email: user.email?.substring(0, 3) + '***' // Partially mask email for privacy
+  });
+  // ============ END AUTHENTICATION CHECK ============
 
   const startTime = Date.now();
 
