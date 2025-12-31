@@ -73,6 +73,8 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
       throw uploadError;
     }
 
+    // Store a reference URL in the database (path can be extracted from this)
+    // The actual display will use signed URLs when fetching
     const { data: urlData } = supabase.storage
       .from('opponent-avatars')
       .getPublicUrl(fileName);
