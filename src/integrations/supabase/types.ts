@@ -141,6 +141,7 @@ export type Database = {
           hand_id: string | null
           id: string
           is_read: boolean
+          player_goal_id: string | null
           recipient_user_id: string
           sender_user_id: string | null
           session_id: string | null
@@ -154,6 +155,7 @@ export type Database = {
           hand_id?: string | null
           id?: string
           is_read?: boolean
+          player_goal_id?: string | null
           recipient_user_id: string
           sender_user_id?: string | null
           session_id?: string | null
@@ -167,6 +169,7 @@ export type Database = {
           hand_id?: string | null
           id?: string
           is_read?: boolean
+          player_goal_id?: string | null
           recipient_user_id?: string
           sender_user_id?: string | null
           session_id?: string | null

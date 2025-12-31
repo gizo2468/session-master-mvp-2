@@ -38,6 +38,11 @@ export default function Notifications() {
       setSelectedNotification(notification);
     }
     
+    // For hand_review_reminder notifications, open Hand Review modal (coach viewing)
+    if (notification.type === 'hand_review_reminder' && notification.hand_id) {
+      setSelectedNotification(notification);
+    }
+    
     // For session_shared notifications, open Session Summary modal (coach viewing)
     if (notification.type === 'session_shared' && notification.session_id) {
       setSelectedSessionNotification(notification);
@@ -59,6 +64,21 @@ export default function Notifications() {
         state: { openBBStackModal: true } 
       });
     }
+    
+    // For key_focus_point_created notifications, navigate to player dashboard
+    if (notification.type === 'key_focus_point_created') {
+      navigate('/player-dashboard', { state: { scrollToFocusPoints: true } });
+    }
+    
+    // For live_session_still_active notifications, navigate to the session
+    if (notification.type === 'live_session_still_active' && notification.session_id) {
+      navigate(`/session/${notification.session_id}`);
+    }
+    
+    // For multi_day_tournament_reminder notifications, navigate to the session
+    if (notification.type === 'multi_day_tournament_reminder' && notification.session_id) {
+      navigate(`/session/${notification.session_id}`);
+    }
   };
 
   const getNotificationIcon = (type: string) => {
@@ -67,6 +87,8 @@ export default function Notifications() {
         return 'MessageSquare';
       case 'hand_uploaded':
         return 'Plus';
+      case 'hand_review_reminder':
+        return 'AlertCircle';
       case 'session_shared':
         return 'Share2';
       case 'connection_request':
@@ -75,6 +97,12 @@ export default function Notifications() {
         return 'UserCheck';
       case 'stack_check':
         return 'Clock';
+      case 'key_focus_point_created':
+        return 'Target';
+      case 'live_session_still_active':
+        return 'Timer';
+      case 'multi_day_tournament_reminder':
+        return 'Calendar';
       default:
         return 'Bell';
     }
