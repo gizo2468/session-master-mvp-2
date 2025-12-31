@@ -1,9 +1,10 @@
 import React, { useRef } from 'react';
-import { Camera, RotateCcw, Award, Pencil } from 'lucide-react';
+import { Camera, RotateCcw, Award, Pencil, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProfileOnboardingFlow } from './ProfileOnboardingFlow';
 import { getAchievementIcon } from './AchievementIcons';
+import { useNativeImagePicker } from '@/hooks/useNativeImagePicker';
 import type { PlayerCardData, PlayerProfile, PlayerPrivateData } from '@/hooks/usePlayerCard';
 
 interface PlayerCardFrontProps {
@@ -15,6 +16,7 @@ interface PlayerCardFrontProps {
   onUpdateCard: (updates: Partial<PlayerCardData>) => void;
   onUpdatePrivate: (updates: Partial<{ full_name: string }>) => void;
   onUploadPhoto: (file: File) => void;
+  onUploadPhotoDataUrl?: (dataUrl: string) => void;
   isSaving: boolean;
   isEditing: boolean;
   onEditingChange: (editing: boolean) => void;
@@ -40,18 +42,29 @@ export function PlayerCardFront({
   onUpdateCard,
   onUpdatePrivate,
   onUploadPhoto,
+  onUploadPhotoDataUrl,
   isSaving,
   isEditing,
   onEditingChange,
   isFirstTimeUser
 }: PlayerCardFrontProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { pickImage, isLoading: isPickingImage, isNative } = useNativeImagePicker();
 
   // If first-time user or editing, show onboarding flow
   const showOnboarding = isFirstTimeUser || isEditing;
 
-  const handlePhotoClick = () => {
-    fileInputRef.current?.click();
+  const handlePhotoClick = async () => {
+    if (isNative) {
+      // Use native picker on mobile
+      const result = await pickImage('prompt');
+      if (result && onUploadPhotoDataUrl) {
+        onUploadPhotoDataUrl(result.dataUrl);
+      }
+    } else {
+      // Fallback to file input on web
+      fileInputRef.current?.click();
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,7 +120,11 @@ export function PlayerCardFront({
             className="relative w-20 h-20 rounded-full border-2 border-poker-gold/60 overflow-hidden cursor-pointer group flex-shrink-0"
             onClick={handlePhotoClick}
           >
-            {privateData?.profile_picture ? (
+            {isPickingImage ? (
+              <div className="w-full h-full bg-zinc-700 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-poker-gold animate-spin" />
+              </div>
+            ) : privateData?.profile_picture ? (
               <img 
                 src={privateData.profile_picture} 
                 alt="Profile" 
@@ -118,9 +135,11 @@ export function PlayerCardFront({
                 <Camera className="w-8 h-8 text-zinc-500" />
               </div>
             )}
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <Camera className="w-6 h-6 text-white" />
-            </div>
+            {!isPickingImage && (
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Camera className="w-6 h-6 text-white" />
+              </div>
+            )}
             <input 
               ref={fileInputRef}
               type="file" 

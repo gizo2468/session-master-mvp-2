@@ -13,6 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import Icon from '@/components/ui/Lucide';
 import { supabase } from '@/integrations/supabase/client';
+import { useNativeImagePicker } from '@/hooks/useNativeImagePicker';
 
 const profileFormSchema = z.object({
   fullName: z.string().min(2, { message: 'Name must be at least 2 characters' }),
@@ -32,6 +33,7 @@ const AccountSettings: React.FC = () => {
   const [profileImage, setProfileImage] = useState<string | undefined>(user?.profilePicture);
   const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const { pickImage, isLoading: isPickingImage, isNative } = useNativeImagePicker();
   
   // Refresh user profile data when component mounts to ensure latest coaching data
   useEffect(() => {
@@ -116,8 +118,18 @@ const AccountSettings: React.FC = () => {
   };
 
   // Handle profile picture click
-  const handleProfilePictureClick = () => {
-    fileInputRef.current?.click();
+  const handleProfilePictureClick = async () => {
+    if (isNative) {
+      // Use native picker on mobile
+      const result = await pickImage('prompt');
+      if (result) {
+        setProfileImage(result.dataUrl);
+        updateUser({ profilePicture: result.dataUrl });
+      }
+    } else {
+      // Fallback to file input on web
+      fileInputRef.current?.click();
+    }
   };
 
   // Handle profile picture change
@@ -170,11 +182,19 @@ const AccountSettings: React.FC = () => {
         {/* Profile Picture Section */}
         <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6 mb-8">
           <div className="flex flex-col items-center gap-3">
-            <Avatar className="w-24 h-24 cursor-pointer" onClick={handleProfilePictureClick}>
-              <AvatarImage src={profileImage} />
-              <AvatarFallback className="text-lg bg-poker-gold text-white">
-                {user?.fullName ? getInitials(user.fullName) : 'U'}
-              </AvatarFallback>
+            <Avatar className={`w-24 h-24 cursor-pointer ${isPickingImage ? 'opacity-50' : ''}`} onClick={handleProfilePictureClick}>
+              {isPickingImage ? (
+                <AvatarFallback className="bg-poker-gold text-white">
+                  <Icon name="Loader" className="h-6 w-6 animate-spin" />
+                </AvatarFallback>
+              ) : (
+                <>
+                  <AvatarImage src={profileImage} />
+                  <AvatarFallback className="text-lg bg-poker-gold text-white">
+                    {user?.fullName ? getInitials(user.fullName) : 'U'}
+                  </AvatarFallback>
+                </>
+              )}
             </Avatar>
             <input
               type="file"
