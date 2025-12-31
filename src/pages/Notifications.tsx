@@ -8,6 +8,7 @@ import { toast } from '@/hooks/use-toast';
 import { HandReviewModal } from '@/components/coaching/HandReviewModal';
 import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,25 @@ export default function Notifications() {
   const { notifications, loading, markAsRead, markAsUnread, removeNotification } = useNotifications();
   const [selectedNotification, setSelectedNotification] = useState<typeof notifications[0] | null>(null);
   const [selectedSessionNotification, setSelectedSessionNotification] = useState<typeof notifications[0] | null>(null);
+
+  // Helper to validate session exists before navigation
+  const validateSessionExists = async (sessionId: string, notificationId: string): Promise<boolean> => {
+    const { data: session } = await supabase
+      .from('sessions')
+      .select('id')
+      .eq('id', sessionId)
+      .maybeSingle();
+    
+    if (!session) {
+      toast({ 
+        title: 'This session no longer exists',
+        variant: 'destructive'
+      });
+      await removeNotification(notificationId);
+      return false;
+    }
+    return true;
+  };
 
   const handleNotificationClick = async (notification: typeof notifications[0]) => {
     // Mark as read first
@@ -43,9 +63,12 @@ export default function Notifications() {
       setSelectedNotification(notification);
     }
     
-    // For session_shared notifications, open Session Summary modal (coach viewing)
+    // For session_shared notifications, validate session exists before opening modal
     if (notification.type === 'session_shared' && notification.session_id) {
-      setSelectedSessionNotification(notification);
+      const exists = await validateSessionExists(notification.session_id, notification.id);
+      if (exists) {
+        setSelectedSessionNotification(notification);
+      }
     }
     
     // For connection_request notifications, navigate to Dashboard incoming requests
@@ -58,11 +81,14 @@ export default function Notifications() {
       navigate('/dashboard');
     }
     
-    // For stack_check notifications, navigate to Live Session and auto-open BB/Stack modal
+    // For stack_check notifications, validate session exists before navigation
     if (notification.type === 'stack_check' && notification.session_id) {
-      navigate(`/session/${notification.session_id}`, { 
-        state: { openBBStackModal: true } 
-      });
+      const exists = await validateSessionExists(notification.session_id, notification.id);
+      if (exists) {
+        navigate(`/session/${notification.session_id}`, { 
+          state: { openBBStackModal: true } 
+        });
+      }
     }
     
     // For key_focus_point_created notifications, navigate to player dashboard
@@ -70,14 +96,20 @@ export default function Notifications() {
       navigate('/player-dashboard', { state: { scrollToFocusPoints: true } });
     }
     
-    // For live_session_still_active notifications, navigate to the session
+    // For live_session_still_active notifications, validate session exists before navigation
     if (notification.type === 'live_session_still_active' && notification.session_id) {
-      navigate(`/session/${notification.session_id}`);
+      const exists = await validateSessionExists(notification.session_id, notification.id);
+      if (exists) {
+        navigate(`/session/${notification.session_id}`);
+      }
     }
     
-    // For multi_day_tournament_reminder notifications, navigate to the session
+    // For multi_day_tournament_reminder notifications, validate session exists before navigation
     if (notification.type === 'multi_day_tournament_reminder' && notification.session_id) {
-      navigate(`/session/${notification.session_id}`);
+      const exists = await validateSessionExists(notification.session_id, notification.id);
+      if (exists) {
+        navigate(`/session/${notification.session_id}`);
+      }
     }
   };
 
