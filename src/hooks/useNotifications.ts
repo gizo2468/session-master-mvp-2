@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Capacitor } from '@capacitor/core';
 import type { Notification } from '@/services/notificationService';
 
 export const useNotifications = () => {
@@ -11,6 +12,18 @@ export const useNotifications = () => {
   
   // Track processed notification IDs to prevent duplicates from real-time subscription
   const processedIdsRef = useRef<Set<string>>(new Set());
+
+  // Update iOS app badge using @capawesome/capacitor-badge
+  const updateBadgeCount = useCallback(async (count: number) => {
+    if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+      try {
+        const { Badge } = await import('@capawesome/capacitor-badge');
+        await Badge.set({ count: Math.max(0, count) });
+      } catch (error) {
+        console.error('Error updating badge:', error);
+      }
+    }
+  }, []);
 
   const refresh = useCallback(async () => {
     if (!user?.id) return;
@@ -30,12 +43,15 @@ export const useNotifications = () => {
       
       setNotifications(notifs);
       setUnreadCount(count);
+      
+      // Update iOS badge
+      updateBadgeCount(count);
     } catch (error) {
       console.error('Error refreshing notifications:', error);
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, updateBadgeCount]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
@@ -45,14 +61,18 @@ export const useNotifications = () => {
         setNotifications(prev => 
           prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
         );
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        setUnreadCount(prev => {
+          const newCount = Math.max(0, prev - 1);
+          updateBadgeCount(newCount);
+          return newCount;
+        });
       }
       return success;
     } catch (error) {
       console.error('Error marking notification as read:', error);
       return false;
     }
-  }, []);
+  }, [updateBadgeCount]);
 
   const markAsUnread = useCallback(async (notificationId: string) => {
     try {
@@ -62,14 +82,18 @@ export const useNotifications = () => {
         setNotifications(prev => 
           prev.map(n => n.id === notificationId ? { ...n, is_read: false } : n)
         );
-        setUnreadCount(prev => prev + 1);
+        setUnreadCount(prev => {
+          const newCount = prev + 1;
+          updateBadgeCount(newCount);
+          return newCount;
+        });
       }
       return success;
     } catch (error) {
       console.error('Error marking notification as unread:', error);
       return false;
     }
-  }, []);
+  }, [updateBadgeCount]);
 
   const removeNotification = useCallback(async (notificationId: string) => {
     try {
@@ -81,7 +105,11 @@ export const useNotifications = () => {
         // Also remove from processed IDs so it can be re-added if needed
         processedIdsRef.current.delete(notificationId);
         if (notification && !notification.is_read) {
-          setUnreadCount(prev => Math.max(0, prev - 1));
+          setUnreadCount(prev => {
+            const newCount = Math.max(0, prev - 1);
+            updateBadgeCount(newCount);
+            return newCount;
+          });
         }
       }
       return success;
@@ -89,7 +117,7 @@ export const useNotifications = () => {
       console.error('Error deleting notification:', error);
       return false;
     }
-  }, [notifications]);
+  }, [notifications, updateBadgeCount]);
 
   // Initial load
   useEffect(() => {
@@ -140,7 +168,11 @@ export const useNotifications = () => {
             return updated.slice(0, 20);
           });
           
-          setUnreadCount(prev => prev + 1);
+          setUnreadCount(prev => {
+            const newCount = prev + 1;
+            updateBadgeCount(newCount);
+            return newCount;
+          });
         }
       )
       .subscribe();
@@ -148,7 +180,7 @@ export const useNotifications = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id]);
+  }, [user?.id, updateBadgeCount]);
 
   return {
     notifications,

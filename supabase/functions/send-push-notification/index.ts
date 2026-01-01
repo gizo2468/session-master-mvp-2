@@ -31,7 +31,8 @@ async function sendAPNSPush(
   data: Record<string, unknown>,
   apnsToken: string,
   bundleId: string,
-  isProduction: boolean
+  isProduction: boolean,
+  badgeCount: number
 ): Promise<{ success: boolean; error?: string; shouldDelete?: boolean }> {
   const host = isProduction 
     ? 'api.push.apple.com' 
@@ -41,7 +42,7 @@ async function sendAPNSPush(
     aps: {
       alert: { title, body },
       sound: 'default',
-      badge: 1,
+      badge: badgeCount,
     },
     ...data,
   };
@@ -93,10 +94,11 @@ async function sendWithFallback(
   data: Record<string, unknown>,
   apnsToken: string,
   bundleId: string,
-  preferProduction: boolean
+  preferProduction: boolean,
+  badgeCount: number
 ): Promise<{ success: boolean; error?: string; shouldDelete?: boolean }> {
   // Try preferred environment first
-  const firstResult = await sendAPNSPush(token, title, body, data, apnsToken, bundleId, preferProduction);
+  const firstResult = await sendAPNSPush(token, title, body, data, apnsToken, bundleId, preferProduction, badgeCount);
   
   if (firstResult.success) {
     return firstResult;
@@ -105,7 +107,7 @@ async function sendWithFallback(
   // If BadDeviceToken, try the other environment
   if (firstResult.error?.includes('BadDeviceToken')) {
     console.log(`[APNS] Token failed on ${preferProduction ? 'production' : 'sandbox'}, trying ${preferProduction ? 'sandbox' : 'production'}...`);
-    const fallbackResult = await sendAPNSPush(token, title, body, data, apnsToken, bundleId, !preferProduction);
+    const fallbackResult = await sendAPNSPush(token, title, body, data, apnsToken, bundleId, !preferProduction, badgeCount);
     return fallbackResult;
   }
   
@@ -153,6 +155,16 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Query unread notifications count for the badge
+    const { count: unreadCount, error: countError } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('recipient_user_id', recipient_user_id)
+      .eq('is_read', false);
+    
+    const badgeCount = countError ? 1 : (unreadCount || 1);
+    console.log(`[send-push-notification] Unread count for badge: ${badgeCount}`);
     
     // Get push tokens for the user
     const { data: tokens, error: tokensError } = await supabase
@@ -209,7 +221,8 @@ Deno.serve(async (req) => {
           data || {}, 
           apnsToken, 
           bundleId, 
-          preferProduction
+          preferProduction,
+          badgeCount
         );
         return { ...result, tokenId: t.id, token: t.push_token };
       })
