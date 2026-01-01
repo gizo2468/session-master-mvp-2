@@ -5,6 +5,9 @@ import { UserRole, CoachTier } from '@/types/poker';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { clearAuthCache } from '@/utils/database/sessionFetcher';
+import { detectPlatform } from '@/utils/platformDetection';
+import { initializeIAP, checkActiveEntitlement } from '@/services/iapService';
+import { verifyAndSyncSubscription } from '@/services/subscriptionSyncService';
 
 export interface User {
   id: string;
@@ -359,6 +362,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const appUser = createUserFromProfile(supabaseUser, mergedData);
         console.log("Final user object created with role:", appUser.role);
         setUser(appUser);
+
+        // Verify iOS IAP entitlement and sync with Supabase (deferred to prevent deadlock)
+        const platform = detectPlatform();
+        if (platform === 'ios') {
+          setTimeout(async () => {
+            try {
+              await initializeIAP();
+              const entitlement = await checkActiveEntitlement();
+              
+              // If there's a mismatch between IAP and stored premium status, sync it
+              if (entitlement.hasActiveSubscription !== appUser.isPremium) {
+                console.log('[AuthContext] IAP status mismatch, syncing...', {
+                  iapActive: entitlement.hasActiveSubscription,
+                  storedPremium: appUser.isPremium
+                });
+                await verifyAndSyncSubscription(
+                  entitlement.hasActiveSubscription,
+                  appUser.isPremium || false,
+                  entitlement.expiryDate,
+                  entitlement.productId
+                );
+                // Update local user state
+                setUser(prev => prev ? { ...prev, isPremium: entitlement.hasActiveSubscription } : null);
+              }
+            } catch (err) {
+              console.error('[AuthContext] IAP verification failed:', err);
+            }
+          }, 100);
+        }
 
         // Update last login time when fetching user data after login
         if (session && isNewLogin) {
