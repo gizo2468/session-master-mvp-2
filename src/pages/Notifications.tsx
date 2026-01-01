@@ -190,7 +190,7 @@ export default function Notifications() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="container mx-auto max-w-md px-4 py-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center">
             <Button
               onClick={() => navigate('/')}
               variant="outline"
@@ -199,7 +199,8 @@ export default function Notifications() {
             >
               <Icon name="ArrowLeft" size={16} />
             </Button>
-            <h1 className="text-xl font-bold">Notifications</h1>
+            <h1 className="text-xl font-bold flex-1 text-center">Notifications</h1>
+            <div className="w-9" /> {/* Spacer to balance the back button */}
           </div>
         </div>
       </header>
