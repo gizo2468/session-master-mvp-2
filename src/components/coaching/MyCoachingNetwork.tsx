@@ -71,6 +71,10 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
   const [showLimitDialog, setShowLimitDialog] = useState(false);
   const [limitDialogRole, setLimitDialogRole] = useState<'coach' | 'student'>('student');
   
+  // View all modals state
+  const [showAllPlayersModal, setShowAllPlayersModal] = useState(false);
+  const [showAllCoachesModal, setShowAllCoachesModal] = useState(false);
+  
   const isCoach = user?.role === 'coach';
   const isStudent = user?.role === 'student';
   
@@ -983,7 +987,7 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Icon name="Network" className="h-5 w-5" />
-          <span>My Player Network</span>
+          <span>{isCoach ? "My Coach Network" : "My Player Network"}</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -1216,7 +1220,7 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
                 <span>Connected Players</span>
               </h3>
               <div className="space-y-3">
-                {connectedPlayers.map((player) => (
+                {connectedPlayers.slice(0, 3).map((player) => (
                   <div
                     key={player.id}
                     className="flex items-center space-x-3 p-3 rounded-lg bg-card/50 hover:bg-card/80 transition-colors cursor-pointer"
@@ -1240,6 +1244,16 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
                   </div>
                 ))}
               </div>
+              {connectedPlayers.length > 3 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full mt-3 text-muted-foreground"
+                  onClick={() => setShowAllPlayersModal(true)}
+                >
+                  View all ({connectedPlayers.length})
+                </Button>
+              )}
             </div>
           )}
 
@@ -1251,7 +1265,7 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
                 <span>Connected Coaches</span>
               </h3>
               <div className="space-y-3">
-                {(isCoach ? connectedCoaches : connectedUsers).map((coach) => (
+                {(isCoach ? connectedCoaches : connectedUsers).slice(0, 3).map((coach) => (
                   <div
                     key={coach.id}
                     className="flex items-center space-x-3 p-3 rounded-lg bg-card/50 hover:bg-card/80 transition-colors cursor-pointer"
@@ -1275,6 +1289,16 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
                   </div>
                 ))}
               </div>
+              {(isCoach ? connectedCoaches : connectedUsers).length > 3 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full mt-3 text-muted-foreground"
+                  onClick={() => setShowAllCoachesModal(true)}
+                >
+                  View all ({(isCoach ? connectedCoaches : connectedUsers).length})
+                </Button>
+              )}
             </div>
           )}
 
@@ -1295,6 +1319,86 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
             </div>
           )}
         </div>
+
+        {/* View All Players Modal */}
+        <Dialog open={showAllPlayersModal} onOpenChange={setShowAllPlayersModal}>
+          <DialogContent className="max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <Icon name="Users" className="h-5 w-5" />
+                <span>All Connected Players ({connectedPlayers.length})</span>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 pt-4">
+              {connectedPlayers.map((player) => (
+                <div
+                  key={player.id}
+                  className="flex items-center space-x-3 p-3 rounded-lg bg-card/50 hover:bg-card/80 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setShowAllPlayersModal(false);
+                    navigate(`/player/${player.id}`);
+                  }}
+                >
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={player.profile_picture || ''} />
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      {getInitials(player.full_name || player.username || 'Player')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">
+                      {player.full_name || player.username || 'Player'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Click to view player's shared content
+                    </p>
+                  </div>
+                  <Icon name="ChevronRight" className="h-4 w-4 text-muted-foreground" />
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* View All Coaches Modal */}
+        <Dialog open={showAllCoachesModal} onOpenChange={setShowAllCoachesModal}>
+          <DialogContent className="max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <Icon name="GraduationCap" className="h-5 w-5" />
+                <span>All Connected Coaches ({(isCoach ? connectedCoaches : connectedUsers).length})</span>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 pt-4">
+              {(isCoach ? connectedCoaches : connectedUsers).map((coach) => (
+                <div
+                  key={coach.id}
+                  className="flex items-center space-x-3 p-3 rounded-lg bg-card/50 hover:bg-card/80 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setShowAllCoachesModal(false);
+                    navigate(`/coach/${coach.id}`);
+                  }}
+                >
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={coach.profile_picture || ''} />
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      {getInitials(coach.full_name || coach.username || 'Coach')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">
+                      {coach.full_name || coach.username || 'Coach'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Click to view shared sessions
+                    </p>
+                  </div>
+                  <Icon name="ChevronRight" className="h-4 w-4 text-muted-foreground" />
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
