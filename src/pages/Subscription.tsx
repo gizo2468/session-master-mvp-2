@@ -10,11 +10,27 @@ import { toast } from 'sonner';
 import { detectPlatform } from '@/utils/platformDetection';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 
+// Pricing plans configuration
+const PLANS = {
+  monthly: {
+    price: 14.99,
+    label: 'month',
+    productId: 'sessionmaster.premium.monthly'
+  },
+  yearly: {
+    price: 129.99,
+    label: 'year',
+    productId: 'sessionmaster.premium.yearly',
+    savingsPercent: 28 // (1 - 129.99 / (14.99 * 12)) * 100 ≈ 28%
+  }
+} as const;
+
 const Subscription: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isPremium } = usePremiumAccess();
   const [isLoading, setIsLoading] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
   const platform = detectPlatform();
   const isMobile = platform === 'ios' || platform === 'android';
 
@@ -29,12 +45,12 @@ const Subscription: React.FC = () => {
       return;
     }
 
-    setIsLoading('monthly');
+    setIsLoading(selectedPlan);
 
     try {
       // Create PayPal order
       const { data, error } = await supabase.functions.invoke('create-paypal-order', {
-        body: { planType: 'monthly' }
+        body: { planType: selectedPlan }
       });
 
       if (error) {
@@ -117,9 +133,39 @@ const Subscription: React.FC = () => {
                 <Crown className="h-5 w-5 text-primary" />
                 <CardTitle className="text-2xl">Premium (Developed Plan)</CardTitle>
               </div>
+              
+              {/* Plan Toggle */}
+              <div className="flex justify-center mb-4">
+                <div className="inline-flex rounded-lg border border-primary/30 p-1 bg-muted/50">
+                  <button
+                    onClick={() => setSelectedPlan('monthly')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                      selectedPlan === 'monthly' 
+                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => setSelectedPlan('yearly')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all relative ${
+                      selectedPlan === 'yearly' 
+                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Yearly
+                    <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
+                      Save 28%
+                    </span>
+                  </button>
+                </div>
+              </div>
+              
               <div className="text-4xl font-bold text-primary mb-2">
-                $9.99
-                <span className="text-lg text-muted-foreground font-normal">/month</span>
+                ${PLANS[selectedPlan].price.toFixed(2)}
+                <span className="text-lg text-muted-foreground font-normal">/{PLANS[selectedPlan].label}</span>
               </div>
               <p className="text-muted-foreground">Support development and unlock all features</p>
             </CardHeader>
@@ -163,7 +209,7 @@ const Subscription: React.FC = () => {
                     className="w-full py-6 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
                     size="lg"
                   >
-                    Subscribe for $9.99 / month
+                    Subscribe for ${PLANS[selectedPlan].price.toFixed(2)} / {PLANS[selectedPlan].label}
                   </Button>
                   <Button 
                     variant="ghost"
@@ -177,11 +223,11 @@ const Subscription: React.FC = () => {
               ) : (
                 <Button 
                   onClick={handlePayPalPayment}
-                  disabled={isLoading === 'monthly'}
+                  disabled={isLoading !== null}
                   className="w-full py-6 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
                   size="lg"
                 >
-                  {isLoading === 'monthly' ? 'Processing...' : 'Subscribe for $9.99 / month'}
+                  {isLoading ? 'Processing...' : `Subscribe for $${PLANS[selectedPlan].price.toFixed(2)} / ${PLANS[selectedPlan].label}`}
                 </Button>
               )}
             </CardContent>
