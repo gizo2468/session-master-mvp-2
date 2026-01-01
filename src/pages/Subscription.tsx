@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { detectPlatform } from '@/utils/platformDetection';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
+import { useIAP } from '@/hooks/useIAP';
 
 // Pricing plans configuration
 const PLANS = {
@@ -20,7 +21,7 @@ const PLANS = {
   yearly: {
     price: 129.99,
     label: 'year',
-    productId: 'sessionmaster.premium.yearly',
+    productId: 'com.sessionmaster.premium_yearly', // Correct product ID
     savingsPercent: 28 // (1 - 129.99 / (14.99 * 12)) * 100 ≈ 28%
   }
 } as const;
@@ -33,6 +34,30 @@ const Subscription: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
   const platform = detectPlatform();
   const isMobile = platform === 'ios' || platform === 'android';
+  
+  // IAP hook for iOS purchases
+  const { purchase, restore, getLocalizedPrice, isLoading: iapLoading, isIOS } = useIAP();
+  
+  // Handle iOS purchase
+  const handleIOSPurchase = async () => {
+    setIsLoading(selectedPlan);
+    const success = await purchase(selectedPlan);
+    if (success) {
+      // Navigate back after successful purchase
+      setTimeout(() => navigate('/settings'), 1500);
+    }
+    setIsLoading(null);
+  };
+  
+  // Handle iOS restore
+  const handleIOSRestore = async () => {
+    setIsLoading('restore');
+    const success = await restore();
+    if (success) {
+      setTimeout(() => navigate('/settings'), 1500);
+    }
+    setIsLoading(null);
+  };
 
   // Ensure we always land at the top when arriving on this page
   useEffect(() => {
@@ -205,19 +230,23 @@ const Subscription: React.FC = () => {
               {isMobile ? (
                 <div className="space-y-3">
                   <Button 
-                    onClick={() => toast.info('In-App Purchase functionality coming soon!')}
+                    onClick={handleIOSPurchase}
+                    disabled={isLoading !== null || iapLoading}
                     className="w-full py-6 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
                     size="lg"
                   >
-                    Subscribe for ${PLANS[selectedPlan].price.toFixed(2)} / {PLANS[selectedPlan].label}
+                    {isLoading === selectedPlan 
+                      ? 'Processing...' 
+                      : `Subscribe for ${getLocalizedPrice(selectedPlan, PLANS[selectedPlan].price)} / ${PLANS[selectedPlan].label}`}
                   </Button>
                   <Button 
                     variant="ghost"
-                    onClick={() => toast.info('Restore Purchases functionality coming soon!')}
+                    onClick={handleIOSRestore}
+                    disabled={isLoading !== null || iapLoading}
                     className="w-full"
                     size="sm"
                   >
-                    Restore Purchases
+                    {isLoading === 'restore' ? 'Restoring...' : 'Restore Purchases'}
                   </Button>
                 </div>
               ) : (
