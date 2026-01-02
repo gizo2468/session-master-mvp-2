@@ -47,7 +47,111 @@ export default function Notifications() {
     
     if (!session) {
       toast({ 
-        title: 'This session no longer exists',
+        title: 'This session is no longer available',
+        variant: 'destructive'
+      });
+      await removeNotification(notificationId);
+      return false;
+    }
+    return true;
+  };
+
+  // Helper to validate hand exists before opening modal
+  const validateHandExists = async (handId: string, notificationId: string): Promise<boolean> => {
+    const { data } = await supabase
+      .from('session_hands_new')
+      .select('id')
+      .eq('id', handId)
+      .maybeSingle();
+    
+    if (!data) {
+      toast({ 
+        title: 'This hand is no longer available',
+        variant: 'destructive'
+      });
+      await removeNotification(notificationId);
+      return false;
+    }
+    return true;
+  };
+
+  // Helper to validate shared session exists and user still has access
+  const validateSharedSessionExists = async (sessionId: string, notificationId: string): Promise<boolean> => {
+    // Check session exists
+    const { data: session } = await supabase
+      .from('sessions')
+      .select('id')
+      .eq('id', sessionId)
+      .maybeSingle();
+    
+    if (!session) {
+      toast({ 
+        title: 'This session is no longer available',
+        variant: 'destructive'
+      });
+      await removeNotification(notificationId);
+      return false;
+    }
+    
+    // Also verify the share still exists for this coach
+    const { data: share } = await supabase
+      .from('shared_sessions')
+      .select('id')
+      .eq('session_id', sessionId)
+      .eq('coach_id', user?.id)
+      .maybeSingle();
+    
+    if (!share) {
+      toast({ 
+        title: 'This session is no longer shared with you',
+        variant: 'destructive'
+      });
+      await removeNotification(notificationId);
+      return false;
+    }
+    
+    return true;
+  };
+
+  // Helper to validate connection still exists
+  const validateConnectionExists = async (notificationId: string, connectionId?: string | null): Promise<boolean> => {
+    if (!connectionId) {
+      // Can't validate without connection_id, allow navigation
+      return true;
+    }
+    
+    const { data } = await supabase
+      .from('coach_student_connections')
+      .select('id')
+      .eq('id', connectionId)
+      .maybeSingle();
+    
+    if (!data) {
+      toast({ 
+        title: 'This connection no longer exists',
+        variant: 'destructive'
+      });
+      await removeNotification(notificationId);
+      return false;
+    }
+    return true;
+  };
+
+  // Helper to validate player goal still exists
+  const validateGoalExists = async (notificationId: string, goalId?: string | null): Promise<boolean> => {
+    if (!goalId) {
+      return true;
+    }
+    
+    const { data } = await supabase
+      .from('player_goals')
+      .select('id')
+      .eq('id', goalId)
+      .maybeSingle();
+    
+    if (!data) {
+      toast({ 
+        title: 'This focus point is no longer available',
         variant: 'destructive'
       });
       await removeNotification(notificationId);
@@ -62,37 +166,60 @@ export default function Notifications() {
       await markAsRead(notification.id);
     }
 
-    // For coach_feedback notifications, open Hand Review modal directly (player viewing)
+    // For coach_feedback notifications, validate hand exists then open modal
     if (notification.type === 'coach_feedback' && notification.hand_id) {
-      setSelectedNotification(notification);
+      const exists = await validateHandExists(notification.hand_id, notification.id);
+      if (exists) {
+        setSelectedNotification(notification);
+      }
+      return;
     }
     
-    // For hand_uploaded notifications, open Hand Review modal (coach viewing)
+    // For hand_uploaded notifications, validate hand exists then open modal
     if (notification.type === 'hand_uploaded' && notification.hand_id) {
-      setSelectedNotification(notification);
+      const exists = await validateHandExists(notification.hand_id, notification.id);
+      if (exists) {
+        setSelectedNotification(notification);
+      }
+      return;
     }
     
-    // For hand_review_reminder notifications, open Hand Review modal (coach viewing)
+    // For hand_review_reminder notifications, validate hand exists then open modal
     if (notification.type === 'hand_review_reminder' && notification.hand_id) {
-      setSelectedNotification(notification);
+      const exists = await validateHandExists(notification.hand_id, notification.id);
+      if (exists) {
+        setSelectedNotification(notification);
+      }
+      return;
     }
     
-    // For session_shared notifications, validate session exists before opening modal
+    // For session_shared notifications, validate session AND share exists
     if (notification.type === 'session_shared' && notification.session_id) {
-      const exists = await validateSessionExists(notification.session_id, notification.id);
+      const exists = await validateSharedSessionExists(notification.session_id, notification.id);
       if (exists) {
         setSelectedSessionNotification(notification);
       }
+      return;
     }
     
-    // For connection_request notifications, navigate to Dashboard incoming requests
+    // For connection_request notifications, validate connection exists
     if (notification.type === 'connection_request') {
-      navigate('/dashboard', { state: { focusSection: 'incoming-requests' } });
+      const notifWithConnection = notification as typeof notification & { connection_id?: string };
+      const exists = await validateConnectionExists(notification.id, notifWithConnection.connection_id);
+      if (exists) {
+        navigate('/dashboard', { state: { focusSection: 'incoming-requests' } });
+      }
+      return;
     }
     
-    // For connection_approved notifications, navigate to Dashboard
+    // For connection_approved notifications, validate connection exists
     if (notification.type === 'connection_approved') {
-      navigate('/dashboard');
+      const notifWithConnection = notification as typeof notification & { connection_id?: string };
+      const exists = await validateConnectionExists(notification.id, notifWithConnection.connection_id);
+      if (exists) {
+        navigate('/dashboard');
+      }
+      return;
     }
     
     // For stack_check notifications, validate session exists before navigation
@@ -103,11 +230,17 @@ export default function Notifications() {
           state: { openBBStackModal: true } 
         });
       }
+      return;
     }
     
-    // For key_focus_point_created notifications, navigate to player dashboard
+    // For key_focus_point_created notifications, validate goal exists
     if (notification.type === 'key_focus_point_created') {
-      navigate('/player-dashboard', { state: { scrollToFocusPoints: true } });
+      const notifWithGoal = notification as typeof notification & { player_goal_id?: string };
+      const exists = await validateGoalExists(notification.id, notifWithGoal.player_goal_id);
+      if (exists) {
+        navigate('/player-dashboard', { state: { scrollToFocusPoints: true } });
+      }
+      return;
     }
     
     // For live_session_still_active notifications, validate session exists before navigation
@@ -116,6 +249,7 @@ export default function Notifications() {
       if (exists) {
         navigate(`/session/${notification.session_id}`);
       }
+      return;
     }
     
     // For multi_day_tournament_reminder notifications, validate session exists before navigation
@@ -124,6 +258,7 @@ export default function Notifications() {
       if (exists) {
         navigate(`/session/${notification.session_id}`);
       }
+      return;
     }
   };
 

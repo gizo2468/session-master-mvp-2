@@ -9,6 +9,8 @@ export interface Notification {
   body: string | null;
   hand_id: string | null;
   session_id: string | null;
+  connection_id: string | null;
+  player_goal_id: string | null;
   is_read: boolean;
   created_at: string;
 }
@@ -218,4 +220,96 @@ export const getUnreadCount = async (userId: string): Promise<number> => {
     console.error('Error in getUnreadCount:', error);
     return 0;
   }
+};
+
+/**
+ * Validates if a notification's target content still exists.
+ * Returns false if the target is missing/deleted.
+ */
+export const validateNotificationTarget = async (notification: Notification): Promise<boolean> => {
+  try {
+    // Session-based notifications
+    if (notification.session_id && [
+      'session_shared', 
+      'stack_check', 
+      'live_session_still_active', 
+      'multi_day_tournament_reminder'
+    ].includes(notification.type)) {
+      const { data } = await supabase
+        .from('sessions')
+        .select('id')
+        .eq('id', notification.session_id)
+        .maybeSingle();
+      if (!data) return false;
+    }
+
+    // Hand-based notifications
+    if (notification.hand_id && [
+      'coach_feedback', 
+      'hand_uploaded', 
+      'hand_review_reminder'
+    ].includes(notification.type)) {
+      const { data } = await supabase
+        .from('session_hands_new')
+        .select('id')
+        .eq('id', notification.hand_id)
+        .maybeSingle();
+      if (!data) return false;
+    }
+
+    // Connection-based notifications (check via connection_id if present)
+    if (notification.type === 'connection_request' || notification.type === 'connection_approved') {
+      // These reference a connection - if connection_id is stored, check it
+      // Otherwise we can't validate without the connection_id field
+      const notifWithConnectionId = notification as Notification & { connection_id?: string };
+      if (notifWithConnectionId.connection_id) {
+        const { data } = await supabase
+          .from('coach_student_connections')
+          .select('id')
+          .eq('id', notifWithConnectionId.connection_id)
+          .maybeSingle();
+        if (!data) return false;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error validating notification target:', error);
+    return true; // On error, assume valid to avoid accidental deletion
+  }
+};
+
+/**
+ * Filters out stale notifications and deletes them in the background.
+ * Returns only valid notifications.
+ */
+export const filterStaleNotifications = async (notifications: Notification[]): Promise<Notification[]> => {
+  const validNotifications: Notification[] = [];
+  const staleIds: string[] = [];
+
+  // Process in parallel for performance
+  const validationResults = await Promise.all(
+    notifications.map(async (notification) => ({
+      notification,
+      isValid: await validateNotificationTarget(notification)
+    }))
+  );
+
+  for (const { notification, isValid } of validationResults) {
+    if (isValid) {
+      validNotifications.push(notification);
+    } else {
+      staleIds.push(notification.id);
+    }
+  }
+
+  // Delete stale notifications in background (non-blocking)
+  if (staleIds.length > 0) {
+    console.log(`Cleaning up ${staleIds.length} stale notifications`);
+    Promise.all(staleIds.map(id => deleteNotification(id))).catch(err =>
+      console.error('Error cleaning up stale notifications:', err)
+    );
+  }
+
+  return validNotifications;
 };

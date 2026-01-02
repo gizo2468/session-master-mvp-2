@@ -31,21 +31,27 @@ export const useNotifications = () => {
     setLoading(true);
     try {
       // Import dynamically to avoid issues during SSR/initial load
-      const { fetchUserNotifications, getUnreadCount } = await import('@/services/notificationService');
+      const { fetchUserNotifications, getUnreadCount, filterStaleNotifications } = await import('@/services/notificationService');
       
-      const [notifs, count] = await Promise.all([
+      const [rawNotifs, count] = await Promise.all([
         fetchUserNotifications(user.id),
         getUnreadCount(user.id)
       ]);
       
-      // Update processed IDs with fetched notifications
-      notifs.forEach(n => processedIdsRef.current.add(n.id));
+      // Filter out stale notifications (deleted sessions/hands/connections)
+      const validNotifs = await filterStaleNotifications(rawNotifs);
       
-      setNotifications(notifs);
-      setUnreadCount(count);
+      // Calculate accurate unread count after filtering
+      const validUnreadCount = validNotifs.filter(n => !n.is_read).length;
+      
+      // Update processed IDs with fetched notifications
+      validNotifs.forEach(n => processedIdsRef.current.add(n.id));
+      
+      setNotifications(validNotifs);
+      setUnreadCount(validUnreadCount);
       
       // Update iOS badge
-      updateBadgeCount(count);
+      updateBadgeCount(validUnreadCount);
     } catch (error) {
       console.error('Error refreshing notifications:', error);
     } finally {
