@@ -161,7 +161,24 @@ export default function Notifications() {
   };
 
   const handleNotificationClick = async (notification: typeof notifications[0]) => {
-    // Mark as read first
+    // First, verify the notification row itself still exists in DB
+    const { data: notifExists } = await supabase
+      .from('notifications')
+      .select('id')
+      .eq('id', notification.id)
+      .maybeSingle();
+    
+    if (!notifExists) {
+      // Notification was deleted - remove via hook (will handle local state)
+      await removeNotification(notification.id);
+      toast({ 
+        title: 'This notification is no longer available',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Mark as read
     if (!notification.is_read) {
       await markAsRead(notification.id);
     }

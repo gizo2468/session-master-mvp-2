@@ -224,58 +224,57 @@ export const getUnreadCount = async (userId: string): Promise<number> => {
 
 /**
  * Validates if a notification's target content still exists.
- * Returns false if the target is missing/deleted.
+ * ID-based validation: checks ANY notification with a target ID, regardless of type.
+ * Returns false if the target is missing/deleted/inaccessible.
  */
 export const validateNotificationTarget = async (notification: Notification): Promise<boolean> => {
   try {
-    // Session-based notifications
-    if (notification.session_id && [
-      'session_shared', 
-      'stack_check', 
-      'live_session_still_active', 
-      'multi_day_tournament_reminder'
-    ].includes(notification.type)) {
-      const { data } = await supabase
+    // Check session if session_id exists (ANY notification with session_id)
+    if (notification.session_id) {
+      const { data, error } = await supabase
         .from('sessions')
         .select('id')
         .eq('id', notification.session_id)
         .maybeSingle();
-      if (!data) return false;
+      // If error (RLS denied) or no data, target is inaccessible
+      if (error || !data) return false;
     }
 
-    // Hand-based notifications
-    if (notification.hand_id && [
-      'coach_feedback', 
-      'hand_uploaded', 
-      'hand_review_reminder'
-    ].includes(notification.type)) {
-      const { data } = await supabase
+    // Check hand if hand_id exists (ANY notification with hand_id)
+    if (notification.hand_id) {
+      const { data, error } = await supabase
         .from('session_hands_new')
         .select('id')
         .eq('id', notification.hand_id)
         .maybeSingle();
-      if (!data) return false;
+      if (error || !data) return false;
     }
 
-    // Connection-based notifications (check via connection_id if present)
-    if (notification.type === 'connection_request' || notification.type === 'connection_approved') {
-      // These reference a connection - if connection_id is stored, check it
-      // Otherwise we can't validate without the connection_id field
-      const notifWithConnectionId = notification as Notification & { connection_id?: string };
-      if (notifWithConnectionId.connection_id) {
-        const { data } = await supabase
-          .from('coach_student_connections')
-          .select('id')
-          .eq('id', notifWithConnectionId.connection_id)
-          .maybeSingle();
-        if (!data) return false;
-      }
+    // Check connection if connection_id exists
+    if (notification.connection_id) {
+      const { data, error } = await supabase
+        .from('coach_student_connections')
+        .select('id')
+        .eq('id', notification.connection_id)
+        .maybeSingle();
+      if (error || !data) return false;
+    }
+
+    // Check player goal if player_goal_id exists
+    if (notification.player_goal_id) {
+      const { data, error } = await supabase
+        .from('player_goals')
+        .select('id')
+        .eq('id', notification.player_goal_id)
+        .maybeSingle();
+      if (error || !data) return false;
     }
 
     return true;
   } catch (error) {
     console.error('Error validating notification target:', error);
-    return true; // On error, assume valid to avoid accidental deletion
+    // On exception, treat as invalid to prevent navigation to error pages
+    return false;
   }
 };
 

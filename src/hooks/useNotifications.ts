@@ -132,7 +132,7 @@ export const useNotifications = () => {
     }
   }, [user?.id, refresh]);
 
-  // Real-time subscription for new notifications
+  // Real-time subscription for new notifications AND deletions
   useEffect(() => {
     if (!user?.id) return;
 
@@ -146,12 +146,22 @@ export const useNotifications = () => {
           table: 'notifications',
           filter: `recipient_user_id=eq.${user.id}`
         },
-        (payload) => {
+        async (payload) => {
           const newNotification = payload.new as Notification;
           
           // Skip if we've already processed this notification ID
           if (processedIdsRef.current.has(newNotification.id)) {
             console.log('Duplicate notification ignored:', newNotification.id);
+            return;
+          }
+          
+          // Validate the notification target before adding to state
+          const { validateNotificationTarget, deleteNotification } = await import('@/services/notificationService');
+          const isValid = await validateNotificationTarget(newNotification);
+          
+          if (!isValid) {
+            console.log('Stale notification received via realtime, deleting:', newNotification.id);
+            deleteNotification(newNotification.id).catch(console.error);
             return;
           }
           
@@ -179,6 +189,35 @@ export const useNotifications = () => {
             updateBadgeCount(newCount);
             return newCount;
           });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_user_id=eq.${user.id}`
+        },
+        (payload) => {
+          const deletedId = (payload.old as { id: string }).id;
+          if (!deletedId) return;
+          
+          // Remove from local state
+          setNotifications(prev => {
+            const notification = prev.find(n => n.id === deletedId);
+            if (notification && !notification.is_read) {
+              setUnreadCount(prevCount => {
+                const newCount = Math.max(0, prevCount - 1);
+                updateBadgeCount(newCount);
+                return newCount;
+              });
+            }
+            return prev.filter(n => n.id !== deletedId);
+          });
+          
+          // Remove from processed IDs
+          processedIdsRef.current.delete(deletedId);
         }
       )
       .subscribe();
