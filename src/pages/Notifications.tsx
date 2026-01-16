@@ -37,11 +37,11 @@ export default function Notifications() {
     );
   }, [notifications]);
 
-  // Helper to validate session exists before navigation
-  const validateSessionExists = async (sessionId: string, notificationId: string): Promise<boolean> => {
+  // Helper to validate session exists and check if it's still active
+  const validateSessionExists = async (sessionId: string, notificationId: string): Promise<{ exists: boolean; isActive: boolean }> => {
     const { data: session } = await supabase
       .from('sessions')
-      .select('id')
+      .select('id, is_active, status')
       .eq('id', sessionId)
       .maybeSingle();
     
@@ -51,9 +51,12 @@ export default function Notifications() {
         variant: 'destructive'
       });
       await removeNotification(notificationId);
-      return false;
+      return { exists: false, isActive: false };
     }
-    return true;
+    return { 
+      exists: true, 
+      isActive: session.is_active === true && session.status === 'active' 
+    };
   };
 
   // Helper to validate hand exists before opening modal
@@ -239,13 +242,20 @@ export default function Notifications() {
       return;
     }
     
-    // For stack_check notifications, validate session exists before navigation
+    // For stack_check notifications, validate session exists AND is active before navigation
     if (notification.type === 'stack_check' && notification.session_id) {
-      const exists = await validateSessionExists(notification.session_id, notification.id);
-      if (exists) {
-        navigate(`/session/${notification.session_id}`, { 
-          state: { openBBStackModal: true } 
-        });
+      const result = await validateSessionExists(notification.session_id, notification.id);
+      if (result.exists) {
+        if (result.isActive) {
+          navigate(`/session/${notification.session_id}`, { 
+            state: { openBBStackModal: true } 
+          });
+        } else {
+          // Session ended - remove stale notification and redirect to details
+          toast({ title: 'This session has ended' });
+          await removeNotification(notification.id);
+          navigate(`/session/${notification.session_id}/details`);
+        }
       }
       return;
     }
@@ -260,20 +270,35 @@ export default function Notifications() {
       return;
     }
     
-    // For live_session_still_active notifications, validate session exists before navigation
+    // For live_session_still_active notifications, validate session exists AND is active
     if (notification.type === 'live_session_still_active' && notification.session_id) {
-      const exists = await validateSessionExists(notification.session_id, notification.id);
-      if (exists) {
-        navigate(`/session/${notification.session_id}`);
+      const result = await validateSessionExists(notification.session_id, notification.id);
+      if (result.exists) {
+        if (result.isActive) {
+          // Session still active - navigate to live session
+          navigate(`/session/${notification.session_id}`);
+        } else {
+          // Session ended - remove stale notification and redirect to details
+          toast({ title: 'This session has ended' });
+          await removeNotification(notification.id);
+          navigate(`/session/${notification.session_id}/details`);
+        }
       }
       return;
     }
     
-    // For multi_day_tournament_reminder notifications, validate session exists before navigation
+    // For multi_day_tournament_reminder notifications, validate session exists AND is active
     if (notification.type === 'multi_day_tournament_reminder' && notification.session_id) {
-      const exists = await validateSessionExists(notification.session_id, notification.id);
-      if (exists) {
-        navigate(`/session/${notification.session_id}`);
+      const result = await validateSessionExists(notification.session_id, notification.id);
+      if (result.exists) {
+        if (result.isActive) {
+          navigate(`/session/${notification.session_id}`);
+        } else {
+          // Session ended - remove stale notification and redirect to details
+          toast({ title: 'This session has ended' });
+          await removeNotification(notification.id);
+          navigate(`/session/${notification.session_id}/details`);
+        }
       }
       return;
     }

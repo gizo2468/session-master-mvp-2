@@ -222,10 +222,18 @@ export const getUnreadCount = async (userId: string): Promise<number> => {
   }
 };
 
+// Notification types that require an active session to be valid
+const ACTIVE_SESSION_NOTIFICATION_TYPES = [
+  'live_session_still_active',
+  'multi_day_tournament_reminder',
+  'stack_check'
+];
+
 /**
  * Validates if a notification's target content still exists.
  * ID-based validation: checks ANY notification with a target ID, regardless of type.
- * Returns false if the target is missing/deleted/inaccessible.
+ * For "active session" notifications, also verifies the session is still active.
+ * Returns false if the target is missing/deleted/inaccessible/ended.
  */
 export const validateNotificationTarget = async (notification: Notification): Promise<boolean> => {
   try {
@@ -233,11 +241,18 @@ export const validateNotificationTarget = async (notification: Notification): Pr
     if (notification.session_id) {
       const { data, error } = await supabase
         .from('sessions')
-        .select('id')
+        .select('id, is_active, status')
         .eq('id', notification.session_id)
         .maybeSingle();
       // If error (RLS denied) or no data, target is inaccessible
       if (error || !data) return false;
+      
+      // For "active session" notification types, session must actually be active
+      if (ACTIVE_SESSION_NOTIFICATION_TYPES.includes(notification.type)) {
+        if (!data.is_active || data.status !== 'active') {
+          return false; // Session ended, notification is stale
+        }
+      }
     }
 
     // Check hand if hand_id exists (ANY notification with hand_id)

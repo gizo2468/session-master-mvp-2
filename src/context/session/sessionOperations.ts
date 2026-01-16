@@ -1,10 +1,12 @@
 
+
 import { PokerSession, HandData, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '@/context/AuthContext';
 import { saveSessionToDatabase, deleteSessionFromDatabase } from '@/utils/database';
 import { createTableHandHandlers } from './handlers';
 import { saveSessionsToSources } from './databaseSync';
+import { supabase } from '@/integrations/supabase/client';
 
 export const createSessionOperations = (
   sessions: PokerSession[],
@@ -273,6 +275,24 @@ export const createSessionOperations = (
       setActiveSession(null);
       
       console.log('✅ FIXED: Session ended successfully and preserved in database with status=ended');
+      
+      // Clean up stale notifications for this ended session
+      try {
+        const { error } = await supabase
+          .from('notifications')
+          .delete()
+          .eq('session_id', id)
+          .in('type', ['live_session_still_active', 'multi_day_tournament_reminder', 'stack_check']);
+        
+        if (error) {
+          console.error('Failed to clean up session notifications:', error);
+        } else {
+          console.log('🧹 Cleaned up session-related notifications for ended session');
+        }
+      } catch (cleanupError) {
+        console.error('Error cleaning up notifications:', cleanupError);
+        // Non-critical - don't fail the session end
+      }
     }
   };
 
