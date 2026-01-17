@@ -1,4 +1,4 @@
-import { jsPDF } from 'jspdf';
+import { jsPDF, GState } from 'jspdf';
 import { format } from 'date-fns';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -11,6 +11,9 @@ import {
   formatPercentage,
   formatRatio,
 } from './statisticsCalculator';
+
+// Import logo as base64
+import logoUrl from '@/assets/session-master-logo-pdf.png';
 
 interface StatData {
   label: string;
@@ -25,6 +28,30 @@ interface ExportData {
   statistics?: any;
   defaultCurrency?: string;
 }
+
+/**
+ * Load image as base64 for PDF embedding
+ */
+const loadImageAsBase64 = async (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } else {
+        reject(new Error('Could not get canvas context'));
+      }
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+};
 
 /**
  * PUBLIC API – what Dashboard imports
@@ -112,45 +139,97 @@ const generateStatisticsPDFWithData = async (data: ExportData) => {
 
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
   let y = margin;
 
+  // === TITLE (centered, bold, larger) ===
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
+  doc.setFontSize(24);
   doc.text('My Finance', pageWidth / 2, y, { align: 'center' });
-  y += 20;
+  y += 30;
 
+  // === HEADER INFO (centered) ===
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
-
-  doc.text(`Timeframe: ${data.filters.timeframeValue}`, margin, y);
-  y += 6;
-  doc.text(`Scope: ${data.filters.gameScope}`, margin, y);
-  y += 6;
+  doc.text(`Timeframe: ${data.filters.timeframeValue}`, pageWidth / 2, y, { align: 'center' });
+  y += 8;
+  doc.text(`Scope: ${data.filters.gameScope}`, pageWidth / 2, y, { align: 'center' });
+  y += 8;
 
   if (data.userName) {
-    doc.text(`User: ${data.userName}`, margin, y);
-    y += 6;
+    doc.text(`User: ${data.userName}`, pageWidth / 2, y, { align: 'center' });
+    y += 8;
   }
 
-  y += 10;
+  y += 20;
 
-  const colWidth = (pageWidth - margin * 2) / 2;
-  const rowHeight = 22;
+  // === 2-COLUMN STATS (centered block) ===
+  const colWidth = 80;
+  const blockStartX = (pageWidth - colWidth * 2) / 2;
+  const rowHeight = 30;
 
   data.stats.forEach((s, i) => {
     const col = i % 2;
     const row = Math.floor(i / 2);
-    const x = margin + col * colWidth;
+    const x = blockStartX + col * colWidth;
     const yy = y + row * rowHeight;
 
-    doc.setFontSize(9);
+    // Label: bigger, bold
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
     doc.text(s.label, x, yy);
 
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text(s.value, x, yy + 8);
+    // Underline the label
+    const labelWidth = doc.getTextWidth(s.label);
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(0, 0, 0);
+    doc.line(x, yy + 2, x + labelWidth, yy + 2);
+
+    // Value below the label
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text(s.value, x, yy + 14);
   });
+
+  // === LOGO AT BOTTOM CENTER WITH GLOW ===
+  try {
+    const logoBase64 = await loadImageAsBase64(logoUrl);
+    const logoWidth = 80;
+    const logoHeight = 55;
+    const logoX = (pageWidth - logoWidth) / 2;
+    const logoY = pageHeight - logoHeight - 25;
+
+    // Golden glow effect - draw multiple semi-transparent layers
+    const glowColor = { r: 218, g: 165, b: 32 }; // Gold
+    
+    // Outer glow layers
+    for (let i = 4; i >= 1; i--) {
+      const opacity = 0.08 * (5 - i);
+      const gState = new GState({ opacity });
+      doc.setGState(gState);
+      doc.setFillColor(glowColor.r, glowColor.g, glowColor.b);
+      doc.roundedRect(
+        logoX - i * 4,
+        logoY - i * 4,
+        logoWidth + i * 8,
+        logoHeight + i * 8,
+        8,
+        8,
+        'F'
+      );
+    }
+
+    // Reset opacity for main logo
+    doc.setGState(new GState({ opacity: 1 }));
+    
+    // Draw the logo
+    doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
+    
+    console.log('[PDF] Logo added successfully');
+  } catch (err) {
+    console.error('[PDF] Failed to load logo:', err);
+  }
 
   const filename = `MyFinance_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
   const platform = Capacitor.getPlatform();
@@ -171,7 +250,7 @@ const generateStatisticsPDFWithData = async (data: ExportData) => {
   try {
     console.log('[PDF] Platform:', platform);
 
-    const dataUri = doc.output('datauristring'); // data:application/pdf;base64,...
+    const dataUri = doc.output('datauristring');
     const base64 = dataUri.split(',')[1];
     console.log('[PDF] base64 length:', base64?.length);
 
