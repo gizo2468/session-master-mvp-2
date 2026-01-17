@@ -6,6 +6,7 @@ import Icon from '@/components/ui/Lucide';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useCoachStudent } from '@/context/CoachStudentContext';
+import { IconMenuButton } from '@/components/ui/IconMenuButton';
 
 interface CoachProfileCardProps {
   coach: {
@@ -58,9 +59,9 @@ const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
             <AlertDialog>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button aria-label="More options" className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted/50">
+                  <IconMenuButton aria-label="More options">
                     <Icon name="EllipsisVertical" className="h-5 w-5" />
-                  </button>
+                  </IconMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <AlertDialogTrigger asChild>

@@ -1,7 +1,23 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* iOS WebView touch optimization */
+button,
+[role="button"],
+a,
+[data-state] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Ensure minimum touch target size for interactive elements on mobile */
+@media (pointer: coarse) {
+  .touch-target-44 {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
 
 
 /* Hide Safari/WebKit credentials autofill button globally */

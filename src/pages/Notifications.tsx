@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { IconMenuButton } from '@/components/ui/IconMenuButton';
 
 export default function Notifications() {
   const navigate = useNavigate();
@@ -450,13 +451,9 @@ export default function Notifications() {
                         <Icon name="ChevronRight" size={16} className="text-gray-400" />
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button
-                              onClick={(e) => e.stopPropagation()}
-                              className="p-1 rounded hover:bg-gray-100 transition-colors"
-                              aria-label="More options"
-                            >
-                              <Icon name="Ellipsis" size={16} className="text-gray-400" />
-                            </button>
+                            <IconMenuButton aria-label="More options">
+                              <Icon name="Ellipsis" size={20} className="text-muted-foreground" />
+                            </IconMenuButton>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                             <DropdownMenuItem
