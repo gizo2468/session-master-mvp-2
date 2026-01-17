@@ -21,6 +21,8 @@ interface StatData {
   rawValue?: number; // For color formatting
   isMoney?: boolean; // To identify money fields
   isCentered?: boolean; // For Total Payouts centering
+  isWinRatio?: boolean; // For Win Ratio color logic
+  isTotalPayouts?: boolean; // For Total Payouts special styling
 }
 
 interface ExportData {
@@ -112,11 +114,11 @@ const formatStatsForPDF = (
       { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns ?? 0, currency), rawValue: stats.totalBuyIns ?? 0, isMoney: false },
       { label: 'Average Duration', value: formatDuration(stats.averageDuration) },
       { label: 'Total Duration', value: formatDuration(stats.totalDuration) },
-      { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
+      { label: 'Win Ratio', value: formatPercentage(stats.winRatio), rawValue: stats.winRatio ?? 0, isWinRatio: true },
       { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
       { label: 'Total Tables', value: String(stats.totalTables ?? 0) },
       { label: 'Number of Sessions', value: String(stats.numberOfSessions ?? 0) },
-      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts ?? 0, currency), rawValue: stats.totalPayouts ?? 0, isMoney: false, isCentered: true },
+      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts ?? 0, currency), rawValue: stats.totalPayouts ?? 0, isTotalPayouts: true, isCentered: true },
     ];
   }
 
@@ -129,7 +131,7 @@ const formatStatsForPDF = (
       { label: 'Total Duration', value: formatDuration(stats.totalDuration) },
       { label: 'Hands Count', value: (stats.handsCount ?? 0).toLocaleString() },
       { label: 'Number of Sessions', value: String(stats.numberOfSessions ?? 0) },
-      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts ?? 0, currency), rawValue: stats.totalPayouts ?? 0, isMoney: false, isCentered: true },
+      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts ?? 0, currency), rawValue: stats.totalPayouts ?? 0, isTotalPayouts: true, isCentered: true },
     ];
   }
 
@@ -141,7 +143,7 @@ const formatStatsForPDF = (
     { label: 'Final Tables', value: String(stats.finalTables ?? 0) },
     { label: 'First Place Finish', value: String(stats.firstPlaceFinish ?? 0) },
     { label: 'Hands Count', value: (stats.handsCount ?? 0).toLocaleString() },
-    { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts ?? 0, currency), rawValue: stats.totalPayouts ?? 0, isMoney: false, isCentered: true },
+    { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts ?? 0, currency), rawValue: stats.totalPayouts ?? 0, isTotalPayouts: true, isCentered: true },
   ];
 };
 
@@ -212,7 +214,7 @@ const generateStatisticsPDFWithData = async (data: ExportData) => {
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
     
-    // Set color based on value (green for positive, red for negative)
+    // Set color based on value type
     if (s.isMoney && s.rawValue !== undefined) {
       if (s.rawValue > 0) {
         doc.setTextColor(34, 139, 34); // Green
@@ -220,6 +222,13 @@ const generateStatisticsPDFWithData = async (data: ExportData) => {
         doc.setTextColor(220, 53, 69); // Red
       } else {
         doc.setTextColor(0, 0, 0); // Black for zero
+      }
+    } else if (s.isWinRatio && s.rawValue !== undefined) {
+      // Win Ratio: green if > 0, red if = 0
+      if (s.rawValue > 0) {
+        doc.setTextColor(34, 139, 34); // Green
+      } else {
+        doc.setTextColor(220, 53, 69); // Red
       }
     } else {
       doc.setTextColor(0, 0, 0); // Black for non-money values
@@ -251,23 +260,42 @@ const generateStatisticsPDFWithData = async (data: ExportData) => {
     doc.setDrawColor(0, 0, 0);
     doc.line(centerX - labelWidth / 2, yy + 1.5, centerX + labelWidth / 2, yy + 1.5);
 
-    // Value with color
+    // Value with special styling for Total Payouts
     doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
     
-    if (s.isMoney && s.rawValue !== undefined) {
+    if (s.isTotalPayouts && s.rawValue !== undefined) {
       if (s.rawValue > 0) {
-        doc.setTextColor(34, 139, 34); // Green
-      } else if (s.rawValue < 0) {
-        doc.setTextColor(220, 53, 69); // Red
+        // Gold with bold for positive Total Payouts
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(218, 165, 32); // Gold color
+        
+        // Draw glow effect (multiple layers of gold text with slight offsets)
+        const glowColor = [255, 215, 0]; // Bright gold for glow
+        const gState = new GState({ opacity: 0.3 });
+        doc.saveGraphicsState();
+        doc.setGState(gState);
+        doc.setTextColor(glowColor[0], glowColor[1], glowColor[2]);
+        // Draw glow layers
+        doc.text(s.value, centerX - 0.5, yy + 10, { align: 'center' });
+        doc.text(s.value, centerX + 0.5, yy + 10, { align: 'center' });
+        doc.text(s.value, centerX, yy + 9.5, { align: 'center' });
+        doc.text(s.value, centerX, yy + 10.5, { align: 'center' });
+        doc.restoreGraphicsState();
+        
+        // Draw main gold text on top
+        doc.setTextColor(218, 165, 32); // Gold color
+        doc.text(s.value, centerX, yy + 10, { align: 'center' });
       } else {
-        doc.setTextColor(0, 0, 0);
+        // Red for zero Total Payouts
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(220, 53, 69); // Red
+        doc.text(s.value, centerX, yy + 10, { align: 'center' });
       }
     } else {
+      doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
+      doc.text(s.value, centerX, yy + 10, { align: 'center' });
     }
-    
-    doc.text(s.value, centerX, yy + 10, { align: 'center' });
   });
 
   // Reset text color
