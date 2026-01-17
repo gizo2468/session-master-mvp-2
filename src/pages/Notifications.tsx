@@ -213,6 +213,15 @@ export default function Notifications() {
       return;
     }
     
+    // For feedback_seen notifications, validate hand exists then open modal (coach view)
+    if (notification.type === 'feedback_seen' && notification.hand_id) {
+      const exists = await validateHandExists(notification.hand_id, notification.id);
+      if (exists) {
+        setSelectedNotification(notification);
+      }
+      return;
+    }
+    
     // For session_shared notifications, validate session AND share exists
     if (notification.type === 'session_shared' && notification.session_id) {
       const exists = await validateSharedSessionExists(notification.session_id, notification.id);
@@ -332,7 +341,7 @@ export default function Notifications() {
   };
   
   // Determine if current user is viewing as coach (coach-targeted notification types)
-  const COACH_VIEW_TYPES = ['hand_uploaded', 'hand_review_reminder'];
+  const COACH_VIEW_TYPES = ['hand_uploaded', 'hand_review_reminder', 'feedback_seen'];
   const isCoachView = selectedNotification ? COACH_VIEW_TYPES.includes(selectedNotification.type) : false;
   const playerId = isCoachView ? selectedNotification?.sender_user_id : user?.id;
   const coachId = isCoachView ? user?.id : selectedNotification?.sender_user_id;
