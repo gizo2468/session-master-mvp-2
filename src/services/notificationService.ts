@@ -11,6 +11,7 @@ export interface Notification {
   session_id: string | null;
   connection_id: string | null;
   player_goal_id: string | null;
+  feedback_id: string | null;
   is_read: boolean;
   created_at: string;
 }
@@ -24,6 +25,7 @@ export interface CreateNotificationData {
   hand_id?: string | null;
   session_id?: string | null;
   player_goal_id?: string | null;
+  feedback_id?: string | null;
 }
 
 export const createNotification = async (data: CreateNotificationData): Promise<Notification | null> => {
@@ -48,7 +50,8 @@ export const createNotification = async (data: CreateNotificationData): Promise<
       ...(data.sender_user_id && { sender_user_id: data.sender_user_id }),
       ...(data.body && { body: data.body }),
       ...(data.hand_id && { hand_id: data.hand_id }),
-      ...(data.session_id && { session_id: data.session_id })
+      ...(data.session_id && { session_id: data.session_id }),
+      ...(data.feedback_id && { feedback_id: data.feedback_id })
     };
     
     console.log('Inserting notification payload:', payload);
@@ -326,4 +329,32 @@ export const filterStaleNotifications = async (notifications: Notification[]): P
   }
 
   return validNotifications;
+};
+
+/**
+ * Deletes a notification by feedback_id and sender_user_id.
+ * Used when a student unlikes feedback to remove the "feedback_seen" notification.
+ */
+export const deleteNotificationByFeedbackId = async (
+  feedbackId: string,
+  senderId: string
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('feedback_id', feedbackId)
+      .eq('sender_user_id', senderId)
+      .eq('type', 'feedback_seen');
+
+    if (error) {
+      console.error('Error deleting notification by feedback_id:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in deleteNotificationByFeedbackId:', error);
+    return false;
+  }
 };
