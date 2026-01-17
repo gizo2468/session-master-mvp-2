@@ -9,7 +9,7 @@ import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 import CardDisplay from '@/components/poker/CardDisplay';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { createNotification } from '@/services/notificationService';
+import { createNotification, deleteNotificationByFeedbackId } from '@/services/notificationService';
 
 interface HandData {
   id: string;
@@ -292,9 +292,8 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
         prev.map(e => e.id === entry.id ? { ...e, seen_at: newSeenAt } : e)
       );
       
-      // Only send notification when LIKING (not when unliking)
       if (!isCurrentlyLiked) {
-        // Get student name for notification
+        // LIKING: Create notification with feedback_id for later deletion
         const { data: studentProfile } = await supabase
           .from('profiles')
           .select('online_nickname, username')
@@ -303,15 +302,18 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
         
         const studentName = studentProfile?.online_nickname || studentProfile?.username || 'Student';
         
-        // Send notification to coach
         await createNotification({
           recipient_user_id: entry.coach_id,
           sender_user_id: currentUserId,
           type: 'feedback_seen',
           title: `${studentName} liked your feedback`,
           body: 'Your coaching feedback has been appreciated.',
-          hand_id: hand?.id || null
+          hand_id: hand?.id || null,
+          feedback_id: entry.id
         });
+      } else {
+        // UNLIKING: Remove the notification for this feedback
+        await deleteNotificationByFeedbackId(entry.id, currentUserId);
       }
     } catch (error) {
       console.error('Error toggling feedback like:', error);

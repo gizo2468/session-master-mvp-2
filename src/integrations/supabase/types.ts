@@ -141,6 +141,7 @@ export type Database = {
           body: string | null
           connection_id: string | null
           created_at: string
+          feedback_id: string | null
           hand_id: string | null
           id: string
           is_read: boolean
@@ -155,6 +156,7 @@ export type Database = {
           body?: string | null
           connection_id?: string | null
           created_at?: string
+          feedback_id?: string | null
           hand_id?: string | null
           id?: string
           is_read?: boolean
@@ -169,6 +171,7 @@ export type Database = {
           body?: string | null
           connection_id?: string | null
           created_at?: string
+          feedback_id?: string | null
           hand_id?: string | null
           id?: string
           is_read?: boolean
@@ -179,7 +182,15 @@ export type Database = {
           title?: string
           type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "hand_feedback"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       opponent_profiles: {
         Row: {
