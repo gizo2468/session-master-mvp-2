@@ -26,49 +26,6 @@ interface ExportData {
   defaultCurrency?: string;
 }
 
-// Logo path for PDF branding
-const LOGO_PATH = '/lovable-uploads/9dacd61d-619a-4834-8789-3d9484fc67a0.png';
-
-// Cache for logo base64 to avoid re-fetching
-let cachedLogoBase64: string | null = null;
-
-/**
- * Convert logo image to base64 for PDF embedding
- */
-const getLogoBase64 = async (): Promise<string | null> => {
-  if (cachedLogoBase64) {
-    return cachedLogoBase64;
-  }
-
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0);
-          cachedLogoBase64 = canvas.toDataURL('image/png');
-          resolve(cachedLogoBase64);
-        } else {
-          resolve(null);
-        }
-      } catch (err) {
-        console.warn('[PDF] Canvas conversion failed:', err);
-        resolve(null);
-      }
-    };
-    img.onerror = () => {
-      console.warn('[PDF] Logo load failed');
-      resolve(null);
-    };
-    img.src = LOGO_PATH;
-  });
-};
-
 /**
  * PUBLIC API – what Dashboard imports
  */
@@ -149,88 +106,52 @@ const formatStatsForPDF = (
 
 /**
  * CORE PDF GENERATION + SHARE (iOS)
- * Updated layout: centered content, styled headings, logo at bottom
  */
 const generateStatisticsPDFWithData = async (data: ExportData) => {
   console.log('[PDF] generateStatisticsPDFWithData started');
 
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const centerX = pageWidth / 2;
-  let y = 25;
+  const margin = 20;
+  let y = margin;
 
-  // ===== TITLE =====
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(24);
-  doc.text('My Finance', centerX, y, { align: 'center' });
-  y += 15;
+  doc.setFontSize(18);
+  doc.text('My Finance', pageWidth / 2, y, { align: 'center' });
+  y += 20;
 
-  // ===== FILTERS INFO (centered) =====
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(80, 80, 80);
 
-  doc.text(`Timeframe: ${data.filters.timeframeValue}`, centerX, y, { align: 'center' });
-  y += 7;
-  doc.text(`Scope: ${data.filters.gameScope}`, centerX, y, { align: 'center' });
-  y += 7;
+  doc.text(`Timeframe: ${data.filters.timeframeValue}`, margin, y);
+  y += 6;
+  doc.text(`Scope: ${data.filters.gameScope}`, margin, y);
+  y += 6;
 
   if (data.userName) {
-    doc.text(`User: ${data.userName}`, centerX, y, { align: 'center' });
-    y += 7;
+    doc.text(`User: ${data.userName}`, margin, y);
+    y += 6;
   }
 
-  // Reset text color
-  doc.setTextColor(0, 0, 0);
-  y += 12;
+  y += 10;
 
-  // ===== STATS (centered, single column with styled headings) =====
-  const rowHeight = 22; // Space for label + value + gap
+  const colWidth = (pageWidth - margin * 2) / 2;
+  const rowHeight = 22;
 
   data.stats.forEach((s, i) => {
-    const yy = y + i * rowHeight;
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    const x = margin + col * colWidth;
+    const yy = y + row * rowHeight;
 
-    // Label: bold, larger, underlined
+    doc.setFontSize(9);
+    doc.text(s.label, x, yy);
+
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text(s.label, centerX, yy, { align: 'center' });
-
-    // Draw underline below label
-    const labelWidth = doc.getTextWidth(s.label);
-    const underlineY = yy + 1.5;
-    doc.setDrawColor(60, 60, 60);
-    doc.setLineWidth(0.4);
-    doc.line(
-      centerX - labelWidth / 2,
-      underlineY,
-      centerX + labelWidth / 2,
-      underlineY
-    );
-
-    // Value: normal weight, below label
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'normal');
-    doc.text(s.value, centerX, yy + 9, { align: 'center' });
+    doc.text(s.value, x, yy + 8);
   });
 
-  // ===== LOGO AT BOTTOM CENTER =====
-  try {
-    const logoBase64 = await getLogoBase64();
-    if (logoBase64) {
-      const logoWidth = 35;
-      const logoHeight = 35;
-      const logoX = centerX - logoWidth / 2;
-      const logoY = pageHeight - logoHeight - 20; // 20mm from bottom
-
-      doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
-      console.log('[PDF] Logo added successfully');
-    }
-  } catch (err) {
-    console.warn('[PDF] Could not add logo:', err);
-  }
-
-  // ===== SAVE / SHARE =====
   const filename = `MyFinance_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
   const platform = Capacitor.getPlatform();
 
