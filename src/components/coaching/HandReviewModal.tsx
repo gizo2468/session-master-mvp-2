@@ -74,7 +74,7 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
     coach_id: string;
     seen_at: string | null;
   }>>([]);
-  const [isMarkingSeen, setIsMarkingSeen] = useState<string | null>(null);
+  const [isTogglingLike, setIsTogglingLike] = useState<string | null>(null);
   const [isSavingFeedback, setIsSavingFeedback] = useState(false);
   const [handImage, setHandImage] = useState<string | null>(null);
   const [loadingHandImage, setLoadingHandImage] = useState(false);
@@ -268,59 +268,60 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
     }
   };
 
-  // Mark feedback as seen (student only)
-  const markFeedbackAsSeen = async (entry: typeof feedbackEntries[0]) => {
-    if (!currentUserId || entry.seen_at || isCoach) return;
+  // Toggle feedback like (student only)
+  const toggleFeedbackLike = async (entry: typeof feedbackEntries[0]) => {
+    if (!currentUserId || isCoach) return;
     
-    setIsMarkingSeen(entry.id);
+    setIsTogglingLike(entry.id);
+    const isCurrentlyLiked = !!entry.seen_at;
+    
     try {
-      const seenAt = new Date().toISOString();
+      // Toggle: if liked -> set null, if not liked -> set timestamp
+      const newSeenAt = isCurrentlyLiked ? null : new Date().toISOString();
       
       // Update database
       const { error } = await supabase
         .from('hand_feedback')
-        .update({ seen_at: seenAt })
+        .update({ seen_at: newSeenAt })
         .eq('id', entry.id);
       
       if (error) throw error;
       
       // Update local state
       setFeedbackEntries(prev => 
-        prev.map(e => e.id === entry.id ? { ...e, seen_at: seenAt } : e)
+        prev.map(e => e.id === entry.id ? { ...e, seen_at: newSeenAt } : e)
       );
       
-      // Get student name for notification
-      const { data: studentProfile } = await supabase
-        .from('profiles')
-        .select('online_nickname, username')
-        .eq('id', currentUserId)
-        .single();
-      
-      const studentName = studentProfile?.online_nickname || studentProfile?.username || 'Student';
-      
-      // Send notification to coach
-      await createNotification({
-        recipient_user_id: entry.coach_id,
-        sender_user_id: currentUserId,
-        type: 'feedback_seen',
-        title: `${studentName} saw your feedback`,
-        body: 'Your coaching feedback has been acknowledged.',
-        hand_id: hand?.id || null
-      });
-      
-      toast({
-        title: "Marked as seen",
-        description: "Coach has been notified."
-      });
+      // Only send notification when LIKING (not when unliking)
+      if (!isCurrentlyLiked) {
+        // Get student name for notification
+        const { data: studentProfile } = await supabase
+          .from('profiles')
+          .select('online_nickname, username')
+          .eq('id', currentUserId)
+          .single();
+        
+        const studentName = studentProfile?.online_nickname || studentProfile?.username || 'Student';
+        
+        // Send notification to coach
+        await createNotification({
+          recipient_user_id: entry.coach_id,
+          sender_user_id: currentUserId,
+          type: 'feedback_seen',
+          title: `${studentName} liked your feedback`,
+          body: 'Your coaching feedback has been appreciated.',
+          hand_id: hand?.id || null
+        });
+      }
     } catch (error) {
-      console.error('Error marking feedback as seen:', error);
+      console.error('Error toggling feedback like:', error);
       toast({
         title: "Error",
-        description: "Failed to mark as seen. Please try again.",
+        description: "Failed to update. Please try again.",
         variant: "destructive"
       });
     } finally {
-      setIsMarkingSeen(null);
+      setIsTogglingLike(null);
     }
   };
 
@@ -583,41 +584,45 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
                                 })}
                               </span>
                               <div className="flex items-center gap-1">
-                                {/* Student: Seen button */}
+                                {/* Student: Toggle heart like */}
                                 {!isCoach && (
-                                  <Button
-                                    variant={entry.seen_at ? "secondary" : "outline"}
-                                    size="sm"
-                                    disabled={!!entry.seen_at || isMarkingSeen === entry.id}
-                                    onClick={() => markFeedbackAsSeen(entry)}
-                                    className={
-                                      entry.seen_at 
-                                        ? "h-7 px-2 text-xs bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800" 
-                                        : "h-7 px-2 text-xs hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-300"
-                                    }
+                                  <button
+                                    onClick={() => toggleFeedbackLike(entry)}
+                                    disabled={isTogglingLike === entry.id}
+                                    className="p-1.5 rounded-full transition-all duration-200 hover:scale-110 disabled:opacity-50"
+                                    aria-label={entry.seen_at ? "Unlike feedback" : "Like feedback"}
                                   >
-                                    {isMarkingSeen === entry.id ? (
-                                      <Icon name="Loader" className="h-3 w-3 animate-spin" />
+                                    {isTogglingLike === entry.id ? (
+                                      <Icon name="Loader" className="h-5 w-5 animate-spin text-muted-foreground" />
                                     ) : entry.seen_at ? (
-                                      <>
-                                        <Icon name="check" className="h-3 w-3 mr-1" />
-                                        Seen
-                                      </>
+                                      <Icon name="Heart" className="h-5 w-5 fill-rose-500 text-rose-500 transition-colors" />
                                     ) : (
-                                      "Seen"
+                                      <Icon name="Heart" className="h-5 w-5 text-muted-foreground hover:text-rose-400 transition-colors" />
                                     )}
-                                  </Button>
+                                  </button>
                                 )}
-                                {/* Coach: Delete button */}
+                                {/* Coach: Read-only heart indicator + Delete button */}
                                 {isCoach && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => deleteFeedback(entry.id)}
-                                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                                  >
-                                    <Icon name="trash-2" className="h-3 w-3" />
-                                  </Button>
+                                  <>
+                                    <div 
+                                      className="p-1"
+                                      aria-label={entry.seen_at ? "Student liked this feedback" : "Not liked yet"}
+                                    >
+                                      {entry.seen_at ? (
+                                        <Icon name="Heart" className="h-4 w-4 fill-rose-500 text-rose-500" />
+                                      ) : (
+                                        <Icon name="Heart" className="h-4 w-4 text-muted-foreground/40" />
+                                      )}
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => deleteFeedback(entry.id)}
+                                      className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                                    >
+                                      <Icon name="trash-2" className="h-3 w-3" />
+                                    </Button>
+                                  </>
                                 )}
                               </div>
                             </div>
