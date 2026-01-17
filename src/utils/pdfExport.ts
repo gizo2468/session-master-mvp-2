@@ -162,68 +162,47 @@ const generateStatisticsPDFWithData = async (data: ExportData) => {
     y += 8;
   }
 
-  y += 20;
+  y += 12;
 
-  // === 2-COLUMN STATS (centered block) ===
-  const colWidth = 80;
-  const blockStartX = (pageWidth - colWidth * 2) / 2;
-  const rowHeight = 30;
+  // === 2-COLUMN STATS (centered, compact) ===
+  const colWidth = 65; // Narrower columns for tighter layout
+  const colGap = 15; // Gap between the two columns
+  const totalBlockWidth = colWidth * 2 + colGap;
+  const blockStartX = (pageWidth - totalBlockWidth) / 2;
+  const rowHeight = 22; // Reduced vertical spacing
 
   data.stats.forEach((s, i) => {
     const col = i % 2;
     const row = Math.floor(i / 2);
-    const x = blockStartX + col * colWidth;
+    const x = blockStartX + col * (colWidth + colGap);
     const yy = y + row * rowHeight;
 
     // Label: bigger, bold
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.text(s.label, x, yy);
 
     // Underline the label
     const labelWidth = doc.getTextWidth(s.label);
-    doc.setLineWidth(0.5);
+    doc.setLineWidth(0.4);
     doc.setDrawColor(0, 0, 0);
-    doc.line(x, yy + 2, x + labelWidth, yy + 2);
+    doc.line(x, yy + 1.5, x + labelWidth, yy + 1.5);
 
-    // Value below the label
-    doc.setFontSize(14);
+    // Value below the label (reduced gap)
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(s.value, x, yy + 14);
+    doc.text(s.value, x, yy + 10);
   });
 
-  // === LOGO AT BOTTOM CENTER WITH GLOW ===
+  // === LOGO AT BOTTOM CENTER (clean, no glow) ===
   try {
     const logoBase64 = await loadImageAsBase64(logoUrl);
-    const logoWidth = 80;
-    const logoHeight = 55;
+    const logoWidth = 70;
+    const logoHeight = 48;
     const logoX = (pageWidth - logoWidth) / 2;
-    const logoY = pageHeight - logoHeight - 25;
+    const logoY = pageHeight - logoHeight - 20;
 
-    // Golden glow effect - draw multiple semi-transparent layers
-    const glowColor = { r: 218, g: 165, b: 32 }; // Gold
-    
-    // Outer glow layers
-    for (let i = 4; i >= 1; i--) {
-      const opacity = 0.08 * (5 - i);
-      const gState = new GState({ opacity });
-      doc.setGState(gState);
-      doc.setFillColor(glowColor.r, glowColor.g, glowColor.b);
-      doc.roundedRect(
-        logoX - i * 4,
-        logoY - i * 4,
-        logoWidth + i * 8,
-        logoHeight + i * 8,
-        8,
-        8,
-        'F'
-      );
-    }
-
-    // Reset opacity for main logo
-    doc.setGState(new GState({ opacity: 1 }));
-    
-    // Draw the logo
+    // Draw the logo (clean, no effects)
     doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
     
     console.log('[PDF] Logo added successfully');
