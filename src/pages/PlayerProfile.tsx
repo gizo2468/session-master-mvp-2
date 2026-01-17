@@ -18,6 +18,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
+import { IconMenuButton } from '@/components/ui/IconMenuButton';
 
 interface PlayerProfile {
   id: string;
@@ -416,9 +417,9 @@ const calculateSummary = (sessions: SharedSession[]) => {
               <AlertDialog>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" aria-label="More options">
+                    <IconMenuButton aria-label="More options">
                       <Icon name="EllipsisVertical" className="h-5 w-5" />
-                    </Button>
+                    </IconMenuButton>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <AlertDialogTrigger asChild>
