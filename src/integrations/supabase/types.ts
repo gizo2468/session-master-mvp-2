@@ -110,6 +110,7 @@ export type Database = {
           feedback_content: string
           hand_id: string
           id: string
+          seen_at: string | null
           student_id: string
           updated_at: string
         }
@@ -119,6 +120,7 @@ export type Database = {
           feedback_content: string
           hand_id: string
           id?: string
+          seen_at?: string | null
           student_id: string
           updated_at?: string
         }
@@ -128,6 +130,7 @@ export type Database = {
           feedback_content?: string
           hand_id?: string
           id?: string
+          seen_at?: string | null
           student_id?: string
           updated_at?: string
         }

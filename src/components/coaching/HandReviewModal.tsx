@@ -72,7 +72,9 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
     feedback_content: string;
     created_at: string;
     coach_id: string;
+    seen_at: string | null;
   }>>([]);
+  const [isMarkingSeen, setIsMarkingSeen] = useState<string | null>(null);
   const [isSavingFeedback, setIsSavingFeedback] = useState(false);
   const [handImage, setHandImage] = useState<string | null>(null);
   const [loadingHandImage, setLoadingHandImage] = useState(false);
@@ -263,6 +265,62 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
       });
     } finally {
       setIsSavingFeedback(false);
+    }
+  };
+
+  // Mark feedback as seen (student only)
+  const markFeedbackAsSeen = async (entry: typeof feedbackEntries[0]) => {
+    if (!currentUserId || entry.seen_at || isCoach) return;
+    
+    setIsMarkingSeen(entry.id);
+    try {
+      const seenAt = new Date().toISOString();
+      
+      // Update database
+      const { error } = await supabase
+        .from('hand_feedback')
+        .update({ seen_at: seenAt })
+        .eq('id', entry.id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setFeedbackEntries(prev => 
+        prev.map(e => e.id === entry.id ? { ...e, seen_at: seenAt } : e)
+      );
+      
+      // Get student name for notification
+      const { data: studentProfile } = await supabase
+        .from('profiles')
+        .select('online_nickname, username')
+        .eq('id', currentUserId)
+        .single();
+      
+      const studentName = studentProfile?.online_nickname || studentProfile?.username || 'Student';
+      
+      // Send notification to coach
+      await createNotification({
+        recipient_user_id: entry.coach_id,
+        sender_user_id: currentUserId,
+        type: 'feedback_seen',
+        title: `${studentName} saw your feedback`,
+        body: 'Your coaching feedback has been acknowledged.',
+        hand_id: hand?.id || null
+      });
+      
+      toast({
+        title: "Marked as seen",
+        description: "Coach has been notified."
+      });
+    } catch (error) {
+      console.error('Error marking feedback as seen:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark as seen. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsMarkingSeen(null);
     }
   };
 
@@ -525,14 +583,29 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
                                 })}
                               </span>
                               <div className="flex items-center gap-1">
-                                {/* Student: Like/Seen button (UI only for now) */}
+                                {/* Student: Seen button */}
                                 {!isCoach && (
                                   <Button
-                                    variant="ghost"
+                                    variant={entry.seen_at ? "secondary" : "outline"}
                                     size="sm"
-                                    className="h-6 w-6 p-0 text-muted-foreground hover:text-rose-500"
+                                    disabled={!!entry.seen_at || isMarkingSeen === entry.id}
+                                    onClick={() => markFeedbackAsSeen(entry)}
+                                    className={
+                                      entry.seen_at 
+                                        ? "h-7 px-2 text-xs bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800" 
+                                        : "h-7 px-2 text-xs hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-300"
+                                    }
                                   >
-                                    <Icon name="heart" className="h-3.5 w-3.5" />
+                                    {isMarkingSeen === entry.id ? (
+                                      <Icon name="Loader" className="h-3 w-3 animate-spin" />
+                                    ) : entry.seen_at ? (
+                                      <>
+                                        <Icon name="check" className="h-3 w-3 mr-1" />
+                                        Seen
+                                      </>
+                                    ) : (
+                                      "Seen"
+                                    )}
                                   </Button>
                                 )}
                                 {/* Coach: Delete button */}
