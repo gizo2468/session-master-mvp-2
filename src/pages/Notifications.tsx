@@ -331,8 +331,9 @@ export default function Notifications() {
     }
   };
   
-  // Determine if current user is viewing as coach (they received hand_uploaded notification)
-  const isCoachView = selectedNotification?.type === 'hand_uploaded';
+  // Determine if current user is viewing as coach (coach-targeted notification types)
+  const COACH_VIEW_TYPES = ['hand_uploaded', 'hand_review_reminder'];
+  const isCoachView = selectedNotification ? COACH_VIEW_TYPES.includes(selectedNotification.type) : false;
   const playerId = isCoachView ? selectedNotification?.sender_user_id : user?.id;
   const coachId = isCoachView ? user?.id : selectedNotification?.sender_user_id;
 
