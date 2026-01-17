@@ -18,6 +18,9 @@ import logoUrl from '@/assets/session-master-logo-pdf.png';
 interface StatData {
   label: string;
   value: string;
+  rawValue?: number; // For color formatting
+  isMoney?: boolean; // To identify money fields
+  isCentered?: boolean; // For Total Payouts centering
 }
 
 interface ExportData {
@@ -85,6 +88,17 @@ export const generateStatisticsPDFFromDB = async (data: ExportData) => {
   });
 };
 
+/**
+ * Format money value with +/- sign for PDF display
+ */
+const formatMoneyWithSign = (value: number, currency: string): string => {
+  const absValue = Math.abs(value);
+  const formatted = formatCurrency(absValue, currency);
+  if (value > 0) return `+${formatted}`;
+  if (value < 0) return `-${formatted.replace('-', '')}`;
+  return formatted;
+};
+
 const formatStatsForPDF = (
   stats: any,
   activeTab: string,
@@ -92,42 +106,42 @@ const formatStatsForPDF = (
 ): StatData[] => {
   if (activeTab === 'sessions') {
     return [
-      { label: 'Net Result', value: formatCurrency(stats.netResult, currency) },
-      { label: 'Net Hourly Rate', value: formatCurrency(stats.netHourlyRate, currency) },
-      { label: 'Average Net Result', value: formatCurrency(stats.averageNetResult, currency) },
-      { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns, currency) },
+      { label: 'Net Result', value: formatMoneyWithSign(stats.netResult ?? 0, currency), rawValue: stats.netResult ?? 0, isMoney: true },
+      { label: 'Net Hourly Rate', value: formatMoneyWithSign(stats.netHourlyRate ?? 0, currency), rawValue: stats.netHourlyRate ?? 0, isMoney: true },
+      { label: 'Average Net Result', value: formatMoneyWithSign(stats.averageNetResult ?? 0, currency), rawValue: stats.averageNetResult ?? 0, isMoney: true },
+      { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns ?? 0, currency), rawValue: stats.totalBuyIns ?? 0, isMoney: false },
       { label: 'Average Duration', value: formatDuration(stats.averageDuration) },
       { label: 'Total Duration', value: formatDuration(stats.totalDuration) },
       { label: 'Win Ratio', value: formatPercentage(stats.winRatio) },
       { label: 'Profit/Loss Ratio', value: formatRatio(stats.profitLossRatio) },
       { label: 'Total Tables', value: String(stats.totalTables ?? 0) },
       { label: 'Number of Sessions', value: String(stats.numberOfSessions ?? 0) },
-      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
+      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts ?? 0, currency), rawValue: stats.totalPayouts ?? 0, isMoney: false, isCentered: true },
     ];
   }
 
   if (activeTab === 'cash') {
     return [
-      { label: 'Net Result', value: formatCurrency(stats.netResult, currency) },
-      { label: 'Net Hourly Rate', value: formatCurrency(stats.netHourlyRate, currency) },
+      { label: 'Net Result', value: formatMoneyWithSign(stats.netResult ?? 0, currency), rawValue: stats.netResult ?? 0, isMoney: true },
+      { label: 'Net Hourly Rate', value: formatMoneyWithSign(stats.netHourlyRate ?? 0, currency), rawValue: stats.netHourlyRate ?? 0, isMoney: true },
       { label: 'Average BB/100', value: (stats.averageBB100 ?? 0).toFixed(1) },
-      { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns, currency) },
+      { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns ?? 0, currency), rawValue: stats.totalBuyIns ?? 0, isMoney: false },
       { label: 'Total Duration', value: formatDuration(stats.totalDuration) },
       { label: 'Hands Count', value: (stats.handsCount ?? 0).toLocaleString() },
       { label: 'Number of Sessions', value: String(stats.numberOfSessions ?? 0) },
-      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
+      { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts ?? 0, currency), rawValue: stats.totalPayouts ?? 0, isMoney: false, isCentered: true },
     ];
   }
 
   return [
-    { label: 'Net Result', value: formatCurrency(stats.netResult, currency) },
-    { label: 'Net Hourly Rate', value: formatCurrency(stats.netHourlyRate, currency) },
-    { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns, currency) },
+    { label: 'Net Result', value: formatMoneyWithSign(stats.netResult ?? 0, currency), rawValue: stats.netResult ?? 0, isMoney: true },
+    { label: 'Net Hourly Rate', value: formatMoneyWithSign(stats.netHourlyRate ?? 0, currency), rawValue: stats.netHourlyRate ?? 0, isMoney: true },
+    { label: 'Total Buy-ins', value: formatCurrency(stats.totalBuyIns ?? 0, currency), rawValue: stats.totalBuyIns ?? 0, isMoney: false },
     { label: 'Total Duration', value: formatDuration(stats.totalDuration) },
     { label: 'Final Tables', value: String(stats.finalTables ?? 0) },
     { label: 'First Place Finish', value: String(stats.firstPlaceFinish ?? 0) },
     { label: 'Hands Count', value: (stats.handsCount ?? 0).toLocaleString() },
-    { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts, currency) },
+    { label: 'Total Payouts', value: formatCurrency(stats.totalPayouts ?? 0, currency), rawValue: stats.totalPayouts ?? 0, isMoney: false, isCentered: true },
   ];
 };
 
@@ -165,34 +179,99 @@ const generateStatisticsPDFWithData = async (data: ExportData) => {
   y += 12;
 
   // === 2-COLUMN STATS (centered, compact) ===
-  const colWidth = 65; // Narrower columns for tighter layout
-  const colGap = 15; // Gap between the two columns
+  const colWidth = 70;
+  const colGap = 20;
   const totalBlockWidth = colWidth * 2 + colGap;
   const blockStartX = (pageWidth - totalBlockWidth) / 2;
-  const rowHeight = 22; // Reduced vertical spacing
+  const rowHeight = 22;
 
-  data.stats.forEach((s, i) => {
+  // Separate regular stats from centered stats (Total Payouts)
+  const regularStats = data.stats.filter(s => !s.isCentered);
+  const centeredStats = data.stats.filter(s => s.isCentered);
+
+  let currentRow = 0;
+  regularStats.forEach((s, i) => {
     const col = i % 2;
-    const row = Math.floor(i / 2);
-    const x = blockStartX + col * (colWidth + colGap);
-    const yy = y + row * rowHeight;
+    currentRow = Math.floor(i / 2);
+    const colCenterX = blockStartX + col * (colWidth + colGap) + colWidth / 2;
+    const yy = y + currentRow * rowHeight;
 
-    // Label: bigger, bold
+    // Label: bold, centered in column
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text(s.label, x, yy);
+    doc.setTextColor(0, 0, 0);
+    doc.text(s.label, colCenterX, yy, { align: 'center' });
+
+    // Underline the label (centered)
+    const labelWidth = doc.getTextWidth(s.label);
+    doc.setLineWidth(0.4);
+    doc.setDrawColor(0, 0, 0);
+    doc.line(colCenterX - labelWidth / 2, yy + 1.5, colCenterX + labelWidth / 2, yy + 1.5);
+
+    // Value below the label with color for money values
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    
+    // Set color based on value (green for positive, red for negative)
+    if (s.isMoney && s.rawValue !== undefined) {
+      if (s.rawValue > 0) {
+        doc.setTextColor(34, 139, 34); // Green
+      } else if (s.rawValue < 0) {
+        doc.setTextColor(220, 53, 69); // Red
+      } else {
+        doc.setTextColor(0, 0, 0); // Black for zero
+      }
+    } else {
+      doc.setTextColor(0, 0, 0); // Black for non-money values
+    }
+    
+    doc.text(s.value, colCenterX, yy + 10, { align: 'center' });
+  });
+
+  // Reset text color
+  doc.setTextColor(0, 0, 0);
+
+  // Calculate Y position after regular stats
+  const statsEndY = y + (currentRow + 1) * rowHeight + 5;
+
+  // Draw centered stats (Total Payouts) between columns
+  centeredStats.forEach((s, i) => {
+    const centerX = pageWidth / 2;
+    const yy = statsEndY + i * rowHeight;
+
+    // Label: bold, centered on page
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text(s.label, centerX, yy, { align: 'center' });
 
     // Underline the label
     const labelWidth = doc.getTextWidth(s.label);
     doc.setLineWidth(0.4);
     doc.setDrawColor(0, 0, 0);
-    doc.line(x, yy + 1.5, x + labelWidth, yy + 1.5);
+    doc.line(centerX - labelWidth / 2, yy + 1.5, centerX + labelWidth / 2, yy + 1.5);
 
-    // Value below the label (reduced gap)
+    // Value with color
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(s.value, x, yy + 10);
+    
+    if (s.isMoney && s.rawValue !== undefined) {
+      if (s.rawValue > 0) {
+        doc.setTextColor(34, 139, 34); // Green
+      } else if (s.rawValue < 0) {
+        doc.setTextColor(220, 53, 69); // Red
+      } else {
+        doc.setTextColor(0, 0, 0);
+      }
+    } else {
+      doc.setTextColor(0, 0, 0);
+    }
+    
+    doc.text(s.value, centerX, yy + 10, { align: 'center' });
   });
+
+  // Reset text color
+  doc.setTextColor(0, 0, 0);
 
   // === LOGO AT BOTTOM CENTER (clean, no glow) ===
   try {
