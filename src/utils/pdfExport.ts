@@ -12,6 +12,9 @@ import {
   formatRatio,
 } from './statisticsCalculator';
 
+// Import the SM chip logo
+import smChipLogo from '@/assets/sm-chip-logo.png';
+
 interface StatData {
   label: string;
   value: string;
@@ -25,6 +28,30 @@ interface ExportData {
   statistics?: any;
   defaultCurrency?: string;
 }
+
+/**
+ * Convert image URL to base64 for PDF embedding
+ */
+const loadImageAsBase64 = (src: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } else {
+        reject(new Error('Failed to get canvas context'));
+      }
+    };
+    img.onerror = reject;
+    img.src = src;
+  });
+};
 
 /**
  * PUBLIC API – what Dashboard imports
@@ -112,14 +139,17 @@ const generateStatisticsPDFWithData = async (data: ExportData) => {
 
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
   let y = margin;
 
+  // ===== HEADER =====
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
   doc.text('My Finance', pageWidth / 2, y, { align: 'center' });
   y += 20;
 
+  // ===== FILTERS INFO =====
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
 
@@ -133,25 +163,46 @@ const generateStatisticsPDFWithData = async (data: ExportData) => {
     y += 6;
   }
 
-  y += 10;
+  y += 14;
 
-  const colWidth = (pageWidth - margin * 2) / 2;
-  const rowHeight = 22;
+  // ===== 2-COLUMN STATS LAYOUT (CENTERED) =====
+  const colWidth = 80; // Fixed column width for consistency
+  const totalWidth = colWidth * 2;
+  const startX = (pageWidth - totalWidth) / 2; // Center the 2-column block
+  const rowHeight = 24;
 
   data.stats.forEach((s, i) => {
     const col = i % 2;
     const row = Math.floor(i / 2);
-    const x = margin + col * colWidth;
+    const x = startX + col * colWidth;
     const yy = y + row * rowHeight;
 
+    // Label (smaller, muted)
     doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
     doc.text(s.label, x, yy);
 
-    doc.setFontSize(11);
+    // Value (larger, bold)
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text(s.value, x, yy + 8);
+    doc.setTextColor(0, 0, 0);
+    doc.text(s.value, x, yy + 9);
   });
 
+  // ===== SM POKER CHIP LOGO AT BOTTOM CENTER =====
+  try {
+    const logoBase64 = await loadImageAsBase64(smChipLogo);
+    const logoSize = 40; // Large and clear
+    const logoX = (pageWidth - logoSize) / 2;
+    const logoY = pageHeight - margin - logoSize; // Safe margin from bottom
+    
+    doc.addImage(logoBase64, 'PNG', logoX, logoY, logoSize, logoSize);
+  } catch (err) {
+    console.warn('[PDF] Failed to load SM chip logo:', err);
+  }
+
+  // ===== SAVE & SHARE =====
   const filename = `MyFinance_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
   const platform = Capacitor.getPlatform();
 
