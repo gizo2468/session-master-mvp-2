@@ -524,16 +524,29 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
                                   minute: '2-digit'
                                 })}
                               </span>
-                              {isCoach && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => deleteFeedback(entry.id)}
-                                  className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                                >
-                                  <Icon name="trash-2" className="h-3 w-3" />
-                                </Button>
-                              )}
+                              <div className="flex items-center gap-1">
+                                {/* Student: Like/Seen button (UI only for now) */}
+                                {!isCoach && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 text-muted-foreground hover:text-rose-500"
+                                  >
+                                    <Icon name="heart" className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
+                                {/* Coach: Delete button */}
+                                {isCoach && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => deleteFeedback(entry.id)}
+                                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                                  >
+                                    <Icon name="trash-2" className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                             <p className="text-sm whitespace-pre-wrap">{entry.feedback_content}</p>
                           </div>
