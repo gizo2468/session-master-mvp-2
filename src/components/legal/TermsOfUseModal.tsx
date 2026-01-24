@@ -12,7 +12,7 @@ const TermsOfUseModal: React.FC<TermsOfUseModalProps> = ({ open, onOpenChange })
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] p-0">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="text-2xl font-serif">SessionMaster - Terms of Use</DialogTitle>
+          <DialogTitle className="text-2xl font-['Bungee'] text-poker-gold">SessionMaster - Terms of Use</DialogTitle>
           <DialogDescription className="text-sm text-gray-500">
             Last updated: July 23, 2025
           </DialogDescription>
