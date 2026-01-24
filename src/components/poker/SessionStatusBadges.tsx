@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { format, differenceInMinutes, differenceInHours } from 'date-fns';
+import { format, differenceInMinutes, differenceInHours, addSeconds } from 'date-fns';
 import SessionTimeBadge from './SessionTimeBadge';
 
 interface SessionStatusBadgesProps {
@@ -14,16 +14,30 @@ const SessionStatusBadges: React.FC<SessionStatusBadgesProps> = ({
   endTime,
   sessionDuration: customDuration
 }) => {
-  const formattedDate = format(new Date(startTime), 'd MMM yyyy');
-  const formattedTime = format(new Date(startTime), 'HH:mm');
+  const startDate = new Date(startTime);
+  const formattedDate = format(startDate, 'd MMM yyyy');
+  const formattedTime = format(startDate, 'HH:mm');
   
-  const formattedEndDate = endTime 
-    ? format(new Date(endTime), 'd MMM yyyy')
+  // Calculate display end time:
+  // PRIORITY 1: If customDuration exists, derive end from startTime + duration
+  // PRIORITY 2: Fall back to actual endTime from database
+  const getDisplayEndTime = () => {
+    if (customDuration && customDuration > 0) {
+      // Calculate derived end time: startTime + sessionDuration (handles midnight crossing)
+      return addSeconds(startDate, customDuration);
+    }
+    return endTime ? new Date(endTime) : null;
+  };
+  
+  const displayEndTime = getDisplayEndTime();
+  
+  const formattedEndDate = displayEndTime 
+    ? format(displayEndTime, 'd MMM yyyy')
     : null;
-  const formattedEndTime = endTime 
-    ? format(new Date(endTime), 'HH:mm')
+  const formattedEndTime = displayEndTime 
+    ? format(displayEndTime, 'HH:mm')
     : null;
-    
+
   const calculateDuration = () => {
     // PRIORITY 1: Use manually saved sessionDuration if available
     if (customDuration && customDuration > 0) {
