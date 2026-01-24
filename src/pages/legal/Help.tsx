@@ -236,7 +236,7 @@ const Help: React.FC = () => {
             <Icon name="ArrowLeft" size={16} />
             <span>Back</span>
           </Button>
-          <h1 className="text-2xl font-serif font-bold text-poker-gold mb-6 text-center">FAQ</h1>
+          <h1 className="text-2xl font-['Bungee'] text-poker-gold mb-6 text-center">FAQ</h1>
         </header>
 
         <div className="bg-card rounded-lg shadow-sm">
