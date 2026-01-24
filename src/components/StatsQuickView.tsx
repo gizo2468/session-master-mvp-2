@@ -2,11 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { useSessionContext } from '@/context/SessionContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { calculateSessionProfit } from '@/utils/sessionCalculations';
 import { getCurrencySymbol, useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 import { useUnifiedSessionStats } from '@/hooks/useUnifiedSessionStats';
 import { calculateSessionStatisticsFromDB } from '@/utils/statisticsCalculator';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import CurrencyConversionModal from './CurrencyConversionModal';
+import { ArrowRightLeft } from 'lucide-react';
+
+interface CurrencyConversion {
+  id: string;
+  from_currency: string;
+  to_currency: string;
+  original_amount: number;
+  converted_amount: number;
+  exchange_rate: number;
+  created_at: string;
+}
 
 function MobileStackTitle({ text }: { text: string }) {
   const isPercentTitle = text.includes('%'); // e.g., "Win %", "ROI %"
@@ -45,7 +60,9 @@ function MobileStackTitle({ text }: { text: string }) {
 
 const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?: boolean }) => {
   const { sessions, isLoading: sessionsLoading } = useSessionContext();
+  const { user } = useAuth();
   const [showCurrencyBreakdown, setShowCurrencyBreakdown] = useState(false);
+  const [showConversionModal, setShowConversionModal] = useState(false);
   const { defaultCurrency } = useDefaultCurrency();
   
   // Fetch unified statistics from database - single source of truth
@@ -53,7 +70,33 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
   const [breakdownLoading, setBreakdownLoading] = useState(false);
   const [currencyBreakdown, setCurrencyBreakdown] = useState<Record<string, number>>({});
   const [overallCurrencyResult, setOverallCurrencyResult] = useState<number>(0);
-  const isLoading = sessionsLoading || statsLoading || breakdownLoading;
+  const [conversions, setConversions] = useState<CurrencyConversion[]>([]);
+  const [conversionsLoading, setConversionsLoading] = useState(false);
+  const isLoading = sessionsLoading || statsLoading || breakdownLoading || conversionsLoading;
+
+  // Fetch currency conversions from database
+  const fetchConversions = async () => {
+    if (!user?.id) return;
+    try {
+      setConversionsLoading(true);
+      const { data, error } = await supabase
+        .from('currency_conversions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setConversions((data as CurrencyConversion[]) || []);
+    } catch (e) {
+      console.error('Failed to fetch conversions:', e);
+    } finally {
+      setConversionsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchConversions();
+  }, [user?.id]);
 
   // Keep Overall Results and Currency Breakdown fully in sync with DB totals per currency
   useEffect(() => {
@@ -84,6 +127,23 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
     };
     fetchBreakdown();
   }, [sessions, defaultCurrency]);
+
+  // Calculate adjusted breakdown based on conversions
+  const getAdjustedBreakdown = () => {
+    const original = { ...currencyBreakdown };
+    const adjusted = { ...currencyBreakdown };
+
+    conversions.forEach((conv) => {
+      // Subtract original amount from source currency
+      adjusted[conv.from_currency] = (adjusted[conv.from_currency] || 0) - conv.original_amount;
+      // Add converted amount to target currency
+      adjusted[conv.to_currency] = (adjusted[conv.to_currency] || 0) + conv.converted_amount;
+    });
+
+    return { original, adjusted };
+  };
+
+  const { original: originalBreakdown, adjusted: adjustedBreakdown } = getAdjustedBreakdown();
   
   if (isLoading) {
     return (
@@ -288,20 +348,24 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
             <DialogTitle>Currency Breakdown</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            {Object.keys(allResultsByCurrency).length === 0 ? (
-              <div className="text-center text-gray-500 py-4">
+            {Object.keys(adjustedBreakdown).length === 0 && Object.keys(originalBreakdown).length === 0 ? (
+              <div className="text-center text-muted-foreground py-4">
                 No sessions with results found
               </div>
             ) : (
-              Object.entries(allResultsByCurrency)
-                .sort(([currencyA], [currencyB]) => {
+              // Combine all currencies from both original and adjusted
+              [...new Set([...Object.keys(originalBreakdown), ...Object.keys(adjustedBreakdown)])]
+                .sort((currencyA, currencyB) => {
                   if (currencyA === 'USD') return -1;
                   if (currencyB === 'USD') return 1;
                   return 0;
                 })
-                .map(([currency, amount]) => {
+                .map((currency) => {
                   const symbol = getCurrencySymbol(currency);
-                  const resultsClass = amount >= 0 ? 'text-green-600' : 'text-red-600';
+                  const originalAmount = originalBreakdown[currency] || 0;
+                  const adjustedAmount = adjustedBreakdown[currency] || 0;
+                  const hasConversion = originalAmount !== adjustedAmount;
+                  const resultsClass = adjustedAmount >= 0 ? 'text-green-600' : 'text-red-600';
                   const currencyName = currency === 'USD' ? 'USD' : 
                                      currency === 'ILS' ? 'ILS' : 
                                      currency === 'EUR' ? 'EUR' : currency;
@@ -310,21 +374,50 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
                               currency === 'EUR' ? '€' : '💰';
                   
                   return (
-                    <div key={currency} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
+                    <div key={currency} className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-lg">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{flag}</span>
-                        <span className="font-medium text-gray-700">{currencyName}</span>
+                        <span className="font-medium text-foreground">{currencyName}</span>
                       </div>
-                      <div className={`text-lg font-bold ${resultsClass}`}>
-                        {amount >= 0 ? '+' : '-'}{symbol} {formatCurrency(Math.abs(amount))}
+                      <div className="text-right">
+                        <div className={`text-lg font-bold ${resultsClass}`}>
+                          {adjustedAmount >= 0 ? '+' : '-'}{symbol} {formatCurrency(Math.abs(adjustedAmount))}
+                        </div>
+                        {hasConversion && (
+                          <div className="text-xs text-muted-foreground">
+                            ({originalAmount >= 0 ? '+' : '-'}{symbol}{formatCurrency(Math.abs(originalAmount))})
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
                 })
             )}
           </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowCurrencyBreakdown(false);
+                setShowConversionModal(true);
+              }}
+              className="w-full"
+            >
+              <ArrowRightLeft className="h-4 w-4 mr-2" />
+              Convert
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Currency Conversion Modal */}
+      <CurrencyConversionModal
+        open={showConversionModal}
+        onOpenChange={setShowConversionModal}
+        currencyBreakdown={adjustedBreakdown}
+        onConversionComplete={fetchConversions}
+        conversions={conversions}
+      />
     </div>
   );
 };
