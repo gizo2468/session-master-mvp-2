@@ -38,12 +38,44 @@ serve(async (req) => {
     console.log(`[${requestId}] Processing PayPal order creation request`);
     
     const body = await req.json();
-    const { planType } = body;
-    console.log(`[${requestId}] Request body:`, JSON.stringify(body, null, 2));
     
-    if (!planType || planType !== 'monthly') {
-      throw new Error('Invalid plan type');
+    // Input validation with strict schema
+    if (!body || typeof body !== 'object') {
+      return new Response(JSON.stringify({ 
+        error: 'Invalid request body',
+        requestId 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
     }
+    
+    const { planType } = body;
+    
+    // Validate planType is a string and matches allowed values
+    if (!planType || typeof planType !== 'string') {
+      return new Response(JSON.stringify({ 
+        error: 'Plan type is required and must be a string',
+        requestId 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+    
+    // Whitelist validation for plan types
+    const allowedPlanTypes = ['monthly'];
+    if (!allowedPlanTypes.includes(planType)) {
+      return new Response(JSON.stringify({ 
+        error: 'Invalid plan type. Allowed values: monthly',
+        requestId 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+    
+    console.log(`[${requestId}] Validated plan type: ${planType}`);
 
     // Get PayPal credentials and environment
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID');

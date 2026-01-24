@@ -38,7 +38,32 @@ serve(async (req) => {
     console.log(`[${requestId}] Processing request: ${req.method}`);
     
     const body = await req.json();
-    console.log(`[${requestId}] Request body:`, JSON.stringify(body, null, 2));
+    
+    // Input validation - ensure body is an object
+    if (!body || typeof body !== 'object') {
+      return new Response(JSON.stringify({ 
+        error: 'Invalid request body',
+        requestId 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+    
+    // Limit body size to prevent DoS (10KB max for this endpoint)
+    const bodySize = JSON.stringify(body).length;
+    if (bodySize > 10240) {
+      console.error(`[${requestId}] Request body too large: ${bodySize} bytes`);
+      return new Response(JSON.stringify({ 
+        error: 'Request body too large',
+        requestId 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 413,
+      });
+    }
+    
+    console.log(`[${requestId}] Request body size: ${bodySize} bytes`);
     
     let orderId = null;
     let isWebhook = false;
@@ -46,13 +71,25 @@ serve(async (req) => {
     // Check if this is a PayPal webhook event
     if (body.event_type && body.resource) {
       isWebhook = true;
+      
+      // Validate event_type is a string
+      if (typeof body.event_type !== 'string' || body.event_type.length > 100) {
+        return new Response(JSON.stringify({ 
+          error: 'Invalid event_type',
+          requestId 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
+      
       console.log(`[${requestId}] Processing PayPal webhook event: ${body.event_type}`);
       
       // Handle different webhook event types
       switch (body.event_type) {
         case 'CHECKOUT.ORDER.APPROVED':
         case 'PAYMENT.CAPTURE.COMPLETED':
-          if (body.resource && body.resource.id) {
+          if (body.resource && typeof body.resource === 'object' && body.resource.id) {
             orderId = body.resource.id;
           } else if (body.resource && body.resource.supplementary_data && body.resource.supplementary_data.related_ids && body.resource.supplementary_data.related_ids.order_id) {
             orderId = body.resource.supplementary_data.related_ids.order_id;
@@ -70,11 +107,31 @@ serve(async (req) => {
       orderId = body.orderId;
     }
     
-    if (!orderId) {
-      throw new Error(`Order ID not found in ${isWebhook ? 'webhook event' : 'request'}`);
+    // Validate orderId format (PayPal order IDs are alphanumeric, typically 17+ chars)
+    if (!orderId || typeof orderId !== 'string' || orderId.length < 10 || orderId.length > 50) {
+      console.error(`[${requestId}] Invalid order ID: ${orderId}`);
+      return new Response(JSON.stringify({ 
+        error: 'Invalid order ID format',
+        requestId 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
     }
     
-    console.log(`[${requestId}] Processing order: ${orderId}`);
+    // Validate orderId contains only safe characters (alphanumeric)
+    if (!/^[A-Za-z0-9]+$/.test(orderId)) {
+      console.error(`[${requestId}] Order ID contains invalid characters`);
+      return new Response(JSON.stringify({ 
+        error: 'Order ID contains invalid characters',
+        requestId 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+    
+    console.log(`[${requestId}] Processing validated order: ${orderId}`);
 
     // Get PayPal credentials and environment
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
