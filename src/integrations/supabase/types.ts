@@ -73,6 +73,39 @@ export type Database = {
           },
         ]
       }
+      currency_conversions: {
+        Row: {
+          converted_amount: number
+          created_at: string
+          exchange_rate: number
+          from_currency: string
+          id: string
+          original_amount: number
+          to_currency: string
+          user_id: string
+        }
+        Insert: {
+          converted_amount: number
+          created_at?: string
+          exchange_rate: number
+          from_currency: string
+          id?: string
+          original_amount: number
+          to_currency: string
+          user_id?: string
+        }
+        Update: {
+          converted_amount?: number
+          created_at?: string
+          exchange_rate?: number
+          from_currency?: string
+          id?: string
+          original_amount?: number
+          to_currency?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       donation_logs: {
         Row: {
           clicked_at: string
