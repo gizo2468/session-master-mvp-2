@@ -82,13 +82,15 @@ interface SharedSessionModalProps {
   onClose: () => void;
   sessionId: string;
   playerId: string;
+  defaultTab?: 'summary' | 'tables' | 'hands';
 }
 
 export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   isOpen,
   onClose,
   sessionId,
-  playerId
+  playerId,
+  defaultTab = 'summary'
 }) => {
   const [sessionDetails, setSessionDetails] = useState<SessionDetails | null>(null);
   const [sessionHands, setSessionHands] = useState<SessionHand[]>([]);
@@ -401,7 +403,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
             <span className="ml-3 text-muted-foreground">Loading session data...</span>
           </div>
         ) : sessionDetails ? (
-          <Tabs defaultValue="summary" className="w-full">
+          <Tabs defaultValue={defaultTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3 h-auto">
               <TabsTrigger value="summary" className="text-center justify-center">Summary</TabsTrigger>
               <TabsTrigger value="tables" className="text-center justify-center">Tables</TabsTrigger>
