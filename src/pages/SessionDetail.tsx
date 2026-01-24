@@ -87,7 +87,7 @@ export default function SessionDetail() {
   }
   
   // Check for completion using both isActive and cashOut
-  const isCompleted = !session.isActive && session.cashOut !== undefined;
+  const isCompleted = !session.isActive && (session.cashOut != null || session.currentStatus === 'ended');
   
   // Calculate total initial buy-ins across all tables
   const calculateTotalInitialBuyin = () => {
