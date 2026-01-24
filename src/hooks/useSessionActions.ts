@@ -46,10 +46,8 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
     }
     
     try {
-      // Update custom duration before ending the session if set
-      if (customSessionDuration !== null) {
-        await updateSessionDuration(currentSession.id, customSessionDuration);
-      }
+      // Note: Custom duration is now saved immediately when user clicks Save in the modal
+      // No need to save it again here - this prevents double-writes
       
       await endSession(currentSession.id, autoCashOutAmount, sessionNotes);
       setShowEndSessionSheet(false);
@@ -168,8 +166,19 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
     }
   };
 
-  const handleCustomDurationChange = (durationSeconds: number) => {
+  const handleCustomDurationChange = async (durationSeconds: number) => {
+    if (!currentSession) return;
+    
+    // Update local state for immediate UI feedback
     setCustomSessionDuration(durationSeconds);
+    
+    // Persist to database immediately when user clicks Save
+    await updateSessionDuration(currentSession.id, durationSeconds);
+    
+    // Refresh session data to update all UI consumers
+    if (refreshSessionsFromDatabase) {
+      await refreshSessionsFromDatabase();
+    }
   };
 
   return {

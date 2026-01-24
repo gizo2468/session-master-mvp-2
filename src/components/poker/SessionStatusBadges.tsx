@@ -6,11 +6,13 @@ import SessionTimeBadge from './SessionTimeBadge';
 interface SessionStatusBadgesProps {
   startTime: string;
   endTime?: string;
+  sessionDuration?: number; // Custom duration in seconds (takes priority over calculation)
 }
 
 const SessionStatusBadges: React.FC<SessionStatusBadgesProps> = ({
   startTime,
-  endTime
+  endTime,
+  sessionDuration: customDuration
 }) => {
   const formattedDate = format(new Date(startTime), 'd MMM yyyy');
   const formattedTime = format(new Date(startTime), 'HH:mm');
@@ -23,6 +25,14 @@ const SessionStatusBadges: React.FC<SessionStatusBadgesProps> = ({
     : null;
     
   const calculateDuration = () => {
+    // PRIORITY 1: Use manually saved sessionDuration if available
+    if (customDuration && customDuration > 0) {
+      const hours = Math.floor(customDuration / 3600);
+      const minutes = Math.floor((customDuration % 3600) / 60);
+      return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+    }
+    
+    // PRIORITY 2: Fall back to timestamp calculation
     if (!endTime) return null;
     
     const start = new Date(startTime);
@@ -36,7 +46,7 @@ const SessionStatusBadges: React.FC<SessionStatusBadgesProps> = ({
     return `${minutes}m`;
   };
   
-  const sessionDuration = endTime ? calculateDuration() : null;
+  const sessionDuration = calculateDuration();
 
   return (
     <div className="flex flex-row flex-wrap gap-4 mb-6">

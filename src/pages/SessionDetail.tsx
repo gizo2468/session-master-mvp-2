@@ -353,6 +353,7 @@ export default function SessionDetail() {
           <SessionStatusBadges
             startTime={session.startTime.toISOString()}
             endTime={session.endTime?.toISOString()}
+            sessionDuration={session.sessionDuration}
           />
           
           <SessionInfoDisplay
