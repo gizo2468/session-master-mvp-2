@@ -178,6 +178,31 @@ const faqItems: FaqItem[] = [
     )
   },
   {
+    id: "overall-results",
+    question: "WHAT HAPPENS WHEN I TAP 'OVERALL RESULTS'?",
+    answer: (
+      <>
+        Tapping <strong>Overall Results</strong> opens the <strong>Currency Breakdown</strong> window.
+        <br /><br />
+        This window shows your results split by currency, so you can see how much you've won or lost in each currency you've played with.
+        <br /><br />
+        You can press <strong>Convert</strong> to convert results between currencies:
+        <br /><br />
+        • Choose a <strong>From</strong> currency (the one you want to convert)
+        <br />
+        • Choose a <strong>To</strong> currency (the one you want to convert into)
+        <br />
+        • Select <strong>Convert All</strong> or enter a custom amount
+        <br />
+        • Enter the exchange rate manually (a suggested rate is provided)
+        <br /><br />
+        After converting, the amounts update immediately. Each currency row still shows the original total in parentheses so you can always see what the value was before any conversions.
+        <br /><br />
+        The <strong>Overall Results</strong> value on the Home screen reflects the updated totals based on your preferred display currency.
+      </>
+    )
+  },
+  {
     id: "who-is-this-for",
     question: "WHO IS THIS APP FOR?",
     answer: (
