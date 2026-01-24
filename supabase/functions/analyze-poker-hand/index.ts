@@ -207,6 +207,17 @@ serve(async (req) => {
   try {
     const { image, heroOverride, dealerOverride } = await req.json();
     
+    // Validate required image field
+    if (!image || typeof image !== 'string') {
+      return new Response(
+        JSON.stringify({ 
+          code: 'INVALID_INPUT',
+          error: 'Image is required and must be a base64 string' 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     // Validate image size
     const imageSizeBytes = (image.length * 3) / 4;
     if (imageSizeBytes > MAX_FILE_SIZE) {
@@ -217,6 +228,32 @@ serve(async (req) => {
         }),
         { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+    
+    // Validate heroOverride if provided (optional field with length limit)
+    if (heroOverride !== undefined && heroOverride !== null) {
+      if (typeof heroOverride !== 'string' || heroOverride.length > 200) {
+        return new Response(
+          JSON.stringify({ 
+            code: 'INVALID_INPUT',
+            error: 'heroOverride must be a string under 200 characters' 
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    
+    // Validate dealerOverride if provided (optional field with length limit)
+    if (dealerOverride !== undefined && dealerOverride !== null) {
+      if (typeof dealerOverride !== 'string' || dealerOverride.length > 200) {
+        return new Response(
+          JSON.stringify({ 
+            code: 'INVALID_INPUT',
+            error: 'dealerOverride must be a string under 200 characters' 
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Minimal logging - no images, no PII

@@ -144,16 +144,62 @@ Deno.serve(async (req) => {
     // Parse request body
     const { recipient_user_id, title, body, data } = await req.json();
     
-    if (!recipient_user_id || !title || !body) {
-      console.error('[send-push-notification] Missing required fields');
+    // Input validation with size limits
+    if (!recipient_user_id || typeof recipient_user_id !== 'string') {
+      console.error('[send-push-notification] Missing or invalid recipient_user_id');
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: recipient_user_id, title, body' }),
+        JSON.stringify({ error: 'Missing or invalid recipient_user_id' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
+    // Validate UUID format for recipient_user_id
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(recipient_user_id)) {
+      console.error('[send-push-notification] Invalid recipient_user_id format');
+      return new Response(
+        JSON.stringify({ error: 'Invalid recipient_user_id format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!title || typeof title !== 'string' || title.length > 150) {
+      console.error('[send-push-notification] Missing or invalid title');
+      return new Response(
+        JSON.stringify({ error: 'Title is required and must be under 150 characters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!body || typeof body !== 'string' || body.length > 500) {
+      console.error('[send-push-notification] Missing or invalid body');
+      return new Response(
+        JSON.stringify({ error: 'Body is required and must be under 500 characters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Validate data payload size if provided
+    if (data !== undefined && data !== null) {
+      if (typeof data !== 'object' || Array.isArray(data)) {
+        console.error('[send-push-notification] Invalid data format');
+        return new Response(
+          JSON.stringify({ error: 'Data must be an object' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      const dataSize = JSON.stringify(data).length;
+      if (dataSize > 4000) {
+        console.error('[send-push-notification] Data payload too large');
+        return new Response(
+          JSON.stringify({ error: 'Data payload too large (max 4KB)' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    
     console.log(`[send-push-notification] Sending push to user: ${recipient_user_id}`);
-    console.log(`[send-push-notification] Title: ${title}, Body: ${body}`);
+    console.log(`[send-push-notification] Title: ${title.substring(0, 50)}..., Body length: ${body.length}`);
     
     // Get APNS credentials from environment
     const keyId = Deno.env.get('APNS_KEY_ID');
