@@ -128,7 +128,8 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           table_notes: table.notes,
           tournament_type: table.tournamentTypes?.[0], // Save single tournament type for this table
           is_multi_day: table.isMultiDay || false,
-          late_registration: table.lateRegistration || false
+          late_registration: table.lateRegistration || false,
+          table_duration: table.tableDuration || null // Custom duration in seconds (if manually set)
         };
 
         // CRITICAL FIX: Consistent UTC handling for table times (now timestamptz)

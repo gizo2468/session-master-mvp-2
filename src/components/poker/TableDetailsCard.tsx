@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TableData } from '@/types/poker';
-import { format } from 'date-fns';
+import { format, addSeconds } from 'date-fns';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Separator } from '@/components/ui/separator';
@@ -24,7 +24,19 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
   const currencySymbol = getCurrencySymbol(table.currency || sessionCurrency);
   const profitClass = profit >= 0 ? 'text-green-600' : 'text-red-600';
   const formattedStart = format(new Date(table.startTime), 'd MMM, HH:mm');
-  const formattedEnd = table.endTime ? format(new Date(table.endTime), 'd MMM, HH:mm') : null;
+  
+  // Calculate display end time:
+  // PRIORITY 1: If tableDuration exists, derive end from startTime + duration
+  // PRIORITY 2: Fall back to actual endTime from database
+  const getDisplayEndTime = () => {
+    if (table.tableDuration && table.tableDuration > 0) {
+      return addSeconds(new Date(table.startTime), table.tableDuration);
+    }
+    return table.endTime ? new Date(table.endTime) : null;
+  };
+  
+  const displayEndTime = getDisplayEndTime();
+  const formattedEnd = displayEndTime ? format(displayEndTime, 'd MMM, HH:mm') : null;
   const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
   const isBountyTournament = table.tournamentTypes?.some(type => 
     ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
@@ -78,9 +90,10 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
             <div className="flex-1 flex justify-center items-center border-x border-gray-100 px-4">
               <div className="text-center">
                 <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
-                <TableTimerDisplay 
+              <TableTimerDisplay 
                   startTime={new Date(table.startTime)} 
-                  endTime={new Date(table.endTime)}
+                  endTime={table.endTime ? new Date(table.endTime) : undefined}
+                  tableDuration={table.tableDuration}
                   isActive={false}
                   className="flex justify-center"
                 />

@@ -11,6 +11,7 @@ interface TableTimerDisplayProps {
   endTimeUTC?: number; // Raw UTC timestamp for accurate calculations
   className?: string;
   isActive?: boolean;
+  tableDuration?: number; // Custom duration in seconds (if manually set)
 }
 
 const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
@@ -19,7 +20,8 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
   endTime,
   endTimeUTC,
   className = "",
-  isActive = true
+  isActive = true,
+  tableDuration
 }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   
@@ -27,7 +29,12 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
     if (!startTime) return;
     
     const calculateElapsedTime = () => {
-      // CRITICAL: Use raw UTC timestamps for accurate calculations without timezone shifts
+      // PRIORITY 1: Use custom tableDuration if set
+      if (tableDuration && tableDuration > 0) {
+        return tableDuration;
+      }
+      
+      // PRIORITY 2: Use raw UTC timestamps for accurate calculations without timezone shifts
       let startTimestamp: number;
       let endTimestamp: number;
       
@@ -71,7 +78,7 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [startTime, startTimeUTC, endTime, endTimeUTC, isActive]);
+  }, [startTime, startTimeUTC, endTime, endTimeUTC, isActive, tableDuration]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
