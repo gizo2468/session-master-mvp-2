@@ -52,7 +52,7 @@ interface GroupedOpponent {
 }
 
 const MyNotesCard: React.FC = () => {
-  const { isPremium } = usePremiumAccess();
+  const { isPremium, getNotesLimits } = usePremiumAccess();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [notes, setNotes] = useState<PlayerNote[]>([]);
@@ -188,13 +188,17 @@ const MyNotesCard: React.FC = () => {
     return result;
   }, [groupedOpponents, modalColorFilter, modalSortOrder]);
 
+  // Notes limit logic for free users
+  const { maxNotes } = getNotesLimits();
+  const hasReachedLimit = !isPremium && totalNotes >= maxNotes;
+
   useEffect(() => {
-    if (isPremium && user?.id) {
+    if (user?.id) {
       fetchNotes();
     } else {
       setIsLoading(false);
     }
-  }, [isPremium, user?.id]);
+  }, [user?.id]);
 
   const handleNoteSaved = () => {
     fetchNotes();
@@ -210,42 +214,6 @@ const MyNotesCard: React.FC = () => {
     setIsViewModalOpen(true);
   };
 
-  // Locked state for non-premium users
-  if (!isPremium) {
-    return (
-      <Card className="border-border/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <StickyNote className="h-5 w-5" />
-            My Notes
-            <Lock className="h-4 w-4 text-muted-foreground ml-auto" />
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-4 space-y-3">
-            <div className="p-3 bg-primary/10 rounded-full w-fit mx-auto">
-              <Crown className="h-6 w-6 text-primary" />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Keep private notes on opponents with Premium
-            </p>
-            <Button
-              onClick={() => {
-                navigate('/subscription');
-                window.scrollTo(0, 0);
-              }}
-              size="sm"
-              className="w-full"
-            >
-              <Crown className="h-4 w-4 mr-2" />
-              Upgrade to Premium
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <>
       <Card className="border-border/50">
@@ -260,10 +228,30 @@ const MyNotesCard: React.FC = () => {
             variant="outline"
             className="w-full justify-center gap-2"
             onClick={() => setIsAddModalOpen(true)}
+            disabled={hasReachedLimit}
           >
             <Plus className="h-4 w-4" />
             Add Note
           </Button>
+
+          {/* Show limit message when reached */}
+          {hasReachedLimit && (
+            <div className="text-center space-y-2 p-3 bg-muted/50 rounded-lg border border-border/30">
+              <p className="text-sm text-muted-foreground">
+                Free plan allows up to 10 notes.
+              </p>
+              <Button
+                size="sm"
+                onClick={() => {
+                  navigate('/subscription');
+                  window.scrollTo(0, 0);
+                }}
+              >
+                <Crown className="h-4 w-4 mr-2" />
+                Upgrade for Unlimited
+              </Button>
+            </div>
+          )}
 
           <Button
             variant="outline"
@@ -350,9 +338,16 @@ const MyNotesCard: React.FC = () => {
                 No notes yet. Add your first note!
               </p>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-2">
-                {totalOpponents} opponent{totalOpponents !== 1 ? 's' : ''} • {totalNotes} note{totalNotes !== 1 ? 's' : ''}
-              </p>
+              <div className="text-center py-2 space-y-1">
+                <p className="text-sm text-muted-foreground">
+                  {totalOpponents} opponent{totalOpponents !== 1 ? 's' : ''} • {totalNotes} note{totalNotes !== 1 ? 's' : ''}
+                </p>
+                {!isPremium && totalNotes > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {totalNotes}/{maxNotes} notes used
+                  </p>
+                )}
+              </div>
             )
           )}
         </CardContent>
@@ -484,6 +479,7 @@ const MyNotesCard: React.FC = () => {
         open={isAddModalOpen}
         onOpenChange={setIsAddModalOpen}
         onNoteSaved={handleNoteSaved}
+        isLimitReached={hasReachedLimit}
       />
 
       <ViewEditNoteModal
