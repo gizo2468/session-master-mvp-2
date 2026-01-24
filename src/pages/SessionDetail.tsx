@@ -366,8 +366,13 @@ export default function SessionDetail() {
             isCompleted={isCompleted}
           />
 
-          {/* Share button below Profit/Loss */}
-          <ShareWithCoachButton sessionId={session.id} />
+          {/* Share button with Edit/Delete buttons below */}
+          <ShareWithCoachButton 
+            sessionId={session.id}
+            onEditClick={handleEditClick}
+            onDeleteClick={() => setShowDeleteModal(true)}
+            showActionButtons={true}
+          />
           
           {/* Only show end session button for active sessions */}
           {session.isActive && (
