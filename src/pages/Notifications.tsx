@@ -23,6 +23,7 @@ export default function Notifications() {
   const { notifications, loading, markAsRead, markAsUnread, removeNotification } = useNotifications();
   const [selectedNotification, setSelectedNotification] = useState<typeof notifications[0] | null>(null);
   const [selectedSessionNotification, setSelectedSessionNotification] = useState<typeof notifications[0] | null>(null);
+  const [sessionModalDefaultTab, setSessionModalDefaultTab] = useState<'summary' | 'tables' | 'hands'>('summary');
 
   // Deduplicate stack_check notifications: show only the most recent one
   const displayNotifications = useMemo(() => {
@@ -205,11 +206,12 @@ export default function Notifications() {
       return;
     }
     
-    // For hand_review_reminder notifications, validate hand exists then open modal
-    if (notification.type === 'hand_review_reminder' && notification.hand_id) {
-      const exists = await validateHandExists(notification.hand_id, notification.id);
+    // For hand_review_reminder notifications, open Session Summary → Hands tab
+    if (notification.type === 'hand_review_reminder' && notification.session_id) {
+      const exists = await validateSharedSessionExists(notification.session_id, notification.id);
       if (exists) {
-        setSelectedNotification(notification);
+        setSessionModalDefaultTab('hands');
+        setSelectedSessionNotification(notification);
       }
       return;
     }
@@ -227,6 +229,7 @@ export default function Notifications() {
     if (notification.type === 'session_shared' && notification.session_id) {
       const exists = await validateSharedSessionExists(notification.session_id, notification.id);
       if (exists) {
+        setSessionModalDefaultTab('summary');
         setSelectedSessionNotification(notification);
       }
       return;
@@ -501,12 +504,16 @@ export default function Notifications() {
         isCoach={isCoachView}
       />
 
-      {/* Session Summary Modal for session_shared notifications */}
+      {/* Session Summary Modal for session_shared and hand_review_reminder notifications */}
       <SharedSessionModal
         isOpen={!!selectedSessionNotification}
-        onClose={() => setSelectedSessionNotification(null)}
+        onClose={() => {
+          setSelectedSessionNotification(null);
+          setSessionModalDefaultTab('summary');
+        }}
         sessionId={selectedSessionNotification?.session_id || ''}
         playerId={selectedSessionNotification?.sender_user_id || ''}
+        defaultTab={sessionModalDefaultTab}
       />
     </div>
   );
