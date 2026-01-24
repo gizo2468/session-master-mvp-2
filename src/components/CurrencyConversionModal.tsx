@@ -21,7 +21,8 @@ import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { ArrowRight, Trash2 } from 'lucide-react';
+import { ArrowRight, Trash2, Loader2 } from 'lucide-react';
+import { getSuggestedExchangeRate } from '@/services/exchangeRateService';
 
 interface CurrencyConversion {
   id: string;
@@ -55,6 +56,8 @@ const CurrencyConversionModal: React.FC<CurrencyConversionModalProps> = ({
   const [convertAll, setConvertAll] = useState(true);
   const [customAmount, setCustomAmount] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [suggestedRate, setSuggestedRate] = useState<number | null>(null);
+  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
 
   // Get available currencies (those with non-zero balances after adjustments)
   const availableCurrencies = Object.keys(currencyBreakdown).filter(
@@ -73,8 +76,32 @@ const CurrencyConversionModal: React.FC<CurrencyConversionModalProps> = ({
       setExchangeRate('');
       setConvertAll(true);
       setCustomAmount('');
+      setSuggestedRate(null);
     }
   }, [open]);
+
+  // Fetch suggested rate when currencies change
+  useEffect(() => {
+    const fetchSuggested = async () => {
+      if (!fromCurrency || !toCurrency) {
+        setSuggestedRate(null);
+        return;
+      }
+
+      setLoadingSuggestion(true);
+      try {
+        const rate = await getSuggestedExchangeRate(fromCurrency, toCurrency);
+        setSuggestedRate(rate);
+      } catch (e) {
+        console.error('Failed to get suggested rate:', e);
+        setSuggestedRate(null);
+      } finally {
+        setLoadingSuggestion(false);
+      }
+    };
+
+    fetchSuggested();
+  }, [fromCurrency, toCurrency]);
 
   const getSourceAmount = () => {
     if (!fromCurrency) return 0;
@@ -235,10 +262,36 @@ const CurrencyConversionModal: React.FC<CurrencyConversionModalProps> = ({
             <Input
               type="number"
               step="0.0001"
-              placeholder="e.g., 1.08"
+              placeholder=""
               value={exchangeRate}
               onChange={(e) => setExchangeRate(e.target.value)}
             />
+            {/* Suggested Rate */}
+            {fromCurrency && toCurrency && (
+              <div className="text-xs text-muted-foreground mt-1">
+                {loadingSuggestion ? (
+                  <span className="flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Loading suggested rate...
+                  </span>
+                ) : suggestedRate ? (
+                  <span className="flex items-center gap-1 flex-wrap">
+                    Suggested: 1 {fromCurrency} ≈ {suggestedRate.toFixed(4)} {toCurrency}
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 ml-1 text-xs"
+                      onClick={() => setExchangeRate(suggestedRate.toFixed(4))}
+                    >
+                      Use
+                    </Button>
+                  </span>
+                ) : (
+                  <span className="text-destructive">Could not fetch suggested rate</span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Preview */}
