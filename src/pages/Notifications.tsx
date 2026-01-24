@@ -140,6 +140,17 @@ export default function Notifications() {
     return true;
   };
 
+  // Helper to get the correct playerId based on notification type
+  const getPlayerIdForNotification = (notification: typeof notifications[0]): string => {
+    // For coach_feedback notifications, the recipient IS the player
+    if (notification.type === 'coach_feedback') {
+      return notification.recipient_user_id || '';
+    }
+    // For session_shared and hand_review_reminder, the sender IS the player
+    return notification.sender_user_id || '';
+  };
+
+
   // Helper to validate connection still exists
   const validateConnectionExists = async (notificationId: string, connectionId?: string | null): Promise<boolean> => {
     if (!connectionId) {
@@ -536,7 +547,7 @@ export default function Notifications() {
           setSessionModalDefaultTab('summary');
         }}
         sessionId={selectedSessionNotification?.session_id || ''}
-        playerId={selectedSessionNotification?.sender_user_id || ''}
+        playerId={selectedSessionNotification ? getPlayerIdForNotification(selectedSessionNotification) : ''}
         defaultTab={sessionModalDefaultTab}
       />
     </div>
