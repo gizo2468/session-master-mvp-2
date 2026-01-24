@@ -72,7 +72,7 @@ export const TablesPlayedSection: React.FC<TablesPlayedSectionProps> = ({
 
   return (
     <div className="mb-6">
-      <h2 className="text-lg font-bold mb-4">Tables Played</h2>
+      <h2 className="text-lg font-bold mb-4 session-summary-title">Tables Played</h2>
       
       <TableFilters
         filters={filters}
