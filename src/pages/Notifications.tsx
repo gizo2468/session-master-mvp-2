@@ -188,11 +188,12 @@ export default function Notifications() {
       await markAsRead(notification.id);
     }
 
-    // For coach_feedback notifications, validate hand exists then open modal
-    if (notification.type === 'coach_feedback' && notification.hand_id) {
-      const exists = await validateHandExists(notification.hand_id, notification.id);
+    // For coach_feedback notifications (player receives), open Session Summary → Hands tab
+    if (notification.type === 'coach_feedback' && notification.session_id) {
+      const exists = await validateSharedSessionExists(notification.session_id, notification.id);
       if (exists) {
-        setSelectedNotification(notification);
+        setSessionModalDefaultTab('hands');
+        setSelectedSessionNotification(notification);
       }
       return;
     }
