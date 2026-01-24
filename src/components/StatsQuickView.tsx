@@ -183,7 +183,8 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
   const dbStats = statistics.all;
   
   // Calculate statistics from database
-  const overallResults = overallCurrencyResult;
+  // Use adjusted total for preferred currency (includes conversions)
+  const overallResults = adjustedBreakdown[defaultCurrency] ?? overallCurrencyResult;
   const totalSessions = dbStats?.numberOfSessions || 0;
   const winRatio = dbStats?.winRatio || 0;
   const wins = Math.round((winRatio * totalSessions) / 100);
