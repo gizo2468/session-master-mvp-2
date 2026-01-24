@@ -80,7 +80,7 @@ export default function Notifications() {
     return true;
   };
 
-  // Helper to validate shared session exists and user still has access
+  // Helper to validate shared session exists and coach still has access
   const validateSharedSessionExists = async (sessionId: string, notificationId: string): Promise<boolean> => {
     // Check session exists
     const { data: session } = await supabase
@@ -109,6 +109,28 @@ export default function Notifications() {
     if (!share) {
       toast({ 
         title: 'This session is no longer shared with you',
+        variant: 'destructive'
+      });
+      await removeNotification(notificationId);
+      return false;
+    }
+    
+    return true;
+  };
+
+  // Helper to validate player's own session exists (for player-received notifications)
+  const validatePlayerSessionExists = async (sessionId: string, notificationId: string): Promise<boolean> => {
+    // Check session exists AND belongs to the current user (player owns it)
+    const { data: session } = await supabase
+      .from('sessions')
+      .select('id, user_id')
+      .eq('id', sessionId)
+      .eq('user_id', user?.id)
+      .maybeSingle();
+    
+    if (!session) {
+      toast({ 
+        title: 'This session is no longer available',
         variant: 'destructive'
       });
       await removeNotification(notificationId);
@@ -190,7 +212,8 @@ export default function Notifications() {
 
     // For coach_feedback notifications (player receives), open Session Summary → Hands tab
     if (notification.type === 'coach_feedback' && notification.session_id) {
-      const exists = await validateSharedSessionExists(notification.session_id, notification.id);
+      // Player owns the session - use player validation (not shared session validation)
+      const exists = await validatePlayerSessionExists(notification.session_id, notification.id);
       if (exists) {
         setSessionModalDefaultTab('hands');
         setSelectedSessionNotification(notification);
