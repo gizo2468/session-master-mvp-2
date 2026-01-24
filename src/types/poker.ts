@@ -143,6 +143,7 @@ export interface TableData {
   chipsCarryover?: number;
   dayEndedWithoutElimination?: boolean;
   lateRegistration?: boolean;
+  tableDuration?: number; // Custom duration in seconds (if manually set)
 }
 
 export interface SessionData {

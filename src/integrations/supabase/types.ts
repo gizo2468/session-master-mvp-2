@@ -817,6 +817,7 @@ export type Database = {
           start_time: string | null
           start_time_utc: number | null
           starting_stack: number | null
+          table_duration: number | null
           table_name: string | null
           table_notes: string | null
           table_type: string | null
@@ -847,6 +848,7 @@ export type Database = {
           start_time?: string | null
           start_time_utc?: number | null
           starting_stack?: number | null
+          table_duration?: number | null
           table_name?: string | null
           table_notes?: string | null
           table_type?: string | null
@@ -877,6 +879,7 @@ export type Database = {
           start_time?: string | null
           start_time_utc?: number | null
           starting_stack?: number | null
+          table_duration?: number | null
           table_name?: string | null
           table_notes?: string | null
           table_type?: string | null
