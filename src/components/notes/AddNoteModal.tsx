@@ -23,6 +23,7 @@ interface AddNoteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onNoteSaved: () => void;
+  isLimitReached?: boolean;
 }
 
 interface OpponentProfile {
@@ -36,6 +37,7 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
   open,
   onOpenChange,
   onNoteSaved,
+  isLimitReached = false,
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -206,6 +208,15 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
   };
 
   const handleSave = async () => {
+    if (isLimitReached) {
+      toast({
+        title: 'Note limit reached',
+        description: 'Free plan allows up to 10 notes. Upgrade to Premium for unlimited.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!user?.id) {
       toast({
         title: 'Error',

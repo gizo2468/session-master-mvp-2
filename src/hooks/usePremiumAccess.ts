@@ -25,10 +25,19 @@ export const usePremiumAccess = () => {
     };
   };
 
+  // Notes limits for free users
+  const getNotesLimits = () => {
+    if (isPremium) {
+      return { maxNotes: Infinity };
+    }
+    return { maxNotes: 10 };  // Free users: 10 notes max
+  };
+
   return {
     isPremium,
     checkPremiumFeature,
     getConnectionLimits,
+    getNotesLimits,
     user
   };
 };
