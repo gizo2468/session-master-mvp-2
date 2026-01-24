@@ -22,7 +22,14 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
   
   const calculateDuration = () => {
     try {
-      // CRITICAL FIX: With schema fix, both start and end times are now timezone-aware
+      // PRIORITY 1: Use manually saved sessionDuration if available
+      if (session.sessionDuration && session.sessionDuration > 0) {
+        const hours = Math.floor(session.sessionDuration / 3600);
+        const minutes = Math.floor((session.sessionDuration % 3600) / 60);
+        return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+      }
+      
+      // PRIORITY 2: Fall back to timestamp calculation
       const start = new Date(session.startTime);
       const end = session.endTime ? new Date(session.endTime) : new Date();
       
@@ -31,8 +38,6 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
         console.error('Invalid start time:', session.startTime);
         return '0m';
       }
-      
-      // Duration calculation with timezone-aware timestamps
       
       const hours = differenceInHours(end, start);
       const minutes = differenceInMinutes(end, start) % 60;
@@ -61,7 +66,7 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
   };
 
   // Memoize duration calculation
-  const duration = React.useMemo(() => calculateDuration(), [session.startTime, session.endTime]);
+  const duration = React.useMemo(() => calculateDuration(), [session.startTime, session.endTime, session.sessionDuration]);
   
   // Determine display format based on tables played
   const getDisplayFormat = () => {
