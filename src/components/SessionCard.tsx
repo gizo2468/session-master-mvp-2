@@ -168,21 +168,23 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
         )}
       </div>
       
-      <div className="grid grid-cols-2 gap-4 text-sm mb-2">
-        <div className="text-center">
-          <span className="text-gray-500">Game:</span>
-          <span className="ml-1 font-medium">{session.gameType || 'Unknown'}</span>
+      <div className="pr-4">
+        <div className="grid grid-cols-2 gap-4 text-sm mb-2">
+          <div className="text-center">
+            <span className="text-gray-500">Game:</span>
+            <span className="ml-1 font-medium">{session.gameType || 'Unknown'}</span>
+          </div>
+          <div className="text-center">
+            <span className="text-gray-500">Format:</span>
+            <span className="ml-1 font-medium">{displayFormat}</span>
+          </div>
         </div>
-        <div className="text-center">
-          <span className="text-gray-500">Format:</span>
-          <span className="ml-1 font-medium">{displayFormat}</span>
+        
+        <div className="flex items-center justify-center text-sm mb-3">
+          <span className="text-gray-500">Duration:</span>
+          <span className="ml-1 font-medium">{duration}</span>
+          <Timer size={14} className="ml-1 text-gray-500" />
         </div>
-      </div>
-      
-      <div className="flex items-center justify-center text-sm mb-3">
-        <span className="text-gray-500">Duration:</span>
-        <span className="ml-1 font-medium">{duration}</span>
-        <Timer size={14} className="ml-1 text-gray-500" />
       </div>
       
       {session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined && (
