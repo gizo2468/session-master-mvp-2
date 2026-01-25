@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { format, differenceInMinutes, differenceInHours } from 'date-fns';
+import { Timer } from 'lucide-react';
 import ProfitLossBadge from './poker/ProfitLossBadge';
 import SessionStatsDisplay from './poker/SessionStatsDisplay';
 import SessionActionButtons from './SessionActionButtons';
@@ -155,7 +156,7 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
     >
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="text-lg font-bold text-primary">{session.location || 'Unknown Location'}</h3>
+          <h3 className="text-lg font-bold text-gray-600 underline decoration-1">{session.location || 'Unknown Location'}</h3>
           <p className="text-sm text-gray-500">{formattedDate} at {formattedTime}</p>
         </div>
         {session.isActive ? (
@@ -176,9 +177,10 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
           <span className="text-gray-500">Format:</span>
           <span className="ml-1 font-medium">{displayFormat}</span>
         </div>
-        <div>
+        <div className="flex items-center">
           <span className="text-gray-500">Duration:</span>
           <span className="ml-1 font-medium">{duration}</span>
+          <Timer size={14} className="ml-1 text-gray-500" />
         </div>
         {session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined && (
           <div>
