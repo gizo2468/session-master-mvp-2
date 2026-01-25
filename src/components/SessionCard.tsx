@@ -168,19 +168,19 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
         )}
       </div>
       
-      <div className="grid grid-cols-3 gap-2 text-sm mb-3">
+      <div className="grid grid-cols-2 gap-4 text-sm mb-3">
         <div className="text-center">
           <span className="text-gray-500">Game:</span>
           <span className="ml-1 font-medium">{session.gameType || 'Unknown'}</span>
+        </div>
+        <div className="text-center">
+          <span className="text-gray-500">Format:</span>
+          <span className="ml-1 font-medium">{displayFormat}</span>
         </div>
         <div className="flex items-center justify-center">
           <span className="text-gray-500">Duration:</span>
           <span className="ml-1 font-medium">{duration}</span>
           <Timer size={14} className="ml-1 text-gray-500" />
-        </div>
-        <div className="text-center">
-          <span className="text-gray-500">Format:</span>
-          <span className="ml-1 font-medium">{displayFormat}</span>
         </div>
         {session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined && (
           <div>
