@@ -47,7 +47,7 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
           </div>
           <div className="text-center">
             <div className="font-medium text-xs text-poker-gold">Buy-ins</div>
-            <div className="text-orange-500 font-semibold">{currencySymbol}{totalBuyIns.toFixed(0)}</div>
+            <div className="text-orange-600 font-semibold">{currencySymbol}{totalBuyIns.toFixed(0)}</div>
           </div>
           <div className="text-center">
             <div className="font-medium text-xs text-poker-gold">Payout</div>
