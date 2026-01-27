@@ -42,7 +42,7 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
             <div className="font-medium text-xs text-poker-gold">Tables</div>
             <div className="text-gray-800 font-semibold flex items-center justify-center gap-1">
               {tables}
-              <PokerTableIcon size={14} className="text-gray-600" />
+              <PokerTableIcon size={18} className="text-gray-600" />
             </div>
           </div>
           <div className="text-center">
