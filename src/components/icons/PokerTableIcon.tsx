@@ -13,30 +13,27 @@ const PokerTableIcon: React.FC<PokerTableIconProps> = ({ size = 16, className = 
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.5"
+      strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
     >
-      {/* Outer table oval */}
-      <ellipse cx="12" cy="12" rx="11" ry="7" />
+      {/* Outer table oval (rail) */}
+      <rect x="1" y="5" width="22" height="14" rx="7" ry="7" />
       
-      {/* Inner table rail */}
-      <ellipse cx="12" cy="12" rx="8" ry="4.5" />
+      {/* Inner table felt */}
+      <rect x="4" y="8" width="16" height="8" rx="4" ry="4" />
       
-      {/* Card slots on the table */}
-      <rect x="5" y="10" width="3" height="4" rx="0.5" />
-      <rect x="9" y="10" width="3" height="4" rx="0.5" />
-      <rect x="13" y="10" width="3" height="4" rx="0.5" />
-      <rect x="17" y="10" width="3" height="4" rx="0.5" />
+      {/* Vertical divider lines on the rail */}
+      <line x1="5" y1="5" x2="5" y2="8" />
+      <line x1="9" y1="5" x2="9" y2="8" />
+      <line x1="15" y1="5" x2="15" y2="8" />
+      <line x1="19" y1="5" x2="19" y2="8" />
       
-      {/* Small dots for player positions */}
-      <circle cx="3" cy="12" r="0.8" fill="currentColor" />
-      <circle cx="21" cy="12" r="0.8" fill="currentColor" />
-      <circle cx="6" cy="7" r="0.8" fill="currentColor" />
-      <circle cx="18" cy="7" r="0.8" fill="currentColor" />
-      <circle cx="6" cy="17" r="0.8" fill="currentColor" />
-      <circle cx="18" cy="17" r="0.8" fill="currentColor" />
+      <line x1="5" y1="16" x2="5" y2="19" />
+      <line x1="9" y1="16" x2="9" y2="19" />
+      <line x1="15" y1="16" x2="15" y2="19" />
+      <line x1="19" y1="16" x2="19" y2="19" />
     </svg>
   );
 };
