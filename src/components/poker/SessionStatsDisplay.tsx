@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
+import PokerTableIcon from '@/components/icons/PokerTableIcon';
 
 interface SessionStatsDisplayProps {
   tables: number;
@@ -39,7 +40,10 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
         <div className="grid grid-cols-4 gap-2 text-sm">
           <div className="text-center">
             <div className="font-medium text-xs text-poker-gold">Tables</div>
-            <div className="text-gray-800 font-semibold">{tables}</div>
+            <div className="text-gray-800 font-semibold flex items-center justify-center gap-1">
+              {tables}
+              <PokerTableIcon size={14} className="text-gray-600" />
+            </div>
           </div>
           <div className="text-center">
             <div className="font-medium text-xs text-poker-gold">Hands</div>
