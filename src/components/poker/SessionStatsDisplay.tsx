@@ -2,6 +2,7 @@
 import React from 'react';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import PokerTableIcon from '@/components/icons/PokerTableIcon';
+import PlayingCardsIcon from '@/components/icons/PlayingCardsIcon';
 
 interface SessionStatsDisplayProps {
   tables: number;
@@ -47,7 +48,10 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
           </div>
           <div className="text-center">
             <div className="font-medium text-xs text-poker-gold">Hands</div>
-            <div className="text-gray-800 font-semibold">{hands}</div>
+            <div className="text-gray-800 font-semibold flex items-center justify-center gap-1">
+              {hands}
+              <PlayingCardsIcon size={18} className="text-gray-600" />
+            </div>
           </div>
           <div className="text-center">
             <div className="font-medium text-xs text-poker-gold">Buy-ins</div>
