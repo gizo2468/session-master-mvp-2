@@ -370,9 +370,9 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
                   const currencyName = currency === 'USD' ? 'USD' : 
                                      currency === 'ILS' ? 'ILS' : 
                                      currency === 'EUR' ? 'EUR' : currency;
-                  const flag = currency === 'USD' ? '💵' : 
+                  const flag = currency === 'USD' ? '$' : 
                               currency === 'ILS' ? '₪' : 
-                              currency === 'EUR' ? '€' : '💰';
+                              currency === 'EUR' ? '€' : symbol;
                   
                   return (
                     <div key={currency} className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-lg">
