@@ -26,7 +26,7 @@ export default function NewSessionButton() {
         <img 
           src={newSessionIcon} 
           alt="New Session" 
-          className="w-56 h-56 sm:w-64 sm:h-64 object-contain"
+          className="w-72 h-72 sm:w-80 sm:h-80 object-contain"
           draggable={false}
         />
       </button>
