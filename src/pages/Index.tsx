@@ -129,13 +129,13 @@ export default function Index() {
         </div>
       </header>
 
-      <main className="container mx-auto max-w-md px-4 py-3">
+      <main className="container mx-auto max-w-md px-4 py-1">
         {showStorageWarning && <StorageWarningAlert />}
         
         
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-1">
           {/* NEW SESSION button appears first, at the top */}
-          <div className="flex justify-center -my-2">
+          <div className="flex justify-center -my-4">
             <NewSessionButton />
           </div>
 
