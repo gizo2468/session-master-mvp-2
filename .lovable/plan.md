@@ -1,49 +1,42 @@
 
+## Fix "New Session" Icon Scaling
 
-## Replace "Start / New Session" Main Button Icon
+This plan addresses the zoomed-in/cropped appearance of the poker chip icon by adjusting how the image scales within its container.
 
-This plan replaces the current circular stopwatch button on the home screen with the new premium shield icon you provided.
+### Problem
 
-### What Changes
+The current image styling uses fixed dimensions (`w-72 h-72`) which may not perfectly match the new poker chip image's natural aspect ratio, potentially causing it to appear cropped or scaled incorrectly.
 
-The current button is built with CSS gradients and shapes to create a stopwatch appearance. It will be replaced with your new premium shield image while keeping all navigation functionality intact.
+### Solution
 
-### Implementation Steps
+Adjust the image styling to ensure the full icon is always visible:
+- Remove the fixed height constraint and use `h-auto` to preserve the image's natural aspect ratio
+- Keep `object-contain` to prevent any cropping
+- This ensures the icon scales proportionally based on width
 
-1. **Copy the new icon to the project**
-   - Save the uploaded image to `src/assets/new-session-button.png`
-   - This follows the existing pattern used for other assets (championship trophies, etc.)
+### Changes
 
-2. **Update the NewSessionButton component**
-   - Import the new image asset
-   - Replace the complex CSS-based stopwatch design with a simple image
-   - Keep the same button wrapper with:
-     - Same click handler (navigates to `/new-session`)
-     - Same accessibility attributes
-     - Same hover/active transitions
-     - Same touch area and responsiveness
+**File: `src/components/NewSessionButton.tsx`**
 
-### Technical Details
+Update the image className from:
+```tsx
+className="w-72 h-72 sm:w-80 sm:h-80 object-contain"
+```
 
-The updated component will:
-- Use an `<img>` tag with the new shield icon
-- Maintain the centered layout with the same container width
-- Keep hover effects (scale/translate transitions)
-- Preserve focus ring styling for accessibility
-- Remove all the CSS shapes (stopwatch ring, crown, tick marks) since they're no longer needed
+To:
+```tsx
+className="w-72 sm:w-80 h-auto object-contain"
+```
 
-### Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/assets/new-session-button.png` | New file - the uploaded shield icon |
-| `src/components/NewSessionButton.tsx` | Replace CSS stopwatch with image-based button |
+This change:
+- Keeps the same width (288px mobile, 320px larger screens)
+- Allows height to adjust automatically based on the image's aspect ratio
+- Ensures the full poker chip is visible without any cropping
 
 ### What Stays the Same
 
+- Button position and centering
 - Click behavior (navigates to `/new-session`)
-- Button position on home screen
-- Touch/click area
-- Hover and focus interactions
-- Error handling fallback navigation
-
+- Hover and active animations
+- Accessibility attributes
+- No functional changes
