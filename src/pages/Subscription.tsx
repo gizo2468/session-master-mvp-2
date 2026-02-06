@@ -3,10 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Check, Star, Zap, Crown, FileDown } from 'lucide-react';
+import { ArrowLeft, Check, Star, Zap, Crown, FileDown, Smartphone } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { detectPlatform } from '@/utils/platformDetection';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 import { useIAP } from '@/hooks/useIAP';
@@ -21,8 +19,8 @@ const PLANS = {
   yearly: {
     price: 129.99,
     label: 'year',
-    productId: 'com.sessionmaster.premium_yearly', // Correct product ID
-    savingsPercent: 28 // (1 - 129.99 / (14.99 * 12)) * 100 ≈ 28%
+    productId: 'com.sessionmaster.premium_yearly',
+    savingsPercent: 28
   }
 } as const;
 
@@ -63,38 +61,6 @@ const Subscription: React.FC = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, []);
-
-  const handlePayPalPayment = async () => {
-    if (!user) {
-      toast.error('Please log in to continue');
-      return;
-    }
-
-    setIsLoading(selectedPlan);
-
-    try {
-      // Create PayPal order
-      const { data, error } = await supabase.functions.invoke('create-paypal-order', {
-        body: { planType: selectedPlan }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.approval_url) {
-        // Redirect to PayPal for payment
-        window.location.href = data.approval_url;
-      } else {
-        throw new Error('No approval URL received from PayPal');
-      }
-    } catch (error) {
-      console.error('Payment initiation error:', error);
-      toast.error('Failed to initiate payment. Please try again.');
-    } finally {
-      setIsLoading(null);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
@@ -250,14 +216,17 @@ const Subscription: React.FC = () => {
                   </Button>
                 </div>
               ) : (
-                <Button 
-                  onClick={handlePayPalPayment}
-                  disabled={isLoading !== null}
-                  className="w-full py-6 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                  size="lg"
-                >
-                  {isLoading ? 'Processing...' : `Subscribe for $${PLANS[selectedPlan].price.toFixed(2)} / ${PLANS[selectedPlan].label}`}
-                </Button>
+                <div className="space-y-4">
+                  <div className="bg-muted/60 rounded-lg p-4 text-center">
+                    <Smartphone className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      Premium subscriptions are available through our mobile app.
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Download Session Master on iOS or Android to subscribe.
+                    </p>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -344,16 +313,16 @@ const Subscription: React.FC = () => {
           </Card>
         </div>
 
-        {/* Trust Section */}
-        {!isMobile && (
+        {/* Trust Section - Only show on mobile */}
+        {isMobile && (
           <div className="mt-16 text-center">
             <p className="text-muted-foreground mb-4">
-              Secure payment processing powered by PayPal
+              Secure in-app purchase processing
             </p>
             <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-              <span>🔒 SSL Encrypted</span>
+              <span>🔒 Secure</span>
               <span>•</span>
-              <span>💳 PayPal Protected</span>
+              <span>💳 App Store Protected</span>
               <span>•</span>
               <span>Cancel anytime</span>
             </div>

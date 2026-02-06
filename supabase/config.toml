@@ -24,17 +24,15 @@ enable_leaked_password_protection = true
 enable_strong_password = false
 enable_phone_email_authentication = false
 
-[functions.capture-paypal-payment]
-verify_jwt = false
-
-[functions.paypal-health]
-verify_jwt = false
-
 [functions.analyze-poker-hand]
 verify_jwt = true
 
+# send-push-notification: Called by database triggers using service role key,
+# but also accepts direct authenticated calls. JWT validated in code.
 [functions.send-push-notification]
 verify_jwt = false
 
+# session-reminders: Internal scheduled function using service role key.
+# This is a background job, not user-callable.
 [functions.session-reminders]
 verify_jwt = false
