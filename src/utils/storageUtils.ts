@@ -17,7 +17,7 @@ const signedUrlCache = new Map<string, { url: string; expiresAt: number }>();
  * Uses caching to avoid excessive API calls
  */
 export async function getSignedUrl(
-  bucket: 'avatars' | 'opponent-avatars',
+  bucket: 'avatars' | 'opponent-avatars' | 'player-goals-images',
   filePath: string
 ): Promise<string | null> {
   if (!filePath) return null;
@@ -58,7 +58,7 @@ export async function getSignedUrl(
  * Works with both public URLs and signed URLs
  */
 export function extractFilePath(
-  bucket: 'avatars' | 'opponent-avatars' | 'tutorial_images',
+  bucket: 'avatars' | 'opponent-avatars' | 'player-goals-images',
   url: string | null | undefined
 ): string | null {
   if (!url) return null;
@@ -86,7 +86,7 @@ export function extractFilePath(
  * For public buckets, returns the public URL
  */
 export async function uploadToStorage(
-  bucket: 'avatars' | 'opponent-avatars' | 'tutorial_images',
+  bucket: 'avatars' | 'opponent-avatars' | 'player-goals-images',
   filePath: string,
   file: File,
   options?: { upsert?: boolean; contentType?: string }
@@ -104,11 +104,8 @@ export async function uploadToStorage(
       throw uploadError;
     }
     
-    // For public buckets, return the public URL
-    if (bucket === 'tutorial_images') {
-      const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
-      return { path: filePath, publicUrl: data.publicUrl };
-    }
+    // All current buckets are private, return just the path
+    // Use getSignedUrl() to get viewable URLs for private buckets
     
     // For private buckets, return just the path
     return { path: filePath };
