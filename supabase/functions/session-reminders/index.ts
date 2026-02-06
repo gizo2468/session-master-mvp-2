@@ -1,19 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// No CORS headers needed - this is an internal cron-scheduled function
+// that doesn't receive browser requests
 
 const SUPABASE_URL = 'https://wfmvvpbpuqbzidptxbqx.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
-Deno.serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(async (_req) => {
   try {
     console.log('[session-reminders] Starting scheduled reminder check...');
     
@@ -356,7 +349,7 @@ Deno.serve(async (req) => {
         results 
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         status: 200 
       }
     );
@@ -369,7 +362,7 @@ Deno.serve(async (req) => {
         error: error instanceof Error ? error.message : 'Unknown error' 
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         status: 500 
       }
     );
