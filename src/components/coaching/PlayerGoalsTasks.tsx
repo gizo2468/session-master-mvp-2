@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/Lucide';
 import { useToast } from '@/hooks/use-toast';
-
+import GoalImageLink from './GoalImageLink';
 export type PlayerGoal = {
   id: string;
   coach_id: string;
@@ -147,18 +147,18 @@ export default function PlayerGoalsTasks({ studentId, mode, coachId }: PlayerGoa
     if (!user?.id || !title.trim()) return;
     setAdding(true);
     try {
-      // Upload image if provided
+      // Upload image if provided (to private bucket, store the path)
       let imageUrl: string | null = null;
       if (imageFile) {
-        const ext = imageFile.name.split('.').pop() || 'jpg';
         const safeName = imageFile.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
-        const filePath = `player_goals_images/${user.id}/${Date.now()}_${safeName}`;
+        // Store in user's folder: {user_id}/{timestamp}_{filename}
+        const filePath = `${user.id}/${Date.now()}_${safeName}`;
         const { error: uploadError } = await supabase.storage
-          .from('tutorial_images')
+          .from('player-goals-images')
           .upload(filePath, imageFile, { upsert: true, contentType: imageFile.type });
         if (uploadError) throw uploadError;
-        const { data } = supabase.storage.from('tutorial_images').getPublicUrl(filePath);
-        imageUrl = data.publicUrl || null;
+        // Store the file path (not a public URL since bucket is private)
+        imageUrl = filePath;
       }
 
       const payload = {
@@ -356,9 +356,7 @@ export default function PlayerGoalsTasks({ studentId, mode, coachId }: PlayerGoa
                             <span className={`h-2 w-2 rounded-full ${colorDotBgClass(g.color)}`} />
                             <span className={`font-semibold text-base ${titleColorClass(g.color)}`}>{toTitleCase(g.title)}</span>
                             {g.image_url && (
-                              <a href={g.image_url} target="_blank" rel="noopener noreferrer" aria-label="View attached image">
-                                <Icon name="Image" className="h-4 w-4" />
-                              </a>
+                              <GoalImageLink imageUrl={g.image_url} />
                             )}
                           </div>
                          {g.details && (
@@ -401,9 +399,7 @@ export default function PlayerGoalsTasks({ studentId, mode, coachId }: PlayerGoa
                       <span className={`h-2 w-2 rounded-full ${colorDotBgClass(g.color)}`} />
                       <span className={`font-semibold text-base ${titleColorClass(g.color)}`}>{toTitleCase(g.title)}</span>
                       {g.image_url && (
-                        <a href={g.image_url} target="_blank" rel="noopener noreferrer" aria-label="View attached image">
-                          <Icon name="Image" className="h-4 w-4" />
-                        </a>
+                        <GoalImageLink imageUrl={g.image_url} />
                       )}
                     </div>
                     {g.details && (
