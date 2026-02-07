@@ -133,14 +133,16 @@ export default function Index() {
         {showStorageWarning && <StorageWarningAlert />}
         
         
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center gap-0">
           {/* NEW SESSION button appears first, at the top */}
-          <div className="flex justify-center -my-4">
+          <div className="flex justify-center -my-5">
             <NewSessionButton />
           </div>
 
           {/* Stats section appears after the button */}
-          <StatsQuickView />
+          <div className="-mt-2 w-full">
+            <StatsQuickView />
+          </div>
           
           {/* Active Sessions List - appears after stats if there are active sessions */}
           {hasActiveSessions && (
