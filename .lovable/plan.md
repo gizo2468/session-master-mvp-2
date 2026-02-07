@@ -1,58 +1,33 @@
 
-## Reduce Vertical Spacing on Home Screen
 
-This plan addresses the excessive vertical spacing between the header/menu area, the "New Session" button, and the Sessions Stats section.
+## Add Green Boundary Contour Around the App Frame
 
-### Current State
+### What will change
+A thin, elegant green border will be added around the entire app's outer container on every page, giving the interface a visually contained, framed appearance. The green will match the poker felt green (`#35654D`) used throughout the app.
 
-Looking at the current layout in `src/pages/Index.tsx`:
-- Main container has `py-3` padding (line 132)
-- Flex container has `gap-3` between elements (line 136)
-- The button wrapper has `-my-2` negative margin (line 138)
+### Approach
+The most reliable and non-invasive way is to add the border at the root level in `index.css`, targeting the `#root` element. This ensures every page gets the contour without modifying individual page files.
 
-The screenshot shows there's still too much empty space above and below the poker chip button.
+### Technical Details
 
-### Solution
+**File: `src/index.css`** - Update the `#root` selector (currently in `App.css` but we'll use `index.css` for the base styles):
 
-Reduce spacing by:
-1. Removing vertical padding from the main container (`py-3` → `py-1`)
-2. Reducing the gap between flex items (`gap-3` → `gap-1`)
-3. Increasing the negative margin on the button wrapper (`-my-2` → `-my-4`) to pull elements even closer
+Actually, since `App.css` already has a `#root` rule, we will update **`src/App.css`** to add:
+- `border: 2px solid #35654D` (poker felt green, matching the START SESSION chip green)
+- `min-height: 100vh` to ensure the border spans the full viewport
+- Remove the existing `max-width`, `margin`, `padding`, and `text-align` rules on `#root` since those are leftover Vite boilerplate that conflict with the app's Tailwind-based layout
 
-### Changes
+**File: `src/App.css`** changes:
+- Replace the current `#root` block with a clean border-only rule:
+  - `border: 2px solid #35654D`
+  - `min-height: 100vh`
+  - `box-sizing: border-box`
+- Keep all other CSS in the file unchanged (keyframes, etc. are harmless)
 
-**File: `src/pages/Index.tsx`**
+### What stays the same
+- No layout, spacing, typography, or functionality changes
+- No changes to any page component files
+- No changes to internal UI elements
+- Responsive behavior is preserved (the border simply wraps the viewport edge)
+- All clickable areas, scrolling, and padding remain unaffected
 
-Line 132 - Reduce main container padding:
-```tsx
-// From:
-<main className="container mx-auto max-w-md px-4 py-3">
-
-// To:
-<main className="container mx-auto max-w-md px-4 py-1">
-```
-
-Line 136 - Reduce gap between flex items:
-```tsx
-// From:
-<div className="flex flex-col items-center gap-3">
-
-// To:
-<div className="flex flex-col items-center gap-1">
-```
-
-Line 138 - Increase negative margin on button wrapper:
-```tsx
-// From:
-<div className="flex justify-center -my-2">
-
-// To:
-<div className="flex justify-center -my-4">
-```
-
-### What Stays the Same
-
-- Button size (w-72 sm:w-80 h-auto)
-- All other element sizes
-- Button position (centered)
-- All functionality and navigation
