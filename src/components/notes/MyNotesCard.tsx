@@ -366,10 +366,25 @@ const MyNotesCard: React.FC = () => {
       >
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <StickyNote className="h-5 w-5" />
-              All Notes
-            </DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2">
+                <StickyNote className="h-5 w-5" />
+                All Notes
+              </DialogTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                disabled={hasReachedLimit}
+                onClick={() => {
+                  setIsAllNotesModalOpen(false);
+                  setIsAddModalOpen(true);
+                }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Note
+              </Button>
+            </div>
           </DialogHeader>
 
           {/* Filter and Sort Controls */}
