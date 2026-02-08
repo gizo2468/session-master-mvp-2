@@ -135,12 +135,12 @@ export default function Index() {
         
         <div className="flex flex-col items-center gap-0">
           {/* NEW SESSION button appears first, at the top */}
-          <div className="flex justify-center -my-8">
+          <div className="flex justify-center -my-14">
             <NewSessionButton />
           </div>
 
           {/* Stats section appears after the button */}
-          <div className="-mt-6 w-full">
+          <div className="-mt-12 w-full">
             <StatsQuickView />
           </div>
           
