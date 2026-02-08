@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import newSessionIcon from '@/assets/new-session-button.png';
+import newSessionIcon from '@/assets/start-session-stopwatch.png';
 
 export default function NewSessionButton() {
   const navigate = useNavigate();
@@ -25,8 +25,8 @@ export default function NewSessionButton() {
       >
         <img 
           src={newSessionIcon} 
-          alt="New Session" 
-          className="w-72 sm:w-80 h-auto object-contain"
+          alt="Start Session" 
+          className="w-44 sm:w-52 h-auto object-contain"
           draggable={false}
         />
       </button>
