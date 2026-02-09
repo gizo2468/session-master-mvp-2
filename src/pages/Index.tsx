@@ -140,12 +140,12 @@ export default function Index() {
         
         <div className="flex flex-col items-center gap-0">
           {/* NEW SESSION button appears first, at the top */}
-          <div className="flex justify-center -my-32">
+          <div className="flex justify-center -my-24">
             <NewSessionButton />
           </div>
 
           {/* Player Card & My Notes chip buttons */}
-          <div className="flex justify-between px-6 -mt-32 w-full">
+          <div className="flex justify-between px-6 -mt-24 w-full">
             <button
               onClick={() => setPlayerCardOpen(true)}
               className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
@@ -163,7 +163,7 @@ export default function Index() {
           </div>
 
           {/* Stats section appears after the button */}
-          <div className="-mt-24 w-full">
+          <div className="-mt-16 w-full">
             <StatsQuickView />
           </div>
           
