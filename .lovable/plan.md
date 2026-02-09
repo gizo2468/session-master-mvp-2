@@ -1,33 +1,39 @@
 
+# Add Two Chip Buttons Below START SESSION
 
-## Add Green Boundary Contour Around the App Frame
+## Overview
+Add two smaller poker chip icon buttons directly beneath the START SESSION button on the Home screen. The left chip (User ID card) will open the Player Card modal, and the right chip (My Notes) will navigate to the Dashboard where My Notes is displayed.
 
-### What will change
-A thin, elegant green border will be added around the entire app's outer container on every page, giving the interface a visually contained, framed appearance. The green will match the poker felt green (`#35654D`) used throughout the app.
+## What Will Change
 
-### Approach
-The most reliable and non-invasive way is to add the border at the root level in `index.css`, targeting the `#root` element. This ensures every page gets the contour without modifying individual page files.
+### New Assets
+- Copy the uploaded User ID card chip image to `src/assets/chip-player-card.png`
+- Copy the uploaded My Notes chip image to `src/assets/chip-my-notes.png`
 
-### Technical Details
+### Home Screen Layout (src/pages/Index.tsx)
+- Add a new horizontal row directly below the START SESSION button wrapper (inside the same flex column, before the stats section)
+- The row will contain two smaller chip buttons spaced apart with `justify-between` or `justify-center gap-X`
+- Left button: User ID card chip -- opens the PlayerCardModal (same behavior as the existing floating PlayerCardButton)
+- Right button: My Notes chip -- navigates to `/dashboard` (where My Notes section lives)
+- Apply tight negative margins to keep the spacing consistent with the current layout
 
-**File: `src/index.css`** - Update the `#root` selector (currently in `App.css` but we'll use `index.css` for the base styles):
+### Button Behavior
+- Left chip: Uses local state to open `PlayerCardModal` (imported from existing component)
+- Right chip: Calls `navigate('/dashboard')` to go to the Dashboard page with My Notes
+- Both buttons get the same hover/active scale transitions as the START SESSION button
 
-Actually, since `App.css` already has a `#root` rule, we will update **`src/App.css`** to add:
-- `border: 2px solid #35654D` (poker felt green, matching the START SESSION chip green)
-- `min-height: 100vh` to ensure the border spans the full viewport
-- Remove the existing `max-width`, `margin`, `padding`, and `text-align` rules on `#root` since those are leftover Vite boilerplate that conflict with the app's Tailwind-based layout
+## Technical Details
 
-**File: `src/App.css`** changes:
-- Replace the current `#root` block with a clean border-only rule:
-  - `border: 2px solid #35654D`
-  - `min-height: 100vh`
-  - `box-sizing: border-box`
-- Keep all other CSS in the file unchanged (keyframes, etc. are harmless)
+### src/pages/Index.tsx Changes
+- Import `PlayerCardModal` from `@/components/PlayerCard/PlayerCardModal`
+- Import two new chip images from `@/assets/`
+- Add `useState` for controlling the PlayerCardModal open state
+- Insert a new `div` with `flex justify-center gap-8` containing two `button` elements after the NewSessionButton wrapper
+- Each button renders an `img` tag sized at approximately `w-20` or `w-24` (much smaller than the main chip)
+- Apply negative top margin (e.g., `-mt-8`) to pull the row tight against the START SESSION chip
+- Adjust the stats section margin if needed to keep the gap minimal
 
-### What stays the same
-- No layout, spacing, typography, or functionality changes
-- No changes to any page component files
-- No changes to internal UI elements
-- Responsive behavior is preserved (the border simply wraps the viewport edge)
-- All clickable areas, scrolling, and padding remain unaffected
-
+### File Changes Summary
+1. **Copy** `user-uploads://image-379.png` to `src/assets/chip-player-card.png`
+2. **Copy** `user-uploads://image-378.png` to `src/assets/chip-my-notes.png`
+3. **Edit** `src/pages/Index.tsx` -- add the two chip buttons row and PlayerCardModal state/component
