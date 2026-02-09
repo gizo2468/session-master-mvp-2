@@ -149,14 +149,14 @@ export default function Index() {
               className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
               aria-label="Player Card"
             >
-              <img src={chipPlayerCard} alt="Player Card" className="w-24 h-auto object-contain" draggable={false} />
+              <img src={chipPlayerCard} alt="Player Card" className="w-32 h-auto object-contain" draggable={false} />
             </button>
             <button
               onClick={() => navigate('/dashboard')}
               className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
               aria-label="My Notes"
             >
-              <img src={chipMyNotes} alt="My Notes" className="w-24 h-auto object-contain" draggable={false} />
+              <img src={chipMyNotes} alt="My Notes" className="w-32 h-auto object-contain" draggable={false} />
             </button>
           </div>
 
