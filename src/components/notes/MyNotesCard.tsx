@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { StickyNote, Plus, Lock, Crown, List, Search } from 'lucide-react';
+import { StickyNote, Plus, Crown, List, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 import { useAuth } from '@/context/AuthContext';
@@ -10,23 +10,10 @@ import { useNavigate } from 'react-router-dom';
 import AddNoteModal from './AddNoteModal';
 import ViewEditNoteModal from './ViewEditNoteModal';
 import { format } from 'date-fns';
-import { PLAYER_COLORS, getColorById } from './playerColors';
+import { getColorById } from './playerColors';
 import { cn } from '@/lib/utils';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { resolveSignedUrls } from '@/hooks/useSignedImageUrl';
-import { extractFilePath, getSignedUrl } from '@/utils/storageUtils';
+import ViewAllNotesModal from './ViewAllNotesModal';
 
 interface OpponentProfile {
   id: string;
@@ -62,8 +49,6 @@ const MyNotesCard: React.FC = () => {
   const [isAllNotesModalOpen, setIsAllNotesModalOpen] = useState(false);
   const [selectedOpponentProfile, setSelectedOpponentProfile] = useState<OpponentProfile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [modalColorFilter, setModalColorFilter] = useState<string>('all');
-  const [modalSortOrder, setModalSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   const fetchNotes = async () => {
     if (!user?.id) return;
@@ -155,38 +140,6 @@ const MyNotesCard: React.FC = () => {
       opponent.profile?.nickname?.toLowerCase().includes(query)
     );
   }, [groupedOpponents, searchQuery]);
-
-  // Get unique colors used in notes (for filter options in modal)
-  const usedColors = useMemo(() => {
-    const colorIds = new Set<string>();
-    groupedOpponents.forEach(opponent => {
-      const colorId = opponent.profile?.color || 'white';
-      colorIds.add(colorId);
-    });
-    return PLAYER_COLORS.filter(color => colorIds.has(color.id));
-  }, [groupedOpponents]);
-
-  // Filter and sort opponents for the modal
-  const modalFilteredOpponents = useMemo(() => {
-    let result = [...groupedOpponents];
-    
-    // Apply color filter
-    if (modalColorFilter !== 'all') {
-      result = result.filter(opponent => 
-        (opponent.profile?.color || 'white') === modalColorFilter
-      );
-    }
-    
-    // Apply sort order
-    if (modalSortOrder === 'oldest') {
-      result.sort((a, b) => 
-        new Date(a.latestNote.created_at).getTime() - new Date(b.latestNote.created_at).getTime()
-      );
-    }
-    // 'newest' is default order from the query, no sorting needed
-    
-    return result;
-  }, [groupedOpponents, modalColorFilter, modalSortOrder]);
 
   // Notes limit logic for free users
   const { maxNotes } = getNotesLimits();
@@ -353,142 +306,10 @@ const MyNotesCard: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* All Notes Modal */}
-      <Dialog 
-        open={isAllNotesModalOpen} 
-        onOpenChange={(open) => {
-          setIsAllNotesModalOpen(open);
-          if (!open) {
-            setModalColorFilter('all');
-            setModalSortOrder('newest');
-          }
-        }}
-      >
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto pt-10">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="flex items-center gap-2">
-                <StickyNote className="h-5 w-5" />
-                All Notes
-              </DialogTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5"
-                disabled={hasReachedLimit}
-                onClick={() => {
-                  setIsAllNotesModalOpen(false);
-                  setIsAddModalOpen(true);
-                }}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add Note
-              </Button>
-            </div>
-          </DialogHeader>
-
-          {/* Filter and Sort Controls */}
-          {groupedOpponents.length > 0 && (
-            <div className="flex items-center justify-between gap-3 pb-3 border-b border-border/50">
-              {/* Color Filter */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <button
-                  onClick={() => setModalColorFilter('all')}
-                  className={cn(
-                    "px-2 py-1 text-xs rounded-md border transition-colors",
-                    modalColorFilter === 'all'
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-muted/50 border-border/50 hover:bg-muted"
-                  )}
-                >
-                  All
-                </button>
-                {usedColors.map((color) => (
-                  <button
-                    key={color.id}
-                    onClick={() => setModalColorFilter(color.id)}
-                    className={cn(
-                      "w-6 h-6 rounded-md border-2 transition-all",
-                      modalColorFilter === color.id
-                        ? "ring-2 ring-primary ring-offset-1"
-                        : "hover:scale-110"
-                    )}
-                    style={{ 
-                      backgroundColor: color.hex,
-                      borderColor: color.border || 'transparent'
-                    }}
-                    title={color.label}
-                  />
-                ))}
-              </div>
-              
-              {/* Sort Dropdown */}
-              <Select value={modalSortOrder} onValueChange={(value: 'newest' | 'oldest') => setModalSortOrder(value)}>
-                <SelectTrigger className="w-[120px] h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest first</SelectItem>
-                  <SelectItem value="oldest">Oldest first</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          
-          {modalFilteredOpponents.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              {groupedOpponents.length === 0 
-                ? 'No notes yet. Add your first note!'
-                : 'No notes match the selected filter.'}
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {modalFilteredOpponents.map((opponent) => {
-                const colorData = getColorById(opponent.profile?.color);
-                return (
-                  <div
-                    key={opponent.profile.id}
-                    onClick={() => {
-                      setIsAllNotesModalOpen(false);
-                      handleOpponentClick(opponent);
-                    }}
-                    className="p-3 bg-muted/50 rounded-lg border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2 min-w-0">
-                        {/* Color indicator */}
-                        <div 
-                          className="w-3 h-3 rounded-sm flex-shrink-0"
-                          style={{ 
-                            backgroundColor: colorData.hex,
-                            border: colorData.border ? `1px solid ${colorData.border}` : '1px solid transparent'
-                          }}
-                          title={colorData.label}
-                        />
-                        <span className="font-medium text-sm truncate">
-                          {opponent.profile?.nickname || 'Unknown'}
-                        </span>
-                        {/* Note count badge */}
-                        {opponent.noteCount > 1 && (
-                          <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full flex-shrink-0">
-                            {opponent.noteCount} notes
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                        {format(new Date(opponent.latestNote.created_at), 'MMM d')}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {opponent.latestNote.note_body}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <ViewAllNotesModal
+        open={isAllNotesModalOpen}
+        onOpenChange={setIsAllNotesModalOpen}
+      />
 
       <AddNoteModal
         open={isAddModalOpen}

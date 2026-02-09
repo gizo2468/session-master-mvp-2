@@ -20,6 +20,7 @@ import NotificationBell from '@/components/NotificationBell';
 import { PlayerCardModal } from '@/components/PlayerCard/PlayerCardModal';
 import chipPlayerCard from '@/assets/chip-player-card.png';
 import chipMyNotes from '@/assets/chip-my-notes.png';
+import ViewAllNotesModal from '@/components/notes/ViewAllNotesModal';
 
 export default function Index() {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ export default function Index() {
     hasActiveSessions 
   } = useActiveSessionRecovery();
   const [playerCardOpen, setPlayerCardOpen] = useState(false);
+  const [notesModalOpen, setNotesModalOpen] = useState(false);
 
 
   // Removed duplicate refresh - SessionContext already loads data on initialization
@@ -152,7 +154,7 @@ export default function Index() {
               <img src={chipPlayerCard} alt="Player Card" className="w-32 h-auto object-contain" draggable={false} />
             </button>
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => setNotesModalOpen(true)}
               className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
               aria-label="My Notes"
             >
@@ -240,6 +242,7 @@ export default function Index() {
       </main>
       
       <PlayerCardModal open={playerCardOpen} onOpenChange={setPlayerCardOpen} />
+      <ViewAllNotesModal open={notesModalOpen} onOpenChange={setNotesModalOpen} />
     </div>
   );
 }
