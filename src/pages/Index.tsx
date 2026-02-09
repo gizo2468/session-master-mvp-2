@@ -17,6 +17,9 @@ import { Button } from '@/components/ui/button';
 import FilterBar from '@/components/ui/FilterBar';
 import { SessionFilter } from '@/types/poker';
 import NotificationBell from '@/components/NotificationBell';
+import { PlayerCardModal } from '@/components/PlayerCard/PlayerCardModal';
+import chipPlayerCard from '@/assets/chip-player-card.png';
+import chipMyNotes from '@/assets/chip-my-notes.png';
 
 export default function Index() {
   const navigate = useNavigate();
@@ -37,8 +40,8 @@ export default function Index() {
     resumeSession,
     hasActiveSessions 
   } = useActiveSessionRecovery();
-  
-  
+  const [playerCardOpen, setPlayerCardOpen] = useState(false);
+
 
   // Removed duplicate refresh - SessionContext already loads data on initialization
   // The refresh will happen automatically via the context's useEffect
@@ -139,6 +142,24 @@ export default function Index() {
             <NewSessionButton />
           </div>
 
+          {/* Player Card & My Notes chip buttons */}
+          <div className="flex justify-center gap-8 -mt-20">
+            <button
+              onClick={() => setPlayerCardOpen(true)}
+              className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+              aria-label="Player Card"
+            >
+              <img src={chipPlayerCard} alt="Player Card" className="w-24 h-auto object-contain" draggable={false} />
+            </button>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+              aria-label="My Notes"
+            >
+              <img src={chipMyNotes} alt="My Notes" className="w-24 h-auto object-contain" draggable={false} />
+            </button>
+          </div>
+
           {/* Stats section appears after the button */}
           <div className="-mt-14 w-full">
             <StatsQuickView />
@@ -218,6 +239,7 @@ export default function Index() {
         </div>
       </main>
       
+      <PlayerCardModal open={playerCardOpen} onOpenChange={setPlayerCardOpen} />
     </div>
   );
 }
