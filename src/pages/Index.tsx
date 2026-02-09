@@ -132,18 +132,18 @@ export default function Index() {
         </div>
       </header>
 
-      <main className="container mx-auto max-w-md px-4 py-1">
+      <main className="container mx-auto max-w-md px-4 py-0">
         {showStorageWarning && <StorageWarningAlert />}
         
         
         <div className="flex flex-col items-center gap-0">
           {/* NEW SESSION button appears first, at the top */}
-          <div className="flex justify-center -my-16">
+          <div className="flex justify-center -my-20">
             <NewSessionButton />
           </div>
 
           {/* Player Card & My Notes chip buttons */}
-          <div className="flex justify-center gap-8 -mt-20">
+          <div className="flex justify-between px-6 -mt-20 w-full">
             <button
               onClick={() => setPlayerCardOpen(true)}
               className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
