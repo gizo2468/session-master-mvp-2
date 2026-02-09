@@ -9,7 +9,7 @@ import NewSessionButton from '@/components/NewSessionButton';
 import StatsQuickView from '@/components/StatsQuickView';
 import StorageWarningAlert from '@/components/StorageWarningAlert';
 
-import PlayerCardButton from '@/components/PlayerCardButton';
+
 import ActiveSessionsList from '@/components/ActiveSessionsList';
 import Logo from '@/components/Logo';
 import Icon from '@/components/ui/Lucide';
@@ -128,7 +128,6 @@ export default function Index() {
             </div>
             <div className="flex-1 flex justify-end gap-2">
               <NotificationBell />
-              <PlayerCardButton />
             </div>
           </div>
         </div>
