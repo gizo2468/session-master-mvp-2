@@ -1,10 +1,14 @@
 
-# Adjust Spacing of START SESSION and Side Icons
+# Reduce Vertical Spacing
 
 ## Changes (src/pages/Index.tsx only)
 
-1. **Spread the two small chip icons to the edges**: Change the chip buttons container from `flex justify-center gap-8` to `flex justify-between px-8` so the Player Card chip sits near the left edge and My Notes chip sits near the right edge, with the START SESSION chip centered above them.
+Two margin adjustments to make the layout tighter:
 
-2. **Reduce vertical space between header and START SESSION chip**: Change the main content container's top padding from `py-1` to `py-0` or remove it, and increase the negative margin on the NewSessionButton wrapper from `-my-16` to `-my-20` (or similar) to pull the chip closer to the header.
+1. **Header to START SESSION**: Increase the negative margin on the NewSessionButton wrapper from `-my-20` to `-my-24` to pull it closer to the header.
 
-No other layout, size, or functionality changes.
+2. **START SESSION to side chips**: Increase the negative margin on the side chips row from `-mt-20` to `-mt-24` to pull them closer to the START SESSION chip.
+
+3. **Side chips to Stats**: Adjust the stats section margin from `-mt-14` to `-mt-16` to keep the tighter feel consistent.
+
+All changes are Tailwind class adjustments on three existing `div` elements. No size, functionality, or other layout changes.
