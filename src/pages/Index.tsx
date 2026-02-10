@@ -144,7 +144,7 @@ export default function Index() {
           </div>
 
           {/* Player Card & My Notes chip buttons */}
-          <div className="flex justify-between px-6 -mt-24 w-full">
+          <div className="flex justify-center gap-6 -mt-28 w-full">
             <button
               onClick={() => setPlayerCardOpen(true)}
               className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
