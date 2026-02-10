@@ -1,19 +1,25 @@
 
-# Remove Obsolete Player Card Floating Button
+# Reposition Side Chip Icons
 
-## What's changing
-The circular gold floating button (bottom-left corner of the screen) that opens the Player Card modal will be removed. This button is now redundant because the Player Card chip button on the Home screen handles the same action.
+## Overview
+Change the two chip buttons (Player Card and My Notes) from being spread to opposite edges to being centered together with a smaller gap beneath the START SESSION button.
 
-## Changes
+## Change (src/pages/Index.tsx only)
 
-### 1. `src/pages/Index.tsx`
-- Remove the `PlayerCardButton` import (line 12)
-- Remove `<PlayerCardButton />` from the header (line 131)
+Update the container `div` for the chip buttons (currently line 147):
 
-### 2. No other files affected
-The `PlayerCardButton` component file itself can remain in the codebase (it may be used elsewhere), but it will no longer be rendered on the Home screen.
+**Before:**
+```
+<div className="flex justify-between px-6 -mt-24 w-full">
+```
 
-## Technical Notes
-- The existing `PlayerCardModal` at line 244 (controlled by the chip button state) remains untouched
-- The chip button at line 149-155 continues to handle Player Card access
-- No functionality, data flow, or other UI changes
+**After:**
+```
+<div className="flex justify-center gap-6 -mt-28 w-full">
+```
+
+- `justify-between px-6` replaced with `justify-center gap-6` -- centers the pair and uses a controlled gap instead of edge-pinning
+- `-mt-24` changed to `-mt-28` to keep them pulled up close to the START SESSION chip
+- `gap-6` (1.5rem) provides a compact spacing between the two icons
+
+No changes to icon size, style, or functionality.
