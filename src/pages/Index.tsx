@@ -156,7 +156,7 @@ export default function Index() {
             {/* Left icon – Player Card */}
             <button
               onClick={() => setPlayerCardOpen(true)}
-              className="absolute -bottom-[15%] left-[5%] z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+              className="absolute -bottom-[5%] left-[5%] z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
               aria-label="Player Card"
             >
               <img src={chipPlayerCard} alt="Player Card" className="w-32 h-auto object-contain" draggable={false} />
@@ -165,7 +165,7 @@ export default function Index() {
             {/* Middle icon – Coach */}
             <button
               onClick={handleCoachChipClick}
-              className="absolute -bottom-[22%] left-1/2 -translate-x-1/2 z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+              className="absolute -bottom-[12%] left-1/2 -translate-x-1/2 z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
               aria-label="Coach Network"
             >
               <img src={chipCoach} alt="Coach Network" className="w-32 h-auto object-contain" draggable={false} />
@@ -174,7 +174,7 @@ export default function Index() {
             {/* Right icon – My Notes */}
             <button
               onClick={() => setNotesModalOpen(true)}
-              className="absolute -bottom-[15%] right-[5%] z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+              className="absolute -bottom-[5%] right-[5%] z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
               aria-label="My Notes"
             >
               <img src={chipMyNotes} alt="My Notes" className="w-32 h-auto object-contain" draggable={false} />
