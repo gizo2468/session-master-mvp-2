@@ -380,6 +380,7 @@ export type Database = {
           coach_tier: string | null
           coaching_focus: string[] | null
           connection_code: string | null
+          country: string | null
           created_at: string
           default_currency: string | null
           deletion_requested: boolean | null
@@ -403,6 +404,7 @@ export type Database = {
           coach_tier?: string | null
           coaching_focus?: string[] | null
           connection_code?: string | null
+          country?: string | null
           created_at?: string
           default_currency?: string | null
           deletion_requested?: boolean | null
@@ -426,6 +428,7 @@ export type Database = {
           coach_tier?: string | null
           coaching_focus?: string[] | null
           connection_code?: string | null
+          country?: string | null
           created_at?: string
           default_currency?: string | null
           deletion_requested?: boolean | null

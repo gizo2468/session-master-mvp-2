@@ -15,6 +15,7 @@ interface PlayerCardFrontProps {
   onFlip: () => void;
   onUpdateCard: (updates: Partial<PlayerCardData>) => void;
   onUpdatePrivate: (updates: Partial<{ full_name: string }>) => void;
+  onUpdateProfile: (updates: Partial<{ country: string; default_currency: string }>) => void;
   onUploadPhoto: (file: File) => void;
   onUploadPhotoDataUrl?: (dataUrl: string) => void;
   isSaving: boolean;
@@ -41,6 +42,7 @@ export function PlayerCardFront({
   onFlip,
   onUpdateCard,
   onUpdatePrivate,
+  onUpdateProfile,
   onUploadPhoto,
   onUploadPhotoDataUrl,
   isSaving,
@@ -90,8 +92,10 @@ export function PlayerCardFront({
       <ProfileOnboardingFlow
         cardData={cardData}
         privateData={privateData}
+        profile={profile}
         onUpdateCard={onUpdateCard}
         onUpdatePrivate={onUpdatePrivate}
+        onUpdateProfile={onUpdateProfile}
         onComplete={handleOnboardingComplete}
         isSaving={isSaving}
       />

@@ -3,14 +3,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Check, SkipForward, Plus, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ACHIEVEMENT_ICONS, getAchievementIcon } from './AchievementIcons';
-import type { PlayerCardData, PlayerPrivateData, Achievement } from '@/hooks/usePlayerCard';
+import { COUNTRIES, CURRENCIES } from '@/utils/countries';
+import type { PlayerCardData, PlayerPrivateData, PlayerProfile, Achievement } from '@/hooks/usePlayerCard';
 
 interface ProfileOnboardingFlowProps {
   cardData: PlayerCardData | null;
   privateData: PlayerPrivateData | null;
+  profile: PlayerProfile | null;
   onUpdateCard: (updates: Partial<PlayerCardData>) => void;
   onUpdatePrivate: (updates: Partial<{ full_name: string }>) => void;
+  onUpdateProfile: (updates: Partial<{ country: string; default_currency: string }>) => void;
   onComplete: () => void;
   isSaving: boolean;
 }
@@ -38,8 +42,10 @@ const COACHING_EXPERIENCE_OPTIONS = [
 export function ProfileOnboardingFlow({
   cardData,
   privateData,
+  profile,
   onUpdateCard,
   onUpdatePrivate,
+  onUpdateProfile,
   onComplete,
   isSaving
 }: ProfileOnboardingFlowProps) {
@@ -48,6 +54,8 @@ export function ProfileOnboardingFlow({
   // Local form state
   const [displayName, setDisplayName] = useState(privateData?.full_name || '');
   const [gameFormat, setGameFormat] = useState<GameFormat>(cardData?.primary_format || 'both');
+  const [country, setCountry] = useState(profile?.country || '');
+  const [currency, setCurrency] = useState(profile?.default_currency || '');
   const [pokerBackground, setPokerBackground] = useState<string[]>(cardData?.poker_background || []);
   const [coachingExperience, setCoachingExperience] = useState<string | null>(cardData?.coaching_experience || null);
   const [achievements, setAchievements] = useState<Achievement[]>(cardData?.achievements || []);
@@ -96,6 +104,15 @@ export function ProfileOnboardingFlow({
   // Check if step 2 can proceed (coaching experience required if Poker Coach selected)
   const canProceedFromStep2 = !isPokerCoachSelected || (isPokerCoachSelected && coachingExperience);
 
+  const saveProfileFields = () => {
+    const profileUpdates: Partial<{ country: string; default_currency: string }> = {};
+    if (country) profileUpdates.country = country;
+    if (currency) profileUpdates.default_currency = currency;
+    if (Object.keys(profileUpdates).length > 0) {
+      onUpdateProfile(profileUpdates);
+    }
+  };
+
   const handleNext = () => {
     // Save data for current step before moving on
     if (currentStep === 1) {
@@ -103,6 +120,7 @@ export function ProfileOnboardingFlow({
         onUpdatePrivate({ full_name: displayName.trim() });
       }
       onUpdateCard({ primary_format: gameFormat });
+      saveProfileFields();
     } else if (currentStep === 2) {
       onUpdateCard({ 
         poker_background: pokerBackground,
@@ -132,6 +150,7 @@ export function ProfileOnboardingFlow({
       coaching_experience: isPokerCoachSelected ? coachingExperience : null,
       achievements: achievements
     });
+    saveProfileFields();
     onComplete();
   };
 
@@ -200,6 +219,48 @@ export function ProfileOnboardingFlow({
             </Badge>
           ))}
         </div>
+      </div>
+
+      <div>
+        <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
+          Country of Residence
+        </label>
+        <Select value={country} onValueChange={setCountry}>
+          <SelectTrigger className="bg-zinc-700 border-poker-gold/40 text-white">
+            <SelectValue placeholder="Select country" />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-800 border-poker-gold/40 max-h-[200px]">
+            {COUNTRIES.map((c) => (
+              <SelectItem key={c.code} value={c.code} className="text-white hover:bg-zinc-700">
+                <span className="flex items-center gap-2">
+                  <span>{c.flag}</span>
+                  <span>{c.name}</span>
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
+          Primary Playing Currency
+        </label>
+        <Select value={currency} onValueChange={setCurrency}>
+          <SelectTrigger className="bg-zinc-700 border-poker-gold/40 text-white">
+            <SelectValue placeholder="Select currency" />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-800 border-poker-gold/40 max-h-[200px]">
+            {CURRENCIES.map((c) => (
+              <SelectItem key={c.code} value={c.code} className="text-white hover:bg-zinc-700">
+                <span className="flex items-center gap-2">
+                  <span className="font-mono">{c.symbol}</span>
+                  <span>{c.code} – {c.name}</span>
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
