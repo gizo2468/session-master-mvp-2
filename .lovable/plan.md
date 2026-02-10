@@ -1,44 +1,49 @@
 
 
-## Fix: Coach Chip Button (Blank Screen and App Freeze)
+## Fix: Coach Chip Button - Role-Based Navigation
 
-### Root Cause
+### Current Problem
+The Coach chip always navigates to `/player-dashboard`, which is a separate page with limited functionality. The screenshot shows the desired behavior is actually the **Dashboard page** (`/dashboard`) with the `MyCoachingNetwork` component, where the "Connect to Coach" dialog can open automatically.
 
-The Coach chip button on the Home screen has a broken navigation flow:
+### Plan
 
-1. **Wrong destination for students WITH coaches**: When a student (player) has connected coaches, tapping the chip navigates to `/coach-dashboard`. But `CoachDashboard` checks if the user has the "coach" role -- since a student is NOT a coach, it redirects to `/coach-profile`, a route that does NOT exist in the app. This causes a blank screen (404/NotFound).
+#### 1. Player with NO coach -- Navigate to Dashboard with auto-open Connect dialog
 
-2. **Potential freeze**: The `navigate()` call inside `CoachDashboard` is called during render (not inside a `useEffect`), which can cause React rendering issues and infinite re-render loops in some cases.
+- **`src/pages/Index.tsx`**: Change `handleCoachChipClick` to navigate to `/dashboard?openConnect=true` instead of `/player-dashboard?openConnect=true`.
+- **`src/components/coaching/MyCoachingNetwork.tsx`**: Add a new prop `autoOpenConnect?: boolean`. When `true`, auto-open the `connectDialogOpen` state on mount (for students) so the "Connect to Coach" dialog appears immediately.
+- **`src/pages/Dashboard.tsx`**: Read the `openConnect` query param from the URL and pass it as `autoOpenConnect` to `MyCoachingNetwork`.
 
-### Fix Plan
+This matches the screenshot exactly -- Dashboard page with the "Connect to Coach" popup.
 
-#### 1. Fix the Coach chip navigation logic in `src/pages/Index.tsx`
+#### 2. Player WITH connected coach(es) -- Navigate to most relevant coach profile
 
-Update `handleCoachChipClick` to navigate students to the **Player Dashboard** (where they can see their coaches), not the Coach Dashboard (which is for users with the "coach" role):
+- **`src/pages/Index.tsx`**: When `connectedCoaches.length > 0`, navigate directly to `/coach/{coachId}` using the first connected coach (the most relevant one). Since the `connectedCoaches` array from `CoachStudentContext` doesn't track "most recent interaction," we use the first coach in the list (or the only one if there's just one).
 
-- **Has connected coaches** --> Navigate to `/player-dashboard` (shows their coaches list)
-- **No connected coaches** --> Navigate to `/player-dashboard?openConnect=true` (scrolls to connect section)
+#### 3. Coach tapping the chip -- Show connected players modal
 
-This makes the chip always go to the Player Dashboard for regular players, which is the correct destination.
-
-#### 2. Fix the unsafe redirect in `src/pages/CoachDashboard.tsx`
-
-Move the `navigate('/coach-profile')` call out of the render body and into a `useEffect`, and redirect to a valid route (e.g., `/player-dashboard` or `/`) instead of the non-existent `/coach-profile`. This prevents:
-- Navigation to a missing route
-- Potential infinite render loops from calling `navigate` during render
-
-#### 3. No other changes
-
-- Button design, size, and position remain untouched
-- No changes to any other pages or components
+- **`src/pages/Index.tsx`**: Add a state `showPlayersModal` and a new `Dialog` component. When the user `isCoach`, tapping the chip opens this modal instead of navigating. The modal shows a list of connected students (from `useCoachStudent().students`). Tapping a player navigates to `/player/{playerId}`. If no students are connected, show a message.
+- The coach role is detected via `useCoachStudent().isCoach`.
 
 ### Technical Details
 
-**File: `src/pages/Index.tsx`** (line ~50-56)
-- Change `handleCoachChipClick`: always navigate to `/player-dashboard`, appending `?openConnect=true` only when no coaches are connected.
+**Files to modify:**
 
-**File: `src/pages/CoachDashboard.tsx`** (lines 32-41)
-- Wrap the non-coach redirect in a `useEffect` hook
-- Change redirect target from `/coach-profile` to `/player-dashboard` (a valid route)
-- Return a skeleton/loading screen while redirect is pending
+1. **`src/pages/Index.tsx`**
+   - Import `isCoach`, `students` from `useCoachStudent()`
+   - Import `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle` from UI
+   - Add `showPlayersModal` state
+   - Update `handleCoachChipClick`:
+     - If `isCoach`: set `showPlayersModal(true)`
+     - Else if `connectedCoaches.length > 0`: navigate to `/coach/${connectedCoaches[0].id}`
+     - Else: navigate to `/dashboard?openConnect=true`
+   - Add Dialog JSX for coach's player list modal
 
+2. **`src/components/coaching/MyCoachingNetwork.tsx`**
+   - Add `autoOpenConnect?: boolean` prop
+   - In `useEffect`, if `autoOpenConnect` is true and user is a student, set `connectDialogOpen(true)`
+
+3. **`src/pages/Dashboard.tsx`**
+   - Read `openConnect` from `useSearchParams`
+   - Pass `autoOpenConnect={openConnect === 'true'}` to `MyCoachingNetwork`
+
+No new routes, no layout changes, no button design changes.
