@@ -27,6 +27,7 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
     activeStudentsCount,
     updateCardData,
     updatePrivateData,
+    updateProfile,
     uploadPhoto,
     isFirstTimeUser
   } = usePlayerCard();
@@ -115,6 +116,7 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
                 onFlip={handleFlip}
                 onUpdateCard={updateCardData}
                 onUpdatePrivate={updatePrivateData}
+                onUpdateProfile={updateProfile}
                 onUploadPhoto={uploadPhoto}
                 isSaving={isSaving}
                 isEditing={isEditing}

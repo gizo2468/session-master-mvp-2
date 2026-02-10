@@ -25,6 +25,8 @@ export interface PlayerProfile {
   username: string | null;
   online_nickname: string | null;
   role: string;
+  country: string | null;
+  default_currency: string | null;
 }
 
 export interface PlayerPrivateData {
@@ -69,7 +71,7 @@ export function usePlayerCard() {
           .maybeSingle(),
         supabase
           .from('profiles')
-          .select('username, online_nickname, role')
+          .select('username, online_nickname, role, country, default_currency')
           .eq('id', user.id)
           .single(),
         supabase
@@ -120,7 +122,9 @@ export function usePlayerCard() {
         setProfile({
           username: profileResult.data.username,
           online_nickname: profileResult.data.online_nickname,
-          role: profileResult.data.role
+          role: profileResult.data.role,
+          country: profileResult.data.country ?? null,
+          default_currency: profileResult.data.default_currency ?? null,
         });
       }
 
@@ -209,6 +213,31 @@ export function usePlayerCard() {
     }
   }, [user?.id, toast]);
 
+  const updateProfile = useCallback(async (updates: Partial<{ country: string; default_currency: string }>) => {
+    if (!user?.id) return;
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setProfile(prev => prev ? { ...prev, ...updates } : null);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save changes',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [user?.id, toast]);
+
   const uploadPhoto = useCallback(async (file: File) => {
     if (!user?.id) return;
 
@@ -266,6 +295,7 @@ export function usePlayerCard() {
     activeStudentsCount,
     updateCardData,
     updatePrivateData,
+    updateProfile,
     uploadPhoto,
     refetch: fetchData,
     isFirstTimeUser
