@@ -1,57 +1,48 @@
 
 
-# Add Third Chip Button (Coach Connection)
+# Fix Mobile Layout and Dropdown Display Issues
 
-## Overview
-Add a "Coach/Network" poker chip button alongside the existing Player Card and My Notes chips, with conditional navigation based on whether the user has a connected coach.
+## Problem 1: Screen Cut Off on Mobile
+The Player Card modal uses a fixed `aspect-[3/4]` ratio container (PlayerCardModal.tsx, line 97). With the new Country and Currency fields added to Step 1, the form content exceeds this fixed height on mobile screens, making it impossible to see or interact with the bottom fields.
 
-## Changes
+### Fix (PlayerCardModal.tsx)
+When the onboarding/editing flow is active, remove the fixed aspect ratio and instead use `max-h-[85vh]` so the card can grow to fit its content while remaining scrollable within the viewport.
 
-### 1. Copy the uploaded chip image to project assets
-- Copy `user-uploads://image-389.png` to `src/assets/chip-coach.png`
+**Line 97 change:**
+- Current: `className="relative w-full aspect-[3/4]"`
+- Updated: conditionally apply `aspect-[3/4]` only when NOT in onboarding/edit mode; otherwise use flexible height
 
-### 2. Update `src/pages/Index.tsx`
+This requires passing `isEditing` and `isFirstTimeUser` knowledge to the container. Since both are already available in the component, the container class will be:
+- Onboarding/editing: `"relative w-full"` (no fixed aspect, content determines height)
+- View mode: `"relative w-full aspect-[3/4]"` (original behavior preserved)
 
-**Imports to add:**
-- `import chipCoach from '@/assets/chip-coach.png';`
-- `import { useCoachStudent } from '@/context/CoachStudentContext';`
+## Problem 2: Country Dropdown Shows "..."
+The `SelectValue` component renders the raw value (country code like "IL") which gets truncated. To show the flag and full name, we need to provide custom content inside `SelectValue` when a country is selected.
 
-**Logic to add:**
-- Destructure `connectedCoaches` from `useCoachStudent()`
-- Create a `handleCoachChipClick` handler:
-  - If `connectedCoaches.length > 0`: navigate to `/coach-dashboard`
-  - If no connected coaches: navigate to `/player-dashboard?openConnect=true` (or similar query param to auto-open the connect popup)
+### Fix (ProfileOnboardingFlow.tsx)
+Replace the simple `<SelectValue placeholder="Select country" />` with a custom render that looks up the selected country from the COUNTRIES array and displays the flag + name.
 
-**Template change (line 147):**
-Add a third button in the existing chip row, identical styling to the other two:
-
+**Lines 229-230 change:**
 ```tsx
-<div className="flex justify-center gap-6 -mt-28 w-full">
-  {/* Player Card chip */}
-  <button ...>
-    <img src={chipPlayerCard} ... className="w-32 h-auto object-contain" />
-  </button>
-  {/* Coach/Network chip (NEW) */}
-  <button
-    onClick={handleCoachChipClick}
-    className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
-    aria-label="Coach Network"
-  >
-    <img src={chipCoach} alt="Coach Network" className="w-32 h-auto object-contain" draggable={false} />
-  </button>
-  {/* My Notes chip */}
-  <button ...>
-    <img src={chipMyNotes} ... className="w-32 h-auto object-contain" />
-  </button>
-</div>
+<SelectTrigger className="bg-zinc-700 border-poker-gold/40 text-white">
+  {country ? (
+    <span className="flex items-center gap-2">
+      <span>{COUNTRIES.find(c => c.code === country)?.flag}</span>
+      <span>{COUNTRIES.find(c => c.code === country)?.name}</span>
+    </span>
+  ) : (
+    <SelectValue placeholder="Select country" />
+  )}
+</SelectTrigger>
 ```
 
-### 3. Handle auto-open on PlayerDashboard (if needed)
-- In the PlayerDashboard page, read the `openConnect` query param
-- If present, auto-open the "Connect with Coach" section/modal on mount
-- This ensures the "no coach" flow lands the user directly at the connection prompt
+Same approach for the currency dropdown to keep it consistent.
 
-## What stays the same
-- All existing chip sizes, styles, layout spacing, and functionality
-- No changes to coaching context, dashboard pages, or other components beyond the navigation target
+## Files Modified
+- `src/components/PlayerCard/PlayerCardModal.tsx` -- conditional aspect ratio
+- `src/components/PlayerCard/ProfileOnboardingFlow.tsx` -- custom SelectValue rendering
+
+## What Stays the Same
+- All other UI, card flip animations, view mode layout, and functionality remain unchanged
+- The fixed aspect ratio is preserved for the normal (non-editing) card view
 
