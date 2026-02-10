@@ -100,7 +100,7 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
             {/* Front side */}
             <div 
               key={`front-${flipKey}`}
-              className={`absolute inset-0 ${
+              className={`${(isEditing || isFirstTimeUser) && !isFlipped ? 'relative' : 'absolute inset-0'} ${
                 isFlipped ? 'animate-card-flip-front' : flipKey > 0 ? 'animate-card-unflip-front' : ''
               }`}
               style={{ 
