@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,16 +28,18 @@ const CoachDashboard = () => {
   const { user } = useAuth();
   const { recentReviews, playerReviews, loading: dashboardLoading, markReviewAsRead } = useCoachDashboardData();
   
-  // Show skeleton while profile is loading or user/profile not available
-  if (profileLoading || !user || (!isCoach || !coachProfile)) {
-    if (!user || profileLoading) {
-      return <CoachDashboardSkeleton />;
+  // Redirect non-coaches safely via useEffect
+  const shouldRedirect = !profileLoading && user && !isCoach;
+  
+  useEffect(() => {
+    if (shouldRedirect) {
+      navigate('/player-dashboard');
     }
-    // If user is available but not a coach, redirect
-    if (user && !profileLoading && !isCoach) {
-      navigate('/coach-profile');
-      return null;
-    }
+  }, [shouldRedirect, navigate]);
+
+  // Show skeleton while profile is loading, user not available, or redirecting
+  if (profileLoading || !user || !isCoach || !coachProfile) {
+    return <CoachDashboardSkeleton />;
   }
 
   // Coach tier details - default to free for new users

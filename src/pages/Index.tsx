@@ -49,7 +49,7 @@ export default function Index() {
 
   const handleCoachChipClick = () => {
     if (connectedCoaches.length > 0) {
-      navigate('/coach-dashboard');
+      navigate('/player-dashboard');
     } else {
       navigate('/player-dashboard?openConnect=true');
     }
