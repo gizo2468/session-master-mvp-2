@@ -39,9 +39,10 @@ interface PendingRequest {
 
 interface MyCoachingNetworkProps {
   highlightIncomingRequests?: boolean;
+  autoOpenConnect?: boolean;
 }
 
-const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncomingRequests }) => {
+const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncomingRequests, autoOpenConnect }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isPremium, getConnectionLimits } = usePremiumAccess();
@@ -353,6 +354,13 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
       }, 300);
     }
   }, [highlightIncomingRequests, incomingRequests]);
+
+  // Auto-open connect dialog when navigated with openConnect param
+  useEffect(() => {
+    if (autoOpenConnect && isStudent) {
+      setConnectDialogOpen(true);
+    }
+  }, [autoOpenConnect, isStudent]);
 
 
   const handleApproveRequest = async (requestId: string, studentUsername: string) => {

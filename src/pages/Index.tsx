@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useSessionContext } from '@/context/SessionContext';
@@ -23,6 +24,8 @@ import chipMyNotes from '@/assets/chip-my-notes.png';
 import chipCoach from '@/assets/chip-coach.png';
 import ViewAllNotesModal from '@/components/notes/ViewAllNotesModal';
 import { useCoachStudent } from '@/context/CoachStudentContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function Index() {
   const navigate = useNavigate();
@@ -45,13 +48,16 @@ export default function Index() {
   } = useActiveSessionRecovery();
   const [playerCardOpen, setPlayerCardOpen] = useState(false);
   const [notesModalOpen, setNotesModalOpen] = useState(false);
-  const { connectedCoaches } = useCoachStudent();
+  const { connectedCoaches, isCoach, students } = useCoachStudent();
+  const [showPlayersModal, setShowPlayersModal] = useState(false);
 
   const handleCoachChipClick = () => {
-    if (connectedCoaches.length > 0) {
-      navigate('/player-dashboard');
+    if (isCoach) {
+      setShowPlayersModal(true);
+    } else if (connectedCoaches.length > 0) {
+      navigate(`/coach/${connectedCoaches[0].id}`);
     } else {
-      navigate('/player-dashboard?openConnect=true');
+      navigate('/dashboard?openConnect=true');
     }
   };
 
@@ -262,6 +268,36 @@ export default function Index() {
       
       <PlayerCardModal open={playerCardOpen} onOpenChange={setPlayerCardOpen} />
       <ViewAllNotesModal open={notesModalOpen} onOpenChange={setNotesModalOpen} />
+
+      {/* Coach: Connected Players Modal */}
+      <Dialog open={showPlayersModal} onOpenChange={setShowPlayersModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Connected Players</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+            {students.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No connected players yet.</p>
+            ) : (
+              students.map((student) => (
+                <button
+                  key={student.id}
+                  onClick={() => {
+                    setShowPlayersModal(false);
+                    navigate(`/player/${student.id}`);
+                  }}
+                  className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                >
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback>{student.displayName?.charAt(0) || '?'}</AvatarFallback>
+                  </Avatar>
+                  <span className="font-medium text-sm">{student.displayName || 'Unknown'}</span>
+                </button>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
