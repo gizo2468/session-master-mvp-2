@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
@@ -17,7 +17,9 @@ import { Plus } from 'lucide-react';
 const Dashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const focusIncomingRequests = (location.state as any)?.focusSection === 'incoming-requests';
+  const autoOpenConnect = searchParams.get('openConnect') === 'true';
   const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [exportPDFFunction, setExportPDFFunction] = useState<(() => void) | null>(null);
@@ -114,7 +116,7 @@ const Dashboard: React.FC = () => {
             {user.role === 'coach' ? (
               <div className="space-y-6">
                 <p className="text-lg font-medium text-poker-feltGreen">Coach Dashboard</p>
-                <MyCoachingNetwork highlightIncomingRequests={focusIncomingRequests} />
+                <MyCoachingNetwork highlightIncomingRequests={focusIncomingRequests} autoOpenConnect={autoOpenConnect} />
                 <MyNotesCard />
                 <StatsQuickView showExtendedMetrics />
                 <PlayerAllTimeChart />
@@ -128,7 +130,7 @@ const Dashboard: React.FC = () => {
             ) : (
               <div className="space-y-6">
                 <p className="text-lg font-medium text-poker-feltGreen">Dashboard</p>
-                <MyCoachingNetwork highlightIncomingRequests={focusIncomingRequests} />
+                <MyCoachingNetwork highlightIncomingRequests={focusIncomingRequests} autoOpenConnect={autoOpenConnect} />
                 <MyNotesCard />
                 <StatsQuickView showExtendedMetrics />
                 <PlayerAllTimeChart />
