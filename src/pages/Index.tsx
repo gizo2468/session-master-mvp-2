@@ -150,7 +150,7 @@ export default function Index() {
         
         <div className="flex flex-col items-center gap-0">
           {/* NEW SESSION button appears first, at the top */}
-          <div className="flex justify-center -my-24">
+          <div className="flex justify-center -my-28">
             <NewSessionButton />
           </div>
 
