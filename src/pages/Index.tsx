@@ -149,38 +149,40 @@ export default function Index() {
         
         
         <div className="flex flex-col items-center gap-0">
-          {/* NEW SESSION button appears first, at the top */}
-          <div className="flex justify-center -mb-28 -mt-36">
+          {/* START SESSION chip + three icon buttons in one relative container */}
+          <div className="relative flex justify-center -mt-36 mb-4">
             <NewSessionButton />
-          </div>
 
-          {/* Player Card & My Notes chip buttons */}
-          <div className="flex justify-center gap-6 -mt-28 w-full">
+            {/* Left icon – Player Card */}
             <button
               onClick={() => setPlayerCardOpen(true)}
-              className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+              className="absolute bottom-[8%] left-[2%] z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
               aria-label="Player Card"
             >
-              <img src={chipPlayerCard} alt="Player Card" className="w-32 h-auto object-contain" draggable={false} />
+              <img src={chipPlayerCard} alt="Player Card" className="w-16 h-auto object-contain" draggable={false} />
             </button>
+
+            {/* Middle icon – Coach */}
             <button
               onClick={handleCoachChipClick}
-              className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+              className="absolute -bottom-[8%] left-1/2 -translate-x-1/2 z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
               aria-label="Coach Network"
             >
-              <img src={chipCoach} alt="Coach Network" className="w-32 h-auto object-contain" draggable={false} />
+              <img src={chipCoach} alt="Coach Network" className="w-16 h-auto object-contain" draggable={false} />
             </button>
+
+            {/* Right icon – My Notes */}
             <button
               onClick={() => setNotesModalOpen(true)}
-              className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+              className="absolute bottom-[8%] right-[2%] z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
               aria-label="My Notes"
             >
-              <img src={chipMyNotes} alt="My Notes" className="w-32 h-auto object-contain" draggable={false} />
+              <img src={chipMyNotes} alt="My Notes" className="w-16 h-auto object-contain" draggable={false} />
             </button>
           </div>
 
           {/* Stats section appears after the button */}
-          <div className="-mt-16 w-full">
+          <div className="w-full">
             <StatsQuickView />
           </div>
           
