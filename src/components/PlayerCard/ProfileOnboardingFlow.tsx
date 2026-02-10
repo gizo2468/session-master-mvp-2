@@ -227,7 +227,14 @@ export function ProfileOnboardingFlow({
         </label>
         <Select value={country} onValueChange={setCountry}>
           <SelectTrigger className="bg-zinc-700 border-poker-gold/40 text-white">
-            <SelectValue placeholder="Select country" />
+            {country ? (
+              <span className="flex items-center gap-2">
+                <span>{COUNTRIES.find(c => c.code === country)?.flag}</span>
+                <span>{COUNTRIES.find(c => c.code === country)?.name}</span>
+              </span>
+            ) : (
+              <SelectValue placeholder="Select country" />
+            )}
           </SelectTrigger>
           <SelectContent className="bg-zinc-800 border-poker-gold/40 max-h-[200px]">
             {COUNTRIES.map((c) => (
@@ -248,7 +255,14 @@ export function ProfileOnboardingFlow({
         </label>
         <Select value={currency} onValueChange={setCurrency}>
           <SelectTrigger className="bg-zinc-700 border-poker-gold/40 text-white">
-            <SelectValue placeholder="Select currency" />
+            {currency ? (
+              <span className="flex items-center gap-2">
+                <span className="font-mono">{CURRENCIES.find(c => c.code === currency)?.symbol}</span>
+                <span>{currency}</span>
+              </span>
+            ) : (
+              <SelectValue placeholder="Select currency" />
+            )}
           </SelectTrigger>
           <SelectContent className="bg-zinc-800 border-poker-gold/40 max-h-[200px]">
             {CURRENCIES.map((c) => (

@@ -94,7 +94,7 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
           </div>
         ) : (
           <div 
-            className="relative w-full aspect-[3/4]"
+            className={`relative w-full ${isEditing || isFirstTimeUser ? '' : 'aspect-[3/4]'}`}
             style={{ transformStyle: 'preserve-3d' }}
           >
             {/* Front side */}
