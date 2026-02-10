@@ -150,35 +150,35 @@ export default function Index() {
         
         <div className="flex flex-col items-center gap-0">
           {/* START SESSION chip + three icon buttons in one relative container */}
-          <div className="relative flex justify-center -mt-36 mb-16">
+          <div className="relative flex justify-center -mt-36 mb-4">
             <NewSessionButton />
 
-            {/* Left icon – Player Card */}
-            <button
-              onClick={() => setPlayerCardOpen(true)}
-              className="absolute -bottom-[12%] left-[5%] z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
-              aria-label="Player Card"
-            >
-              <img src={chipPlayerCard} alt="Player Card" className="w-32 h-auto object-contain" draggable={false} />
-            </button>
+            {/* Three icons positioned ON the lower edge of the chip */}
+            <div className="absolute bottom-[8%] left-0 right-0 z-10 flex justify-center gap-2 pointer-events-none">
+              <button
+                onClick={() => setPlayerCardOpen(true)}
+                className="pointer-events-auto p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+                aria-label="Player Card"
+              >
+                <img src={chipPlayerCard} alt="Player Card" className="w-32 h-auto object-contain" draggable={false} />
+              </button>
 
-            {/* Middle icon – Coach */}
-            <button
-              onClick={handleCoachChipClick}
-              className="absolute -bottom-[22%] left-1/2 -translate-x-1/2 z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
-              aria-label="Coach Network"
-            >
-              <img src={chipCoach} alt="Coach Network" className="w-32 h-auto object-contain" draggable={false} />
-            </button>
+              <button
+                onClick={handleCoachChipClick}
+                className="pointer-events-auto p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+                aria-label="Coach Network"
+              >
+                <img src={chipCoach} alt="Coach Network" className="w-32 h-auto object-contain" draggable={false} />
+              </button>
 
-            {/* Right icon – My Notes */}
-            <button
-              onClick={() => setNotesModalOpen(true)}
-              className="absolute -bottom-[12%] right-[5%] z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
-              aria-label="My Notes"
-            >
-              <img src={chipMyNotes} alt="My Notes" className="w-32 h-auto object-contain" draggable={false} />
-            </button>
+              <button
+                onClick={() => setNotesModalOpen(true)}
+                className="pointer-events-auto p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+                aria-label="My Notes"
+              >
+                <img src={chipMyNotes} alt="My Notes" className="w-32 h-auto object-contain" draggable={false} />
+              </button>
+            </div>
           </div>
 
           {/* Stats section appears after the button */}
