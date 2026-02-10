@@ -34,6 +34,9 @@ const SubscriptionSuccess = lazyWithRetry(() => import("./pages/SubscriptionSucc
 const SubscriptionCancel = lazyWithRetry(() => import("./pages/SubscriptionCancel"), "SubscriptionCancel");
 const Notifications = lazyWithRetry(() => import("./pages/Notifications"), "Notifications");
 const AddPastSession = lazyWithRetry(() => import("./pages/AddPastSession"), "AddPastSession");
+const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"), "CoachDashboard");
+const PlayerDashboard = lazyWithRetry(() => import("./pages/PlayerDashboard"), "PlayerDashboard");
+const ConnectCoach = lazyWithRetry(() => import("./pages/ConnectCoach"), "ConnectCoach");
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -86,6 +89,9 @@ const App = () => {
                         <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
                         <Route path="/notifications" element={<Notifications />} />
                         <Route path="/add-past-session" element={<AddPastSession />} />
+                        <Route path="/coach-dashboard" element={<CoachDashboard />} />
+                        <Route path="/player-dashboard" element={<PlayerDashboard />} />
+                        <Route path="/connect-coach" element={<ConnectCoach />} />
                       </Routes>
                     </Suspense>
                   </AppErrorBoundary>
