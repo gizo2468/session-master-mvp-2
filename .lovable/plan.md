@@ -1,45 +1,48 @@
 
-# Display Country and Currency on Profile Card
+# Fix Coach Chip Button (Blank Screen + App Freeze)
 
-## Current State
-- The `country` and `default_currency` columns already exist in the `profiles` table
-- The `usePlayerCard` hook already fetches both fields and saves them via `updateProfile`
-- The onboarding flow correctly persists selections to Supabase
-- Data is confirmed working (e.g., user IsheepIT has country=IL, currency=ILS stored)
-- **Missing**: The profile card front view (PlayerCardFront.tsx) does not display these fields
+## Root Cause
+The Coach chip button navigates to `/coach-dashboard` or `/player-dashboard?openConnect=true`, but **neither route is registered** in `App.tsx`. The router has no matching route and no catch-all, so the user sees a blank screen.
 
-## Changes
+The page components exist as files (`CoachDashboard.tsx`, `PlayerDashboard.tsx`, `ConnectCoach.tsx`) but were never added to the route table.
 
-### 1. `src/components/PlayerCard/PlayerCardFront.tsx`
-Add country flag + name and currency below the username, in the existing header section. This keeps the layout intact -- just adds a small info line under the @username.
+## Fix: Add Missing Routes to App.tsx
 
-Add import for `COUNTRIES` and `CURRENCIES` from `@/utils/countries`.
+Add lazy-loaded imports and route entries for the three missing pages:
 
-In the header area (around line 157-164), after the username paragraph, add:
-```tsx
-{/* Country & Currency info */}
-{(profile?.country || profile?.default_currency) && (
-  <p className="text-xs text-zinc-400 mt-1">
-    {profile?.country && (
-      <span>
-        {COUNTRIES.find(c => c.code === profile.country)?.flag}{' '}
-        {COUNTRIES.find(c => c.code === profile.country)?.name}
-      </span>
-    )}
-    {profile?.country && profile?.default_currency && (
-      <span className="mx-1.5">·</span>
-    )}
-    {profile?.default_currency && (
-      <span>{profile.default_currency}</span>
-    )}
-  </p>
-)}
+```text
+New lazy imports:
+  - CoachDashboard
+  - PlayerDashboard
+  - ConnectCoach
+
+New routes:
+  /coach-dashboard  ->  CoachDashboard
+  /player-dashboard ->  PlayerDashboard
+  /connect-coach    ->  ConnectCoach
 ```
 
-This displays something like: "Flag Israel . ILS" in a subtle line below the username, consistent with the existing card style.
+### Specific changes in `src/App.tsx`:
 
-## No other changes needed
-- No database migrations required (columns already exist)
-- No RLS changes needed (existing policies already cover these columns)
-- Save and fetch logic already works end-to-end
-- Layout and design remain consistent with the current card appearance
+1. Add three new lazy imports (around line 37):
+   - `const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"), "CoachDashboard");`
+   - `const PlayerDashboard = lazyWithRetry(() => import("./pages/PlayerDashboard"), "PlayerDashboard");`
+   - `const ConnectCoach = lazyWithRetry(() => import("./pages/ConnectCoach"), "ConnectCoach");`
+
+2. Add three new Route entries (around line 88, before the closing `</Routes>`):
+   - `<Route path="/coach-dashboard" element={<CoachDashboard />} />`
+   - `<Route path="/player-dashboard" element={<PlayerDashboard />} />`
+   - `<Route path="/connect-coach" element={<ConnectCoach />} />`
+
+## What This Fixes
+- Coach chip with connected coach: navigates to `/coach-dashboard` which now renders properly
+- Coach chip without connected coach: navigates to `/player-dashboard?openConnect=true` which now renders and auto-scrolls to the connect section
+- The "Manage" and "Connect with a Coach" buttons on PlayerDashboard link to `/connect-coach`, which also now works
+
+## Files Modified
+- `src/App.tsx` only -- add imports and routes
+
+## What Stays the Same
+- Button design, size, position unchanged
+- All existing routes and functionality unchanged
+- No database or RLS changes needed
