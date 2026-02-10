@@ -150,7 +150,7 @@ export default function Index() {
         
         <div className="flex flex-col items-center gap-0">
           {/* START SESSION chip + three icon buttons in one relative container */}
-          <div className="relative flex justify-center -mt-36 mb-16">
+          <div className="relative flex justify-center -mt-36 mb-0">
             <NewSessionButton />
 
             {/* Left icon – Player Card */}
