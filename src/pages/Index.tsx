@@ -182,7 +182,7 @@ export default function Index() {
           </div>
 
           {/* Stats section appears after the button */}
-          <div className="w-full -mt-20">
+          <div className="w-full -mt-28">
             <StatsQuickView />
           </div>
           
