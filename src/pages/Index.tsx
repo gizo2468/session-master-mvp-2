@@ -102,7 +102,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm relative z-10">
         <div className="container mx-auto max-w-md px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex-1 flex justify-start gap-2">
