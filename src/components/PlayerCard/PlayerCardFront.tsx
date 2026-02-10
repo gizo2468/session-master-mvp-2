@@ -6,6 +6,7 @@ import { ProfileOnboardingFlow } from './ProfileOnboardingFlow';
 import { getAchievementIcon } from './AchievementIcons';
 import { useNativeImagePicker } from '@/hooks/useNativeImagePicker';
 import type { PlayerCardData, PlayerProfile, PlayerPrivateData } from '@/hooks/usePlayerCard';
+import { COUNTRIES } from '@/utils/countries';
 
 interface PlayerCardFrontProps {
   cardData: PlayerCardData | null;
@@ -161,6 +162,22 @@ export function PlayerCardFront({
             <p className="text-poker-gold text-sm">
               @{profile?.username || profile?.online_nickname || 'username'}
             </p>
+            {(profile?.country || profile?.default_currency) && (
+              <p className="text-xs text-zinc-400 mt-1">
+                {profile?.country && (
+                  <span>
+                    {COUNTRIES.find(c => c.code === profile.country)?.flag}{' '}
+                    {COUNTRIES.find(c => c.code === profile.country)?.name}
+                  </span>
+                )}
+                {profile?.country && profile?.default_currency && (
+                  <span className="mx-1.5">·</span>
+                )}
+                {profile?.default_currency && (
+                  <span>{profile.default_currency}</span>
+                )}
+              </p>
+            )}
           </div>
         </div>
 
