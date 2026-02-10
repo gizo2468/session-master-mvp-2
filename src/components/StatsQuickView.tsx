@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { calculateSessionProfit } from '@/utils/sessionCalculations';
-import { getCurrencySymbol, useDefaultCurrency } from '@/hooks/useDefaultCurrency';
+import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useUnifiedSessionStats } from '@/hooks/useUnifiedSessionStats';
 import { calculateSessionStatisticsFromDB } from '@/utils/statisticsCalculator';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,7 +63,8 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
   const { user } = useAuth();
   const [showCurrencyBreakdown, setShowCurrencyBreakdown] = useState(false);
   const [showConversionModal, setShowConversionModal] = useState(false);
-  const { defaultCurrency } = useDefaultCurrency();
+  // Home screen stats always use USD, independent of ID Card currency
+  const homeCurrency = 'USD';
   
   // Fetch unified statistics from database - single source of truth
   const { statistics, isLoading: statsLoading } = useUnifiedSessionStats();
@@ -106,8 +107,8 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
         // Use completed sessions only to discover currencies; values come from DB
         const completed = sessions.filter(s => !s.isActive && (s.currentStatus === 'ended' || s.status === 'completed' || !s.status));
         const currencies = Array.from(new Set(completed.map(s => s.currency || 'USD')));
-        if (!currencies.includes(defaultCurrency)) {
-          currencies.push(defaultCurrency);
+        if (!currencies.includes(homeCurrency)) {
+          currencies.push(homeCurrency);
         }
         const results = await Promise.all(
           currencies.map(async (cur) => {
@@ -118,7 +119,7 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
         const map: Record<string, number> = {};
         results.forEach(([cur, val]) => { map[cur] = val; });
         setCurrencyBreakdown(map);
-        setOverallCurrencyResult(map[defaultCurrency] || 0);
+        setOverallCurrencyResult(map[homeCurrency] || 0);
       } catch (e) {
         console.error('Failed to fetch currency breakdown from DB', e);
       } finally {
@@ -126,7 +127,7 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
       }
     };
     fetchBreakdown();
-  }, [sessions, defaultCurrency]);
+  }, [sessions, homeCurrency]);
 
   // Calculate adjusted breakdown based on conversions
   const getAdjustedBreakdown = () => {
@@ -184,7 +185,7 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
   
   // Calculate statistics from database
   // Use adjusted total for preferred currency (includes conversions)
-  const overallResults = adjustedBreakdown[defaultCurrency] ?? overallCurrencyResult;
+  const overallResults = adjustedBreakdown[homeCurrency] ?? overallCurrencyResult;
   const totalSessions = dbStats?.numberOfSessions || 0;
   const winRatio = dbStats?.winRatio || 0;
   const wins = Math.round((winRatio * totalSessions) / 100);
@@ -200,7 +201,7 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
   const allResultsByCurrency = currencyBreakdown;
 
   // Currency display functions
-  const currencySymbol = getCurrencySymbol(defaultCurrency);
+  const currencySymbol = getCurrencySymbol(homeCurrency);
   const formatCurrency = (amount: number): string => {
     return amount % 1 === 0 ? amount.toLocaleString() : amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
@@ -223,7 +224,7 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
   const tournamentProfit = tournamentStats?.netResult || 0;
   
   // Best session calculation from in-memory (for display purposes)
-  const defaultCurrencySessions = completedSessions.filter(s => (s.currency || 'USD') === defaultCurrency);
+  const defaultCurrencySessions = completedSessions.filter(s => (s.currency || 'USD') === homeCurrency);
   const bestSessionProfit = defaultCurrencySessions.length > 0 
     ? defaultCurrencySessions.reduce((max, s) => {
         const p = calculateSessionProfit(s);
