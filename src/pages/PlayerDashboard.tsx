@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCoachStudent } from '@/context/CoachStudentContext';
@@ -20,10 +20,19 @@ interface PlayerReview {
 
 const PlayerDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { connectedCoaches } = useCoachStudent();
   const { user } = useAuth();
   const [recentReviews, setRecentReviews] = useState<PlayerReview[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
+  const connectRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to connect section if openConnect param is present
+  useEffect(() => {
+    if (searchParams.get('openConnect') === 'true' && connectRef.current) {
+      connectRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [searchParams]);
 
   // Load player's recent reviews
   useEffect(() => {
@@ -97,7 +106,7 @@ const PlayerDashboard = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 text-gray-500">
+                <div ref={connectRef} className="text-center py-6 text-gray-500">
                   <p>You are not connected to any coaches yet.</p>
                   <Button 
                     onClick={() => navigate('/connect-coach')} 
