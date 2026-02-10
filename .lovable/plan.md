@@ -1,42 +1,45 @@
 
+# Display Country and Currency on Profile Card
 
-# Fix: User ID Chip Opens Blank Screen
+## Current State
+- The `country` and `default_currency` columns already exist in the `profiles` table
+- The `usePlayerCard` hook already fetches both fields and saves them via `updateProfile`
+- The onboarding flow correctly persists selections to Supabase
+- Data is confirmed working (e.g., user IsheepIT has country=IL, currency=ILS stored)
+- **Missing**: The profile card front view (PlayerCardFront.tsx) does not display these fields
 
-## Root Cause
-The previous mobile layout fix (removing `aspect-[3/4]` when `isFirstTimeUser` is true) broke the card display. The front and back card sides use `absolute inset-0` positioning, which requires a parent with a defined size. Without the aspect ratio, the container collapses to 0 height, resulting in a blank modal.
+## Changes
 
-For first-time users, `isFirstTimeUser` is always true, so the modal always opens blank.
+### 1. `src/components/PlayerCard/PlayerCardFront.tsx`
+Add country flag + name and currency below the username, in the existing header section. This keeps the layout intact -- just adds a small info line under the @username.
 
-## Fix (src/components/PlayerCard/PlayerCardModal.tsx)
+Add import for `COUNTRIES` and `CURRENCIES` from `@/utils/countries`.
 
-Make the front side use `relative` positioning (instead of `absolute`) when the onboarding/editing flow is active. This lets the form content naturally define the container height, while the back side stays hidden via absolute positioning.
-
-### Changes at lines 101-106 (front side div):
-
-**Before:**
+In the header area (around line 157-164), after the username paragraph, add:
 ```tsx
-<div 
-  key={`front-${flipKey}`}
-  className={`absolute inset-0 ${
-    isFlipped ? 'animate-card-flip-front' : flipKey > 0 ? 'animate-card-unflip-front' : ''
-  }`}
+{/* Country & Currency info */}
+{(profile?.country || profile?.default_currency) && (
+  <p className="text-xs text-zinc-400 mt-1">
+    {profile?.country && (
+      <span>
+        {COUNTRIES.find(c => c.code === profile.country)?.flag}{' '}
+        {COUNTRIES.find(c => c.code === profile.country)?.name}
+      </span>
+    )}
+    {profile?.country && profile?.default_currency && (
+      <span className="mx-1.5">·</span>
+    )}
+    {profile?.default_currency && (
+      <span>{profile.default_currency}</span>
+    )}
+  </p>
+)}
 ```
 
-**After:**
-```tsx
-<div 
-  key={`front-${flipKey}`}
-  className={`${(isEditing || isFirstTimeUser) && !isFlipped ? 'relative' : 'absolute inset-0'} ${
-    isFlipped ? 'animate-card-flip-front' : flipKey > 0 ? 'animate-card-unflip-front' : ''
-  }`}
-```
+This displays something like: "Flag Israel . ILS" in a subtle line below the username, consistent with the existing card style.
 
-When in onboarding/editing mode and showing the front side, use `relative` so the content sizes the parent. In all other cases (view mode, or when flipped to back), keep the original `absolute inset-0`.
-
-## Files Modified
-- `src/components/PlayerCard/PlayerCardModal.tsx` -- single line change to front side positioning
-
-## What Stays the Same
-- Card flip animations, back side, view mode layout
-- Button design, size, position, spacing on Home screen
-- All other functionality
+## No other changes needed
+- No database migrations required (columns already exist)
+- No RLS changes needed (existing policies already cover these columns)
+- Save and fetch logic already works end-to-end
+- Layout and design remain consistent with the current card appearance
