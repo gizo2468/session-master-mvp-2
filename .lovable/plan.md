@@ -1,22 +1,57 @@
 
-# Fix: Header Click Area Blocked by START SESSION Button
 
-## Problem
-The negative margin (`-my-24`) on the START SESSION button container pulls the large image upward, overlapping the header area. Since the header lacks a `z-index`, the button's invisible click area sits on top of the header elements (Settings, User, Logo, Notification Bell), intercepting all clicks.
+# Add Third Chip Button (Coach Connection)
 
-## Fix (src/pages/Index.tsx only)
+## Overview
+Add a "Coach/Network" poker chip button alongside the existing Player Card and My Notes chips, with conditional navigation based on whether the user has a connected coach.
 
-### Add `relative z-10` to the header element (line 105)
-This ensures the header renders above the overlapping button.
+## Changes
 
-**Before:**
+### 1. Copy the uploaded chip image to project assets
+- Copy `user-uploads://image-389.png` to `src/assets/chip-coach.png`
+
+### 2. Update `src/pages/Index.tsx`
+
+**Imports to add:**
+- `import chipCoach from '@/assets/chip-coach.png';`
+- `import { useCoachStudent } from '@/context/CoachStudentContext';`
+
+**Logic to add:**
+- Destructure `connectedCoaches` from `useCoachStudent()`
+- Create a `handleCoachChipClick` handler:
+  - If `connectedCoaches.length > 0`: navigate to `/coach-dashboard`
+  - If no connected coaches: navigate to `/player-dashboard?openConnect=true` (or similar query param to auto-open the connect popup)
+
+**Template change (line 147):**
+Add a third button in the existing chip row, identical styling to the other two:
+
+```tsx
+<div className="flex justify-center gap-6 -mt-28 w-full">
+  {/* Player Card chip */}
+  <button ...>
+    <img src={chipPlayerCard} ... className="w-32 h-auto object-contain" />
+  </button>
+  {/* Coach/Network chip (NEW) */}
+  <button
+    onClick={handleCoachChipClick}
+    className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+    aria-label="Coach Network"
+  >
+    <img src={chipCoach} alt="Coach Network" className="w-32 h-auto object-contain" draggable={false} />
+  </button>
+  {/* My Notes chip */}
+  <button ...>
+    <img src={chipMyNotes} ... className="w-32 h-auto object-contain" />
+  </button>
+</div>
 ```
-<header className="bg-white shadow-sm">
-```
 
-**After:**
-```
-<header className="bg-white shadow-sm relative z-10">
-```
+### 3. Handle auto-open on PlayerDashboard (if needed)
+- In the PlayerDashboard page, read the `openConnect` query param
+- If present, auto-open the "Connect with Coach" section/modal on mount
+- This ensures the "no coach" flow lands the user directly at the connection prompt
 
-This is a single-line change. No other files or functionality are affected.
+## What stays the same
+- All existing chip sizes, styles, layout spacing, and functionality
+- No changes to coaching context, dashboard pages, or other components beyond the navigation target
+
