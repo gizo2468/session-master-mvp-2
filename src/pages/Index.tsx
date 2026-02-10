@@ -20,7 +20,9 @@ import NotificationBell from '@/components/NotificationBell';
 import { PlayerCardModal } from '@/components/PlayerCard/PlayerCardModal';
 import chipPlayerCard from '@/assets/chip-player-card.png';
 import chipMyNotes from '@/assets/chip-my-notes.png';
+import chipCoach from '@/assets/chip-coach.png';
 import ViewAllNotesModal from '@/components/notes/ViewAllNotesModal';
+import { useCoachStudent } from '@/context/CoachStudentContext';
 
 export default function Index() {
   const navigate = useNavigate();
@@ -43,6 +45,15 @@ export default function Index() {
   } = useActiveSessionRecovery();
   const [playerCardOpen, setPlayerCardOpen] = useState(false);
   const [notesModalOpen, setNotesModalOpen] = useState(false);
+  const { connectedCoaches } = useCoachStudent();
+
+  const handleCoachChipClick = () => {
+    if (connectedCoaches.length > 0) {
+      navigate('/coach-dashboard');
+    } else {
+      navigate('/player-dashboard?openConnect=true');
+    }
+  };
 
 
   // Removed duplicate refresh - SessionContext already loads data on initialization
@@ -151,6 +162,13 @@ export default function Index() {
               aria-label="Player Card"
             >
               <img src={chipPlayerCard} alt="Player Card" className="w-32 h-auto object-contain" draggable={false} />
+            </button>
+            <button
+              onClick={handleCoachChipClick}
+              className="transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+              aria-label="Coach Network"
+            >
+              <img src={chipCoach} alt="Coach Network" className="w-32 h-auto object-contain" draggable={false} />
             </button>
             <button
               onClick={() => setNotesModalOpen(true)}
