@@ -156,7 +156,7 @@ export default function Index() {
             {/* Left icon – Player Card */}
             <button
               onClick={() => setPlayerCardOpen(true)}
-              className="absolute bottom-[4%] left-[5%] z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+              className="absolute bottom-[18%] left-[5%] z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
               aria-label="Player Card"
             >
               <img src={chipPlayerCard} alt="Player Card" className="w-28 h-auto object-contain" draggable={false} />
@@ -174,7 +174,7 @@ export default function Index() {
             {/* Right icon – My Notes */}
             <button
               onClick={() => setNotesModalOpen(true)}
-              className="absolute bottom-[4%] right-[5%] z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
+              className="absolute bottom-[18%] right-[5%] z-10 p-2 transform transition-all hover:scale-105 active:scale-95 focus:outline-none"
               aria-label="My Notes"
             >
               <img src={chipMyNotes} alt="My Notes" className="w-28 h-auto object-contain" draggable={false} />
