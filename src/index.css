@@ -19,6 +19,7 @@ button img {
 button:active,
 [role="button"]:active {
   outline: none;
+  background-color: transparent !important;
   -webkit-tap-highlight-color: transparent;
 }
 

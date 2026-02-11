@@ -20,7 +20,7 @@ export default function NewSessionButton() {
     <div className="flex justify-center w-full">
       <button
         onClick={handleClick}
-        className="relative rounded-full overflow-hidden transform transition-all hover:scale-105 hover:-translate-y-1 focus:outline-none focus-visible:outline-none"
+        className="relative rounded-full overflow-hidden bg-transparent transform transition-transform hover:scale-105 hover:-translate-y-1 focus:outline-none focus-visible:outline-none"
         style={{ WebkitTapHighlightColor: 'transparent' }}
         aria-label="New session"
       >
