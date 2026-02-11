@@ -162,7 +162,7 @@ export default function Index() {
             {/* Left icon – Player Card */}
             <button
               onClick={() => setPlayerCardOpen(true)}
-              className="absolute bottom-[24%] left-[5%] z-10 rounded-full overflow-hidden transform transition-all hover:scale-105 active:scale-95 focus:outline-none focus-visible:outline-none"
+              className="absolute bottom-[24%] left-[5%] z-10 rounded-full overflow-hidden transform transition-all hover:scale-105 focus:outline-none focus-visible:outline-none"
               style={{ WebkitTapHighlightColor: 'transparent' }}
               aria-label="Player Card"
             >
@@ -172,7 +172,7 @@ export default function Index() {
             {/* Middle icon – Coach */}
             <button
               onClick={handleCoachChipClick}
-              className="absolute bottom-[14%] left-1/2 -translate-x-1/2 z-10 rounded-full overflow-hidden transform transition-all hover:scale-105 active:scale-95 focus:outline-none focus-visible:outline-none"
+              className="absolute bottom-[14%] left-1/2 -translate-x-1/2 z-10 rounded-full overflow-hidden transform transition-all hover:scale-105 focus:outline-none focus-visible:outline-none"
               style={{ WebkitTapHighlightColor: 'transparent' }}
               aria-label="Coach Network"
             >
@@ -182,7 +182,7 @@ export default function Index() {
             {/* Right icon – My Notes */}
             <button
               onClick={() => setNotesModalOpen(true)}
-              className="absolute bottom-[24%] right-[5%] z-10 rounded-full overflow-hidden transform transition-all hover:scale-105 active:scale-95 focus:outline-none focus-visible:outline-none"
+              className="absolute bottom-[24%] right-[5%] z-10 rounded-full overflow-hidden transform transition-all hover:scale-105 focus:outline-none focus-visible:outline-none"
               style={{ WebkitTapHighlightColor: 'transparent' }}
               aria-label="My Notes"
             >
