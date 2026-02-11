@@ -1,30 +1,56 @@
 
 
-## Fix: Remove Yellow Focus Outline and Fix Chip Hitboxes
+## Fix: Remove Tap Flash and Shrink START SESSION Chip
 
-### Problem 1: Yellow Outline on Click
-The **NewSessionButton** (`src/components/NewSessionButton.tsx`) has `focus:ring-2 focus:ring-offset-2 focus:ring-poker-gold` which shows a gold/yellow rectangular border when the button receives focus. This is the yellow box visible in the screenshot. The three chip buttons may also show browser-default focus outlines despite `focus:outline-none` (some browsers need `focus-visible:outline-none` as well).
+### Issue 1: Tap Flash/Outline on Click
 
-### Problem 2: Oversized Clickable Areas
-The three chip icon buttons (`src/pages/Index.tsx`, lines 163-187) have:
-- `p-2` padding, making the clickable area larger than the visible chip image
-- `z-10` stacking, which causes them to intercept clicks on elements underneath (like the stats card or START SESSION button)
-- Rectangular hit areas instead of circular ones matching the chip shape
+The global CSS already sets `-webkit-tap-highlight-color: transparent` on buttons, but a brief rectangular flash still appears. This is caused by:
+- The browser applying a default tap highlight on the `img` element inside the button (not covered by the global rule)
+- Potential `outline` from the `active` pseudo-state
 
-### Fix Plan
+**Fix in `src/index.css`**: Add `img` to the global tap-highlight rule and add a universal `outline: none` on `:active` for buttons:
+```css
+button,
+[role="button"],
+a,
+[data-state],
+button img {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
 
-#### File 1: `src/components/NewSessionButton.tsx`
-- Replace `focus:ring-2 focus:ring-offset-2 focus:ring-poker-gold` with `focus:outline-none focus-visible:outline-none` to completely remove the gold rectangle on click/focus.
+button:active,
+[role="button"]:active {
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+```
 
-#### File 2: `src/pages/Index.tsx` (lines 163-187, the three chip buttons)
-For each of the three chip buttons (Player Card, Coach, My Notes):
-- Remove `p-2` padding so the clickable area matches the image bounds exactly.
-- Add `rounded-full` and `overflow-hidden` to clip the hit area to a circle matching the chip shape.
-- Keep `focus:outline-none` and add `focus-visible:outline-none` to prevent any focus outlines.
-- Keep all positioning, sizing, transitions, and `z-10` unchanged (needed for layering above the main chip).
+Also add `-webkit-tap-highlight-color: transparent` directly as inline styles on the chip buttons in `src/pages/Index.tsx` and `src/components/NewSessionButton.tsx` as a belt-and-suspenders approach (some iOS WebViews ignore the CSS rule).
+
+### Issue 2: Shrink START SESSION Chip + Constrain Hitbox
+
+Currently the START SESSION image is `w-[28rem] sm:w-[32rem]` (448px / 512px) which is very large and its rectangular button area intercepts clicks.
+
+**Fix in `src/components/NewSessionButton.tsx`**:
+- Reduce image size from `w-[28rem] sm:w-[32rem]` to `w-72 sm:w-80` (288px / 320px) -- roughly 35% smaller
+- Add `rounded-full overflow-hidden` to the button so the clickable area is clipped to the circular chip shape (same technique used on the smaller chips)
+
+### Files to Modify
+
+1. **`src/index.css`** (lines 7-14): Expand the tap-highlight rule to cover images inside buttons and add `:active` outline suppression.
+
+2. **`src/components/NewSessionButton.tsx`** (lines 21-31):
+   - Add `rounded-full overflow-hidden` to button className
+   - Add inline `style={{ WebkitTapHighlightColor: 'transparent' }}`
+   - Reduce image from `w-[28rem] sm:w-[32rem]` to `w-72 sm:w-80`
+
+3. **`src/pages/Index.tsx`** (lines 163-187): Add inline `style={{ WebkitTapHighlightColor: 'transparent' }}` to each of the three chip buttons for extra safety.
 
 ### What stays the same
-- Button design, size, position, and spacing -- all unchanged
-- All functionality (navigation, modals) -- unchanged
-- Layout of the START SESSION chip and stats card -- unchanged
+- Small chip positions, sizes, and spacing -- unchanged
+- All functionality and navigation -- unchanged
+- Stats card positioning -- unchanged (the `-mt-28` pull-up may need minor visual tweaking but layout logic stays)
 
