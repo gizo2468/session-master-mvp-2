@@ -1,49 +1,52 @@
 
 
-## Fix: Coach Chip Button - Role-Based Navigation
+## Fix: Pixel-Perfect Circular Hitboxes for Home Chip Icons
 
-### Current Problem
-The Coach chip always navigates to `/player-dashboard`, which is a separate page with limited functionality. The screenshot shows the desired behavior is actually the **Dashboard page** (`/dashboard`) with the `MyCoachingNetwork` component, where the "Connect to Coach" dialog can open automatically.
+### Root Cause
 
-### Plan
+`rounded-full overflow-hidden` on the `<button>` elements only affects **visual clipping** — it rounds the corners and hides overflow visually. However, the browser still registers clicks/taps across the entire **rectangular bounding box** of the button. This is standard HTML/CSS behavior.
 
-#### 1. Player with NO coach -- Navigate to Dashboard with auto-open Connect dialog
+### Solution
 
-- **`src/pages/Index.tsx`**: Change `handleCoachChipClick` to navigate to `/dashboard?openConnect=true` instead of `/player-dashboard?openConnect=true`.
-- **`src/components/coaching/MyCoachingNetwork.tsx`**: Add a new prop `autoOpenConnect?: boolean`. When `true`, auto-open the `connectDialogOpen` state on mount (for students) so the "Connect to Coach" dialog appears immediately.
-- **`src/pages/Dashboard.tsx`**: Read the `openConnect` query param from the URL and pass it as `autoOpenConnect` to `MyCoachingNetwork`.
+Use `clip-path: circle(50%)` on each chip button via an inline style. Unlike `overflow-hidden`, `clip-path` actually removes the clipped areas from hit-testing — the browser will not register pointer events outside the circle.
 
-This matches the screenshot exactly -- Dashboard page with the "Connect to Coach" popup.
+Additionally, make each button a perfect square (since `clip-path: circle(50%)` creates a circle from the element's center, it works best on square elements). The chip images are `w-28` wide, so adding `w-28 h-28` ensures a square bounding box, and `clip-path: circle(50%)` then creates a perfect circle matching the visible chip area.
 
-#### 2. Player WITH connected coach(es) -- Navigate to most relevant coach profile
+### Changes
 
-- **`src/pages/Index.tsx`**: When `connectedCoaches.length > 0`, navigate directly to `/coach/{coachId}` using the first connected coach (the most relevant one). Since the `connectedCoaches` array from `CoachStudentContext` doesn't track "most recent interaction," we use the first coach in the list (or the only one if there's just one).
+**File: `src/pages/Index.tsx`** — All 3 chip buttons (lines 163-187)
 
-#### 3. Coach tapping the chip -- Show connected players modal
+For each of the three `<button>` elements:
 
-- **`src/pages/Index.tsx`**: Add a state `showPlayersModal` and a new `Dialog` component. When the user `isCoach`, tapping the chip opens this modal instead of navigating. The modal shows a list of connected students (from `useCoachStudent().students`). Tapping a player navigates to `/player/{playerId}`. If no students are connected, show a message.
-- The coach role is detected via `useCoachStudent().isCoach`.
+1. Add inline style: `style={{ clipPath: 'circle(50%)' }}`
+2. Add explicit square dimensions: `w-28 h-28` (matching the image width)
+3. Keep `rounded-full overflow-hidden` as visual fallback (harmless)
+4. Keep all positioning classes (`absolute`, `bottom-[24%]`, etc.) unchanged
 
-### Technical Details
+Example for the left chip button:
+```
+<button
+  onClick={() => setPlayerCardOpen(true)}
+  className="absolute bottom-[24%] left-[5%] z-10 w-28 h-28 rounded-full overflow-hidden ..."
+  style={{ clipPath: 'circle(50%)' }}
+  aria-label="Player Card"
+>
+  <img ... className="w-full h-full object-contain pointer-events-none" />
+</button>
+```
 
-**Files to modify:**
+The same pattern applies to all three buttons (Player Card, Coach, My Notes).
 
-1. **`src/pages/Index.tsx`**
-   - Import `isCoach`, `students` from `useCoachStudent()`
-   - Import `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle` from UI
-   - Add `showPlayersModal` state
-   - Update `handleCoachChipClick`:
-     - If `isCoach`: set `showPlayersModal(true)`
-     - Else if `connectedCoaches.length > 0`: navigate to `/coach/${connectedCoaches[0].id}`
-     - Else: navigate to `/dashboard?openConnect=true`
-   - Add Dialog JSX for coach's player list modal
+### Why This Works
 
-2. **`src/components/coaching/MyCoachingNetwork.tsx`**
-   - Add `autoOpenConnect?: boolean` prop
-   - In `useEffect`, if `autoOpenConnect` is true and user is a student, set `connectDialogOpen(true)`
+- `clip-path: circle(50%)` is supported in all modern browsers (Chrome, Safari, Firefox, Edge) and mobile WebViews
+- It clips both rendering AND pointer/hit-testing to the circle
+- No JavaScript hit-testing needed — pure CSS solution
+- No layout or visual changes
 
-3. **`src/pages/Dashboard.tsx`**
-   - Read `openConnect` from `useSearchParams`
-   - Pass `autoOpenConnect={openConnect === 'true'}` to `MyCoachingNetwork`
+### No Other Changes
 
-No new routes, no layout changes, no button design changes.
+- START SESSION button remains unchanged
+- All positions, spacing, and z-indexes stay the same
+- Only the 3 small chip buttons are modified
+
