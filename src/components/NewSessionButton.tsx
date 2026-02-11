@@ -17,20 +17,23 @@ export default function NewSessionButton() {
   };
   
   return (
-    <div className="flex justify-center w-full">
-      <button
-        onClick={handleClick}
-        className="relative rounded-full overflow-hidden bg-transparent transform transition-transform hover:scale-105 hover:-translate-y-1 focus:outline-none focus-visible:outline-none"
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        aria-label="New session"
-      >
+    <div className="relative flex justify-center w-full">
+      {/* Visual layer - not clickable */}
+      <div className="pointer-events-none">
         <img 
           src={newSessionIcon} 
           alt="Start Session" 
           className="w-[28rem] sm:w-[32rem] h-auto object-contain"
           draggable={false}
         />
-      </button>
+      </div>
+      {/* Hit area - circular, sized to match the visible chip only */}
+      <button
+        onClick={handleClick}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[55%] aspect-square rounded-full bg-transparent cursor-pointer transition-transform hover:scale-105 focus:outline-none focus-visible:outline-none"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
+        aria-label="New session"
+      />
     </div>
   );
 }
