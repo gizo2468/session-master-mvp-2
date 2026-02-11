@@ -1,49 +1,30 @@
 
 
-## Fix: Coach Chip Button - Role-Based Navigation
+## Fix: Remove Yellow Focus Outline and Fix Chip Hitboxes
 
-### Current Problem
-The Coach chip always navigates to `/player-dashboard`, which is a separate page with limited functionality. The screenshot shows the desired behavior is actually the **Dashboard page** (`/dashboard`) with the `MyCoachingNetwork` component, where the "Connect to Coach" dialog can open automatically.
+### Problem 1: Yellow Outline on Click
+The **NewSessionButton** (`src/components/NewSessionButton.tsx`) has `focus:ring-2 focus:ring-offset-2 focus:ring-poker-gold` which shows a gold/yellow rectangular border when the button receives focus. This is the yellow box visible in the screenshot. The three chip buttons may also show browser-default focus outlines despite `focus:outline-none` (some browsers need `focus-visible:outline-none` as well).
 
-### Plan
+### Problem 2: Oversized Clickable Areas
+The three chip icon buttons (`src/pages/Index.tsx`, lines 163-187) have:
+- `p-2` padding, making the clickable area larger than the visible chip image
+- `z-10` stacking, which causes them to intercept clicks on elements underneath (like the stats card or START SESSION button)
+- Rectangular hit areas instead of circular ones matching the chip shape
 
-#### 1. Player with NO coach -- Navigate to Dashboard with auto-open Connect dialog
+### Fix Plan
 
-- **`src/pages/Index.tsx`**: Change `handleCoachChipClick` to navigate to `/dashboard?openConnect=true` instead of `/player-dashboard?openConnect=true`.
-- **`src/components/coaching/MyCoachingNetwork.tsx`**: Add a new prop `autoOpenConnect?: boolean`. When `true`, auto-open the `connectDialogOpen` state on mount (for students) so the "Connect to Coach" dialog appears immediately.
-- **`src/pages/Dashboard.tsx`**: Read the `openConnect` query param from the URL and pass it as `autoOpenConnect` to `MyCoachingNetwork`.
+#### File 1: `src/components/NewSessionButton.tsx`
+- Replace `focus:ring-2 focus:ring-offset-2 focus:ring-poker-gold` with `focus:outline-none focus-visible:outline-none` to completely remove the gold rectangle on click/focus.
 
-This matches the screenshot exactly -- Dashboard page with the "Connect to Coach" popup.
+#### File 2: `src/pages/Index.tsx` (lines 163-187, the three chip buttons)
+For each of the three chip buttons (Player Card, Coach, My Notes):
+- Remove `p-2` padding so the clickable area matches the image bounds exactly.
+- Add `rounded-full` and `overflow-hidden` to clip the hit area to a circle matching the chip shape.
+- Keep `focus:outline-none` and add `focus-visible:outline-none` to prevent any focus outlines.
+- Keep all positioning, sizing, transitions, and `z-10` unchanged (needed for layering above the main chip).
 
-#### 2. Player WITH connected coach(es) -- Navigate to most relevant coach profile
+### What stays the same
+- Button design, size, position, and spacing -- all unchanged
+- All functionality (navigation, modals) -- unchanged
+- Layout of the START SESSION chip and stats card -- unchanged
 
-- **`src/pages/Index.tsx`**: When `connectedCoaches.length > 0`, navigate directly to `/coach/{coachId}` using the first connected coach (the most relevant one). Since the `connectedCoaches` array from `CoachStudentContext` doesn't track "most recent interaction," we use the first coach in the list (or the only one if there's just one).
-
-#### 3. Coach tapping the chip -- Show connected players modal
-
-- **`src/pages/Index.tsx`**: Add a state `showPlayersModal` and a new `Dialog` component. When the user `isCoach`, tapping the chip opens this modal instead of navigating. The modal shows a list of connected students (from `useCoachStudent().students`). Tapping a player navigates to `/player/{playerId}`. If no students are connected, show a message.
-- The coach role is detected via `useCoachStudent().isCoach`.
-
-### Technical Details
-
-**Files to modify:**
-
-1. **`src/pages/Index.tsx`**
-   - Import `isCoach`, `students` from `useCoachStudent()`
-   - Import `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle` from UI
-   - Add `showPlayersModal` state
-   - Update `handleCoachChipClick`:
-     - If `isCoach`: set `showPlayersModal(true)`
-     - Else if `connectedCoaches.length > 0`: navigate to `/coach/${connectedCoaches[0].id}`
-     - Else: navigate to `/dashboard?openConnect=true`
-   - Add Dialog JSX for coach's player list modal
-
-2. **`src/components/coaching/MyCoachingNetwork.tsx`**
-   - Add `autoOpenConnect?: boolean` prop
-   - In `useEffect`, if `autoOpenConnect` is true and user is a student, set `connectDialogOpen(true)`
-
-3. **`src/pages/Dashboard.tsx`**
-   - Read `openConnect` from `useSearchParams`
-   - Pass `autoOpenConnect={openConnect === 'true'}` to `MyCoachingNetwork`
-
-No new routes, no layout changes, no button design changes.
