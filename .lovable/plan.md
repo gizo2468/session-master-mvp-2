@@ -1,49 +1,42 @@
 
-
-## Fix: Eliminate Black Circular Tap Flash on Home Chips
+## Fix: Constrain START SESSION Chip Hitbox to Circular Bounds
 
 ### Root Cause
 
-The previous fix (removing `active:scale-95`) did not address the real issue. The black circular flash comes from two things working together:
+The button sizes itself to the image's natural dimensions via `w-[28rem] h-auto`, resulting in a rectangular element. While `rounded-full overflow-hidden` visually clips to an ellipse/circle, the **clickable area remains the full rectangle**. This means taps in the transparent corners of the image still trigger navigation.
 
-1. **`transition-all`** on every chip button -- this transitions ALL CSS properties, including `background-color`. When the browser briefly applies its default active-state background to the button, `transition-all` makes it smoothly visible instead of instant/invisible.
+### Fix
 
-2. **No explicit background** -- the buttons have no `background-color` set, so the browser's native `:active` background (dark/black) shows through the `rounded-full overflow-hidden` circular clip as a brief dark circle.
+Make the button a fixed square (same width and height) so that `rounded-full` produces a true circle, and the rectangular hit area matches the visible chip bounds exactly.
 
-### Fix (two changes per button)
+**In `src/components/NewSessionButton.tsx`:**
 
-For all 4 chip buttons (START SESSION + 3 small chips):
+1. Set explicit square dimensions on the button: `w-[28rem] h-[28rem] sm:w-[32rem] sm:h-[32rem]`
+2. Keep `rounded-full overflow-hidden` -- now this clips both visuals AND hit area to a circle
+3. Make the image fill the button using absolute positioning and `object-cover` so the chip visual stays identical
+4. Add `pointer-events-none` to the image so clicks only register on the button's circular area
 
-- **Replace `transition-all` with `transition-transform`** -- only animate transform (scale/translate), never background or other properties
-- **Add `bg-transparent`** -- explicitly set background to transparent so no browser default can override it
-
-Additionally, in `src/index.css`, add `background-color: transparent !important` to the `button:active` rule to universally prevent browsers from injecting a dark active background.
-
-### Files to Modify
-
-**1. `src/index.css` (lines 19-23)**
-Add `background-color: transparent !important;` to the `button:active` rule:
-```css
-button:active,
-[role="button"]:active {
-  outline: none;
-  background-color: transparent !important;
-  -webkit-tap-highlight-color: transparent;
-}
+```tsx
+<button
+  onClick={handleClick}
+  className="relative w-[28rem] h-[28rem] sm:w-[32rem] sm:h-[32rem] rounded-full overflow-hidden bg-transparent transform transition-transform hover:scale-105 hover:-translate-y-1 focus:outline-none focus-visible:outline-none"
+  style={{ WebkitTapHighlightColor: 'transparent' }}
+  aria-label="New session"
+>
+  <img 
+    src={newSessionIcon} 
+    alt="Start Session" 
+    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+    draggable={false}
+  />
+</button>
 ```
 
-**2. `src/components/NewSessionButton.tsx` (line 23)**
-Change:
-- `transition-all` to `transition-transform`
-- Add `bg-transparent`
-
-**3. `src/pages/Index.tsx` (lines 165, 175, 185)**
-On each of the three small chip buttons:
-- `transition-all` to `transition-transform`
-- Add `bg-transparent`
-
 ### What stays the same
-- All sizes, spacing, layout, positioning -- unchanged
-- All hover effects -- unchanged (hover:scale-105 still uses transform, so it works with transition-transform)
-- All functionality -- unchanged
+- Visual size and appearance of the chip -- unchanged
+- Positioning and layout within the page -- unchanged
+- All other chips (Player Card, Coach, My Notes) -- unchanged
+- Navigation and functionality -- unchanged
 
+### File Modified
+- **`src/components/NewSessionButton.tsx`** -- button gets explicit square dimensions; image becomes absolutely positioned inside it
