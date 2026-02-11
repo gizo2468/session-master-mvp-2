@@ -8,9 +8,18 @@
 button,
 [role="button"],
 a,
-[data-state] {
+[data-state],
+button img {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+button:active,
+[role="button"]:active {
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Ensure minimum touch target size for interactive elements on mobile */
