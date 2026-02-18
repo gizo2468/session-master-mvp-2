@@ -198,9 +198,9 @@ textarea:-webkit-autofill:active {
     @apply font-bold tracking-tight;
   }
 
-  /* Session Summary title - Bungee font with gold color */
+  /* Session Summary title - gold color */
   .session-summary-title {
-    font-family: 'Bungee', cursive;
+    font-family: 'Inter', sans-serif;
     color: hsl(43 77% 52%); /* poker-gold */
   }
 
