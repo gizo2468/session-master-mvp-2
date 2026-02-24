@@ -333,19 +333,42 @@ function generateHandHistory(
   const lines: string[] = [];
   const handId = uuidToNumericId(hand.id);
   const gameTypeStr = formatGameType(hand.game_type || session.game_type);
-  const sb = hand.small_blind ?? session.small_blind ?? 0.5;
-  const bb = hand.big_blind ?? session.big_blind ?? 1;
+
+  // Blinds: only use if actually stored
+  const sbRaw = hand.small_blind ?? session.small_blind;
+  const bbRaw = hand.big_blind ?? session.big_blind;
+  const hasBlinds = sbRaw != null && bbRaw != null;
+  const sb = sbRaw ?? 0;
+  const bb = bbRaw ?? 1; // fallback for unit conversion only
+
   const handDate = hand.created_at
     ? format(new Date(hand.created_at), 'yyyy/MM/dd HH:mm:ss')
     : format(new Date(session.start_time), 'yyyy/MM/dd HH:mm:ss');
   const tableName = table?.table_name || session.location || 'Table1';
-  const handNum = hand.hand_number ?? fallbackHandNum;
 
-  // Build player list
-  const heroSeat = positionToSeat(hand.position);
-  const heroStack = hand.hero_stack_bb ? hand.hero_stack_bb * bb : 100 * bb;
+  // ---- Header ----
+  const blindsStr = hasBlinds ? ` (${fmt$(sb)}/${fmt$(bb)})` : '';
+  lines.push(
+    `PokerStars Hand #${handId}: ${gameTypeStr}${blindsStr} - ${handDate} ET`
+  );
+  lines.push(`Table '${tableName}'`);
 
-  // Parse villains
+  // ---- Seats: only real recorded players ----
+  const players = new Map<string, string>();
+  players.set('Hero', 'Hero');
+  players.set('hero', 'Hero');
+  players.set('Me', 'Hero');
+
+  // Hero seat
+  if (hand.hero_stack_bb != null) {
+    const heroStack = hand.hero_stack_bb * bb;
+    const seatNum = hand.position ? positionToSeat(hand.position) : 1;
+    lines.push(`Seat ${seatNum}: Hero (${fmt$(heroStack)} in chips)`);
+  } else if (hand.position) {
+    lines.push(`Seat ${positionToSeat(hand.position)}: Hero`);
+  }
+
+  // Villains: only if actually recorded
   interface VillainInfo { position?: string; hand?: string; bigBlind?: number; name?: string; }
   let villains: VillainInfo[] = [];
   if (hand.villains) {
@@ -356,88 +379,58 @@ function generateHandHistory(
     }
   }
 
-  // Build seat assignments
-  const players = new Map<string, string>(); // actor key -> display name
-  const seats: { seat: number; name: string; stack: number }[] = [];
-  seats.push({ seat: heroSeat, name: 'Hero', stack: heroStack });
-  players.set('Hero', 'Hero');
-  players.set('hero', 'Hero');
-  players.set('Me', 'Hero');
+  const usedSeats = new Set<number>();
+  if (hand.position) usedSeats.add(positionToSeat(hand.position));
 
-  const usedSeats = new Set([heroSeat]);
   villains.forEach((v, i) => {
-    const vName = v.name || `Player${i + 2}`;
+    const vName = v.name || `Villain${i + 1}`;
+    players.set(vName, vName);
+    if (v.position) players.set(v.position, vName);
+
     let vSeat = v.position ? positionToSeat(v.position) : 0;
     if (vSeat === 0 || usedSeats.has(vSeat)) {
-      // Find next available seat
       for (let s = 1; s <= 9; s++) {
         if (!usedSeats.has(s)) { vSeat = s; break; }
       }
     }
     usedSeats.add(vSeat);
-    const vStack = v.bigBlind ? v.bigBlind * bb : 100 * bb;
-    seats.push({ seat: vSeat, name: vName, stack: vStack });
-    players.set(vName, vName);
-    if (v.position) players.set(v.position, vName);
+
+    if (v.bigBlind != null) {
+      const vStack = v.bigBlind * bb;
+      lines.push(`Seat ${vSeat}: ${vName} (${fmt$(vStack)} in chips)`);
+    } else {
+      lines.push(`Seat ${vSeat}: ${vName}`);
+    }
   });
 
-  // If no villains, add placeholder opponents
-  if (villains.length === 0) {
-    for (let i = 2; i <= 6; i++) {
-      let seat = i;
-      while (usedSeats.has(seat)) seat++;
-      if (seat > 9) break;
-      usedSeats.add(seat);
-      const name = `Player${i}`;
-      seats.push({ seat, name, stack: 100 * bb });
-      players.set(name, name);
-    }
-  }
-
-  seats.sort((a, b) => a.seat - b.seat);
-  const maxPlayers = Math.max(6, seats.length);
-
-  // Determine button seat (BTN = seat with that position, or first seat)
-  const btnSeat = heroSeat === positionToSeat('BTN') ? heroSeat : seats[0].seat;
-
-  // ---- Header ----
-  lines.push(
-    `PokerStars Hand #${handId}: ${gameTypeStr} (${fmt$(sb)}/${fmt$(bb)}) - ${handDate} ET`
-  );
-  lines.push(
-    `Table '${tableName}' ${maxPlayers}-max Seat #${btnSeat} is the button`
-  );
-
-  // Seat lines
-  for (const s of seats) {
-    lines.push(`Seat ${s.seat}: ${s.name} (${fmt$(s.stack)} in chips)`);
-  }
-
-  // Post blinds - find SB and BB players
-  const sbPlayer = seats.find(s => s.seat === positionToSeat('SB'))?.name
-    || seats.find(s => s.seat !== heroSeat)?.name || 'Player2';
-  const bbPlayer = seats.find(s => s.seat === positionToSeat('BB'))?.name
-    || seats.find(s => s.name === 'Hero' && heroSeat === 3)?.name || 'Player3';
-
-  lines.push(`${sbPlayer}: posts small blind ${fmt$(sb)}`);
-  lines.push(`${bbPlayer}: posts big blind ${fmt$(bb)}`);
+  // NO blind posting lines — we don't store who posted blinds
 
   // ---- Hole Cards ----
-  lines.push('*** HOLE CARDS ***');
   const holeCards = parseCards(hand.hole_cards);
-  const holeStr = holeCards.length > 0 ? holeCards.join(' ') : '?? ??';
-  lines.push(`Dealt to Hero [${holeStr}]`);
+  if (holeCards.length > 0) {
+    lines.push('*** HOLE CARDS ***');
+    lines.push(`Dealt to Hero [${holeCards.join(' ')}]`);
+  }
+
+  // ---- Position / action tag metadata ----
+  if (hand.position && !hand.hole_cards) {
+    // If we have position but no cards, note position
+    lines.push(`** Hero position: ${hand.position} **`);
+  }
 
   // ---- Preflop ----
-  const preflopLines = formatActions(hand.preflop_actions || hand.preflop_action, bb, players);
-  lines.push(...preflopLines);
+  const preflopActions = hand.preflop_actions || hand.preflop_action;
+  const preflopLines = formatActionsStrict(preflopActions, bb, players);
+  if (preflopLines.length > 0) {
+    lines.push(...preflopLines);
+  }
 
   // ---- Flop ----
   const flopCards = parseFlopCards(hand.flop_cards);
   if (flopCards.length >= 3) {
     lines.push(`*** FLOP *** [${flopCards.slice(0, 3).join(' ')}]`);
-    const flopLines = formatActions(hand.flop_actions || hand.flop_action, bb, players);
-    lines.push(...flopLines);
+    const flopLines = formatActionsStrict(hand.flop_actions || hand.flop_action, bb, players);
+    if (flopLines.length > 0) lines.push(...flopLines);
   }
 
   // ---- Turn ----
@@ -445,8 +438,8 @@ function generateHandHistory(
     const turnCard = formatCard(hand.turn_card);
     const board = flopCards.slice(0, 3).join(' ');
     lines.push(`*** TURN *** [${board}] [${turnCard}]`);
-    const turnLines = formatActions(hand.turn_actions || hand.turn_action, bb, players);
-    lines.push(...turnLines);
+    const turnLines = formatActionsStrict(hand.turn_actions || hand.turn_action, bb, players);
+    if (turnLines.length > 0) lines.push(...turnLines);
   }
 
   // ---- River ----
@@ -455,28 +448,19 @@ function generateHandHistory(
     const board = [...flopCards.slice(0, 3)];
     if (hand.turn_card) board.push(formatCard(hand.turn_card));
     lines.push(`*** RIVER *** [${board.join(' ')}] [${riverCard}]`);
-    const riverLines = formatActions(hand.river_actions || hand.river_action, bb, players);
-    lines.push(...riverLines);
+    const riverLines = formatActionsStrict(hand.river_actions || hand.river_action, bb, players);
+    if (riverLines.length > 0) lines.push(...riverLines);
   }
 
-  // ---- Showdown ----
+  // ---- Showdown: only if stored ----
   if (hand.showdown_result) {
     lines.push('*** SHOW DOWN ***');
-    const wonAmount = hand.amount_won ?? hand.result_value ?? 0;
-    const resultUnit = hand.result_unit || 'BB';
-    const wonDollar = resultUnit === 'BB' ? wonAmount * bb : wonAmount;
-    
-    if (hand.showdown_result.toLowerCase().includes('won') || wonDollar > 0) {
-      lines.push(`Hero: shows [${holeStr}]`);
-      lines.push(`Hero collected ${fmt$(Math.abs(wonDollar))} from pot`);
-    } else {
-      lines.push(`Hero: shows [${holeStr}]`);
-      lines.push(`Hero lost`);
+    if (holeCards.length > 0) {
+      lines.push(`Hero: shows [${holeCards.join(' ')}]`);
     }
-
-    // Show villain hands if available
+    // Show villain hands if actually recorded
     villains.forEach((v, i) => {
-      const vName = v.name || `Player${i + 2}`;
+      const vName = v.name || `Villain${i + 1}`;
       if (v.hand) {
         const vCards = parseCards(v.hand);
         if (vCards.length > 0) {
@@ -486,35 +470,43 @@ function generateHandHistory(
     });
   }
 
+  // ---- Result: only if stored ----
+  if (hand.result_value != null) {
+    const unit = hand.result_unit || 'BB';
+    const sign = hand.result_value >= 0 ? '+' : '';
+    lines.push(`** Hero result: ${sign}${hand.result_value} ${unit} **`);
+  }
+
   // ---- Summary ----
-  const totalPot = hand.pot_size
-    ? (hand.result_unit === 'BB' ? (hand.pot_size * bb) : hand.pot_size)
-    : (hand.amount_invested ?? 0) + (hand.amount_won ?? 0);
   const fullBoard: string[] = [...flopCards.slice(0, 3)];
   if (hand.turn_card) fullBoard.push(formatCard(hand.turn_card));
   if (hand.river_card) fullBoard.push(formatCard(hand.river_card));
 
-  lines.push('*** SUMMARY ***');
-  lines.push(`Total pot ${fmt$(Math.abs(totalPot))} | Rake $0.00`);
-  if (fullBoard.length > 0) {
-    lines.push(`Board [${fullBoard.join(' ')}]`);
-  }
-
-  // Seat summary
-  for (const s of seats) {
-    const posLabel = seatToPositionLabel(s.seat);
-    const posStr = posLabel ? ` (${posLabel})` : '';
-    if (s.name === 'Hero') {
-      const resultStr = hand.showdown_result?.toLowerCase().includes('won')
-        ? `showed [${holeStr}] and won`
-        : hand.showdown_result
-          ? `showed [${holeStr}] and lost`
-          : 'folded';
-      lines.push(`Seat ${s.seat}: ${s.name}${posStr} ${resultStr}`);
-    } else {
-      lines.push(`Seat ${s.seat}: ${s.name}${posStr} folded`);
+  const hasSummaryContent = hand.pot_size != null || fullBoard.length > 0;
+  if (hasSummaryContent) {
+    lines.push('*** SUMMARY ***');
+    if (hand.pot_size != null) {
+      const potDollar = hand.result_unit === 'BB' ? hand.pot_size * bb : hand.pot_size;
+      lines.push(`Total pot ${fmt$(Math.abs(potDollar))}`);
+    }
+    if (fullBoard.length > 0) {
+      lines.push(`Board [${fullBoard.join(' ')}]`);
     }
   }
 
+  // NO fabricated seat summary lines
+
   return lines.join('\n');
+}
+
+/** Format actions strictly — returns empty array if no real actions stored */
+function formatActionsStrict(actions: any, bb: number, players: Map<string, string>): string[] {
+  if (!actions) return [];
+  if (typeof actions === 'string') {
+    const trimmed = actions.trim();
+    if (!trimmed || trimmed === '[]') return [];
+    return [trimmed];
+  }
+  if (!Array.isArray(actions) || actions.length === 0) return [];
+  return formatActions(actions, bb, players);
 }
