@@ -1,112 +1,111 @@
 
 
-## Plan: Make "Total Hands" Clickable + PT4-Compatible Hand History Export
+## Plan: Fix Hand History Export — No Fabricated Data
 
-### Overview
+### Problem
 
-Add a clickable "Total Hands" metric in Sessions Stats that opens an "Export Hands (PT4)" modal. The modal allows date range selection, shows matching sessions with hand counts, and exports a ZIP of PokerStars-style hand history TXT files that PokerTracker 4 can import.
+The current `generateHandHistory` function in `src/utils/pt4HandHistoryExport.ts` fabricates data that does not exist in the database:
 
-### Data Available for Export
+1. **Fake players**: When no villains are recorded, it invents 5 placeholder opponents (Player2–Player6) with fake $400 stacks
+2. **Fake stacks**: Villains without stack data get default `100*bb`; hero without stack gets `100*bb`
+3. **Fake seat/button layout**: Assigns arbitrary seat numbers and button position
+4. **Fake blind posting lines**: Generates `Player2: posts small blind` even though no such player exists
+5. **Fake summary lines**: Shows `Player2 (small blind) folded`, `Player3 (under the gun) folded` etc. — all invented
+6. **Empty action arrays**: Outputs `[]` when no actions exist (visible in screenshots)
+7. **Fake pot/rake**: Computes pot from unrelated fields when pot_size isn't stored
 
-From the `session_hands_new` table, each hand has:
-- `hole_cards`, `position`, `small_blind`, `big_blind`, `hero_stack_bb`
-- `preflop_actions`, `flop_actions`, `turn_actions`, `river_actions` (JSON arrays with actor/action/size/unit)
-- `flop_cards`, `turn_card`, `river_card`
-- `pot_size`, `amount_won`, `amount_invested`
-- `showdown_result`, `result_value`, `result_unit`
-- `villains` (JSON with position/hand/bigBlind)
-- `game_type` (NLH/PLO)
-- `hand_number`, `created_at`
-- Related session data: `session_id` -> sessions table (format, location, currency, blinds, start_time)
-- Related table data: `table_id` -> session_tables (table_name, stakes, game_format)
+### Solution
 
-This is sufficient to generate PokerStars-style hand histories. Missing data (e.g., unknown villain names, incomplete actions) will use safe placeholders.
+Rewrite `generateHandHistory` to be a **truthful raw export** that only includes data actually stored in the database. Sections with no data are omitted entirely.
 
-### New Dependencies
+### File to Modify
 
-- **`jszip`** -- for creating ZIP files in-browser (no server needed)
+**`src/utils/pt4HandHistoryExport.ts`** — rewrite the `generateHandHistory` function (lines 327–520)
 
-### Files to Create
-
-**1. `src/utils/pt4HandHistoryExport.ts`** -- Core export logic
-- Function to query `session_hands_new` with joined `sessions` and `session_tables` data for a date range
-- Function to convert each hand record into PokerStars-format hand history text:
+### New Export Structure Per Hand
 
 ```text
-PokerStars Hand #<hand_id_hash>: <game_type> ($<sb>/$<bb>) - <date> <time>
-Table '<table_name>' <max_players>-max Seat #<btn_seat> is the button
-Seat 1: Hero ($<stack>)
-Seat 2: Villain1 ($<stack>)
-...
-Hero: posts small blind $<sb>
-Villain1: posts big blind $<bb>
+PokerStars Hand #<hash>: Hold'em No Limit ($2.00/$4.00) - 2026/01/30 19:18:35 ET
+Table '<location_or_table_name>' Seat #<hero_seat> is the button
+Seat <hero_seat>: Hero (<stack_if_known> in chips)
+[Seat <villain_seat>: <villain_name> (<stack_if_known> in chips)]  ← only if villains recorded
 *** HOLE CARDS ***
-Dealt to Hero [<cards>]
-<preflop_actions>
-*** FLOP *** [<flop_cards>]
-<flop_actions>
-*** TURN *** [<board>] [<turn>]
-<turn_actions>
-*** RIVER *** [<board>] [<river>]
-<river_actions>
-*** SHOW DOWN ***
-<showdown if available>
-*** SUMMARY ***
-Total pot $<pot> | Rake $0
-Board [<full_board>]
-Seat 1: Hero <result>
+Dealt to Hero [5h 4d]                                              ← only if hole_cards stored
+[*** FLOP *** [5c 5s 3d]]                                         ← only if flop_cards stored
+[*** TURN *** [5c 5s 3d] [5d]]                                    ← only if turn_card stored
+[*** RIVER *** [5c 5s 3d 5d] [Kh]]                                ← only if river_card stored
 ```
 
-- Handles missing data gracefully (placeholder villain names like "Player2", default stacks, omitted streets if no cards)
-- Groups hands by session into separate TXT files
-- Uses JSZip to package into `export_hands_YYYYMMDD-YYYYMMDD.zip`
+### Key Rules
 
-**2. `src/components/poker/HandHistoryExportModal.tsx`** -- UI modal
-- Date range picker (Start Date + End Date) using existing Calendar/Popover components
-- Fetches sessions with hands in the selected range from `session_hands_new` joined with `sessions`
-- Displays list of matching sessions: date, name/location, game type, hand count
-- Empty state when no hands found
-- "Export Hands" button that triggers the export
-- Loading/progress state during export
+1. **No placeholder opponents** — if `villains` is null/empty, no opponent seat lines appear
+2. **No blind posting lines** — we don't store who posted blinds; omit entirely
+3. **No fake stacks** — if `hero_stack_bb` is null, omit stack or write `UNKNOWN`; same for villains
+4. **No action lines for empty actions** — if `preflop_actions` is null/empty AND `preflop_action` is null/empty, output nothing (no `[]`)
+5. **No seat summary block** — we don't store per-player outcomes for opponents; omit the `Seat X: PlayerN folded` fabrication
+6. **Table line** — omit `6-max` (we don't store max players); omit button position guess
+7. **Showdown section** — only include if `showdown_result` is stored; only show hero/villain cards if actually recorded
+8. **Summary section** — only include `Total pot` if `pot_size` is stored; only include `Board` if board cards exist; no `Rake $0.00` fabrication (use `Rake UNKNOWN`)
+9. **Result** — if `result_value` and `result_unit` are stored, include a comment line like `** Hero result: +65 BB **`
+10. **Game metadata** — include `game_type`, `position`, blinds ONLY if stored
 
-### Files to Modify
+### Specific Changes
 
-**3. `src/components/StatsQuickView.tsx`**
-- Lines 276-279 (non-extended "Total Hands" cell): wrap the value+label in a clickable button that opens the export modal
-- Lines 309-312 (extended "Total Hands" cell): same treatment
-- Import and render `HandHistoryExportModal` with open/close state
-- No visual size/layout changes -- just add `cursor-pointer` and underline-on-hover to indicate clickability
+- Remove the "add placeholder opponents" block (lines 385–395)
+- Remove blind posting lines (lines 417–423)
+- Remove seat summary loop (lines 503–517)
+- Conditionally emit each section only when real data exists
+- Remove `positionToSeat` / `seatToPositionLabel` helper usage for fabrication
+- Keep `formatActions` but only call it when actions array is non-empty
+- Change `Table` line to omit max-players and button if not stored
 
-### PokerStars Hand History Format Details
+### What Stays The Same
 
-The export will follow the standard PokerStars format that PT4 recognizes:
-- Hand ID: numeric hash derived from the UUID
-- Game type: "Hold'em No Limit" or "Omaha Pot Limit"
-- Currency amounts from blinds (converted from chips to dollar notation)
-- Seat assignments derived from position data (BTN=seat 1, SB=seat 2, BB=seat 3, etc.)
-- Actions formatted as: `PlayerName: <action> $<amount>`
-- Board cards in bracket notation: `[Ah Kd 7s]`
-- Card format: rank+suit letter (e.g., "Ah", "Td", "9c", "2s")
-- When action data is structured JSON (`preflopActions` etc.), each entry maps to a line
-- When action data is legacy text strings, output as-is in a comment or best-effort parse
-- Missing hole cards: `[?? ??]`
-- Missing villain info: auto-generated names and default stack sizes
+- `fetchSessionsWithHandCounts` — unchanged
+- `exportHandHistoryZip` — unchanged (file grouping, ZIP packaging)
+- `getExportFileName` — unchanged
+- `HandHistoryExportModal.tsx` — unchanged
+- `StatsQuickView.tsx` — unchanged
+- All helper functions for card parsing — unchanged
 
-### Export Flow
+### Before/After Example
 
-1. User taps "Total Hands" in Sessions Stats
-2. Modal opens with date pickers defaulting to last 30 days
-3. Query runs: fetch sessions with hand counts in date range
-4. User sees session list with hand counts
-5. User taps "Export Hands"
-6. System fetches full hand data for all matching sessions
-7. Generates PokerStars-format text per hand, grouped by session into TXT files
-8. Packages into ZIP using JSZip
-9. Triggers browser download of the ZIP file
+**Before** (fabricated):
+```
+Table 'home' 6-max Seat #2 is the button
+Seat 2: Player2 ($400.00 in chips)
+Seat 3: Hero ($100.00 in chips)
+Seat 4: Player3 ($400.00 in chips)
+...
+Player2: posts small blind $2.00
+Hero: posts big blind $4.00
+*** HOLE CARDS ***
+Dealt to Hero [5h 4d]
+[]
+*** FLOP *** [5c 5s 3d]
+[]
+...
+Seat 2: Player2 (small blind) folded
+Seat 4: Player3 (under the gun) folded
+...
+```
 
-### What stays the same
-- All existing stats layout, sizes, colors, spacing
-- All other metrics remain non-clickable
-- No changes to My Finance / PDF export
-- No changes to hand recording or session flows
+**After** (truthful):
+```
+PokerStars Hand #1847931181: Hold'em No Limit ($2.00/$4.00) - 2026/01/30 19:18:35 ET
+Table 'home'
+Seat 3: Hero ($100.00 in chips)
+Seat 1: Villain ($120.00 in chips)
+*** HOLE CARDS ***
+Dealt to Hero [5h 4d]
+*** FLOP *** [5c 5s 3d]
+*** TURN *** [5c 5s 3d] [5d]
+*** RIVER *** [5c 5s 3d 5d] [Kh]
+*** SHOW DOWN ***
+Hero: shows [5h 4d]
+Villain: shows [4s 4h]
+** Hero result: +65 BB **
+*** SUMMARY ***
+Board [5c 5s 3d 5d Kh]
+```
 
