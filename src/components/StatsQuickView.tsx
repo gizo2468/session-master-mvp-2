@@ -258,9 +258,9 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
             title="Click to view currency breakdown"
           >
             {Object.keys(allResultsByCurrency).length === 0 ? (
-              <span className="text-lg font-bold text-gray-400">{displayCurrency(0)}</span>
+              <span className="text-base font-bold text-gray-400">{displayCurrency(0)}</span>
             ) : (
-              <span className={`text-xl font-bold ${overallResults >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <span className={`text-base font-bold ${overallResults >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {displayCurrency(overallResults)}
               </span>
             )}
