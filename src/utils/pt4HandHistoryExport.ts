@@ -98,24 +98,36 @@ interface ActionEntry {
   customDescription?: string;
 }
 
-/** Convert structured actions to plain-text lines (no JSON, no dollar signs) */
+/** Convert structured actions to plain-text lines — NO JSON, NO IDs, NO UUIDs */
 function formatActionsPlainText(actions: any): string[] {
   if (!actions) return [];
 
-  // String legacy format
+  // If it's a string, try to parse as JSON array first
   if (typeof actions === 'string') {
     const trimmed = actions.trim();
-    if (!trimmed || trimmed === '[]') return [];
-    return [`  ${trimmed}`];
+    if (!trimmed || trimmed === '[]' || trimmed === '{}') return [];
+    // Attempt JSON parse in case it's a serialised array
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return formatActionsPlainText(parsed);
+      if (typeof parsed === 'object' && parsed.action) return formatActionsPlainText([parsed]);
+    } catch {
+      // Not JSON — treat as a plain description line, strip any UUIDs
+      return [`  ${stripIds(trimmed)}`];
+    }
+    return [`  ${stripIds(trimmed)}`];
   }
 
   if (!Array.isArray(actions) || actions.length === 0) return [];
 
   const lines: string[] = [];
-  for (const a of actions as ActionEntry[]) {
-    if (!a || !a.action) continue;
+  for (const a of actions) {
+    if (!a || typeof a !== 'object') continue;
+    // Skip entries that are just IDs or have no meaningful action
+    const action = a.action || a.customDescription;
+    if (!action) continue;
+
     const actor = resolveActorLabel(a.actor);
-    const action = a.action;
     const size = a.size;
     const unit = (a.unit || 'BB').toUpperCase();
 
@@ -127,6 +139,12 @@ function formatActionsPlainText(actions: any): string[] {
     lines.push(`  ${actor}: ${action}${sizeSuffix}`);
   }
   return lines;
+}
+
+/** Strip UUIDs and common internal ID patterns from a string */
+function stripIds(str: string): string {
+  // Remove UUIDs (8-4-4-4-12 hex)
+  return str.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '').replace(/\s{2,}/g, ' ').trim();
 }
 
 function resolveActorLabel(actor: string | undefined): string {
