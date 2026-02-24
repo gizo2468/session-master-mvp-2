@@ -141,6 +141,16 @@ function formatActionsPlainText(actions: any): string[] {
   return lines;
 }
 
+/** Convert a UUID to a deterministic numeric ID */
+function uuidToNumericId(uuid: string): string {
+  const hex = uuid.replace(/-/g, '');
+  let hash = 0;
+  for (let i = 0; i < hex.length; i++) {
+    hash = ((hash << 5) - hash + hex.charCodeAt(i)) & 0x7fffffff;
+  }
+  return String(hash || 1);
+}
+
 /** Strip UUIDs and common internal ID patterns from a string */
 function stripIds(str: string): string {
   // Remove UUIDs (8-4-4-4-12 hex)
@@ -280,7 +290,8 @@ function generateHandHistory(
   const lines: string[] = [];
 
   // ---- Header ----
-  lines.push('SessionMaster Hand');
+  const handId = uuidToNumericId(hand.id);
+  lines.push(`SessionMaster Hand #${handId}`);
 
   // Metadata — only if stored
   if (session.location) {
