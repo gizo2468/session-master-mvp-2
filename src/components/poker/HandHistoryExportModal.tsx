@@ -77,7 +77,7 @@ const HandHistoryExportModal: React.FC<HandHistoryExportModalProps> = ({ open, o
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Export Hands (PT4)
+            Export Hands (SessionMaster HH)
           </DialogTitle>
         </DialogHeader>
 
