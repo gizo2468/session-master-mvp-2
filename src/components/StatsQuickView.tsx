@@ -11,6 +11,7 @@ import { calculateSessionStatisticsFromDB } from '@/utils/statisticsCalculator';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import CurrencyConversionModal from './CurrencyConversionModal';
+import HandHistoryExportModal from './poker/HandHistoryExportModal';
 import { ArrowRightLeft } from 'lucide-react';
 
 interface CurrencyConversion {
@@ -63,6 +64,7 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
   const { user } = useAuth();
   const [showCurrencyBreakdown, setShowCurrencyBreakdown] = useState(false);
   const [showConversionModal, setShowConversionModal] = useState(false);
+  const [showHandExport, setShowHandExport] = useState(false);
   // Home screen stats always use USD, independent of ID Card currency
   const homeCurrency = 'USD';
   
@@ -273,9 +275,14 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
             <span className="text-xl font-bold">{winDisplay}</span>
           </div>
           
-          <div className="grid place-items-center gap-1">
+          <div
+            className="grid place-items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setShowHandExport(true)}
+            role="button"
+            tabIndex={0}
+          >
             <MobileStackTitle text="Total Hands" />
-            <span className="text-xl font-bold">{totalHands}</span>
+            <span className="text-xl font-bold underline decoration-dotted underline-offset-2">{totalHands}</span>
           </div>
           
           <div className="grid place-items-center gap-1">
@@ -307,9 +314,14 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
           
           {/* Row 3: Total Hands, Avg Buy-in, Avg Duration */}
           <div className="grid grid-cols-3 gap-4 text-center mb-4">
-            <div className="grid place-items-center gap-1">
+            <div
+              className="grid place-items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => setShowHandExport(true)}
+              role="button"
+              tabIndex={0}
+            >
               <MobileStackTitle text="Total Hands" />
-              <span className="text-base font-bold">{totalHands}</span>
+              <span className="text-base font-bold underline decoration-dotted underline-offset-2">{totalHands}</span>
             </div>
             
             <div className="grid place-items-center gap-1">
@@ -419,6 +431,12 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
         currencyBreakdown={adjustedBreakdown}
         onConversionComplete={fetchConversions}
         conversions={conversions}
+      />
+
+      {/* Hand History Export Modal */}
+      <HandHistoryExportModal
+        open={showHandExport}
+        onOpenChange={setShowHandExport}
       />
     </div>
   );
