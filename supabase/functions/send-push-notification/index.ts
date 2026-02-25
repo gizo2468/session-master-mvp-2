@@ -141,6 +141,44 @@ Deno.serve(async (req) => {
   console.log('[send-push-notification] Function invoked');
   
   try {
+    // --- Authentication check ---
+    // This function is called by database triggers using the service role key,
+    // but we must block unauthenticated public access.
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      console.error('[send-push-notification] Missing Authorization header');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    // Allow service-role calls (from database triggers / internal cron jobs)
+    const isServiceRole = serviceRoleKey && token === serviceRoleKey;
+
+    if (!isServiceRole) {
+      // For non-service-role calls, validate as a user JWT
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+      const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+      if (claimsError || !claimsData?.claims) {
+        console.error('[send-push-notification] Invalid JWT:', claimsError?.message);
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      console.log(`[send-push-notification] Authenticated as user: ${claimsData.claims.sub}`);
+    } else {
+      console.log('[send-push-notification] Authenticated via service role key');
+    }
+
     // Parse request body
     const { recipient_user_id, title, body, data } = await req.json();
     
