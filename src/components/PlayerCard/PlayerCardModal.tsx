@@ -29,6 +29,7 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
     updatePrivateData,
     updateProfile,
     uploadPhoto,
+    uploadPhotoFromDataUrl,
     isFirstTimeUser
   } = usePlayerCard();
 
@@ -118,6 +119,7 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
                 onUpdatePrivate={updatePrivateData}
                 onUpdateProfile={updateProfile}
                 onUploadPhoto={uploadPhoto}
+                onUploadPhotoDataUrl={uploadPhotoFromDataUrl}
                 isSaving={isSaving}
                 isEditing={isEditing}
                 onEditingChange={setIsEditing}

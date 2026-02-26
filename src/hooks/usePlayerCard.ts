@@ -2,7 +2,23 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { getSignedUrl, extractFilePath } from '@/utils/storageUtils';
+
+const SUPABASE_URL = "https://wfmvvpbpuqbzidptxbqx.supabase.co";
+
+/** Build a public URL for a file in the avatars bucket, with optional cache-bust */
+function buildAvatarPublicUrl(filePath: string, cacheBust = false): string {
+  const base = `${SUPABASE_URL}/storage/v1/object/public/avatars/${filePath}`;
+  return cacheBust ? `${base}?t=${Date.now()}` : base;
+}
+
+/** Resolve a profile_picture value to a displayable URL.
+ *  - If it's already a full URL, return as-is (backward compat).
+ *  - If it's a relative path like "userId/avatar.jpg", build the public URL. */
+function resolveProfilePicture(value: string | null): string | null {
+  if (!value) return null;
+  if (value.startsWith('http')) return value;
+  return buildAvatarPublicUrl(value);
+}
 export interface Achievement {
   id: string;
   title: string;
@@ -129,18 +145,10 @@ export function usePlayerCard() {
       }
 
       if (privateResult.data) {
-        // If profile picture exists, get a signed URL for the private bucket
-        let resolvedPrivateData = { ...privateResult.data };
-        if (privateResult.data.profile_picture) {
-          const filePath = extractFilePath('avatars', privateResult.data.profile_picture);
-          if (filePath) {
-            const signedUrl = await getSignedUrl('avatars', filePath);
-            if (signedUrl) {
-              resolvedPrivateData.profile_picture = signedUrl;
-            }
-          }
-        }
-        setPrivateData(resolvedPrivateData);
+        setPrivateData({
+          ...privateResult.data,
+          profile_picture: resolveProfilePicture(privateResult.data.profile_picture),
+        });
       }
     } catch (error) {
       console.error('Error fetching player card data:', error);
@@ -243,29 +251,24 @@ export function usePlayerCard() {
 
     setIsSaving(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar.${fileExt}`;
+      const filePath = `${user.id}/avatar.jpg`;
       
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true });
+        .upload(filePath, file, { upsert: true, contentType: file.type || 'image/jpeg' });
 
       if (uploadError) throw uploadError;
 
-      // Store the path reference in database (not the signed URL)
-      // We construct a reference URL that we can parse later to get the path
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-      
-      // Store the reference URL in database
-      await updatePrivateData({ profile_picture: publicUrl });
-      
-      // Get a signed URL for immediate display
-      const signedUrl = await getSignedUrl('avatars', fileName);
-      if (signedUrl) {
-        setPrivateData(prev => prev ? { ...prev, profile_picture: signedUrl } : null);
-      }
+      // Store the relative path in DB
+      const { error: dbError } = await supabase
+        .from('user_private_data')
+        .update({ profile_picture: filePath })
+        .eq('id', user.id);
+
+      if (dbError) throw dbError;
+
+      // Update local state with public URL + cache-bust for immediate display
+      setPrivateData(prev => prev ? { ...prev, profile_picture: buildAvatarPublicUrl(filePath, true) } : null);
 
       toast({
         title: 'Photo updated',
@@ -281,7 +284,50 @@ export function usePlayerCard() {
     } finally {
       setIsSaving(false);
     }
-  }, [user?.id, updatePrivateData, toast]);
+  }, [user?.id, toast]);
+
+  const uploadPhotoFromDataUrl = useCallback(async (dataUrl: string) => {
+    if (!user?.id) return;
+
+    setIsSaving(true);
+    try {
+      // Convert base64 data URL to Blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const filePath = `${user.id}/avatar.jpg`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, blob, { upsert: true, contentType: 'image/jpeg' });
+
+      if (uploadError) throw uploadError;
+
+      // Store the relative path in DB
+      const { error: dbError } = await supabase
+        .from('user_private_data')
+        .update({ profile_picture: filePath })
+        .eq('id', user.id);
+
+      if (dbError) throw dbError;
+
+      // Update local state with public URL + cache-bust for immediate display
+      setPrivateData(prev => prev ? { ...prev, profile_picture: buildAvatarPublicUrl(filePath, true) } : null);
+
+      toast({
+        title: 'Photo updated',
+        description: 'Your profile photo has been saved'
+      });
+    } catch (error) {
+      console.error('Error uploading photo from data URL:', error);
+      toast({
+        title: 'Upload failed',
+        description: 'Could not upload photo. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [user?.id, toast]);
 
   return {
     isLoading,
@@ -297,6 +343,7 @@ export function usePlayerCard() {
     updatePrivateData,
     updateProfile,
     uploadPhoto,
+    uploadPhotoFromDataUrl,
     refetch: fetchData,
     isFirstTimeUser
   };
