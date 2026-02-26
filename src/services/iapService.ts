@@ -1,17 +1,17 @@
-import { CapacitorPurchases, PACKAGE_TYPE, type Package, type CustomerInfo } from '@capgo/capacitor-purchases';
+import { NativePurchases, PURCHASE_TYPE } from '@capgo/native-purchases';
 import { detectPlatform } from '@/utils/platformDetection';
 
 // Product IDs as provided
 export const PRODUCT_IDS = {
   monthly: 'sessionmaster.premium.monthly',
-  yearly: 'com.sessionmaster.premium_yearly'
+  yearly: 'com.sessionmaster.premium_yearly',
 } as const;
 
 export interface PurchaseResult {
   success: boolean;
   productId?: string;
   expiryDate?: Date;
-  error?: string;
+  error?: string; // 'USER_CANCELLED' | message
 }
 
 export interface EntitlementResult {
@@ -21,38 +21,37 @@ export interface EntitlementResult {
 }
 
 let isInitialized = false;
-let availablePackages: Package[] = [];
+let cachedProducts: any[] = [];
+
+const isIOS = () => detectPlatform() === 'ios';
+
+const parseDate = (value?: string | number | null): Date | undefined => {
+  if (!value) return undefined;
+  const d = new Date(value as any);
+  return Number.isNaN(d.getTime()) ? undefined : d;
+};
 
 /**
- * Initialize the IAP plugin - call once on app start
+ * Initialize IAP - call once on app start
  */
 export const initializeIAP = async (): Promise<boolean> => {
-  const platform = detectPlatform();
-  
-  if (platform !== 'ios') {
+  if (!isIOS()) {
     console.log('[IAP] Not iOS, skipping initialization');
     return false;
   }
-
-  if (isInitialized) {
-    return true;
-  }
+  if (isInitialized) return true;
 
   try {
-    // For iOS, we use RevenueCat through this plugin
-    // The plugin requires a RevenueCat API key
-    // For now, we'll initialize with observer mode for direct StoreKit
-    await CapacitorPurchases.setup({
-      apiKey: 'appl_placeholder', // Required by plugin
-      observerMode: true // Use direct StoreKit
-    });
-    
+    const { isBillingSupported } = await NativePurchases.isBillingSupported();
+    if (!isBillingSupported) {
+      console.warn('[IAP] Billing not supported on this device');
+      return false;
+    }
+
     isInitialized = true;
-    console.log('[IAP] Initialized successfully');
-    
-    // Load products
+    console.log('[IAP] Initialized (native-purchases)');
+
     await loadProducts();
-    
     return true;
   } catch (error) {
     console.error('[IAP] Initialization failed:', error);
@@ -61,116 +60,77 @@ export const initializeIAP = async (): Promise<boolean> => {
 };
 
 /**
- * Load available products from the App Store
+ * Load products from App Store
  */
-export const loadProducts = async (): Promise<Package[]> => {
+export const loadProducts = async (): Promise<any[]> => {
+  if (!isIOS()) return [];
+
   try {
-    const result = await CapacitorPurchases.getOfferings();
-    const offerings = result.offerings;
-    
-    if (offerings.current?.availablePackages) {
-      availablePackages = offerings.current.availablePackages;
-      console.log('[IAP] Loaded packages:', availablePackages.map(p => p.identifier));
-    }
-    
-    return availablePackages;
+    const { products } = await NativePurchases.getProducts({
+      productIdentifiers: Object.values(PRODUCT_IDS),
+      productType: PURCHASE_TYPE.SUBS,
+    });
+
+    cachedProducts = products || [];
+    console.log(
+      '[IAP] Loaded products:',
+      cachedProducts.map((p: any) => p.productIdentifier || p.identifier)
+    );
+
+    return cachedProducts;
   } catch (error) {
     console.error('[IAP] Failed to load products:', error);
+    cachedProducts = [];
     return [];
   }
 };
 
 /**
- * Get available products with localized pricing
+ * Get cached products
  */
-export const getProducts = (): Package[] => {
-  return availablePackages;
-};
+export const getProducts = (): any[] => cachedProducts;
 
 /**
- * Get localized price for a product
+ * Get localized price for a plan
  */
 export const getLocalizedPrice = (planType: 'monthly' | 'yearly'): string | null => {
   const productId = PRODUCT_IDS[planType];
-  const pkg = availablePackages.find(p => 
-    p.product?.identifier === productId || p.identifier === productId
-  );
-  return pkg?.product?.priceString || null;
+  const p = cachedProducts.find((x: any) => (x.productIdentifier || x.identifier) === productId);
+  return p?.priceString || null;
 };
 
 /**
- * Purchase a subscription product
+ * Purchase a subscription
  */
 export const purchaseProduct = async (productId: string): Promise<PurchaseResult> => {
-  const platform = detectPlatform();
-  
-  if (platform !== 'ios') {
-    return { success: false, error: 'IAP only available on iOS' };
-  }
+  if (!isIOS()) return { success: false, error: 'IAP only available on iOS' };
 
   try {
-    // Find the package for this product
-    const pkg = availablePackages.find(p => 
-      p.product?.identifier === productId || p.identifier === productId
-    );
-
-    if (!pkg) {
-      // If no package found, try using monthly/annual package types
-      const isYearly = productId.includes('yearly');
-      const fallbackPkg = availablePackages.find(p => 
-        isYearly ? p.packageType === PACKAGE_TYPE.ANNUAL : p.packageType === PACKAGE_TYPE.MONTHLY
-      );
-      
-      if (fallbackPkg) {
-        const result = await CapacitorPurchases.purchasePackage({
-          identifier: fallbackPkg.identifier,
-          offeringIdentifier: fallbackPkg.offeringIdentifier
-        });
-
-        if (result.customerInfo) {
-          const expiryDate = getExpiryFromCustomerInfo(result.customerInfo);
-          return {
-            success: true,
-            productId,
-            expiryDate
-          };
-        }
-      }
-      
-      return { success: false, error: 'Product not found' };
-    }
-
-    // Purchase via package
-    const result = await CapacitorPurchases.purchasePackage({
-      identifier: pkg.identifier,
-      offeringIdentifier: pkg.offeringIdentifier
+    await NativePurchases.purchaseProduct({
+      productIdentifier: productId,
+      productType: PURCHASE_TYPE.SUBS,
+      quantity: 1,
     });
 
-    if (result.customerInfo) {
-      const expiryDate = getExpiryFromCustomerInfo(result.customerInfo);
-      return {
-        success: true,
-        productId,
-        expiryDate
-      };
-    }
-
-    return { success: true, productId };
+    // Verify entitlement after purchase
+    const ent = await checkActiveEntitlement();
+    return {
+      success: ent.hasActiveSubscription,
+      productId: ent.productId || productId,
+      expiryDate: ent.expiryDate,
+      error: ent.hasActiveSubscription ? undefined : 'Purchase completed but entitlement not active',
+    };
   } catch (error: any) {
-    console.error('[IAP] Purchase failed:', error);
-    
-    // Check if user cancelled
-    if (error.code === 'USER_CANCELLED' || 
-        error.code === 1 ||
-        error.message?.includes('cancelled') || 
-        error.message?.includes('canceled')) {
+    const msg = String(error?.message || error || '');
+    if (
+      msg.toLowerCase().includes('cancel') ||
+      error?.code === 'USER_CANCELLED' ||
+      error?.code === 1
+    ) {
       return { success: false, error: 'USER_CANCELLED' };
     }
-    
-    return { 
-      success: false, 
-      error: error.message || 'Purchase failed' 
-    };
+    console.error('[IAP] Purchase failed:', error);
+    return { success: false, error: msg || 'Purchase failed' };
   }
 };
 
@@ -178,95 +138,45 @@ export const purchaseProduct = async (productId: string): Promise<PurchaseResult
  * Restore previous purchases
  */
 export const restorePurchases = async (): Promise<EntitlementResult> => {
-  const platform = detectPlatform();
-  
-  if (platform !== 'ios') {
-    return { hasActiveSubscription: false };
-  }
+  if (!isIOS()) return { hasActiveSubscription: false };
 
-  try {
-    const result = await CapacitorPurchases.restorePurchases();
-    
-    if (result.customerInfo) {
-      return checkEntitlementFromCustomerInfo(result.customerInfo);
-    }
-    
-    return { hasActiveSubscription: false };
-  } catch (error) {
-    console.error('[IAP] Restore failed:', error);
-    throw error;
-  }
+  await NativePurchases.restorePurchases();
+  return await checkActiveEntitlement();
 };
 
 /**
- * Check if user has an active subscription entitlement
+ * Check active subscription status
  */
 export const checkActiveEntitlement = async (): Promise<EntitlementResult> => {
-  const platform = detectPlatform();
-  
-  if (platform !== 'ios') {
-    return { hasActiveSubscription: false };
-  }
+  if (!isIOS()) return { hasActiveSubscription: false };
 
   try {
-    const result = await CapacitorPurchases.getCustomerInfo();
-    
-    if (result.customerInfo) {
-      return checkEntitlementFromCustomerInfo(result.customerInfo);
-    }
-    
-    return { hasActiveSubscription: false };
+    const { purchases } = await NativePurchases.getPurchases({
+      productType: PURCHASE_TYPE.SUBS,
+    });
+
+    const relevant = (purchases || []).filter((p: any) =>
+      Object.values(PRODUCT_IDS).includes(p.productIdentifier)
+    );
+
+    const active = relevant.filter((p: any) => p.isActive);
+
+    if (!active.length) return { hasActiveSubscription: false };
+
+    active.sort((a: any, b: any) => {
+      const da = parseDate(a.expirationDate)?.getTime() ?? 0;
+      const db = parseDate(b.expirationDate)?.getTime() ?? 0;
+      return db - da;
+    });
+
+    const best = active[0];
+    return {
+      hasActiveSubscription: true,
+      productId: best.productIdentifier,
+      expiryDate: parseDate(best.expirationDate),
+    };
   } catch (error) {
     console.error('[IAP] Entitlement check failed:', error);
     return { hasActiveSubscription: false };
   }
-};
-
-/**
- * Extract entitlement info from customer info
- */
-const checkEntitlementFromCustomerInfo = (customerInfo: CustomerInfo): EntitlementResult => {
-  // Check for active entitlements
-  const activeEntitlements = customerInfo.entitlements?.active;
-  
-  if (activeEntitlements && Object.keys(activeEntitlements).length > 0) {
-    const entitlement = Object.values(activeEntitlements)[0];
-    return {
-      hasActiveSubscription: true,
-      productId: entitlement.productIdentifier,
-      expiryDate: entitlement.expirationDate ? new Date(entitlement.expirationDate) : undefined
-    };
-  }
-
-  // Check active subscriptions directly
-  const activeSubscriptions = customerInfo.activeSubscriptions;
-  if (activeSubscriptions && activeSubscriptions.length > 0) {
-    return {
-      hasActiveSubscription: true,
-      productId: activeSubscriptions[0]
-    };
-  }
-
-  return { hasActiveSubscription: false };
-};
-
-/**
- * Get expiry date from customer info
- */
-const getExpiryFromCustomerInfo = (customerInfo: CustomerInfo): Date | undefined => {
-  const activeEntitlements = customerInfo.entitlements?.active;
-  
-  if (activeEntitlements && Object.keys(activeEntitlements).length > 0) {
-    const entitlement = Object.values(activeEntitlements)[0];
-    if (entitlement.expirationDate) {
-      return new Date(entitlement.expirationDate);
-    }
-  }
-  
-  // Try latestExpirationDate as fallback
-  if (customerInfo.latestExpirationDate) {
-    return new Date(customerInfo.latestExpirationDate);
-  }
-  
-  return undefined;
 };
