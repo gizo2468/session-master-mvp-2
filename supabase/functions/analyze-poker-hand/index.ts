@@ -1937,8 +1937,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
     return new Response(
       JSON.stringify({ 
         code: lastStatus === 400 ? 'UNSUPPORTED_IMAGE' : 'AI_GATEWAY_ERROR', 
-        error: finalMessage, 
-        details: { status: lastStatus, snippet: lastSnippet }
+        error: finalMessage
       }),
       { status: finalStatus, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -1949,7 +1948,7 @@ Remember: The hero is ALWAYS the bottom-center player. All other players are vil
 
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Analysis failed. Please try again.',
+        error: 'Analysis failed. Please try again.',
         code: 'ANALYSIS_ERROR'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -248,7 +248,7 @@ Deno.serve(async (req) => {
     if (!keyId || !teamId || !keyP8 || !bundleId) {
       console.error('[send-push-notification] Missing APNS credentials');
       return new Response(
-        JSON.stringify({ error: 'APNS credentials not configured' }),
+        JSON.stringify({ error: 'Push notifications temporarily unavailable' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -300,7 +300,7 @@ Deno.serve(async (req) => {
     } catch (jwtError) {
       console.error('[send-push-notification] Failed to generate APNS JWT:', jwtError);
       return new Response(
-        JSON.stringify({ error: 'Failed to generate APNS token', details: String(jwtError) }),
+        JSON.stringify({ error: 'Push notification service error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -364,7 +364,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('[send-push-notification] Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: String(error) }),
+      JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
