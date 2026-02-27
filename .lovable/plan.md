@@ -1,28 +1,19 @@
 
 
-## Plan: Fix card shadow override
+## Plan: Fix horizontal scroll on Add Past Session page
 
 ### Root Cause
-The `.shadow-sm` override was placed in `@layer base` in `index.css`. Tailwind generates its `shadow-sm` utility in `@layer utilities`, which always wins over `@layer base` due to CSS cascade layer ordering. The green-tinted shadow never applies.
+Elements inside the form (likely the radio group grid or calendar popover) are slightly exceeding the viewport width, causing horizontal scroll on mobile.
 
 ### Fix
-Override `boxShadow` in **`tailwind.config.ts`** under `theme.extend` — this is the correct way to customize Tailwind utility values. This ensures every `shadow-sm` usage (including the Card component) uses the green-tinted shadow.
+Add `overflow-x-hidden` to the outermost wrapper in both:
 
-Also remove the ineffective `.shadow-sm` rule from `src/index.css` `@layer base`.
+1. **`src/pages/AddPastSession.tsx`** — Add `overflow-x-hidden` to the root div
+2. **`src/components/poker/PastSessionForm.tsx`** — Add `overflow-x-hidden` to the root div (line 322)
 
-### Changes
-
-**1. `tailwind.config.ts`** — Add `boxShadow` override in `theme.extend`:
-```ts
-boxShadow: {
-  sm: '0 1px 3px 0 rgba(53, 101, 77, 0.15), 0 1px 2px -1px rgba(53, 101, 77, 0.1)',
-},
-```
-Slightly increased opacity (0.15/0.1) vs the previous attempt (0.12/0.08) for more visible but still subtle effect.
-
-**2. `src/index.css`** — Remove the ineffective `.shadow-sm` rule from `@layer base` (lines 159-161).
+This prevents any child overflow from creating a horizontal scrollbar while preserving all layout and spacing.
 
 ### Files changed
-- `tailwind.config.ts`
-- `src/index.css`
+- `src/pages/AddPastSession.tsx` (1 line change)
+- `src/components/poker/PastSessionForm.tsx` (1 line change)
 
