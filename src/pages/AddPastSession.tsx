@@ -10,7 +10,7 @@ export default function AddPastSession() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       <PastSessionForm onClose={handleClose} />
     </div>
   );
