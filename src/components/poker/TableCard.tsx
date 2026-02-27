@@ -285,17 +285,15 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                 <span className="text-gray-600">Blinds:</span>
                 <span className="font-medium">{currencySymbol}{table.smallBlind}/{currencySymbol}{table.bigBlind}</span>
               </div>
-              {/* Show blind history */}
+              {/* Show blind history with elapsed time */}
               {blindHistory.length > 0 && (
                 <div className="space-y-1">
                   {blindHistory.slice(-1).filter(update => {
-                    const formatted = BBStackUpdateService.formatHistoryLine(update);
+                    const formatted = BBStackUpdateService.formatCashHistoryLineWithTime(update, table.startTime, currencySymbol);
                     return formatted && formatted.trim() !== '';
                   }).map((update, index) => (
-                    <div key={update.id || index} className="flex justify-between text-sm">
-                      <span className="font-medium text-gray-700">
-                        {BBStackUpdateService.formatHistoryLine(update)}
-                      </span>
+                    <div key={update.id || index} className="text-xs text-gray-500 mt-1">
+                      {BBStackUpdateService.formatCashHistoryLineWithTime(update, table.startTime, currencySymbol)}
                     </div>
                   ))}
                   {blindHistory.length > 1 && (

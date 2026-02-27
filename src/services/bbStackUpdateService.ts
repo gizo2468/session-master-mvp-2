@@ -376,4 +376,33 @@ export class BBStackUpdateService {
     
     return '';
   }
+
+  /**
+   * Format a cash game blinds update with elapsed time from table start.
+   * Returns e.g. "$1/$2 – Updated after 00:14" or "$1/$2 – Stack: $500 – Updated after 00:14"
+   */
+  static formatCashHistoryLineWithTime(
+    update: BBStackUpdate,
+    tableStartTime: Date | string,
+    currencySymbol: string = '$'
+  ): string {
+    if (update.small_blind == null || update.big_blind == null) return '';
+    
+    const blindsPart = `${currencySymbol}${update.small_blind}/${currencySymbol}${update.big_blind}`;
+    const stackPart = update.stack ? ` – Stack: ${currencySymbol}${update.stack}` : '';
+    
+    // Calculate elapsed time
+    const start = typeof tableStartTime === 'string' ? new Date(tableStartTime) : tableStartTime;
+    const updateTime = update.created_at ? new Date(update.created_at) : new Date();
+    const diffMs = updateTime.getTime() - start.getTime();
+    
+    if (diffMs < 0) return `${blindsPart}${stackPart}`;
+    
+    const totalMinutes = Math.floor(diffMs / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const timePart = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    
+    return `${blindsPart}${stackPart} – Updated after ${timePart}`;
+  }
 }
