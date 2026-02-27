@@ -1,6 +1,8 @@
+/* App root styles - no border */
 #root {
   min-height: 100vh;
   box-sizing: border-box;
+  border: none;
 }
 
 .logo {
