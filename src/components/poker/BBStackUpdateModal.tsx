@@ -345,8 +345,8 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
             tableId: data.tableId,
             smallBlind: data.smallBlind,
             bigBlind: data.bigBlind,
-            // If stack BB is provided, store it in the stack field (reusing tournament column)
-            ...(data.stackBB && data.stackBB !== '' ? { stack: data.stackBB, bb: data.stackBB } : {})
+            // If stack amount is provided, store the raw money value in the stack column
+            ...(data.stackBB && data.stackBB !== '' ? { stack: data.stackBB } : {})
           };
         } else {
           const history = historiesMap[data.tableId] || [];
@@ -626,24 +626,20 @@ const TableRow = React.memo<{
             </div>
           </div>
           
-          {/* Stack in BB */}
+          {/* Stack Amount (money) */}
           <div className="space-y-2 mt-3">
-            <div className="flex justify-between">
-              <Label className="text-xs text-gray-500">Stack (BB)</Label>
-              {tableData.stackBB && tableData.bigBlind > 0 && (
-                <span className="text-xs text-gray-400">
-                  ≈ {currencySymbol}{(parseFloat(tableData.stackBB) * tableData.bigBlind).toFixed(2)}
-                </span>
-              )}
+            <Label className="text-xs text-gray-500">Stack Amount</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">{currencySymbol}</span>
+              <Input
+                type="text"
+                inputMode="decimal"
+                placeholder="e.g. 500"
+                value={tableData.stackBB}
+                onChange={(e) => onStackBBChange(table.id, e.target.value)}
+                className="h-10 pl-7"
+              />
             </div>
-            <Input
-              type="text"
-              inputMode="decimal"
-              placeholder="e.g. 100"
-              value={tableData.stackBB}
-              onChange={(e) => onStackBBChange(table.id, e.target.value)}
-              className="h-10"
-            />
           </div>
         </div>
       ) : (
