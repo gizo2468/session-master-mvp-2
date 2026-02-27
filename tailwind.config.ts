@@ -19,6 +19,9 @@ export default {
 			}
 		},
 		extend: {
+			boxShadow: {
+				sm: '0 1px 3px 0 rgba(53, 101, 77, 0.15), 0 1px 2px -1px rgba(53, 101, 77, 0.1)',
+			},
 			fontFamily: {
 				'space-grotesk': ['Space Grotesk', 'sans-serif'],
 			},
