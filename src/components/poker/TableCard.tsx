@@ -306,9 +306,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
 
                       return (
                         <div key={update.id || index} className="flex flex-col gap-1 mt-1">
-                          <span className="text-xs text-gray-600 font-medium">
-                            LVL: {blindHistory.length}
-                          </span>
                           {update.stack != null && (
                             <span className="text-xs text-gray-600 font-medium">
                               CURRENT STACK: {currencySymbol}{update.stack}
