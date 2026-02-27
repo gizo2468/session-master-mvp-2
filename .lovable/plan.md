@@ -1,32 +1,28 @@
 
 
-## Plan: Cash game Stack Amount + Blinds Update Note on Table Card
+## Plan: Fix Cash Game BB/Stack Update Save Failure
 
-### Changes
+### Root Cause
+The `table_bb_stack_updates` table has a CHECK constraint (`exclusive_game_type`) requiring cash game rows to have `stack IS NULL AND bb IS NULL AND level IS NULL`. The recent changes store the cash stack amount in `stack`, violating this constraint.
 
-**1. `src/components/poker/BBStackUpdateModal.tsx`** — Cash game stack field changes:
-- Rename label from "Stack (BB)" to "Stack Amount"
-- Change placeholder from "e.g. 100" to "e.g. 500"
-- Remove the BB-to-currency conversion display (≈ $X) — the input IS already in currency
-- Add currency symbol prefix to make it clear it's a money amount
-- Rename `stackBB` field usage to represent cash value (keep same field name internally for compatibility)
+### Solution
+Two changes needed:
 
-**2. `src/services/bbStackUpdateService.ts`** — Update `formatHistoryLine` for cash games:
-- Include the `created_at` timestamp in the return data (already present)
-- Update format to show "SB/BB" and elapsed time from table start
-- Add a new method `formatCashHistoryLine(update, tableStartTime)` that returns e.g. `"$1/$2 • Blinds updated after 00:14"`
+**1. DB Migration** — Relax the CHECK constraint to allow `stack` in cash game rows:
+```sql
+ALTER TABLE public.table_bb_stack_updates DROP CONSTRAINT exclusive_game_type;
+ALTER TABLE public.table_bb_stack_updates ADD CONSTRAINT exclusive_game_type CHECK (
+  (level IS NOT NULL AND stack IS NOT NULL AND bb IS NOT NULL AND small_blind IS NULL AND big_blind IS NULL) OR
+  (small_blind IS NOT NULL AND big_blind IS NOT NULL AND level IS NULL AND bb IS NULL)
+);
+```
+This removes only the `stack IS NULL` requirement from the cash game branch, allowing cash rows to optionally store a stack value.
 
-**3. `src/components/poker/TableCard.tsx`** — Display blinds update note on cash table cards:
-- For the latest blind history entry, show the SB/BB values AND elapsed time from table start
-- Calculate time diff between `update.created_at` and `table.startTime`
-- Format as `"$1/$2 – Updated after HH:MM"` in a subtle note below the blinds display
-- Show stack amount if saved (e.g. "Stack: $500")
-
-**4. `src/services/bbStackUpdateService.ts`** — Save logic:
-- For cash games, store the stack value as the raw money amount (already using `stack` column, just ensure it stores the cash value not BB value)
+**2. `src/services/bbStackUpdateService.ts`** — In `saveBBStackUpdatesBulk`, for cash game rows, parse `stack` as a float and round to integer (bigint column), and ensure `bb` stays `null`:
+- Line 336: change `parseInt` to `Math.round(parseFloat(...))` for stack
+- Line 337: force `row.bb = null` (already done, just confirm)
 
 ### Files changed
-- `src/components/poker/BBStackUpdateModal.tsx`
-- `src/services/bbStackUpdateService.ts`  
-- `src/components/poker/TableCard.tsx`
+- New DB migration (relax CHECK constraint)
+- `src/services/bbStackUpdateService.ts` (minor parse fix)
 
