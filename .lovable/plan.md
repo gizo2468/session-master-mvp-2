@@ -1,17 +1,24 @@
 
 
-## Plan: Show Elapsed Duration Instead of Date in Cash Blinds History Modal
+## Plan: Update Cash Blinds History Modal — Title, Content & Time Style
 
-### Changes
+### Changes to `src/components/poker/BlindHistoryModal.tsx`
 
-**1. `src/components/poker/BlindHistoryModal.tsx`**
-- Add a new prop `tableStartTime?: Date | string` to the component interface.
-- For cash game entries, replace `format(new Date(update.created_at), 'MMM d, HH:mm')` with elapsed duration from `tableStartTime`, using the same format as the Table Card: `30M` or `1H 30M`.
-- Display as `{small_blind}/{big_blind} — {elapsed}` on each row.
-- Tournament mode rendering remains unchanged.
+**1. Title** (lines 104-107):
+- For cash mode, change title text to `"STACK HISTORY"` and center-align it
+- Remove the `flex items-center justify-between` wrapper for cash mode since there's no edit button
 
-**2. `src/components/poker/TableCard.tsx`** (line 509-514)
-- Pass `tableStartTime={table.startTime}` prop to `BlindHistoryModal`.
+**2. Row content** (lines 174-177):
+- Replace `{update.small_blind}/{update.big_blind}` with the stack value: `${currencySymbol}${update.stack}`
+- Need to accept a new `currencySymbol` prop
+
+**3. Time format** (lines 196-208):
+- For cash mode, replace the plain `<span>` with a `<Badge variant="timeStarted">` with a `Clock` icon, matching `TableTimerDisplay` style
+- Use same duration format: under 1h → `Xm Ys` pattern, over 1h → `Xh Ym` (matching `TableTimerDisplay.formatTime`)
+
+### Changes to `src/components/poker/TableCard.tsx` (line 509-516)
+
+- Pass `currencySymbol={currencySymbol}` prop to `BlindHistoryModal`
 
 ### Files changed
 - `src/components/poker/BlindHistoryModal.tsx`
