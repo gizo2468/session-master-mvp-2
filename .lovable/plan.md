@@ -1,28 +1,29 @@
 
 
-## Plan: Fix Cash Game BB/Stack Update Save Failure
+## Plan: Update Cash Game Table Card Blind Display & History Formatting
 
-### Root Cause
-The `table_bb_stack_updates` table has a CHECK constraint (`exclusive_game_type`) requiring cash game rows to have `stack IS NULL AND bb IS NULL AND level IS NULL`. The recent changes store the cash stack amount in `stack`, violating this constraint.
+### Changes
 
-### Solution
-Two changes needed:
+**1. `src/components/poker/TableCard.tsx`** (lines 282-309) — Cash mode blinds section:
+- Update the main "Blinds:" line to show the **latest** blinds from `blindHistory` (if any updates exist), falling back to the original `table.smallBlind/table.bigBlind`.
+- Reformat the blind history line: replace raw `$2/$4 – Stack: $250 – Updated after 00:16` with structured layout:
+  - Line 1: `Current Level: $2/$4`
+  - Line 2: `CURRENT STACK: $250` (only if stack exists)
+  - Line 3: A `<Badge>` component matching the DURATION chip style (`variant="timeStarted"` with clock icon), showing `Updated after 00:16`
+- This means we stop using `BBStackUpdateService.formatCashHistoryLineWithTime()` as a single string, and instead render the parts separately in JSX.
 
-**1. DB Migration** — Relax the CHECK constraint to allow `stack` in cash game rows:
-```sql
-ALTER TABLE public.table_bb_stack_updates DROP CONSTRAINT exclusive_game_type;
-ALTER TABLE public.table_bb_stack_updates ADD CONSTRAINT exclusive_game_type CHECK (
-  (level IS NOT NULL AND stack IS NOT NULL AND bb IS NOT NULL AND small_blind IS NULL AND big_blind IS NULL) OR
-  (small_blind IS NOT NULL AND big_blind IS NOT NULL AND level IS NULL AND bb IS NULL)
-);
-```
-This removes only the `stack IS NULL` requirement from the cash game branch, allowing cash rows to optionally store a stack value.
+**2. `src/services/bbStackUpdateService.ts`** — No changes needed. The raw data fields (`small_blind`, `big_blind`, `stack`, `created_at`) are already available on the update object. We'll read them directly in the TableCard component.
 
-**2. `src/services/bbStackUpdateService.ts`** — In `saveBBStackUpdatesBulk`, for cash game rows, parse `stack` as a float and round to integer (bigint column), and ensure `bb` stays `null`:
-- Line 336: change `parseInt` to `Math.round(parseFloat(...))` for stack
-- Line 337: force `row.bb = null` (already done, just confirm)
+**3. No changes to Tournament mode** — The tournament blind history rendering (lines 328-355) remains untouched.
+
+### Implementation Detail
+
+In the cash blinds section (~line 282-309):
+- Compute `latestUpdate = blindHistory[blindHistory.length - 1]` if it exists
+- Main blinds line: show `latestUpdate.small_blind / latestUpdate.big_blind` if available, else original values
+- History note: render as three styled lines using `Badge variant="timeStarted"` for the elapsed time chip (same as `TableTimerDisplay` uses)
+- Import `Badge` (already imported on line 20)
 
 ### Files changed
-- New DB migration (relax CHECK constraint)
-- `src/services/bbStackUpdateService.ts` (minor parse fix)
+- `src/components/poker/TableCard.tsx`
 
