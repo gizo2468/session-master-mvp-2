@@ -1,29 +1,18 @@
 
 
-## Plan: Update Cash Game Table Card Blind Display & History Formatting
+## Plan: Cash Table Card — Level Counter + Readable Duration Format
 
-### Changes
+### Changes to `src/components/poker/TableCard.tsx` (lines 295-321)
 
-**1. `src/components/poker/TableCard.tsx`** (lines 282-309) — Cash mode blinds section:
-- Update the main "Blinds:" line to show the **latest** blinds from `blindHistory` (if any updates exist), falling back to the original `table.smallBlind/table.bigBlind`.
-- Reformat the blind history line: replace raw `$2/$4 – Stack: $250 – Updated after 00:16` with structured layout:
-  - Line 1: `Current Level: $2/$4`
-  - Line 2: `CURRENT STACK: $250` (only if stack exists)
-  - Line 3: A `<Badge>` component matching the DURATION chip style (`variant="timeStarted"` with clock icon), showing `Updated after 00:16`
-- This means we stop using `BBStackUpdateService.formatCashHistoryLineWithTime()` as a single string, and instead render the parts separately in JSX.
+**1. Replace "Current Level" with incrementing level counter:**
+- The `blindHistory` array is ordered chronologically. The last entry is shown via `slice(-1)`.
+- Replace `Current Level: $X/$Y` with `LVL: {blindHistory.length}` (since each entry in `blindHistory` is one update, the count = the level number).
 
-**2. `src/services/bbStackUpdateService.ts`** — No changes needed. The raw data fields (`small_blind`, `big_blind`, `stack`, `created_at`) are already available on the update object. We'll read them directly in the TableCard component.
-
-**3. No changes to Tournament mode** — The tournament blind history rendering (lines 328-355) remains untouched.
-
-### Implementation Detail
-
-In the cash blinds section (~line 282-309):
-- Compute `latestUpdate = blindHistory[blindHistory.length - 1]` if it exists
-- Main blinds line: show `latestUpdate.small_blind / latestUpdate.big_blind` if available, else original values
-- History note: render as three styled lines using `Badge variant="timeStarted"` for the elapsed time chip (same as `TableTimerDisplay` uses)
-- Import `Badge` (already imported on line 20)
+**2. Update duration format:**
+- Replace `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}` with:
+  - If `hours === 0`: `${minutes}M`
+  - If `hours > 0`: `${hours}H ${minutes}M`
 
 ### Files changed
-- `src/components/poker/TableCard.tsx`
+- `src/components/poker/TableCard.tsx` (lines 305, 309-310 only)
 
