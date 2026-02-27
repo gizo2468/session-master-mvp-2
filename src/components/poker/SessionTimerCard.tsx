@@ -184,10 +184,14 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center" style={{ border: '1.5px solid hsl(43, 77%, 52%)' }}>
-      <div className="mb-2 text-sm text-gray-500">Session Time</div>
+    <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
       <div 
-        className="text-5xl font-bold mb-3" 
+        className="inline-block rounded-lg mb-3"
+        style={{ border: '1.5px solid hsl(43, 77%, 52%)', padding: '12px 24px' }}
+      >
+        <div className="mb-2 text-sm text-gray-500">Session Time</div>
+        <div 
+          className="text-5xl font-bold"
         style={{ 
           fontFamily: "'DSEG7Classic', monospace",
           color: 'hsl(43, 77%, 52%)',
@@ -195,8 +199,9 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
           textShadow: '0 0 3px hsla(43, 77%, 52%, 0.4)',
           letterSpacing: '-0.03em'
         }}
-      >
-        {formatTime(elapsedTime)}
+        >
+          {formatTime(elapsedTime)}
+        </div>
       </div>
       
       <div className="grid grid-cols-2 gap-4 mb-6">
