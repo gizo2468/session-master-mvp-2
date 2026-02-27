@@ -512,6 +512,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
         history={blindHistory}
         tableFormat={table.format}
         onEditLevel={handleEditLevel}
+        tableStartTime={table.startTime}
       />
 
       {/* BB/Stack Update Modal for Editing */}
