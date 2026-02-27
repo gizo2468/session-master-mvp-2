@@ -302,12 +302,12 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                       const totalMinutes = Math.max(0, Math.floor(diffMs / 60000));
                       const hours = Math.floor(totalMinutes / 60);
                       const minutes = totalMinutes % 60;
-                      const timePart = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                      const timePart = hours > 0 ? `${hours}H ${minutes}M` : `${minutes}M`;
 
                       return (
                         <div key={update.id || index} className="flex flex-col gap-1 mt-1">
                           <span className="text-xs text-gray-600 font-medium">
-                            Current Level: {currencySymbol}{update.small_blind}/{currencySymbol}{update.big_blind}
+                            LVL: {blindHistory.length}
                           </span>
                           {update.stack != null && (
                             <span className="text-xs text-gray-600 font-medium">
