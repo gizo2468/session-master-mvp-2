@@ -191,7 +191,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         style={{ 
           fontFamily: "'DSEG7Classic', monospace",
           color: 'hsl(43, 77%, 52%)',
-          WebkitTextStroke: '0.8px hsl(0, 0%, 10%)',
+          WebkitTextStroke: '0.8px hsl(0, 0%, 75%)',
           textShadow: '0 0 3px hsla(43, 77%, 52%, 0.4)',
           letterSpacing: '-0.03em'
         }}
