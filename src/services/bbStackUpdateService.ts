@@ -331,10 +331,10 @@ export class BBStackUpdateService {
           // For cash games: both blinds must be set (database constraint)
           row.small_blind = update.smallBlind ?? 0;
           row.big_blind = update.bigBlind ?? 0;
-          // Ensure tournament fields are null for constraint
+          // Store stack BB if provided (reuse bb column for stack-in-BB value)
           row.level = null;
-          row.stack = null;
-          row.bb = null;
+          row.stack = update.stack && update.stack !== '' ? parseInt(update.stack) : null;
+          row.bb = update.bb && update.bb !== '' ? parseInt(update.bb) : null;
         }
 
         return row;

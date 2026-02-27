@@ -16,6 +16,7 @@ export interface SessionLiveStateData {
       // Cash game fields
       smallBlind?: number;
       bigBlind?: number;
+      stackBB?: string;
     };
   };
   [key: string]: any;

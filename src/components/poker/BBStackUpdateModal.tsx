@@ -34,6 +34,7 @@ interface TableUpdateData {
   // Cash game fields  
   smallBlind: number;
   bigBlind: number;
+  stackBB: string; // Stack size in BB for cash games
 }
 
 // Blind presets for cash games (same as AddTableForm)
@@ -122,13 +123,17 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
           const smallBlindValue = savedData?.smallBlind ?? latest.smallBlind ?? table.smallBlind ?? 1;
           const bigBlindValue = savedData?.bigBlind ?? latest.bigBlind ?? table.bigBlind ?? (smallBlindValue * 2);
           
+          // Get saved stack BB from latest update
+          const savedStackBB = (savedData as any)?.stackBB ?? (latest.bb ? latest.bb.toString() : '');
+          
           return {
             tableId: table.id,
             level: 1,
             stack: '',
             bb: '',
             smallBlind: smallBlindValue,
-            bigBlind: bigBlindValue
+            bigBlind: bigBlindValue,
+            stackBB: savedStackBB
           };
         } else {
           // For tournaments, use editing level or saved level or default to 1
@@ -142,7 +147,8 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
             stack: defaultStack?.toString() ?? '',
             bb: defaultBB?.toString() ?? '',
             smallBlind: 0,
-            bigBlind: 0
+            bigBlind: 0,
+            stackBB: ''
           };
         }
       });
@@ -250,6 +256,19 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     );
   };
 
+  const handleStackBBChange = (tableId: string, value: string) => {
+    // Allow empty, integers, and decimals
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setUpdateData(prev =>
+        prev.map(data =>
+          data.tableId === tableId
+            ? { ...data, stackBB: value }
+            : data
+        )
+      );
+    }
+  };
+
   const handleSave = async () => {
     try {
       const tournamentTableIds = updateData
@@ -325,7 +344,9 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
             sessionId,
             tableId: data.tableId,
             smallBlind: data.smallBlind,
-            bigBlind: data.bigBlind
+            bigBlind: data.bigBlind,
+            // If stack BB is provided, store it in the stack field (reusing tournament column)
+            ...(data.stackBB && data.stackBB !== '' ? { stack: data.stackBB, bb: data.stackBB } : {})
           };
         } else {
           const history = historiesMap[data.tableId] || [];
@@ -369,7 +390,8 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
         if (isCashTable) {
           bbStackUpdates[data.tableId] = {
             smallBlind: data.smallBlind,
-            bigBlind: data.bigBlind
+            bigBlind: data.bigBlind,
+            stackBB: data.stackBB
           };
         } else {
           bbStackUpdates[data.tableId] = {
@@ -447,6 +469,10 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     handleBigBlindSliderChange(tableId, values);
   }, []);
 
+  const handleStackBBChangeMemo = useCallback((tableId: string, value: string) => {
+    handleStackBBChange(tableId, value);
+  }, []);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md w-full max-h-[85vh] flex flex-col">
@@ -495,6 +521,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
                   onBBChange={handleBBChangeMemo}
                   onSmallBlindChange={handleSmallBlindChangeMemo}
                   onBigBlindChange={handleBigBlindSliderChangeMemo}
+                  onStackBBChange={handleStackBBChangeMemo}
                 />
               );
             })}
@@ -532,6 +559,7 @@ const TableRow = React.memo<{
   onBBChange: (tableId: string, bb: string) => void;
   onSmallBlindChange: (tableId: string, values: number[]) => void;
   onBigBlindChange: (tableId: string, values: number[]) => void;
+  onStackBBChange: (tableId: string, value: string) => void;
 }>(({
   table,
   index,
@@ -547,7 +575,8 @@ const TableRow = React.memo<{
   onStackChange,
   onBBChange,
   onSmallBlindChange,
-  onBigBlindChange
+  onBigBlindChange,
+  onStackBBChange
 }) => {
   return (
     <div className="border rounded-lg p-4 bg-gray-50">
@@ -595,6 +624,26 @@ const TableRow = React.memo<{
                 className="py-2"
               />
             </div>
+          </div>
+          
+          {/* Stack in BB */}
+          <div className="space-y-2 mt-3">
+            <div className="flex justify-between">
+              <Label className="text-xs text-gray-500">Stack (BB)</Label>
+              {tableData.stackBB && tableData.bigBlind > 0 && (
+                <span className="text-xs text-gray-400">
+                  ≈ {currencySymbol}{(parseFloat(tableData.stackBB) * tableData.bigBlind).toFixed(2)}
+                </span>
+              )}
+            </div>
+            <Input
+              type="text"
+              inputMode="decimal"
+              placeholder="e.g. 100"
+              value={tableData.stackBB}
+              onChange={(e) => onStackBBChange(table.id, e.target.value)}
+              className="h-10"
+            />
           </div>
         </div>
       ) : (
