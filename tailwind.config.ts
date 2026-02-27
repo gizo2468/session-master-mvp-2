@@ -20,7 +20,8 @@ export default {
 		},
 		extend: {
 			boxShadow: {
-				sm: '0 1px 3px 0 rgba(53, 101, 77, 0.15), 0 1px 2px -1px rgba(53, 101, 77, 0.1)',
+				sm: '0 2px 6px 0 rgba(53, 101, 77, 0.18), 0 1px 3px -1px rgba(53, 101, 77, 0.12)',
+				DEFAULT: '0 2px 8px 0 rgba(53, 101, 77, 0.16), 0 1px 4px -1px rgba(53, 101, 77, 0.1)',
 			},
 			fontFamily: {
 				'space-grotesk': ['Space Grotesk', 'sans-serif'],
