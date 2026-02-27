@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import Icon from '@/components/ui/Lucide';
 import { BBStackUpdateService } from '@/services/bbStackUpdateService';
 import { format } from 'date-fns';
 import { Pencil } from 'lucide-react';
@@ -26,6 +28,7 @@ interface BlindHistoryModalProps {
   tableFormat: string;
   onEditLevel?: (level: number, currentBB?: number, currentStack?: number) => void;
   tableStartTime?: Date | string;
+  currencySymbol?: string;
 }
 
 const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
@@ -34,7 +37,8 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
   history,
   tableFormat,
   onEditLevel,
-  tableStartTime
+  tableStartTime,
+  currencySymbol = '$'
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const isCashGame = tableFormat === 'Cash';
@@ -101,21 +105,23 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <div className="flex items-center justify-between pr-8">
-            <DialogTitle>
-              {isCashGame ? 'Blinds History' : 'BB/Stack History'}
-            </DialogTitle>
-            {!isCashGame && onEditLevel && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsEditMode(!isEditMode)}
-                className="p-1 h-8 w-8 -mr-2"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+          {isCashGame ? (
+            <DialogTitle className="text-center">STACK HISTORY</DialogTitle>
+          ) : (
+            <div className="flex items-center justify-between pr-8">
+              <DialogTitle>BB/Stack History</DialogTitle>
+              {onEditLevel && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditMode(!isEditMode)}
+                  className="p-1 h-8 w-8 -mr-2"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
           {isEditMode && !isCashGame && (
             <p className="text-sm text-muted-foreground">
               Click on a level to edit its values
@@ -173,7 +179,7 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                         <div className="space-y-1">
                           {isCashGame ? (
                             <span className="font-medium text-sm">
-                              {update.small_blind}/{update.big_blind}
+                              {currencySymbol}{update.stack ?? '—'}
                             </span>
                           ) : (
                             <div className="text-xs text-gray-600 space-y-1">
@@ -193,19 +199,27 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                         </div>
                         
                         {update.created_at && (
-                          <span className="text-xs text-gray-500">
-                            {isCashGame && tableStartTime
-                              ? (() => {
-                                  const start = new Date(tableStartTime).getTime();
-                                  const updated = new Date(update.created_at).getTime();
-                                  const diffMs = Math.max(0, updated - start);
-                                  const totalMinutes = Math.floor(diffMs / 60000);
-                                  const hours = Math.floor(totalMinutes / 60);
-                                  const minutes = totalMinutes % 60;
-                                  return hours > 0 ? `${hours}H ${minutes}M` : `${minutes}M`;
-                                })()
-                              : format(new Date(update.created_at), 'MMM d, HH:mm')}
-                          </span>
+                          <>
+                            {isCashGame && tableStartTime ? (() => {
+                              const start = new Date(tableStartTime).getTime();
+                              const updated = new Date(update.created_at).getTime();
+                              const totalSeconds = Math.max(0, Math.floor((updated - start) / 1000));
+                              const hours = Math.floor(totalSeconds / 3600);
+                              const minutes = Math.floor((totalSeconds % 3600) / 60);
+                              const seconds = totalSeconds % 60;
+                              const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m ${seconds}s`;
+                              return (
+                                <Badge variant="timeStarted" className="px-2 py-1 font-mono font-medium flex items-center gap-1.5">
+                                  <Icon name="Clock" className="h-3 w-3" />
+                                  <span>{timeStr}</span>
+                                </Badge>
+                              );
+                            })() : (
+                              <span className="text-xs text-gray-500">
+                                {format(new Date(update.created_at), 'MMM d, HH:mm')}
+                              </span>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
