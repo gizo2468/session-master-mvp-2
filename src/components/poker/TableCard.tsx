@@ -279,35 +279,63 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
             })()}
           </div>
           
-          {table.format === 'Cash' && (
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Blinds:</span>
-                <span className="font-medium">{currencySymbol}{table.smallBlind}/{currencySymbol}{table.bigBlind}</span>
-              </div>
-              {/* Show blind history with elapsed time */}
-              {blindHistory.length > 0 && (
-                <div className="space-y-1">
-                  {blindHistory.slice(-1).filter(update => {
-                    const formatted = BBStackUpdateService.formatCashHistoryLineWithTime(update, table.startTime, currencySymbol);
-                    return formatted && formatted.trim() !== '';
-                  }).map((update, index) => (
-                    <div key={update.id || index} className="text-xs text-gray-500 mt-1">
-                      {BBStackUpdateService.formatCashHistoryLineWithTime(update, table.startTime, currencySymbol)}
-                    </div>
-                  ))}
-                  {blindHistory.length > 1 && (
-                    <button
-                      onClick={() => setShowBlindHistory(true)}
-                      className="text-xs text-gray-900 hover:text-gray-700"
-                    >
-                      View All Blinds Updates
-                    </button>
-                  )}
+          {table.format === 'Cash' && (() => {
+            const latestUpdate = blindHistory.length > 0 ? blindHistory[blindHistory.length - 1] : null;
+            const displaySmall = latestUpdate?.small_blind ?? table.smallBlind;
+            const displayBig = latestUpdate?.big_blind ?? table.bigBlind;
+            return (
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Blinds:</span>
+                  <span className="font-medium">{currencySymbol}{displaySmall}/{currencySymbol}{displayBig}</span>
                 </div>
-              )}
-            </div>
-          )}
+                {/* Show blind history with elapsed time */}
+                {blindHistory.length > 0 && (
+                  <div className="space-y-1">
+                    {blindHistory.slice(-1).filter(update => 
+                      update.small_blind != null && update.big_blind != null
+                    ).map((update, index) => {
+                      // Calculate elapsed time
+                      const start = typeof table.startTime === 'string' ? new Date(table.startTime) : table.startTime;
+                      const updateTime = update.created_at ? new Date(update.created_at) : new Date();
+                      const diffMs = updateTime.getTime() - start.getTime();
+                      const totalMinutes = Math.max(0, Math.floor(diffMs / 60000));
+                      const hours = Math.floor(totalMinutes / 60);
+                      const minutes = totalMinutes % 60;
+                      const timePart = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+                      return (
+                        <div key={update.id || index} className="flex flex-col gap-1 mt-1">
+                          <span className="text-xs text-gray-600 font-medium">
+                            Current Level: {currencySymbol}{update.small_blind}/{currencySymbol}{update.big_blind}
+                          </span>
+                          {update.stack != null && (
+                            <span className="text-xs text-gray-600 font-medium">
+                              CURRENT STACK: {currencySymbol}{update.stack}
+                            </span>
+                          )}
+                          {diffMs >= 0 && (
+                            <Badge variant="timeStarted" className="px-2 py-1 font-mono font-medium flex items-center gap-1.5 w-fit text-xs">
+                              <Icon name="Clock" className="h-3 w-3" />
+                              <span>Updated after {timePart}</span>
+                            </Badge>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {blindHistory.length > 1 && (
+                      <button
+                        onClick={() => setShowBlindHistory(true)}
+                        className="text-xs text-gray-900 hover:text-gray-700"
+                      >
+                        View All Blinds Updates
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
           
           {table.format === 'Tournament' && (
             <div className="space-y-2">
