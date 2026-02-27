@@ -184,7 +184,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
+    <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center" style={{ border: '1.5px solid hsl(43, 77%, 52%)' }}>
       <div className="mb-2 text-sm text-gray-500">Session Time</div>
       <div 
         className="text-5xl font-bold mb-3" 
