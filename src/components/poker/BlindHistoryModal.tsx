@@ -25,6 +25,7 @@ interface BlindHistoryModalProps {
   history: BBStackUpdate[];
   tableFormat: string;
   onEditLevel?: (level: number, currentBB?: number, currentStack?: number) => void;
+  tableStartTime?: Date | string;
 }
 
 const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
@@ -32,7 +33,8 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
   onClose,
   history,
   tableFormat,
-  onEditLevel
+  onEditLevel,
+  tableStartTime
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const isCashGame = tableFormat === 'Cash';
@@ -192,7 +194,17 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                         
                         {update.created_at && (
                           <span className="text-xs text-gray-500">
-                            {format(new Date(update.created_at), 'MMM d, HH:mm')}
+                            {isCashGame && tableStartTime
+                              ? (() => {
+                                  const start = new Date(tableStartTime).getTime();
+                                  const updated = new Date(update.created_at).getTime();
+                                  const diffMs = Math.max(0, updated - start);
+                                  const totalMinutes = Math.floor(diffMs / 60000);
+                                  const hours = Math.floor(totalMinutes / 60);
+                                  const minutes = totalMinutes % 60;
+                                  return hours > 0 ? `${hours}H ${minutes}M` : `${minutes}M`;
+                                })()
+                              : format(new Date(update.created_at), 'MMM d, HH:mm')}
                           </span>
                         )}
                       </div>
