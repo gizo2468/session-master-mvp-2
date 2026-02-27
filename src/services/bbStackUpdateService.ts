@@ -333,8 +333,8 @@ export class BBStackUpdateService {
           row.big_blind = update.bigBlind ?? 0;
           // Store stack BB if provided (reuse bb column for stack-in-BB value)
           row.level = null;
-          row.stack = update.stack && update.stack !== '' ? parseInt(update.stack) : null;
-          row.bb = update.bb && update.bb !== '' ? parseInt(update.bb) : null;
+          row.stack = update.stack && update.stack !== '' ? Math.round(parseFloat(update.stack)) : null;
+          row.bb = null;
         }
 
         return row;
