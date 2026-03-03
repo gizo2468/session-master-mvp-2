@@ -1,32 +1,25 @@
 
 
-## Plan: Make "Edit Photo" button clearly visible in avatar lightbox
+## Plan: Update Player Card Back Side
 
-### Problem
-The pencil button exists but is too subtle — a small icon on a dark background, easy to miss. Need to make it obvious.
+### Changes
 
-### Change: `src/components/PlayerCard/PlayerCardFront.tsx` (lines 290-298)
+#### 1. `src/components/PlayerCard/PlayerCardModal.tsx`
+- Pass `privateData` to `PlayerCardBack` so it has access to the profile picture URL.
 
-Replace the small pencil icon button with a larger, labeled button bar at the bottom of the lightbox:
+#### 2. `src/components/PlayerCard/PlayerCardBack.tsx`
 
-```tsx
-{/* Bottom action bar */}
-<div className="absolute bottom-6 left-0 right-0 flex justify-center z-50">
-  <button
-    onClick={async () => {
-      await handlePhotoClick();
-      setIsImageFullscreen(false);
-    }}
-    className="flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-5 py-2.5 text-white text-sm font-medium hover:bg-white/30 transition-colors border border-white/30"
-  >
-    <Pencil className="w-4 h-4" />
-    Edit Photo
-  </button>
-</div>
-```
+**Props**: Add `profilePicture: string | null` prop.
 
-This replaces the tiny top-right pencil icon with a clearly labeled "Edit Photo" button centered at the bottom of the overlay — always visible and obvious.
+**Title**: Change "Session Master" to "Session Master ID".
+
+**Large avatar**: Add a circular avatar below the title/subtitle, centered, ~20w/20h, with a gold ring border (`border-2 border-poker-gold/60`). Use `profilePicture` as `img src` with `object-cover rounded-full`. Show a fallback (User icon or initials) if no picture.
+
+**Achievements row**: Always show all 3 achievement types (bracelet, ring, trophy) with their counts — display `0` when none exist. Remove the `hasAnyAchievements` conditional so the row is always visible.
+
+**Layout adjustments**: Reduce margins slightly to fit the avatar without overflow. Move "Playing Focus" and "Coach Info" below the avatar. Keep "Unique Player Code" and "Flip Card" at the bottom as-is.
 
 ### Files changed
-- `src/components/PlayerCard/PlayerCardFront.tsx` (lines 290-298)
+- `src/components/PlayerCard/PlayerCardBack.tsx`
+- `src/components/PlayerCard/PlayerCardModal.tsx`
 
