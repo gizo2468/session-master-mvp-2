@@ -1,34 +1,28 @@
 
 
-## Plan: Move gold frame from card to timer area only
+## Plan: Profile Avatar Tap-to-Zoom Lightbox
 
-### Change: `src/components/poker/SessionTimerCard.tsx`
+### Problem
+Currently, tapping the avatar in view mode triggers photo upload. We need to separate concerns: **view mode** opens a lightbox, **edit/onboarding mode** triggers upload.
 
-1. **Line 187**: Remove the `style={{ border: '1.5px solid hsl(43, 77%, 52%)' }}` from the outer card div.
+### Changes: `src/components/PlayerCard/PlayerCardFront.tsx`
 
-2. **Lines 188-200**: Wrap the "Session Time" label and digital timer in a new `div` with a thin gold border:
+1. **Add state** `isImageFullscreen` (boolean, default false).
 
-```tsx
-<div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
-  <div 
-    className="inline-block rounded-lg mb-3"
-    style={{ 
-      border: '1.5px solid hsl(43, 77%, 52%)', 
-      padding: '12px 24px' 
-    }}
-  >
-    <div className="mb-2 text-sm text-gray-500">Session Time</div>
-    <div 
-      className="text-5xl font-bold" 
-      style={{ ... existing timer styles ... }}
-    >
-      {formatTime(elapsedTime)}
-    </div>
-  </div>
-```
+2. **Change avatar click behavior in view mode** (lines 124-127): Instead of calling `handlePhotoClick` (upload), call `setIsImageFullscreen(true)` — but only when there's an actual image. If no image exists, do nothing (no lightbox for the placeholder).
 
-The `mb-3` moves from the timer div to the wrapper, and `inline-block` keeps the frame tightly wrapping the content.
+3. **Add fullscreen lightbox dialog** after the card's closing div, using the same Dialog pattern from `ViewEditNoteModal.tsx`:
+   - Dark/blurred backdrop
+   - Centered image with `object-contain`, max 90vw/90vh
+   - Small X close button (top-right, white on dark circle)
+   - Click outside to close (handled by Dialog)
+   - Smooth scale-in animation via existing `animate-scale-in`
+
+4. **Import** `Dialog, DialogContent, DialogHeader, DialogTitle` and `X` icon.
+
+### Key Detail
+The avatar upload functionality (`handlePhotoClick`) is preserved but only used during onboarding/edit flow (which already has its own component `ProfileOnboardingFlow`). In view mode, the avatar becomes a lightbox trigger instead.
 
 ### Files changed
-- `src/components/poker/SessionTimerCard.tsx` (lines 187-200)
+- `src/components/PlayerCard/PlayerCardFront.tsx`
 
