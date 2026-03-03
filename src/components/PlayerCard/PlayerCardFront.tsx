@@ -287,6 +287,15 @@ export function PlayerCardFront({
         >
           <X className="w-5 h-5" />
         </button>
+        <button
+          onClick={async () => {
+            await handlePhotoClick();
+            setIsImageFullscreen(false);
+          }}
+          className="absolute top-3 right-14 z-50 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+        >
+          <Pencil className="w-5 h-5" />
+        </button>
         {privateData?.profile_picture && (
           <img
             src={privateData.profile_picture}
