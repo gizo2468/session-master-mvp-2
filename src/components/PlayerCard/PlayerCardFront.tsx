@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
-import { Camera, RotateCcw, Award, Pencil, Loader2 } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Camera, RotateCcw, Award, Pencil, Loader2, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProfileOnboardingFlow } from './ProfileOnboardingFlow';
@@ -53,6 +54,7 @@ export function PlayerCardFront({
 }: PlayerCardFrontProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { pickImage, isLoading: isPickingImage, isNative } = useNativeImagePicker();
+  const [isImageFullscreen, setIsImageFullscreen] = useState(false);
 
   // If first-time user or editing, show onboarding flow
   const showOnboarding = isFirstTimeUser || isEditing;
@@ -113,6 +115,7 @@ export function PlayerCardFront({
 
   // View Mode - Static display
   return (
+    <>
     <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 rounded-2xl border-2 border-poker-gold/40 shadow-2xl overflow-hidden flex flex-col">
       {/* Gold accent line at top */}
       <div className="h-1.5 bg-gradient-to-r from-transparent via-poker-gold to-transparent" />
@@ -123,7 +126,11 @@ export function PlayerCardFront({
           {/* Photo - still clickable to upload */}
           <div 
             className="relative w-20 h-20 rounded-full border-2 border-poker-gold/60 overflow-hidden cursor-pointer group flex-shrink-0"
-            onClick={handlePhotoClick}
+            onClick={() => {
+              if (privateData?.profile_picture) {
+                setIsImageFullscreen(true);
+              }
+            }}
           >
             {isPickingImage ? (
               <div className="w-full h-full bg-zinc-700 flex items-center justify-center">
@@ -140,7 +147,7 @@ export function PlayerCardFront({
                 <Camera className="w-8 h-8 text-zinc-500" />
               </div>
             )}
-            {!isPickingImage && (
+            {!isPickingImage && !privateData?.profile_picture && (
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Camera className="w-6 h-6 text-white" />
               </div>
@@ -269,5 +276,26 @@ export function PlayerCardFront({
         </div>
       </div>
     </div>
+
+    {/* Fullscreen avatar lightbox */}
+    <Dialog open={isImageFullscreen} onOpenChange={setIsImageFullscreen}>
+      <DialogContent className="max-w-[95vw] max-h-[95vh] bg-black/95 border-none p-0 overflow-hidden backdrop-blur-sm flex items-center justify-center [&>button]:hidden">
+        <DialogTitle className="sr-only">Profile Photo</DialogTitle>
+        <button
+          onClick={() => setIsImageFullscreen(false)}
+          className="absolute top-3 right-3 z-50 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        {privateData?.profile_picture && (
+          <img
+            src={privateData.profile_picture}
+            alt="Profile"
+            className="max-w-[90vw] max-h-[85vh] object-contain animate-scale-in rounded-lg"
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
