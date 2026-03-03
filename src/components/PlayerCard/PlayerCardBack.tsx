@@ -1,5 +1,5 @@
 import React from 'react';
-import { RotateCcw, Trophy } from 'lucide-react';
+import { RotateCcw, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Achievement } from '@/hooks/usePlayerCard';
 import braceletImg from '@/assets/championship-bracelet.png';
@@ -13,6 +13,7 @@ interface PlayerCardBackProps {
   coachingExperience: string | null;
   activeStudentsCount: number;
   achievements: Achievement[];
+  profilePicture: string | null;
   onFlip: () => void;
 }
 
@@ -48,6 +49,7 @@ export function PlayerCardBack({
   coachingExperience,
   activeStudentsCount,
   achievements,
+  profilePicture,
   onFlip 
 }: PlayerCardBackProps) {
   // Count achievements by type
@@ -57,10 +59,6 @@ export function PlayerCardBack({
     bracelet: achievements.filter(a => a.icon === 'bracelet').length,
   };
 
-  const hasAnyAchievements = achievementCounts.trophy > 0 || 
-                              achievementCounts.ring > 0 || 
-                              achievementCounts.bracelet > 0;
-
   return (
     <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 rounded-2xl border-2 border-poker-gold/40 shadow-2xl overflow-hidden">
       {/* Gold accent line at top */}
@@ -68,15 +66,30 @@ export function PlayerCardBack({
       
       <div className="p-5 flex flex-col h-full">
         {/* Header */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-3">
           <h3 className="text-poker-gold font-bold text-lg tracking-wider uppercase">
-            Session Master
+            Session Master ID
           </h3>
           <p className="text-zinc-500 text-xs tracking-widest">CAREER SNAPSHOT</p>
         </div>
 
+        {/* Large Avatar */}
+        <div className="flex justify-center mb-3">
+          <div className="w-20 h-20 rounded-full border-2 border-poker-gold/60 overflow-hidden bg-zinc-800 flex items-center justify-center">
+            {profilePicture ? (
+              <img 
+                src={profilePicture} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User className="w-8 h-8 text-zinc-500" />
+            )}
+          </div>
+        </div>
+
         {/* Playing Focus */}
-        <div className="mb-4">
+        <div className="mb-3">
           <p className="text-zinc-500 text-[10px] tracking-widest uppercase mb-1.5">Playing Focus</p>
           <div className="inline-block px-3 py-1.5 rounded-full border border-poker-gold/30 bg-zinc-800/50">
             <span className="text-poker-gold text-sm font-medium">
@@ -87,7 +100,7 @@ export function PlayerCardBack({
 
         {/* Coach Information - Only for coaches */}
         {isCoach && (
-          <div className="mb-4 p-3 rounded-lg bg-zinc-800/30 border border-zinc-700/50">
+          <div className="mb-3 p-3 rounded-lg bg-zinc-800/30 border border-zinc-700/50">
             <p className="text-zinc-500 text-[10px] tracking-widest uppercase mb-2">Coach Info</p>
             
             {coachingExperience && (
@@ -106,50 +119,30 @@ export function PlayerCardBack({
           </div>
         )}
 
-        {/* Achievements Summary */}
-        {hasAnyAchievements && (
-          <div className="mb-4">
-            <p className="text-zinc-500 text-[10px] tracking-widest uppercase mb-2">Achievements</p>
-            <div className="flex items-center justify-center gap-6">
-              {achievementCounts.trophy > 0 && (
-                <div className="flex flex-col items-center">
-                  <img 
-                    src={trophyImg} 
-                    alt="Trophy" 
-                    className="w-10 h-10 object-contain"
-                  />
-                  <span className="text-poker-gold font-bold text-lg mt-1">
-                    {achievementCounts.trophy}
-                  </span>
-                </div>
-              )}
-              {achievementCounts.ring > 0 && (
-                <div className="flex flex-col items-center">
-                  <img 
-                    src={ringImg} 
-                    alt="Ring" 
-                    className="w-10 h-10 object-contain"
-                  />
-                  <span className="text-poker-gold font-bold text-lg mt-1">
-                    {achievementCounts.ring}
-                  </span>
-                </div>
-              )}
-              {achievementCounts.bracelet > 0 && (
-                <div className="flex flex-col items-center">
-                  <img 
-                    src={braceletImg} 
-                    alt="Bracelet" 
-                    className="w-10 h-10 object-contain"
-                  />
-                  <span className="text-poker-gold font-bold text-lg mt-1">
-                    {achievementCounts.bracelet}
-                  </span>
-                </div>
-              )}
+        {/* Achievements Summary - Always visible */}
+        <div className="mb-3">
+          <p className="text-zinc-500 text-[10px] tracking-widest uppercase mb-2">Achievements</p>
+          <div className="flex items-center justify-center gap-6">
+            <div className="flex flex-col items-center">
+              <img src={braceletImg} alt="Bracelet" className="w-10 h-10 object-contain" />
+              <span className="text-poker-gold font-bold text-lg mt-1">
+                {achievementCounts.bracelet}
+              </span>
+            </div>
+            <div className="flex flex-col items-center">
+              <img src={ringImg} alt="Ring" className="w-10 h-10 object-contain" />
+              <span className="text-poker-gold font-bold text-lg mt-1">
+                {achievementCounts.ring}
+              </span>
+            </div>
+            <div className="flex flex-col items-center">
+              <img src={trophyImg} alt="Trophy" className="w-10 h-10 object-contain" />
+              <span className="text-poker-gold font-bold text-lg mt-1">
+                {achievementCounts.trophy}
+              </span>
             </div>
           </div>
-        )}
+        </div>
 
         {/* Spacer */}
         <div className="flex-1" />

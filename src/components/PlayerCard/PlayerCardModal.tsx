@@ -146,6 +146,7 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
                 coachingExperience={cardData?.coaching_experience || null}
                 activeStudentsCount={activeStudentsCount}
                 achievements={cardData?.achievements || []}
+                profilePicture={privateData?.profile_picture || null}
                 onFlip={handleFlip}
               />
             </div>
