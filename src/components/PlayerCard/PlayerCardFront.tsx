@@ -287,15 +287,19 @@ export function PlayerCardFront({
         >
           <X className="w-5 h-5" />
         </button>
-        <button
-          onClick={async () => {
-            await handlePhotoClick();
-            setIsImageFullscreen(false);
-          }}
-          className="absolute top-3 right-14 z-50 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
-        >
-          <Pencil className="w-5 h-5" />
-        </button>
+        {/* Bottom action bar */}
+        <div className="absolute bottom-6 left-0 right-0 flex justify-center z-50">
+          <button
+            onClick={async () => {
+              await handlePhotoClick();
+              setIsImageFullscreen(false);
+            }}
+            className="flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-5 py-2.5 text-white text-sm font-medium hover:bg-white/30 transition-colors border border-white/30"
+          >
+            <Pencil className="w-4 h-4" />
+            Edit Photo
+          </button>
+        </div>
         {privateData?.profile_picture && (
           <img
             src={privateData.profile_picture}
