@@ -34,16 +34,22 @@ export function PlayerCardBack({
       <div className="h-1.5 bg-gradient-to-r from-transparent via-poker-gold to-transparent" />
       
       <div className="p-5 flex flex-col h-full">
-        {/* Header */}
-        <div className="text-center mb-2">
+        {/* Header + Role */}
+        <div className="text-center mb-1">
           <h3 className="text-poker-gold font-bold text-lg tracking-wider uppercase">
             Session Master ID
           </h3>
+          <p className="text-zinc-400 text-sm mt-0.5">
+            {isCoach ? 'Coach' : 'Player'}
+          </p>
         </div>
 
+        {/* Spacer top */}
+        <div className="flex-1" />
+
         {/* Large Avatar */}
-        <div className="flex justify-center mb-2">
-          <div className="w-40 h-40 rounded-full border-[3px] border-poker-gold/60 overflow-hidden bg-zinc-800 flex items-center justify-center">
+        <div className="flex justify-center">
+          <div className="w-48 h-48 rounded-full border-[3px] border-poker-gold/60 overflow-hidden bg-zinc-800 flex items-center justify-center">
             {profilePicture ? (
               <img 
                 src={profilePicture} 
@@ -51,23 +57,20 @@ export function PlayerCardBack({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <User className="w-16 h-16 text-zinc-500" />
+              <User className="w-20 h-20 text-zinc-500" />
             )}
           </div>
         </div>
 
-        {/* Identity: Name + Role */}
+        {/* Spacer bottom */}
+        <div className="flex-1" />
+
+        {/* Full name directly above achievements */}
         <div className="text-center mb-1">
           <p className="text-poker-gold font-bold text-lg">
             {fullName || 'Unknown Player'}
           </p>
-          <p className="text-zinc-400 text-sm">
-            {isCoach ? 'Coach' : 'Player'}
-          </p>
         </div>
-
-        {/* Spacer */}
-        <div className="flex-1" />
 
         {/* Achievements row (no title) */}
         <div className="mb-2">
