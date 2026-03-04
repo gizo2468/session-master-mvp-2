@@ -141,12 +141,10 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
             >
               <PlayerCardBack
                 barcodeValue={barcodeValue}
-                primaryFormat={cardData?.primary_format || 'both'}
                 isCoach={profile?.role === 'coach'}
-                coachingExperience={cardData?.coaching_experience || null}
-                activeStudentsCount={activeStudentsCount}
                 achievements={cardData?.achievements || []}
                 profilePicture={privateData?.profile_picture || null}
+                fullName={privateData?.full_name || null}
                 onFlip={handleFlip}
               />
             </div>
