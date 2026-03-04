@@ -1,25 +1,14 @@
 
 
-## Plan: Update Player Card Back Side
+## Plan: Back Card UI Tweaks
 
-### Changes
+### File: `src/components/PlayerCard/PlayerCardBack.tsx`
 
-#### 1. `src/components/PlayerCard/PlayerCardModal.tsx`
-- Pass `privateData` to `PlayerCardBack` so it has access to the profile picture URL.
+**5 changes:**
 
-#### 2. `src/components/PlayerCard/PlayerCardBack.tsx`
-
-**Props**: Add `profilePicture: string | null` prop.
-
-**Title**: Change "Session Master" to "Session Master ID".
-
-**Large avatar**: Add a circular avatar below the title/subtitle, centered, ~20w/20h, with a gold ring border (`border-2 border-poker-gold/60`). Use `profilePicture` as `img src` with `object-cover rounded-full`. Show a fallback (User icon or initials) if no picture.
-
-**Achievements row**: Always show all 3 achievement types (bracelet, ring, trophy) with their counts — display `0` when none exist. Remove the `hasAnyAchievements` conditional so the row is always visible.
-
-**Layout adjustments**: Reduce margins slightly to fit the avatar without overflow. Move "Playing Focus" and "Coach Info" below the avatar. Keep "Unique Player Code" and "Flip Card" at the bottom as-is.
-
-### Files changed
-- `src/components/PlayerCard/PlayerCardBack.tsx`
-- `src/components/PlayerCard/PlayerCardModal.tsx`
+1. **Enlarge avatar** — Change `w-20 h-20` to `w-32 h-32`, border to `border-3`, fallback icon to `w-12 h-12`
+2. **Remove "CAREER SNAPSHOT" text** — Delete line 73 entirely
+3. **Remove "PLAYING FOCUS" label** — Delete line 93, keep only the pill (centered)
+4. **Center "ACHIEVEMENTS" + shrink icons** — Add `text-center` to achievements label, reduce icons from `w-10 h-10` to `w-7 h-7`, reduce count text from `text-lg` to `text-base`
+5. **Shrink player code** — Change label from `text-[10px]` to `text-[8px]`, code text from `text-sm` to `text-xs`, reduce `mb-4` to `mb-2`
 
