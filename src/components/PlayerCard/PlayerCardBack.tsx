@@ -66,16 +66,15 @@ export function PlayerCardBack({
       
       <div className="p-5 flex flex-col h-full">
         {/* Header */}
-        <div className="text-center mb-3">
+        <div className="text-center mb-2">
           <h3 className="text-poker-gold font-bold text-lg tracking-wider uppercase">
             Session Master ID
           </h3>
-          <p className="text-zinc-500 text-xs tracking-widest">CAREER SNAPSHOT</p>
         </div>
 
         {/* Large Avatar */}
-        <div className="flex justify-center mb-3">
-          <div className="w-20 h-20 rounded-full border-2 border-poker-gold/60 overflow-hidden bg-zinc-800 flex items-center justify-center">
+        <div className="flex justify-center mb-2">
+          <div className="w-32 h-32 rounded-full border-[3px] border-poker-gold/60 overflow-hidden bg-zinc-800 flex items-center justify-center">
             {profilePicture ? (
               <img 
                 src={profilePicture} 
@@ -83,14 +82,13 @@ export function PlayerCardBack({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <User className="w-8 h-8 text-zinc-500" />
+              <User className="w-12 h-12 text-zinc-500" />
             )}
           </div>
         </div>
 
-        {/* Playing Focus */}
-        <div className="mb-3">
-          <p className="text-zinc-500 text-[10px] tracking-widest uppercase mb-1.5">Playing Focus</p>
+        {/* Playing Focus Pill */}
+        <div className="mb-2 flex justify-center">
           <div className="inline-block px-3 py-1.5 rounded-full border border-poker-gold/30 bg-zinc-800/50">
             <span className="text-poker-gold text-sm font-medium">
               {getFormatLabel(primaryFormat)}
@@ -100,7 +98,7 @@ export function PlayerCardBack({
 
         {/* Coach Information - Only for coaches */}
         {isCoach && (
-          <div className="mb-3 p-3 rounded-lg bg-zinc-800/30 border border-zinc-700/50">
+          <div className="mb-2 p-3 rounded-lg bg-zinc-800/30 border border-zinc-700/50">
             <p className="text-zinc-500 text-[10px] tracking-widest uppercase mb-2">Coach Info</p>
             
             {coachingExperience && (
@@ -120,24 +118,24 @@ export function PlayerCardBack({
         )}
 
         {/* Achievements Summary - Always visible */}
-        <div className="mb-3">
-          <p className="text-zinc-500 text-[10px] tracking-widest uppercase mb-2">Achievements</p>
+        <div className="mb-2">
+          <p className="text-zinc-500 text-[10px] tracking-widest uppercase mb-2 text-center">Achievements</p>
           <div className="flex items-center justify-center gap-6">
             <div className="flex flex-col items-center">
-              <img src={braceletImg} alt="Bracelet" className="w-10 h-10 object-contain" />
-              <span className="text-poker-gold font-bold text-lg mt-1">
+              <img src={braceletImg} alt="Bracelet" className="w-7 h-7 object-contain" />
+              <span className="text-poker-gold font-bold text-base mt-0.5">
                 {achievementCounts.bracelet}
               </span>
             </div>
             <div className="flex flex-col items-center">
-              <img src={ringImg} alt="Ring" className="w-10 h-10 object-contain" />
-              <span className="text-poker-gold font-bold text-lg mt-1">
+              <img src={ringImg} alt="Ring" className="w-7 h-7 object-contain" />
+              <span className="text-poker-gold font-bold text-base mt-0.5">
                 {achievementCounts.ring}
               </span>
             </div>
             <div className="flex flex-col items-center">
-              <img src={trophyImg} alt="Trophy" className="w-10 h-10 object-contain" />
-              <span className="text-poker-gold font-bold text-lg mt-1">
+              <img src={trophyImg} alt="Trophy" className="w-7 h-7 object-contain" />
+              <span className="text-poker-gold font-bold text-base mt-0.5">
                 {achievementCounts.trophy}
               </span>
             </div>
@@ -148,9 +146,9 @@ export function PlayerCardBack({
         <div className="flex-1" />
 
         {/* Unique Player Code */}
-        <div className="text-center mb-4">
-          <p className="text-zinc-500 text-[10px] tracking-widest uppercase mb-1">Unique Player Code</p>
-          <p className="text-poker-gold font-mono text-sm tracking-wider">
+        <div className="text-center mb-2">
+          <p className="text-zinc-500 text-[8px] tracking-widest uppercase mb-0.5">Unique Player Code</p>
+          <p className="text-poker-gold font-mono text-xs tracking-wider">
             {barcodeValue}
           </p>
         </div>
