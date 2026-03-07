@@ -1,24 +1,50 @@
 
 
-## Plan: Back Card Layout Refinement
+## Plan: Performance Fixes (AuthContext Parallelization + Start Session Button Immediacy)
 
-### File: `src/components/PlayerCard/PlayerCardBack.tsx`
+### Change 1: Parallelize profile fetches in `src/context/AuthContext.tsx`
 
-**Reorder layout to:**
-1. "SESSION MASTER ID" title
-2. Role ("Player" / "Coach") — moved up, directly under title
-3. Spacer (flex-1) — pushes avatar to center
-4. Large avatar — enlarged from `w-40 h-40` to `w-48 h-48`
-5. Spacer (flex-1) — balances centering
-6. Full name — moved down, directly above achievements (tight spacing, `mb-1`)
-7. Achievements row
-8. Unique Player Code
-9. Flip Card button
+**Lines 328-340**: Replace sequential queries with `Promise.all`:
 
-**Specific changes:**
-- Move role text (`isCoach ? 'Coach' : 'Player'`) into the header section under the title
-- Add `flex-1` spacers above and below the avatar to vertically center it
-- Enlarge avatar to `w-48 h-48`, fallback icon to `w-20 h-20`
-- Place full name (`text-poker-gold font-bold text-lg`) just above achievements with `mb-1`
-- Keep everything else (achievements, code, flip button) as-is
+```typescript
+// Before (sequential):
+const { data, error } = await supabase.from('profiles')...
+const { data: privateData } = await supabase.from('user_private_data')...
+
+// After (parallel):
+const [profileResult, privateResult] = await Promise.all([
+  supabase.from('profiles').select('*').eq('id', supabaseUser.id).single(),
+  supabase.from('user_private_data').select('full_name').eq('id', supabaseUser.id).single(),
+]);
+const { data, error } = profileResult;
+const { data: privateData } = privateResult;
+```
+
+Everything after line 340 stays exactly the same — same error handling, same merge logic, same flow.
+
+### Change 2: Show Start Session button immediately on Index page
+
+**Problem**: `src/pages/Index.tsx` line 109 blocks the entire page render (including the Start Session button) while `isLoading || isRecovering` is true. The sessions fetch can take 10+ seconds. The Start Session button has zero dependency on session data.
+
+**Fix in `src/pages/Index.tsx`**: Remove the full-page loading gate (lines 109-118). Instead, show the header + Start Session button + chip buttons immediately, and only show a small inline loading spinner in the "Recent Sessions" area while sessions load.
+
+Specifically:
+- Delete the early-return loading block (lines 109-118)
+- Wrap only the session-dependent sections (StatsQuickView, ActiveSessionsList, Recent Sessions list) in a conditional that shows an inline spinner when `isLoading || isRecovering`
+- The header, NewSessionButton, and three chip buttons render instantly
+
+### Change 3: Preload the Start Session image asset
+
+**In `index.html`**: Add a `<link rel="preload">` for the stopwatch PNG so the browser fetches it early, before the JS bundle even evaluates:
+
+```html
+<link rel="preload" href="/src/assets/start-session-stopwatch.png" as="image" />
+```
+
+(Vite rewrites this to the hashed asset path at build time.)
+
+### Verification approach
+- DevTools Network tab: confirm `profiles` and `user_private_data` requests fire simultaneously
+- The Start Session button and chip icons should be visible immediately after auth completes, without waiting for session data
+- All user flows (login, logout, navigation, session creation) unchanged
 
