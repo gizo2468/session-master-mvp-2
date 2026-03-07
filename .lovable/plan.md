@@ -1,75 +1,24 @@
 
 
-## Plan: Change Game Type + Format selectors to bubble chips
+## Plan: Back Card Layout Refinement
 
-### What changes
+### File: `src/components/PlayerCard/PlayerCardBack.tsx`
 
-**File: `src/components/poker/AddTableForm.tsx`**
+**Reorder layout to:**
+1. "SESSION MASTER ID" title
+2. Role ("Player" / "Coach") — moved up, directly under title
+3. Spacer (flex-1) — pushes avatar to center
+4. Large avatar — enlarged from `w-40 h-40` to `w-48 h-48`
+5. Spacer (flex-1) — balances centering
+6. Full name — moved down, directly above achievements (tight spacing, `mb-1`)
+7. Achievements row
+8. Unique Player Code
+9. Flip Card button
 
-**1. Game Type (lines 205-221)** — Replace `RadioGroup` + `RadioGroupItem` with two `<button>` chips styled identically to the Tournament Type chips:
-
-```tsx
-<div className="space-y-2">
-  <Label>Game Type <span className="text-red-500">*</span></Label>
-  <div className="flex flex-wrap gap-2">
-    {(['NLH', 'PLO'] as const).map((type) => (
-      <button
-        key={type}
-        type="button"
-        onClick={() => setGameType(type)}
-        className={`px-3 py-1 rounded-full text-sm cursor-pointer transition-colors ${
-          gameType === type
-            ? 'bg-poker-gold text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-        }`}
-      >
-        {type}
-      </button>
-    ))}
-  </div>
-</div>
-```
-
-**2. Format (lines 224-242)** — Same treatment, replace radio buttons with chip buttons:
-
-```tsx
-{!fixedFormat && (
-  <div className="space-y-2">
-    <Label>Format <span className="text-red-500">*</span></Label>
-    <div className="flex flex-wrap gap-2">
-      {(['Cash', 'Tournament'] as const).map((f) => (
-        <button
-          key={f}
-          type="button"
-          onClick={() => setFormat(f)}
-          className={`px-3 py-1 rounded-full text-sm cursor-pointer transition-colors ${
-            format === f
-              ? 'bg-poker-gold text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          {f}
-        </button>
-      ))}
-    </div>
-  </div>
-)}
-```
-
-**3. Tournament Type animation fix (line 253)** — Remove the custom accordion animation classes from `CollapsibleContent` to use native smooth expand:
-
-```tsx
-// Before
-<CollapsibleContent className="pt-2 overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-
-// After
-<CollapsibleContent className="pt-2">
-```
-
-Same fix on line 387 for Advanced Options collapsible.
-
-### What stays unchanged
-- All state, validation, values, labels, submit logic, and layout remain identical.
-- Tournament Type chips are untouched.
-- The `RadioGroup` import can be removed if no longer used elsewhere in this file (it's still used for Tournament Type, so it stays).
+**Specific changes:**
+- Move role text (`isCoach ? 'Coach' : 'Player'`) into the header section under the title
+- Add `flex-1` spacers above and below the avatar to vertically center it
+- Enlarge avatar to `w-48 h-48`, fallback icon to `w-20 h-20`
+- Place full name (`text-poker-gold font-bold text-lg`) just above achievements with `mb-1`
+- Keep everything else (achievements, code, flip button) as-is
 
