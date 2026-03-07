@@ -142,6 +142,7 @@ export function usePlayerCard() {
           role: profileResult.data.role,
           country: profileResult.data.country ?? null,
           default_currency: profileResult.data.default_currency ?? null,
+          created_at: profileResult.data.created_at,
         });
       }
 
