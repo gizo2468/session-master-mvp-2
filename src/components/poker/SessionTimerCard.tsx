@@ -202,18 +202,34 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         }}
       >
         <div className="mb-2 text-sm text-center" style={{ color: 'hsl(43, 40%, 45%)' }}>Session Time</div>
-        <div 
-          className="text-5xl font-bold"
-          style={{ 
-            fontFamily: "'DSEG7Classic', monospace",
-            color: 'hsl(43, 77%, 52%)',
-            WebkitTextStroke: '0.8px hsl(0, 0%, 75%)',
-            textShadow: '0 0 3px hsla(43, 77%, 52%, 0.4)',
-            letterSpacing: '-0.03em',
-            paddingRight: '0.03em',
-          }}
-        >
-          {formatTime(elapsedTime)}
+        <div className="relative">
+          {/* Unlit segments: full 8s in faint color behind real digits */}
+          <div 
+            aria-hidden="true"
+            className="text-5xl font-bold absolute inset-0"
+            style={{ 
+              fontFamily: "'DSEG7Classic', monospace",
+              color: 'hsla(43, 50%, 70%, 0.18)',
+              letterSpacing: '-0.03em',
+              paddingRight: '0.03em',
+            }}
+          >
+            {formatTime(elapsedTime).replace(/[0-9]/g, '8')}
+          </div>
+          {/* Active (lit) digits */}
+          <div 
+            className="text-5xl font-bold"
+            style={{ 
+              fontFamily: "'DSEG7Classic', monospace",
+              color: 'hsl(43, 77%, 52%)',
+              WebkitTextStroke: '0.8px hsl(0, 0%, 75%)',
+              textShadow: '0 0 3px hsla(43, 77%, 52%, 0.4)',
+              letterSpacing: '-0.03em',
+              paddingRight: '0.03em',
+            }}
+          >
+            {formatTime(elapsedTime)}
+          </div>
         </div>
       </div>
       
