@@ -204,40 +204,44 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
             {/* Game Type - Moved up after Table Name */}
             <div className="space-y-2">
               <Label>Game Type <span className="text-red-500">*</span></Label>
-              <RadioGroup 
-                value={gameType} 
-                onValueChange={(value) => setGameType(value as 'NLH' | 'PLO')}
-                className="flex space-x-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="NLH" id="nlh" />
-                  <Label htmlFor="nlh" className="cursor-pointer">NLH</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="PLO" id="plo" />
-                  <Label htmlFor="plo" className="cursor-pointer">PLO</Label>
-                </div>
-              </RadioGroup>
+              <div className="flex flex-wrap gap-2">
+                {(['NLH', 'PLO'] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setGameType(type)}
+                    className={`px-3 py-1 rounded-full text-sm cursor-pointer transition-colors ${
+                      gameType === type
+                        ? 'bg-poker-gold text-white'
+                        : 'bg-muted text-muted-foreground hover:bg-accent'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Format Selection */}
             {!fixedFormat && (
               <div className="space-y-2">
                 <Label>Format <span className="text-red-500">*</span></Label>
-                <RadioGroup 
-                  value={format} 
-                  onValueChange={(value) => setFormat(value as 'Cash' | 'Tournament')}
-                  className="flex space-x-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Cash" id="cash" />
-                    <Label htmlFor="cash" className="cursor-pointer">Cash</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Tournament" id="tournament" />
-                    <Label htmlFor="tournament" className="cursor-pointer">Tournament</Label>
-                  </div>
-                </RadioGroup>
+                <div className="flex flex-wrap gap-2">
+                  {(['Cash', 'Tournament'] as const).map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setFormat(f)}
+                      className={`px-3 py-1 rounded-full text-sm cursor-pointer transition-colors ${
+                        format === f
+                          ? 'bg-poker-gold text-white'
+                          : 'bg-muted text-muted-foreground hover:bg-accent'
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -250,7 +254,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
                   </span>
                   <ChevronDown className={`h-4 w-4 text-poker-gold transition-transform duration-200 ${isTournamentTypeOpen ? 'rotate-180' : ''}`} />
                 </CollapsibleTrigger>
-                <CollapsibleContent className="pt-2 overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                <CollapsibleContent className="pt-2">
                   <RadioGroup 
                     value={tournamentType}
                     onValueChange={(value) => {
@@ -384,7 +388,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
                   <span className="text-base font-medium text-poker-gold">Advanced Options</span>
                   <ChevronDown className={`h-4 w-4 text-poker-gold transition-transform duration-200 ${isAdvancedOpen ? 'rotate-180' : ''}`} />
                 </CollapsibleTrigger>
-                <CollapsibleContent className="pt-3 space-y-3 overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                <CollapsibleContent className="pt-3 space-y-3">
                   {/* Multi-Day Tournament */}
                   <div className="flex items-center space-x-3 rounded-md border p-3">
                     <Checkbox
