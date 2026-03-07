@@ -325,19 +325,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   "Is new login:", isNewLogin,
                   "User metadata role:", supabaseUser.user_metadata?.role);
       
-      // Query the profiles table for complete user data including coaching fields
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', supabaseUser.id)
-        .single();
-
-      // Also fetch full_name from user_private_data
-      const { data: privateData } = await supabase
-        .from('user_private_data')
-        .select('full_name')
-        .eq('id', supabaseUser.id)
-        .single();
+      // Query profiles + private data in parallel (no sequential waterfall)
+      const [profileResult, privateResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', supabaseUser.id)
+          .single(),
+        supabase
+          .from('user_private_data')
+          .select('full_name')
+          .eq('id', supabaseUser.id)
+          .single(),
+      ]);
+      const { data, error } = profileResult;
+      const { data: privateData } = privateResult;
 
       if (error) {
         console.error("Error fetching user profile:", error);
