@@ -184,9 +184,9 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
+    <div className="bg-white rounded-lg shadow-md p-6 mb-6 flex flex-col items-center">
       <div 
-        className="mx-auto rounded-xl mb-3 relative w-fit"
+        className="rounded-xl mb-3 relative w-fit"
         style={{
           border: '3px solid hsl(43, 77%, 52%)',
           outline: '1px solid hsl(43, 60%, 40%)',
@@ -216,7 +216,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         </div>
       </div>
       
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 mb-6 w-full">
         <div className="text-left">
           <div className="text-sm text-gray-500">Started</div>
           <div className="font-medium">{formattedStartTime}</div>
@@ -235,7 +235,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         </div>
       </div>
       
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 w-full">
         <div className="flex justify-center gap-2">
           {onAddTable && (
             <Button
