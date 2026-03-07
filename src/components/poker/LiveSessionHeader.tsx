@@ -8,21 +8,16 @@ const LiveSessionHeader: React.FC = () => {
   const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
 
   return (
-    <header className="bg-white shadow-sm px-4 py-4 sticky top-0 z-10">
-      <div className="container mx-auto max-w-md">
-        <div className="relative flex items-center justify-center">
-          <Button 
-            onClick={navigateToHomeWithRefresh}
-            variant="ghost"
-            className="text-poker-feltGreen p-0 absolute left-0"
-            disabled={isRefreshing}
-          >
-            <Icon name={isRefreshing ? "Loader2" : "ArrowLeft"} size={16} className={`mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>Home</span>
-          </Button>
-          <h1 className="text-xl font-bold">Live Session</h1>
-        </div>
-      </div>
+    <header className="bg-white shadow-sm px-4 py-4 sticky top-0 z-10 relative flex items-center justify-center">
+      <button 
+        onClick={navigateToHomeWithRefresh}
+        disabled={isRefreshing}
+        className="absolute left-4 flex items-center gap-1 text-poker-feltGreen bg-transparent border-none cursor-pointer p-0 text-sm font-medium"
+      >
+        <Icon name={isRefreshing ? "Loader2" : "ArrowLeft"} size={16} className={isRefreshing ? 'animate-spin' : ''} />
+        <span>Home</span>
+      </button>
+      <h1 className="text-xl font-bold">Live Session</h1>
     </header>
   );
 };
