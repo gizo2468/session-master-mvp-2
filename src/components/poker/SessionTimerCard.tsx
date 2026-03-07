@@ -186,12 +186,12 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6 flex flex-col items-center">
       <div 
-        className="rounded-xl mb-3 relative w-fit"
+        className="rounded-xl mb-3 relative w-fit flex flex-col items-center"
         style={{
           border: '3px solid hsl(43, 77%, 52%)',
           outline: '1px solid hsl(43, 60%, 40%)',
           outlineOffset: '-5px',
-          padding: '16px 28px',
+          padding: '16px 32px',
           borderRadius: '12px',
           background: 'white',
           boxShadow: [
@@ -203,13 +203,14 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       >
         <div className="mb-2 text-sm text-center" style={{ color: 'hsl(43, 40%, 45%)' }}>Session Time</div>
         <div 
-          className="text-5xl font-bold text-center"
+          className="text-5xl font-bold"
           style={{ 
             fontFamily: "'DSEG7Classic', monospace",
             color: 'hsl(43, 77%, 52%)',
             WebkitTextStroke: '0.8px hsl(0, 0%, 75%)',
             textShadow: '0 0 3px hsla(43, 77%, 52%, 0.4)',
-            letterSpacing: '-0.03em'
+            letterSpacing: '-0.03em',
+            paddingRight: '0.03em',
           }}
         >
           {formatTime(elapsedTime)}
