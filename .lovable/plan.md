@@ -1,22 +1,24 @@
 
 
-## Plan: Replace "Unique Player Code" with "Member Since"
+## Plan: Back Card Layout Refinement
 
-### Changes
+### File: `src/components/PlayerCard/PlayerCardBack.tsx`
 
-**1. `src/hooks/usePlayerCard.ts`** (~line 90)
-- Add `created_at` to the profiles select query: `'username, online_nickname, role, country, default_currency, created_at'`
-- Add `created_at` to the `PlayerProfile` interface
+**Reorder layout to:**
+1. "SESSION MASTER ID" title
+2. Role ("Player" / "Coach") — moved up, directly under title
+3. Spacer (flex-1) — pushes avatar to center
+4. Large avatar — enlarged from `w-40 h-40` to `w-48 h-48`
+5. Spacer (flex-1) — balances centering
+6. Full name — moved down, directly above achievements (tight spacing, `mb-1`)
+7. Achievements row
+8. Unique Player Code
+9. Flip Card button
 
-**2. `src/components/PlayerCard/PlayerCardModal.tsx`** (line 142-149)
-- Pass `memberSince={profile?.created_at || null}` to `PlayerCardBack`
-
-**3. `src/components/PlayerCard/PlayerCardBack.tsx`**
-- Replace `barcodeValue` prop with `memberSince: string | null` in the interface
-- Remove the "Unique Player Code" section (lines 94-100)
-- Add "Member Since" section with same styling: small label + gold formatted date (e.g., "27 Feb 2026") using `date-fns` `format()`
-- Remove unused `barcodeValue` prop references
-
-### Date formatting
-Use `format(new Date(memberSince), 'd MMM yyyy')` from `date-fns` (already installed) to produce e.g. "27 Feb 2026".
+**Specific changes:**
+- Move role text (`isCoach ? 'Coach' : 'Player'`) into the header section under the title
+- Add `flex-1` spacers above and below the avatar to vertically center it
+- Enlarge avatar to `w-48 h-48`, fallback icon to `w-20 h-20`
+- Place full name (`text-poker-gold font-bold text-lg`) just above achievements with `mb-1`
+- Keep everything else (achievements, code, flip button) as-is
 
