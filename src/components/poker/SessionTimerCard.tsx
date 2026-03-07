@@ -191,44 +191,51 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
           border: '3px solid hsl(43, 77%, 52%)',
           outline: '1px solid hsl(43, 60%, 40%)',
           outlineOffset: '-5px',
-          padding: '16px 32px',
+          padding: '8px 10px',
           borderRadius: '12px',
           background: 'white',
-          boxShadow: [
-            '0 0 8px 2px hsla(43, 77%, 52%, 0.25)',
-            '0 0 20px 4px hsla(43, 77%, 52%, 0.12)',
-            '0 0 40px 8px hsla(43, 77%, 52%, 0.06)',
-          ].join(', '),
         }}
       >
-        <div className="mb-2 text-sm text-center" style={{ color: 'hsl(43, 40%, 45%)' }}>Session Time</div>
-        <div className="relative">
-          {/* Unlit segments: full 8s in faint color behind real digits */}
-          <div 
-            aria-hidden="true"
-            className="text-5xl font-bold absolute inset-0"
-            style={{ 
-              fontFamily: "'DSEG7Classic', monospace",
-              color: 'hsla(43, 40%, 65%, 0.22)',
-              letterSpacing: '-0.03em',
-              paddingRight: '0.03em',
-            }}
-          >
-            {formatTime(elapsedTime).replace(/[0-9]/g, '8')}
-          </div>
-          {/* Active (lit) digits */}
-          <div 
-            className="text-5xl font-bold"
-            style={{ 
-              fontFamily: "'DSEG7Classic', monospace",
-              color: 'hsl(40, 85%, 42%)',
-              WebkitTextStroke: '0.5px hsl(43, 80%, 50%)',
-              textShadow: '0 0 6px hsla(43, 90%, 50%, 0.5), 0 0 2px hsla(43, 90%, 55%, 0.3)',
-              letterSpacing: '-0.03em',
-              paddingRight: '0.03em',
-            }}
-          >
-            {formatTime(elapsedTime)}
+        <div
+          style={{
+            padding: '8px 20px',
+            borderRadius: '8px',
+            boxShadow: [
+              '0 0 8px 2px hsla(43, 77%, 52%, 0.25)',
+              '0 0 20px 4px hsla(43, 77%, 52%, 0.12)',
+              '0 0 40px 8px hsla(43, 77%, 52%, 0.06)',
+            ].join(', '),
+          }}
+        >
+          <div className="mb-2 text-sm text-center" style={{ color: 'hsl(43, 40%, 45%)' }}>Session Time</div>
+          <div className="relative">
+            {/* Unlit segments: full 8s in faint color behind real digits */}
+            <div 
+              aria-hidden="true"
+              className="text-5xl font-bold absolute inset-0"
+              style={{ 
+                fontFamily: "'DSEG7Classic', monospace",
+                color: 'hsla(43, 40%, 65%, 0.22)',
+                letterSpacing: '-0.03em',
+                paddingRight: '0.03em',
+              }}
+            >
+              {formatTime(elapsedTime).replace(/[0-9]/g, '8')}
+            </div>
+            {/* Active (lit) digits */}
+            <div 
+              className="text-5xl font-bold"
+              style={{ 
+                fontFamily: "'DSEG7Classic', monospace",
+                color: 'hsl(40, 85%, 42%)',
+                WebkitTextStroke: '0.5px hsl(43, 80%, 50%)',
+                textShadow: '0 0 6px hsla(43, 90%, 50%, 0.5), 0 0 2px hsla(43, 90%, 55%, 0.3)',
+                letterSpacing: '-0.03em',
+                paddingRight: '0.03em',
+              }}
+            >
+              {formatTime(elapsedTime)}
+            </div>
           </div>
         </div>
       </div>
