@@ -106,16 +106,7 @@ export default function Index() {
     }
   };
 
-  if (isLoading || isRecovering) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your poker sessions...</p>
-        </div>
-      </div>
-    );
-  }
+  const sessionsLoading = isLoading || isRecovering;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -192,11 +183,17 @@ export default function Index() {
 
           {/* Stats section appears after the button */}
           <div className="w-full -mt-28">
-            <StatsQuickView />
+            {sessionsLoading ? (
+              <div className="flex justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-poker-feltGreen"></div>
+              </div>
+            ) : (
+              <StatsQuickView />
+            )}
           </div>
           
           {/* Active Sessions List - appears after stats if there are active sessions */}
-          {hasActiveSessions && (
+          {!sessionsLoading && hasActiveSessions && (
             <ActiveSessionsList 
               sessions={activeSessions}
               onResume={resumeSession}
@@ -228,7 +225,11 @@ export default function Index() {
             </div>
             
             {/* Show filters and sessions only if there are sessions */}
-            {sessions.length > 0 ? (
+            {sessionsLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-poker-feltGreen"></div>
+              </div>
+            ) : sessions.length > 0 ? (
               <>
                 <FilterBar filters={filters} onFiltersChange={setFilters} />
                 
@@ -256,7 +257,7 @@ export default function Index() {
                   )}
                 </div>
               </>
-            ) : !hasActiveSessions ? (
+            ) : !hasActiveSessions && !sessionsLoading ? (
               <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
                   <Icon name="PlusCircle" size={48} className="mx-auto" />
