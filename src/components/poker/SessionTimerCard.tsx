@@ -186,19 +186,33 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
       <div 
-        className="inline-block rounded-lg mb-3"
-        style={{ border: '1.5px solid hsl(43, 77%, 52%)', padding: '12px 24px' }}
+        className="inline-block rounded-xl mb-3 relative"
+        style={{
+          border: '3px solid hsl(30, 40%, 28%)',
+          outline: '1px solid hsl(43, 60%, 40%)',
+          outlineOffset: '-5px',
+          padding: '16px 28px',
+          borderRadius: '12px',
+          background: 'linear-gradient(135deg, hsl(30, 30%, 15%), hsl(30, 25%, 12%))',
+          boxShadow: [
+            '0 0 8px 2px hsla(43, 77%, 52%, 0.25)',
+            '0 0 20px 4px hsla(43, 77%, 52%, 0.12)',
+            '0 0 40px 8px hsla(43, 77%, 52%, 0.06)',
+            'inset 0 1px 0 0 hsla(43, 60%, 50%, 0.15)',
+            'inset 0 -1px 0 0 hsla(30, 40%, 10%, 0.4)',
+          ].join(', '),
+        }}
       >
-        <div className="mb-2 text-sm text-gray-500">Session Time</div>
+        <div className="mb-2 text-sm" style={{ color: 'hsl(43, 40%, 65%)' }}>Session Time</div>
         <div 
           className="text-5xl font-bold"
-        style={{ 
-          fontFamily: "'DSEG7Classic', monospace",
-          color: 'hsl(43, 77%, 52%)',
-          WebkitTextStroke: '0.8px hsl(0, 0%, 75%)',
-          textShadow: '0 0 3px hsla(43, 77%, 52%, 0.4)',
-          letterSpacing: '-0.03em'
-        }}
+          style={{ 
+            fontFamily: "'DSEG7Classic', monospace",
+            color: 'hsl(43, 77%, 52%)',
+            WebkitTextStroke: '0.8px hsl(0, 0%, 75%)',
+            textShadow: '0 0 3px hsla(43, 77%, 52%, 0.4)',
+            letterSpacing: '-0.03em'
+          }}
         >
           {formatTime(elapsedTime)}
         </div>
