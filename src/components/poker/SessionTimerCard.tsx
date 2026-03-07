@@ -203,7 +203,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       >
         <div className="mb-2 text-sm text-center" style={{ color: 'hsl(43, 40%, 45%)' }}>Session Time</div>
         <div 
-          className="text-5xl font-bold"
+          className="text-5xl font-bold text-center"
           style={{ 
             fontFamily: "'DSEG7Classic', monospace",
             color: 'hsl(43, 77%, 52%)',
