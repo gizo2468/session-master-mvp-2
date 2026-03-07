@@ -140,7 +140,7 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
               }}
             >
               <PlayerCardBack
-                barcodeValue={barcodeValue}
+                memberSince={profile?.created_at || null}
                 isCoach={profile?.role === 'coach'}
                 achievements={cardData?.achievements || []}
                 profilePicture={privateData?.profile_picture || null}

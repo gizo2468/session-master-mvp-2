@@ -43,6 +43,7 @@ export interface PlayerProfile {
   role: string;
   country: string | null;
   default_currency: string | null;
+  created_at: string;
 }
 
 export interface PlayerPrivateData {
@@ -87,7 +88,7 @@ export function usePlayerCard() {
           .maybeSingle(),
         supabase
           .from('profiles')
-          .select('username, online_nickname, role, country, default_currency')
+          .select('username, online_nickname, role, country, default_currency, created_at')
           .eq('id', user.id)
           .single(),
         supabase

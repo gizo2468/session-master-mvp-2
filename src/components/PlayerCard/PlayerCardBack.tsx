@@ -2,12 +2,13 @@ import React from 'react';
 import { RotateCcw, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Achievement } from '@/hooks/usePlayerCard';
+import { format } from 'date-fns';
 import braceletImg from '@/assets/championship-bracelet.png';
 import ringImg from '@/assets/championship-ring.png';
 import trophyImg from '@/assets/championship-trophy.png';
 
 interface PlayerCardBackProps {
-  barcodeValue: string;
+  memberSince: string | null;
   isCoach: boolean;
   achievements: Achievement[];
   profilePicture: string | null;
@@ -16,7 +17,7 @@ interface PlayerCardBackProps {
 }
 
 export function PlayerCardBack({ 
-  barcodeValue, 
+  memberSince, 
   isCoach,
   achievements,
   profilePicture,
@@ -96,11 +97,11 @@ export function PlayerCardBack({
           </div>
         </div>
 
-        {/* Unique Player Code */}
+        {/* Member Since */}
         <div className="text-center mb-2">
-          <p className="text-zinc-500 text-[8px] tracking-widest uppercase mb-0.5">Unique Player Code</p>
+          <p className="text-zinc-500 text-[8px] tracking-widest uppercase mb-0.5">Member Since</p>
           <p className="text-poker-gold font-mono text-xs tracking-wider">
-            {barcodeValue}
+            {memberSince ? format(new Date(memberSince), 'd MMM yyyy') : '—'}
           </p>
         </div>
 
