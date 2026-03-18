@@ -14,7 +14,7 @@ export function buildAvatarPublicUrl(filePath: string, cacheBust = false): strin
 /** Resolve a profile_picture value to a displayable URL.
  *  - If it's already a full URL, return as-is (backward compat).
  *  - If it's a relative path like "userId/avatar.jpg", build the public URL. */
-function resolveProfilePicture(value: string | null): string | null {
+export function resolveProfilePicture(value: string | null): string | null {
   if (!value) return null;
   if (value.startsWith('http')) return value;
   return buildAvatarPublicUrl(value);
