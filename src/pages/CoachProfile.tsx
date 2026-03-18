@@ -722,6 +722,14 @@ const CoachProfile: React.FC = () => {
             </ScrollArea>
           </DialogContent>
         </Dialog>
+
+      {coachId && (
+        <ViewOnlyCardBack
+          userId={coachId}
+          open={backCardOpen}
+          onOpenChange={setBackCardOpen}
+        />
+      )}
     </PageContainer>
   );
 };

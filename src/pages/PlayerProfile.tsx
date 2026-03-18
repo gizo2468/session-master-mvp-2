@@ -19,6 +19,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
 import { IconMenuButton } from '@/components/ui/IconMenuButton';
+import { resolveProfilePicture } from '@/hooks/usePlayerCard';
+import { ViewOnlyCardBack } from '@/components/PlayerCard/ViewOnlyCardBack';
 
 interface PlayerProfile {
   id: string;
