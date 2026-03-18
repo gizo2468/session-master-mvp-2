@@ -39,7 +39,7 @@ export function ViewOnlyCardBack({ userId, open, onOpenChange }: ViewOnlyCardBac
         setProfilePicture(resolveProfilePicture(privateRes.data?.profile_picture || null));
 
         if (cardRes.data?.achievements && Array.isArray(cardRes.data.achievements)) {
-          setAchievements(cardRes.data.achievements as Achievement[]);
+          setAchievements(cardRes.data.achievements as unknown as Achievement[]);
         } else {
           setAchievements([]);
         }
