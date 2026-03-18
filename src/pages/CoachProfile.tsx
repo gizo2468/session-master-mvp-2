@@ -16,6 +16,8 @@ import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
 import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
 import { HandReviewModal } from '@/components/coaching/HandReviewModal';
 import CardDisplay from '@/components/poker/CardDisplay';
+import { resolveProfilePicture } from '@/hooks/usePlayerCard';
+import { ViewOnlyCardBack } from '@/components/PlayerCard/ViewOnlyCardBack';
 
 interface CoachData {
   id: string;
