@@ -1,28 +1,24 @@
 
 
-## Plan: Fix Hand Image Upload on iOS
+## Plan: Back Card Layout Refinement
 
-### Problem
-`ImageUploadSection` receives `onImageDataUrl` as an optional prop, but `HandForm.tsx` never passes it. On iOS native, the component uses the native Capacitor camera picker which returns a dataUrl via `onImageDataUrl`. Since the callback is missing, the selected image is silently discarded.
+### File: `src/components/PlayerCard/PlayerCardBack.tsx`
 
-### Fix
+**Reorder layout to:**
+1. "SESSION MASTER ID" title
+2. Role ("Player" / "Coach") — moved up, directly under title
+3. Spacer (flex-1) — pushes avatar to center
+4. Large avatar — enlarged from `w-40 h-40` to `w-48 h-48`
+5. Spacer (flex-1) — balances centering
+6. Full name — moved down, directly above achievements (tight spacing, `mb-1`)
+7. Achievements row
+8. Unique Player Code
+9. Flip Card button
 
-**File: `src/components/poker/HandForm.tsx` (line 119-122)**
-
-Pass `onImageDataUrl` to `ImageUploadSection` that sets the image preview and form value:
-
-```tsx
-<ImageUploadSection 
-  imagePreview={imagePreview}
-  onImageChange={handleImageChange}
-  onImageDataUrl={(dataUrl) => {
-    setImagePreview(dataUrl);
-    form.setValue('image', dataUrl);
-  }}
-/>
-```
-
-`setImagePreview` and `form` are already exposed by `useHandForm` (line 393-394 in the hook). This mirrors what `handleImageChange` does for the web file input path.
-
-**Single file change, ~3 lines added.**
+**Specific changes:**
+- Move role text (`isCoach ? 'Coach' : 'Player'`) into the header section under the title
+- Add `flex-1` spacers above and below the avatar to vertically center it
+- Enlarge avatar to `w-48 h-48`, fallback icon to `w-20 h-20`
+- Place full name (`text-poker-gold font-bold text-lg`) just above achievements with `mb-1`
+- Keep everything else (achievements, code, flip button) as-is
 

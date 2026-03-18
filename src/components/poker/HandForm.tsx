@@ -61,6 +61,7 @@ const HandForm: React.FC<HandFormProps> = ({
     isNotesOpen,
     setIsNotesOpen,
     imagePreview,
+    setImagePreview,
     gameType,
     selectedCards,
     flopCards,
@@ -119,6 +120,10 @@ const HandForm: React.FC<HandFormProps> = ({
               <ImageUploadSection 
                 imagePreview={imagePreview}
                 onImageChange={handleImageChange}
+                onImageDataUrl={(dataUrl) => {
+                  setImagePreview(dataUrl);
+                  form.setValue('image', dataUrl);
+                }}
               />
 
               {/* AI Hand Analyzer - only show when adding new hand, not editing */}
