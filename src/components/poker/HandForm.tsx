@@ -61,6 +61,7 @@ const HandForm: React.FC<HandFormProps> = ({
     isNotesOpen,
     setIsNotesOpen,
     imagePreview,
+    setImagePreview,
     gameType,
     selectedCards,
     flopCards,
