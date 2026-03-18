@@ -75,7 +75,7 @@ const PlayerProfile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { removeStudent } = useCoachStudent();
   const [unreadBySession, setUnreadBySession] = useState<Record<string, boolean>>({});
-
+  const [backCardOpen, setBackCardOpen] = useState(false);
   useEffect(() => {
     if (!playerId || !user?.id) return;
     loadPlayerData();
