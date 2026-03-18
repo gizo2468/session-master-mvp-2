@@ -82,6 +82,7 @@ const CoachProfile: React.FC = () => {
   // View All modals
   const [viewAllSessionsOpen, setViewAllSessionsOpen] = useState(false);
   const [viewAllHandsOpen, setViewAllHandsOpen] = useState(false);
+  const [backCardOpen, setBackCardOpen] = useState(false);
 
   useEffect(() => {
     const loadCoachData = async () => {
