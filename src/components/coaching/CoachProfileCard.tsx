@@ -19,6 +19,7 @@ interface CoachProfileCardProps {
     coaching_focus?: string[];
     experience?: string;
   };
+  onAvatarClick?: () => void;
 }
 
 const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
