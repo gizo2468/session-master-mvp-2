@@ -412,7 +412,7 @@ const CoachProfile: React.FC = () => {
 
       {/* Coach Profile Card */}
       <div className="mb-8">
-        <CoachProfileCard coach={coach} />
+        <CoachProfileCard coach={coach} onAvatarClick={() => setBackCardOpen(true)} />
       </div>
 
       {/* Shared Sessions */}
