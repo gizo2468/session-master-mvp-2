@@ -138,7 +138,7 @@ const CoachProfile: React.FC = () => {
         const coachProfile = {
           ...profileResult.data,
           full_name: privateResult.data?.full_name || profileResult.data.username,
-          profile_picture: privateResult.data?.profile_picture
+          profile_picture: resolveProfilePicture(privateResult.data?.profile_picture || null) || undefined
         };
 
         setCoach(coachProfile);
