@@ -22,7 +22,7 @@ interface CoachProfileCardProps {
   onAvatarClick?: () => void;
 }
 
-const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
+const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach, onAvatarClick }) => {
   const { disconnectFromCoach } = useCoachStudent();
 
   const getInitials = (name: string) => {
