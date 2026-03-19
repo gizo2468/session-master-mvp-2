@@ -595,6 +595,14 @@ const calculateSummary = (sessions: SharedSession[]) => {
           />
         )}
       </div>
+
+      {playerId && (
+        <ViewOnlyCardBack
+          userId={playerId}
+          open={backCardOpen}
+          onOpenChange={setBackCardOpen}
+        />
+      )}
     </div>
   );
 };
