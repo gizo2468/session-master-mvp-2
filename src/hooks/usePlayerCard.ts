@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 const SUPABASE_URL = "https://wfmvvpbpuqbzidptxbqx.supabase.co";
 
 /** Build a public URL for a file in the avatars bucket, with optional cache-bust */
-function buildAvatarPublicUrl(filePath: string, cacheBust = false): string {
+export function buildAvatarPublicUrl(filePath: string, cacheBust = false): string {
   const base = `${SUPABASE_URL}/storage/v1/object/public/avatars/${filePath}`;
   return cacheBust ? `${base}?t=${Date.now()}` : base;
 }
@@ -14,7 +14,7 @@ function buildAvatarPublicUrl(filePath: string, cacheBust = false): string {
 /** Resolve a profile_picture value to a displayable URL.
  *  - If it's already a full URL, return as-is (backward compat).
  *  - If it's a relative path like "userId/avatar.jpg", build the public URL. */
-function resolveProfilePicture(value: string | null): string | null {
+export function resolveProfilePicture(value: string | null): string | null {
   if (!value) return null;
   if (value.startsWith('http')) return value;
   return buildAvatarPublicUrl(value);

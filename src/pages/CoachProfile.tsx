@@ -16,6 +16,8 @@ import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
 import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
 import { HandReviewModal } from '@/components/coaching/HandReviewModal';
 import CardDisplay from '@/components/poker/CardDisplay';
+import { resolveProfilePicture } from '@/hooks/usePlayerCard';
+import { ViewOnlyCardBack } from '@/components/PlayerCard/ViewOnlyCardBack';
 
 interface CoachData {
   id: string;
@@ -80,6 +82,7 @@ const CoachProfile: React.FC = () => {
   // View All modals
   const [viewAllSessionsOpen, setViewAllSessionsOpen] = useState(false);
   const [viewAllHandsOpen, setViewAllHandsOpen] = useState(false);
+  const [backCardOpen, setBackCardOpen] = useState(false);
 
   useEffect(() => {
     const loadCoachData = async () => {
@@ -135,7 +138,7 @@ const CoachProfile: React.FC = () => {
         const coachProfile = {
           ...profileResult.data,
           full_name: privateResult.data?.full_name || profileResult.data.username,
-          profile_picture: privateResult.data?.profile_picture
+          profile_picture: resolveProfilePicture(privateResult.data?.profile_picture || null) || undefined
         };
 
         setCoach(coachProfile);
@@ -409,7 +412,7 @@ const CoachProfile: React.FC = () => {
 
       {/* Coach Profile Card */}
       <div className="mb-8">
-        <CoachProfileCard coach={coach} />
+        <CoachProfileCard coach={coach} onAvatarClick={() => setBackCardOpen(true)} />
       </div>
 
       {/* Shared Sessions */}
@@ -719,6 +722,14 @@ const CoachProfile: React.FC = () => {
             </ScrollArea>
           </DialogContent>
         </Dialog>
+
+      {coachId && (
+        <ViewOnlyCardBack
+          userId={coachId}
+          open={backCardOpen}
+          onOpenChange={setBackCardOpen}
+        />
+      )}
     </PageContainer>
   );
 };

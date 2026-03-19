@@ -19,6 +19,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
 import { IconMenuButton } from '@/components/ui/IconMenuButton';
+import { resolveProfilePicture } from '@/hooks/usePlayerCard';
+import { ViewOnlyCardBack } from '@/components/PlayerCard/ViewOnlyCardBack';
 
 interface PlayerProfile {
   id: string;
@@ -73,7 +75,7 @@ const PlayerProfile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { removeStudent } = useCoachStudent();
   const [unreadBySession, setUnreadBySession] = useState<Record<string, boolean>>({});
-
+  const [backCardOpen, setBackCardOpen] = useState(false);
   useEffect(() => {
     if (!playerId || !user?.id) return;
     loadPlayerData();
@@ -124,7 +126,7 @@ const PlayerProfile = () => {
       const playerData = {
         ...profileResult.data,
         full_name: privateResult.data?.full_name || profileResult.data.username,
-        profile_picture: privateResult.data?.profile_picture,
+        profile_picture: resolveProfilePicture(privateResult.data?.profile_picture || null) || undefined,
         email: privateResult.data?.email,
         default_currency: profileResult.data.default_currency || 'USD'
       };
@@ -398,12 +400,14 @@ const calculateSummary = (sessions: SharedSession[]) => {
           </Button>
           
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={player.profile_picture || ''} />
-              <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                {getInitials(player.full_name || player.username || 'Player')}
-              </AvatarFallback>
-            </Avatar>
+            <div className="cursor-pointer" onClick={() => setBackCardOpen(true)}>
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={player.profile_picture || ''} />
+                <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                  {getInitials(player.full_name || player.username || 'Player')}
+                </AvatarFallback>
+              </Avatar>
+            </div>
             <div>
               <h1 className="text-2xl font-bold text-poker-black">
                 {player.full_name || player.username}
@@ -591,6 +595,14 @@ const calculateSummary = (sessions: SharedSession[]) => {
           />
         )}
       </div>
+
+      {playerId && (
+        <ViewOnlyCardBack
+          userId={playerId}
+          open={backCardOpen}
+          onOpenChange={setBackCardOpen}
+        />
+      )}
     </div>
   );
 };

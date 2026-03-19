@@ -19,9 +19,10 @@ interface CoachProfileCardProps {
     coaching_focus?: string[];
     experience?: string;
   };
+  onAvatarClick?: () => void;
 }
 
-const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
+const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach, onAvatarClick }) => {
   const { disconnectFromCoach } = useCoachStudent();
 
   const getInitials = (name: string) => {
@@ -41,12 +42,17 @@ const CoachProfileCard: React.FC<CoachProfileCardProps> = ({ coach }) => {
       <CardContent className="space-y-6">
         {/* Coach Avatar and Basic Info */}
         <div className="flex items-center space-x-4">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={coach.profile_picture || ''} />
-            <AvatarFallback className="bg-primary/10 text-primary text-lg">
-              {getInitials(coach.full_name || coach.username || 'Coach')}
-            </AvatarFallback>
-          </Avatar>
+          <div 
+            className={onAvatarClick ? 'cursor-pointer' : ''} 
+            onClick={onAvatarClick}
+          >
+            <Avatar className="h-16 w-16">
+              <AvatarImage src={coach.profile_picture || ''} />
+              <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                {getInitials(coach.full_name || coach.username || 'Coach')}
+              </AvatarFallback>
+            </Avatar>
+          </div>
           <div className="flex-1">
             <h3 className="font-semibold text-lg">
               {coach.full_name || coach.username}
