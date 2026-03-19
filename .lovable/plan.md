@@ -1,29 +1,24 @@
 
 
-## Plan: Add Image Lightbox Preview to Hand Image Upload
+## Plan: Back Card Layout Refinement
 
-### What changes
+### File: `src/components/PlayerCard/PlayerCardBack.tsx`
 
-**Single file: `src/components/poker/HandFormSections/ImageUploadSection.tsx`**
+**Reorder layout to:**
+1. "SESSION MASTER ID" title
+2. Role ("Player" / "Coach") — moved up, directly under title
+3. Spacer (flex-1) — pushes avatar to center
+4. Large avatar — enlarged from `w-40 h-40` to `w-48 h-48`
+5. Spacer (flex-1) — balances centering
+6. Full name — moved down, directly above achievements (tight spacing, `mb-1`)
+7. Achievements row
+8. Unique Player Code
+9. Flip Card button
 
-When an image is already uploaded (i.e. `imagePreview` exists), tapping the circular thumbnail will open a fullscreen lightbox dialog instead of immediately triggering the image picker. The lightbox follows the same pattern as the Profile Card's avatar lightbox:
-
-- Dark blurred background (`bg-black/95 backdrop-blur-sm`)
-- Large image displayed with `object-contain`
-- Top-right X close button
-- Bottom-center "Edit Photo" button (with `Pencil` icon) that triggers the native/web image picker and closes the lightbox
-
-When no image exists yet, tapping still opens the picker directly (current behavior unchanged).
-
-### Implementation details
-
-1. Add `useState` for `isLightboxOpen`
-2. Import `Dialog`, `DialogContent`, `DialogTitle` from `@/components/ui/dialog`, `Pencil` and `X` from `lucide-react`
-3. Split the `handleClick` logic:
-   - If `imagePreview` exists → open lightbox
-   - If no image → run existing picker flow
-4. Extract picker logic into `handlePickImage()` (reused by both the no-image click and the lightbox "Edit Photo" button)
-5. Add the lightbox Dialog after the existing JSX, matching the Profile Card's lightbox styling exactly
-
-No other files change. The `onImageChange` and `onImageDataUrl` callbacks remain the same.
+**Specific changes:**
+- Move role text (`isCoach ? 'Coach' : 'Player'`) into the header section under the title
+- Add `flex-1` spacers above and below the avatar to vertically center it
+- Enlarge avatar to `w-48 h-48`, fallback icon to `w-20 h-20`
+- Place full name (`text-poker-gold font-bold text-lg`) just above achievements with `mb-1`
+- Keep everything else (achievements, code, flip button) as-is
 
