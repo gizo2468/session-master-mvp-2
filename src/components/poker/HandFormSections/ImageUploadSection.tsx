@@ -79,15 +79,19 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
 
       {/* Lightbox preview */}
       <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
-        <DialogContent className="max-w-[100vw] max-h-[100dvh] w-screen h-[100dvh] p-0 border-none bg-black/95 backdrop-blur-sm flex flex-col items-center justify-center gap-0 [&>button]:hidden">
+        <DialogContent
+          className="max-w-[100vw] max-h-[100dvh] w-screen h-[100dvh] p-0 border-none bg-black/95 backdrop-blur-sm flex flex-col items-center justify-center gap-0 [&>button]:hidden"
+          onClick={() => setIsLightboxOpen(false)}
+        >
           <DialogTitle className="sr-only">Hand Image Preview</DialogTitle>
 
           {/* Close button */}
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsLightboxOpen(false)}
-            className="absolute top-4 right-4 z-10 text-white hover:bg-white/10"
+            onClick={(e) => { e.stopPropagation(); setIsLightboxOpen(false); }}
+            className="absolute top-4 right-4 z-20 text-white hover:bg-white/10 min-w-[44px] min-h-[44px]"
+            style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
           >
             <X className="w-6 h-6" />
           </Button>
@@ -98,14 +102,16 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
               src={imagePreview}
               alt="Hand preview"
               className="max-w-[90vw] max-h-[70dvh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
             />
           )}
 
           {/* Edit button */}
-          <div className="absolute bottom-8 left-0 right-0 flex justify-center">
+          <div className="absolute bottom-8 left-0 right-0 flex justify-center" onClick={(e) => e.stopPropagation()}>
             <Button
               onClick={handleEditPhoto}
               className="bg-primary text-primary-foreground hover:bg-primary/90 backdrop-blur-md px-6"
+              style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
             >
               <Pencil className="w-4 h-4 mr-2" />
               Edit Photo
