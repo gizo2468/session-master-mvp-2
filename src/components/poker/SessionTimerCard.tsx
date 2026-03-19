@@ -227,9 +227,9 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
               className="text-5xl font-bold"
               style={{ 
                 fontFamily: "'DSEG7Classic', monospace",
-                color: 'hsl(40, 85%, 42%)',
-                WebkitTextStroke: '0.5px hsl(43, 80%, 50%)',
-                textShadow: '0 0 6px hsla(43, 90%, 50%, 0.5), 0 0 2px hsla(43, 90%, 55%, 0.3)',
+                color: 'hsl(43, 80%, 48%)',
+                WebkitTextStroke: '0.5px hsl(45, 78%, 55%)',
+                textShadow: '0 0 6px hsla(45, 85%, 55%, 0.5), 0 0 2px hsla(45, 85%, 58%, 0.3)',
                 letterSpacing: '-0.03em',
                 paddingRight: '0.03em',
               }}
