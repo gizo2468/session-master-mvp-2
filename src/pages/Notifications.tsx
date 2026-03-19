@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { HandReviewModal } from '@/components/coaching/HandReviewModal';
@@ -24,6 +25,7 @@ export default function Notifications() {
   const [selectedNotification, setSelectedNotification] = useState<typeof notifications[0] | null>(null);
   const [selectedSessionNotification, setSelectedSessionNotification] = useState<typeof notifications[0] | null>(null);
   const [sessionModalDefaultTab, setSessionModalDefaultTab] = useState<'summary' | 'tables' | 'hands'>('summary');
+  const swipeBackRef = useSwipeBack({ fallbackPath: '/', screenName: 'Notifications' });
 
   // Deduplicate stack_check notifications: show only the most recent one
   const displayNotifications = useMemo(() => {
@@ -413,7 +415,7 @@ export default function Notifications() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="container mx-auto max-w-md px-4 py-4">
           <div className="flex items-center">

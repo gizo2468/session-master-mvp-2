@@ -5,10 +5,21 @@ import { useSwipeBack } from '@/hooks/useSwipeBack';
 interface PageContainerProps {
   children: ReactNode;
   disableSwipeBack?: boolean;
+  swipeBackFallbackPath?: string;
+  swipeBackScreenName?: string;
 }
 
-export default function PageContainer({ children, disableSwipeBack = false }: PageContainerProps) {
-  const swipeRef = useSwipeBack(disableSwipeBack);
+export default function PageContainer({
+  children,
+  disableSwipeBack = false,
+  swipeBackFallbackPath = '/',
+  swipeBackScreenName = 'PageContainer',
+}: PageContainerProps) {
+  const swipeRef = useSwipeBack({
+    disabled: disableSwipeBack,
+    fallbackPath: swipeBackFallbackPath,
+    screenName: swipeBackScreenName,
+  });
 
   return (
     <div ref={swipeRef} className="min-h-screen bg-gray-50">

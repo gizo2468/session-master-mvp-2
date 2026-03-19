@@ -17,6 +17,7 @@ import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useCoachStudent } from '@/context/CoachStudentContext';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
 import { IconMenuButton } from '@/components/ui/IconMenuButton';
 import { resolveProfilePicture } from '@/hooks/usePlayerCard';
@@ -76,6 +77,7 @@ const PlayerProfile = () => {
   const { removeStudent } = useCoachStudent();
   const [unreadBySession, setUnreadBySession] = useState<Record<string, boolean>>({});
   const [backCardOpen, setBackCardOpen] = useState(false);
+  const swipeBackRef = useSwipeBack({ fallbackPath: '/dashboard', screenName: 'PlayerProfile' });
   useEffect(() => {
     if (!playerId || !user?.id) return;
     loadPlayerData();
@@ -386,7 +388,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
   const currencySymbol = getCurrencySymbol(player.default_currency);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-4xl px-4 py-8">
         {/* Header */}
         <header className="mb-8">

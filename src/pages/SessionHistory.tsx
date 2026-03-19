@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
 import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import SessionCard from '@/components/SessionCard';
 import { Button } from '@/components/ui/button';
 import FilterBar from '@/components/ui/FilterBar';
@@ -14,6 +15,7 @@ export default function SessionHistory() {
   const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
   const { user } = useAuth();
   const { sessions, filters, setFilters, isLoading } = useSessionContext();
+  const swipeBackRef = useSwipeBack({ fallbackPath: '/', screenName: 'SessionHistory' });
   const [sortBy, setSortBy] = useState<'date' | 'profit'>('date');
 
   useEffect(() => {
@@ -74,7 +76,7 @@ export default function SessionHistory() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm px-4 py-4 sticky top-0 z-10">
         <div className="container mx-auto max-w-md">
           <div className="flex justify-between items-center">

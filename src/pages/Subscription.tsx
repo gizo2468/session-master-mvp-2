@@ -7,6 +7,7 @@ import { ArrowLeft, Check, Star, Zap, Crown, FileDown, Smartphone } from 'lucide
 import { useAuth } from '@/context/AuthContext';
 import { detectPlatform } from '@/utils/platformDetection';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { useIAP } from '@/hooks/useIAP';
 
 // Pricing plans configuration
@@ -32,6 +33,7 @@ const Subscription: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
   const platform = detectPlatform();
   const isMobile = platform === 'ios' || platform === 'android';
+  const swipeBackRef = useSwipeBack({ fallbackPath: '/settings', screenName: 'Subscription' });
   
   // IAP hook for iOS purchases
   const { purchase, restore, getLocalizedPrice, isLoading: iapLoading, isIOS } = useIAP();
@@ -63,7 +65,7 @@ const Subscription: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <div ref={swipeBackRef} className="min-h-screen bg-gradient-to-br from-background to-muted">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">

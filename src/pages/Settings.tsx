@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CurrencySelector } from '@/components/ui/CurrencySelector';
 import Icon from '@/components/ui/Lucide';
@@ -39,6 +40,7 @@ const Settings: React.FC = () => {
     experience: ''
   });
   const [isUsernameLoading, setIsUsernameLoading] = useState(false);
+  const swipeBackRef = useSwipeBack({ fallbackPath: '/', screenName: 'Settings' });
 
   const coachingFocusOptions = [
     'Tournaments',
@@ -257,7 +259,7 @@ const Settings: React.FC = () => {
   const appVersion = "0.0.0"; // From package.json
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-md px-4 py-8">
         <header className="mb-8">
           <Button 

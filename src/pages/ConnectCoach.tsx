@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { useAuth } from '@/context/AuthContext';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import Icon from '@/components/ui/Lucide';
 import ConnectWithCoach from '@/components/coaching/ConnectWithCoach';
 import CoachConnection from '@/components/coaching/CoachConnection';
@@ -14,6 +15,7 @@ const ConnectCoach = () => {
   const navigate = useNavigate();
   const { isStudent, studentProfile, loading } = useCoachStudent();
   const { user, isLoading } = useAuth();
+  const swipeBackRef = useSwipeBack({ fallbackPath: '/', screenName: 'ConnectCoach' });
   
   // Show loading while checking authentication
   if (isLoading || loading) {
@@ -66,7 +68,7 @@ const ConnectCoach = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-md px-4 py-8">
         <header className="mb-8">
           <button 
