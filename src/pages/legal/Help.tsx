@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import Icon from '@/components/ui/Lucide';
 import {
   Accordion,
@@ -223,9 +224,10 @@ const faqItems: FaqItem[] = [
 
 const Help: React.FC = () => {
   const navigate = useNavigate();
+  const swipeBackRef = useSwipeBack({ fallbackPath: '/settings', screenName: 'Help' });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div ref={swipeBackRef} className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <header className="mb-8">
           <Button 

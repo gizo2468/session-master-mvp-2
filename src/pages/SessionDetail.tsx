@@ -4,6 +4,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
 import { useSessionLoader } from '@/hooks/useSessionLoader';
 import { useToast } from '@/hooks/use-toast';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import TableDetailsCard from '@/components/poker/TableDetailsCard';
 import { TablesPlayedSection } from '@/components/poker/TablesPlayedSection';
@@ -37,6 +38,7 @@ export default function SessionDetail() {
   const [showAddTable, setShowAddTable] = useState(false);
   const [selectedTable, setSelectedTable] = useState<TableData | null>(null);
   const [cashOutAmount, setCashOutAmount] = useState('');
+  const swipeBackRef = useSwipeBack({ fallbackPath: '/history', screenName: 'SessionDetail' });
   
   // Show loading state while fetching session
   if (isLoadingSession) {
@@ -333,7 +335,7 @@ export default function SessionDetail() {
   };
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-3xl px-4 py-8">
         <SessionDetailHeader
           sessionId={sessionId}

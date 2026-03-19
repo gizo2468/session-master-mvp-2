@@ -20,6 +20,7 @@ import PendingRequestsList from '@/components/coaching/PendingRequestsList';
 import StudentsList from '@/components/coaching/StudentsList';
 import CoachDashboardSkeleton from '@/components/coaching/CoachDashboardSkeleton';
 import { useCoachDashboardData } from '@/hooks/useCoachDashboardData';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const CoachDashboard = () => {
@@ -27,6 +28,7 @@ const CoachDashboard = () => {
   const { isCoach, coachProfile, students, profileLoading } = useCoachStudent();
   const { user } = useAuth();
   const { recentReviews, playerReviews, loading: dashboardLoading, markReviewAsRead } = useCoachDashboardData();
+  const swipeBackRef = useSwipeBack({ fallbackPath: '/', screenName: 'CoachDashboard' });
   
   // Redirect non-coaches safely via useEffect
   const shouldRedirect = !profileLoading && user && !isCoach;
@@ -96,7 +98,7 @@ const CoachDashboard = () => {
   const totalReviews = recentReviews.length + playerReviews.length;
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <header className="mb-8">
           <button 

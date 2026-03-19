@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { useAuth } from '@/context/AuthContext';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { supabase } from '@/integrations/supabase/client';
 import Icon from '@/components/ui/Lucide';
 import PlayerReviewForm from '@/components/coaching/PlayerReviewForm';
@@ -26,6 +27,7 @@ const PlayerDashboard = () => {
   const [recentReviews, setRecentReviews] = useState<PlayerReview[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const connectRef = useRef<HTMLDivElement>(null);
+  const swipeBackRef = useSwipeBack({ fallbackPath: '/', screenName: 'PlayerDashboard' });
 
   // Auto-scroll to connect section if openConnect param is present
   useEffect(() => {
@@ -56,7 +58,7 @@ const PlayerDashboard = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <header className="mb-8">
           <button 

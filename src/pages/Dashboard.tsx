@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import { useNavigateWithRefresh } from '@/hooks/useNavigateWithRefresh';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import PlayerAllTimeChart from '@/components/PlayerAllTimeChart';
 import StatsQuickView from '@/components/StatsQuickView';
 import MyCoachingNetwork from '@/components/coaching/MyCoachingNetwork';
@@ -30,6 +31,7 @@ const Dashboard: React.FC = () => {
     gameTypes: [],
     sessionFormat: [],
   });
+  const swipeBackRef = useSwipeBack({ fallbackPath: '/', screenName: 'Dashboard' });
 
   // Helper function to display role with proper formatting
   const getDisplayRole = (role?: string) => {
@@ -84,7 +86,7 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="container mx-auto max-w-md px-4 py-4">
           <div className="flex justify-between items-center">
