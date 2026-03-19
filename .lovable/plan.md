@@ -1,35 +1,26 @@
 
 
-## Plan: Add Smooth Visual Slide Transition to Swipe-Back
+## Plan: Fix Home Page Scroll Position on Open/Return
 
-### Problem
-The swipe-back gesture works functionally but has no visual feedback — the page just abruptly changes on `navigate(-1)`. It needs to visually slide the page right as the user drags, then either complete the slide-out animation or snap back.
+### Root Cause
 
-### Approach
-Enhance `useSwipeBack` to visually translate the page container in real-time during the swipe, with:
-- **Live tracking**: During `touchmove`, apply `transform: translateX(dx)` to the element with decreasing opacity
-- **A subtle shadow** on the left edge during the drag to simulate depth
-- **Completion animation**: If the swipe qualifies, animate the page fully off-screen (translateX → 100%) over ~250ms, then navigate
-- **Snap-back animation**: If the swipe is cancelled or too short, animate smoothly back to translateX(0) over ~200ms
-- Use `will-change: transform` and GPU-accelerated properties only
+The Home page (`Index.tsx`) never scrolls to the top on mount or when the user returns to it. Other pages like `LiveSession` and `Subscription` explicitly call `window.scrollTo(0, 0)` on mount, but the Home page does not.
 
-### Changes
+When navigating back to Home (via swipe-back or button), the browser may retain a stale scroll offset from the previous visit or from the route transition animation, causing the page to appear slightly scrolled down. The `-mt-36` negative margin on the chip container makes even a small offset visually obvious, since it cuts off the top of the header area.
 
-**`src/hooks/useSwipeBack.ts`** — Add visual feedback to the existing gesture logic:
+### Fix
 
-1. **`touchstart`**: Set `will-change: transform` on the element, remove any existing transition
-2. **`touchmove`**: Apply `transform: translateX(${dx}px)` directly to the element (clamped to 0–screenWidth). Add slight opacity reduction (1 → 0.85 as dx grows). Add a left-edge shadow via `boxShadow`
-3. **`touchend` (qualifies)**: Add a CSS transition (`transform 250ms ease-out, opacity 200ms ease-out`), set `translateX(100vw)` + opacity 0, then after the transition ends call `navigate(-1)` or fallback
-4. **`touchend` (doesn't qualify) / `touchcancel`**: Add transition, animate back to `translateX(0)` + opacity 1, then clean up styles
-5. **Cleanup**: Always remove inline styles and `will-change` after animation completes
+Add a `useEffect` in `src/pages/Index.tsx` that scrolls to the true top on mount:
 
-No new files needed. No changes to page components or routing. The visual effect is entirely self-contained in the hook via inline style manipulation on the ref'd element.
+```ts
+useEffect(() => {
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+}, []);
+```
 
-### Technical details
+This matches the same pattern already used in `LiveSession.tsx` (line 33) and `Subscription.tsx` (line 64).
 
-- Use `requestAnimationFrame` in touchmove for smooth 60fps updates
-- Use `transitionend` listener for cleanup after completion/snap-back animations
-- Clamp translateX to prevent negative (leftward) movement
-- Opacity range: 1.0 → 0.85 (subtle, not dramatic)
-- Shadow: `box-shadow: -4px 0 16px rgba(0,0,0,0.15)` during drag
+### Scope
+- **One file changed**: `src/pages/Index.tsx` — add the scroll-to-top effect
+- No layout, spacing, or navigation changes
 
