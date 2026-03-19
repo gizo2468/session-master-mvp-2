@@ -28,6 +28,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function Index() {
+  // Always start at the true top when mounting or returning to Home
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { 
