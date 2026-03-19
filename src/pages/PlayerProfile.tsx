@@ -126,7 +126,7 @@ const PlayerProfile = () => {
       const playerData = {
         ...profileResult.data,
         full_name: privateResult.data?.full_name || profileResult.data.username,
-        profile_picture: privateResult.data?.profile_picture,
+        profile_picture: resolveProfilePicture(privateResult.data?.profile_picture || null) || undefined,
         email: privateResult.data?.email,
         default_currency: profileResult.data.default_currency || 'USD'
       };
