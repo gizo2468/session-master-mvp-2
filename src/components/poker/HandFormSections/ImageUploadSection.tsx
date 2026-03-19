@@ -1,6 +1,8 @@
-import React from 'react';
-import { Camera, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Camera, Loader2, Pencil, X } from 'lucide-react';
 import { useNativeImagePicker } from '@/hooks/useNativeImagePicker';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface ImageUploadSectionProps {
   imagePreview: string | null;
@@ -14,18 +16,31 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
   onImageDataUrl
 }) => {
   const { pickImage, isLoading, isNative } = useNativeImagePicker();
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
-  const handleClick = async () => {
+  const handlePickImage = async () => {
     if (isNative) {
-      // Use native picker on mobile
       const result = await pickImage('prompt');
       if (result && onImageDataUrl) {
         onImageDataUrl(result.dataUrl);
       }
     } else {
-      // Fallback to file input on web
       document.getElementById('image-upload')?.click();
     }
+  };
+
+  const handleClick = () => {
+    if (isLoading) return;
+    if (imagePreview) {
+      setIsLightboxOpen(true);
+    } else {
+      handlePickImage();
+    }
+  };
+
+  const handleEditPhoto = () => {
+    setIsLightboxOpen(false);
+    setTimeout(() => handlePickImage(), 200);
   };
 
   return (
@@ -61,6 +76,43 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
         onChange={onImageChange}
         className="hidden"
       />
+
+      {/* Lightbox preview */}
+      <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
+        <DialogContent className="max-w-[100vw] max-h-[100dvh] w-screen h-[100dvh] p-0 border-none bg-black/95 backdrop-blur-sm flex flex-col items-center justify-center gap-0 [&>button]:hidden">
+          <DialogTitle className="sr-only">Hand Image Preview</DialogTitle>
+
+          {/* Close button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsLightboxOpen(false)}
+            className="absolute top-4 right-4 z-10 text-white hover:bg-white/10"
+          >
+            <X className="w-6 h-6" />
+          </Button>
+
+          {/* Image */}
+          {imagePreview && (
+            <img
+              src={imagePreview}
+              alt="Hand preview"
+              className="max-w-[90vw] max-h-[70dvh] object-contain rounded-lg"
+            />
+          )}
+
+          {/* Edit button */}
+          <div className="absolute bottom-8 left-0 right-0 flex justify-center">
+            <Button
+              onClick={handleEditPhoto}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 backdrop-blur-md px-6"
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit Photo
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
