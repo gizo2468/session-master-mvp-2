@@ -400,12 +400,14 @@ const calculateSummary = (sessions: SharedSession[]) => {
           </Button>
           
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={player.profile_picture || ''} />
-              <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                {getInitials(player.full_name || player.username || 'Player')}
-              </AvatarFallback>
-            </Avatar>
+            <div className="cursor-pointer" onClick={() => setBackCardOpen(true)}>
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={player.profile_picture || ''} />
+                <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                  {getInitials(player.full_name || player.username || 'Player')}
+                </AvatarFallback>
+              </Avatar>
+            </div>
             <div>
               <h1 className="text-2xl font-bold text-poker-black">
                 {player.full_name || player.username}
