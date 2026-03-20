@@ -1,28 +1,27 @@
 
 
-## Plan: Fix View All Button Bottom Spacing
+## Plan: Fix Start New Session Top Gap & Back Navigation
 
 ### Problem
-The Home page root container is `fixed inset-0` with no bottom padding. On iPhone, the View All button at the bottom of the session list gets cut off by the home indicator bar / bottom safe area.
+`SessionForm.tsx` uses `min-h-screen bg-gray-50` without safe-area padding or fixed positioning. When navigating between this page and the Home page (which uses `fixed inset-0`), the inconsistent container strategies cause scroll-offset issues that persist after navigating back.
 
 ### Fix
 
-**`src/pages/Index.tsx`** — Add `pb-safe` class to the root div (line 319) to add bottom safe-area padding, plus a small extra bottom padding on the content area:
+**`src/pages/SessionForm.tsx`** — line 343, update the root div:
 
-1. Add `pb-safe` to the root container so the scrollable area respects the bottom safe area inset
-2. Add `pb-6` to the `<main>` element (line 285 area) to ensure extra breathing room above the safe area
+```tsx
+// Before
+<div className="min-h-screen bg-gray-50">
 
-Root div changes from:
-```tsx
-<div className="fixed inset-0 overflow-y-auto overscroll-none bg-gray-50 pt-safe">
-```
-to:
-```tsx
+// After
 <div className="fixed inset-0 overflow-y-auto overscroll-none bg-gray-50 pt-safe pb-safe">
 ```
 
-And the `<main>` closing area — add `pb-6` to the main's inner content wrapper to give the View All button proper spacing from the bottom edge.
+This matches the same pattern used on the Home page and SessionDetail, ensuring:
+- Correct top positioning with `pt-safe` for iPhone notch/Dynamic Island
+- Bottom safe area with `pb-safe`
+- No scroll offset leaking between pages via `fixed inset-0 overflow-y-auto overscroll-none`
 
 ### Scope
-- One class addition in `src/pages/Index.tsx`
+- One line change in `src/pages/SessionForm.tsx`
 
