@@ -226,10 +226,10 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
       return;
     }
 
-    if (!opponentName.trim() || !noteBody.trim()) {
+    if (!opponentName.trim()) {
       toast({
         title: 'Missing fields',
-        description: 'Please fill in both opponent name and note.',
+        description: 'Please fill in the opponent name.',
         variant: 'destructive',
       });
       return;
