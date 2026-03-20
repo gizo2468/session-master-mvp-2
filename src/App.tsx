@@ -97,6 +97,7 @@ const App = () => {
                         <Route path="/connect-coach" element={<ConnectCoach />} />
                       </Routes>
                     </Suspense>
+                    </AppLayout>
                   </AppErrorBoundary>
                 </AuthGuard>
               </SessionProvider>

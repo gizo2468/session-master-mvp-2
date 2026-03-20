@@ -113,7 +113,7 @@ export default function Index() {
   const sessionsLoading = isLoading || isRecovering;
 
   return (
-    <div className="fixed inset-0 overflow-y-auto overscroll-none bg-gray-50 pt-safe pb-safe">
+    <div className="min-h-screen">
       <header className="bg-white shadow-sm relative z-10">
         <div className="container mx-auto max-w-md px-4 py-4">
           <div className="flex justify-between items-center">
