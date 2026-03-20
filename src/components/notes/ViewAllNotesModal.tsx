@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { StickyNote, Plus } from 'lucide-react';
+import { StickyNote, Plus, X } from 'lucide-react';
+import { useSignedImageUrl } from '@/hooks/useSignedImageUrl';
 import { Button } from '@/components/ui/button';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 import { useAuth } from '@/context/AuthContext';
@@ -52,6 +53,63 @@ interface ViewAllNotesModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Reusable opponent row with optional image thumbnail
+const OpponentRowInner: React.FC<{
+  opponent: GroupedOpponent;
+  onClick: () => void;
+  onImageClick: (url: string) => void;
+}> = ({ opponent, onClick, onImageClick }) => {
+  const colorData = getColorById(opponent.profile?.color);
+  const signedUrl = useSignedImageUrl('opponent-avatars', opponent.profile?.image_url);
+
+  return (
+    <div
+      onClick={onClick}
+      className="p-3 bg-muted/50 rounded-lg border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors"
+    >
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2 min-w-0">
+          <div
+            className="w-3 h-3 rounded-sm flex-shrink-0"
+            style={{
+              backgroundColor: colorData.hex,
+              border: colorData.border ? `1px solid ${colorData.border}` : '1px solid transparent'
+            }}
+            title={colorData.label}
+          />
+          {signedUrl && (
+            <img
+              src={signedUrl}
+              alt=""
+              className="w-6 h-6 rounded-full object-cover flex-shrink-0 cursor-pointer"
+              onClick={(e) => { e.stopPropagation(); onImageClick(signedUrl); }}
+            />
+          )}
+          <span className="font-medium text-sm truncate">
+            {opponent.profile?.nickname || 'Unknown'}
+          </span>
+          {opponent.noteCount > 1 && (
+            <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full flex-shrink-0">
+              {opponent.noteCount} notes
+            </span>
+          )}
+        </div>
+        <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+          {format(new Date(opponent.latestNote.created_at), 'MMM d')}
+        </span>
+      </div>
+      {opponent.latestNote.note_body && (
+        <p className="text-sm text-muted-foreground line-clamp-2">
+          {opponent.latestNote.note_body}
+        </p>
+      )}
+    </div>
+  );
+};
+
+// Wrap to use as "OpponentRow" in JSX
+const OpponentRow = React.memo(OpponentRowInner);
+
 const ViewAllNotesModal: React.FC<ViewAllNotesModalProps> = ({ open, onOpenChange }) => {
   const { isPremium, getNotesLimits } = usePremiumAccess();
   const { user } = useAuth();
@@ -62,6 +120,8 @@ const ViewAllNotesModal: React.FC<ViewAllNotesModalProps> = ({ open, onOpenChang
   const [selectedOpponentProfile, setSelectedOpponentProfile] = useState<OpponentProfile | null>(null);
   const [colorFilter, setColorFilter] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [isImageFullscreen, setIsImageFullscreen] = useState(false);
+  const [fullscreenImageUrl, setFullscreenImageUrl] = useState<string | null>(null);
 
   const fetchNotes = async () => {
     if (!user?.id) return;
@@ -269,49 +329,41 @@ const ViewAllNotesModal: React.FC<ViewAllNotesModalProps> = ({ open, onOpenChang
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {filteredOpponents.map((opponent) => {
-                    const colorData = getColorById(opponent.profile?.color);
-                    return (
-                      <div
-                        key={opponent.profile.id}
-                        onClick={() => handleOpponentClick(opponent)}
-                        className="p-3 bg-muted/50 rounded-lg border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors"
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div
-                              className="w-3 h-3 rounded-sm flex-shrink-0"
-                              style={{
-                                backgroundColor: colorData.hex,
-                                border: colorData.border ? `1px solid ${colorData.border}` : '1px solid transparent'
-                              }}
-                              title={colorData.label}
-                            />
-                            <span className="font-medium text-sm truncate">
-                              {opponent.profile?.nickname || 'Unknown'}
-                            </span>
-                            {opponent.noteCount > 1 && (
-                              <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full flex-shrink-0">
-                                {opponent.noteCount} notes
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                            {format(new Date(opponent.latestNote.created_at), 'MMM d')}
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {opponent.latestNote.note_body}
-                        </p>
-                      </div>
-                    );
-                  })}
+                  {filteredOpponents.map((opponent) => (
+                    <OpponentRow
+                      key={opponent.profile.id}
+                      opponent={opponent}
+                      onClick={() => handleOpponentClick(opponent)}
+                      onImageClick={(url) => { setFullscreenImageUrl(url); setIsImageFullscreen(true); }}
+                    />
+                  ))}
                 </div>
               )}
             </>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Fullscreen image lightbox */}
+      {isImageFullscreen && fullscreenImageUrl && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 animate-in fade-in-0 duration-200"
+          onClick={() => setIsImageFullscreen(false)}
+        >
+          <button
+            onClick={(e) => { e.stopPropagation(); setIsImageFullscreen(false); }}
+            className="absolute top-4 right-4 z-10 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-background/20 backdrop-blur-md text-white"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <img
+            src={fullscreenImageUrl}
+            alt="Opponent"
+            className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
       <AddNoteModal
         open={isAddModalOpen}
