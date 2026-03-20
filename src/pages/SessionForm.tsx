@@ -344,7 +344,7 @@ export default function SessionForm() {
       <div className="container mx-auto max-w-md px-4 py-8">
         <header className="mb-8">
           <button 
-            onClick={() => navigate('/')} 
+            onClick={() => navigate(-1)} 
             className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:underline"
           >
             <Icon name="ArrowLeft" size={16} />
