@@ -27,6 +27,15 @@ export default function Notifications() {
   const [sessionModalDefaultTab, setSessionModalDefaultTab] = useState<'summary' | 'tables' | 'hands'>('summary');
   const swipeBackRef = useSwipeBack({ fallbackPath: '/', screenName: 'Notifications' });
 
+  const handleMarkAllAsRead = async () => {
+    const unread = displayNotifications.filter(n => !n.is_read);
+    if (unread.length === 0) return;
+    for (const n of unread) {
+      await markAsRead(n.id);
+    }
+    toast({ title: 'All notifications marked as read' });
+  };
+
   // Deduplicate stack_check notifications: show only the most recent one
   const displayNotifications = useMemo(() => {
     const stackCheckNotifications = notifications.filter(n => n.type === 'stack_check');
@@ -428,7 +437,15 @@ export default function Notifications() {
               <Icon name="ArrowLeft" size={16} />
             </Button>
             <h1 className="text-xl font-bold flex-1 text-center">Notifications</h1>
-            <div className="w-9" /> {/* Spacer to balance the back button */}
+            <Button
+              onClick={handleMarkAllAsRead}
+              variant="outline"
+              size="sm"
+              className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+              disabled={displayNotifications.length === 0 || displayNotifications.every(n => n.is_read)}
+            >
+              <Icon name="CheckCheck" size={16} />
+            </Button>
           </div>
         </div>
       </header>
