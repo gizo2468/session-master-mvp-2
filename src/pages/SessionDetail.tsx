@@ -224,7 +224,7 @@ export default function SessionDetail() {
     
     endSession(session.id, parseFloat(cashOutAmount));
     setShowEndSessionModal(false);
-    navigate('/');
+    navigate('/', { replace: true });
   };
   
   const handleDelete = () => {
