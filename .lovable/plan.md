@@ -1,56 +1,39 @@
 
 
-## Problem
+## Plan: Notes Feature Updates (3 Tasks)
 
-Every "Back" / "Home" button across the app uses `navigate('/')` or `navigateToHomeWithRefresh()` which calls `navigate('/')`. This **pushes** a new `/` entry onto the browser history stack instead of going back. 
+### Task 1: Make note text optional when saving
 
-So a flow like: Home → Settings → (Back) → Home → Dashboard → (Back) → Home creates history: `[/, /settings, /, /dashboard, /]`. When the user swipe-backs, they walk through all those stale entries — Settings, Home, Dashboard, Home — instead of just going one step back.
+**Current behavior**: Line 229 in `AddNoteModal.tsx` requires both `opponentName.trim()` and `noteBody.trim()` to be truthy. The insert on line 265 sends `noteBody.trim()` which would be empty string.
 
-The same issue applies to `navigate('/')` calls in ~13 other page files.
+**Fix**:
+- `AddNoteModal.tsx` line 229: Change validation to only require `opponentName.trim()`, remove the `noteBody.trim()` check
+- Line 265: Change `note_body: noteBody.trim()` to `note_body: noteBody.trim() || ''` (empty string is fine)
+- Update error message to say "Please fill in the opponent name"
 
-## Fix
+### Task 2: Add image thumbnail to note list views
 
-Two-part solution:
+In both `ViewAllNotesModal.tsx` (line 280-305) and `MyNotesCard.tsx` (line 250-276), the opponent card rows show only a color dot + name. Need to add a small circular avatar thumbnail next to the color dot for opponents that have an image.
 
-### 1. Fix `useNavigateWithRefresh` to use `navigate(-1)` with a `/` fallback
+**Changes**:
+- In both list views, add a 24x24px rounded avatar thumbnail before the nickname when `opponent.profile.image_url` exists
+- The thumbnail is display-only in the list (no tap action in the list row itself — tapping the row opens the opponent detail modal as before)
 
-Change `navigateToHomeWithRefresh` so it pops history instead of pushing. If there's no history to go back to (e.g. deep link), fall back to `navigate('/', { replace: true })`.
+### Task 3: Add fullscreen image popup from opponent detail view and list views
 
-This single change fixes Settings, Dashboard, SessionHistory, SimpleSettings, LiveSessionHeader, and SessionDetailHeader — all places that use `navigateToHomeWithRefresh` as their back button.
+**ViewEditNoteModal already has a fullscreen viewer** (lines 886-912) that opens when clicking the avatar in view mode (line 460). This already works with X close button and dismiss-on-outside-click via Dialog.
 
-### 2. Fix direct `navigate('/')` calls on back buttons
+For the **list views** (ViewAllNotesModal and MyNotesCard search results), add a small camera/image icon indicator on rows with images. Tapping that icon opens a fullscreen lightbox popup (same pattern as the existing one in ViewEditNoteModal).
 
-For pages that use `navigate('/')` directly as their "back" action (not as a redirect after completing an action), change them to `navigate(-1)` with awareness of history depth.
+**Changes to ViewAllNotesModal.tsx and MyNotesCard.tsx**:
+- Add state for `fullscreenImageUrl` and `isImageFullscreen`
+- On each opponent row that has `image_url`, show a small clickable avatar thumbnail
+- Tapping the thumbnail (with `e.stopPropagation()` to prevent opening the opponent detail) opens the fullscreen lightbox
+- Lightbox: dark bg, centered image, X close button (min 44x44px touch target), dismiss on background tap
 
-Pages with back-button `navigate('/')` to fix:
-- `ConnectCoach.tsx` — back button
-- `PlayerDashboard.tsx` — back button  
-- `CoachDashboard.tsx` — back button
-- `Notifications.tsx` — back button
-- `AddPastSession.tsx` — close/back handler
+### Files to modify
 
-Pages where `navigate('/')` is correct and should NOT change (these are "go to home after completing an action" — the user expects to land on home, not go back to the form):
-- `SessionDetail.tsx` — after ending/deleting session
-- `ConfirmSession.tsx` — after confirming session
-- `EditSession.tsx` — after saving edits
-- `LiveSession.tsx` — error/fallback states
-- `Settings.tsx` — after logout
-- `auth/Signup.tsx` — after signup
-- `CoachUpgrade.tsx` — redirect guard
-
-### 3. For action-completion navigations, use `replace: true`
-
-The `navigate('/')` calls that happen after completing actions (end session, delete, save, confirm) should use `{ replace: true }` so they don't add the completed form page to history.
-
-### Files to update
-
-1. **`src/hooks/useNavigateWithRefresh.ts`** — change `navigate('/')` to `navigate(-1)` with fallback
-2. **`src/pages/ConnectCoach.tsx`** — back button: `navigate(-1)`
-3. **`src/pages/PlayerDashboard.tsx`** — back button: `navigate(-1)`
-4. **`src/pages/CoachDashboard.tsx`** — back button: `navigate(-1)`
-5. **`src/pages/Notifications.tsx`** — back button: `navigate(-1)`
-6. **`src/pages/AddPastSession.tsx`** — close handler: `navigate(-1)`
-7. **`src/pages/SessionDetail.tsx`** — end/delete actions: add `{ replace: true }`
-8. **`src/pages/ConfirmSession.tsx`** — confirm action: add `{ replace: true }`
-9. **`src/pages/EditSession.tsx`** — save/back actions: add `{ replace: true }` on completions, `navigate(-1)` on back button
+1. **`src/components/notes/AddNoteModal.tsx`** — Remove note text requirement from validation (line 229)
+2. **`src/components/notes/ViewAllNotesModal.tsx`** — Add avatar thumbnail + fullscreen lightbox
+3. **`src/components/notes/MyNotesCard.tsx`** — Add avatar thumbnail + fullscreen lightbox to search results
 
