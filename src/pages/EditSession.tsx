@@ -179,7 +179,7 @@ export default function EditSession() {
         description: "Your session has been successfully updated."
       });
       
-      navigate('/');
+      navigate('/', { replace: true });
       
     } catch (error) {
       console.error('❌ Error saving session:', error);
