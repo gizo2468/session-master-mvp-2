@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { StickyNote, Plus, Crown, List, Search } from 'lucide-react';
+import { StickyNote, Plus, Crown, List, Search, X } from 'lucide-react';
+import { useSignedImageUrl } from '@/hooks/useSignedImageUrl';
 import { Input } from '@/components/ui/input';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 import { useAuth } from '@/context/AuthContext';
