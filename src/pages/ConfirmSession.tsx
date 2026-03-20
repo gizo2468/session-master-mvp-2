@@ -99,7 +99,7 @@ export default function ConfirmSession() {
       title: "Session Ended",
       description: "Your poker session has been successfully recorded."
     });
-    navigate('/');
+    navigate('/', { replace: true });
   };
   
   const handleInitiateRebuy = (amount: number) => {
