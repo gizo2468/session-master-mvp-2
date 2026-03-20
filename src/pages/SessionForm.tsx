@@ -75,6 +75,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function SessionForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const swipeBackRef = useSwipeBack({ fallbackPath: '/', screenName: 'SessionForm' });
   const { startSession } = useSessionContext();
   const { defaultCurrency, getCurrencySymbol } = useDefaultCurrency();
   const { isPremium } = usePremiumAccess();
