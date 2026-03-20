@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { StickyNote, Plus } from 'lucide-react';
+import { StickyNote, Plus, X } from 'lucide-react';
+import { useSignedImageUrl } from '@/hooks/useSignedImageUrl';
 import { Button } from '@/components/ui/button';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 import { useAuth } from '@/context/AuthContext';
