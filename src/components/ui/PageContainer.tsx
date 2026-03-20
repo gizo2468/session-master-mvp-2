@@ -23,7 +23,7 @@ export default function PageContainer({
 
   return (
     <div ref={swipeRef} className="min-h-screen content-safe">
-      <div className="container mx-auto max-w-md px-4 pt-4 pb-8">
+      <div className="container mx-auto max-w-md px-4 pb-8">
         {children}
       </div>
     </div>
