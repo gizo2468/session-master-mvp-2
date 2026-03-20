@@ -335,7 +335,7 @@ export default function SessionDetail() {
   };
   
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
+    <div ref={swipeBackRef} className="fixed inset-0 overflow-y-auto overscroll-none bg-gray-50 pt-safe">
       <div className="container mx-auto max-w-3xl px-4 py-8">
         <SessionDetailHeader
           sessionId={sessionId}
