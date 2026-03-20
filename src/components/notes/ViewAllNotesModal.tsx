@@ -344,26 +344,24 @@ const ViewAllNotesModal: React.FC<ViewAllNotesModalProps> = ({ open, onOpenChang
         </DialogContent>
       </Dialog>
 
-      {/* Fullscreen image lightbox */}
-      {isImageFullscreen && fullscreenImageUrl && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 animate-in fade-in-0 duration-200"
-          onClick={() => setIsImageFullscreen(false)}
-        >
+      {/* Fullscreen image lightbox as a separate Dialog so it portals above All Notes */}
+      <Dialog open={isImageFullscreen} onOpenChange={setIsImageFullscreen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none flex items-center justify-center [&>button:last-child]:hidden">
           <button
-            onClick={(e) => { e.stopPropagation(); setIsImageFullscreen(false); }}
+            onClick={() => setIsImageFullscreen(false)}
             className="absolute top-4 right-4 z-10 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-background/20 backdrop-blur-md text-white"
           >
             <X className="h-6 w-6" />
           </button>
-          <img
-            src={fullscreenImageUrl}
-            alt="Opponent"
-            className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
+          {fullscreenImageUrl && (
+            <img
+              src={fullscreenImageUrl}
+              alt="Opponent"
+              className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AddNoteModal
         open={isAddModalOpen}
