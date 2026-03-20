@@ -437,7 +437,15 @@ export default function Notifications() {
               <Icon name="ArrowLeft" size={16} />
             </Button>
             <h1 className="text-xl font-bold flex-1 text-center">Notifications</h1>
-            <div className="w-9" /> {/* Spacer to balance the back button */}
+            <Button
+              onClick={handleMarkAllAsRead}
+              variant="outline"
+              size="sm"
+              className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+              disabled={displayNotifications.length === 0 || displayNotifications.every(n => n.is_read)}
+            >
+              <Icon name="CheckCheck" size={16} />
+            </Button>
           </div>
         </div>
       </header>
