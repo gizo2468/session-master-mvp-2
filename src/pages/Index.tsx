@@ -187,13 +187,7 @@ export default function Index() {
 
           {/* Stats section appears after the button */}
           <div className="w-full -mt-28">
-            {sessionsLoading ? (
-              <div className="flex justify-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-poker-feltGreen"></div>
-              </div>
-            ) : (
-              <StatsQuickView />
-            )}
+            <StatsQuickView />
           </div>
           
           {/* Active Sessions List - appears after stats if there are active sessions */}
@@ -230,8 +224,24 @@ export default function Index() {
             
             {/* Show filters and sessions only if there are sessions */}
             {sessionsLoading ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-poker-feltGreen"></div>
+              <div className="space-y-4">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="bg-white rounded-lg shadow-md p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="space-y-2">
+                        <div className="h-5 w-32 animate-pulse rounded bg-muted" />
+                        <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+                      </div>
+                      <div className="h-6 w-16 animate-pulse rounded-full bg-muted" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mb-2">
+                      <div className="h-4 w-full animate-pulse rounded bg-muted" />
+                      <div className="h-4 w-full animate-pulse rounded bg-muted" />
+                    </div>
+                    <div className="h-4 w-20 mx-auto animate-pulse rounded bg-muted mb-3" />
+                    <div className="h-12 w-full animate-pulse rounded bg-muted" />
+                  </div>
+                ))}
               </div>
             ) : sessions.length > 0 ? (
               <>
