@@ -1,63 +1,58 @@
 
-Root cause identified: the current “global fix” moved `pt-safe` onto the outer `AppLayout` wrapper:
+Root cause found: the remaining iPhone gap is not coming from `AppLayout` anymore. It is coming from the shared safe-area utility classes themselves:
 
-```tsx
-<div className="fixed inset-0 overflow-y-auto overscroll-none bg-gray-50 pt-safe pb-safe">
-```
+- `.header-safe` = `env(safe-area-inset-top) + 1rem`
+- `.content-safe` = `env(safe-area-inset-top) + 2rem`
 
-That makes the safe-area render as a blank band above every page. Then many screens add their own top spacing on top of that (`py-8`, `mb-8`, white header bars with `py-4`), so the iPhone top inset is being applied in the wrong place and visually doubled. That is why Home, Start New Session, coach/profile flows, and return navigation all still show the same empty top strip.
+So across the app, pages are still adding the real iPhone top inset plus extra visual spacing above the first header/content block. That is why the empty space still appears on Home, Start New Session, coach pages, and after navigation.
 
-Plan to fix it properly and globally:
+Plan to fix it properly across the app:
 
-1. Update the global layout strategy
-- Remove `pt-safe` from `AppLayout`
-- Keep the fixed viewport/scroll reset behavior there
-- Keep bottom safe-area handling globally (`pb-safe`) if needed
+1. Redefine the shared top-safe utilities in `src/index.css`
+- Change the top-safe classes so they only apply the actual iPhone inset, not extra spacing
+- Split “safe area” from “design spacing”
+- Example approach:
+  - header wrapper gets only `padding-top: env(safe-area-inset-top)`
+  - content pages get only `padding-top: env(safe-area-inset-top)`
+  - normal visual spacing becomes explicit `pt-4`, `mb-4`, `py-4`, etc. below the safe area, not above it
 
-2. Move top safe-area handling to shared layout patterns instead of the outer wrapper
-- Create reusable top-safe utilities/classes in `src/index.css`, for example:
-  - a header-safe class for full-width top bars
-  - a content-safe class for standard page containers
-- These classes will use `calc(env(safe-area-inset-top, 0px) + ...)` so the safe inset becomes part of the header/content padding instead of a separate blank strip above it
+2. Keep `AppLayout` as the global scroll/viewport shell
+- No extra top padding there
+- Keep the scroll reset behavior
+- Keep bottom safe handling only if needed
 
-3. Apply the shared pattern to the two main page structures used across the app
-- Pattern A: full-width header bar pages  
-  Examples found: Home, Dashboard, Notifications, EditSession, ConfirmSession
-- Pattern B: standard container pages with back button/content start  
-  Examples found: SessionForm, Settings, SessionDetail, ConnectCoach, CoachProfile via `PageContainer`, legal pages, etc.
+3. Normalize the two shared page patterns
+- Header-bar pages: Home, Dashboard, Notifications, Session History, Live Session, Confirm Session, Edit Session
+  - Top bar background should start at the very top
+  - Header content should sit directly under the notch inset, with no extra blank band above it
+- Content/back-button pages: Session Form, Settings, Connect Coach, Coach Profile via `PageContainer`, Add Past Session, Session Detail, etc.
+  - First content block should start after the real safe inset only
+  - Any additional spacing should be intentional inside the page layout
 
-4. Centralize the standard container fix
-- Update `PageContainer` so it becomes the canonical safe-area-aware wrapper for “content pages”
-- Replace its generic `py-8` behavior with a top-safe-aware padding pattern
-- This will automatically fix the large set of pages already using `PageContainer`
+4. Update `PageContainer` to be the canonical safe-top wrapper
+- Make it apply only the true iPhone safe inset
+- Keep regular content spacing separate
+- This will fix a large group of pages in one place
 
-5. Normalize the remaining non-PageContainer pages to the same shared classes
-- For pages that render their own top bars, swap raw `py-4` / `py-8` spacing for the shared safe-area classes
-- This is still a pattern-based fix, not one-off tweaking
+5. Remove the remaining “double spacing” on representative pages
+- Home (`Index.tsx`)
+- Session Form
+- Session Detail
+- Settings
+- Dashboard
+- Notifications
+- Session History
+- Add Past Session
+- Live Session header
+- Any other page still using `header-safe` / `content-safe`
 
-6. Preserve current navigation behavior
-- Keep the existing scroll-reset logic in `AppLayout`
-- Do not reintroduce per-page fixed wrappers or extra top safe padding, since that caused the stacking/gap issues before
+6. Preserve navigation behavior
+- Keep the current swipe-back/history fixes
+- Do not add new fixed wrappers or page-specific safe-area hacks
+- Ensure returning Home does not reintroduce the gap because spacing will no longer be baked into the wrong layer
 
-Expected result
-- No blank band above the top bar/header
-- The header/background reaches the iPhone top area cleanly
-- Standard content pages start at the correct safe position without oversized top space
-- Returning Home or using swipe-back no longer reintroduces the gap, because the spacing is no longer applied at the wrong global level
-
-Files I would update
-- `src/components/AppLayout.tsx`
-- `src/index.css`
-- `src/components/ui/PageContainer.tsx`
-- Shared header/content pages that currently use the two affected layout patterns, starting with:
-  - `src/pages/Index.tsx`
-  - `src/pages/SessionForm.tsx`
-  - `src/pages/Settings.tsx`
-  - `src/pages/SessionDetail.tsx`
-  - `src/pages/Dashboard.tsx`
-  - `src/pages/Notifications.tsx`
-  - other pages matching the same header/container patterns
-
-Implementation intent
-- This will be a real root-cause fix: remove top safe-area from the outer app shell, and reapply it once per page structure in the correct visual layer.
-- No unrelated UI redesigns; only top safe-area/top-spacing behavior will be adjusted.
+Expected result:
+- No actual empty space above the header on iPhone
+- Header/top bar sits correctly at the top edge, respecting only the real notch inset
+- No repeated gap after back navigation or swipe-back
+- One consistent safe-area system across the app instead of continued page-by-page adjustments
