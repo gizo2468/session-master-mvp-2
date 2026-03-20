@@ -340,7 +340,7 @@ export default function SessionForm() {
   };
   
   return (
-    <div className="fixed inset-0 overflow-y-auto overscroll-none bg-gray-50 pt-safe pb-safe">
+    <div className="min-h-screen">
       <div className="container mx-auto max-w-md px-4 py-8">
         <header className="mb-8">
           <button 

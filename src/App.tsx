@@ -12,6 +12,7 @@ import AuthGuard from "@/components/auth/AuthGuard";
 import LoadingScreen from "@/components/LoadingScreen";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
+import AppLayout from "@/components/AppLayout";
 
 // Lazy load route components for better performance (with retry on chunk load failure)
 import Index from "./pages/Index";
@@ -67,6 +68,7 @@ const App = () => {
               <SessionProvider>
                 <AuthGuard>
                   <AppErrorBoundary>
+                    <AppLayout>
                     <Suspense fallback={<LoadingScreen />}>
                       <Routes>
                         <Route path="/" element={<Index />} />
@@ -95,6 +97,7 @@ const App = () => {
                         <Route path="/connect-coach" element={<ConnectCoach />} />
                       </Routes>
                     </Suspense>
+                    </AppLayout>
                   </AppErrorBoundary>
                 </AuthGuard>
               </SessionProvider>
