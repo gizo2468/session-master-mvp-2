@@ -64,7 +64,7 @@ const CoachUpgrade = () => {
   
   return (
     <div className="min-h-screen bg-gray-50 content-safe">
-      <div className="container mx-auto max-w-5xl px-4 pt-4 pb-8">
+      <div className="container mx-auto max-w-5xl px-4 pb-8">
         <header className="mb-8">
           <Button 
             onClick={() => navigate(-1)} 
