@@ -795,6 +795,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                   )}
                 </ScrollArea>
               </div>
+              )
             )}
 
             {/* Footer Buttons */}
