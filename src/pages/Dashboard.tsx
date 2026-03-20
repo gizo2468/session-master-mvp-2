@@ -87,7 +87,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm header-safe">
+      <header className="bg-white shadow-sm header-safe pt-4">
         <div className="container mx-auto max-w-md px-4 pb-4">
           <div className="flex justify-between items-center">
             <Button 

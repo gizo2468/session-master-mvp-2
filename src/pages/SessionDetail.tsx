@@ -335,8 +335,8 @@ export default function SessionDetail() {
   };
   
   return (
-    <div ref={swipeBackRef} className="min-h-screen">
-      <div className="container mx-auto max-w-3xl px-4 pb-8 content-safe">
+    <div ref={swipeBackRef} className="min-h-screen content-safe">
+      <div className="container mx-auto max-w-3xl px-4 pt-4 pb-8">
         <SessionDetailHeader
           sessionId={sessionId}
           location={session.location}
