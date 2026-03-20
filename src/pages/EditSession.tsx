@@ -223,7 +223,7 @@ export default function EditSession() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/')}
+              onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/', { replace: true })}
               className="flex items-center gap-2"
             >
               <Icon name="ArrowLeft" size={16} />
