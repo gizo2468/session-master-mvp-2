@@ -1,26 +1,29 @@
 
 
-## Plan: Fix Start New Session Top Gap & Back Navigation
+## Plan: Fix Swipe-Back Navigation Stack Pollution
 
 ### Problem
-`SessionForm.tsx` uses `min-h-screen bg-gray-50` without safe-area padding or fixed positioning. When navigating between this page and the Home page (which uses `fixed inset-0`), the inconsistent container strategies cause scroll-offset issues that persist after navigating back.
+SessionForm's back button (line 348) uses `navigate('/')`, which pushes a **new** `/` entry onto the history stack. The resulting stack looks like:
+
+```text
+[Home] → [SessionForm] → [Home (new push)] → [SessionDetail]
+```
+
+When swiping back from SessionDetail, the user lands on Home correctly. But one more swipe-back goes to SessionForm (still in the stack), which is unexpected.
 
 ### Fix
 
-**`src/pages/SessionForm.tsx`** — line 343, update the root div:
+**`src/pages/SessionForm.tsx`** — Change the back button handler from `navigate('/')` to `navigate(-1)`:
 
 ```tsx
-// Before
-<div className="min-h-screen bg-gray-50">
+// Line 348: Before
+onClick={() => navigate('/')}
 
-// After
-<div className="fixed inset-0 overflow-y-auto overscroll-none bg-gray-50 pt-safe pb-safe">
+// After  
+onClick={() => navigate(-1)}
 ```
 
-This matches the same pattern used on the Home page and SessionDetail, ensuring:
-- Correct top positioning with `pt-safe` for iPhone notch/Dynamic Island
-- Bottom safe area with `pb-safe`
-- No scroll offset leaking between pages via `fixed inset-0 overflow-y-auto overscroll-none`
+This pops SessionForm off the stack instead of pushing a duplicate Home entry, keeping the history clean.
 
 ### Scope
 - One line change in `src/pages/SessionForm.tsx`
