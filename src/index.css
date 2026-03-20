@@ -223,12 +223,12 @@ textarea:-webkit-autofill:active {
 
   /* Header-safe: for full-width top bars (bg extends into safe area, content padded below it) */
   .header-safe {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 1rem);
+    padding-top: env(safe-area-inset-top, 0px);
   }
 
   /* Content-safe: for standard page containers with back button / content start */
   .content-safe {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 2rem);
+    padding-top: env(safe-area-inset-top, 0px);
   }
 }
 

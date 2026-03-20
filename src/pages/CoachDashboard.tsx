@@ -98,8 +98,8 @@ const CoachDashboard = () => {
   const totalReviews = recentReviews.length + playerReviews.length;
   
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
-      <div className="container mx-auto max-w-4xl px-4 pb-8 content-safe">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 content-safe">
+      <div className="container mx-auto max-w-4xl px-4 pt-4 pb-8">
         <header className="mb-8">
           <button 
             onClick={() => navigate('/')} 
