@@ -69,7 +69,7 @@ const ConnectCoach = () => {
   
   return (
     <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
-      <div className="container mx-auto max-w-md px-4 py-8">
+      <div className="container mx-auto max-w-md px-4 pb-8 content-safe">
         <header className="mb-8">
           <button 
             onClick={() => navigate('/')} 

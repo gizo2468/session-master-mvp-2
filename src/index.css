@@ -220,6 +220,16 @@ textarea:-webkit-autofill:active {
   .pt-safe {
     padding-top: env(safe-area-inset-top, 0);
   }
+
+  /* Header-safe: for full-width top bars (bg extends into safe area, content padded below it) */
+  .header-safe {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 1rem);
+  }
+
+  /* Content-safe: for standard page containers with back button / content start */
+  .content-safe {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 2rem);
+  }
 }
 
 /* Hide scrollbar on mobile/touch devices while keeping scroll functionality */
