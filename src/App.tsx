@@ -68,6 +68,7 @@ const App = () => {
               <SessionProvider>
                 <AuthGuard>
                   <AppErrorBoundary>
+                    <AppLayout>
                     <Suspense fallback={<LoadingScreen />}>
                       <Routes>
                         <Route path="/" element={<Index />} />
