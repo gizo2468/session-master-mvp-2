@@ -1,38 +1,56 @@
 
 
-## Fix: Remove remaining top gap on content-safe pages (no white header bar)
+## Problem
 
-### Root Cause
+Every "Back" / "Home" button across the app uses `navigate('/')` or `navigateToHomeWithRefresh()` which calls `navigate('/')`. This **pushes** a new `/` entry onto the browser history stack instead of going back. 
 
-Pages using `content-safe` have this structure:
-```html
-<div class="min-h-screen content-safe">           <!-- padding-top: env(safe-area-inset-top) ~47px -->
-  <div class="container mx-auto max-w-md px-4 pt-4 pb-8">  <!-- +16px extra -->
-```
+So a flow like: Home → Settings → (Back) → Home → Dashboard → (Back) → Home creates history: `[/, /settings, /, /dashboard, /]`. When the user swipe-backs, they walk through all those stale entries — Settings, Home, Dashboard, Home — instead of just going one step back.
 
-The `content-safe` class correctly applies the iPhone hardware inset (~47px). But the inner container **also** adds `pt-4` (16px), creating ~63px of empty gray space above the back button. On header-bar pages this isn't visible because the white header background absorbs the padding visually — but on content-safe pages with no white header, it shows as a blank gray strip.
+The same issue applies to `navigate('/')` calls in ~13 other page files.
 
-### Fix
+## Fix
 
-Remove `pt-4` from the inner container div on all content-safe pages. The hardware safe-area inset from `content-safe` alone is sufficient. The back button and header content will sit flush against the safe area boundary.
+Two-part solution:
 
-### Files to update (10 files, same 1-word change each)
+### 1. Fix `useNavigateWithRefresh` to use `navigate(-1)` with a `/` fallback
 
-All changes are identical: remove `pt-4` from the inner container `<div>` class.
+Change `navigateToHomeWithRefresh` so it pops history instead of pushing. If there's no history to go back to (e.g. deep link), fall back to `navigate('/', { replace: true })`.
 
-1. **`src/components/ui/PageContainer.tsx`** — line 26: `px-4 pt-4 pb-8` → `px-4 pb-8`
-2. **`src/pages/Settings.tsx`** — line 263: same change
-3. **`src/pages/SessionForm.tsx`** — line 344: same change
-4. **`src/pages/SessionDetail.tsx`** — line 339: same change
-5. **`src/pages/ConnectCoach.tsx`** — line 72: same change
-6. **`src/pages/CoachDashboard.tsx`** — line 102: same change
-7. **`src/pages/CoachUpgrade.tsx`** — line 67: same change
-8. **`src/pages/PlayerDashboard.tsx`** — line 62: same change
-9. **`src/pages/CoachStudentDetail.tsx`** — line 36: same change
-10. **`src/pages/AddPastSession.tsx`** — line 15: remove `pt-4` from the class string
+This single change fixes Settings, Dashboard, SessionHistory, SimpleSettings, LiveSessionHeader, and SessionDetailHeader — all places that use `navigateToHomeWithRefresh` as their back button.
 
-### Result
-- Back button / first content sits flush against the iPhone safe area
-- No empty gray strip above the content
-- Header-bar pages (Home, Dashboard, etc.) remain unaffected — they use `header-safe` on a white `<header>` element
+### 2. Fix direct `navigate('/')` calls on back buttons
+
+For pages that use `navigate('/')` directly as their "back" action (not as a redirect after completing an action), change them to `navigate(-1)` with awareness of history depth.
+
+Pages with back-button `navigate('/')` to fix:
+- `ConnectCoach.tsx` — back button
+- `PlayerDashboard.tsx` — back button  
+- `CoachDashboard.tsx` — back button
+- `Notifications.tsx` — back button
+- `AddPastSession.tsx` — close/back handler
+
+Pages where `navigate('/')` is correct and should NOT change (these are "go to home after completing an action" — the user expects to land on home, not go back to the form):
+- `SessionDetail.tsx` — after ending/deleting session
+- `ConfirmSession.tsx` — after confirming session
+- `EditSession.tsx` — after saving edits
+- `LiveSession.tsx` — error/fallback states
+- `Settings.tsx` — after logout
+- `auth/Signup.tsx` — after signup
+- `CoachUpgrade.tsx` — redirect guard
+
+### 3. For action-completion navigations, use `replace: true`
+
+The `navigate('/')` calls that happen after completing actions (end session, delete, save, confirm) should use `{ replace: true }` so they don't add the completed form page to history.
+
+### Files to update
+
+1. **`src/hooks/useNavigateWithRefresh.ts`** — change `navigate('/')` to `navigate(-1)` with fallback
+2. **`src/pages/ConnectCoach.tsx`** — back button: `navigate(-1)`
+3. **`src/pages/PlayerDashboard.tsx`** — back button: `navigate(-1)`
+4. **`src/pages/CoachDashboard.tsx`** — back button: `navigate(-1)`
+5. **`src/pages/Notifications.tsx`** — back button: `navigate(-1)`
+6. **`src/pages/AddPastSession.tsx`** — close handler: `navigate(-1)`
+7. **`src/pages/SessionDetail.tsx`** — end/delete actions: add `{ replace: true }`
+8. **`src/pages/ConfirmSession.tsx`** — confirm action: add `{ replace: true }`
+9. **`src/pages/EditSession.tsx`** — save/back actions: add `{ replace: true }` on completions, `navigate(-1)` on back button
 
