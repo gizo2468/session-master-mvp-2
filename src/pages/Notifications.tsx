@@ -27,6 +27,15 @@ export default function Notifications() {
   const [sessionModalDefaultTab, setSessionModalDefaultTab] = useState<'summary' | 'tables' | 'hands'>('summary');
   const swipeBackRef = useSwipeBack({ fallbackPath: '/', screenName: 'Notifications' });
 
+  const handleMarkAllAsRead = async () => {
+    const unread = displayNotifications.filter(n => !n.is_read);
+    if (unread.length === 0) return;
+    for (const n of unread) {
+      await markAsRead(n.id);
+    }
+    toast({ title: 'All notifications marked as read' });
+  };
+
   // Deduplicate stack_check notifications: show only the most recent one
   const displayNotifications = useMemo(() => {
     const stackCheckNotifications = notifications.filter(n => n.type === 'stack_check');
