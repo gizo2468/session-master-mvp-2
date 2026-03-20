@@ -1,34 +1,15 @@
 
 
-## Add "Mark All as Read" Button to Notifications Header
+## Enable Swipe-Back on Start New Session Page
 
-### Change
+### Problem
+`src/pages/SessionForm.tsx` does not use `useSwipeBack` — it's the only major page missing the gesture.
 
-In `src/pages/Notifications.tsx`:
+### Fix
+In `src/pages/SessionForm.tsx`:
+1. Import `useSwipeBack` from `@/hooks/useSwipeBack`
+2. Call `useSwipeBack({ fallbackPath: '/', screenName: 'SessionForm' })` to get a ref
+3. Attach the ref to the root `<div>` (line 343)
 
-1. **Replace the spacer div** (line 431) with a button using the `CheckCheck` icon, styled identically to the back button (same `variant="outline"`, `size="sm"`, green border/text)
-
-2. **Add handler**: `handleMarkAllAsRead` that iterates through all unread `displayNotifications` and calls `markAsRead` on each, then shows a toast confirmation
-
-3. **Disable state**: Button should be disabled when there are no unread notifications (all already read or list is empty)
-
-### File to modify
-
-**`src/pages/Notifications.tsx`**
-
-- Add a `handleMarkAllAsRead` async function that filters unread notifications and calls `markAsRead` for each
-- Replace line 431 (`<div className="w-9" />`) with:
-```tsx
-<Button
-  onClick={handleMarkAllAsRead}
-  variant="outline"
-  size="sm"
-  className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
-  disabled={displayNotifications.every(n => n.is_read) || displayNotifications.length === 0}
->
-  <Icon name="CheckCheck" size={16} />
-</Button>
-```
-
-Single file, minimal change.
+Single file, 3-line change.
 
