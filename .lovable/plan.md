@@ -1,26 +1,28 @@
 
 
-## Plan: Fix Home Page Scroll Position on Open/Return
+## Plan: Eliminate Layout Shift on Home Page Load
 
 ### Root Cause
 
-The Home page (`Index.tsx`) never scrolls to the top on mount or when the user returns to it. Other pages like `LiveSession` and `Subscription` explicitly call `window.scrollTo(0, 0)` on mount, but the Home page does not.
+The Home page has a two-stage loading problem:
 
-When navigating back to Home (via swipe-back or button), the browser may retain a stale scroll offset from the previous visit or from the route transition animation, causing the page to appear slightly scrolled down. The `-mt-36` negative margin on the chip container makes even a small offset visually obvious, since it cuts off the top of the header area.
+1. **Index.tsx** wraps `StatsQuickView` in its own loading gate (lines 190-196) showing a tiny spinner (`h-6 w-6` with `py-4`)
+2. When that resolves, `StatsQuickView` renders and hits **its own** internal loading state (lines 151-183) showing a taller skeleton
+3. When *that* resolves, the real stats content appears
+
+This creates two visible layout shifts — the spinner is much shorter than the skeleton, which is shorter than the final content. Same issue for Recent Sessions (lines 232-235): a small spinner swaps to a list of cards.
 
 ### Fix
 
-Add a `useEffect` in `src/pages/Index.tsx` that scrolls to the true top on mount:
+**`src/pages/Index.tsx`**:
+- Remove the Index-level loading spinners that gate `StatsQuickView` and Recent Sessions
+- Render `StatsQuickView` immediately — it already has a proper internal skeleton that matches its final height
+- For Recent Sessions, replace the small loading spinner with skeleton `SessionCard` placeholders (3 cards) that match the real card height, preventing the "pop-up" effect
+- Keep `ActiveSessionsList` gated since it conditionally appears
 
-```ts
-useEffect(() => {
-  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-}, []);
-```
+**`src/components/StatsQuickView.tsx`**:
+- No structural changes needed — its internal skeleton already handles loading well
 
-This matches the same pattern already used in `LiveSession.tsx` (line 33) and `Subscription.tsx` (line 64).
-
-### Scope
-- **One file changed**: `src/pages/Index.tsx` — add the scroll-to-top effect
-- No layout, spacing, or navigation changes
+### Result
+The page will render with correctly-sized placeholders from the first frame, then content fills in without any height changes or visible "rising" effect. No artificial delay added.
 
