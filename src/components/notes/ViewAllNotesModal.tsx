@@ -77,6 +77,9 @@ const OpponentRowInner: React.FC<{
             }}
             title={colorData.label}
           />
+          <span className="font-medium text-sm truncate">
+            {opponent.profile?.nickname || 'Unknown'}
+          </span>
           {signedUrl && (
             <img
               src={signedUrl}
@@ -85,9 +88,6 @@ const OpponentRowInner: React.FC<{
               onClick={(e) => { e.stopPropagation(); onImageClick(signedUrl); }}
             />
           )}
-          <span className="font-medium text-sm truncate">
-            {opponent.profile?.nickname || 'Unknown'}
-          </span>
           {opponent.noteCount > 1 && (
             <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full flex-shrink-0">
               {opponent.noteCount} notes
