@@ -1,58 +1,38 @@
 
-Root cause found: the remaining iPhone gap is not coming from `AppLayout` anymore. It is coming from the shared safe-area utility classes themselves:
 
-- `.header-safe` = `env(safe-area-inset-top) + 1rem`
-- `.content-safe` = `env(safe-area-inset-top) + 2rem`
+## Fix: Remove remaining top gap on content-safe pages (no white header bar)
 
-So across the app, pages are still adding the real iPhone top inset plus extra visual spacing above the first header/content block. That is why the empty space still appears on Home, Start New Session, coach pages, and after navigation.
+### Root Cause
 
-Plan to fix it properly across the app:
+Pages using `content-safe` have this structure:
+```html
+<div class="min-h-screen content-safe">           <!-- padding-top: env(safe-area-inset-top) ~47px -->
+  <div class="container mx-auto max-w-md px-4 pt-4 pb-8">  <!-- +16px extra -->
+```
 
-1. Redefine the shared top-safe utilities in `src/index.css`
-- Change the top-safe classes so they only apply the actual iPhone inset, not extra spacing
-- Split “safe area” from “design spacing”
-- Example approach:
-  - header wrapper gets only `padding-top: env(safe-area-inset-top)`
-  - content pages get only `padding-top: env(safe-area-inset-top)`
-  - normal visual spacing becomes explicit `pt-4`, `mb-4`, `py-4`, etc. below the safe area, not above it
+The `content-safe` class correctly applies the iPhone hardware inset (~47px). But the inner container **also** adds `pt-4` (16px), creating ~63px of empty gray space above the back button. On header-bar pages this isn't visible because the white header background absorbs the padding visually — but on content-safe pages with no white header, it shows as a blank gray strip.
 
-2. Keep `AppLayout` as the global scroll/viewport shell
-- No extra top padding there
-- Keep the scroll reset behavior
-- Keep bottom safe handling only if needed
+### Fix
 
-3. Normalize the two shared page patterns
-- Header-bar pages: Home, Dashboard, Notifications, Session History, Live Session, Confirm Session, Edit Session
-  - Top bar background should start at the very top
-  - Header content should sit directly under the notch inset, with no extra blank band above it
-- Content/back-button pages: Session Form, Settings, Connect Coach, Coach Profile via `PageContainer`, Add Past Session, Session Detail, etc.
-  - First content block should start after the real safe inset only
-  - Any additional spacing should be intentional inside the page layout
+Remove `pt-4` from the inner container div on all content-safe pages. The hardware safe-area inset from `content-safe` alone is sufficient. The back button and header content will sit flush against the safe area boundary.
 
-4. Update `PageContainer` to be the canonical safe-top wrapper
-- Make it apply only the true iPhone safe inset
-- Keep regular content spacing separate
-- This will fix a large group of pages in one place
+### Files to update (10 files, same 1-word change each)
 
-5. Remove the remaining “double spacing” on representative pages
-- Home (`Index.tsx`)
-- Session Form
-- Session Detail
-- Settings
-- Dashboard
-- Notifications
-- Session History
-- Add Past Session
-- Live Session header
-- Any other page still using `header-safe` / `content-safe`
+All changes are identical: remove `pt-4` from the inner container `<div>` class.
 
-6. Preserve navigation behavior
-- Keep the current swipe-back/history fixes
-- Do not add new fixed wrappers or page-specific safe-area hacks
-- Ensure returning Home does not reintroduce the gap because spacing will no longer be baked into the wrong layer
+1. **`src/components/ui/PageContainer.tsx`** — line 26: `px-4 pt-4 pb-8` → `px-4 pb-8`
+2. **`src/pages/Settings.tsx`** — line 263: same change
+3. **`src/pages/SessionForm.tsx`** — line 344: same change
+4. **`src/pages/SessionDetail.tsx`** — line 339: same change
+5. **`src/pages/ConnectCoach.tsx`** — line 72: same change
+6. **`src/pages/CoachDashboard.tsx`** — line 102: same change
+7. **`src/pages/CoachUpgrade.tsx`** — line 67: same change
+8. **`src/pages/PlayerDashboard.tsx`** — line 62: same change
+9. **`src/pages/CoachStudentDetail.tsx`** — line 36: same change
+10. **`src/pages/AddPastSession.tsx`** — line 15: remove `pt-4` from the class string
 
-Expected result:
-- No actual empty space above the header on iPhone
-- Header/top bar sits correctly at the top edge, respecting only the real notch inset
-- No repeated gap after back navigation or swipe-back
-- One consistent safe-area system across the app instead of continued page-by-page adjustments
+### Result
+- Back button / first content sits flush against the iPhone safe area
+- No empty gray strip above the content
+- Header-bar pages (Home, Dashboard, etc.) remain unaffected — they use `header-safe` on a white `<header>` element
+
