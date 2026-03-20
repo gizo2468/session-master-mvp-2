@@ -14,7 +14,7 @@ import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 
 // Lazy load route components for better performance (with retry on chunk load failure)
-const Index = lazyWithRetry(() => import("./pages/Index"), "Index");
+import Index from "./pages/Index";
 const SessionForm = lazyWithRetry(() => import("./pages/SessionForm"), "SessionForm");
 const LiveSession = lazyWithRetry(() => import("./pages/LiveSession"), "LiveSession");
 const SessionHistory = lazyWithRetry(() => import("./pages/SessionHistory"), "SessionHistory");
