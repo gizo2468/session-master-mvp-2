@@ -187,13 +187,7 @@ export default function Index() {
 
           {/* Stats section appears after the button */}
           <div className="w-full -mt-28">
-            {sessionsLoading ? (
-              <div className="flex justify-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-poker-feltGreen"></div>
-              </div>
-            ) : (
-              <StatsQuickView />
-            )}
+            <StatsQuickView />
           </div>
           
           {/* Active Sessions List - appears after stats if there are active sessions */}
