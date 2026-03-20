@@ -18,6 +18,7 @@ import { useSessionContext } from '@/context/SessionContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { PokerSession, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
