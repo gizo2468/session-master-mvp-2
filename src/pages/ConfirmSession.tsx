@@ -195,7 +195,7 @@ export default function ConfirmSession() {
         <div className="container mx-auto max-w-md">
           <div className="flex justify-between items-center">
             <Button 
-              onClick={() => navigate('/')}
+              onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/', { replace: true })}
               variant="ghost"
               className="text-poker-feltGreen p-0"
             >

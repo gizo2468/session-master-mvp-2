@@ -364,7 +364,7 @@ export default function EditSession() {
             <div className="flex gap-3 pt-4">
               <Button
                 variant="outline"
-                onClick={() => navigate('/')}
+                onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/', { replace: true })}
                 className="flex-1"
                 disabled={saving}
               >

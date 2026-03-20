@@ -420,7 +420,7 @@ export default function Notifications() {
         <div className="container mx-auto max-w-md px-4 pb-4">
           <div className="flex items-center">
             <Button
-              onClick={() => navigate('/')}
+              onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/', { replace: true })}
               variant="outline"
               size="sm"
               className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
