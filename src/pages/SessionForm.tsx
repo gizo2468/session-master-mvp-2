@@ -18,6 +18,7 @@ import { useSessionContext } from '@/context/SessionContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
+import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { PokerSession, TableData } from '@/types/poker';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -74,6 +75,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function SessionForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const swipeBackRef = useSwipeBack({ fallbackPath: '/', screenName: 'SessionForm' });
   const { startSession } = useSessionContext();
   const { defaultCurrency, getCurrencySymbol } = useDefaultCurrency();
   const { isPremium } = usePremiumAccess();
@@ -340,7 +342,7 @@ export default function SessionForm() {
   };
   
   return (
-    <div className="min-h-screen content-safe">
+    <div ref={swipeBackRef} className="min-h-screen content-safe">
       <div className="container mx-auto max-w-md px-4 pb-8">
         <header className="mb-8">
           <button 
