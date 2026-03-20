@@ -8,7 +8,7 @@ const LiveSessionHeader: React.FC = () => {
   const { navigateToHomeWithRefresh, isRefreshing } = useNavigateWithRefresh();
 
   return (
-    <header className="bg-white shadow-sm px-4 py-4 sticky top-0 z-10 relative flex items-center justify-center">
+    <header className="bg-white shadow-sm px-4 pb-4 sticky top-0 z-10 relative flex items-center justify-center header-safe">
       <button 
         onClick={navigateToHomeWithRefresh}
         disabled={isRefreshing}

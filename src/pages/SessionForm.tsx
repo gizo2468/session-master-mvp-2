@@ -341,7 +341,7 @@ export default function SessionForm() {
   
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto max-w-md px-4 py-8">
+      <div className="container mx-auto max-w-md px-4 pb-8 content-safe">
         <header className="mb-8">
           <button 
             onClick={() => navigate(-1)} 
