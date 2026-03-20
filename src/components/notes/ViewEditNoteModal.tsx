@@ -636,7 +636,8 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
             )}
 
             {/* Content - toggle between Notes and Linked Hands */}
-            {!showLinkedHands ? (
+            {!isEditingProfile && (
+              !showLinkedHands ? (
               /* Notes List */
               <div className="py-4 space-y-3">
                 {isLoadingNotes ? (
@@ -794,6 +795,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
                   )}
                 </ScrollArea>
               </div>
+              )
             )}
 
             {/* Footer Buttons */}
