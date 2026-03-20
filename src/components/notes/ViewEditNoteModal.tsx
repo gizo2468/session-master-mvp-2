@@ -636,6 +636,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
             )}
 
             {/* Content - toggle between Notes and Linked Hands */}
+            {!isEditingProfile && (
             {!showLinkedHands ? (
               /* Notes List */
               <div className="py-4 space-y-3">
