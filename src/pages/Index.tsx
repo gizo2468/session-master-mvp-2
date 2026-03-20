@@ -283,6 +283,7 @@ export default function Index() {
           </div>
         </div>
       </main>
+      <div className="pb-6" />
       
       <PlayerCardModal open={playerCardOpen} onOpenChange={setPlayerCardOpen} />
       <ViewAllNotesModal open={notesModalOpen} onOpenChange={setNotesModalOpen} />
