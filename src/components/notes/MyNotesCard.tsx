@@ -39,6 +39,62 @@ interface GroupedOpponent {
   noteCount: number;
 }
 
+// Reusable opponent row with optional image thumbnail
+const OpponentRowInner: React.FC<{
+  opponent: GroupedOpponent;
+  onClick: () => void;
+  onImageClick: (url: string) => void;
+}> = ({ opponent, onClick, onImageClick }) => {
+  const colorData = getColorById(opponent.profile?.color);
+  const signedUrl = useSignedImageUrl('opponent-avatars', opponent.profile?.image_url);
+
+  return (
+    <div
+      onClick={onClick}
+      className="p-3 bg-muted/50 rounded-lg border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors"
+    >
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2 min-w-0">
+          <div
+            className="w-3 h-3 rounded-sm flex-shrink-0"
+            style={{
+              backgroundColor: colorData.hex,
+              border: colorData.border ? `1px solid ${colorData.border}` : '1px solid transparent'
+            }}
+            title={colorData.label}
+          />
+          {signedUrl && (
+            <img
+              src={signedUrl}
+              alt=""
+              className="w-6 h-6 rounded-full object-cover flex-shrink-0 cursor-pointer"
+              onClick={(e) => { e.stopPropagation(); onImageClick(signedUrl); }}
+            />
+          )}
+          <span className="font-medium text-sm truncate">
+            {opponent.profile?.nickname || 'Unknown'}
+          </span>
+          {opponent.noteCount > 1 && (
+            <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full flex-shrink-0">
+              {opponent.noteCount} notes
+            </span>
+          )}
+        </div>
+        <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+          {format(new Date(opponent.latestNote.created_at), 'MMM d')}
+        </span>
+      </div>
+      {opponent.latestNote.note_body && (
+        <p className="text-sm text-muted-foreground line-clamp-2">
+          {opponent.latestNote.note_body}
+        </p>
+      )}
+    </div>
+  );
+};
+
+const OpponentRow = React.memo(OpponentRowInner);
+
 const MyNotesCard: React.FC = () => {
   const { isPremium, getNotesLimits } = usePremiumAccess();
   const { user } = useAuth();
@@ -50,6 +106,8 @@ const MyNotesCard: React.FC = () => {
   const [isAllNotesModalOpen, setIsAllNotesModalOpen] = useState(false);
   const [selectedOpponentProfile, setSelectedOpponentProfile] = useState<OpponentProfile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isImageFullscreen, setIsImageFullscreen] = useState(false);
+  const [fullscreenImageUrl, setFullscreenImageUrl] = useState<string | null>(null);
 
   const fetchNotes = async () => {
     if (!user?.id) return;
