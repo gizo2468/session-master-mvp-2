@@ -179,7 +179,7 @@ export default function EditSession() {
         description: "Your session has been successfully updated."
       });
       
-      navigate('/');
+      navigate('/', { replace: true });
       
     } catch (error) {
       console.error('❌ Error saving session:', error);
@@ -223,7 +223,7 @@ export default function EditSession() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/')}
+              onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/', { replace: true })}
               className="flex items-center gap-2"
             >
               <Icon name="ArrowLeft" size={16} />
@@ -364,7 +364,7 @@ export default function EditSession() {
             <div className="flex gap-3 pt-4">
               <Button
                 variant="outline"
-                onClick={() => navigate('/')}
+                onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/', { replace: true })}
                 className="flex-1"
                 disabled={saving}
               >

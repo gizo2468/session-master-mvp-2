@@ -8,7 +8,11 @@ export default function AddPastSession() {
   const swipeBackRef = useSwipeBack({ fallbackPath: '/', screenName: 'AddPastSession' });
 
   const handleClose = () => {
-    navigate('/');
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/', { replace: true });
+    }
   };
 
   return (
