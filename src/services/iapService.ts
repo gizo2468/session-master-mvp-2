@@ -65,17 +65,29 @@ export const initializeIAP = async (): Promise<boolean> => {
 export const loadProducts = async (): Promise<any[]> => {
   if (!isIOS()) return [];
 
+  const requestedIds = Object.values(PRODUCT_IDS);
+  console.log('[IAP] Requesting products:', requestedIds);
+
   try {
     const { products } = await NativePurchases.getProducts({
-      productIdentifiers: Object.values(PRODUCT_IDS),
+      productIdentifiers: requestedIds,
       productType: PURCHASE_TYPE.SUBS,
     });
 
     cachedProducts = products || [];
     console.log(
-      '[IAP] Loaded products:',
-      cachedProducts.map((p: any) => p.productIdentifier || p.identifier)
+      '[IAP] StoreKit returned',
+      cachedProducts.length,
+      'products:',
+      cachedProducts.map((p: any) => ({
+        id: p.productIdentifier || p.identifier,
+        price: p.priceString || p.price,
+      }))
     );
+
+    if (cachedProducts.length === 0) {
+      console.warn('[IAP] No products returned. Check: App Store Connect status, Paid Apps Agreement, Bundle ID match.');
+    }
 
     return cachedProducts;
   } catch (error) {
