@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.fa19e82d191f494f933fbcc0a4a9f418',
+  appId: 'com.guyzohar.sessionmaster',
   appName: 'session-master-mvp',
   webDir: 'dist',
 
