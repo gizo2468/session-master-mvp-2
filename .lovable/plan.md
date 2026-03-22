@@ -1,17 +1,26 @@
 
 
-## Fix: Settings → Subscription Back Navigation Loop
+## Fix: Edit Profile Popup Crash on iPhone in Notes Flow
 
-### Problem
-The Subscription page's back button uses `navigate('/settings')` which **pushes** a new `/settings` entry onto the history stack instead of popping back. This creates the stack: `Home → Settings → Subscription → Settings(new)`, so pressing back from the new Settings entry returns to Subscription.
+### Root Cause
+
+In `ViewAllNotesModal`, when clicking an opponent, the "All Notes" dialog closes first (`onOpenChange(false)`) and then `ViewEditNoteModal` opens as a standalone dialog. When the user taps "Edit Profile", `setIsEditingProfile(true)` triggers a significant DOM change — the notes list hides, color selector appears, input field appears, avatar becomes editable. On iPhone, this layout shift causes Radix Dialog's overlay to incorrectly detect an "outside click", which fires `onOpenChange(false)` on the ViewEditNoteModal. Since the parent ViewAllNotesModal is already closed, the user lands back on Home.
+
+This is a known Radix UI mobile issue where rapid content changes inside a Dialog cause touch events to be misinterpreted as dismiss gestures.
 
 ### Fix
 
-**`src/pages/Subscription.tsx`** — two changes:
+**`src/components/notes/ViewEditNoteModal.tsx`** — Add `onInteractOutside` and `onPointerDownOutside` handlers to DialogContent (line 417) that prevent accidental dismissal:
 
-1. **Back button** (line 75): Change `navigate('/settings')` to `navigate(-1)` — this pops back to the existing Settings entry instead of pushing a duplicate.
+```tsx
+<DialogContent 
+  className={...}
+  onInteractOutside={(e) => e.preventDefault()}
+  onPointerDownOutside={(e) => e.preventDefault()}
+>
+```
 
-2. **Post-purchase redirect** (line 47): Change `navigate('/settings')` to `navigate(-1)` — same reason; after a successful purchase, go back rather than push.
+This prevents the dialog from closing due to overlay touch events on mobile while still allowing the explicit "Close" button (line 806) and the X button to work normally via `onOpenChange`.
 
-Both changes ensure Subscription is removed from the stack when leaving it, so the subsequent back from Settings correctly returns to Home.
+Single file, 2 props added to one element.
 
