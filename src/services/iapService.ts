@@ -65,17 +65,29 @@ export const initializeIAP = async (): Promise<boolean> => {
 export const loadProducts = async (): Promise<any[]> => {
   if (!isIOS()) return [];
 
+  const requestedIds = Object.values(PRODUCT_IDS);
+  console.log('[IAP] Requesting products:', requestedIds);
+
   try {
     const { products } = await NativePurchases.getProducts({
-      productIdentifiers: Object.values(PRODUCT_IDS),
+      productIdentifiers: requestedIds,
       productType: PURCHASE_TYPE.SUBS,
     });
 
     cachedProducts = products || [];
     console.log(
-      '[IAP] Loaded products:',
-      cachedProducts.map((p: any) => p.productIdentifier || p.identifier)
+      '[IAP] StoreKit returned',
+      cachedProducts.length,
+      'products:',
+      cachedProducts.map((p: any) => ({
+        id: p.productIdentifier || p.identifier,
+        price: p.priceString || p.price,
+      }))
     );
+
+    if (cachedProducts.length === 0) {
+      console.warn('[IAP] No products returned. Check: App Store Connect status, Paid Apps Agreement, Bundle ID match.');
+    }
 
     return cachedProducts;
   } catch (error) {
@@ -104,6 +116,24 @@ export const getLocalizedPrice = (planType: 'monthly' | 'yearly'): string | null
  */
 export const purchaseProduct = async (productId: string): Promise<PurchaseResult> => {
   if (!isIOS()) return { success: false, error: 'IAP only available on iOS' };
+
+  // Verify product is in cache; retry load once if missing
+  const findProduct = () =>
+    cachedProducts.some((p: any) => (p.productIdentifier || p.identifier) === productId);
+
+  if (!findProduct()) {
+    console.log(`[IAP] Product ${productId} not in cache (${cachedProducts.length} cached). Retrying load...`);
+    await loadProducts();
+  }
+
+  if (!findProduct()) {
+    const available = cachedProducts.map((p: any) => p.productIdentifier || p.identifier);
+    console.error(`[IAP] Product ${productId} still not found. Available: [${available.join(', ')}]`);
+    return {
+      success: false,
+      error: 'Product not found. Please ensure your subscription products are approved in App Store Connect and try again.',
+    };
+  }
 
   try {
     await NativePurchases.purchaseProduct({
