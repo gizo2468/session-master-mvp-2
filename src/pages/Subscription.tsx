@@ -44,7 +44,7 @@ const Subscription: React.FC = () => {
     const success = await purchase(selectedPlan);
     if (success) {
       // Navigate back after successful purchase
-      setTimeout(() => navigate('/settings'), 1500);
+      setTimeout(() => navigate(-1), 1500);
     }
     setIsLoading(null);
   };
@@ -54,7 +54,7 @@ const Subscription: React.FC = () => {
     setIsLoading('restore');
     const success = await restore();
     if (success) {
-      setTimeout(() => navigate('/settings'), 1500);
+      setTimeout(() => navigate(-1), 1500);
     }
     setIsLoading(null);
   };
