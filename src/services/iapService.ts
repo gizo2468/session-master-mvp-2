@@ -117,6 +117,24 @@ export const getLocalizedPrice = (planType: 'monthly' | 'yearly'): string | null
 export const purchaseProduct = async (productId: string): Promise<PurchaseResult> => {
   if (!isIOS()) return { success: false, error: 'IAP only available on iOS' };
 
+  // Verify product is in cache; retry load once if missing
+  const findProduct = () =>
+    cachedProducts.some((p: any) => (p.productIdentifier || p.identifier) === productId);
+
+  if (!findProduct()) {
+    console.log(`[IAP] Product ${productId} not in cache (${cachedProducts.length} cached). Retrying load...`);
+    await loadProducts();
+  }
+
+  if (!findProduct()) {
+    const available = cachedProducts.map((p: any) => p.productIdentifier || p.identifier);
+    console.error(`[IAP] Product ${productId} still not found. Available: [${available.join(', ')}]`);
+    return {
+      success: false,
+      error: 'Product not found. Please ensure your subscription products are approved in App Store Connect and try again.',
+    };
+  }
+
   try {
     await NativePurchases.purchaseProduct({
       productIdentifier: productId,
