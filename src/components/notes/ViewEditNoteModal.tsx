@@ -414,7 +414,7 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className={`sm:max-w-md max-h-[85vh] ${showLinkedHands ? 'overflow-hidden' : 'overflow-y-auto'}`} data-form-type="other">
+        <DialogContent className={`sm:max-w-md max-h-[85vh] ${showLinkedHands ? 'overflow-hidden' : 'overflow-y-auto'}`} data-form-type="other" onInteractOutside={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader className="sr-only">
             <DialogTitle>{currentProfile?.nickname || 'Opponent'}</DialogTitle>
           </DialogHeader>
