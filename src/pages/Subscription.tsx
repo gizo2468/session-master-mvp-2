@@ -72,7 +72,7 @@ const Subscription: React.FC = () => {
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => navigate('/settings')}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
