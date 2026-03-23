@@ -72,28 +72,6 @@ export default function Index() {
       return () => clearTimeout(timer);
     }
   }, [allDataReady]);
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { 
-    sessions, 
-    filters, 
-    setFilters, 
-    showStorageWarning, 
-    dismissStorageWarning,
-    isLoading,
-    refreshSessionsFromDatabase 
-  } = useSessionContext();
-  
-  const { 
-    activeSessions, 
-    isLoading: isRecovering, 
-    resumeSession,
-    hasActiveSessions 
-  } = useActiveSessionRecovery();
-  const [playerCardOpen, setPlayerCardOpen] = useState(false);
-  const [notesModalOpen, setNotesModalOpen] = useState(false);
-  const { connectedCoaches, isCoach, students } = useCoachStudent();
-  const [showPlayersModal, setShowPlayersModal] = useState(false);
 
   const handleCoachChipClick = () => {
     if (isCoach) {
