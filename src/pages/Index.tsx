@@ -131,6 +131,25 @@ export default function Index() {
   const sessionsLoading = isLoading || isRecovering;
 
   return (
+    <>
+      {/* Splash screen overlay */}
+      {!splashRemoved && (
+        <div
+          className={`fixed inset-0 z-50 bg-background flex items-center justify-center transition-opacity duration-300 ${
+            splashVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        >
+          <div className="text-center space-y-6">
+            <div className="flex justify-center">
+              <Logo />
+            </div>
+            <div className="flex justify-center">
+              <Icon name="Loader2" size={32} className="animate-spin text-primary" />
+            </div>
+            <p className="text-muted-foreground text-sm">Loading Session Master...</p>
+          </div>
+        </div>
+      )}
     <div className="min-h-screen">
       <header className="bg-white shadow-sm relative z-10 header-safe pt-4">
         <div className="container mx-auto max-w-md px-4 pb-4">
