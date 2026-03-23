@@ -1,15 +1,15 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useSessionContext } from '@/context/SessionContext';
 import { useActiveSessionRecovery } from '@/hooks/useActiveSessionRecovery';
+import { useUnifiedSessionStats } from '@/hooks/useUnifiedSessionStats';
 import SessionCard from '@/components/SessionCard';
 import NewSessionButton from '@/components/NewSessionButton';
 import StatsQuickView from '@/components/StatsQuickView';
 import StorageWarningAlert from '@/components/StorageWarningAlert';
-
 
 import ActiveSessionsList from '@/components/ActiveSessionsList';
 import Logo from '@/components/Logo';
