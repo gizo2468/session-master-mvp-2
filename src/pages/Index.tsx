@@ -50,6 +50,46 @@ export default function Index() {
     resumeSession,
     hasActiveSessions 
   } = useActiveSessionRecovery();
+  
+  const { isLoading: statsLoading } = useUnifiedSessionStats();
+  
+  const [playerCardOpen, setPlayerCardOpen] = useState(false);
+  const [notesModalOpen, setNotesModalOpen] = useState(false);
+  const { connectedCoaches, isCoach, students } = useCoachStudent();
+  const [showPlayersModal, setShowPlayersModal] = useState(false);
+
+  // Splash screen logic
+  const allDataReady = !isLoading && !isRecovering && !statsLoading;
+  const [splashVisible, setSplashVisible] = useState(true);
+  const [splashRemoved, setSplashRemoved] = useState(false);
+
+  useEffect(() => {
+    if (allDataReady && splashVisible) {
+      // Start fade-out
+      setSplashVisible(false);
+      // Remove from DOM after transition
+      const timer = setTimeout(() => setSplashRemoved(true), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [allDataReady]);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { 
+    sessions, 
+    filters, 
+    setFilters, 
+    showStorageWarning, 
+    dismissStorageWarning,
+    isLoading,
+    refreshSessionsFromDatabase 
+  } = useSessionContext();
+  
+  const { 
+    activeSessions, 
+    isLoading: isRecovering, 
+    resumeSession,
+    hasActiveSessions 
+  } = useActiveSessionRecovery();
   const [playerCardOpen, setPlayerCardOpen] = useState(false);
   const [notesModalOpen, setNotesModalOpen] = useState(false);
   const { connectedCoaches, isCoach, students } = useCoachStudent();
