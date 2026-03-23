@@ -65,7 +65,7 @@ const PrivacyPolicy: React.FC = () => {
             <p>SessionMaster is not intended for individuals under 13. We do not knowingly collect personal data from children. If we learn that we have collected data from a child under 13, we will delete it promptly.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">9. International Users</h2>
-            <p>SessionMaster currently serves users in Israel and the United States. If we expand to additional regions, we will update this policy to comply with local regulations such as GDPR and CCPA.</p>
+            <p>SessionMaster is available to users worldwide. Certain features, services, or regional availability may vary depending on location, platform support, legal requirements, or rollout status. We are committed to complying with applicable local regulations, including GDPR and CCPA, where relevant.</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">10. Changes to This Policy</h2>
             <p>We may update this Privacy Policy from time to time. The latest version will always be available in the app. Material changes will be communicated via in-app notice or email.</p>
