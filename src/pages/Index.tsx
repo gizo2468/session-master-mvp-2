@@ -355,5 +355,6 @@ export default function Index() {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 }
