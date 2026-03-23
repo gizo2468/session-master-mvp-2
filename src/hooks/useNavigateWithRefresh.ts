@@ -24,15 +24,16 @@ export const useNavigateWithRefresh = () => {
         await refreshSessionsFromDatabase();
       }
       
-      // Pop history instead of pushing to avoid stale entries on swipe-back
-      if (window.history.length > 1) {
+      const historyIndex = window.history.state?.idx;
+      if (typeof historyIndex === 'number' && historyIndex > 0) {
         navigate(-1);
       } else {
         navigate('/', { replace: true });
       }
     } catch (error) {
       console.error('Failed to refresh session data during navigation:', error);
-      if (window.history.length > 1) {
+      const historyIndex = window.history.state?.idx;
+      if (typeof historyIndex === 'number' && historyIndex > 0) {
         navigate(-1);
       } else {
         navigate('/', { replace: true });
