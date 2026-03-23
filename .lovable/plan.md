@@ -1,37 +1,19 @@
 
 
-## Fix: LiveSession Back Button Crashes in Browser/Preview
+## Update Privacy Policy — International Users Section
 
-### Root Cause
+### Change
+Update the "International Users" paragraph in both files where it appears:
 
-The `LiveSessionHeader` uses `navigateToHomeWithRefresh()` which checks `window.history.length > 1` to decide whether to call `navigate(-1)`. The problem: `window.history.length` reflects the **entire browser tab history**, not just in-app navigation. It's almost always > 1, even when there's no previous in-app route.
+**Files:**
+- `src/components/legal/PrivacyPolicyModal.tsx` (line 60)
+- `src/pages/legal/PrivacyPolicy.tsx` (line 68)
 
-In the Lovable preview (iframe) or when opening the LiveSession URL directly in a browser, there is no previous React Router entry. `navigate(-1)` navigates the iframe/tab **out of the app entirely** — to a blank page or the previous non-app URL. This looks like a crash.
+**Current text:**
+> SessionMaster currently serves users in Israel and the United States. If we expand to additional regions, we will update this policy to comply with local regulations such as GDPR and CCPA.
 
-This doesn't happen on older phone builds because native navigation always starts from Home, so there's always a valid in-app history entry to go back to.
+**New text:**
+> SessionMaster is available to users worldwide. Certain features, services, or regional availability may vary depending on location, platform support, legal requirements, or rollout status. We are committed to complying with applicable local regulations, including GDPR and CCPA, where relevant.
 
-### Fix
-
-**`src/hooks/useNavigateWithRefresh.ts`** — In `navigateToHomeWithRefresh`, replace the unreliable `window.history.length` check with React Router's internal history index (`window.history.state?.idx`). If the index is > 0, there's a real in-app entry to go back to. Otherwise, navigate directly to `'/'` with `replace: true`.
-
-```typescript
-// Before (broken)
-if (window.history.length > 1) {
-  navigate(-1);
-} else {
-  navigate('/', { replace: true });
-}
-
-// After (fixed)
-const historyIndex = window.history.state?.idx;
-if (typeof historyIndex === 'number' && historyIndex > 0) {
-  navigate(-1);
-} else {
-  navigate('/', { replace: true });
-}
-```
-
-Apply the same fix to the catch block (lines 35-38).
-
-Single file change, same pattern applied in two places within the function.
+Two files, one line each. No other changes.
 
