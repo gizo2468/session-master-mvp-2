@@ -1,15 +1,15 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useSessionContext } from '@/context/SessionContext';
 import { useActiveSessionRecovery } from '@/hooks/useActiveSessionRecovery';
+import { useUnifiedSessionStats } from '@/hooks/useUnifiedSessionStats';
 import SessionCard from '@/components/SessionCard';
 import NewSessionButton from '@/components/NewSessionButton';
 import StatsQuickView from '@/components/StatsQuickView';
 import StorageWarningAlert from '@/components/StorageWarningAlert';
-
 
 import ActiveSessionsList from '@/components/ActiveSessionsList';
 import Logo from '@/components/Logo';
@@ -50,10 +50,28 @@ export default function Index() {
     resumeSession,
     hasActiveSessions 
   } = useActiveSessionRecovery();
+  
+  const { isLoading: statsLoading } = useUnifiedSessionStats();
+  
   const [playerCardOpen, setPlayerCardOpen] = useState(false);
   const [notesModalOpen, setNotesModalOpen] = useState(false);
   const { connectedCoaches, isCoach, students } = useCoachStudent();
   const [showPlayersModal, setShowPlayersModal] = useState(false);
+
+  // Splash screen logic
+  const allDataReady = !isLoading && !isRecovering && !statsLoading;
+  const [splashVisible, setSplashVisible] = useState(true);
+  const [splashRemoved, setSplashRemoved] = useState(false);
+
+  useEffect(() => {
+    if (allDataReady && splashVisible) {
+      // Start fade-out
+      setSplashVisible(false);
+      // Remove from DOM after transition
+      const timer = setTimeout(() => setSplashRemoved(true), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [allDataReady]);
 
   const handleCoachChipClick = () => {
     if (isCoach) {
@@ -113,6 +131,25 @@ export default function Index() {
   const sessionsLoading = isLoading || isRecovering;
 
   return (
+    <>
+      {/* Splash screen overlay */}
+      {!splashRemoved && (
+        <div
+          className={`fixed inset-0 z-50 bg-background flex items-center justify-center transition-opacity duration-300 ${
+            splashVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        >
+          <div className="text-center space-y-6">
+            <div className="flex justify-center">
+              <Logo />
+            </div>
+            <div className="flex justify-center">
+              <Icon name="Loader2" size={32} className="animate-spin text-primary" />
+            </div>
+            <p className="text-muted-foreground text-sm">Loading Session Master...</p>
+          </div>
+        </div>
+      )}
     <div className="min-h-screen">
       <header className="bg-white shadow-sm relative z-10 header-safe pt-4">
         <div className="container mx-auto max-w-md px-4 pb-4">
@@ -318,5 +355,6 @@ export default function Index() {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 }
