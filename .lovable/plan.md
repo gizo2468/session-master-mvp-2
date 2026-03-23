@@ -1,26 +1,37 @@
 
 
-## Fix: Edit Profile Popup Crash on iPhone in Notes Flow
+## Fix: LiveSession Back Button Crashes in Browser/Preview
 
 ### Root Cause
 
-In `ViewAllNotesModal`, when clicking an opponent, the "All Notes" dialog closes first (`onOpenChange(false)`) and then `ViewEditNoteModal` opens as a standalone dialog. When the user taps "Edit Profile", `setIsEditingProfile(true)` triggers a significant DOM change — the notes list hides, color selector appears, input field appears, avatar becomes editable. On iPhone, this layout shift causes Radix Dialog's overlay to incorrectly detect an "outside click", which fires `onOpenChange(false)` on the ViewEditNoteModal. Since the parent ViewAllNotesModal is already closed, the user lands back on Home.
+The `LiveSessionHeader` uses `navigateToHomeWithRefresh()` which checks `window.history.length > 1` to decide whether to call `navigate(-1)`. The problem: `window.history.length` reflects the **entire browser tab history**, not just in-app navigation. It's almost always > 1, even when there's no previous in-app route.
 
-This is a known Radix UI mobile issue where rapid content changes inside a Dialog cause touch events to be misinterpreted as dismiss gestures.
+In the Lovable preview (iframe) or when opening the LiveSession URL directly in a browser, there is no previous React Router entry. `navigate(-1)` navigates the iframe/tab **out of the app entirely** — to a blank page or the previous non-app URL. This looks like a crash.
+
+This doesn't happen on older phone builds because native navigation always starts from Home, so there's always a valid in-app history entry to go back to.
 
 ### Fix
 
-**`src/components/notes/ViewEditNoteModal.tsx`** — Add `onInteractOutside` and `onPointerDownOutside` handlers to DialogContent (line 417) that prevent accidental dismissal:
+**`src/hooks/useNavigateWithRefresh.ts`** — In `navigateToHomeWithRefresh`, replace the unreliable `window.history.length` check with React Router's internal history index (`window.history.state?.idx`). If the index is > 0, there's a real in-app entry to go back to. Otherwise, navigate directly to `'/'` with `replace: true`.
 
-```tsx
-<DialogContent 
-  className={...}
-  onInteractOutside={(e) => e.preventDefault()}
-  onPointerDownOutside={(e) => e.preventDefault()}
->
+```typescript
+// Before (broken)
+if (window.history.length > 1) {
+  navigate(-1);
+} else {
+  navigate('/', { replace: true });
+}
+
+// After (fixed)
+const historyIndex = window.history.state?.idx;
+if (typeof historyIndex === 'number' && historyIndex > 0) {
+  navigate(-1);
+} else {
+  navigate('/', { replace: true });
+}
 ```
 
-This prevents the dialog from closing due to overlay touch events on mobile while still allowing the explicit "Close" button (line 806) and the X button to work normally via `onOpenChange`.
+Apply the same fix to the catch block (lines 35-38).
 
-Single file, 2 props added to one element.
+Single file change, same pattern applied in two places within the function.
 
