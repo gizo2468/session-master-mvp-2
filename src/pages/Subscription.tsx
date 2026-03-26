@@ -330,6 +330,16 @@ const Subscription: React.FC = () => {
             </div>
           </div>
         )}
+
+        <div className="mt-6 flex items-center justify-center gap-4 text-xs text-muted-foreground pb-4">
+          <a href="https://sessionmaster.site/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline">
+            Privacy Policy
+          </a>
+          <span>•</span>
+          <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener noreferrer" className="underline">
+            Terms of Use
+          </a>
+        </div>
       </div>
     </div>
   );
