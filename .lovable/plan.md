@@ -1,24 +1,36 @@
 
+## Investigate Why the Preview Is Failing
 
-## Add Legal Links to Subscription Screen
+### What I found so far
+- The recent `Subscription.tsx` edits look syntactically valid.
+- No browser console errors were captured from the preview snapshot.
+- The preview session replay shows the page shell loading, but that alone does not prove the React app fully initialized.
+- The startup path is gated by:
+  - `src/App.tsx`
+  - `src/components/auth/AuthGuard.tsx`
+  - `src/context/AuthContext.tsx`
 
-### Change
+### Most likely causes to verify
+1. A startup/runtime issue during app bootstrap or auth initialization
+2. A preview-only environment problem rather than a real app regression
+3. A stale route/history/session state causing the preview iframe to fail before rendering the page
 
-In `src/pages/Subscription.tsx`, add two text links below the trust section (line 331), before the closing `</div>`:
+### Fix plan
+1. Inspect the app startup flow and auth guard path end-to-end to identify where rendering stops.
+2. Check preview-side request failures and runtime logs for the initial load/auth flow, not just the subscription page.
+3. If a code regression is found, make the smallest targeted fix in the startup/auth/render path.
+4. If this is confirmed to be preview-only, avoid unnecessary app changes and verify behavior against the published app instead of chasing the preview environment.
 
-```tsx
-<div className="mt-6 flex items-center justify-center gap-4 text-xs text-muted-foreground">
-  <a href="https://sessionmaster.site/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline">
-    Privacy Policy
-  </a>
-  <span>•</span>
-  <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener noreferrer" className="underline">
-    Terms of Use
-  </a>
-</div>
-```
+### Files already identified as highest priority
+- `src/App.tsx`
+- `src/components/auth/AuthGuard.tsx`
+- `src/context/AuthContext.tsx`
+- `src/pages/Subscription.tsx`
 
-Place this **outside** the `isMobile` conditional so the links appear on all platforms (App Store compliance requires them regardless). Insert after line 331, before the final `</div>` tags.
+### Implementation constraints
+- Do not change pricing, purchases, or unrelated UI
+- Only fix the actual cause of the failed preview/render path
+- Avoid speculative changes if the issue is platform-specific to preview
 
-Single file, one addition. No changes to pricing, purchase flow, or styling.
-
+### Technical note
+There is a known class of preview-only failures where the preview environment interferes with auth/network calls even though the published app works. I will first separate “real app bug” from “preview-only issue” before proposing any code change, so you do not lose more messages on blind fixes.
