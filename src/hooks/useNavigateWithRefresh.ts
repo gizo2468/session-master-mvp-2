@@ -24,20 +24,10 @@ export const useNavigateWithRefresh = () => {
         await refreshSessionsFromDatabase();
       }
       
-      const historyIndex = window.history.state?.idx;
-      if (typeof historyIndex === 'number' && historyIndex > 0) {
-        navigate(-1);
-      } else {
-        navigate('/', { replace: true });
-      }
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Failed to refresh session data during navigation:', error);
-      const historyIndex = window.history.state?.idx;
-      if (typeof historyIndex === 'number' && historyIndex > 0) {
-        navigate(-1);
-      } else {
-        navigate('/', { replace: true });
-      }
+      navigate('/', { replace: true });
     } finally {
       setIsRefreshing(false);
     }

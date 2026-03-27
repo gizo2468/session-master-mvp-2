@@ -72,7 +72,7 @@ const ConnectCoach = () => {
       <div className="container mx-auto max-w-md px-4 pb-8">
         <header className="mb-8">
           <button 
-            onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/', { replace: true })} 
+            onClick={() => navigate('/', { replace: true })} 
             className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:underline"
           >
             <Icon name="ArrowLeft" size={16} />
