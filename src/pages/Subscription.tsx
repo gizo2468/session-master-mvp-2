@@ -214,8 +214,11 @@ const Subscription: React.FC = () => {
                     className="w-full"
                     size="sm"
                   >
-                    {isLoading === 'restore' ? 'Restoring...' : 'Restore Purchases'}
+                  {isLoading === 'restore' ? 'Restoring...' : 'Restore Purchases'}
                   </Button>
+                  <p className="text-center text-xs text-muted-foreground mt-3">
+                    Subscription · Cancel Anytime
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
