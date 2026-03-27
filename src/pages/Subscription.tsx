@@ -343,6 +343,9 @@ const Subscription: React.FC = () => {
             Terms of Use
           </a>
         </div>
+        <p className="text-center text-xs text-muted-foreground mt-2 pb-2">
+          Auto-Renewable Subscription · Cancel Anytime
+        </p>
       </div>
     </div>
   );
