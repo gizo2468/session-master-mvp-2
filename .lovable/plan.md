@@ -1,36 +1,40 @@
 
-## Investigate Why the Preview Is Failing
+## Investigate Preview White Screen as a Lovable Preview Issue
 
-### What I found so far
-- The recent `Subscription.tsx` edits look syntactically valid.
-- No browser console errors were captured from the preview snapshot.
-- The preview session replay shows the page shell loading, but that alone does not prove the React app fully initialized.
-- The startup path is gated by:
+### What I found
+- The current startup files do not show an obvious syntax break from the recent subscription text edits.
+- The preview snapshots available right now show:
+  - no console errors captured
+  - no matching network failures captured
+  - session replay with almost no meaningful interaction data
+- The auth/bootstrap path is still the main place where the preview can stall:
   - `src/App.tsx`
   - `src/components/auth/AuthGuard.tsx`
   - `src/context/AuthContext.tsx`
+- There is also a known Lovable preview-only failure mode where the preview environment interferes with Supabase auth/network requests and produces a white screen even though the published app works.
 
-### Most likely causes to verify
-1. A startup/runtime issue during app bootstrap or auth initialization
-2. A preview-only environment problem rather than a real app regression
-3. A stale route/history/session state causing the preview iframe to fail before rendering the page
+### Plan
+1. Treat this first as a preview-environment problem, not an app bug.
+2. Verify whether the published app loads correctly while the preview remains white.
+3. Check whether the preview is failing during auth/bootstrap rather than from a code regression.
+4. If the published app works, avoid further app-code changes for this issue and use the published URL for functional testing until preview is stable.
+5. Only if the published app also fails will I continue with an app-level fix plan.
 
-### Fix plan
-1. Inspect the app startup flow and auth guard path end-to-end to identify where rendering stops.
-2. Check preview-side request failures and runtime logs for the initial load/auth flow, not just the subscription page.
-3. If a code regression is found, make the smallest targeted fix in the startup/auth/render path.
-4. If this is confirmed to be preview-only, avoid unnecessary app changes and verify behavior against the published app instead of chasing the preview environment.
+### Likely root cause
+The strongest current signal is:
+- preview-specific startup/auth failure
+- not a subscription-screen text change
+- not enough evidence of a real runtime code crash in the app itself
 
-### Files already identified as highest priority
-- `src/App.tsx`
-- `src/components/auth/AuthGuard.tsx`
-- `src/context/AuthContext.tsx`
-- `src/pages/Subscription.tsx`
+### Technical details
+```text
+Possible flow:
+Lovable preview loads
+-> preview proxy/interceptor affects startup/auth request
+-> Auth bootstrap never completes cleanly
+-> app appears as white page
+```
 
-### Implementation constraints
-- Do not change pricing, purchases, or unrelated UI
-- Only fix the actual cause of the failed preview/render path
-- Avoid speculative changes if the issue is platform-specific to preview
-
-### Technical note
-There is a known class of preview-only failures where the preview environment interferes with auth/network calls even though the published app works. I will first separate “real app bug” from “preview-only issue” before proposing any code change, so you do not lose more messages on blind fixes.
+### Scope
+- Focus only on the white preview rendering problem
+- Do not change purchase flow, subscription UI, or unrelated navigation unless the published app proves broken too
