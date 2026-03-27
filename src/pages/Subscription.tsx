@@ -217,7 +217,7 @@ const Subscription: React.FC = () => {
                   {isLoading === 'restore' ? 'Restoring...' : 'Restore Purchases'}
                   </Button>
                   <p className="text-center text-xs text-muted-foreground mt-3">
-                    Subscription · Cancel Anytime
+                    Auto-Renewable Subscription · Cancel Anytime
                   </p>
                 </div>
               ) : (
