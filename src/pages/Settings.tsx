@@ -33,6 +33,7 @@ const Settings: React.FC = () => {
   const { toast } = useToast();
   const { defaultCurrency } = useDefaultCurrency();
   const { interval: stackCheckInterval, updateInterval: updateStackCheckInterval, isLoading: stackCheckLoading } = useStackCheckInterval();
+  const { nightMode, toggleNightMode } = useNightMode();
   const [profile, setProfile] = useState<{ username?: string; role?: string; default_currency?: string; coaching_focus?: string[]; experience?: string } | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
