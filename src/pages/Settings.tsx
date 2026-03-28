@@ -581,6 +581,26 @@ const Settings: React.FC = () => {
             </CardContent>
           </Card>
 
+          {/* Appearance */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Appearance</CardTitle>
+              <CardDescription className="text-center">Customize how the app looks</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Icon name="Moon" className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Night Mode</p>
+                    <p className="text-sm text-muted-foreground">Darken the app background</p>
+                  </div>
+                </div>
+                <Switch checked={nightMode} onCheckedChange={toggleNightMode} />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Support Section */}
           <SupportSettings />
 
