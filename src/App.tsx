@@ -107,6 +107,7 @@ const App = () => {
               </SessionProvider>
             </CoachStudentProvider>
           </AuthProvider>
+          </NightModeProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

@@ -16,6 +16,8 @@ import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 import { useStackCheckInterval, STACK_CHECK_OPTIONS } from '@/hooks/useStackCheckInterval';
 import { supabase } from '@/integrations/supabase/client';
 import SupportSettings from '@/components/settings/SupportSettings';
+import { Switch } from '@/components/ui/switch';
+import { useNightMode } from '@/context/NightModeContext';
 import {
   Select,
   SelectContent,
