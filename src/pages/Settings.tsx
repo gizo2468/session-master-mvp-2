@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 import { useStackCheckInterval, STACK_CHECK_OPTIONS } from '@/hooks/useStackCheckInterval';
 import { supabase } from '@/integrations/supabase/client';
+import { Switch } from '@/components/ui/switch';
 import SupportSettings from '@/components/settings/SupportSettings';
 import {
   Select,
