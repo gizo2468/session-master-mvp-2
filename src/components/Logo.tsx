@@ -1,4 +1,5 @@
 import React from 'react';
+import logoSrc from '@/assets/session-master-logo.png';
 
 interface LogoProps {
   className?: string;
@@ -8,9 +9,9 @@ const Logo: React.FC<LogoProps> = ({ className }) => {
   return (
     <div className={`w-full flex flex-col items-center justify-center ${className || ''}`}>
       <img 
-        src="/lovable-uploads/9dacd61d-619a-4834-8789-3d9484fc67a0.png" 
+        src={logoSrc} 
         alt="Session Master Logo" 
-        className="w-40 h-auto object-contain"
+        className="w-44 h-auto object-contain dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]"
       />
     </div>
   );
