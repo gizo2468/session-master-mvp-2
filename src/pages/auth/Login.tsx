@@ -97,7 +97,7 @@ const Login: React.FC = () => {
         type: 'signup',
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: 'https://sessionmaster.site/confirm-email'
         }
       });
 
