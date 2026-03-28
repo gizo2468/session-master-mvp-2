@@ -268,13 +268,13 @@ const Settings: React.FC = () => {
           <Button 
             onClick={navigateToHomeWithRefresh}
             variant="ghost"
-            className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:bg-transparent hover:text-poker-green"
+            className="text-primary mb-4 flex items-center gap-1 hover:bg-transparent hover:text-primary/80"
             disabled={isRefreshing}
           >
             <Icon name={isRefreshing ? "Loader2" : "ArrowLeft"} size={16} className={isRefreshing ? 'animate-spin' : ''} />
             <span>Back</span>
           </Button>
-          <h1 className="text-2xl font-bold text-poker-black">Settings</h1>
+          <h1 className="text-2xl font-bold text-poker-black dark:text-white">Settings</h1>
         </header>
         
         <div className="space-y-6">
