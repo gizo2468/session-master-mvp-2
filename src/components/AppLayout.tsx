@@ -18,7 +18,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   return (
     <div
       ref={scrollRef}
-      className="fixed inset-0 overflow-y-auto overscroll-none bg-gray-50 pb-safe"
+      className="fixed inset-0 overflow-y-auto overscroll-none bg-gray-50 dark:bg-background pb-safe"
     >
       {children}
     </div>

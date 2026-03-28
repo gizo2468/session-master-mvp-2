@@ -55,7 +55,7 @@ async function initPushOnce() {
   await PushNotifications.register();
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(<ThemeProvider><App /></ThemeProvider>);
 
 // ריצה פעם אחת אחרי שהאפליקציה עלתה
 setTimeout(() => {
