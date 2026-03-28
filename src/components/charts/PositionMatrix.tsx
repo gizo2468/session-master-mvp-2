@@ -7,9 +7,10 @@ interface PositionMatrixProps {
   solutions: ChartSolution[];
   onSpotClick: (solution: ChartSolution) => void;
   stackDepth: number;
+  isUserOwned?: boolean;
+  onCreateSpot?: (heroPos: string, scenario: { actionType: string; villain: string | null }) => void;
 }
 
-// Define the rows for the matrix (scenarios)
 const SCENARIOS = [
   { label: 'RFI', actionType: 'RFI', villain: null },
   { label: 'vs UTG', actionType: 'DEFEND', villain: 'UTG' },
@@ -31,14 +32,11 @@ function findSolution(
 ): ChartSolution | null {
   return solutions.find(s => {
     if (s.hero_position !== heroPos) return false;
-    if (scenario.actionType === 'RFI') {
-      return s.action_type === 'RFI';
-    }
+    if (scenario.actionType === 'RFI') return s.action_type === 'RFI';
     return s.action_type === scenario.actionType && s.villain_position === scenario.villain;
   }) || null;
 }
 
-// Can't defend/3bet from the same or earlier position
 function isValidSpot(heroPos: string, scenario: typeof SCENARIOS[number]): boolean {
   if (scenario.actionType === 'RFI') return true;
   if (!scenario.villain) return false;
@@ -46,17 +44,15 @@ function isValidSpot(heroPos: string, scenario: typeof SCENARIOS[number]): boole
   const heroIdx = POSITIONS.indexOf(heroPos as any);
   const villainIdx = POSITIONS.indexOf(scenario.villain as any);
 
-  // Hero must act after villain (higher index) to defend/3bet
-  // Exception: BB/SB can defend vs anyone
   if (heroPos === 'BB' || heroPos === 'SB') return villainIdx < heroIdx;
   return heroIdx > villainIdx;
 }
 
-const PositionMatrix: React.FC<PositionMatrixProps> = ({ solutions, onSpotClick, stackDepth }) => {
+const PositionMatrix: React.FC<PositionMatrixProps> = ({ solutions, onSpotClick, stackDepth, isUserOwned, onCreateSpot }) => {
   return (
     <div className="w-full overflow-x-auto">
       <div className="min-w-[640px]">
-        {/* Header row with positions */}
+        {/* Header row */}
         <div className="grid grid-cols-[100px_repeat(8,1fr)] gap-1 mb-1">
           <div className="flex items-center justify-center text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
             {stackDepth}bb
@@ -74,12 +70,10 @@ const PositionMatrix: React.FC<PositionMatrixProps> = ({ solutions, onSpotClick,
         {/* Scenario rows */}
         {SCENARIOS.map(scenario => (
           <div key={scenario.label} className="grid grid-cols-[100px_repeat(8,1fr)] gap-1 mb-1">
-            {/* Row label */}
             <div className="flex items-center text-[11px] font-medium text-muted-foreground px-1 truncate">
               {scenario.label}
             </div>
 
-            {/* Position cells */}
             {POSITIONS.map(pos => {
               const valid = isValidSpot(pos, scenario);
               const solution = valid ? findSolution(solutions, pos, scenario) : null;
@@ -100,7 +94,13 @@ const PositionMatrix: React.FC<PositionMatrixProps> = ({ solutions, onSpotClick,
               return (
                 <button
                   key={pos}
-                  onClick={() => solution && onSpotClick(solution)}
+                  onClick={() => {
+                    if (solution) {
+                      onSpotClick(solution);
+                    } else if (isUserOwned && onCreateSpot) {
+                      onCreateSpot(pos, { actionType: scenario.actionType, villain: scenario.villain });
+                    }
+                  }}
                   className={cn(
                     'flex flex-col items-center justify-center h-11 rounded-md transition-all text-[10px] font-medium',
                     'active:scale-95',
@@ -110,14 +110,14 @@ const PositionMatrix: React.FC<PositionMatrixProps> = ({ solutions, onSpotClick,
                         : scenario.actionType === '3BET'
                           ? 'bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/20'
                           : 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/20'
-                      : 'bg-muted/40 text-muted-foreground/50 border border-transparent'
+                      : isUserOwned
+                        ? 'bg-muted/40 text-muted-foreground/50 border border-dashed border-muted-foreground/20 hover:border-primary/40 hover:text-primary/60'
+                        : 'bg-muted/40 text-muted-foreground/50 border border-transparent'
                   )}
-                  disabled={!solution}
+                  disabled={!solution && !isUserOwned}
                 >
                   {solution ? (
-                    <>
-                      <span className="font-bold text-xs leading-none">{freq ? `${freq}%` : '—'}</span>
-                    </>
+                    <span className="font-bold text-xs leading-none">{freq ? `${freq}%` : '—'}</span>
                   ) : (
                     <Icon name="Plus" className="h-3 w-3 opacity-30" />
                   )}

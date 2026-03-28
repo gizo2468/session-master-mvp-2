@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 
@@ -21,6 +21,7 @@ export interface ChartSolution {
   range_data: Record<string, any>;
   notes: string | null;
   is_default: boolean;
+  user_id: string | null;
 }
 
 export function useChartCollections() {
@@ -85,6 +86,115 @@ export function useChartSolution(solutionId: string | null) {
   });
 }
 
+export function useCreateCollection() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { name: string; stack_depth_bb: number; game_type: string }) => {
+      const { data, error } = await supabase
+        .from('chart_collections' as any)
+        .insert({
+          name: params.name,
+          stack_depth_bb: params.stack_depth_bb,
+          game_type: params.game_type,
+          user_id: user?.id,
+          is_default: false,
+        } as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as unknown as ChartCollection;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chart-collections'] });
+    },
+  });
+}
+
+export function useCreateSolution() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      collection_id: string;
+      hero_position: string;
+      villain_position: string | null;
+      action_type: string;
+      spot_label: string;
+      range_data: Record<string, string>;
+      notes?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from('chart_solutions' as any)
+        .insert({
+          collection_id: params.collection_id,
+          hero_position: params.hero_position,
+          villain_position: params.villain_position,
+          action_type: params.action_type,
+          spot_label: params.spot_label,
+          range_data: params.range_data,
+          notes: params.notes || null,
+          user_id: user?.id,
+          is_default: false,
+        } as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as unknown as ChartSolution;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['chart-solutions', variables.collection_id] });
+    },
+  });
+}
+
+export function useDeleteSolution() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { id: string; collection_id: string }) => {
+      const { error } = await supabase
+        .from('chart_solutions' as any)
+        .delete()
+        .eq('id', params.id);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['chart-solutions', variables.collection_id] });
+    },
+  });
+}
+
+export function useDeleteCollection() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Delete all solutions in the collection first
+      await supabase
+        .from('chart_solutions' as any)
+        .delete()
+        .eq('collection_id', id);
+
+      const { error } = await supabase
+        .from('chart_collections' as any)
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chart-collections'] });
+      queryClient.invalidateQueries({ queryKey: ['chart-solutions'] });
+    },
+  });
+}
+
 // Position ordering for the matrix
 export const POSITIONS = ['UTG', 'MP', 'LJ', 'HJ', 'CO', 'BU', 'SB', 'BB'] as const;
 export type Position = typeof POSITIONS[number];
@@ -105,3 +215,10 @@ export function getHandType(row: number, col: number): 'pair' | 'suited' | 'offs
   if (col > row) return 'suited';
   return 'offsuit';
 }
+
+// Action types
+export const ACTION_TYPES = [
+  { value: 'RFI', label: 'RFI (Raise First In)' },
+  { value: 'DEFEND', label: 'Defend vs Raise' },
+  { value: '3BET', label: '3-Bet' },
+] as const;
