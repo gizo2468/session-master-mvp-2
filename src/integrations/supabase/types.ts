@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      chart_collections: {
+        Row: {
+          created_at: string
+          game_type: string
+          id: string
+          is_default: boolean
+          name: string
+          stack_depth_bb: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          game_type?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          stack_depth_bb?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          game_type?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          stack_depth_bb?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      chart_solutions: {
+        Row: {
+          action_type: string
+          collection_id: string
+          created_at: string
+          hero_position: string
+          id: string
+          is_default: boolean
+          notes: string | null
+          range_data: Json
+          spot_label: string
+          updated_at: string
+          user_id: string | null
+          villain_position: string | null
+        }
+        Insert: {
+          action_type?: string
+          collection_id: string
+          created_at?: string
+          hero_position: string
+          id?: string
+          is_default?: boolean
+          notes?: string | null
+          range_data?: Json
+          spot_label: string
+          updated_at?: string
+          user_id?: string | null
+          villain_position?: string | null
+        }
+        Update: {
+          action_type?: string
+          collection_id?: string
+          created_at?: string
+          hero_position?: string
+          id?: string
+          is_default?: boolean
+          notes?: string | null
+          range_data?: Json
+          spot_label?: string
+          updated_at?: string
+          user_id?: string | null
+          villain_position?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_solutions_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "chart_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coach_student_connections: {
         Row: {
           coach_id: string
@@ -1225,6 +1311,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_custom_charts: {
+        Row: {
+          base_solution_id: string
+          created_at: string
+          custom_notes: string | null
+          custom_range_data: Json
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          base_solution_id: string
+          created_at?: string
+          custom_notes?: string | null
+          custom_range_data?: Json
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          base_solution_id?: string
+          created_at?: string
+          custom_notes?: string | null
+          custom_range_data?: Json
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_custom_charts_base_solution_id_fkey"
+            columns: ["base_solution_id"]
+            isOneToOne: false
+            referencedRelation: "chart_solutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_feedback: {
         Row: {
