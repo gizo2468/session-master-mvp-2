@@ -577,6 +577,18 @@ const Settings: React.FC = () => {
                     <Icon name="ChevronRight" className="h-4 w-4" />
                   </Button>
                 </div>
+
+                {/* Dark Mode */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Icon name="Moon" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">Dark Mode</p>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Premium poker atmosphere</p>
+                    </div>
+                  </div>
+                  <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
+                </div>
               </div>
             </CardContent>
           </Card>
