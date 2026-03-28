@@ -311,7 +311,7 @@ const AccountSettings: React.FC = () => {
         <Separator className="my-8" />
         
         {/* Password Reset Section - Updated with centered layout */}
-        <div className="bg-white dark:bg-card p-6 rounded-lg border border-border shadow-sm text-center">
+        <div className="bg-white dark:bg-card p-6 rounded-lg border border-border shadow-sm dark:shadow-black/20 text-center">
           <h3 className="text-lg font-medium mb-4">{t('reset_password')}</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             Enter your email address and we'll send you a secure link to reset your password.

@@ -616,7 +616,7 @@ const CoachSessionReview = () => {
                             >
                               <Icon name="message-square" size={14} className="text-gray-500 dark:text-muted-foreground" />
                               <span>Comment on Hand</span>
-                              <div className="absolute -top-1 -right-1 bg-poker-gold rounded-full w-3 h-3 flex items-center justify-center shadow-sm">
+                              <div className="absolute -top-1 -right-1 bg-poker-gold rounded-full w-3 h-3 flex items-center justify-center shadow-sm dark:shadow-black/20">
                                 <span className="text-white text-xs font-bold">$</span>
                               </div>
                             </Button>
@@ -650,7 +650,7 @@ const CoachSessionReview = () => {
                 >
                   <Icon name="message-square" size={16} className="text-gray-500 dark:text-muted-foreground" />
                   <span>Add Session Comment</span>
-                  <div className="absolute -top-1.5 -right-1.5 bg-poker-gold rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
+                  <div className="absolute -top-1.5 -right-1.5 bg-poker-gold rounded-full w-4 h-4 flex items-center justify-center shadow-sm dark:shadow-black/20">
                     <span className="text-white text-xs font-bold">$</span>
                   </div>
                 </Button>

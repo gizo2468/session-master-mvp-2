@@ -287,7 +287,7 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
             <Button variant="outline" onClick={() => setShowDurationModal(false)} className="flex-1">
               Cancel
             </Button>
-            <Button onClick={handleSaveDuration} className="flex-1 bg-poker-gold hover:bg-poker-gold/90 text-black">
+            <Button onClick={handleSaveDuration} className="flex-1 bg-poker-gold hover:bg-poker-gold/90 text-black dark:text-foreground">
               Save
             </Button>
           </DialogFooter>

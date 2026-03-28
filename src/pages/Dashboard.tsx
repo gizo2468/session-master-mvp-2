@@ -87,7 +87,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background">
-      <header className="bg-white dark:bg-card shadow-sm header-safe pt-4">
+      <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 header-safe pt-4">
         <div className="container mx-auto max-w-md px-4 pb-4">
           <div className="flex justify-between items-center">
             <Button 
@@ -107,7 +107,7 @@ const Dashboard: React.FC = () => {
 
       <main className="container mx-auto max-w-md px-4 py-6">
         <div className="text-center space-y-4">
-          <div className="bg-white dark:bg-card rounded-lg p-6 shadow-sm">
+          <div className="bg-white dark:bg-card rounded-lg p-6 shadow-sm dark:shadow-black/20">
             <h2 className="text-2xl font-bold mb-2 text-primary">
               Welcome, {user.fullName || user.username}!
             </h2>

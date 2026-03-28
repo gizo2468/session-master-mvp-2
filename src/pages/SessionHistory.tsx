@@ -77,7 +77,7 @@ export default function SessionHistory() {
 
   return (
     <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background">
-      <header className="bg-white dark:bg-card shadow-sm px-4 pb-4 sticky top-0 z-10 header-safe pt-4">
+      <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 px-4 pb-4 sticky top-0 z-10 header-safe pt-4">
         <div className="container mx-auto max-w-md">
           <div className="flex justify-between items-center">
             <Button 

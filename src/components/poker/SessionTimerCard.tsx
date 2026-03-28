@@ -184,7 +184,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   };
   
   return (
-    <div className="bg-white dark:bg-card rounded-lg shadow-md p-6 mb-6 flex flex-col items-center">
+    <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6 flex flex-col items-center">
       <div 
         className="rounded-xl mb-3 relative w-fit flex flex-col items-center"
         style={{

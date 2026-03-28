@@ -99,7 +99,7 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
 
   if (isLoading || !currentStats) {
     return (
-      <div className="bg-white dark:bg-card rounded-lg p-4 sm:p-6 shadow-sm">
+      <div className="bg-white dark:bg-card rounded-lg p-4 sm:p-6 shadow-sm dark:shadow-black/20">
         <div className="flex items-center gap-3 mb-4">
           <h3 className="text-xl sm:text-2xl font-bold text-primary">My Finance</h3>
           <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20">
@@ -121,7 +121,7 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-card rounded-lg p-4 sm:p-6 shadow-sm">
+      <div className="bg-white dark:bg-card rounded-lg p-4 sm:p-6 shadow-sm dark:shadow-black/20">
         <div className="flex items-center gap-3 mb-4">
           <h3 className="text-xl sm:text-2xl font-bold text-primary">My Finance</h3>
           <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20">
@@ -148,7 +148,7 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
   const profitLossRatioDisplay = formatRatio(currentStats.profitLossRatio);
 
   return (
-    <div className="bg-white dark:bg-card rounded-lg p-4 sm:p-6 shadow-sm">
+    <div className="bg-white dark:bg-card rounded-lg p-4 sm:p-6 shadow-sm dark:shadow-black/20">
       <div className="flex items-center gap-3 mb-4">
         <h3 className="text-xl sm:text-2xl font-bold text-primary">My Finance</h3>
         <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20">

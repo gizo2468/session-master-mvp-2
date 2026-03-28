@@ -210,7 +210,7 @@ export function ProfileOnboardingFlow({
               variant={gameFormat === format ? 'default' : 'outline'}
               className={`cursor-pointer transition-all py-2 px-3 ${
                 gameFormat === format
-                  ? 'bg-poker-gold text-black hover:bg-poker-darkGold'
+                  ? 'bg-poker-gold text-black dark:text-foreground hover:bg-poker-darkGold'
                   : 'border-poker-gold/40 text-zinc-400 hover:border-poker-gold hover:text-white'
               }`}
               onClick={() => setGameFormat(format)}
@@ -297,7 +297,7 @@ export function ProfileOnboardingFlow({
               variant={isSelected ? 'default' : 'outline'}
               className={`cursor-pointer transition-all py-2 px-3 ${
                 isSelected
-                  ? 'bg-poker-gold text-black hover:bg-poker-darkGold'
+                  ? 'bg-poker-gold text-black dark:text-foreground hover:bg-poker-darkGold'
                   : isDisabled
                   ? 'border-zinc-600 text-zinc-600 cursor-not-allowed'
                   : 'border-poker-gold/40 text-zinc-400 hover:border-poker-gold hover:text-white'
@@ -327,7 +327,7 @@ export function ProfileOnboardingFlow({
                 variant={coachingExperience === option.value ? 'default' : 'outline'}
                 className={`cursor-pointer transition-all py-2 px-3 ${
                   coachingExperience === option.value
-                    ? 'bg-poker-gold text-black hover:bg-poker-darkGold'
+                    ? 'bg-poker-gold text-black dark:text-foreground hover:bg-poker-darkGold'
                     : 'border-poker-gold/40 text-zinc-400 hover:border-poker-gold hover:text-white'
                 }`}
                 onClick={() => setCoachingExperience(option.value)}
@@ -396,7 +396,7 @@ export function ProfileOnboardingFlow({
               size="sm"
               onClick={addAchievement}
               disabled={!newAchievementTitle.trim()}
-              className="bg-poker-gold text-black hover:bg-poker-darkGold"
+              className="bg-poker-gold text-black dark:text-foreground hover:bg-poker-darkGold"
             >
               <Plus className="w-4 h-4" />
             </Button>
@@ -485,7 +485,7 @@ export function ProfileOnboardingFlow({
                 <Button
                   size="sm"
                   onClick={handleNext}
-                  className="bg-poker-gold text-black hover:bg-poker-darkGold"
+                  className="bg-poker-gold text-black dark:text-foreground hover:bg-poker-darkGold"
                   disabled={isSaving || isNextDisabled}
                 >
                   Next
@@ -506,7 +506,7 @@ export function ProfileOnboardingFlow({
                 <Button
                   size="sm"
                   onClick={handleComplete}
-                  className="bg-poker-gold text-black hover:bg-poker-darkGold"
+                  className="bg-poker-gold text-black dark:text-foreground hover:bg-poker-darkGold"
                   disabled={isSaving}
                 >
                   <Check className="w-4 h-4 mr-1" />

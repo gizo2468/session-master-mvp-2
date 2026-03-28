@@ -24,7 +24,7 @@ export class AppErrorBoundary extends React.Component<Props, State> {
 
     return (
       <main className="min-h-screen flex items-center justify-center bg-background text-foreground px-4">
-        <section className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-sm">
+        <section className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-sm dark:shadow-black/20">
           <h1 className="text-xl font-semibold">Something went wrong</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             This can happen after an update when an old cached file is still loaded.

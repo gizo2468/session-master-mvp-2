@@ -29,7 +29,7 @@ export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) 
       </button>
       
       {isOpen && (
-        <div className="bg-white dark:bg-card rounded-lg shadow-md p-4 mt-2">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-4 mt-2">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-gray-500 dark:text-muted-foreground block mb-1">Game Type</label>

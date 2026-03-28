@@ -69,7 +69,7 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency }: 
           return (
             <div 
               key={table.id} 
-              className="bg-gray-50 dark:bg-background p-4 rounded-lg border border-gray-200 dark:border-border shadow-sm hover:shadow-md transition-shadow relative"
+              className="bg-gray-50 dark:bg-background p-4 rounded-lg border border-gray-200 dark:border-border shadow-sm dark:shadow-black/20 hover:shadow-md dark:shadow-black/30 transition-shadow relative"
             >
               {/* Edit and Delete Buttons */}
               <div className="absolute top-2 right-2 flex gap-1">

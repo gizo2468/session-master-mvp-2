@@ -44,7 +44,7 @@ export default function SessionDetail() {
   if (isLoadingSession) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col items-center justify-center p-4">
-        <div className="bg-white dark:bg-card rounded-lg shadow-md p-8 max-w-md w-full text-center">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-8 max-w-md w-full text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
           <h1 className="text-xl font-bold mb-2">Loading Session...</h1>
           <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Please wait while we fetch your session details.</p>
@@ -57,7 +57,7 @@ export default function SessionDetail() {
   if (loadingError) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col items-center justify-center p-4">
-        <div className="bg-white dark:bg-card rounded-lg shadow-md p-8 max-w-md w-full text-center">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold mb-4 text-red-600">Error Loading Session</h1>
           <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-4">{loadingError}</p>
           <button
@@ -75,7 +75,7 @@ export default function SessionDetail() {
   if (!session) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col items-center justify-center p-4">
-        <div className="bg-white dark:bg-card rounded-lg shadow-md p-8 max-w-md w-full text-center">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold mb-4">Session not found</h1>
           <button
             onClick={() => navigate('/')}
@@ -351,7 +351,7 @@ export default function SessionDetail() {
           onEndSession={() => setShowEndSessionModal(true)}
         />
         
-        <div className="bg-white dark:bg-card rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6">
           <SessionStatusBadges
             startTime={session.startTime.toISOString()}
             endTime={session.endTime?.toISOString()}
@@ -394,7 +394,7 @@ export default function SessionDetail() {
           />
         )}
         
-        <div className="bg-white dark:bg-card rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6">
           <HandManagementPanel 
             sessionId={session.id} 
             hands={[

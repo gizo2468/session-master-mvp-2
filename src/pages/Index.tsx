@@ -151,7 +151,7 @@ export default function Index() {
         </div>
       )}
     <div className="min-h-screen">
-      <header className="bg-white dark:bg-card shadow-sm relative z-10 header-safe pt-4">
+      <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 relative z-10 header-safe pt-4">
         <div className="container mx-auto max-w-md px-4 pb-4">
           <div className="flex justify-between items-center">
             <div className="flex-1 flex justify-start gap-2">
@@ -263,7 +263,7 @@ export default function Index() {
             {sessionsLoading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="bg-white dark:bg-card rounded-lg shadow-md p-4">
+                  <div key={i} className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div className="space-y-2">
                         <div className="h-5 w-32 animate-pulse rounded bg-muted" />

@@ -357,7 +357,7 @@ export default function SessionForm() {
         </header>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="off" className="bg-white dark:bg-card rounded-lg shadow-md p-6 space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="off" className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 space-y-6">
             <FormField
               control={form.control}
               name="gameType"
@@ -765,7 +765,7 @@ export default function SessionForm() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md shadow-md transition-all"
+              className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md shadow-md dark:shadow-black/30 transition-all"
             >
               {isSubmitting ? (
                 <div className="flex items-center justify-center">

@@ -175,7 +175,7 @@ export default function ConfirmSession() {
   if (!activeSession) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col items-center justify-center p-4">
-        <div className="bg-white dark:bg-card rounded-lg shadow-md p-8 max-w-md w-full text-center">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold mb-4">No active session</h1>
           <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-6">There is no active poker session at the moment.</p>
           <Button 
@@ -191,7 +191,7 @@ export default function ConfirmSession() {
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col">
-      <header className="bg-white dark:bg-card shadow-sm px-4 pb-4 sticky top-0 z-10 header-safe pt-4">
+      <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 px-4 pb-4 sticky top-0 z-10 header-safe pt-4">
         <div className="container mx-auto max-w-md">
           <div className="flex justify-between items-center">
             <Button 
@@ -234,7 +234,7 @@ export default function ConfirmSession() {
           
           {/* Using TableCard component for all tables - pass sessionId to each table */}
           {activeSession.tables && activeSession.tables.length > 0 ? (
-            <div className="bg-white dark:bg-card rounded-lg shadow-md p-6 mb-6">
+            <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6">
               <h3 className="text-xl font-extrabold tracking-tight mb-4">Tables</h3>
               <div className="space-y-5">
                 {activeSession.tables.map((table) => (
@@ -250,7 +250,7 @@ export default function ConfirmSession() {
               </div>
             </div>
           ) : (
-            <div className="bg-white dark:bg-card rounded-lg shadow-md p-6 mb-6 text-center">
+            <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6 text-center">
               <h3 className="text-xl font-extrabold tracking-tight mb-2">No Tables</h3>
               <p className="text-gray-500 dark:text-muted-foreground">Add a table to track hands and results separately.</p>
             </div>
@@ -331,7 +331,7 @@ export default function ConfirmSession() {
                       } blur-sm scale-110`}></div>
                       
                       {/* Profit/loss badge */}
-                      <div className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md ${
+                      <div className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md dark:shadow-black/30 ${
                         parseFloat(cashOutAmount) >= activeSession.buyIn 
                           ? 'bg-green-100/70 shadow-green-200/50' 
                           : 'bg-red-100/70 shadow-red-200/50'

@@ -141,7 +141,7 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
   if (!session || !session.id) {
     console.error('Invalid session data:', session);
     return (
-      <div className="bg-white dark:bg-card rounded-lg shadow-md p-4 mb-4">
+      <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-4 mb-4">
         <div className="text-center text-gray-500 dark:text-muted-foreground">
           <p>Invalid session data</p>
         </div>
@@ -152,7 +152,7 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
   return (
     <div 
       onClick={handleCardClick}
-      className="bg-white dark:bg-card rounded-lg shadow-md p-4 mb-4 cursor-pointer hover:shadow-lg transition-shadow"
+      className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-4 mb-4 cursor-pointer hover:shadow-lg transition-shadow"
     >
       <div className="flex justify-between items-start mb-3">
         <div>

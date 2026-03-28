@@ -241,7 +241,7 @@ const Help: React.FC = () => {
           <h1 className="text-2xl font-['Shippori_Antique_B1'] text-poker-gold mb-6 text-center">FAQ</h1>
         </header>
 
-        <div className="bg-card rounded-lg shadow-sm">
+        <div className="bg-card rounded-lg shadow-sm dark:shadow-black/20">
           <Accordion type="single" collapsible className="w-full">
             {faqItems.map((item, index) => (
               <AccordionItem 

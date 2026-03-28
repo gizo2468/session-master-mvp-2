@@ -63,7 +63,7 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
 
   return (
     <>
-      <div className="bg-white dark:bg-card rounded-lg shadow-md p-6 mb-6">
+      <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-extrabold tracking-tight">Tables</h3>
           {showShareToggle && (

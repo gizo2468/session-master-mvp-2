@@ -174,7 +174,7 @@ export default function EndTableDialog({
                     <label htmlFor="bountyAmount" className="block text-sm font-medium mb-1">
                       Total Bounty Collected (Optional)
                     </label>
-                    <div className="flex rounded-md shadow-sm">
+                    <div className="flex rounded-md shadow-sm dark:shadow-black/20">
                       <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-background border border-r-0 border-gray-300 dark:border-border rounded-l-md">
                         {currencySymbol}
                       </span>

@@ -42,10 +42,10 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
 
   const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
   const suits = [
-    { symbol: 's', display: '♠', color: 'text-black' },
+    { symbol: 's', display: '♠', color: 'text-black dark:text-foreground' },
     { symbol: 'h', display: '♥', color: 'text-red-600' },
     { symbol: 'd', display: '♦', color: 'text-red-600' },
-    { symbol: 'c', display: '♣', color: 'text-black' },
+    { symbol: 'c', display: '♣', color: 'text-black dark:text-foreground' },
   ];
 
   // Convert selected cards to string format for exclusion checking
@@ -301,7 +301,7 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                            className={cn(
                              "py-2 px-2 text-sm font-bold rounded transition-all",
                              currentSelection.rank === rank
-                               ? "bg-primary text-white shadow-md"
+                               ? "bg-primary text-white shadow-md dark:shadow-black/30"
                                : suits.every(suit => isCardExcluded(rank, suit.symbol))
                                  ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
                                  : "bg-gray-200 dark:bg-muted hover:bg-gray-300 text-gray-800 dark:text-foreground"
@@ -332,7 +332,7 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                            className={cn(
                              "py-2 px-2 text-sm font-bold rounded transition-all",
                              currentSelection.rank === rank
-                               ? "bg-primary text-white shadow-md"
+                               ? "bg-primary text-white shadow-md dark:shadow-black/30"
                                : suits.every(suit => isCardExcluded(rank, suit.symbol))
                                  ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
                                  : "bg-gray-200 dark:bg-muted hover:bg-gray-300 text-gray-800 dark:text-foreground"
@@ -368,7 +368,7 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                            className={cn(
                              "py-3 px-2 text-2xl rounded transition-all flex items-center justify-center",
                              currentSelection.suit === suit.symbol
-                               ? "bg-primary text-white shadow-md"
+                               ? "bg-primary text-white shadow-md dark:shadow-black/30"
                                : ranks.every(rank => isCardExcluded(rank, suit.symbol))
                                  ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
                                  : "bg-gray-200 dark:bg-muted hover:bg-gray-300",

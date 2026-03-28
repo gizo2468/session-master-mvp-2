@@ -54,7 +54,7 @@ export default function LiveSession() {
   if (loadingError && !currentSession) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col items-center justify-center p-4">
-        <div className="bg-white dark:bg-card rounded-lg shadow-md p-8 max-w-md w-full text-center">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold mb-4 text-red-600">Session Error</h1>
           <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-6">{loadingError}</p>
           <div className="flex gap-2">
@@ -80,7 +80,7 @@ export default function LiveSession() {
   if (!currentSession) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col items-center justify-center p-4">
-        <div className="bg-white dark:bg-card rounded-lg shadow-md p-8 max-w-md w-full text-center">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold mb-4">No Active Session</h1>
           <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-6">There is no active poker session at the moment.</p>
           <Button 
@@ -98,7 +98,7 @@ export default function LiveSession() {
   if (!currentSession.startTime || !currentSession.gameType || !currentSession.format) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col items-center justify-center p-4">
-        <div className="bg-white dark:bg-card rounded-lg shadow-md p-8 max-w-md w-full text-center">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold mb-4 text-red-600">Invalid Session Data</h1>
           <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-6">The session data appears to be corrupted or incomplete.</p>
           <Button 

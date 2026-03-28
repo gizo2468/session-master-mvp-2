@@ -47,10 +47,10 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   
   // Card suits with display symbols and colors
   const suits = [
-    { symbol: 's', display: '♠', color: 'text-black' },
+    { symbol: 's', display: '♠', color: 'text-black dark:text-foreground' },
     { symbol: 'h', display: '♥', color: 'text-red-600' },
     { symbol: 'd', display: '♦', color: 'text-red-600' },
-    { symbol: 'c', display: '♣', color: 'text-black' },
+    { symbol: 'c', display: '♣', color: 'text-black dark:text-foreground' },
   ];
   
   // Parse selected cards into array of card objects
@@ -281,7 +281,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                        className={cn(
                          "py-2.5 rounded-md font-bold text-lg transition-all",
                          currentSelection.rank === rank 
-                           ? "bg-poker-gold text-white shadow-md" 
+                           ? "bg-poker-gold text-white shadow-md dark:shadow-black/30" 
                            : suits.every(suit => isCardUnavailable(rank, suit.symbol))
                              ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
                              : "bg-gray-300 hover:bg-gray-200 dark:bg-muted text-gray-800 dark:text-foreground"
@@ -318,7 +318,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                        className={cn(
                          "py-2.5 rounded-md font-bold text-lg transition-all",
                          currentSelection.rank === rank 
-                           ? "bg-poker-gold text-white shadow-md" 
+                           ? "bg-poker-gold text-white shadow-md dark:shadow-black/30" 
                            : suits.every(suit => isCardUnavailable(rank, suit.symbol))
                              ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
                              : "bg-gray-300 hover:bg-gray-200 dark:bg-muted text-gray-800 dark:text-foreground"
@@ -356,7 +356,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                      className={cn(
                        "py-1.5 rounded-md text-lg transition-all flex items-center justify-center",
                        currentSelection.suit === suit.symbol
-                         ? "bg-poker-gold text-white shadow-md" 
+                         ? "bg-poker-gold text-white shadow-md dark:shadow-black/30" 
                          : ranks.every(rank => isCardUnavailable(rank, suit.symbol))
                            ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
                            : "bg-gray-300 hover:bg-gray-200 dark:bg-muted",

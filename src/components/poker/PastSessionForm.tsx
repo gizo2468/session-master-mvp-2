@@ -321,7 +321,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background overflow-x-hidden">
       {/* Page Header */}
-      <header className="bg-white dark:bg-card shadow-sm sticky top-0 z-10">
+      <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 sticky top-0 z-10">
         <div className="container mx-auto max-w-md px-4 py-4">
           <div className="flex items-center gap-3">
             <Button 
@@ -486,7 +486,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                         <FormLabel>Tournament Type</FormLabel>
                         <FormControl>
                           <select
-                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm dark:shadow-black/20 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                             value={field.value}
                             onChange={field.onChange}
                           >

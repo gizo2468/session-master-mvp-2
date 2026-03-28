@@ -217,7 +217,7 @@ export default function EditSession() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background">
-      <header className="bg-white dark:bg-card shadow-sm header-safe pt-4">
+      <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 header-safe pt-4">
         <div className="container mx-auto max-w-md px-4 pb-4">
           <div className="flex items-center gap-4">
             <Button

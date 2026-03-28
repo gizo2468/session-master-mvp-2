@@ -60,7 +60,7 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
   }
 
   return (
-    <Card className="bg-white dark:bg-card rounded-lg shadow-md mb-6">
+    <Card className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-medium">
           {session.format === 'Tournament' ? 'Tournament Controls' : 'Cash Game Controls'}

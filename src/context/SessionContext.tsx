@@ -405,7 +405,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     <SessionContext.Provider value={contextValue}>
       {initializationError ? (
         <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="text-center p-8 bg-card rounded-lg shadow-md max-w-md border border-border">
+          <div className="text-center p-8 bg-card rounded-lg shadow-md dark:shadow-black/30 max-w-md border border-border">
             <div className="text-destructive mb-4">
               <Icon name="AlertCircle" size={48} className="mx-auto" />
             </div>

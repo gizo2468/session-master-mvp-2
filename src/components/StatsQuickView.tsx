@@ -150,7 +150,7 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
   
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-card rounded-lg shadow-md p-4 mb-6 min-h-[220px]">
+      <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-4 mb-6 min-h-[220px]">
         <div className="animate-pulse">
           <div className="h-4 bg-gray-200 dark:bg-muted rounded w-1/3 mb-4"></div>
           <div className="grid grid-cols-3 gap-4 mb-4">
@@ -236,7 +236,7 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
   const normalizedBest = bestSessionProfit === -Infinity ? 0 : bestSessionProfit;
   
   return (
-    <div className="bg-white dark:bg-card rounded-lg shadow-md p-4 mb-6">
+    <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-4 mb-6">
       <h2 className="text-2xl font-extrabold tracking-tight mb-4 text-center text-primary">Sessions Stats</h2>
       
       <div className="grid grid-cols-3 gap-4 text-center mb-4">

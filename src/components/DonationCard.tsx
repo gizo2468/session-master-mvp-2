@@ -40,7 +40,7 @@ const DonationCard = () => {
   };
 
   return (
-    <Card className="overflow-hidden border-2 border-poker-feltGreen/20 bg-white dark:bg-card shadow-md">
+    <Card className="overflow-hidden border-2 border-poker-feltGreen/20 bg-white dark:bg-card shadow-md dark:shadow-black/30">
       <CardHeader className="bg-gradient-to-r from-poker-feltGreen to-poker-feltGreen/80 text-white pb-4">
         <div className="flex items-center justify-center gap-2 mb-1">
           <Icon name="Heart" className="text-poker-cream animate-pulse" />
@@ -59,7 +59,7 @@ const DonationCard = () => {
       <CardFooter className="flex justify-center pb-6">
         <Button 
           onClick={handleDonateClick}
-          className="px-8 py-2 bg-poker-gold hover:bg-poker-darkGold text-white font-medium rounded-full shadow-md flex items-center gap-2"
+          className="px-8 py-2 bg-poker-gold hover:bg-poker-darkGold text-white font-medium rounded-full shadow-md dark:shadow-black/30 flex items-center gap-2"
           variant="poker"
         >
           <Icon name="HeartHandshake" size={18} />

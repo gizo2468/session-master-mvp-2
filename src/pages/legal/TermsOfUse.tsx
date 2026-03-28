@@ -24,7 +24,7 @@ const TermsOfUse: React.FC = () => {
           <h1 className="text-2xl font-serif font-bold text-poker-black mb-6">SessionMaster – Terms of Use</h1>
         </header>
 
-        <div className="bg-white dark:bg-card rounded-lg shadow-sm p-6">
+        <div className="bg-white dark:bg-card rounded-lg shadow-sm dark:shadow-black/20 p-6">
           <div className="prose max-w-none">
             <p className="text-sm text-gray-500 dark:text-muted-foreground mb-4">Last updated: July 23, 2025</p>
 

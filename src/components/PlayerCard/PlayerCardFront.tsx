@@ -192,7 +192,7 @@ export function PlayerCardFront({
         <div className="flex gap-2 mb-4 flex-wrap">
           {cardData?.primary_format && (
             <Badge
-              className="bg-poker-gold text-black"
+              className="bg-poker-gold text-black dark:text-foreground"
             >
               {formatLabels[cardData.primary_format]}
             </Badge>

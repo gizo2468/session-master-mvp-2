@@ -73,7 +73,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   const hasMultiDayTables = multiDayTables.length > 0;
 
   return (
-    <Card className="bg-white dark:bg-card rounded-lg shadow-md mb-6">
+    <Card className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-medium">Session Details</CardTitle>
       </CardHeader>

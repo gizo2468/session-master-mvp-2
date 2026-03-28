@@ -134,7 +134,7 @@ const Subscription: React.FC = () => {
                     onClick={() => setSelectedPlan('monthly')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
                       selectedPlan === 'monthly' 
-                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                        ? 'bg-primary text-primary-foreground shadow-sm dark:shadow-black/20' 
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -144,7 +144,7 @@ const Subscription: React.FC = () => {
                     onClick={() => setSelectedPlan('yearly')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all relative ${
                       selectedPlan === 'yearly' 
-                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                        ? 'bg-primary text-primary-foreground shadow-sm dark:shadow-black/20' 
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
