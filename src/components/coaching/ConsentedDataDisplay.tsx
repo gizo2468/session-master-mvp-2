@@ -91,9 +91,9 @@ export const ConsentedDataDisplay: React.FC<ConsentedDataDisplayProps> = ({
         )}
         <CardContent className={compact ? 'p-0' : ''}>
           <div className="space-y-3 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-48"></div>
-            <div className="h-4 bg-gray-200 rounded w-32"></div>
-            <div className="h-4 bg-gray-200 rounded w-56"></div>
+            <div className="h-4 bg-gray-200 dark:bg-muted rounded w-48"></div>
+            <div className="h-4 bg-gray-200 dark:bg-muted rounded w-32"></div>
+            <div className="h-4 bg-gray-200 dark:bg-muted rounded w-56"></div>
           </div>
         </CardContent>
       </Card>
@@ -136,7 +136,7 @@ export const ConsentedDataDisplay: React.FC<ConsentedDataDisplayProps> = ({
           <div className="space-y-3">
             {data?.full_name && (
               <div className="flex items-center gap-2">
-                <Icon name="user" size={16} className="text-gray-500" />
+                <Icon name="user" size={16} className="text-gray-500 dark:text-muted-foreground" />
                 <span className="font-medium">Name:</span>
                 <span>{data.full_name}</span>
               </div>
@@ -144,7 +144,7 @@ export const ConsentedDataDisplay: React.FC<ConsentedDataDisplayProps> = ({
 
             {data?.email && (
               <div className="flex items-center gap-2">
-                <Icon name="mail" size={16} className="text-gray-500" />
+                <Icon name="mail" size={16} className="text-gray-500 dark:text-muted-foreground" />
                 <span className="font-medium">Email:</span>
                 <a 
                   href={`mailto:${data.email}`}
@@ -157,7 +157,7 @@ export const ConsentedDataDisplay: React.FC<ConsentedDataDisplayProps> = ({
 
             {data?.phone_number && (
               <div className="flex items-center gap-2">
-                <Icon name="phone" size={16} className="text-gray-500" />
+                <Icon name="phone" size={16} className="text-gray-500 dark:text-muted-foreground" />
                 <span className="font-medium">Phone:</span>
                 <a 
                   href={`tel:${data.phone_number}`}
@@ -170,7 +170,7 @@ export const ConsentedDataDisplay: React.FC<ConsentedDataDisplayProps> = ({
 
             {data?.date_of_birth && (
               <div className="flex items-center gap-2">
-                <Icon name="calendar" size={16} className="text-gray-500" />
+                <Icon name="calendar" size={16} className="text-gray-500 dark:text-muted-foreground" />
                 <span className="font-medium">Date of Birth:</span>
                 <span>{formatDate(data.date_of_birth)}</span>
               </div>
@@ -178,10 +178,10 @@ export const ConsentedDataDisplay: React.FC<ConsentedDataDisplayProps> = ({
 
             {data?.address && (
               <div className="flex items-start gap-2">
-                <Icon name="map-pin" size={16} className="text-gray-500 mt-0.5" />
+                <Icon name="map-pin" size={16} className="text-gray-500 dark:text-muted-foreground mt-0.5" />
                 <div>
                   <span className="font-medium">Address:</span>
-                  <div className="text-sm text-gray-600 mt-1">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">
                     {formatAddress(data.address)}
                   </div>
                 </div>
@@ -189,7 +189,7 @@ export const ConsentedDataDisplay: React.FC<ConsentedDataDisplayProps> = ({
             )}
 
             <div className="pt-3 border-t">
-              <div className="flex items-center gap-2 text-xs text-gray-500">
+              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-muted-foreground">
                 <Icon name="shield-check" size={12} />
                 Only information explicitly shared by the student is displayed
               </div>

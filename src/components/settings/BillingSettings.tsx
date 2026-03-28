@@ -144,7 +144,7 @@ const BillingSettings: React.FC = () => {
                       <CardTitle>{plan.name}</CardTitle>
                       <div className="mt-2 flex items-baseline">
                         <span className="text-2xl font-bold">${plan.price}</span>
-                        <span className="ml-1 text-sm text-gray-500">/month</span>
+                        <span className="ml-1 text-sm text-gray-500 dark:text-muted-foreground">/month</span>
                       </div>
                     </div>
                     {plan.tier === 'pro' && (

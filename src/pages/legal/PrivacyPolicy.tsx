@@ -10,7 +10,7 @@ const PrivacyPolicy: React.FC = () => {
   const swipeBackRef = useSwipeBack({ fallbackPath: '/settings', screenName: 'PrivacyPolicy' });
 
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background">
       <div className="container mx-auto px-4 py-8">
         <header className="mb-8">
           <Button 
@@ -24,9 +24,9 @@ const PrivacyPolicy: React.FC = () => {
           <h1 className="text-2xl font-serif font-bold text-poker-black mb-6">SessionMaster - Privacy Policy</h1>
         </header>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white dark:bg-card rounded-lg shadow-sm p-6">
           <div className="prose max-w-none">
-            <p className="text-sm text-gray-500 mb-4">Last updated: July 23, 2025</p>
+            <p className="text-sm text-gray-500 dark:text-muted-foreground mb-4">Last updated: July 23, 2025</p>
             
             <p className="mb-4">At SessionMaster, we respect your privacy. We only collect the information that is strictly necessary to provide and improve the app.</p>
             

@@ -248,13 +248,13 @@ const AccountSettings: React.FC = () => {
                 <FormItem>
                   <FormLabel>Username</FormLabel>
                   <Input value={user?.username || 'Not set'} disabled />
-                  <p className="text-xs text-gray-500 mt-1">Your unique username identifier</p>
+                  <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">Your unique username identifier</p>
                 </FormItem>
                 
                 <FormItem>
                   <FormLabel>{t('email')}</FormLabel>
                   <Input value={user?.email} disabled />
-                  <p className="text-xs text-gray-500 mt-1">Last login: {lastLoginFormatted}</p>
+                  <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">Last login: {lastLoginFormatted}</p>
                 </FormItem>
                 
                 {/* Coaching Fields - Only show for coach users */}
@@ -262,7 +262,7 @@ const AccountSettings: React.FC = () => {
                   <>
                     <FormItem>
                       <FormLabel>Coaching Focus</FormLabel>
-                      <div className="flex flex-wrap gap-2 p-3 min-h-[40px] bg-gray-50 border rounded-md">
+                      <div className="flex flex-wrap gap-2 p-3 min-h-[40px] bg-gray-50 dark:bg-background border rounded-md">
                         {user?.coachingFocus && user.coachingFocus.length > 0 ? (
                           user.coachingFocus.map((focus, index) => (
                             <span
@@ -273,20 +273,20 @@ const AccountSettings: React.FC = () => {
                             </span>
                           ))
                         ) : (
-                          <span className="text-gray-500 text-sm">No coaching focus areas set</span>
+                          <span className="text-gray-500 dark:text-muted-foreground text-sm">No coaching focus areas set</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Your coaching specialization areas</p>
+                      <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">Your coaching specialization areas</p>
                     </FormItem>
                     
                     <FormItem>
                       <FormLabel>Experience</FormLabel>
-                      <div className="p-3 min-h-[40px] bg-gray-50 border rounded-md">
+                      <div className="p-3 min-h-[40px] bg-gray-50 dark:bg-background border rounded-md">
                         <p className="text-sm">
                           {user?.experience || "No experience information provided"}
                         </p>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Your coaching experience and achievements</p>
+                      <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">Your coaching experience and achievements</p>
                     </FormItem>
                   </>
                 )}
@@ -311,7 +311,7 @@ const AccountSettings: React.FC = () => {
         <Separator className="my-8" />
         
         {/* Password Reset Section - Updated with centered layout */}
-        <div className="bg-white p-6 rounded-lg border border-border shadow-sm text-center">
+        <div className="bg-white dark:bg-card p-6 rounded-lg border border-border shadow-sm text-center">
           <h3 className="text-lg font-medium mb-4">{t('reset_password')}</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             Enter your email address and we'll send you a secure link to reset your password.

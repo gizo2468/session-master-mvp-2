@@ -22,17 +22,17 @@ export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) 
     <div className="mb-4">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center text-gray-500 text-sm"
+        className="flex items-center text-gray-500 dark:text-muted-foreground text-sm"
       >
         <Filter className="w-4 h-4 mr-1" />
         Filters
       </button>
       
       {isOpen && (
-        <div className="bg-white rounded-lg shadow-md p-4 mt-2">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md p-4 mt-2">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-gray-500 block mb-1">Game Type</label>
+              <label className="text-sm text-gray-500 dark:text-muted-foreground block mb-1">Game Type</label>
               <select 
                 className="w-full p-2 border rounded"
                 value={filters.gameType}
@@ -45,7 +45,7 @@ export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) 
             </div>
             
             <div>
-              <label className="text-sm text-gray-500 block mb-1">Format</label>
+              <label className="text-sm text-gray-500 dark:text-muted-foreground block mb-1">Format</label>
               <select 
                 className="w-full p-2 border rounded"
                 value={filters.format}
@@ -58,7 +58,7 @@ export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) 
             </div>
             
             <div className="col-span-2">
-              <label className="text-sm text-gray-500 block mb-1">Location</label>
+              <label className="text-sm text-gray-500 dark:text-muted-foreground block mb-1">Location</label>
               <input 
                 type="text"
                 placeholder="Filter by location..."

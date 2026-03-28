@@ -188,7 +188,7 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
 
   // Get suit info for display
   const getSuitInfo = (suitSymbol: string) => {
-    return suits.find(s => s.symbol === suitSymbol) || { display: '?', color: 'text-gray-500' };
+    return suits.find(s => s.symbol === suitSymbol) || { display: '?', color: 'text-gray-500 dark:text-muted-foreground' };
   };
 
   // Ensure we have the right number of slots
@@ -205,7 +205,7 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
           onClick={(e) => handleSlotTap(index, e)}
           disabled={disabled}
           className={cn(
-            "w-12 h-16 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center transition-all",
+            "w-12 h-16 border-2 border-dashed border-gray-300 dark:border-border rounded-md flex flex-col items-center justify-center transition-all",
             "hover:border-primary/50 hover:bg-muted/20",
             disabled && "opacity-50 cursor-not-allowed",
             !disabled && "cursor-pointer"
@@ -214,7 +214,7 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
           {slot.rank && slot.suit ? (
             <>
               {/* Filled card slot */}
-              <div className="relative w-full h-full bg-white border border-gray-400 rounded-lg flex flex-col items-center justify-center gap-0.5 p-1">
+              <div className="relative w-full h-full bg-white dark:bg-card border border-gray-400 rounded-lg flex flex-col items-center justify-center gap-0.5 p-1">
                 <div className="font-bold text-xs leading-tight">{slot.rank}</div>
                 <div className={`${getSuitInfo(slot.suit).color} text-xs leading-tight`}>
                   {getSuitInfo(slot.suit).display}
@@ -303,8 +303,8 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                              currentSelection.rank === rank
                                ? "bg-primary text-white shadow-md"
                                : suits.every(suit => isCardExcluded(rank, suit.symbol))
-                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
-                                 : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+                                 ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
+                                 : "bg-gray-200 dark:bg-muted hover:bg-gray-300 text-gray-800 dark:text-foreground"
                            )}
                         >
                           {rank}
@@ -334,8 +334,8 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                              currentSelection.rank === rank
                                ? "bg-primary text-white shadow-md"
                                : suits.every(suit => isCardExcluded(rank, suit.symbol))
-                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
-                                 : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+                                 ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
+                                 : "bg-gray-200 dark:bg-muted hover:bg-gray-300 text-gray-800 dark:text-foreground"
                            )}
                         >
                           {rank}
@@ -370,8 +370,8 @@ const CardSlotPicker: React.FC<CardSlotPickerProps> = ({
                              currentSelection.suit === suit.symbol
                                ? "bg-primary text-white shadow-md"
                                : ranks.every(rank => isCardExcluded(rank, suit.symbol))
-                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
-                                 : "bg-gray-200 hover:bg-gray-300",
+                                 ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
+                                 : "bg-gray-200 dark:bg-muted hover:bg-gray-300",
                              // Only apply suit color if not disabled
                              !ranks.every(rank => isCardExcluded(rank, suit.symbol)) && 
                              currentSelection.suit !== suit.symbol && suit.color

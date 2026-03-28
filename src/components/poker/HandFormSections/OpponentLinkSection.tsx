@@ -95,7 +95,7 @@ const OpponentLinkSection: React.FC<OpponentLinkSectionProps> = ({ control }) =>
                         className="w-full h-full rounded-full object-cover"
                       />
                     ) : (
-                      <span className="text-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">
                         {opponent.nickname.charAt(0).toUpperCase()}
                       </span>
                     )}
@@ -176,7 +176,7 @@ const OpponentLinkSection: React.FC<OpponentLinkSectionProps> = ({ control }) =>
                                 className="w-full h-full rounded-full object-cover"
                               />
                             ) : (
-                              <span className="text-gray-600">
+                              <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">
                                 {opponent.nickname.charAt(0).toUpperCase()}
                               </span>
                             )}

@@ -164,7 +164,7 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
           <form onSubmit={handleFormSubmit} className="flex-1 overflow-y-auto space-y-6">
             {/* Game & Format Section */}
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-gray-900">Game & Format</h4>
+              <h4 className="text-sm font-medium text-gray-900 dark:text-foreground">Game & Format</h4>
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -283,7 +283,7 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
 
             {/* Financials Section */}
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-gray-900">Financials</h4>
+              <h4 className="text-sm font-medium text-gray-900 dark:text-foreground">Financials</h4>
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -318,7 +318,7 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
 
               {/* Show rebuys calculation for tournaments */}
               {watchedFormat === 'Tournament' && watchedRebuysCount > 0 && (
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
                   Total Rebuys Value: ${rebuysValue.toFixed(2)} ({watchedRebuysCount} × ${watchedInitialBuyIn.toFixed(2)})
                 </div>
               )}
@@ -379,7 +379,7 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
                 {/* Multi-Day Tournament Status Section */}
                 {watchedIsMultiDay && (
                   <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-gray-900">Multi-Day Tournament Status</h4>
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-foreground">Multi-Day Tournament Status</h4>
                     <FormField
                       control={form.control}
                       name="multiDayStatus"
@@ -460,7 +460,7 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
                 {/* Tournament Results Section - only show if eliminated or not multi-day */}
                 {(!watchedIsMultiDay || watchedMultiDayStatus === 'eliminated') && (
                   <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-gray-900">Tournament Results</h4>
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-foreground">Tournament Results</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -541,7 +541,7 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
 
             {/* Notes Section */}
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-gray-900">Additional Information</h4>
+              <h4 className="text-sm font-medium text-gray-900 dark:text-foreground">Additional Information</h4>
               <FormField
                 control={form.control}
                 name="notes"
@@ -564,14 +564,14 @@ const PastEditTableForm: React.FC<PastEditTableFormProps> = ({
             </div>
 
             {/* Profit/Loss Display */}
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-gray-50 dark:bg-background rounded-lg">
               <p className="text-sm font-medium">
                 Profit/Loss: 
                 <span className={`ml-2 text-lg ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)}
                 </span>
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">
                 {watchedFormat === 'Tournament' 
                   ? '(Regular Payout + Bounty Payout) - (Initial Buy-in + Rebuys)'
                   : 'Cash Out - (Initial Buy-in + Rebuys)'

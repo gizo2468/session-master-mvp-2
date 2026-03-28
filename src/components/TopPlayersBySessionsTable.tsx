@@ -180,7 +180,7 @@ const TopPlayersBySessionsTable: React.FC = () => {
           </TableBody>
         </Table>
         {playerData.length === 0 && (
-          <p className="text-center text-gray-500 mt-4">No session data available</p>
+          <p className="text-center text-gray-500 dark:text-muted-foreground mt-4">No session data available</p>
         )}
       </CardContent>
     </Card>

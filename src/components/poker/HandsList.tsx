@@ -120,7 +120,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                               <PopoverTrigger asChild>
                                 <button
                                   onClick={(e) => e.stopPropagation()}
-                                  className="text-gray-500 hover:text-gray-700"
+                                  className="text-gray-500 dark:text-muted-foreground hover:text-gray-700 dark:text-gray-300"
                                   aria-label="View hand notes"
                                 >
                                   <MessageSquare size={16} />
@@ -129,7 +129,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                               <PopoverContent className="w-80 p-4">
                                 <div className="space-y-2">
                                   <h4 className="font-medium">Hand Notes</h4>
-                                  <p className="text-sm text-gray-700">{hand.notes}</p>
+                                  <p className="text-sm text-gray-700 dark:text-gray-300">{hand.notes}</p>
                                 </div>
                               </PopoverContent>
                             </Popover>
@@ -139,7 +139,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                     </div>
                   </TableCell>
                   <TableCell className="md:py-2">
-                    <span className="inline-flex items-center justify-center px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
+                    <span className="inline-flex items-center justify-center px-2 py-1 bg-gray-100 dark:bg-muted text-gray-800 dark:text-foreground text-xs font-medium rounded-full">
                       {hand.position}
                     </span>
                   </TableCell>
@@ -161,7 +161,7 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                           </span>
                         </div>
                         {(hand.smallBlind !== undefined || hand.bigBlind !== undefined) && (hand.smallBlind || hand.bigBlind) !== 0 && (
-                          <span className="text-xs text-gray-500 text-center">
+                          <span className="text-xs text-gray-500 dark:text-muted-foreground text-center">
                             (
                             {hand.currencyType === 'currency' ? '$' : ''}
                             {hand.smallBlind !== undefined ? Number(hand.smallBlind).toString() : '0'}

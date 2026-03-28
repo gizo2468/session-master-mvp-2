@@ -41,7 +41,7 @@ const StudentSettings: React.FC = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <h4 className="font-medium text-lg">{coach.displayName}</h4>
-                        {coach.bio && <p className="text-sm text-gray-500">{coach.bio}</p>}
+                        {coach.bio && <p className="text-sm text-gray-500 dark:text-muted-foreground">{coach.bio}</p>}
                       </div>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -74,7 +74,7 @@ const StudentSettings: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500 dark:text-muted-foreground">
               {t('no_connected_coaches')}
             </div>
           )}
@@ -88,7 +88,7 @@ const StudentSettings: React.FC = () => {
           <Card>
             <CardContent className="pt-6">
               <h4 className="text-lg font-medium mb-2">Become a Coach</h4>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-gray-500 dark:text-muted-foreground mb-4">
                 Upgrade your account to become a coach and start helping other players improve their game
               </p>
               <Button 

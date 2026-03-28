@@ -353,11 +353,11 @@ export default function SessionForm() {
             <span>Back</span>
           </button>
           <h1 className="text-2xl font-bold text-poker-black">Start New Session</h1>
-          <p className="text-gray-500 text-sm mt-1">Enter your first table details below</p>
+          <p className="text-gray-500 dark:text-muted-foreground text-sm mt-1">Enter your first table details below</p>
         </header>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="off" className="bg-white rounded-lg shadow-md p-6 space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="off" className="bg-white dark:bg-card rounded-lg shadow-md p-6 space-y-6">
             <FormField
               control={form.control}
               name="gameType"
@@ -383,7 +383,7 @@ export default function SessionForm() {
                           className={`flex-1 cursor-pointer py-3 px-4 rounded-md border text-center ${
                             field.value === 'NLH' 
                               ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
-                              : 'bg-white text-gray-700 border-gray-300'
+                              : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border'
                           }`}
                         >
                           No Limit Hold'em
@@ -403,7 +403,7 @@ export default function SessionForm() {
                           className={`flex-1 cursor-pointer py-3 px-4 rounded-md border text-center ${
                             field.value === 'PLO' 
                               ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
-                              : 'bg-white text-gray-700 border-gray-300'
+                              : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border'
                           }`}
                         >
                           Pot Limit Omaha
@@ -443,7 +443,7 @@ export default function SessionForm() {
                           className={`flex-1 cursor-pointer py-3 px-4 rounded-md border text-center ${
                             field.value === 'Cash' 
                               ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
-                              : 'bg-white text-gray-700 border-gray-300'
+                              : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border'
                           }`}
                         >
                           Cash Game
@@ -463,7 +463,7 @@ export default function SessionForm() {
                           className={`flex-1 cursor-pointer py-3 px-4 rounded-md border text-center ${
                             field.value === 'Tournament' 
                               ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
-                              : 'bg-white text-gray-700 border-gray-300'
+                              : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border'
                           }`}
                         >
                           Tournament
@@ -508,7 +508,7 @@ export default function SessionForm() {
                                   className={`cursor-pointer px-3 py-1 rounded-full text-sm ${
                                     field.value === type
                                       ? 'bg-poker-gold text-white'
-                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                      : 'bg-gray-100 dark:bg-muted text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-muted'
                                   }`}
                                 >
                                   {type}
@@ -554,7 +554,7 @@ export default function SessionForm() {
                   <FormControl>
                     <div className="relative">
                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                         <span className="text-gray-500">{getCurrentCurrencySymbol()}</span>
+                         <span className="text-gray-500 dark:text-muted-foreground">{getCurrentCurrencySymbol()}</span>
                        </div>
                       <Input 
                         type="number" 
@@ -611,8 +611,8 @@ export default function SessionForm() {
                           {isManualMode ? 'Edit Manual Blinds' : 'Enter Manual'}
                         </Button>
                       ) : (
-                        <div className="py-2 px-3 bg-gray-100 rounded-md border">
-                          <div className="text-sm text-gray-600 text-center">
+                        <div className="py-2 px-3 bg-gray-100 dark:bg-muted rounded-md border">
+                          <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 text-center">
                             Auto-set to 2× Small Blind
                           </div>
                         </div>

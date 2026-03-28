@@ -102,7 +102,7 @@ const SessionModals: React.FC<SessionModalsProps> = ({
       {/* Delete Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+          <div className="bg-white dark:bg-card rounded-lg shadow-xl p-6 max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">Delete Session</h2>
             <p className="mb-6">Are you sure you want to delete this session? This action cannot be undone.</p>
             
@@ -116,7 +116,7 @@ const SessionModals: React.FC<SessionModalsProps> = ({
               
               <button
                 onClick={onDeleteModalClose}
-                className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-md"
+                className="flex-1 py-2 px-4 bg-gray-200 dark:bg-muted hover:bg-gray-300 text-gray-800 dark:text-foreground font-bold rounded-md"
               >
                 Cancel
               </button>
@@ -128,19 +128,19 @@ const SessionModals: React.FC<SessionModalsProps> = ({
       {/* End Session Modal - Only show for active sessions */}
       {showEndSessionModal && session.isActive && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+          <div className="bg-white dark:bg-card rounded-lg shadow-xl p-6 max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">End Session</h2>
             <p className="mb-4">Please enter your cash out amount:</p>
             
             <div className="mb-6">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <span className="text-gray-500">{getCurrencySymbol(session.currency)}</span>
+                  <span className="text-gray-500 dark:text-muted-foreground">{getCurrencySymbol(session.currency)}</span>
                 </div>
                 <input
                   type="number"
                   placeholder="0.00"
-                  className="w-full p-3 pl-8 border border-gray-300 rounded-md"
+                  className="w-full p-3 pl-8 border border-gray-300 dark:border-border rounded-md"
                   value={cashOutAmount}
                   onChange={(e) => onCashOutAmountChange(e.target.value)}
                   min="0"
@@ -151,11 +151,11 @@ const SessionModals: React.FC<SessionModalsProps> = ({
             </div>
             
             <div className="mb-6">
-              <label className="block text-gray-700 mb-2" htmlFor="notes">Session Notes</label>
+              <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="notes">Session Notes</label>
               <textarea
                 id="notes"
                 placeholder="How did your session go? Note any significant hands, reads, or things to improve..."
-                className="w-full p-3 border border-gray-300 rounded-md min-h-[100px]"
+                className="w-full p-3 border border-gray-300 dark:border-border rounded-md min-h-[100px]"
                 value={session.notes || ''}
                 onChange={(e) => onNotesChange(e.target.value)}
               ></textarea>
@@ -172,7 +172,7 @@ const SessionModals: React.FC<SessionModalsProps> = ({
               
               <button
                 onClick={onEndSessionModalClose}
-                className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-md"
+                className="flex-1 py-2 px-4 bg-gray-200 dark:bg-muted hover:bg-gray-300 text-gray-800 dark:text-foreground font-bold rounded-md"
               >
                 Cancel
               </button>

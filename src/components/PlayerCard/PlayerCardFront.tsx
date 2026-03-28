@@ -294,7 +294,7 @@ export function PlayerCardFront({
               await handlePhotoClick();
               setIsImageFullscreen(false);
             }}
-            className="flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-5 py-2.5 text-white text-sm font-medium hover:bg-white/30 transition-colors border border-white/30"
+            className="flex items-center gap-2 rounded-full bg-white dark:bg-card/20 backdrop-blur-md px-5 py-2.5 text-white text-sm font-medium hover:bg-white dark:bg-card/30 transition-colors border border-white/30"
           >
             <Pencil className="w-4 h-4" />
             Edit Photo

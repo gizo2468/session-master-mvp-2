@@ -29,7 +29,7 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
         variant="ghost"
         onClick={handleUpgradeClick}
         className={cn(
-          "bg-gray-200 hover:bg-gray-300 border border-gray-300 opacity-90 ml-2 relative",
+          "bg-gray-200 dark:bg-muted hover:bg-gray-300 border border-gray-300 dark:border-border opacity-90 ml-2 relative",
           "flex items-center gap-1.5 h-9 px-3"
         )}
         size="sm"
@@ -40,7 +40,7 @@ const FeatureLockOverlay: React.FC<FeatureLockOverlayProps> = ({
             <span className="text-white text-xs font-bold">$</span>
           </div>
         </div>
-        <span className="text-gray-700">Change Plan</span>
+        <span className="text-gray-700 dark:text-gray-300">Change Plan</span>
       </Button>
     );
   }

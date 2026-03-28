@@ -139,7 +139,7 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
               </div>
             )}
             
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-50 dark:bg-background rounded-lg p-4">
               {/* Gold centered title */}
               <div className="flex items-center justify-center gap-2 mb-3">
                 <DollarSign size={20} className="text-poker-gold" />
@@ -148,17 +148,17 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
               
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <div className="text-gray-500">Total Buy-in</div>
+                  <div className="text-gray-500 dark:text-muted-foreground">Total Buy-in</div>
                   <div className="font-medium">{currencySymbol}{session.buyIn.toFixed(2)}</div>
                 </div>
                 <div>
-                  <div className="text-gray-500">Total Cash-out</div>
+                  <div className="text-gray-500 dark:text-muted-foreground">Total Cash-out</div>
                   <div className="font-medium">{currencySymbol}{autoCashOutAmount.toFixed(2)}</div>
                 </div>
                 
                 {/* Session Duration with Edit */}
                 <div>
-                  <div className="text-gray-500">Session Duration</div>
+                  <div className="text-gray-500 dark:text-muted-foreground">Session Duration</div>
                   <div className="font-medium flex items-center gap-2">
                     <Clock size={14} className="text-muted-foreground" />
                     {formatDuration(displayDuration)}
@@ -173,25 +173,25 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
                 </div>
                 
                 <div>
-                  <div className="text-gray-500">Tables Played</div>
+                  <div className="text-gray-500 dark:text-muted-foreground">Tables Played</div>
                   <div className="font-medium">{tablesPlayed}</div>
                 </div>
                 <div>
-                  <div className="text-gray-500">Hands Entered</div>
+                  <div className="text-gray-500 dark:text-muted-foreground">Hands Entered</div>
                   <div className="font-medium">{handsEntered}</div>
                 </div>
                 <div>
-                  <div className="text-gray-500">Cashouts Made</div>
+                  <div className="text-gray-500 dark:text-muted-foreground">Cashouts Made</div>
                   <div className="font-medium">{cashoutsRecorded}</div>
                 </div>
                 <div>
-                  <div className="text-gray-500">ROI %</div>
+                  <div className="text-gray-500 dark:text-muted-foreground">ROI %</div>
                   <div className={`font-medium ${roi >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {roi.toFixed(1)}%
                   </div>
                 </div>
-                <div className="col-span-2 pt-2 border-t border-gray-200">
-                  <div className="text-gray-500">Net Result</div>
+                <div className="col-span-2 pt-2 border-t border-gray-200 dark:border-border">
+                  <div className="text-gray-500 dark:text-muted-foreground">Net Result</div>
                   <div className={`font-bold text-lg ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {profit >= 0 ? '+' : ''}{currencySymbol}{profit.toFixed(2)}
                   </div>
@@ -228,7 +228,7 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
             </Collapsible>
           </div>
           
-          <div className="flex gap-3 flex-shrink-0 pt-4 border-t border-gray-200">
+          <div className="flex gap-3 flex-shrink-0 pt-4 border-t border-gray-200 dark:border-border">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}

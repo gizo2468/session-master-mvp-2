@@ -63,7 +63,7 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div className="bg-white dark:bg-card rounded-lg shadow-md p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-extrabold tracking-tight">Tables</h3>
           {showShareToggle && (
@@ -85,7 +85,7 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
         </div>
         
         {activeTables.length === 0 && inactiveTables.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-md">
+          <div className="text-center py-8 text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-background rounded-md">
             <p className="mb-2">No tables added yet.</p>
             <p className="text-sm">Click "Add Table" to start tracking multiple tables.</p>
           </div>

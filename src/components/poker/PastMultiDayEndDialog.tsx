@@ -105,7 +105,7 @@ const PastMultiDayEndDialog: React.FC<PastMultiDayEndDialogProps> = ({
 
         {step === 'choice' && (
           <div className="space-y-6">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
               Are you ending because you were eliminated, or the day ended and you're continuing?
             </p>
             

@@ -34,7 +34,7 @@ const CardSelectionSection: React.FC<CardSelectionSectionProps> = ({
           <div className="flex items-center gap-2">
             <FormLabel>Cards</FormLabel>
             <AdaptiveTooltip content={tooltipContent.cards}>
-              <CircleHelp className="h-4 w-4 text-gray-500" />
+              <CircleHelp className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
             </AdaptiveTooltip>
           </div>
           

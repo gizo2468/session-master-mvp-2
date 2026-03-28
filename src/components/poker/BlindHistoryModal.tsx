@@ -132,7 +132,7 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
         <ScrollArea className="max-h-96 pr-4">
           <div className="space-y-3">
             {groupedHistory.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-muted-foreground">
                 <p>No {isCashGame ? 'blinds' : 'BB/Stack'} updates yet.</p>
               </div>
             ) : (
@@ -142,7 +142,7 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                   {group.level !== null && (
                     <h4 
                       className={`font-semibold text-sm border-b pb-1 ${
-                        isEditMode && onEditLevel ? 'cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-t' : ''
+                        isEditMode && onEditLevel ? 'cursor-pointer hover:bg-gray-100 dark:bg-muted px-2 py-1 rounded-t' : ''
                       }`}
                       onClick={() => {
                         if (isEditMode && onEditLevel) {
@@ -172,7 +172,7 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                     <div 
                       key={`${groupIndex}-${updateIndex}`} 
                       className={`border rounded-lg p-3 ${group.level !== null ? 'ml-4' : ''} ${
-                        update.created_at ? 'bg-gray-50' : 'bg-gray-100 border-dashed'
+                        update.created_at ? 'bg-gray-50 dark:bg-background' : 'bg-gray-100 dark:bg-muted border-dashed'
                       }`}
                     >
                       <div className="flex justify-between items-start mb-2">
@@ -182,7 +182,7 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                               {currencySymbol}{update.stack ?? '—'}
                             </span>
                           ) : (
-                            <div className="text-xs text-gray-600 space-y-1">
+                            <div className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 space-y-1">
                               {update.bb && (
                                 <div>Big Blind: {update.bb}</div>
                               )}
@@ -190,7 +190,7 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                                 <div>Stack: {update.stack}</div>
                               )}
                               {!update.created_at && (update.bb || update.stack) && (
-                                <div className="text-xs text-gray-400 italic">
+                                <div className="text-xs text-gray-400 dark:text-gray-500 italic">
                                   (inherited from previous level)
                                 </div>
                               )}
@@ -215,7 +215,7 @@ const BlindHistoryModal: React.FC<BlindHistoryModalProps> = ({
                                 </Badge>
                               );
                             })() : (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-gray-500 dark:text-muted-foreground">
                                 {format(new Date(update.created_at), 'MMM d, HH:mm')}
                               </span>
                             )}

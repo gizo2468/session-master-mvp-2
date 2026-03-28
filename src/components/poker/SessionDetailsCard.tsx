@@ -73,7 +73,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   const hasMultiDayTables = multiDayTables.length > 0;
 
   return (
-    <Card className="bg-white rounded-lg shadow-md mb-6">
+    <Card className="bg-white dark:bg-card rounded-lg shadow-md mb-6">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-medium">Session Details</CardTitle>
       </CardHeader>
@@ -82,7 +82,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           {/* Only show "Playing From" if it's not an online game */}
           {!session.isOnline && (
             <div className="flex justify-between">
-              <span className="text-gray-500">Playing From:</span>
+              <span className="text-gray-500 dark:text-muted-foreground">Playing From:</span>
               <span className="font-medium">{session.location}</span>
             </div>
           )}
@@ -91,8 +91,8 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           {session.isOnline && (
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-1.5">
-                <Globe className="h-4 w-4 text-gray-600" />
-                <span className="text-gray-500">Online Game – Played from:</span>
+                <Globe className="h-4 w-4 text-gray-600 dark:text-gray-400 dark:text-gray-500" />
+                <span className="text-gray-500 dark:text-muted-foreground">Online Game – Played from:</span>
               </div>
               <span className="font-medium">{session.physicalLocation || "Not specified"}</span>
             </div>
@@ -100,7 +100,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           
           {/* Game Type */}
           <div className="flex justify-between">
-            <span className="text-gray-500">Game Type:</span>
+            <span className="text-gray-500 dark:text-muted-foreground">Game Type:</span>
             <span className="font-medium">{session.gameType}</span>
           </div>
           
@@ -109,7 +109,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-1.5">
                 <Share2 className="h-4 w-4 text-muted-foreground" />
-                <span className="text-gray-500">Shared With:</span>
+                <span className="text-gray-500 dark:text-muted-foreground">Shared With:</span>
               </div>
               <div className="font-medium text-amber-700">
                 {sharedCoaches.map((coachId, index) => {
@@ -168,7 +168,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           
           {!session.isActive && (
             <div className="flex justify-between items-center">
-              <span className="text-gray-500">Profit/Loss:</span>
+              <span className="text-gray-500 dark:text-muted-foreground">Profit/Loss:</span>
               <div className="flex items-center gap-1">
                 {totalProfit >= 0 ? (
                   <TrendingUp className="w-4 h-4 text-green-600" />
@@ -185,7 +185,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           
           {/* Multi-day tournaments details section */}
           {hasMultiDayTables && (
-            <div className="pt-3 mt-2 border-t border-gray-100">
+            <div className="pt-3 mt-2 border-t border-gray-100 dark:border-border">
               <h4 className="text-sm font-medium text-green-700 mb-2">Continuing Tournaments</h4>
               <div className="space-y-2">
                 {multiDayTables.map((table) => (
@@ -201,12 +201,12 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
                     </div>
                     {table.nextDayStart && (
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-gray-600">Next day:</span>
+                        <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Next day:</span>
                         <span className="font-medium">{format(new Date(table.nextDayStart), 'd MMM, HH:mm')}</span>
                       </div>
                     )}
                     {table.notes && (
-                      <div className="text-xs text-gray-600 mt-1 pt-1 border-t border-green-100">
+                      <div className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1 pt-1 border-t border-green-100">
                         {table.notes}
                       </div>
                     )}
@@ -218,8 +218,8 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           
           {session.notes && !hasMultiDayTables && (
             <div className="pt-2">
-              <span className="text-gray-500 block mb-1">Notes:</span>
-              <p className="text-sm bg-gray-50 p-3 rounded">{session.notes}</p>
+              <span className="text-gray-500 dark:text-muted-foreground block mb-1">Notes:</span>
+              <p className="text-sm bg-gray-50 dark:bg-background p-3 rounded">{session.notes}</p>
             </div>
           )}
         </div>

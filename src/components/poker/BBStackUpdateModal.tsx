@@ -489,7 +489,7 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
         
         {activeTables.length === 0 ? (
           <div className="flex-1 flex items-center justify-center py-12">
-            <div className="text-center text-gray-500">
+            <div className="text-center text-gray-500 dark:text-muted-foreground">
               <p className="text-lg font-medium mb-2">No Active Tables</p>
               <p className="text-sm">Add a table to update BB/Stack values</p>
             </div>
@@ -579,7 +579,7 @@ const TableRow = React.memo<{
   onStackBBChange
 }) => {
   return (
-    <div className="border rounded-lg p-4 bg-gray-50">
+    <div className="border rounded-lg p-4 bg-gray-50 dark:bg-background">
       <h4 className="font-medium mb-3">
         Table {index + 1}
         {table.buyIn && (
@@ -600,7 +600,7 @@ const TableRow = React.memo<{
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <Label className="text-xs text-gray-500">Small Blind</Label>
+                <Label className="text-xs text-gray-500 dark:text-muted-foreground">Small Blind</Label>
                 <span className="text-xs font-medium">{currencySymbol}{tableData.smallBlind}</span>
               </div>
               <Slider
@@ -613,7 +613,7 @@ const TableRow = React.memo<{
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <Label className="text-xs text-gray-500">Big Blind</Label>
+                <Label className="text-xs text-gray-500 dark:text-muted-foreground">Big Blind</Label>
                 <span className="text-xs font-medium">{currencySymbol}{tableData.bigBlind}</span>
               </div>
               <Slider
@@ -628,9 +628,9 @@ const TableRow = React.memo<{
           
           {/* Stack Amount (money) */}
           <div className="space-y-2 mt-3">
-            <Label className="text-xs text-gray-500">Stack Amount</Label>
+            <Label className="text-xs text-gray-500 dark:text-muted-foreground">Stack Amount</Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">{currencySymbol}</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-gray-500">{currencySymbol}</span>
               <Input
                 type="text"
                 inputMode="decimal"
@@ -645,15 +645,15 @@ const TableRow = React.memo<{
       ) : (
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">
+            <label className="text-xs text-gray-500 dark:text-muted-foreground mb-1 block">
               Level
               {editingLevel && (
-                <span className="text-xs text-gray-400 ml-1">
+                <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">
                   (editing)
                 </span>
               )}
               {!editingLevel && highestLevel && highestLevel > 0 && (
-                <span className="text-xs text-gray-400 ml-1">
+                <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">
                   (min: {highestLevel})
                 </span>
               )}
@@ -684,7 +684,7 @@ const TableRow = React.memo<{
           </div>
           
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">Stack</label>
+            <label className="text-xs text-gray-500 dark:text-muted-foreground mb-1 block">Stack</label>
             <Input
               type="text"
               placeholder="Stack"
@@ -695,7 +695,7 @@ const TableRow = React.memo<{
           </div>
           
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">BB</label>
+            <label className="text-xs text-gray-500 dark:text-muted-foreground mb-1 block">BB</label>
             <Input
               type="text"
               placeholder="BB"

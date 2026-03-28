@@ -62,7 +62,7 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center justify-center px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
+                    <span className="inline-flex items-center justify-center px-2 py-1 bg-gray-100 dark:bg-muted text-gray-800 dark:text-foreground text-xs font-medium rounded-full">
                       {hand.position}
                     </span>
                   </TableCell>
@@ -76,7 +76,7 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
                       
                       {hand.notes && (
                         <AdaptiveTooltip content={<p>{hand.notes}</p>}>
-                          <div className="text-xs text-gray-500 italic line-clamp-1">
+                          <div className="text-xs text-gray-500 dark:text-muted-foreground italic line-clamp-1">
                             {hand.notes}
                           </div>
                         </AdaptiveTooltip>
@@ -95,7 +95,7 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
                           </span>
                         </div>
                         {(hand.smallBlind !== undefined || hand.bigBlind !== undefined) && (hand.smallBlind || hand.bigBlind) !== 0 && (
-                          <span className="text-xs text-gray-500 text-center">
+                          <span className="text-xs text-gray-500 dark:text-muted-foreground text-center">
                             (
                             {hand.currencyType === 'currency' ? '$' : ''}
                             {hand.smallBlind !== undefined ? Number(hand.smallBlind).toString() : '0'}
@@ -125,11 +125,11 @@ const CoachHandsList: React.FC<CoachHandsListProps> = ({
                           size="sm" 
                           variant="ghost" 
                           onClick={() => handleFeedbackClick(hand.id)}
-                          className="h-8 w-8 p-0 bg-gray-200 hover:bg-gray-300 border border-gray-300 opacity-90 relative"
+                          className="h-8 w-8 p-0 bg-gray-200 dark:bg-muted hover:bg-gray-300 border border-gray-300 dark:border-border opacity-90 relative"
                           aria-label="Locked feedback - upgrade required"
                         >
                           <div className="relative flex items-center justify-center w-full h-full">
-                            <MessageSquare className="h-4 w-4 text-gray-500" />
+                            <MessageSquare className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
                             <div className="absolute -top-1.5 -right-1.5 bg-poker-gold rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
                               <span className="text-white text-xs font-bold">$</span>
                             </div>

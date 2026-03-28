@@ -41,10 +41,10 @@ export default function LiveSession() {
   // Loading state with better error handling
   if (isLoadingSession) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading session...</p>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Loading session...</p>
         </div>
       </div>
     );
@@ -53,10 +53,10 @@ export default function LiveSession() {
   // Error state - only show if there's a real error AND no session data
   if (loadingError && !currentSession) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col items-center justify-center p-4">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold mb-4 text-red-600">Session Error</h1>
-          <p className="text-gray-600 mb-6">{loadingError}</p>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-6">{loadingError}</p>
           <div className="flex gap-2">
             <Button 
               onClick={() => window.location.reload()}
@@ -79,10 +79,10 @@ export default function LiveSession() {
   // No session found state
   if (!currentSession) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col items-center justify-center p-4">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold mb-4">No Active Session</h1>
-          <p className="text-gray-600 mb-6">There is no active poker session at the moment.</p>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-6">There is no active poker session at the moment.</p>
           <Button 
             onClick={() => navigate('/')}
             className="bg-poker-gold hover:bg-poker-darkGold text-white"
@@ -97,10 +97,10 @@ export default function LiveSession() {
   // Validate session data before rendering components
   if (!currentSession.startTime || !currentSession.gameType || !currentSession.format) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col items-center justify-center p-4">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold mb-4 text-red-600">Invalid Session Data</h1>
-          <p className="text-gray-600 mb-6">The session data appears to be corrupted or incomplete.</p>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-6">The session data appears to be corrupted or incomplete.</p>
           <Button 
             onClick={() => navigate('/')}
             className="bg-poker-gold hover:bg-poker-darkGold text-white"
@@ -127,7 +127,7 @@ export default function LiveSession() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col">
       <LiveSessionHeader />
       
       <main className="flex-1 pt-4">

@@ -66,10 +66,10 @@ const Dashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Loading...</p>
         </div>
       </div>
     );
@@ -77,17 +77,17 @@ const Dashboard: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Please log in to access your dashboard.</p>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Please log in to access your dashboard.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm header-safe pt-4">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background">
+      <header className="bg-white dark:bg-card shadow-sm header-safe pt-4">
         <div className="container mx-auto max-w-md px-4 pb-4">
           <div className="flex justify-between items-center">
             <Button 
@@ -107,11 +107,11 @@ const Dashboard: React.FC = () => {
 
       <main className="container mx-auto max-w-md px-4 py-6">
         <div className="text-center space-y-4">
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-white dark:bg-card rounded-lg p-6 shadow-sm">
             <h2 className="text-2xl font-bold mb-2 text-primary">
               Welcome, {user.fullName || user.username}!
             </h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-4">
               Role: <span className="font-semibold">{getDisplayRole(user.role)}</span>
             </p>
             

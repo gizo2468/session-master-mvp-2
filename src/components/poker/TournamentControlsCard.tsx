@@ -60,7 +60,7 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
   }
 
   return (
-    <Card className="bg-white rounded-lg shadow-md mb-6">
+    <Card className="bg-white dark:bg-card rounded-lg shadow-md mb-6">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-medium">
           {session.format === 'Tournament' ? 'Tournament Controls' : 'Cash Game Controls'}
@@ -108,13 +108,13 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
                   
                   <div className="flex flex-col items-center space-y-6 py-6">
                     <div className="text-center">
-                      <p className="text-sm text-gray-600 mb-3">Rebuy Amount</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-3">Rebuy Amount</p>
                       <Badge variant="outline" className="px-6 py-3 text-2xl font-bold border-2 border-poker-gold text-poker-gold">
                         ${rebuyAmount.toFixed(2)}
                       </Badge>
                     </div>
                     
-                    <p className="text-center text-gray-700 font-medium">
+                    <p className="text-center text-gray-700 dark:text-gray-300 font-medium">
                       Do you want to rebuy for this amount?
                     </p>
                   </div>
@@ -162,7 +162,7 @@ const TournamentControlsCard: React.FC<TournamentControlsCardProps> = ({
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-muted-foreground">$</span>
                       </div>
                       <Input
                         id="rebuy-amount"

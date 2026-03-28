@@ -107,7 +107,7 @@ export const EnhancedReviewForm = ({
       }
     }
     
-    return `${baseClass} bg-gray-50 border border-gray-200 hover:bg-gray-100`;
+    return `${baseClass} bg-gray-50 dark:bg-background border border-gray-200 dark:border-border hover:bg-gray-100 dark:bg-muted`;
   };
 
   const renderStarRating = () => {
@@ -130,7 +130,7 @@ export const EnhancedReviewForm = ({
             </button>
           ))}
           {starRating && (
-            <span className="ml-2 text-sm text-gray-600">
+            <span className="ml-2 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
               {starRating} star{starRating !== 1 ? 's' : ''}
             </span>
           )}

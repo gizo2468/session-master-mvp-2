@@ -98,7 +98,7 @@ const CoachDashboard = () => {
   const totalReviews = recentReviews.length + playerReviews.length;
   
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 content-safe">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background content-safe">
       <div className="container mx-auto max-w-4xl px-4 pb-8">
         <header className="mb-8">
           <button 
@@ -111,7 +111,7 @@ const CoachDashboard = () => {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-poker-black">Coach Dashboard</h1>
-              <p className="text-gray-500 text-sm mt-1">Manage your students and provide reviews</p>
+              <p className="text-gray-500 dark:text-muted-foreground text-sm mt-1">Manage your students and provide reviews</p>
             </div>
             <TooltipProvider>
               <Tooltip>
@@ -158,7 +158,7 @@ const CoachDashboard = () => {
                           <span 
                             onClick={handlePlanBadgeClick}
                             className={`cursor-pointer hover:underline font-medium ${
-                              coachTier === 'free' ? 'text-gray-600' : 
+                              coachTier === 'free' ? 'text-gray-600 dark:text-gray-400 dark:text-gray-500' : 
                               coachTier === 'starter' ? 'text-blue-600' :
                               coachTier === 'pro' ? 'text-poker-gold' : 'text-purple-600'
                             }`}
@@ -172,7 +172,7 @@ const CoachDashboard = () => {
                       </Tooltip>
                     </TooltipProvider>
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
                     Students: {studentCount} / {maxStudents}
                   </div>
                 </div>
@@ -180,11 +180,11 @@ const CoachDashboard = () => {
                   value={studentPercentage} 
                   className={`h-2 ${
                     studentPercentage > 90 ? 'bg-red-100' : 
-                    studentPercentage > 70 ? 'bg-amber-100' : 'bg-gray-100'
+                    studentPercentage > 70 ? 'bg-amber-100' : 'bg-gray-100 dark:bg-muted'
                   }`} 
                 />
                 <div className="flex justify-between mt-4">
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 dark:text-muted-foreground">
                     {coachTier === 'free' ? (
                       <span className="flex items-center gap-1">
                         <Icon name="alert-circle" size={14} />
@@ -253,7 +253,7 @@ const CoachDashboard = () => {
                           {/* Player to Coach Reviews */}
                           {playerReviews.length > 0 && (
                             <div className="space-y-3">
-                              <h4 className="text-sm font-medium text-gray-700">From Players</h4>
+                              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">From Players</h4>
                               {playerReviews.map(review => (
                                 <div key={review.id} className="border rounded-md p-3 bg-blue-50">
                                   <div className="flex justify-between items-start mb-1">
@@ -261,12 +261,12 @@ const CoachDashboard = () => {
                                       <span className="text-sm font-medium">
                                         {getStudentName(review.player_id)}
                                       </span>
-                                      <span className="text-xs text-gray-500 ml-2">
+                                      <span className="text-xs text-gray-500 dark:text-muted-foreground ml-2">
                                         {review.review_type}
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      <span className="text-xs text-gray-500">
+                                      <span className="text-xs text-gray-500 dark:text-muted-foreground">
                                         {new Date(review.created_at).toLocaleDateString()}
                                       </span>
                                       {!review.read && (
@@ -285,7 +285,7 @@ const CoachDashboard = () => {
                                   <p className="text-sm my-2">{review.message}</p>
                                   
                                   <div className="flex justify-between items-center">
-                                    <div className="text-xs text-gray-500">
+                                    <div className="text-xs text-gray-500 dark:text-muted-foreground">
                                       Player review
                                     </div>
                                     {!review.read && (
@@ -303,7 +303,7 @@ const CoachDashboard = () => {
                           {recentReviews.length > 0 && (
                             <div className="space-y-3">
                               {playerReviews.length > 0 && <Separator />}
-                              <h4 className="text-sm font-medium text-gray-700">Session Comments</h4>
+                              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Session Comments</h4>
                               {recentReviews.map(comment => (
                                 <div key={comment.id} className="border rounded-md p-3">
                                   <div className="flex justify-between items-start mb-1">
@@ -311,13 +311,13 @@ const CoachDashboard = () => {
                                       <span className="text-sm font-medium">
                                         {getStudentName(comment.student_id)}
                                       </span>
-                                      <span className="text-xs text-gray-500 ml-2">
+                                      <span className="text-xs text-gray-500 dark:text-muted-foreground ml-2">
                                         Session {comment.session_id.slice(-8)}
                                         {comment.hand_number && <span> • Hand {comment.hand_number}</span>}
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      <span className="text-xs text-gray-500">
+                                      <span className="text-xs text-gray-500 dark:text-muted-foreground">
                                         {new Date(comment.created_at).toLocaleDateString()}
                                       </span>
                                       <Button 
@@ -335,7 +335,7 @@ const CoachDashboard = () => {
                                   <p className="text-sm my-2">{comment.comment}</p>
                                   
                                   <div className="flex justify-between items-center">
-                                    <div className="text-xs text-gray-500">
+                                    <div className="text-xs text-gray-500 dark:text-muted-foreground">
                                       Coach review
                                     </div>
                                   </div>
@@ -379,7 +379,7 @@ const CoachDashboard = () => {
                   </TooltipProvider>
                 </div>
                 {coachProfile?.bio && (
-                  <p className="text-gray-500 mt-1 text-sm">{coachProfile.bio}</p>
+                  <p className="text-gray-500 dark:text-muted-foreground mt-1 text-sm">{coachProfile.bio}</p>
                 )}
               </CardHeader>
               <CardContent>
@@ -395,7 +395,7 @@ const CoachDashboard = () => {
                       value={studentPercentage} 
                       className={`h-2 ${
                         studentPercentage > 90 ? 'bg-red-100' : 
-                        studentPercentage > 70 ? 'bg-amber-100' : 'bg-gray-100'
+                        studentPercentage > 70 ? 'bg-amber-100' : 'bg-gray-100 dark:bg-muted'
                       }`} 
                     />
                   </div>

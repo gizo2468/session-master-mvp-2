@@ -71,7 +71,7 @@ const SimpleSettings: React.FC = () => {
   const appVersion = "0.0.0"; // From package.json
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-background">
       <div className="container mx-auto max-w-md px-4 py-8">
         <header className="mb-8">
           <Button 
@@ -97,37 +97,37 @@ const SimpleSettings: React.FC = () => {
               <div className="space-y-4">
                 {/* Email */}
                 <div className="flex items-center gap-3">
-                  <Icon name="Mail" className="h-5 w-5 text-gray-500" />
+                  <Icon name="Mail" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                   <div>
                     <p className="font-medium">{user?.email || 'Not signed in'}</p>
-                    <p className="text-sm text-gray-500">Email</p>
+                    <p className="text-sm text-gray-500 dark:text-muted-foreground">Email</p>
                   </div>
                 </div>
 
                 {/* Full Name */}
                   <div className="flex items-center gap-3">
-                    <Icon name="UserCircle2" className="h-5 w-5 text-gray-500" />
+                    <Icon name="UserCircle2" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                     <div>
                       <p className="font-medium">{user?.fullName || '—'}</p>
-                      <p className="text-sm text-gray-500">Full Name</p>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Full Name</p>
                     </div>
                   </div>
 
                 {/* Username */}
                 {profileLoading ? (
                   <div className="flex items-center gap-3">
-                    <Icon name="AtSign" className="h-5 w-5 text-gray-500" />
+                    <Icon name="AtSign" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                     <div>
-                      <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
-                      <p className="text-sm text-gray-500">Username</p>
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-muted rounded animate-pulse"></div>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Username</p>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <Icon name="AtSign" className="h-5 w-5 text-gray-500" />
+                    <Icon name="AtSign" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                     <div>
                       <p className="font-medium">@{profile?.username || 'Not set'}</p>
-                      <p className="text-sm text-gray-500">Username</p>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Username</p>
                     </div>
                   </div>
                 )}
@@ -135,18 +135,18 @@ const SimpleSettings: React.FC = () => {
                 {/* Role */}
                 {profileLoading ? (
                   <div className="flex items-center gap-3">
-                    <Icon name="User" className="h-5 w-5 text-gray-500" />
+                    <Icon name="User" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                     <div>
-                      <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
-                      <p className="text-sm text-gray-500">Role</p>
+                      <div className="h-4 w-16 bg-gray-200 dark:bg-muted rounded animate-pulse"></div>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Role</p>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <Icon name="User" className="h-5 w-5 text-gray-500" />
+                    <Icon name="User" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                     <div>
                       <p className="font-medium">{getDisplayRole(profile?.role)}</p>
-                      <p className="text-sm text-gray-500">Role</p>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Role</p>
                     </div>
                   </div>
                 )}
@@ -196,7 +196,7 @@ const SimpleSettings: React.FC = () => {
 
         {/* App Version at bottom */}
         <div className="mt-12 text-center">
-          <p className="text-sm text-gray-500">App Version {appVersion}</p>
+          <p className="text-sm text-gray-500 dark:text-muted-foreground">App Version {appVersion}</p>
         </div>
       </div>
     </div>

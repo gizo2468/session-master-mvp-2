@@ -10,7 +10,7 @@ const TermsOfUse: React.FC = () => {
   const swipeBackRef = useSwipeBack({ fallbackPath: '/settings', screenName: 'TermsOfUse' });
 
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background">
       <div className="container mx-auto px-4 py-8">
         <header className="mb-8">
           <Button 
@@ -24,9 +24,9 @@ const TermsOfUse: React.FC = () => {
           <h1 className="text-2xl font-serif font-bold text-poker-black mb-6">SessionMaster – Terms of Use</h1>
         </header>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white dark:bg-card rounded-lg shadow-sm p-6">
           <div className="prose max-w-none">
-            <p className="text-sm text-gray-500 mb-4">Last updated: July 23, 2025</p>
+            <p className="text-sm text-gray-500 dark:text-muted-foreground mb-4">Last updated: July 23, 2025</p>
 
             <h2 className="text-xl font-bold mt-6 mb-3">1. Eligibility and Account Types</h2>
             <p>To use SessionMaster, you must be at least 13 years old. By registering, you confirm that you meet this requirement. If we discover that a user is under the age of 13, their account will be deleted.</p>

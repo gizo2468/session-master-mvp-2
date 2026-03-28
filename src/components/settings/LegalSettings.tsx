@@ -27,30 +27,30 @@ const LegalSettings: React.FC = () => {
                  role="button"
                  aria-label="View privacy policy">
               <div className="flex items-center">
-                <Icon name="Shield" className="mr-3 text-gray-500 h-4 w-4" />
+                <Icon name="Shield" className="mr-3 text-gray-500 dark:text-muted-foreground h-4 w-4" />
                 <span>Privacy Policy</span>
               </div>
-              <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
+              <Icon name="ChevronRight" className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
             </div>
             <div className="flex items-center justify-between border-b pb-3" 
                  onClick={() => navigate('/legal/terms')}
                  role="button"
                  aria-label="View terms of use">
               <div className="flex items-center">
-                <Icon name="FileText" className="mr-3 text-gray-500 h-4 w-4" />
+                <Icon name="FileText" className="mr-3 text-gray-500 dark:text-muted-foreground h-4 w-4" />
                 <span>Terms of Use</span>
               </div>
-              <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
+              <Icon name="ChevronRight" className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
             </div>
             <div className="flex items-center justify-between pt-1" 
                  onClick={() => navigate('/legal/cookie')}
                  role="button"
                  aria-label="View cookie policy">
               <div className="flex items-center">
-                <Icon name="Cookie" className="mr-3 text-gray-500 h-4 w-4" />
+                <Icon name="Cookie" className="mr-3 text-gray-500 dark:text-muted-foreground h-4 w-4" />
                 <span>Cookie Policy</span>
               </div>
-              <Icon name="ChevronRight" className="h-4 w-4 text-gray-500" />
+              <Icon name="ChevronRight" className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
             </div>
           </CardContent>
         </Card>

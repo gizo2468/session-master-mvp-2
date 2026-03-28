@@ -63,7 +63,7 @@ const CoachUpgrade = () => {
   const isOnFreePlan = currentTier === 'free';
   
   return (
-    <div className="min-h-screen bg-gray-50 content-safe">
+    <div className="min-h-screen bg-gray-50 dark:bg-background content-safe">
       <div className="container mx-auto max-w-5xl px-4 pb-8">
         <header className="mb-8">
           <Button 
@@ -76,7 +76,7 @@ const CoachUpgrade = () => {
           </Button>
           
           <h1 className="text-2xl font-bold text-poker-black mb-2">Coach Tier Upgrade</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">
             Upgrade your coaching capabilities with our tiered plans designed to grow with your coaching business
           </p>
         </header>
@@ -87,7 +87,7 @@ const CoachUpgrade = () => {
             .map((plan) => (
               <Card 
                 key={plan.tier} 
-                className={`flex flex-col ${currentTier === plan.tier ? 'border-poker-gold ring-2 ring-poker-gold' : 'border-gray-200'}`}
+                className={`flex flex-col ${currentTier === plan.tier ? 'border-poker-gold ring-2 ring-poker-gold' : 'border-gray-200 dark:border-border'}`}
               >
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -95,7 +95,7 @@ const CoachUpgrade = () => {
                       <CardTitle>{plan.name}</CardTitle>
                       <div className="mt-2 flex items-baseline">
                         <span className="text-2xl font-bold">${plan.price}</span>
-                        <span className="ml-1 text-sm text-gray-500">/month</span>
+                        <span className="ml-1 text-sm text-gray-500 dark:text-muted-foreground">/month</span>
                       </div>
                     </div>
                     {currentTier === plan.tier && (
@@ -135,9 +135,9 @@ const CoachUpgrade = () => {
             ))}
         </div>
         
-        <div className="bg-gray-100 p-6 rounded-lg">
+        <div className="bg-gray-100 dark:bg-muted p-6 rounded-lg">
           <h2 className="text-xl font-semibold mb-2">Current Plan: {coachTiers[currentTier].name}</h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-4">
             {currentTier === 'free' 
               ? "You are currently on the free coaching plan with limited features and student capacity." 
               : "Thank you for supporting Session Master! Your paid subscription helps us build better tools for poker coaches."}

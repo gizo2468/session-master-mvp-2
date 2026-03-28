@@ -119,7 +119,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold">Street-by-Street</h3>
           <AdaptiveTooltip content="Analyze the action through each betting round">
-            <CircleHelp className="h-4 w-4 text-gray-500" />
+            <CircleHelp className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
           </AdaptiveTooltip>
         </div>
         
@@ -144,7 +144,7 @@ const StreetByStreetSection: React.FC<StreetByStreetSectionProps> = ({
                       setValue('turnCards', [{ id: 0 }]);
                       setValue('riverCards', [{ id: 0 }]);
                     }}
-                    className="text-gray-500 hover:text-gray-800 ml-2"
+                    className="text-gray-500 dark:text-muted-foreground hover:text-gray-800 dark:text-foreground ml-2"
                     aria-label="Clear all board cards"
                   >
                     <Trash2 size={16} />

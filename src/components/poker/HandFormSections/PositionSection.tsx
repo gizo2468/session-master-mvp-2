@@ -86,7 +86,7 @@ const PositionSection: React.FC<PositionSectionProps> = ({
           <div className="flex items-center gap-2">
             <FormLabel>Position</FormLabel>
             <AdaptiveTooltip content={tooltipContent.position}>
-              <CircleHelp className="h-4 w-4 text-gray-500" />
+              <CircleHelp className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
             </AdaptiveTooltip>
           </div>
           
@@ -111,7 +111,7 @@ const PositionSection: React.FC<PositionSectionProps> = ({
                     className={`h-[30px] flex items-center justify-center cursor-pointer snap-center transition-all duration-200 ${
                       index === selectedPositionIndex 
                         ? 'text-poker-gold font-bold text-lg' 
-                        : 'text-gray-600 text-base hover:text-gray-800'
+                        : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 text-base hover:text-gray-800 dark:text-foreground'
                     }`}
                     onClick={() => handlePositionTap(index)}
                   >

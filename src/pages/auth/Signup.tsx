@@ -336,7 +336,7 @@ const Signup: React.FC = () => {
   // Show email confirmation screen
   if (showEmailConfirmation) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-background py-12 px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4">
@@ -349,10 +349,10 @@ const Signup: React.FC = () => {
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <Icon name="Mail" className="w-8 h-8 text-green-600" />
             </div>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">
               We've sent a confirmation link to <strong>{userEmail}</strong>
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-muted-foreground">
               Please check your email and click the confirmation link to activate your account. 
               You won't be able to sign in until you confirm your email address.
             </p>
@@ -367,7 +367,7 @@ const Signup: React.FC = () => {
             </div>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
               Already confirmed?{' '}
               <Link to="/auth/login" className="text-poker-gold hover:underline">
                 Sign In
@@ -380,7 +380,7 @@ const Signup: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-background py-12 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
@@ -426,7 +426,7 @@ const Signup: React.FC = () => {
                           }}
                         />
                         {isCheckingUsername && (
-                          <Icon name="Loader" className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
+                          <Icon name="Loader" className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-gray-400 dark:text-gray-500" />
                         )}
                       </div>
                     </FormControl>
@@ -453,7 +453,7 @@ const Signup: React.FC = () => {
                           }}
                         />
                         {isCheckingEmail && (
-                          <Icon name="Loader" className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
+                          <Icon name="Loader" className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-gray-400 dark:text-gray-500" />
                         )}
                       </div>
                     </FormControl>
@@ -493,7 +493,7 @@ const Signup: React.FC = () => {
                         >
                           <Icon 
                             name={showPassword ? "EyeOff" : "Eye"} 
-                            className="h-4 w-4 text-gray-400" 
+                            className="h-4 w-4 text-gray-400 dark:text-gray-500" 
                           />
                         </Button>
                       </div>
@@ -526,7 +526,7 @@ const Signup: React.FC = () => {
                         >
                           <Icon 
                             name={showConfirmPassword ? "EyeOff" : "Eye"} 
-                            className="h-4 w-4 text-gray-400" 
+                            className="h-4 w-4 text-gray-400 dark:text-gray-500" 
                           />
                         </Button>
                       </div>
@@ -555,7 +555,7 @@ const Signup: React.FC = () => {
                             </FormControl>
                             <div className="space-y-1">
                               <FormLabel className="font-medium">{option.label}</FormLabel>
-                              <p className="text-xs text-gray-500">{option.description}</p>
+                              <p className="text-xs text-gray-500 dark:text-muted-foreground">{option.description}</p>
                             </div>
                           </FormItem>
                         ))}
@@ -574,7 +574,7 @@ const Signup: React.FC = () => {
                     render={({ field }) => (
                       <FormItem className="space-y-3">
                         <FormLabel>Coaching Focus</FormLabel>
-                        <p className="text-xs text-gray-500">Select up to 3 focus areas</p>
+                        <p className="text-xs text-gray-500 dark:text-muted-foreground">Select up to 3 focus areas</p>
                         <FormControl>
                           <div className="flex flex-wrap gap-2">
                             {coachingFocusOptions.map((option) => {
@@ -587,7 +587,7 @@ const Signup: React.FC = () => {
                                   variant={isSelected ? "default" : "outline"}
                                   className={`cursor-pointer hover:bg-accent ${
                                     isDisabled 
-                                      ? "opacity-50 cursor-not-allowed bg-gray-50 hover:bg-gray-50" 
+                                      ? "opacity-50 cursor-not-allowed bg-gray-50 dark:bg-background hover:bg-gray-50 dark:bg-background" 
                                       : ""
                                   }`}
                                   onClick={() => {
@@ -702,7 +702,7 @@ const Signup: React.FC = () => {
           </Form>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
             Already have an account?{' '}
             <Link to="/auth/login" className="text-poker-gold hover:underline">
               Sign In

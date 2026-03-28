@@ -33,7 +33,7 @@ const StatCell: React.FC<StatCellProps> = ({ label, value, isPositive = null, is
 
   return (
     <div className="text-center p-2 sm:p-3 flex flex-col justify-between min-h-[4rem] sm:min-h-[5rem]">
-      <p className="text-xs sm:text-sm text-gray-600 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">
+      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1 leading-tight h-8 sm:h-10 flex items-center justify-center">
         {label}
       </p>
       <p className={`text-lg sm:text-2xl font-bold flex items-center justify-center ${colorClass}`}>
@@ -99,7 +99,7 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
 
   if (isLoading || !currentStats) {
     return (
-      <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
+      <div className="bg-white dark:bg-card rounded-lg p-4 sm:p-6 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
           <h3 className="text-xl sm:text-2xl font-bold text-primary">My Finance</h3>
           <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20">
@@ -108,10 +108,10 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
           </Badge>
         </div>
         <div className="animate-pulse">
-          <div className="h-10 bg-gray-200 rounded mb-4"></div>
+          <div className="h-10 bg-gray-200 dark:bg-muted rounded mb-4"></div>
           <div className="grid grid-cols-2 gap-4">
             {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="h-20 bg-gray-200 rounded"></div>
+              <div key={i} className="h-20 bg-gray-200 dark:bg-muted rounded"></div>
             ))}
           </div>
         </div>
@@ -121,7 +121,7 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
+      <div className="bg-white dark:bg-card rounded-lg p-4 sm:p-6 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
           <h3 className="text-xl sm:text-2xl font-bold text-primary">My Finance</h3>
           <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20">
@@ -148,7 +148,7 @@ const MyStatisticsContent: React.FC<MyStatisticsSectionProps> = ({ onFilterClick
   const profitLossRatioDisplay = formatRatio(currentStats.profitLossRatio);
 
   return (
-    <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
+    <div className="bg-white dark:bg-card rounded-lg p-4 sm:p-6 shadow-sm">
       <div className="flex items-center gap-3 mb-4">
         <h3 className="text-xl sm:text-2xl font-bold text-primary">My Finance</h3>
         <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20">

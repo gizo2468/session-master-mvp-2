@@ -259,7 +259,7 @@ const Settings: React.FC = () => {
   const appVersion = "0.0.0"; // From package.json
 
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 content-safe">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background content-safe">
       <div className="container mx-auto max-w-md px-4 pb-8">
         <header className="mb-8">
           <Button 
@@ -326,34 +326,34 @@ const Settings: React.FC = () => {
               <div className="space-y-4">
                 {/* Full Name */}
                 <div className="flex items-center gap-3">
-                  <Icon name="UserCircle2" className="h-5 w-5 text-gray-500" />
+                  <Icon name="UserCircle2" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                   <div>
                     <p className="font-medium">{user?.fullName || '—'}</p>
-                    <p className="text-sm text-gray-500">Full Name</p>
+                    <p className="text-sm text-gray-500 dark:text-muted-foreground">Full Name</p>
                   </div>
                 </div>
 
                 {/* Email */}
                 <div className="flex items-center gap-3">
-                  <Icon name="Mail" className="h-5 w-5 text-gray-500" />
+                  <Icon name="Mail" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                   <div>
                     <p className="font-medium">{user?.email || 'Not signed in'}</p>
-                    <p className="text-sm text-gray-500">Email</p>
+                    <p className="text-sm text-gray-500 dark:text-muted-foreground">Email</p>
                   </div>
                 </div>
 
                 {/* Username */}
                 {profileLoading ? (
                   <div className="flex items-center gap-3">
-                    <Icon name="AtSign" className="h-5 w-5 text-gray-500" />
+                    <Icon name="AtSign" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                     <div>
-                      <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
-                      <p className="text-sm text-gray-500">Username</p>
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-muted rounded animate-pulse"></div>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Username</p>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 flex-1">
-                    <Icon name="AtSign" className="h-5 w-5 text-gray-500" />
+                    <Icon name="AtSign" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                     <div className="flex-1">
                       {isEditing ? (
                         <div>
@@ -365,12 +365,12 @@ const Settings: React.FC = () => {
                             autoComplete="off"
                             data-form-type="other"
                           />
-                          <p className="text-sm text-gray-500 mt-1">Username</p>
+                          <p className="text-sm text-gray-500 dark:text-muted-foreground mt-1">Username</p>
                         </div>
                       ) : (
                         <div>
                           <p className="font-medium">@{profile?.username || 'Not set'}</p>
-                          <p className="text-sm text-gray-500">Username</p>
+                          <p className="text-sm text-gray-500 dark:text-muted-foreground">Username</p>
                         </div>
                       )}
                     </div>
@@ -380,18 +380,18 @@ const Settings: React.FC = () => {
                 {/* Role */}
                 {profileLoading ? (
                   <div className="flex items-center gap-3">
-                    <Icon name="User" className="h-5 w-5 text-gray-500" />
+                    <Icon name="User" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                     <div>
-                      <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
-                      <p className="text-sm text-gray-500">Role</p>
+                      <div className="h-4 w-16 bg-gray-200 dark:bg-muted rounded animate-pulse"></div>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Role</p>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <Icon name="User" className="h-5 w-5 text-gray-500" />
+                    <Icon name="User" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                     <div>
                       <p className="font-medium">{getDisplayRole(profile?.role)}</p>
-                      <p className="text-sm text-gray-500">Role</p>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Role</p>
                     </div>
                   </div>
                 )}
@@ -401,7 +401,7 @@ const Settings: React.FC = () => {
                   <>
                     {/* Coaching Focus */}
                     <div className="flex items-start gap-3">
-                      <Icon name="Target" className="h-5 w-5 text-gray-500 mt-0.5" />
+                      <Icon name="Target" className="h-5 w-5 text-gray-500 dark:text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="font-medium">Coaching Focus</p>
                         {isEditing ? (
@@ -419,8 +419,8 @@ const Settings: React.FC = () => {
                                       isSelected
                                         ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
                                         : isDisabled
-                                        ? "opacity-50 cursor-not-allowed bg-gray-50"
-                                        : "hover:bg-gray-100"
+                                        ? "opacity-50 cursor-not-allowed bg-gray-50 dark:bg-background"
+                                        : "hover:bg-gray-100 dark:bg-muted"
                                     }`}
                                     onClick={() => !isDisabled && handleCoachingFocusToggle(option)}
                                   >
@@ -442,7 +442,7 @@ const Settings: React.FC = () => {
                                 </span>
                               ))
                             ) : (
-                              <span className="text-sm text-gray-500">No coaching focus areas set</span>
+                              <span className="text-sm text-gray-500 dark:text-muted-foreground">No coaching focus areas set</span>
                             )}
                           </div>
                         )}
@@ -451,7 +451,7 @@ const Settings: React.FC = () => {
 
                     {/* Experience */}
                     <div className="flex items-start gap-3">
-                      <Icon name="Award" className="h-5 w-5 text-gray-500 mt-0.5" />
+                      <Icon name="Award" className="h-5 w-5 text-gray-500 dark:text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="font-medium">Experience</p>
                         {isEditing ? (
@@ -463,7 +463,7 @@ const Settings: React.FC = () => {
                             rows={3}
                           />
                         ) : (
-                          <p className="text-sm text-gray-700 mt-1">
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
                             {profile?.experience || "No experience information provided"}
                           </p>
                         )}
@@ -486,15 +486,15 @@ const Settings: React.FC = () => {
                 {/* Default Currency */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Icon name="DollarSign" className="h-5 w-5 text-gray-500" />
+                    <Icon name="DollarSign" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                     <div>
                       <p className="font-medium">Default Currency</p>
-                      <p className="text-sm text-gray-500">Currency for new sessions</p>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Currency for new sessions</p>
                     </div>
                   </div>
                   <div className="min-w-[140px]">
                     {profileLoading ? (
-                      <div className="h-9 w-full bg-gray-200 rounded animate-pulse"></div>
+                      <div className="h-9 w-full bg-gray-200 dark:bg-muted rounded animate-pulse"></div>
                     ) : (
                       <CurrencySelector
                         value={profile?.default_currency || 'USD'}
@@ -508,15 +508,15 @@ const Settings: React.FC = () => {
                 {/* Stack Check Reminder */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Icon name="Timer" className="h-5 w-5 text-gray-500" />
+                    <Icon name="Timer" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                     <div>
                       <p className="font-medium">Check my stack every</p>
-                      <p className="text-sm text-gray-500">Reminder during live sessions</p>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Reminder during live sessions</p>
                     </div>
                   </div>
                   <div className="min-w-[140px]">
                     {stackCheckLoading ? (
-                      <div className="h-9 w-full bg-gray-200 rounded animate-pulse"></div>
+                      <div className="h-9 w-full bg-gray-200 dark:bg-muted rounded animate-pulse"></div>
                     ) : (
                       <Select
                         value={stackCheckInterval === null ? 'never' : String(stackCheckInterval)}
@@ -559,10 +559,10 @@ const Settings: React.FC = () => {
                 {/* Subscription */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Icon name="Crown" className="h-5 w-5 text-gray-500" />
+                    <Icon name="Crown" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
                     <div>
                       <p className="font-medium">Subscription</p>
-                      <p className="text-sm text-gray-500">Manage your premium plan</p>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Manage your premium plan</p>
                     </div>
                   </div>
                   <Button
@@ -605,7 +605,7 @@ const Settings: React.FC = () => {
 
         {/* App Version at bottom */}
         <div className="mt-12 text-center">
-          <p className="text-sm text-gray-500">App Version {appVersion}</p>
+          <p className="text-sm text-gray-500 dark:text-muted-foreground">App Version {appVersion}</p>
         </div>
       </div>
     </div>

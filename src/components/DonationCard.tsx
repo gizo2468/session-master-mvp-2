@@ -40,7 +40,7 @@ const DonationCard = () => {
   };
 
   return (
-    <Card className="overflow-hidden border-2 border-poker-feltGreen/20 bg-white shadow-md">
+    <Card className="overflow-hidden border-2 border-poker-feltGreen/20 bg-white dark:bg-card shadow-md">
       <CardHeader className="bg-gradient-to-r from-poker-feltGreen to-poker-feltGreen/80 text-white pb-4">
         <div className="flex items-center justify-center gap-2 mb-1">
           <Icon name="Heart" className="text-poker-cream animate-pulse" />
@@ -50,7 +50,7 @@ const DonationCard = () => {
       </CardHeader>
       
       <CardContent className="pt-6 pb-4 text-center">
-        <p className="text-gray-700">
+        <p className="text-gray-700 dark:text-gray-300">
           Help us grow this app and bring more value to the poker community. Every donation, big or small, 
           helps us build better tools for your sessions.
         </p>

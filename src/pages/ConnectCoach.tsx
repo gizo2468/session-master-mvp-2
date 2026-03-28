@@ -20,7 +20,7 @@ const ConnectCoach = () => {
   // Show loading while checking authentication
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center">
         <div className="text-center">
           <Icon name="Loader" className="h-8 w-8 animate-spin mx-auto mb-2" />
           <p>Loading...</p>
@@ -32,7 +32,7 @@ const ConnectCoach = () => {
   // Redirect to login if not authenticated
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-background">
         <div className="container mx-auto max-w-md px-4 py-8">
           <Card>
             <CardHeader>
@@ -68,7 +68,7 @@ const ConnectCoach = () => {
   }
   
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 content-safe">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background content-safe">
       <div className="container mx-auto max-w-md px-4 pb-8">
         <header className="mb-8">
           <button 
@@ -79,7 +79,7 @@ const ConnectCoach = () => {
             <span>Back</span>
           </button>
           <h1 className="text-2xl font-bold text-poker-black">Connect with Coaches</h1>
-          <p className="text-gray-500 text-sm mt-1">Get personalized poker coaching from multiple experts</p>
+          <p className="text-gray-500 dark:text-muted-foreground text-sm mt-1">Get personalized poker coaching from multiple experts</p>
         </header>
         
         {!isStudent && (

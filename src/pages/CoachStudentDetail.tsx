@@ -32,7 +32,7 @@ const CoachStudentDetail = () => {
   const defaultTab = tabParam === 'reviews' ? 'reviews' : 'sessions';
   
   return (
-    <div className="min-h-screen bg-gray-50 content-safe">
+    <div className="min-h-screen bg-gray-50 dark:bg-background content-safe">
       <div className="container mx-auto max-w-4xl px-4 pb-8">
         <header className="mb-8">
           <button 
@@ -49,7 +49,7 @@ const CoachStudentDetail = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-poker-black">{student.displayName}</h1>
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-500 dark:text-muted-foreground text-sm">
                 Connected since {new Date(student.createdAt).toLocaleDateString()}
               </p>
             </div>

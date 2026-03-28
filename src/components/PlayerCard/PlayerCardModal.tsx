@@ -79,7 +79,7 @@ export function PlayerCardModal({ open, onOpenChange }: PlayerCardModalProps) {
         variant="ghost"
         size="icon"
         onClick={handleClose}
-        className="absolute top-4 right-4 text-white hover:bg-white/10 z-10"
+        className="absolute top-4 right-4 text-white hover:bg-white dark:bg-card/10 z-10"
       >
         <X className="w-6 h-6" />
       </Button>

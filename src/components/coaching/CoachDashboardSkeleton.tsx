@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const CoachDashboardSkeleton = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-background">
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <header className="mb-8">
           <div className="flex items-center gap-1 mb-4">

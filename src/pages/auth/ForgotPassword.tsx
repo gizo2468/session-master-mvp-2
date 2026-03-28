@@ -57,7 +57,7 @@ const ForgotPassword: React.FC = () => {
 
   if (isEmailSent) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
@@ -90,7 +90,7 @@ const ForgotPassword: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -134,7 +134,7 @@ const ForgotPassword: React.FC = () => {
           </form>
           
           <div className="mt-6 text-center text-sm">
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">
               Remember your password?{' '}
               <Link 
                 to="/auth/login" 

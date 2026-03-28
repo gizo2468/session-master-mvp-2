@@ -166,7 +166,7 @@ const ResetPassword: React.FC = () => {
 
   if (isCheckingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-background py-12 px-4">
         <Card className="w-full max-w-md">
           <CardContent className="p-6">
             <div className="flex items-center justify-center">
@@ -181,7 +181,7 @@ const ResetPassword: React.FC = () => {
 
   if (!hasValidSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-background py-12 px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4">
@@ -204,7 +204,7 @@ const ResetPassword: React.FC = () => {
           <CardFooter className="flex justify-center">
             <Button 
               variant="link" 
-              className="text-sm text-gray-600 p-0 h-auto"
+              className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 p-0 h-auto"
               onClick={() => navigate('/auth/login')}
             >
               Back to login
@@ -216,7 +216,7 @@ const ResetPassword: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-background py-12 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
@@ -275,7 +275,7 @@ const ResetPassword: React.FC = () => {
         <CardFooter className="flex justify-center">
           <Button 
             variant="link" 
-            className="text-sm text-gray-600 p-0 h-auto"
+            className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 p-0 h-auto"
             onClick={() => navigate('/auth/login')}
           >
             Back to login

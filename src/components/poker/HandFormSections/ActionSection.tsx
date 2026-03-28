@@ -22,7 +22,7 @@ const ActionSection: React.FC<ActionSectionProps> = ({
           <div className="flex items-center gap-2">
             <FormLabel>Action Type</FormLabel>
             <AdaptiveTooltip content={tooltipContent.action}>
-              <CircleHelp className="h-4 w-4 text-gray-500" />
+              <CircleHelp className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
             </AdaptiveTooltip>
           </div>
           <FormControl>

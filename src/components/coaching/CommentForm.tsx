@@ -92,7 +92,7 @@ export const CommentForm = ({
       }
     }
     
-    return `${baseClass} bg-gray-50 border border-gray-200 hover:bg-gray-100`;
+    return `${baseClass} bg-gray-50 dark:bg-background border border-gray-200 dark:border-border hover:bg-gray-100 dark:bg-muted`;
   };
   
   return (
