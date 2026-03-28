@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 import { useStackCheckInterval, STACK_CHECK_OPTIONS } from '@/hooks/useStackCheckInterval';
 import { supabase } from '@/integrations/supabase/client';
+import { Switch } from '@/components/ui/switch';
 import SupportSettings from '@/components/settings/SupportSettings';
 import {
   Select,
@@ -30,6 +32,7 @@ const Settings: React.FC = () => {
   const { user, logout, isLoading } = useAuth();
   const { toast } = useToast();
   const { defaultCurrency } = useDefaultCurrency();
+  const { theme, toggleTheme } = useTheme();
   const { interval: stackCheckInterval, updateInterval: updateStackCheckInterval, isLoading: stackCheckLoading } = useStackCheckInterval();
   const [profile, setProfile] = useState<{ username?: string; role?: string; default_currency?: string; coaching_focus?: string[]; experience?: string } | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -573,6 +576,18 @@ const Settings: React.FC = () => {
                   >
                     <Icon name="ChevronRight" className="h-4 w-4" />
                   </Button>
+                </div>
+
+                {/* Dark Mode */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Icon name="Moon" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">Dark Mode</p>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Premium poker atmosphere</p>
+                    </div>
+                  </div>
+                  <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
                 </div>
               </div>
             </CardContent>
