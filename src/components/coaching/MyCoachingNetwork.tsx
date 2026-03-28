@@ -1407,6 +1407,15 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
             </div>
           </DialogContent>
         </Dialog>
+        {/* Charts Library button */}
+        <Button
+          variant="outline"
+          className="w-full mt-4 border-primary/30 text-primary hover:bg-primary/10"
+          onClick={() => navigate('/charts-library')}
+        >
+          <Icon name="LayoutGrid" className="h-4 w-4 mr-2" />
+          Charts Library
+        </Button>
       </CardContent>
     </Card>
   );

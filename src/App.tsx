@@ -39,6 +39,7 @@ const AddPastSession = lazyWithRetry(() => import("./pages/AddPastSession"), "Ad
 const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"), "CoachDashboard");
 const PlayerDashboard = lazyWithRetry(() => import("./pages/PlayerDashboard"), "PlayerDashboard");
 const ConnectCoach = lazyWithRetry(() => import("./pages/ConnectCoach"), "ConnectCoach");
+const ChartsLibrary = lazyWithRetry(() => import("./pages/ChartsLibrary"), "ChartsLibrary");
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,6 +96,7 @@ const App = () => {
                         <Route path="/coach-dashboard" element={<CoachDashboard />} />
                         <Route path="/player-dashboard" element={<PlayerDashboard />} />
                         <Route path="/connect-coach" element={<ConnectCoach />} />
+                        <Route path="/charts-library" element={<ChartsLibrary />} />
                       </Routes>
                     </Suspense>
                     </AppLayout>
