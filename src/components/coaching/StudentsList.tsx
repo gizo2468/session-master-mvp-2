@@ -31,11 +31,11 @@ const StudentsList = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-6 text-gray-500">
+          <div className="text-center py-6 text-gray-500 dark:text-muted-foreground">
             <div className="mb-4">
               <Icon name="Users" size={48} className="mx-auto text-gray-300" />
             </div>
-            <p className="text-sm font-medium text-gray-600 mb-1">You don't have any connected students yet.</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1">You don't have any connected students yet.</p>
             <p className="text-xs">Share your connection code to get started.</p>
           </div>
         </CardContent>
@@ -65,7 +65,7 @@ const StudentsList = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <div className="font-medium">{displayName}</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 dark:text-muted-foreground">
                       Connected since {new Date(student.createdAt).toLocaleDateString()}
                     </div>
                     {showUnknownWarning && (
@@ -73,7 +73,7 @@ const StudentsList = () => {
                         ⚠️ Student name not available - this might indicate a data sync issue
                       </div>
                     )}
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                       Student ID: {student.id.slice(0, 8)}
                     </div>
                   </div>

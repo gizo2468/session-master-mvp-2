@@ -274,7 +274,7 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
                           className={`cursor-pointer px-3 py-1 rounded-full text-sm ${
                             tournamentType === type
                               ? 'bg-poker-gold text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              : 'bg-gray-100 dark:bg-muted text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-muted'
                           }`}
                         >
                           {type}
@@ -371,8 +371,8 @@ const AddTableForm: React.FC<AddTableFormProps> = ({
                       <Label>Big Blind</Label>
                       <span className="text-sm font-medium">{getCurrencySymbol(currency)}{bigBlind}</span>
                     </div>
-                    <div className="py-2 px-3 bg-gray-100 rounded-md border">
-                      <div className="text-sm text-gray-600 text-center">
+                    <div className="py-2 px-3 bg-gray-100 dark:bg-muted rounded-md border">
+                      <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 text-center">
                         Auto-set to 2× Small Blind
                       </div>
                     </div>

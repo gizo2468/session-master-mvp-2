@@ -47,10 +47,10 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   
   // Card suits with display symbols and colors
   const suits = [
-    { symbol: 's', display: '♠', color: 'text-black' },
+    { symbol: 's', display: '♠', color: 'text-black dark:text-foreground' },
     { symbol: 'h', display: '♥', color: 'text-red-600' },
     { symbol: 'd', display: '♦', color: 'text-red-600' },
-    { symbol: 'c', display: '♣', color: 'text-black' },
+    { symbol: 'c', display: '♣', color: 'text-black dark:text-foreground' },
   ];
   
   // Parse selected cards into array of card objects
@@ -89,7 +89,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   // Get suit display and color info
   const getSuitInfo = (suitSymbol: string) => {
     const suit = suits.find(s => s.symbol === suitSymbol);
-    return suit || { display: '?', color: 'text-gray-500' };
+    return suit || { display: '?', color: 'text-gray-500 dark:text-muted-foreground' };
   };
   
   // Handle rank selection
@@ -202,7 +202,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                 >
                   {card ? (
                     /* Filled card slot with white background and border */
-                    <div className="relative w-full h-full bg-white border border-gray-400 rounded-lg flex flex-col items-center justify-center gap-0.5 p-1">
+                    <div className="relative w-full h-full bg-white dark:bg-card border border-gray-400 rounded-lg flex flex-col items-center justify-center gap-0.5 p-1">
                       <div className="font-bold text-xs leading-tight">{card.rank}</div>
                       <div className={`${color} text-xs leading-tight`}>{display}</div>
                     </div>
@@ -242,10 +242,10 @@ const CardSelector: React.FC<CardSelectorProps> = ({
               <button
                 onClick={handleExpandSlots}
                 type="button"
-                className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center hover:border-poker-gold hover:text-poker-gold transition-all bg-white hover:bg-gray-50 cursor-pointer flex-shrink-0"
+                className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-dashed border-gray-300 dark:border-border rounded-md flex items-center justify-center hover:border-poker-gold hover:text-poker-gold transition-all bg-white dark:bg-card hover:bg-gray-50 dark:bg-background cursor-pointer flex-shrink-0"
                 aria-label="Add another card slot"
               >
-                <span className="text-lg sm:text-xl font-bold text-gray-600 hover:text-poker-gold">+</span>
+                <span className="text-lg sm:text-xl font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:text-poker-gold">+</span>
               </button>
             )}
           </div>
@@ -255,7 +255,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
             <button
               onClick={clearSelectedCards}
               type="button"
-              className="text-gray-500 hover:text-gray-800 flex-shrink-0 ml-1 sm:ml-2"
+              className="text-gray-500 dark:text-muted-foreground hover:text-gray-800 dark:text-foreground flex-shrink-0 ml-1 sm:ml-2"
               aria-label="Clear all cards"
             >
               <Trash2 size={18} className="sm:w-5 sm:h-5" />
@@ -265,7 +265,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
       </div>
       
       {/* Card selection keyboard layout */}
-      <div className="bg-gray-100 rounded-lg p-3">
+      <div className="bg-gray-100 dark:bg-muted rounded-lg p-3">
         {/* Card ranks section - two rows for better spacing */}
         <div className="space-y-1.5 mb-3">
           {/* First row of ranks */}
@@ -281,10 +281,10 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                        className={cn(
                          "py-2.5 rounded-md font-bold text-lg transition-all",
                          currentSelection.rank === rank 
-                           ? "bg-poker-gold text-white shadow-md" 
+                           ? "bg-poker-gold text-white shadow-md dark:shadow-black/30" 
                            : suits.every(suit => isCardUnavailable(rank, suit.symbol))
-                             ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
-                             : "bg-gray-300 hover:bg-gray-200 text-gray-800"
+                             ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
+                             : "bg-gray-300 hover:bg-gray-200 dark:bg-muted text-gray-800 dark:text-foreground"
                        )}
                     >
                       {rank}
@@ -318,10 +318,10 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                        className={cn(
                          "py-2.5 rounded-md font-bold text-lg transition-all",
                          currentSelection.rank === rank 
-                           ? "bg-poker-gold text-white shadow-md" 
+                           ? "bg-poker-gold text-white shadow-md dark:shadow-black/30" 
                            : suits.every(suit => isCardUnavailable(rank, suit.symbol))
-                             ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
-                             : "bg-gray-300 hover:bg-gray-200 text-gray-800"
+                             ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
+                             : "bg-gray-300 hover:bg-gray-200 dark:bg-muted text-gray-800 dark:text-foreground"
                        )}
                     >
                       {rank}
@@ -356,10 +356,10 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                      className={cn(
                        "py-1.5 rounded-md text-lg transition-all flex items-center justify-center",
                        currentSelection.suit === suit.symbol
-                         ? "bg-poker-gold text-white shadow-md" 
+                         ? "bg-poker-gold text-white shadow-md dark:shadow-black/30" 
                          : ranks.every(rank => isCardUnavailable(rank, suit.symbol))
-                           ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50"
-                           : "bg-gray-300 hover:bg-gray-200",
+                           ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
+                           : "bg-gray-300 hover:bg-gray-200 dark:bg-muted",
                        // Only apply suit color if not disabled
                        !ranks.every(rank => isCardUnavailable(rank, suit.symbol)) && 
                        currentSelection.suit !== suit.symbol && suit.color

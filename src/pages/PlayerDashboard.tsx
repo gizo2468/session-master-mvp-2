@@ -58,7 +58,7 @@ const PlayerDashboard = () => {
   };
   
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 content-safe">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background content-safe">
       <div className="container mx-auto max-w-4xl px-4 pb-8">
         <header className="mb-8">
           <button 
@@ -71,7 +71,7 @@ const PlayerDashboard = () => {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-poker-black">Player Dashboard</h1>
-              <p className="text-gray-500 text-sm mt-1">Track your progress and manage coaching</p>
+              <p className="text-gray-500 dark:text-muted-foreground text-sm mt-1">Track your progress and manage coaching</p>
             </div>
           </div>
         </header>
@@ -92,7 +92,7 @@ const PlayerDashboard = () => {
                       <div className="flex justify-between items-start">
                         <div>
                           <h3 className="font-medium text-lg">{coach.displayName}</h3>
-                          {coach.bio && <p className="text-sm text-gray-600">{coach.bio}</p>}
+                          {coach.bio && <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">{coach.bio}</p>}
                         </div>
                         <div className="flex gap-2">
                           <PlayerReviewForm 
@@ -108,7 +108,7 @@ const PlayerDashboard = () => {
                   ))}
                 </div>
               ) : (
-                <div ref={connectRef} className="text-center py-6 text-gray-500">
+                <div ref={connectRef} className="text-center py-6 text-gray-500 dark:text-muted-foreground">
                   <p>You are not connected to any coaches yet.</p>
                   <Button 
                     onClick={() => navigate('/connect-coach')} 
@@ -131,7 +131,7 @@ const PlayerDashboard = () => {
             </CardHeader>
             <CardContent>
               {loadingReviews ? (
-                <div className="text-center py-6 text-gray-500">
+                <div className="text-center py-6 text-gray-500 dark:text-muted-foreground">
                   <p>Loading reviews...</p>
                 </div>
               ) : recentReviews.length > 0 ? (
@@ -141,7 +141,7 @@ const PlayerDashboard = () => {
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <span className="text-sm font-medium">{review.review_type}</span>
-                          <span className="text-xs text-gray-500 ml-2">
+                          <span className="text-xs text-gray-500 dark:text-muted-foreground ml-2">
                             {new Date(review.created_at).toLocaleDateString()}
                           </span>
                         </div>
@@ -151,12 +151,12 @@ const PlayerDashboard = () => {
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-700">{review.message}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{review.message}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 text-gray-500">
+                <div className="text-center py-6 text-gray-500 dark:text-muted-foreground">
                   <p className="text-sm">No reviews sent yet.</p>
                   <p className="text-xs mt-1">
                     Connect with a coach and send them reviews about your sessions.
@@ -174,7 +174,7 @@ const PlayerDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-6 text-gray-500">
+              <div className="text-center py-6 text-gray-500 dark:text-muted-foreground">
                 <Icon name="Info" className="mx-auto mb-2 h-8 w-8" />
                 <p className="text-sm">Your sessions are automatically synced when you complete them.</p>
                 <p className="text-xs mt-1">
@@ -192,7 +192,7 @@ const PlayerDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-6 text-gray-500">
+              <div className="text-center py-6 text-gray-500 dark:text-muted-foreground">
                 <p>No pending connection requests.</p>
               </div>
             </CardContent>

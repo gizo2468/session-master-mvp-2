@@ -30,7 +30,7 @@ function MobileStackTitle({ text }: { text: string }) {
   // Keep percentage titles on a single line on mobile; vertically center within two-line slot
   if (isPercentTitle) {
     return (
-      <span className="text-gray-500 text-sm leading-5 min-h-[2.5rem] sm:min-h-0 flex items-center justify-center sm:inline-flex sm:justify-start sm:items-baseline whitespace-nowrap">
+      <span className="text-gray-500 dark:text-muted-foreground text-sm leading-5 min-h-[2.5rem] sm:min-h-0 flex items-center justify-center sm:inline-flex sm:justify-start sm:items-baseline whitespace-nowrap">
         {text}
       </span>
     );
@@ -42,7 +42,7 @@ function MobileStackTitle({ text }: { text: string }) {
   // Single-word titles: keep one line, vertically centered on mobile
   if (!rest) {
     return (
-      <span className="text-gray-500 text-sm leading-5 min-h-[2.5rem] sm:min-h-0 flex items-center justify-center sm:inline-flex sm:justify-start sm:items-baseline">
+      <span className="text-gray-500 dark:text-muted-foreground text-sm leading-5 min-h-[2.5rem] sm:min-h-0 flex items-center justify-center sm:inline-flex sm:justify-start sm:items-baseline">
         {first}
       </span>
     );
@@ -50,7 +50,7 @@ function MobileStackTitle({ text }: { text: string }) {
 
   // Multi-word titles: stack words on mobile, single-line on tablet/desktop
   return (
-    <span className="text-gray-500 text-sm leading-5 min-h-[2.5rem] sm:min-h-0 flex sm:inline">
+    <span className="text-gray-500 dark:text-muted-foreground text-sm leading-5 min-h-[2.5rem] sm:min-h-0 flex sm:inline">
       <span className="flex flex-col justify-center">
         <span>{first}</span>
         <span className="block sm:inline">{' '}{rest}</span>
@@ -150,30 +150,30 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
   
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6 min-h-[220px]">
+      <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-4 mb-6 min-h-[220px]">
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-4 bg-gray-200 dark:bg-muted rounded w-1/3 mb-4"></div>
           <div className="grid grid-cols-3 gap-4 mb-4">
-            <div className="h-12 bg-gray-200 rounded"></div>
-            <div className="h-12 bg-gray-200 rounded"></div>
-            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="h-12 bg-gray-200 dark:bg-muted rounded"></div>
+            <div className="h-12 bg-gray-200 dark:bg-muted rounded"></div>
+            <div className="h-12 bg-gray-200 dark:bg-muted rounded"></div>
           </div>
           <div className="grid grid-cols-3 gap-4 mb-4">
-            <div className="h-12 bg-gray-200 rounded"></div>
-            <div className="h-12 bg-gray-200 rounded"></div>
-            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="h-12 bg-gray-200 dark:bg-muted rounded"></div>
+            <div className="h-12 bg-gray-200 dark:bg-muted rounded"></div>
+            <div className="h-12 bg-gray-200 dark:bg-muted rounded"></div>
           </div>
           {showExtendedMetrics && (
             <>
               <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="h-12 bg-gray-200 rounded"></div>
-                <div className="h-12 bg-gray-200 rounded"></div>
-                <div className="h-12 bg-gray-200 rounded"></div>
+                <div className="h-12 bg-gray-200 dark:bg-muted rounded"></div>
+                <div className="h-12 bg-gray-200 dark:bg-muted rounded"></div>
+                <div className="h-12 bg-gray-200 dark:bg-muted rounded"></div>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <div className="h-12 bg-gray-200 rounded"></div>
-                <div className="h-12 bg-gray-200 rounded"></div>
-                <div className="h-12 bg-gray-200 rounded"></div>
+                <div className="h-12 bg-gray-200 dark:bg-muted rounded"></div>
+                <div className="h-12 bg-gray-200 dark:bg-muted rounded"></div>
+                <div className="h-12 bg-gray-200 dark:bg-muted rounded"></div>
               </div>
             </>
           )}
@@ -236,7 +236,7 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
   const normalizedBest = bestSessionProfit === -Infinity ? 0 : bestSessionProfit;
   
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+    <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-4 mb-6">
       <h2 className="text-2xl font-extrabold tracking-tight mb-4 text-center text-primary">Sessions Stats</h2>
       
       <div className="grid grid-cols-3 gap-4 text-center mb-4">
@@ -258,7 +258,7 @@ const StatsQuickView = ({ showExtendedMetrics = false }: { showExtendedMetrics?:
             title="Click to view currency breakdown"
           >
             {Object.keys(allResultsByCurrency).length === 0 ? (
-              <span className="text-base font-bold text-gray-400">{displayCurrency(0)}</span>
+              <span className="text-base font-bold text-gray-400 dark:text-gray-500">{displayCurrency(0)}</span>
             ) : (
               <span className={`text-base font-bold ${overallResults >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {displayCurrency(overallResults)}

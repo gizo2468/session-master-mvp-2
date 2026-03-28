@@ -174,10 +174,10 @@ export default function ConfirmSession() {
   
   if (!activeSession) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full text-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col items-center justify-center p-4">
+        <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold mb-4">No active session</h1>
-          <p className="text-gray-600 mb-6">There is no active poker session at the moment.</p>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-6">There is no active poker session at the moment.</p>
           <Button 
             onClick={() => navigate('/')}
             className="bg-poker-gold hover:bg-poker-darkGold text-white"
@@ -190,8 +190,8 @@ export default function ConfirmSession() {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white shadow-sm px-4 pb-4 sticky top-0 z-10 header-safe pt-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col">
+      <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 px-4 pb-4 sticky top-0 z-10 header-safe pt-4">
         <div className="container mx-auto max-w-md">
           <div className="flex justify-between items-center">
             <Button 
@@ -234,7 +234,7 @@ export default function ConfirmSession() {
           
           {/* Using TableCard component for all tables - pass sessionId to each table */}
           {activeSession.tables && activeSession.tables.length > 0 ? (
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6">
               <h3 className="text-xl font-extrabold tracking-tight mb-4">Tables</h3>
               <div className="space-y-5">
                 {activeSession.tables.map((table) => (
@@ -250,9 +250,9 @@ export default function ConfirmSession() {
               </div>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
+            <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6 text-center">
               <h3 className="text-xl font-extrabold tracking-tight mb-2">No Tables</h3>
-              <p className="text-gray-500">Add a table to track hands and results separately.</p>
+              <p className="text-gray-500 dark:text-muted-foreground">Add a table to track hands and results separately.</p>
             </div>
           )}
         </div>
@@ -303,14 +303,14 @@ export default function ConfirmSession() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500">{currencySymbol}</span>
+                    <span className="text-gray-500 dark:text-muted-foreground">{currencySymbol}</span>
                   </div>
                   <input
                     id="cashout"
                     type="number"
                     min="0"
                     step="0.01"
-                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                     placeholder="0.00"
                     value={cashOutAmount}
                     onChange={(e) => setCashOutAmount(e.target.value)}
@@ -331,7 +331,7 @@ export default function ConfirmSession() {
                       } blur-sm scale-110`}></div>
                       
                       {/* Profit/loss badge */}
-                      <div className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md ${
+                      <div className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md dark:shadow-black/30 ${
                         parseFloat(cashOutAmount) >= activeSession.buyIn 
                           ? 'bg-green-100/70 shadow-green-200/50' 
                           : 'bg-red-100/70 shadow-red-200/50'
@@ -352,7 +352,7 @@ export default function ConfirmSession() {
                     </div>
                   )}
                 </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-2 bg-gray-200 dark:bg-muted rounded-full overflow-hidden">
                   {cashOutAmount && (
                     <div 
                       className={`h-full ${
@@ -372,7 +372,7 @@ export default function ConfirmSession() {
               
               {/* Show bounty tournament specific fields if applicable */}
               {hasAnyBountyTournaments() && (
-                <div className="space-y-4 mb-6 border-t border-b border-gray-100 py-4">
+                <div className="space-y-4 mb-6 border-t border-b border-gray-100 dark:border-border py-4">
                   <h3 className="text-md font-medium">Bounty Tournament Details</h3>
                   
                   <div>
@@ -383,7 +383,7 @@ export default function ConfirmSession() {
                       id="finalPosition"
                       type="number"
                       min="1"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                       placeholder="Enter your final position (e.g. 3 for 3rd)"
                       value={finalPosition}
                       onChange={(e) => setFinalPosition(e.target.value)}
@@ -398,7 +398,7 @@ export default function ConfirmSession() {
                       id="playersEliminated"
                       type="number"
                       min="0"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                       placeholder="Number of players knocked out"
                       value={playersEliminated}
                       onChange={(e) => setPlayersEliminated(e.target.value)}
@@ -411,14 +411,14 @@ export default function ConfirmSession() {
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">{currencySymbol}</span>
+                        <span className="text-gray-500 dark:text-muted-foreground">{currencySymbol}</span>
                       </div>
                       <input
                         id="bountyCollected"
                         type="number"
                         min="0"
                         step="0.01"
-                        className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                        className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                         placeholder="0.00"
                         value={bountyCollected}
                         onChange={(e) => setBountyCollected(e.target.value)}
@@ -434,7 +434,7 @@ export default function ConfirmSession() {
                 </label>
               <Textarea
                 id="notes"
-                className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                className="w-full min-h-[100px] border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                 placeholder="Session notes"
                 value={sessionNotes}
                 onChange={(e) => setSessionNotes(e.target.value)}

@@ -59,7 +59,7 @@ const ConnectionCodeDisplay = () => {
         <div className="text-center mb-3">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Icon name="Key" size={18} className="text-poker-gold" />
-            <h3 className="text-sm font-medium text-gray-700">Active Connection Code</h3>
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Active Connection Code</h3>
           </div>
           <div className="text-3xl font-mono font-bold tracking-wider text-poker-gold mb-1">
             {connectionCode}
@@ -70,7 +70,7 @@ const ConnectionCodeDisplay = () => {
           </div>
         </div>
         
-        <p className="text-sm text-gray-600 text-center mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 text-center mb-4">
           Share this code with players to allow them to connect with you
         </p>
         

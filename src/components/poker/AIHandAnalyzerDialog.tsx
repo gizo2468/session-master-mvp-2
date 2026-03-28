@@ -316,7 +316,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                   className={cn(
                     "h-10 text-sm font-bold rounded transition-all",
                     selected
-                      ? "bg-primary text-primary-foreground shadow-md"
+                      ? "bg-primary text-primary-foreground shadow-md dark:shadow-black/30"
                       : disabled
                       ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
                       : "bg-muted hover:bg-muted/80 text-foreground"
@@ -341,7 +341,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                   className={cn(
                     "h-10 text-sm font-bold rounded transition-all",
                     selected
-                      ? "bg-primary text-primary-foreground shadow-md"
+                      ? "bg-primary text-primary-foreground shadow-md dark:shadow-black/30"
                       : disabled
                       ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
                       : "bg-muted hover:bg-muted/80 text-foreground"
@@ -370,7 +370,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
                   className={cn(
                     "h-12 text-2xl rounded transition-all flex items-center justify-center",
                     selected
-                      ? "bg-primary text-primary-foreground shadow-md"
+                      ? "bg-primary text-primary-foreground shadow-md dark:shadow-black/30"
                       : disabled
                       ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
                       : cn("bg-muted hover:bg-muted/80", suit.color)
@@ -487,7 +487,7 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
           }}
         className={cn(
           styles.card,
-          "relative inline-flex rounded-md shadow-md flex-col items-center justify-between py-1 px-0.5",
+          "relative inline-flex rounded-md shadow-md dark:shadow-black/30 flex-col items-center justify-between py-1 px-0.5",
           "hover:scale-105 transition-all cursor-pointer group",
           !card || !card.rank || !card.suit
             ? "bg-muted border-2 border-dashed border-muted-foreground/30 hover:border-poker-gold hover:bg-poker-gold/5"

@@ -36,7 +36,7 @@ const LiveSessionIndicators = () => {
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 bg-red-500 rounded-full animate-pulse"></div>
                 <span className="font-medium">{student.displayName}</span>
-                <span className="text-xs text-gray-500">Started 12 minutes ago</span>
+                <span className="text-xs text-gray-500 dark:text-muted-foreground">Started 12 minutes ago</span>
               </div>
               <Button 
                 size="sm"

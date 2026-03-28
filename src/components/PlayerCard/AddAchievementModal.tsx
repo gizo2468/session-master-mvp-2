@@ -104,7 +104,7 @@ export function AddAchievementModal({ open, onOpenChange, onAdd }: AddAchievemen
           <Button
             onClick={handleSubmit}
             disabled={!title.trim()}
-            className="bg-poker-gold text-black hover:bg-poker-darkGold"
+            className="bg-poker-gold text-black dark:text-foreground hover:bg-poker-darkGold"
           >
             Add Achievement
           </Button>

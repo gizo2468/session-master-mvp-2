@@ -16,7 +16,7 @@ export default function AddPastSession() {
   };
 
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 overflow-x-hidden content-safe">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background overflow-x-hidden content-safe">
       <PastSessionForm onClose={handleClose} />
     </div>
   );

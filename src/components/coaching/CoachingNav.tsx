@@ -40,7 +40,7 @@ const CoachingNav = () => {
               <Icon name="BarChart2" size={16} />
               Coach Dashboard
               {pendingRequests.length > 0 && (
-                <span className="bg-white text-poker-feltGreen text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="bg-white dark:bg-card text-poker-feltGreen text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {pendingRequests.length}
                 </span>
               )}

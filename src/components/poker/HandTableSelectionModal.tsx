@@ -70,12 +70,12 @@ const HandTableSelectionModal: React.FC<HandTableSelectionModalProps> = ({
           
           <div className="space-y-3">
             {activeTables.length === 0 ? (
-              <div className="text-center py-4 text-gray-500">
+              <div className="text-center py-4 text-gray-500 dark:text-muted-foreground">
                 No active tables found. Please add a table first.
               </div>
             ) : (
               <>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-4">
                   Choose which table you want to add a hand to:
                 </p>
                 
@@ -90,7 +90,7 @@ const HandTableSelectionModal: React.FC<HandTableSelectionModalProps> = ({
                       <div className="font-medium">
                         {table.name || `Table ${table.id.slice(-4)}`}
                       </div>
-                      <div className="text-sm text-gray-500 mt-1">
+                      <div className="text-sm text-gray-500 dark:text-muted-foreground mt-1">
                         {table.gameType} • {table.format}
                         {table.format === 'Tournament' && table.tournamentTypes && table.tournamentTypes.length > 0 && (
                           <span> • {table.tournamentTypes[0]}</span>

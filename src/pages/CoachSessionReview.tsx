@@ -281,11 +281,11 @@ const CoachSessionReview = () => {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-background">
         <div className="container mx-auto max-w-4xl px-4 py-8">
           <div className="text-center py-12">
             <Icon name="Loader" className="mx-auto mb-4 h-8 w-8 animate-spin text-poker-feltGreen" />
-            <p className="text-gray-600">Loading session data...</p>
+            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Loading session data...</p>
           </div>
         </div>
       </div>
@@ -294,7 +294,7 @@ const CoachSessionReview = () => {
 
   if (error || !sessionData) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-background">
         <div className="container mx-auto max-w-4xl px-4 py-8">
           <header className="mb-8">
             <button 
@@ -308,10 +308,10 @@ const CoachSessionReview = () => {
           
           <div className="text-center py-12">
             <Icon name="AlertCircle" className="mx-auto mb-4 h-12 w-12 text-red-500" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-foreground mb-2">
               {error || 'Session not found'}
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-6">
               The session data could not be loaded or does not exist.
             </p>
             <Button 
@@ -327,7 +327,7 @@ const CoachSessionReview = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-background">
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <header className="mb-8">
           <button 
@@ -339,7 +339,7 @@ const CoachSessionReview = () => {
           </button>
           
           <h1 className="text-2xl font-bold text-poker-black">Session Review</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 dark:text-muted-foreground text-sm mt-1">
             {sessionData.gameType || 'Poker'} {sessionData.sessionType || 'Session'}
           </p>
         </header>
@@ -356,35 +356,35 @@ const CoachSessionReview = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                  <h4 className="font-medium text-gray-900">Game Type</h4>
-                  <p className="text-gray-600">{sessionData.gameType || 'Not specified'}</p>
+                  <h4 className="font-medium text-gray-900 dark:text-foreground">Game Type</h4>
+                  <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">{sessionData.gameType || 'Not specified'}</p>
                 </div>
                 
                 <div>
-                  <h4 className="font-medium text-gray-900">Session Type</h4>
-                  <p className="text-gray-600">{sessionData.sessionType || 'Not specified'}</p>
+                  <h4 className="font-medium text-gray-900 dark:text-foreground">Session Type</h4>
+                  <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">{sessionData.sessionType || 'Not specified'}</p>
                 </div>
                 
                 <div>
-                  <h4 className="font-medium text-gray-900">Duration</h4>
-                  <p className="text-gray-600">{formatDuration(sessionData.startTime.toISOString(), sessionData.endTime?.toISOString() || new Date().toISOString())}</p>
+                  <h4 className="font-medium text-gray-900 dark:text-foreground">Duration</h4>
+                  <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">{formatDuration(sessionData.startTime.toISOString(), sessionData.endTime?.toISOString() || new Date().toISOString())}</p>
                 </div>
                 
                 <div>
-                  <h4 className="font-medium text-gray-900">Start Time</h4>
-                  <p className="text-gray-600">{formatDateTime(sessionData.startTime.toISOString())}</p>
+                  <h4 className="font-medium text-gray-900 dark:text-foreground">Start Time</h4>
+                  <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">{formatDateTime(sessionData.startTime.toISOString())}</p>
                 </div>
                 
                 <div>
-                  <h4 className="font-medium text-gray-900">End Time</h4>
-                  <p className="text-gray-600">{sessionData.endTime ? formatDateTime(sessionData.endTime.toISOString()) : 'Active'}</p>
+                  <h4 className="font-medium text-gray-900 dark:text-foreground">End Time</h4>
+                  <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">{sessionData.endTime ? formatDateTime(sessionData.endTime.toISOString()) : 'Active'}</p>
                 </div>
               </div>
               
               {sessionData.notes && (
                 <div className="mt-6 pt-4 border-t">
-                  <h4 className="font-medium text-gray-900 mb-2">Notes</h4>
-                  <p className="text-gray-600 whitespace-pre-wrap">{sessionData.notes}</p>
+                  <h4 className="font-medium text-gray-900 dark:text-foreground mb-2">Notes</h4>
+                  <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 whitespace-pre-wrap">{sessionData.notes}</p>
                 </div>
               )}
             </CardContent>
@@ -405,24 +405,24 @@ const CoachSessionReview = () => {
                     <div className={`text-2xl font-bold ${sessionResults.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       ${sessionResults.net_profit.toFixed(2)}
                     </div>
-                    <div className="text-xs text-gray-500">Net Profit</div>
+                    <div className="text-xs text-gray-500 dark:text-muted-foreground">Net Profit</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-poker-feltGreen">${sessionResults.total_buy_in.toFixed(2)}</div>
-                    <div className="text-xs text-gray-500">Total Buy-in</div>
+                    <div className="text-xs text-gray-500 dark:text-muted-foreground">Total Buy-in</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-poker-feltGreen">${sessionResults.total_cashout.toFixed(2)}</div>
-                    <div className="text-xs text-gray-500">Total Cashout</div>
+                    <div className="text-xs text-gray-500 dark:text-muted-foreground">Total Cashout</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-poker-feltGreen">{sessionResults.hands_played}</div>
-                    <div className="text-xs text-gray-500">Hands Played</div>
+                    <div className="text-xs text-gray-500 dark:text-muted-foreground">Hands Played</div>
                   </div>
                 </div>
                 
                 {sessionResults.roi_percentage !== 0 && (
-                  <div className="mt-4 pt-3 border-t border-gray-200">
+                  <div className="mt-4 pt-3 border-t border-gray-200 dark:border-border">
                     <div className={`text-lg font-medium ${sessionResults.roi_percentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       ROI: {sessionResults.roi_percentage.toFixed(1)}%
                     </div>
@@ -444,13 +444,13 @@ const CoachSessionReview = () => {
               <CardContent>
                 <div className="space-y-4">
                   {sessionTables.map(table => (
-                    <div key={table.id} className="border rounded-lg p-4 bg-gray-50">
+                    <div key={table.id} className="border rounded-lg p-4 bg-gray-50 dark:bg-background">
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <h4 className="font-medium text-gray-900">
+                          <h4 className="font-medium text-gray-900 dark:text-foreground">
                             {table.table_name || `Table ${table.id.slice(0, 8)}`}
                           </h4>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
                             {table.table_type} • {table.game_format} • {table.stakes}
                           </p>
                         </div>
@@ -458,46 +458,46 @@ const CoachSessionReview = () => {
                           <div className={`text-lg font-medium ${(table.cashout - table.buy_in) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                             {(table.cashout - table.buy_in) >= 0 ? '+' : ''}${(table.cashout - table.buy_in).toFixed(2)}
                           </div>
-                          <div className="text-xs text-gray-500">P&L</div>
+                          <div className="text-xs text-gray-500 dark:text-muted-foreground">P&L</div>
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-3 md:grid-cols-6 gap-3 text-sm">
                         <div>
-                          <div className="font-medium text-gray-900">${table.buy_in.toFixed(2)}</div>
-                          <div className="text-gray-500">Buy-in</div>
+                          <div className="font-medium text-gray-900 dark:text-foreground">${table.buy_in.toFixed(2)}</div>
+                          <div className="text-gray-500 dark:text-muted-foreground">Buy-in</div>
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">${table.cashout.toFixed(2)}</div>
-                          <div className="text-gray-500">Cashout</div>
+                          <div className="font-medium text-gray-900 dark:text-foreground">${table.cashout.toFixed(2)}</div>
+                          <div className="text-gray-500 dark:text-muted-foreground">Cashout</div>
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">{table.rebuys}</div>
-                          <div className="text-gray-500">Rebuys</div>
+                          <div className="font-medium text-gray-900 dark:text-foreground">{table.rebuys}</div>
+                          <div className="text-gray-500 dark:text-muted-foreground">Rebuys</div>
                         </div>
                         {table.final_position && (
                           <div>
-                            <div className="font-medium text-gray-900">{table.final_position}</div>
-                            <div className="text-gray-500">Position</div>
+                            <div className="font-medium text-gray-900 dark:text-foreground">{table.final_position}</div>
+                            <div className="text-gray-500 dark:text-muted-foreground">Position</div>
                           </div>
                         )}
                         {table.players_eliminated > 0 && (
                           <div>
-                            <div className="font-medium text-gray-900">{table.players_eliminated}</div>
-                            <div className="text-gray-500">Eliminations</div>
+                            <div className="font-medium text-gray-900 dark:text-foreground">{table.players_eliminated}</div>
+                            <div className="text-gray-500 dark:text-muted-foreground">Eliminations</div>
                           </div>
                         )}
                         {table.bounty_amount > 0 && (
                           <div>
-                            <div className="font-medium text-gray-900">${table.bounty_amount.toFixed(2)}</div>
-                            <div className="text-gray-500">Bounties</div>
+                            <div className="font-medium text-gray-900 dark:text-foreground">${table.bounty_amount.toFixed(2)}</div>
+                            <div className="text-gray-500 dark:text-muted-foreground">Bounties</div>
                           </div>
                         )}
                       </div>
                       
                       {table.table_notes && (
-                        <div className="mt-3 pt-3 border-t border-gray-200">
-                          <p className="text-sm text-gray-600">{table.table_notes}</p>
+                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-border">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">{table.table_notes}</p>
                         </div>
                       )}
                     </div>
@@ -519,17 +519,17 @@ const CoachSessionReview = () => {
               <CardContent>
                 <div className="space-y-4">
                   {sessionHands.map(hand => (
-                    <div key={hand.id} className="border rounded-lg p-4 bg-gray-50">
+                    <div key={hand.id} className="border rounded-lg p-4 bg-gray-50 dark:bg-background">
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <h4 className="font-medium text-gray-900">
+                          <h4 className="font-medium text-gray-900 dark:text-foreground">
                             Hand #{hand.hand_number || 'N/A'}
                             {hand.position && (
-                              <span className="ml-2 text-sm text-gray-600">({hand.position})</span>
+                              <span className="ml-2 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">({hand.position})</span>
                             )}
                           </h4>
                           {hand.hole_cards && (
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
                               Hole cards: {hand.hole_cards}
                             </p>
                           )}
@@ -538,42 +538,42 @@ const CoachSessionReview = () => {
                           <div className={`text-lg font-medium ${hand.amount_won >= hand.amount_invested ? 'text-green-600' : 'text-red-600'}`}>
                             {formatCurrency(hand.amount_won - hand.amount_invested, hand.currency_type)}
                           </div>
-                          <div className="text-xs text-gray-500">Net</div>
+                          <div className="text-xs text-gray-500 dark:text-muted-foreground">Net</div>
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-gray-900 dark:text-foreground">
                             {formatCurrency(hand.pot_size, hand.currency_type)}
                           </div>
-                          <div className="text-gray-500">Pot Size</div>
+                          <div className="text-gray-500 dark:text-muted-foreground">Pot Size</div>
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-gray-900 dark:text-foreground">
                             {formatCurrency(hand.amount_invested, hand.currency_type)}
                           </div>
-                          <div className="text-gray-500">Invested</div>
+                          <div className="text-gray-500 dark:text-muted-foreground">Invested</div>
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-gray-900 dark:text-foreground">
                             {formatCurrency(hand.amount_won, hand.currency_type)}
                           </div>
-                          <div className="text-gray-500">Won</div>
+                          <div className="text-gray-500 dark:text-muted-foreground">Won</div>
                         </div>
                         {hand.showdown_result && (
                           <div>
-                            <div className="font-medium text-gray-900">{hand.showdown_result}</div>
-                            <div className="text-gray-500">Result</div>
+                            <div className="font-medium text-gray-900 dark:text-foreground">{hand.showdown_result}</div>
+                            <div className="text-gray-500 dark:text-muted-foreground">Result</div>
                           </div>
                         )}
                       </div>
 
                       {/* Hand action breakdown */}
                       {(hand.preflop_action || hand.flop_action || hand.turn_action || hand.river_action) && (
-                        <div className="mt-3 pt-3 border-t border-gray-200">
-                          <div className="text-xs font-medium text-gray-700 mb-2">Action:</div>
-                          <div className="text-sm text-gray-600 space-y-1">
+                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-border">
+                          <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Action:</div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 space-y-1">
                             {hand.preflop_action && <div><span className="font-medium">Preflop:</span> {hand.preflop_action}</div>}
                             {hand.flop_cards && hand.flop_action && (
                               <div><span className="font-medium">Flop ({hand.flop_cards}):</span> {hand.flop_action}</div>
@@ -589,13 +589,13 @@ const CoachSessionReview = () => {
                       )}
                       
                       {hand.hand_notes && (
-                        <div className="mt-3 pt-3 border-t border-gray-200">
-                          <p className="text-sm text-gray-600">{hand.hand_notes}</p>
+                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-border">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">{hand.hand_notes}</p>
                         </div>
                       )}
 
                       {/* Add comment button for individual hands */}
-                      <div className="mt-3 pt-3 border-t border-gray-200 flex justify-end">
+                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-border flex justify-end">
                         {hasCommentAccess ? (
                           <Button 
                             onClick={() => openCommentForm(hand.id)}
@@ -612,11 +612,11 @@ const CoachSessionReview = () => {
                               onClick={() => openCommentForm(hand.id)}
                               variant="outline"
                               size="sm"
-                              className="bg-gray-200 hover:bg-gray-300 border border-gray-300 opacity-90 flex items-center gap-1 text-gray-700 relative"
+                              className="bg-gray-200 dark:bg-muted hover:bg-gray-300 border border-gray-300 dark:border-border opacity-90 flex items-center gap-1 text-gray-700 dark:text-gray-300 relative"
                             >
-                              <Icon name="message-square" size={14} className="text-gray-500" />
+                              <Icon name="message-square" size={14} className="text-gray-500 dark:text-muted-foreground" />
                               <span>Comment on Hand</span>
-                              <div className="absolute -top-1 -right-1 bg-poker-gold rounded-full w-3 h-3 flex items-center justify-center shadow-sm">
+                              <div className="absolute -top-1 -right-1 bg-poker-gold rounded-full w-3 h-3 flex items-center justify-center shadow-sm dark:shadow-black/20">
                                 <span className="text-white text-xs font-bold">$</span>
                               </div>
                             </Button>
@@ -646,11 +646,11 @@ const CoachSessionReview = () => {
                 <Button 
                   onClick={() => openCommentForm()}
                   variant="outline"
-                  className="bg-gray-200 hover:bg-gray-300 border border-gray-300 opacity-90 flex items-center gap-2 text-gray-700 relative"
+                  className="bg-gray-200 dark:bg-muted hover:bg-gray-300 border border-gray-300 dark:border-border opacity-90 flex items-center gap-2 text-gray-700 dark:text-gray-300 relative"
                 >
-                  <Icon name="message-square" size={16} className="text-gray-500" />
+                  <Icon name="message-square" size={16} className="text-gray-500 dark:text-muted-foreground" />
                   <span>Add Session Comment</span>
-                  <div className="absolute -top-1.5 -right-1.5 bg-poker-gold rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
+                  <div className="absolute -top-1.5 -right-1.5 bg-poker-gold rounded-full w-4 h-4 flex items-center justify-center shadow-sm dark:shadow-black/20">
                     <span className="text-white text-xs font-bold">$</span>
                   </div>
                 </Button>
@@ -668,12 +668,12 @@ const CoachSessionReview = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 dark:text-muted-foreground">
                   <Icon name="Database" className="mx-auto mb-3 h-8 w-8" />
                   <p className="text-sm">
                     No additional session data (hands, tables, results) has been recorded yet.
                   </p>
-                  <p className="text-xs mt-2 text-gray-400">
+                  <p className="text-xs mt-2 text-gray-400 dark:text-gray-500">
                     When the student records detailed session information, it will appear here.
                   </p>
                 </div>

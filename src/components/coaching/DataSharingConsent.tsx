@@ -111,10 +111,10 @@ export const DataSharingConsent: React.FC<DataSharingConsentProps> = ({
             {[1, 2, 3].map(i => (
               <div key={i} className="flex items-center justify-between animate-pulse">
                 <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-32"></div>
-                  <div className="h-3 bg-gray-100 rounded w-48"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-muted rounded w-32"></div>
+                  <div className="h-3 bg-gray-100 dark:bg-muted rounded w-48"></div>
                 </div>
-                <div className="h-6 w-11 bg-gray-200 rounded-full"></div>
+                <div className="h-6 w-11 bg-gray-200 dark:bg-muted rounded-full"></div>
               </div>
             ))}
           </div>
@@ -141,12 +141,12 @@ export const DataSharingConsent: React.FC<DataSharingConsentProps> = ({
 
         <div className="space-y-4">
           {DATA_FIELDS.map(field => (
-            <div key={field.key} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+            <div key={field.key} className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-border last:border-0">
               <div className="space-y-1 flex-1">
                 <Label htmlFor={field.key} className="text-sm font-medium">
                   {field.label}
                 </Label>
-                <p className="text-xs text-gray-600">{field.description}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500">{field.description}</p>
               </div>
               <Switch
                 id={field.key}
@@ -160,7 +160,7 @@ export const DataSharingConsent: React.FC<DataSharingConsentProps> = ({
         </div>
 
         <div className="pt-4 border-t">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-muted-foreground">
             <Icon name="lock" className="inline h-3 w-3 mr-1" />
             Your privacy is protected. Only the information you explicitly consent to share will be visible to your coach.
           </p>

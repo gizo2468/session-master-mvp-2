@@ -13,7 +13,7 @@ const TermsOfUseModal: React.FC<TermsOfUseModalProps> = ({ open, onOpenChange })
       <DialogContent className="max-w-4xl max-h-[90vh] p-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-2xl font-['Shippori_Antique_B1'] text-poker-gold">SessionMaster - Terms of Use</DialogTitle>
-          <DialogDescription className="text-sm text-gray-500">
+          <DialogDescription className="text-sm text-gray-500 dark:text-muted-foreground">
             Last updated: July 23, 2025
           </DialogDescription>
         </DialogHeader>

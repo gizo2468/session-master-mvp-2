@@ -30,40 +30,40 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
   return (
     <div className="flex flex-col gap-4 mb-6">
       <div className="flex justify-between py-2 border-b">
-        <span className="text-gray-500">Game:</span>
+        <span className="text-gray-500 dark:text-muted-foreground">Game:</span>
         <span className="font-medium">{session.gameType}</span>
       </div>
       
       <div className="flex justify-between py-2 border-b">
-        <span className="text-gray-500">Format:</span>
+        <span className="text-gray-500 dark:text-muted-foreground">Format:</span>
         <span className="font-medium">{session.format}</span>
       </div>
       
       {/* Only show blinds for Cash game format */}
       {shouldShowBlinds && (
         <div className="flex justify-between py-2 border-b">
-          <span className="text-gray-500">Blinds:</span>
+          <span className="text-gray-500 dark:text-muted-foreground">Blinds:</span>
           <span className="font-medium">{currencySymbol}{session.smallBlind || 0}/{currencySymbol}{session.bigBlind || 0}</span>
         </div>
       )}
       
       <div className="flex justify-between py-2 border-b">
-        <span className="text-gray-500">Buy-in:</span>
+        <span className="text-gray-500 dark:text-muted-foreground">Buy-in:</span>
         <span className="font-medium">
           {currencySymbol}{totalInitialBuyin.toFixed(2)}
           {additionalBuyins > 0 && (
-            <span className="text-gray-600"> (+{currencySymbol}{additionalBuyins.toFixed(2)})</span>
+            <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500"> (+{currencySymbol}{additionalBuyins.toFixed(2)})</span>
           )}
         </span>
       </div>
       
       <div className="flex justify-between py-2 border-b">
-        <span className="text-gray-500">Re-Buys:</span>
+        <span className="text-gray-500 dark:text-muted-foreground">Re-Buys:</span>
         <span className="font-medium">{totalRebuys}</span>
       </div>
       
       <div className="flex justify-between py-2 border-b">
-        <span className="text-gray-500">ITM:</span>
+        <span className="text-gray-500 dark:text-muted-foreground">ITM:</span>
         <span className="font-medium">
           {(() => {
             const totalTables = session.tables?.length || 0;
@@ -74,7 +74,7 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
       </div>
       
       <div className="flex justify-between py-2 border-b">
-        <span className="text-gray-500">Payout:</span>
+        <span className="text-gray-500 dark:text-muted-foreground">Payout:</span>
         <span className="font-medium">
           {currencySymbol}{totalCashout.toFixed(2)}
         </span>
@@ -82,7 +82,7 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
       
       {session.notes && (
         <div className="flex justify-between py-2 border-b">
-          <span className="text-gray-500">Session Notes:</span>
+          <span className="text-gray-500 dark:text-muted-foreground">Session Notes:</span>
           <span className="font-medium text-sm max-w-xs text-right">{session.notes}</span>
         </div>
       )}
@@ -90,7 +90,7 @@ const SessionInfoDisplay: React.FC<SessionInfoDisplayProps> = ({
       
       {isCompleted && (
         <div className="flex flex-col items-center py-2">
-          <span className="text-gray-500 mb-2">Profit/Loss</span>
+          <span className="text-gray-500 dark:text-muted-foreground mb-2">Profit/Loss</span>
           <ProfitLossBadge profit={profit} currency={session.currency} size="lg" />
         </div>
       )}

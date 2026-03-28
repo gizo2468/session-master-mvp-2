@@ -340,7 +340,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-background">
         <div className="container mx-auto max-w-4xl px-4 py-8">
           <div className="text-center py-12">
             <Icon name="Loader" className="mx-auto mb-4 h-8 w-8 animate-spin text-muted-foreground" />
@@ -353,7 +353,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-background">
         <div className="container mx-auto max-w-4xl px-4 py-8">
           <div className="text-center py-12">
             <Icon name="AlertCircle" className="mx-auto mb-4 h-12 w-12 text-red-500" />
@@ -371,7 +371,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
 
   if (!player) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-background">
         <div className="container mx-auto max-w-4xl px-4 py-8">
           <div className="text-center py-12">
             <p className="text-muted-foreground">Player not found.</p>
@@ -388,7 +388,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
   const currencySymbol = getCurrencySymbol(player.default_currency);
 
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background">
       <div className="container mx-auto max-w-4xl px-4 py-8">
         {/* Header */}
         <header className="mb-8">
@@ -414,9 +414,9 @@ const calculateSummary = (sessions: SharedSession[]) => {
               <h1 className="text-2xl font-bold text-poker-black">
                 {player.full_name || player.username}
               </h1>
-              <p className="text-gray-500">@{player.username}</p>
+              <p className="text-gray-500 dark:text-muted-foreground">@{player.username}</p>
               {player.bio && (
-                <p className="text-sm text-gray-600 mt-1">{player.bio}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">{player.bio}</p>
               )}
             </div>
             <div className="ml-auto">
@@ -542,42 +542,42 @@ const calculateSummary = (sessions: SharedSession[]) => {
                   <div className="text-2xl font-bold text-poker-feltGreen">
                     {currencySymbol}{summary.averageBuyIn.toFixed(0)}
                   </div>
-                  <div className="text-xs text-gray-500">Average Buy-in</div>
+                  <div className="text-xs text-gray-500 dark:text-muted-foreground">Average Buy-in</div>
                 </div>
                 
                 <div className="text-center">
                   <div className={`text-2xl font-bold ${summary.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {summary.totalProfit >= 0 ? '+' : ''}{currencySymbol}{summary.totalProfit.toFixed(0)}
                   </div>
-                  <div className="text-xs text-gray-500">Total P&L</div>
+                  <div className="text-xs text-gray-500 dark:text-muted-foreground">Total P&L</div>
                 </div>
                 
                 <div className="text-center">
                   <div className="text-2xl font-bold text-poker-feltGreen">
                     {summary.sessionFrequency}{summary.sessionFrequencyUnit === 'wk' ? '/wk' : '/mo'}
                   </div>
-                  <div className="text-xs text-gray-500">Session Frequency</div>
+                  <div className="text-xs text-gray-500 dark:text-muted-foreground">Session Frequency</div>
                 </div>
                 
                 <div className="text-center">
                   <div className={`text-2xl font-bold ${summary.bestSharedResult >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {summary.bestSharedResult >= 0 ? '+' : ''}{currencySymbol}{summary.bestSharedResult.toFixed(0)}
                   </div>
-                  <div className="text-xs text-gray-500">Best Shared Result</div>
+                  <div className="text-xs text-gray-500 dark:text-muted-foreground">Best Shared Result</div>
                 </div>
                 
                 <div className="text-center">
                   <div className={`text-2xl font-bold ${summary.winRate >= 50 ? 'text-green-600' : 'text-red-600'}`}>
                     {summary.winRate}%
                   </div>
-                  <div className="text-xs text-gray-500">Win Rate</div>
+                  <div className="text-xs text-gray-500 dark:text-muted-foreground">Win Rate</div>
                 </div>
                 
                 <div className="text-center">
                   <div className="text-lg font-bold text-poker-feltGreen">
                     {summary.mostPlayedFormat}
                   </div>
-                  <div className="text-xs text-gray-500">Favorite Format</div>
+                  <div className="text-xs text-gray-500 dark:text-muted-foreground">Favorite Format</div>
                 </div>
               </div>
             </CardContent>

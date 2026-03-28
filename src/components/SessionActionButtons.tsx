@@ -73,13 +73,13 @@ export default function SessionActionButtons({ session }: SessionActionButtonsPr
             </DialogDescription>
           </DialogHeader>
           
-          <div className="bg-gray-50 p-3 rounded-lg mb-4">
+          <div className="bg-gray-50 dark:bg-background p-3 rounded-lg mb-4">
             <div className="text-sm">
               <div className="font-medium">{session.location}</div>
-              <div className="text-gray-500">
+              <div className="text-gray-500 dark:text-muted-foreground">
                 {session.gameType} • {session.format}
               </div>
-              <div className="text-gray-500">
+              <div className="text-gray-500 dark:text-muted-foreground">
                 {new Date(session.startTime).toLocaleDateString()} at {new Date(session.startTime).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>

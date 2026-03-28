@@ -161,20 +161,20 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
 
   return (
     <>
-      <Card className="bg-white p-4 relative border border-gray-200 shadow-md rounded-xl">
+      <Card className="bg-white dark:bg-card p-4 relative border border-gray-200 dark:border-border shadow-md dark:shadow-black/30 rounded-xl">
         {/* Edit Button */}
         <Button
           variant="ghost"
           size="sm"
-          className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-gray-100"
+          className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-gray-100 dark:bg-muted"
           onClick={() => setShowEditForm(true)}
         >
-          <Pencil className="h-4 w-4 text-gray-600" />
+          <Pencil className="h-4 w-4 text-gray-600 dark:text-gray-400 dark:text-gray-500" />
         </Button>
 
         <div className="text-center mb-2 pr-8">
           <h3 className="text-xl font-bold">{table.location}</h3>
-          <div className="flex items-center justify-center gap-2 text-base text-gray-600">
+          <div className="flex items-center justify-center gap-2 text-base text-gray-600 dark:text-gray-400 dark:text-gray-500">
             <span>{table.gameType}</span>
             <span>•</span> 
             <span>{table.format}</span>
@@ -196,17 +196,17 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
           )}
         </div>
 
-        <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 pb-4">
+        <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 dark:border-border pb-4">
           <div className="flex flex-1 justify-center items-center">
             <div className="text-center">
-              <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
+              <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Start</div>
               <div className="font-medium">{formattedStartTime}</div>
             </div>
           </div>
           
-          <div className="flex-1 flex justify-center items-center border-x border-gray-100 px-4">
+          <div className="flex-1 flex justify-center items-center border-x border-gray-100 dark:border-border px-4">
             <div className="text-center">
-              <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
+              <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Duration</div>
               <TableTimerDisplay 
                 startTime={safeStartTime}
                 startTimeUTC={table.startTimeUTC}
@@ -221,7 +221,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
           {!table.isActive && safeEndTime && (
             <div className="flex-1 flex justify-center items-center">
               <div className="text-center">
-                <div className="text-gray-500 font-medium text-xs uppercase mb-1">End</div>
+                <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">End</div>
                 <div className="font-medium">{dateFormat(safeEndTime, 'HH:mm')}</div>
               </div>
             </div>
@@ -229,7 +229,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
         </div>
 
         {table.isMultiDay && table.dayEndedWithoutElimination && (
-          <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 pb-4 bg-green-50 rounded-md p-2">
+          <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 dark:border-border pb-4 bg-green-50 rounded-md p-2">
             {table.nextDayStart && (
               <div className="flex-1 flex justify-center items-center">
                 <div className="text-center">
@@ -240,7 +240,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
             )}
             
             {table.chipsCarryover && (
-              <div className="flex-1 flex justify-center items-center border-l border-gray-100 pl-4">
+              <div className="flex-1 flex justify-center items-center border-l border-gray-100 dark:border-border pl-4">
                 <div className="text-center">
                   <div className="text-green-600 font-medium text-xs uppercase mb-1">Chips Carried Over</div>
                   <div className="font-medium text-green-800">{table.chipsCarryover.toLocaleString()}</div>
@@ -253,7 +253,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
         <div className="space-y-2">
           <div className="flex items-center gap-4 mb-4 justify-center">
             <div className="text-right">
-              <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
+              <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">BUY-IN</span>
               <span className="font-bold text-2xl">
                 {currencySymbol}{table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
               </span>
@@ -265,13 +265,13 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               const rebuyCount = Math.floor(rebuyTotal / (table.initialBuyIn ?? table.buyIn));
               return extra > 0 ? (
                 <div className="text-right">
-                  <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
+                  <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">REBUY</span>
                   <div>
                     <span className="font-bold text-2xl text-red-600">
                       +{currencySymbol}{extra.toFixed(2)}
                     </span>
                     {rebuyCount > 0 && (
-                      <span className="text-sm text-gray-500 ml-1">({rebuyCount})</span>
+                      <span className="text-sm text-gray-500 dark:text-muted-foreground ml-1">({rebuyCount})</span>
                     )}
                   </div>
                 </div>
@@ -286,7 +286,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
             return (
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Blinds:</span>
+                  <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Blinds:</span>
                   <span className="font-medium">{currencySymbol}{displaySmall}/{currencySymbol}{displayBig}</span>
                 </div>
                 {/* Show blind history with elapsed time */}
@@ -307,7 +307,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                       return (
                         <div key={update.id || index} className="flex flex-col gap-1 mt-1">
                           {update.stack != null && (
-                            <span className="text-xs text-gray-600 font-medium">
+                            <span className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 font-medium">
                               CURRENT STACK: {currencySymbol}{update.stack}
                             </span>
                           )}
@@ -323,7 +323,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                     {blindHistory.length > 1 && (
                       <button
                         onClick={() => setShowBlindHistory(true)}
-                        className="text-xs text-gray-900 hover:text-gray-700"
+                        className="text-xs text-gray-900 dark:text-foreground hover:text-gray-700 dark:text-gray-300"
                       >
                         View All Blinds Updates
                       </button>
@@ -338,13 +338,13 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
             <div className="space-y-2">
               {table.startingBB && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Starting BBs:</span>
+                  <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Starting BBs:</span>
                   <span className="font-medium">{table.startingBB}BB</span>
                 </div>
               )}
               {liveState.bbStackUpdates?.[table.id]?.bb && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">
+                  <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">
                     Lvl {liveState.bbStackUpdates[table.id].level || 1}:
                   </span>
                   <span className="font-medium">{liveState.bbStackUpdates[table.id].bb}BBs</span>
@@ -362,7 +362,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                            !formatted.includes('undefined');
                   }).map((update, index) => (
                     <div key={update.id || index} className="flex justify-between text-sm">
-                      <span className="font-medium text-gray-700">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
                         {BBStackUpdateService.formatHistoryLine(update)}
                       </span>
                     </div>
@@ -370,7 +370,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                   {blindHistory.length > 1 && (
                     <button
                       onClick={() => setShowBlindHistory(true)}
-                      className="text-xs text-gray-900 hover:text-gray-700"
+                      className="text-xs text-gray-900 dark:text-foreground hover:text-gray-700 dark:text-gray-300"
                     >
                       View All Blinds Updates
                     </button>
@@ -423,7 +423,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               <div className="space-y-1 mt-2 text-xs">
                 {table.tournamentTypes?.[0] && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Tournament Type:</span>
+                    <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Tournament Type:</span>
                     <span className="font-medium">{table.tournamentTypes[0]}</span>
                   </div>
                 )}
@@ -431,7 +431,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                   ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
                 ) && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Players Eliminated:</span>
+                    <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Players Eliminated:</span>
                     <span className="font-medium">{table.bountyCount}</span>
                   </div>
                 )}
@@ -439,13 +439,13 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                   ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
                 ) && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Total Bounty Collected:</span>
-                    <span className="font-medium text-gray-500">{currencySymbol}{table.bountyAmount.toFixed(2)}</span>
+                    <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Total Bounty Collected:</span>
+                    <span className="font-medium text-gray-500 dark:text-muted-foreground">{currencySymbol}{table.bountyAmount.toFixed(2)}</span>
                   </div>
                 )}
                 {table.finalPosition && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Final Position:</span>
+                    <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Final Position:</span>
                     <span className="font-medium">{table.finalPosition}th</span>
                   </div>
                 )}
@@ -453,18 +453,18 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                 {table.dayEndedWithoutElimination && (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
+                      <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Status:</span>
                       <span className="font-medium text-poker-feltGreen">Day Ended (Continuing)</span>
                     </div>
                     {table.chipsCarryover && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Chips Carried Over:</span>
+                        <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Chips Carried Over:</span>
                         <span className="font-medium">{table.chipsCarryover.toLocaleString()}</span>
                       </div>
                     )}
                     {table.nextDayStart && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Next Day Starts:</span>
+                        <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Next Day Starts:</span>
                         <span className="font-medium">{dateFormat(new Date(table.nextDayStart), 'd MMM yyyy HH:mm')}</span>
                       </div>
                     )}
@@ -473,7 +473,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                 
                 {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
                   <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                    <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
+                    <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">TOTAL PAYOUT</span>
                     <span className="font-bold text-2xl text-poker-gold">
                       {currencySymbol}{(table.cashOut ?? 0).toFixed(2)}
                     </span>
@@ -484,7 +484,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
             
             {table.format === 'Cash' && table.cashOut !== undefined && (
               <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
+                <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">TOTAL PAYOUT</span>
                 <span className="font-bold text-2xl text-poker-gold">
                   {currencySymbol}{(table.cashOut ?? 0).toFixed(2)}
                 </span>
@@ -493,7 +493,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
           </div>
         )}
         
-        <div className="mt-6 pt-4 border-t border-gray-100">
+        <div className="mt-6 pt-4 border-t border-gray-100 dark:border-border">
         <HandManagementPanel 
           sessionId={sessionId}
           tableId={table.id}
@@ -584,20 +584,20 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500">{currencySymbol}</span>
+                      <span className="text-gray-500 dark:text-muted-foreground">{currencySymbol}</span>
                     </div>
                     <input
                       id="tableCashout"
                       type="number"
                       min="0"
                       step="0.01"
-                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                       placeholder="0.00"
                       value={cashOutAmount}
                       onChange={(e) => setCashOutAmount(e.target.value)}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Enter the total amount you received (including all earnings)</p>
+                  <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">Enter the total amount you received (including all earnings)</p>
                 </div>
 
                 {table.format === 'Tournament' && endReason !== 'day-ended' && (
@@ -609,7 +609,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                       id="finalPosition"
                       type="number"
                       min="1"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                       placeholder="Enter your final position (e.g. 3 for 3rd)"
                       value={finalPosition}
                       onChange={(e) => setFinalPosition(e.target.value)}
@@ -628,7 +628,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                         id="bountyCount"
                         type="number"
                         min="0"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                         placeholder="Number of players eliminated"
                         value={bountyCount}
                         onChange={(e) => setBountyCount(e.target.value)}
@@ -639,8 +639,8 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                       <label htmlFor="bountyAmount" className="block text-sm font-medium mb-1">
                         Total Bounty Collected (Optional)
                       </label>
-                      <div className="flex rounded-md shadow-sm">
-                        <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                      <div className="flex rounded-md shadow-sm dark:shadow-black/20">
+                        <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-background border border-r-0 border-gray-300 dark:border-border rounded-l-md">
                           {currencySymbol}
                         </span>
                         <input
@@ -648,13 +648,13 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                           type="number"
                           min="0"
                           step="0.01"
-                          className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none"
+                          className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-border rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none"
                           placeholder="0.00"
                           value={bountyAmount}
                           onChange={(e) => setBountyAmount(e.target.value)}
                         />
                        </div>
-                       <p className="text-xs text-gray-500 mt-1">For tracking only - should already be included in Total Payout above</p>
+                       <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">For tracking only - should already be included in Total Payout above</p>
                      </div>
                   </>
                 )}
@@ -668,14 +668,14 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                           ? 'text-green-600' 
                           : cashOutAmount 
                             ? 'text-red-600' 
-                            : 'text-gray-500'
+                            : 'text-gray-500 dark:text-muted-foreground'
                       }`}>
                         {cashOutAmount 
                         ? `${currencySymbol}${(parseFloat(cashOutAmount) - table.buyIn).toFixed(2)}` 
                         : `${currencySymbol}0.00`}
                       </span>
                     </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-2 bg-gray-200 dark:bg-muted rounded-full overflow-hidden">
                       {cashOutAmount && (
                         <div 
                           className={`h-full ${
@@ -705,11 +705,11 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                   <input
                     id="nextDayStart"
                     type="datetime-local"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                     value={nextDayStart ? nextDayStart.toISOString().slice(0, 16) : ''}
                     onChange={(e) => setNextDayStart(e.target.value ? new Date(e.target.value) : null)}
                   />
-                  <p className="text-xs text-gray-500 mt-1">When does the next day begin?</p>
+                  <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">When does the next day begin?</p>
                 </div>
                 
                 <div>
@@ -720,12 +720,12 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                     id="chipsCarryover"
                     type="number"
                     min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                     placeholder="Number of chips"
                     value={chipsCarryover}
                     onChange={(e) => setChipsCarryover(e.target.value)}
                   />
-                  <p className="text-xs text-gray-500 mt-1">How many chips are you carrying over to the next day?</p>
+                  <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">How many chips are you carrying over to the next day?</p>
                 </div>
               </div>
             )}
@@ -736,7 +736,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               </label>
               <Textarea
                 id="tableNotes"
-                className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                className="w-full min-h-[100px] border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                 placeholder="Table notes"
                 value={tableNotes}
                 onChange={(e) => setTableNotes(e.target.value)}
@@ -802,7 +802,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                   <div className="text-4xl font-bold text-poker-gold mb-2">
                     {currencySymbol}{(table.tournamentBuyIn || table.initialBuyIn || table.buyIn).toFixed(2)}
                   </div>
-                  <div className="text-sm text-gray-600">Tournament Rebuy Amount</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">Tournament Rebuy Amount</div>
                 </div>
               </div>
               <DialogFooter className="gap-2">
@@ -822,14 +822,14 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500">{currencySymbol}</span>
+                    <span className="text-gray-500 dark:text-muted-foreground">{currencySymbol}</span>
                   </div>
                   <input
                     id="rebuyAmount"
                     type="number"
                     min="0"
                     step="0.01"
-                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                     placeholder="0.00"
                     value={rebuyDialogAmount}
                     onChange={(e) => setRebuyDialogAmount(e.target.value)}

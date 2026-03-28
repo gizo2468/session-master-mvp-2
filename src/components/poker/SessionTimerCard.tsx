@@ -184,7 +184,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6 flex flex-col items-center">
+    <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6 flex flex-col items-center">
       <div 
         className="rounded-xl mb-3 relative w-fit flex flex-col items-center"
         style={{
@@ -242,17 +242,17 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       
       <div className="grid grid-cols-2 gap-4 mb-6 w-full">
         <div className="text-left">
-          <div className="text-sm text-gray-500">Started</div>
+          <div className="text-sm text-gray-500 dark:text-muted-foreground">Started</div>
           <div className="font-medium">{formattedStartTime}</div>
-          <div className="text-xs text-gray-400">{formattedDate}</div>
+          <div className="text-xs text-gray-400 dark:text-gray-500">{formattedDate}</div>
         </div>
         
         <div className="text-right">
-          <div className="text-sm text-gray-500">Total Tables</div>
+          <div className="text-sm text-gray-500 dark:text-muted-foreground">Total Tables</div>
           <div className="font-medium">{activeSession?.tables?.length || 0}</div>
-          <div className="text-xs text-gray-400 mt-1">
-            <div className="text-sm text-gray-500">Hands Saved</div>
-            <div className="font-medium text-gray-800">
+          <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            <div className="text-sm text-gray-500 dark:text-muted-foreground">Hands Saved</div>
+            <div className="font-medium text-gray-800 dark:text-foreground">
               {activeSession?.tables?.reduce((total, table) => total + (table.hands?.length || 0), 0) || 0}
             </div>
           </div>
@@ -283,7 +283,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
           <Button
             onClick={handleBBStackUpdate}
             variant="outline"
-            className="bg-white/50 border border-gray-200 text-gray-700 hover:bg-white hover:text-gray-900 flex items-center gap-2"
+            className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground flex items-center gap-2"
             size="sm"
           >
             <Icon name="CircleDot" size={14} /> BB/Stack Update
@@ -295,7 +295,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
           <Button
             onClick={handleUploadHand}
             variant="outline"
-            className="bg-white/50 border border-gray-200 text-gray-700 hover:bg-white hover:text-gray-900 flex items-center gap-2"
+            className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground flex items-center gap-2"
             size="sm"
           >
             <Icon name="Hand" size={14} /> Upload Hand

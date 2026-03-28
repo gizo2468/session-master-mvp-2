@@ -47,7 +47,7 @@ const CoachSettings: React.FC = () => {
                   <div className="text-3xl font-mono font-bold tracking-wider text-poker-gold mb-2">
                     {connectionCode}
                   </div>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-muted-foreground">
                     Share this code with your players to connect with them
                   </p>
                 </div>

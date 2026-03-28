@@ -121,14 +121,14 @@ export default function EndTableDialog({
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500">{currencySymbol}</span>
+                    <span className="text-gray-500 dark:text-muted-foreground">{currencySymbol}</span>
                   </div>
                   <input
                     id="tableCashout"
                     type="number"
                     min="0"
                     step="0.01"
-                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                     placeholder="0.00"
                     value={cashOutAmount}
                     onChange={(e) => onCashOutAmountChange(e.target.value)}
@@ -145,7 +145,7 @@ export default function EndTableDialog({
                     id="finalPosition"
                     type="number"
                     min="1"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                     placeholder="Enter your final position (e.g. 3 for 3rd)"
                     value={finalPosition}
                     onChange={(e) => onFinalPositionChange(e.target.value)}
@@ -163,7 +163,7 @@ export default function EndTableDialog({
                       id="bountyCount"
                       type="number"
                       min="0"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                       placeholder="Number of players eliminated"
                       value={bountyCount}
                       onChange={(e) => onBountyCountChange(e.target.value)}
@@ -174,8 +174,8 @@ export default function EndTableDialog({
                     <label htmlFor="bountyAmount" className="block text-sm font-medium mb-1">
                       Total Bounty Collected (Optional)
                     </label>
-                    <div className="flex rounded-md shadow-sm">
-                      <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                    <div className="flex rounded-md shadow-sm dark:shadow-black/20">
+                      <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-background border border-r-0 border-gray-300 dark:border-border rounded-l-md">
                         {currencySymbol}
                       </span>
                       <input
@@ -183,7 +183,7 @@ export default function EndTableDialog({
                         type="number"
                         min="0"
                         step="0.01"
-                        className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none"
+                        className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-border rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none"
                         placeholder="0.00"
                         value={bountyAmount}
                         onChange={(e) => onBountyAmountChange(e.target.value)}
@@ -203,14 +203,14 @@ export default function EndTableDialog({
                         ? 'text-green-600' 
                         : cashOutAmount 
                           ? 'text-red-600' 
-                          : 'text-gray-500'
+                          : 'text-gray-500 dark:text-muted-foreground'
                     }`}>
                       {cashOutAmount && table
                         ? `${currencySymbol}${(parseFloat(cashOutAmount) - table.buyIn).toFixed(2)}` 
                         : `${currencySymbol}0.00`}
                     </span>
                   </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-2 bg-gray-200 dark:bg-muted rounded-full overflow-hidden">
                     {cashOutAmount && table && (
                       <div 
                         className={`h-full ${
@@ -236,7 +236,7 @@ export default function EndTableDialog({
                 </label>
                 <Textarea
                   id="tableNotes"
-                  className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                  className="w-full min-h-[100px] border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                   placeholder="Table notes"
                   value={tableNotes}
                   onChange={(e) => onTableNotesChange(e.target.value)}
@@ -256,11 +256,11 @@ export default function EndTableDialog({
                 <input
                   id="nextDayStart"
                   type="datetime-local"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                   value={nextDayStart ? nextDayStart.toISOString().slice(0, 16) : ''}
                   onChange={(e) => onNextDayStartChange(e.target.value ? new Date(e.target.value) : null)}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">
                   When does the next day of this tournament begin?
                 </p>
               </div>
@@ -273,12 +273,12 @@ export default function EndTableDialog({
                   id="chipsCarryover"
                   type="number"
                   min="0"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
                   placeholder="Enter chip count"
                   value={chipsCarryover}
                   onChange={(e) => onChipsCarryoverChange(e.target.value)}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">
                   How many chips are you carrying over to the next day?
                 </p>
               </div>

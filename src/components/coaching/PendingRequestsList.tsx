@@ -41,7 +41,7 @@ const PendingRequestsList = () => {
                     <span className="font-medium">
                       {studentDisplayText}
                     </span>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 dark:text-muted-foreground">
                       {new Date(request.createdAt).toLocaleDateString()}
                     </div>
                     {showUnknownWarning && (
@@ -49,7 +49,7 @@ const PendingRequestsList = () => {
                         ⚠️ Student name not available - this might indicate a data sync issue
                       </div>
                     )}
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                       Request ID: {request.id.slice(0, 8)} • Student ID: {request.studentId.slice(0, 8)}
                     </div>
                   </div>

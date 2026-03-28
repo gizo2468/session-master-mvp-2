@@ -4,10 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/context/LanguageContext';
+import { useTheme } from '@/context/ThemeContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const AppSettings = () => {
   const { language, setLanguage, t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
 
   // Define available languages directly in the component
   const availableLanguages = [
@@ -47,9 +49,9 @@ const AppSettings = () => {
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="dark-mode" className="block mb-1">Dark Mode</Label>
-              <p className="text-sm text-muted-foreground">Coming soon</p>
+              <p className="text-sm text-muted-foreground">Premium poker atmosphere</p>
             </div>
-            <Switch id="dark-mode" disabled />
+            <Switch id="dark-mode" checked={theme === 'dark'} onCheckedChange={toggleTheme} />
           </div>
         </div>
       </CardContent>

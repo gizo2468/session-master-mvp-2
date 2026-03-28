@@ -73,7 +73,7 @@ export function ViewOnlyCardBack({ userId, open, onOpenChange }: ViewOnlyCardBac
           variant="ghost"
           size="icon"
           onClick={handleClose}
-          className="text-white hover:bg-white/10"
+          className="text-white hover:bg-white dark:bg-card/10"
         >
           <X className="w-6 h-6" />
         </Button>

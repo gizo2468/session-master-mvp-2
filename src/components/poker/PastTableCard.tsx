@@ -193,30 +193,30 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
           </CollapsibleTrigger>
           
           <CollapsibleContent>
-            <div className="border-t border-gray-200">
+            <div className="border-t border-gray-200 dark:border-border">
               <div className="p-4 space-y-4">
                 {/* Financial Stats - Full Width Layout */}
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-sm text-gray-600 font-medium">Initial Buy-in</span>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-border">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 font-medium">Initial Buy-in</span>
                     <span className="text-sm font-semibold">{getCurrencySymbol(table.currency || 'USD')}{table.initialBuyIn?.toFixed(2) || '0.00'}</span>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-sm text-gray-600 font-medium">Rebuys</span>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-border">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 font-medium">Rebuys</span>
                     <span className="text-sm font-semibold">{getCurrencySymbol(table.currency || 'USD')}{(table.rebuys || 0).toFixed(2)}</span>
                   </div>
                   {/* Only show cash out for non-continuing tournaments */}
                   {!isContinuing && (
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600 font-medium">Total Payout</span>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-border">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 font-medium">Total Payout</span>
                       <span className="text-sm font-semibold">{getCurrencySymbol(table.currency || 'USD')}{(table.cashOut || 0).toFixed(2)}</span>
                     </div>
                   )}
                   {/* Only show bounties for non-continuing tournaments - display only, not included in totals */}
                   {!isContinuing && table.bountyAmount && table.bountyAmount > 0 && (
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-600 font-medium">Bounty Payout (info only)</span>
-                      <span className="text-sm font-semibold text-gray-500">{getCurrencySymbol(table.currency || 'USD')}{table.bountyAmount.toFixed(2)}</span>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-border">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 font-medium">Bounty Payout (info only)</span>
+                      <span className="text-sm font-semibold text-gray-500 dark:text-muted-foreground">{getCurrencySymbol(table.currency || 'USD')}{table.bountyAmount.toFixed(2)}</span>
                     </div>
                   )}
                 </div>
@@ -246,7 +246,7 @@ const PastTableCard: React.FC<PastTableCardProps> = ({ table, onUpdate, onDelete
 
                 {table.notes && (
                   <div>
-                    <span className="text-gray-600 text-sm font-medium">Notes:</span>
+                    <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm font-medium">Notes:</span>
                     <p className="text-sm mt-1 break-words">{table.notes}</p>
                   </div>
                 )}

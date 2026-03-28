@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { ThemeProvider } from "./context/ThemeContext";
 import App from "./App.tsx";
 import "./index.css";
 import "@fontsource/inter/400.css";
@@ -54,7 +55,7 @@ async function initPushOnce() {
   await PushNotifications.register();
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(<ThemeProvider><App /></ThemeProvider>);
 
 // ריצה פעם אחת אחרי שהאפליקציה עלתה
 setTimeout(() => {

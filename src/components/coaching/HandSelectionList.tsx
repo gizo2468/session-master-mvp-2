@@ -82,7 +82,7 @@ export const HandSelectionList = ({ sessionId, selectedHandIds, onSelectionChang
     return (
       <Card>
         <CardContent className="py-6">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500 dark:text-muted-foreground">
             <Icon name="Loader" className="mx-auto mb-2 h-6 w-6 animate-spin" />
             <p>Loading hands...</p>
           </div>
@@ -95,7 +95,7 @@ export const HandSelectionList = ({ sessionId, selectedHandIds, onSelectionChang
     return (
       <Card>
         <CardContent className="py-6">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500 dark:text-muted-foreground">
             <Icon name="Cards" className="mx-auto mb-2 h-8 w-8" />
             <p>No hands recorded for this session.</p>
           </div>
@@ -127,7 +127,7 @@ export const HandSelectionList = ({ sessionId, selectedHandIds, onSelectionChang
               <div 
                 key={hand.id} 
                 className={`border rounded-lg p-3 transition-colors ${
-                  isSelected ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
+                  isSelected ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 dark:bg-background border-gray-200 dark:border-border'
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -143,11 +143,11 @@ export const HandSelectionList = ({ sessionId, selectedHandIds, onSelectionChang
                         <h4 className="font-medium text-sm">
                           Hand #{hand.hand_number || 'N/A'}
                           {hand.position && (
-                            <span className="ml-2 text-xs text-gray-600">({hand.position})</span>
+                            <span className="ml-2 text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500">({hand.position})</span>
                           )}
                         </h4>
                         {hand.hole_cards && (
-                          <p className="text-xs text-gray-600 mt-1">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">
                             Hole cards: {hand.hole_cards}
                           </p>
                         )}
@@ -156,24 +156,24 @@ export const HandSelectionList = ({ sessionId, selectedHandIds, onSelectionChang
                         <div className={`text-sm font-medium ${netResult >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {netResult >= 0 ? '+' : ''}{formatCurrency(netResult, hand.currency_type)}
                         </div>
-                        <div className="text-xs text-gray-500">Net</div>
+                        <div className="text-xs text-gray-500 dark:text-muted-foreground">Net</div>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       <div>
-                        <span className="text-gray-500">Pot:</span> {formatCurrency(hand.pot_size, hand.currency_type)}
+                        <span className="text-gray-500 dark:text-muted-foreground">Pot:</span> {formatCurrency(hand.pot_size, hand.currency_type)}
                       </div>
                       <div>
-                        <span className="text-gray-500">Invested:</span> {formatCurrency(hand.amount_invested, hand.currency_type)}
+                        <span className="text-gray-500 dark:text-muted-foreground">Invested:</span> {formatCurrency(hand.amount_invested, hand.currency_type)}
                       </div>
                       <div>
-                        <span className="text-gray-500">Won:</span> {formatCurrency(hand.amount_won, hand.currency_type)}
+                        <span className="text-gray-500 dark:text-muted-foreground">Won:</span> {formatCurrency(hand.amount_won, hand.currency_type)}
                       </div>
                     </div>
                     
                     {hand.hand_notes && (
-                      <p className="text-xs text-gray-600 mt-2 line-clamp-2">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-2 line-clamp-2">
                         {hand.hand_notes}
                       </p>
                     )}

@@ -102,7 +102,7 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
     return (
       <Card>
         <CardContent className="py-6">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500 dark:text-muted-foreground">
             <Icon name="Loader" className="mx-auto mb-2 h-6 w-6 animate-spin" />
             <p className="text-sm">Loading stats...</p>
           </div>
@@ -127,30 +127,30 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-poker-feltGreen">{stats.totalSessions}</div>
-            <div className="text-xs text-gray-500">Total Sessions</div>
+            <div className="text-xs text-gray-500 dark:text-muted-foreground">Total Sessions</div>
           </div>
           
           <div className="text-center">
             <div className="text-2xl font-bold text-poker-feltGreen">{stats.totalHours}h</div>
-            <div className="text-xs text-gray-500">Total Hours</div>
+            <div className="text-xs text-gray-500 dark:text-muted-foreground">Total Hours</div>
           </div>
           
           <div className="text-center">
             <div className="text-2xl font-bold text-poker-feltGreen">{stats.averageSessionLength}m</div>
-            <div className="text-xs text-gray-500">Avg Length</div>
+            <div className="text-xs text-gray-500 dark:text-muted-foreground">Avg Length</div>
           </div>
           
           <div className="text-center">
             <div className="text-sm font-medium text-poker-feltGreen">
               {stats.mostPlayedGameType || 'N/A'}
             </div>
-            <div className="text-xs text-gray-500">Most Played</div>
+            <div className="text-xs text-gray-500 dark:text-muted-foreground">Most Played</div>
           </div>
         </div>
         
         {stats.lastSessionDate && (
           <div className="mt-4 pt-3 border-t">
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
               <Icon name="Clock" size={14} />
               <span>Last session: {new Date(stats.lastSessionDate).toLocaleDateString()}</span>
             </div>

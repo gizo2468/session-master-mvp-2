@@ -77,7 +77,7 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
     return (
       <Card>
         <CardContent className="py-6">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500 dark:text-muted-foreground">
             <Icon name="Loader" className="mx-auto mb-2 h-8 w-8 animate-spin" />
             <p>Loading sessions...</p>
           </div>
@@ -111,7 +111,7 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
     return (
       <Card>
         <CardContent className="py-6">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500 dark:text-muted-foreground">
             <Icon name="Clock" className="mx-auto mb-2 h-8 w-8" />
             <p>This student hasn't recorded any sessions yet.</p>
             <p className="text-sm mt-1">Sessions will appear here once the student starts tracking their poker sessions.</p>
@@ -142,11 +142,11 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
                       </Badge>
                     )}
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-muted-foreground">
                     {duration} minutes • {new Date(session.start_time).toLocaleDateString()}
                   </div>
                   {session.notes && (
-                    <div className="text-sm text-gray-600 mt-1 line-clamp-2">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1 line-clamp-2">
                       {session.notes}
                     </div>
                   )}
@@ -154,7 +154,7 @@ export const StudentSessions = ({ studentId }: { studentId: string }) => {
                 
                 {/* Action button section */}
                 <div className="flex justify-between items-center mt-auto pt-2">
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-muted-foreground">
                     Session {session.id.slice(0, 8)}
                   </div>
                   

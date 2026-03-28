@@ -13,7 +13,7 @@ const CookiePolicyModal: React.FC<CookiePolicyModalProps> = ({ open, onOpenChang
       <DialogContent className="max-w-4xl max-h-[90vh] p-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-2xl font-['Shippori_Antique_B1'] text-poker-gold">SessionMaster - Cookie Policy</DialogTitle>
-          <DialogDescription className="text-sm text-gray-500">
+          <DialogDescription className="text-sm text-gray-500 dark:text-muted-foreground">
             Last updated: July 23, 2025
           </DialogDescription>
         </DialogHeader>

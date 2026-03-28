@@ -189,7 +189,7 @@ export const EnhancedStudentSessions = ({ studentId }: { studentId: string }) =>
     return (
       <Card>
         <CardContent className="py-6">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500 dark:text-muted-foreground">
             <Icon name="Loader" className="mx-auto mb-2 h-8 w-8 animate-spin" />
             <p>Loading sessions...</p>
           </div>
@@ -223,7 +223,7 @@ export const EnhancedStudentSessions = ({ studentId }: { studentId: string }) =>
     return (
       <Card>
         <CardContent className="py-6">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500 dark:text-muted-foreground">
             <Icon name="Clock" className="mx-auto mb-2 h-8 w-8" />
             <p>This student hasn't recorded any sessions yet.</p>
             <p className="text-sm mt-1">Sessions will appear here once the student starts tracking their poker sessions.</p>
@@ -253,7 +253,7 @@ export const EnhancedStudentSessions = ({ studentId }: { studentId: string }) =>
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8"
               />
-              <Icon name="Search" className="absolute left-2 top-2.5 text-gray-400" size={16} />
+              <Icon name="Search" className="absolute left-2 top-2.5 text-gray-400 dark:text-gray-500" size={16} />
             </div>
             
             <Select value={sortBy} onValueChange={(value: 'date' | 'profit' | 'duration') => setSortBy(value)}>
@@ -307,11 +307,11 @@ export const EnhancedStudentSessions = ({ studentId }: { studentId: string }) =>
                     )}
                   </div>
                   
-                  <div className="text-sm text-gray-500 mb-2">
+                  <div className="text-sm text-gray-500 dark:text-muted-foreground mb-2">
                     {duration} minutes • {new Date(session.start_time).toLocaleDateString()}
                   </div>
 
-                  <div className="flex items-center gap-4 text-xs text-gray-600 mb-2">
+                  <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-2">
                     <div className="flex items-center gap-1">
                       <Icon name="Cards" size={12} />
                       <span>{stats.handsCount} hands</span>
@@ -329,14 +329,14 @@ export const EnhancedStudentSessions = ({ studentId }: { studentId: string }) =>
                   </div>
                   
                   {session.notes && (
-                    <div className="text-sm text-gray-600 mt-1 line-clamp-2">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1 line-clamp-2">
                       {session.notes}
                     </div>
                   )}
                 </div>
                 
                 <div className="flex justify-between items-center mt-auto pt-2">
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-muted-foreground">
                     Session {session.id.slice(0, 8)}
                   </div>
                   
@@ -359,7 +359,7 @@ export const EnhancedStudentSessions = ({ studentId }: { studentId: string }) =>
       {filteredSessions.length === 0 && sessions.length > 0 && (
         <Card>
           <CardContent className="py-6">
-            <div className="text-center text-gray-500">
+            <div className="text-center text-gray-500 dark:text-muted-foreground">
               <Icon name="Search" className="mx-auto mb-2 h-8 w-8" />
               <p>No sessions match your current filters.</p>
               <p className="text-sm mt-1">Try adjusting your search or filter criteria.</p>
@@ -370,7 +370,7 @@ export const EnhancedStudentSessions = ({ studentId }: { studentId: string }) =>
       
       {filteredSessions.length > 0 && (
         <div className="text-center pt-4">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-muted-foreground">
             Showing {filteredSessions.length} of {sessions.length} sessions
           </p>
         </div>

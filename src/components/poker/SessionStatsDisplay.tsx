@@ -26,8 +26,8 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
 
   if (loading) {
     return (
-      <div className="mt-3 pt-3 border-t border-gray-100">
-        <div className="h-6 bg-gray-200 rounded animate-pulse" />
+      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-border">
+        <div className="h-6 bg-gray-200 dark:bg-muted rounded animate-pulse" />
       </div>
     );
   }
@@ -36,26 +36,26 @@ const SessionStatsDisplay: React.FC<SessionStatsDisplayProps> = ({
   const payoutColorClass = totalPayout > 0 ? 'text-green-600' : 'text-red-600';
 
   return (
-    <div className="mt-3 pt-3 border-t border-gray-100">
-      <div className="bg-gray-50 px-3 py-2 rounded-md">
+    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-border">
+      <div className="bg-gray-50 dark:bg-background px-3 py-2 rounded-md">
         <div className="grid grid-cols-4 gap-2 text-sm">
           <div className="text-center">
             <div className="font-medium text-xs text-poker-gold">Tables</div>
-            <div className="text-gray-800 font-semibold flex items-center justify-center gap-1">
+            <div className="text-gray-800 dark:text-foreground font-semibold flex items-center justify-center gap-1">
               {tables}
-              <PokerTableIcon size={18} className="text-gray-600" />
+              <PokerTableIcon size={18} className="text-gray-600 dark:text-gray-400 dark:text-gray-500" />
             </div>
           </div>
           <div className="text-center">
             <div className="font-medium text-xs text-poker-gold">Hands</div>
-            <div className="text-gray-800 font-semibold flex items-center justify-center gap-1">
+            <div className="text-gray-800 dark:text-foreground font-semibold flex items-center justify-center gap-1">
               {hands}
-              <PlayingCardsIcon size={18} className="text-gray-600" />
+              <PlayingCardsIcon size={18} className="text-gray-600 dark:text-gray-400 dark:text-gray-500" />
             </div>
           </div>
           <div className="text-center">
             <div className="font-medium text-xs text-poker-gold">Buy-ins</div>
-            <div className="text-gray-800 font-semibold">{currencySymbol}{totalBuyIns.toFixed(0)}</div>
+            <div className="text-gray-800 dark:text-foreground font-semibold">{currencySymbol}{totalBuyIns.toFixed(0)}</div>
           </div>
           <div className="text-center">
             <div className="font-medium text-xs text-poker-gold">Payout</div>

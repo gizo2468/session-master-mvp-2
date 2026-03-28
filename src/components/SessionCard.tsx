@@ -141,8 +141,8 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
   if (!session || !session.id) {
     console.error('Invalid session data:', session);
     return (
-      <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-        <div className="text-center text-gray-500">
+      <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-4 mb-4">
+        <div className="text-center text-gray-500 dark:text-muted-foreground">
           <p>Invalid session data</p>
         </div>
       </div>
@@ -152,12 +152,12 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
   return (
     <div 
       onClick={handleCardClick}
-      className="bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer hover:shadow-lg transition-shadow"
+      className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-4 mb-4 cursor-pointer hover:shadow-lg transition-shadow"
     >
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="text-lg font-bold text-gray-600 underline decoration-1">{session.location || 'Unknown Location'}</h3>
-          <p className="text-sm text-gray-500">{formattedDate} at {formattedTime}</p>
+          <h3 className="text-lg font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 underline decoration-1">{session.location || 'Unknown Location'}</h3>
+          <p className="text-sm text-gray-500 dark:text-muted-foreground">{formattedDate} at {formattedTime}</p>
         </div>
         {session.isActive ? (
           <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
@@ -171,25 +171,25 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
       <div className="pr-4">
         <div className="grid grid-cols-2 gap-4 text-sm mb-2">
           <div className="text-center">
-            <span className="text-gray-500">Game:</span>
+            <span className="text-gray-500 dark:text-muted-foreground">Game:</span>
             <span className="ml-1 font-medium">{session.gameType || 'Unknown'}</span>
           </div>
           <div className="text-center">
-            <span className="text-gray-500">Format:</span>
+            <span className="text-gray-500 dark:text-muted-foreground">Format:</span>
             <span className="ml-1 font-medium">{displayFormat}</span>
           </div>
         </div>
         
         <div className="flex items-center justify-center text-sm mb-3">
-          <span className="text-gray-500">Duration:</span>
+          <span className="text-gray-500 dark:text-muted-foreground">Duration:</span>
           <span className="ml-1 font-medium">{duration}</span>
-          <Timer size={14} className="ml-1 text-gray-500" />
+          <Timer size={14} className="ml-1 text-gray-500 dark:text-muted-foreground" />
         </div>
       </div>
       
       {session.format === 'Cash' && session.smallBlind !== undefined && session.bigBlind !== undefined && (
         <div className="text-center text-sm mb-3">
-          <span className="text-gray-500">Blinds:</span>
+          <span className="text-gray-500 dark:text-muted-foreground">Blinds:</span>
           <span className="ml-1 font-medium">{getCurrencySymbol(session.currency)}{session.smallBlind}/{getCurrencySymbol(session.currency)}{session.bigBlind}</span>
         </div>
       )}
@@ -205,14 +205,14 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
       />
       
       {session.notes && (
-        <div className="mt-3 pt-3 border-t border-gray-200">
-          <p className="text-sm text-gray-600 line-clamp-2">{session.notes}</p>
+        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-border">
+          <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 line-clamp-2">{session.notes}</p>
         </div>
       )}
       
       {/* Action buttons for completed sessions */}
       {showActions && !session.isActive && (
-        <div className="session-actions mt-3 pt-3 border-t border-gray-200">
+        <div className="session-actions mt-3 pt-3 border-t border-gray-200 dark:border-border">
           <SessionActionButtons session={session} />
         </div>
       )}

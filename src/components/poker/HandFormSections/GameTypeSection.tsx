@@ -24,7 +24,7 @@ const GameTypeSection: React.FC<GameTypeSectionProps> = ({
           <div className="flex items-center gap-2">
             <FormLabel>Game Type</FormLabel>
             <AdaptiveTooltip content={tooltipContent.cards}>
-              <CircleHelp className="h-4 w-4 text-gray-500" />
+              <CircleHelp className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
             </AdaptiveTooltip>
           </div>
           <FormControl>
@@ -39,7 +39,7 @@ const GameTypeSection: React.FC<GameTypeSectionProps> = ({
                 className={`flex-1 py-2 px-4 rounded-full transition-all cursor-pointer ${
                   field.value === 'NLH' 
                     ? 'bg-poker-gold text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-muted text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-muted'
                 }`}
               >
                 Texas Hold'em
@@ -55,7 +55,7 @@ const GameTypeSection: React.FC<GameTypeSectionProps> = ({
                 className={`flex-1 py-2 px-4 rounded-full transition-all cursor-pointer ${
                   field.value === 'PLO' 
                     ? 'bg-poker-gold text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-muted text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-muted'
                 }`}
               >
                 Omaha

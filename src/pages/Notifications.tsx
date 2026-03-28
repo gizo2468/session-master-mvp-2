@@ -424,8 +424,8 @@ export default function Notifications() {
   };
 
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm header-safe pt-4">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background">
+      <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 header-safe pt-4">
         <div className="container mx-auto max-w-md px-4 pb-4">
           <div className="flex items-center">
             <Button
@@ -457,11 +457,11 @@ export default function Notifications() {
           </div>
         ) : displayNotifications.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
+            <div className="text-gray-400 dark:text-gray-500 mb-4">
               <Icon name="BellOff" size={48} className="mx-auto" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications yet</h3>
-            <p className="text-gray-500">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-foreground mb-2">No notifications yet</h3>
+            <p className="text-gray-500 dark:text-muted-foreground">
               You'll see notifications here when coaches leave feedback or players share sessions with you.
             </p>
           </div>
@@ -473,8 +473,8 @@ export default function Notifications() {
                 onClick={() => handleNotificationClick(notification)}
                 className={`w-full text-left p-4 rounded-lg border transition-colors ${
                   notification.is_read
-                    ? 'bg-white border-green-200 hover:border-green-300'
-                    : 'bg-white border-red-200 hover:border-red-300'
+                    ? 'bg-white dark:bg-card border-green-200 hover:border-green-300'
+                    : 'bg-white dark:bg-card border-red-200 hover:border-red-300'
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -485,18 +485,18 @@ export default function Notifications() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className={`font-medium line-clamp-2 md:truncate md:line-clamp-none ${
-                      notification.is_read ? 'text-gray-700' : 'text-gray-900'
+                      notification.is_read ? 'text-gray-700 dark:text-gray-300' : 'text-gray-900 dark:text-foreground'
                     }`}>
                       {renderTitle(notification.title)}
                     </h3>
                     {notification.body && (
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground mt-1 line-clamp-2">
                         {notification.body}
                       </p>
                     )}
                     {/* Bottom row: Timestamp left, Status + Arrow + Menu right */}
                     <div className="flex items-center justify-between mt-2">
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-400 dark:text-gray-500">
                         {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                       </p>
                       <div className="flex items-center gap-2">
@@ -505,7 +505,7 @@ export default function Notifications() {
                         }`}>
                           {notification.is_read ? 'Read' : 'New'}
                         </span>
-                        <Icon name="ChevronRight" size={16} className="text-gray-400" />
+                        <Icon name="ChevronRight" size={16} className="text-gray-400 dark:text-gray-500" />
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <IconMenuButton aria-label="More options">

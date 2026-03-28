@@ -62,7 +62,7 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control, setValue
                 className={cn(
                   "h-7 px-3 text-xs font-medium transition-all",
                   field.value === 'BB' 
-                    ? "bg-background shadow-sm text-foreground" 
+                    ? "bg-background shadow-sm dark:shadow-black/20 text-foreground" 
                     : "text-muted-foreground hover:text-foreground"
                 )}
                 onClick={() => handleUnitToggle('BB', field.onChange)}
@@ -76,7 +76,7 @@ const HandResultSection: React.FC<HandResultSectionProps> = ({ control, setValue
                 className={cn(
                   "h-7 px-3 text-xs font-medium transition-all",
                   field.value === 'Chips' 
-                    ? "bg-background shadow-sm text-foreground" 
+                    ? "bg-background shadow-sm dark:shadow-black/20 text-foreground" 
                     : "text-muted-foreground hover:text-foreground"
                 )}
                 onClick={() => handleUnitToggle('Chips', field.onChange)}

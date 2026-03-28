@@ -116,7 +116,7 @@ const FloatingCardSelector: React.FC<FloatingCardSelectorProps> = ({
       >
         <div
           ref={panelRef}
-          className="w-[320px] p-4 rounded-md border bg-popover text-popover-foreground shadow-md"
+          className="w-[320px] p-4 rounded-md border bg-popover text-popover-foreground shadow-md dark:shadow-black/30"
         >
           {children}
         </div>

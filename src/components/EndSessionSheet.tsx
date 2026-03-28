@@ -67,39 +67,39 @@ export default function EndSessionSheet({
         
         <div className="space-y-6 mt-6">
           {/* Session Summary */}
-          <div className="bg-gray-50 rounded-lg p-4">
+          <div className="bg-gray-50 dark:bg-background rounded-lg p-4">
             <h3 className="font-semibold mb-2">Session Summary</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-500">Location:</span>
+                <span className="text-gray-500 dark:text-muted-foreground">Location:</span>
                 <span className="ml-1 font-medium">{session.location}</span>
               </div>
               <div>
-                <span className="text-gray-500">Game:</span>
+                <span className="text-gray-500 dark:text-muted-foreground">Game:</span>
                 <span className="ml-1 font-medium">{session.gameType} {session.format}</span>
               </div>
               <div>
-                <span className="text-gray-500">Buy-in:</span>
+                <span className="text-gray-500 dark:text-muted-foreground">Buy-in:</span>
                 <span className="ml-1 font-medium">{currencySymbol}{session.buyIn.toFixed(2)}</span>
               </div>
               <div>
-                <span className="text-gray-500">Rebuys:</span>
+                <span className="text-gray-500 dark:text-muted-foreground">Rebuys:</span>
                 <span className="ml-1 font-medium">{session.rebuys || 0}</span>
               </div>
               <div>
-                <span className="text-gray-500">Tables Played:</span>
+                <span className="text-gray-500 dark:text-muted-foreground">Tables Played:</span>
                 <span className="ml-1 font-medium">{tablesPlayed}</span>
               </div>
               <div>
-                <span className="text-gray-500">Hands Entered:</span>
+                <span className="text-gray-500 dark:text-muted-foreground">Hands Entered:</span>
                 <span className="ml-1 font-medium">{handsEntered}</span>
               </div>
               <div>
-                <span className="text-gray-500">Cashouts Made:</span>
+                <span className="text-gray-500 dark:text-muted-foreground">Cashouts Made:</span>
                 <span className="ml-1 font-medium">{cashoutsRecorded}</span>
               </div>
               <div>
-                <span className="text-gray-500">ROI:</span>
+                <span className="text-gray-500 dark:text-muted-foreground">ROI:</span>
                 <span className={`ml-1 font-medium ${roi >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {roi.toFixed(1)}%
                 </span>
@@ -112,7 +112,7 @@ export default function EndSessionSheet({
             <label className="text-sm font-medium">Cash Out Amount</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <span className="text-gray-500">{currencySymbol}</span>
+                <span className="text-gray-500 dark:text-muted-foreground">{currencySymbol}</span>
               </div>
               <Input
                 type="number"
@@ -128,17 +128,17 @@ export default function EndSessionSheet({
 
           {/* Profit/Loss Display */}
           {cashOut > 0 && (
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-50 dark:bg-background rounded-lg p-4">
               <h3 className="font-semibold mb-2">Session Results</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">Profit/Loss:</span>
+                  <span className="text-gray-500 dark:text-muted-foreground">Profit/Loss:</span>
                   <span className={`ml-1 font-medium ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {currencySymbol}{profit.toFixed(2)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">ROI:</span>
+                  <span className="text-gray-500 dark:text-muted-foreground">ROI:</span>
                   <span className={`ml-1 font-medium ${roi >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {roi.toFixed(1)}%
                   </span>

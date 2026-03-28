@@ -241,7 +241,7 @@ const Help: React.FC = () => {
           <h1 className="text-2xl font-['Shippori_Antique_B1'] text-poker-gold mb-6 text-center">FAQ</h1>
         </header>
 
-        <div className="bg-card rounded-lg shadow-sm">
+        <div className="bg-card rounded-lg shadow-sm dark:shadow-black/20">
           <Accordion type="single" collapsible className="w-full">
             {faqItems.map((item, index) => (
               <AccordionItem 
@@ -252,7 +252,7 @@ const Help: React.FC = () => {
                 <AccordionTrigger className="px-6 py-4 text-left text-sm font-medium text-foreground hover:no-underline hover:bg-muted/50 transition-colors">
                   {item.question}
                 </AccordionTrigger>
-                <AccordionContent className="px-6 pb-4 text-sm text-gray-600 leading-relaxed [&_strong]:text-poker-gold">
+                <AccordionContent className="px-6 pb-4 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 leading-relaxed [&_strong]:text-poker-gold">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>

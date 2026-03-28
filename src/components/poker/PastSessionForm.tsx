@@ -319,9 +319,9 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
   const watchedFormat = form.watch('format');
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-background overflow-x-hidden">
       {/* Page Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
+      <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 sticky top-0 z-10">
         <div className="container mx-auto max-w-md px-4 py-4">
           <div className="flex items-center gap-3">
             <Button 
@@ -334,8 +334,8 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               <Icon name="ArrowLeft" size={20} />
             </Button>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Add Past Session</h1>
-              <p className="text-sm text-gray-500">Enter details for a completed poker session</p>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-foreground">Add Past Session</h1>
+              <p className="text-sm text-gray-500 dark:text-muted-foreground">Enter details for a completed poker session</p>
             </div>
           </div>
         </div>
@@ -367,7 +367,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                           className={`flex-1 cursor-pointer py-2 px-3 rounded-md border text-center text-sm ${
                             field.value === 'NLH' 
                               ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
-                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                              : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border hover:bg-gray-50 dark:bg-background'
                           }`}
                         >
                           No Limit Hold'em
@@ -383,7 +383,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                           className={`flex-1 cursor-pointer py-2 px-3 rounded-md border text-center text-sm ${
                             field.value === 'PLO' 
                               ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
-                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                              : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border hover:bg-gray-50 dark:bg-background'
                           }`}
                         >
                           Pot Limit Omaha
@@ -418,7 +418,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                           className={`flex-1 cursor-pointer py-2 px-3 rounded-md border text-center text-sm ${
                             field.value === 'Cash' 
                               ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
-                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                              : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border hover:bg-gray-50 dark:bg-background'
                           }`}
                         >
                           Cash Game
@@ -434,7 +434,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                           className={`flex-1 cursor-pointer py-2 px-3 rounded-md border text-center text-sm ${
                             field.value === 'Tournament' 
                               ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
-                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                              : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border hover:bg-gray-50 dark:bg-background'
                           }`}
                         >
                           Tournament
@@ -486,7 +486,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                         <FormLabel>Tournament Type</FormLabel>
                         <FormControl>
                           <select
-                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm dark:shadow-black/20 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                             value={field.value}
                             onChange={field.onChange}
                           >
@@ -559,7 +559,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               {/* Tables List */}
               {tables.length > 0 && (
                 <div className="space-y-3 max-h-60 overflow-y-auto overflow-x-hidden w-full">
-                  <h4 className="text-sm font-medium text-gray-700">Added Tables:</h4>
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Added Tables:</h4>
                   {tables.map((table) => (
                     <PastTableCard
                       key={table.id}

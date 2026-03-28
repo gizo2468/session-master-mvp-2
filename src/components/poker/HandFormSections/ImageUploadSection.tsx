@@ -90,7 +90,7 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
             variant="ghost"
             size="icon"
             onClick={(e) => { e.stopPropagation(); setIsLightboxOpen(false); }}
-            className="absolute top-4 right-4 z-20 text-white hover:bg-white/10 min-w-[44px] min-h-[44px]"
+            className="absolute top-4 right-4 z-20 text-white hover:bg-white dark:bg-card/10 min-w-[44px] min-h-[44px]"
             style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
           >
             <X className="w-6 h-6" />

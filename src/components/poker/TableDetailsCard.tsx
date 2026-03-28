@@ -57,12 +57,12 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
   console.log('TableDetailsCard - manuallyEnteredPayout (what will be displayed):', manuallyEnteredPayout);
 
   return (
-    <Card className="bg-white rounded-lg shadow mb-6">
+    <Card className="bg-white dark:bg-card rounded-lg shadow mb-6">
       <CardHeader>
         <CardTitle className="text-base flex items-center justify-between">
           <div>
             <span>{table.location}</span>
-            <span className="text-sm text-gray-500 font-normal ml-2">
+            <span className="text-sm text-gray-500 dark:text-muted-foreground font-normal ml-2">
               {table.gameType} • {table.format}
             </span>
           </div>
@@ -78,18 +78,18 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
       </CardHeader>
       <CardContent>
         {/* Redesigned Start, Duration, End row with better visual balance */}
-        <div className="flex justify-center items-center mb-6 text-sm border-b border-gray-100 pb-4">
+        <div className="flex justify-center items-center mb-6 text-sm border-b border-gray-100 dark:border-border pb-4">
           <div className="flex flex-1 justify-center items-center">
             <div className="text-center">
-              <div className="text-gray-500 font-medium text-xs uppercase mb-1">Start</div>
+              <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Start</div>
               <div className="font-medium">{formattedStart}</div>
             </div>
           </div>
           
           {table.startTime && table.endTime && (
-            <div className="flex-1 flex justify-center items-center border-x border-gray-100 px-4">
+            <div className="flex-1 flex justify-center items-center border-x border-gray-100 dark:border-border px-4">
               <div className="text-center">
-                <div className="text-gray-500 font-medium text-xs uppercase mb-1">Duration</div>
+                <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Duration</div>
               <TableTimerDisplay 
                   startTime={new Date(table.startTime)} 
                   endTime={table.endTime ? new Date(table.endTime) : undefined}
@@ -104,7 +104,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
           {formattedEnd && (
             <div className="flex-1 flex justify-center items-center">
               <div className="text-center">
-                <div className="text-gray-500 font-medium text-xs uppercase mb-1">End</div>
+                <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">End</div>
                 <div className="font-medium">{formattedEnd}</div>
               </div>
             </div>
@@ -113,7 +113,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
         
         {/* Multi-Day Tournament Continuation Info */}
         {isMultiDayContinuing && (
-          <div className="flex justify-center items-center mb-6 text-sm border-b border-gray-100 pb-4 bg-green-50 rounded-md p-2">
+          <div className="flex justify-center items-center mb-6 text-sm border-b border-gray-100 dark:border-border pb-4 bg-green-50 rounded-md p-2">
             {formattedNextDayStart && (
               <div className="flex-1 flex justify-center items-center">
                 <div className="text-center">
@@ -124,7 +124,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
             )}
             
             {table.chipsCarryover && (
-              <div className="flex-1 flex justify-center items-center border-l border-gray-100 pl-4">
+              <div className="flex-1 flex justify-center items-center border-l border-gray-100 dark:border-border pl-4">
                 <div className="text-center">
                   <div className="text-green-600 font-medium text-xs uppercase mb-1">Chips Carried Over</div>
                   <div className="font-medium text-green-800">{table.chipsCarryover.toLocaleString()}</div>
@@ -137,14 +137,14 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
         {/* Styled Buy-in and Rebuy section with centered alignment */}
         <div className="flex items-center justify-center gap-4 mb-4">
           <div className="text-center">
-            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">BUY-IN</span>
+            <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">BUY-IN</span>
             <span className="font-bold text-2xl">
               {currencySymbol}{table.initialBuyIn?.toFixed(2) ?? table.buyIn.toFixed(2)}
             </span>
           </div>
           {rebuyAmount > 0 && (
             <div className="text-center">
-              <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">REBUY</span>
+              <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">REBUY</span>
               <span className="font-bold text-2xl text-red-600">
                 +{currencySymbol}{rebuyAmount.toFixed(2)}
               </span>
@@ -156,18 +156,18 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs mb-4">
           {table.format === 'Tournament' && table.startingBB && (
             <div className="flex items-center">
-              <span className="text-gray-500 mr-1">Starting BBs:</span>
+              <span className="text-gray-500 dark:text-muted-foreground mr-1">Starting BBs:</span>
               <span>{table.startingBB}BB</span>
             </div>
           )}
           
           {table.format === 'Tournament' && table.startingBB && table.tournamentTypes && table.tournamentTypes.length > 0 && (
-            <span className="text-gray-400">•</span>
+            <span className="text-gray-400 dark:text-gray-500">•</span>
           )}
           
           {table.tournamentTypes && table.tournamentTypes.length > 0 && (
             <div className="flex items-center">
-              <span className="text-gray-500 mr-1">Tournament Type:</span>
+              <span className="text-gray-500 dark:text-muted-foreground mr-1">Tournament Type:</span>
               <span className="flex flex-wrap gap-1">
                 {table.tournamentTypes.map((type, index) => (
                   <React.Fragment key={type}>
@@ -185,14 +185,14 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs mb-4">
             {table.bountyCount !== undefined && table.bountyCount > 0 && (
               <div>
-                <span className="text-gray-500">Players Eliminated:</span>
+                <span className="text-gray-500 dark:text-muted-foreground">Players Eliminated:</span>
                 <div>{table.bountyCount}</div>
               </div>
             )}
             {table.bountyAmount !== undefined && table.bountyAmount > 0 && (
               <div>
-                <span className="text-gray-500">Bounty Collected (info only):</span>
-                <div className="text-gray-600 font-medium">{currencySymbol}{table.bountyAmount.toFixed(2)}</div>
+                <span className="text-gray-500 dark:text-muted-foreground">Bounty Collected (info only):</span>
+                <div className="text-gray-600 dark:text-gray-400 dark:text-gray-500 font-medium">{currencySymbol}{table.bountyAmount.toFixed(2)}</div>
               </div>
             )}
           </div>
@@ -204,7 +204,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
             <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
               isMultiDayContinuing 
                 ? 'bg-green-100 text-green-800' 
-                : 'bg-gray-100 text-gray-800'
+                : 'bg-gray-100 dark:bg-muted text-gray-800 dark:text-foreground'
             }`}>
               {isMultiDayContinuing 
                 ? 'Continuing to Next Day' 
@@ -216,7 +216,7 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
         {/* COMPLETELY REWRITTEN: Total Payout display - shows ONLY the raw manually entered value */}
         {table.cashOut !== undefined && !isMultiDayContinuing && (
           <div className="flex flex-col items-center justify-center mt-4 mb-2">
-            <span className="block uppercase text-xs text-gray-500 font-medium tracking-wider">TOTAL PAYOUT</span>
+            <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">TOTAL PAYOUT</span>
             <span className="font-bold text-2xl text-poker-gold">
               {currencySymbol}{manuallyEnteredPayout.toFixed(2)}
             </span>
@@ -225,8 +225,8 @@ export const TableDetailsCard: React.FC<TableDetailsCardProps> = ({ table, sessi
         
         {table.notes && (
           <div className="mt-2">
-            <span className="text-gray-500 block mb-1">Notes:</span>
-            <div className="text-xs bg-gray-50 p-2 rounded">{table.notes}</div>
+            <span className="text-gray-500 dark:text-muted-foreground block mb-1">Notes:</span>
+            <div className="text-xs bg-gray-50 dark:bg-background p-2 rounded">{table.notes}</div>
           </div>
         )}
       </CardContent>

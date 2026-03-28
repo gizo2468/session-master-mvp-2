@@ -32,7 +32,7 @@ const CoachConnection = () => {
                 <div>
                   <div className="text-lg font-medium">{coach.displayName}</div>
                   {coach.bio && (
-                    <p className="text-gray-600 text-sm">{coach.bio}</p>
+                    <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm">{coach.bio}</p>
                   )}
                 </div>
               </div>

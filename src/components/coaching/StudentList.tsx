@@ -22,11 +22,11 @@ const StudentList = () => {
 
   if (students.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-gray-500 dark:text-muted-foreground">
         <div className="mb-4">
           <Icon name="Users" size={48} className="mx-auto text-gray-300" />
         </div>
-        <p className="text-lg font-medium text-gray-600 mb-2">No players connected yet</p>
+        <p className="text-lg font-medium text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-2">No players connected yet</p>
         <p className="text-sm">Share your connection code to get started coaching players.</p>
       </div>
     );
@@ -47,7 +47,7 @@ const StudentList = () => {
                 </div>
                 <div>
                   <h3 className="font-medium">{student.displayName}</h3>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 dark:text-muted-foreground">
                     {student.sessionCount || 0} {student.sessionCount === 1 ? 'session' : 'sessions'} • 
                     Last active: {student.lastActivity ? 
                       new Date(student.lastActivity).toLocaleDateString() : 

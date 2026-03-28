@@ -25,10 +25,10 @@ const badgeVariants = cva(
         timeDuration: "border-transparent bg-poker-cream text-poker-black rounded-xl",
         timeEnded: "border-transparent bg-poker-cream text-poker-black rounded-xl",
         // Enhanced coach plan badge variants with modern styling
-        planFree: "border-transparent bg-gray-600 text-white px-4 py-1 rounded-md shadow-sm hover:shadow-md transition-all",
-        planStarter: "border-transparent bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-1 rounded-md shadow-sm hover:shadow-md transition-all",
-        planPro: "border-transparent bg-gradient-to-r from-poker-gold to-poker-darkGold text-white px-4 py-1 rounded-md shadow-sm hover:shadow-md transition-all",
-        planElite: "border-transparent bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-1 rounded-md shadow-sm hover:shadow-md transition-all",
+        planFree: "border-transparent bg-gray-600 text-white px-4 py-1 rounded-md shadow-sm dark:shadow-black/20 hover:shadow-md dark:shadow-black/30 transition-all",
+        planStarter: "border-transparent bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-1 rounded-md shadow-sm dark:shadow-black/20 hover:shadow-md dark:shadow-black/30 transition-all",
+        planPro: "border-transparent bg-gradient-to-r from-poker-gold to-poker-darkGold text-white px-4 py-1 rounded-md shadow-sm dark:shadow-black/20 hover:shadow-md dark:shadow-black/30 transition-all",
+        planElite: "border-transparent bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-1 rounded-md shadow-sm dark:shadow-black/20 hover:shadow-md dark:shadow-black/30 transition-all",
       },
     },
     defaultVariants: {

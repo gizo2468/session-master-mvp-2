@@ -195,10 +195,10 @@ export default function EditSession() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-poker-feltGreen mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading session data...</p>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Loading session data...</p>
         </div>
       </div>
     );
@@ -206,18 +206,18 @@ export default function EditSession() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center">
         <div className="text-center">
           <Icon name="AlertCircle" className="mx-auto mb-4 h-12 w-12 text-red-500" />
-          <p className="text-gray-600">Session not found</p>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Session not found</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm header-safe pt-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-background">
+      <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 header-safe pt-4">
         <div className="container mx-auto max-w-md px-4 pb-4">
           <div className="flex items-center gap-4">
             <Button
@@ -241,7 +241,7 @@ export default function EditSession() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Location
               </label>
               <Input
@@ -253,7 +253,7 @@ export default function EditSession() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Game Type
                 </label>
                 <Select
@@ -271,7 +271,7 @@ export default function EditSession() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Format
                 </label>
                 <Select
@@ -291,7 +291,7 @@ export default function EditSession() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Buy-in ($)
                 </label>
                 <Input
@@ -304,7 +304,7 @@ export default function EditSession() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Cash Out ($)
                 </label>
                 <Input
@@ -320,7 +320,7 @@ export default function EditSession() {
             {formData.format === 'Cash' && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Small Blind ($)
                   </label>
                   <Input
@@ -333,7 +333,7 @@ export default function EditSession() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Big Blind ($)
                   </label>
                   <Input
@@ -348,7 +348,7 @@ export default function EditSession() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Notes
               </label>
               <Textarea

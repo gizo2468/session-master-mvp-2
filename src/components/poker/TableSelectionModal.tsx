@@ -209,7 +209,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
               return (
                 <div
                   key={table.id}
-                  className="border rounded-lg p-3 transition-colors relative cursor-pointer hover:bg-gray-50"
+                  className="border rounded-lg p-3 transition-colors relative cursor-pointer hover:bg-gray-50 dark:bg-background"
                   onClick={() => toggleHandsExpansion(table.id)}
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -226,7 +226,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={(e) => handleEditClick(e, table)}
-                        className="h-8 w-8 p-0 hover:bg-gray-100 hover:text-gray-800"
+                        className="h-8 w-8 p-0 hover:bg-gray-100 dark:bg-muted hover:text-gray-800 dark:text-foreground"
                         title="Edit Table"
                       >
                         <Edit2 className="h-4 w-4" />
@@ -246,7 +246,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
                   
                   {/* Add Hand button and table details on same row */}
                   <div className="flex justify-between items-center mb-2">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-muted-foreground">
                       {formatTableDetails(table)} • {formattedStart}
                     </p>
                     {onAddHand && (
@@ -327,7 +327,7 @@ const TableSelectionModal: React.FC<TableSelectionModalProps> = ({
               <Button
                 variant="outline"
                 onClick={onAddTable}
-                className="w-full border-dashed border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                className="w-full border-dashed border-2 border-gray-300 dark:border-border hover:border-gray-400 hover:bg-gray-50 dark:bg-background"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Table
