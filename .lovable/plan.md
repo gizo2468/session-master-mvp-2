@@ -1,55 +1,38 @@
 
 
-## Update Signup Email Confirmation Redirect — With 3 Pre-Checks
+## Night Mode — Revised Plan (Targeted Text Override)
 
-### Check 1: Production Supabase Redirect URLs
+### What changed from previous plan
+Removed the broad `.text-poker-black`, `.text-gray-500`, `.text-gray-600` global overrides. Replaced with a single, scoped selector that only hits page-level `h1` titles — the only elements that actually sit directly on the dark background and need a color fix.
 
-The `supabase/config.toml` has `auto_confirm_email = true` and does **not** include `https://sessionmaster.site/*` in `additional_redirect_urls`. However, `config.toml` only controls the **local dev** Supabase instance — it does **not** control the production Supabase project settings.
+### Why `h1.text-poker-black` is safe
+Every match of `text-poker-black` on an `h1` is a page title sitting directly on the `bg-gray-50` page background (Settings, Coach Dashboard, Session Form, etc.). The other uses of `text-poker-black` are on badges and button variants — those are `span`/`div` elements inside components with their own colored backgrounds, so `h1.text-poker-black` won't touch them.
 
-**Action required before implementation**: You must verify in the Supabase Dashboard (Authentication → URL Configuration) that `https://sessionmaster.site/*` is listed under "Redirect URLs". If it is not, add it manually:
+### CSS overrides (`src/index.css`)
+```css
+/* Night Mode */
+html.night-mode .bg-gray-50 {
+  background-color: #111827 !important;
+}
 
-→ https://supabase.com/dashboard/project/wfmvvpbpuqbzidptxbqx/auth/url-configuration
+html.night-mode h1.text-poker-black {
+  color: #f3f4f6 !important;
+}
+```
 
-Without this, Supabase will reject the redirect to `sessionmaster.site/confirm-email`.
+That's it for CSS. Two rules total — background + page titles only. Cards, badges, buttons, and all internal component text stay completely untouched.
 
-I will also update `config.toml` to keep it in sync for local dev.
+### Files (same 4 as before)
 
-### Check 2: auto_confirm_email = true
+| File | Action |
+|---|---|
+| `src/context/NightModeContext.tsx` | New — context, localStorage, class toggle on `<html>` |
+| `src/index.css` | Add 2 CSS rules above |
+| `src/App.tsx` | Wrap with `NightModeProvider` |
+| `src/pages/Settings.tsx` | Add Appearance card with Night Mode toggle |
 
-The config shows `auto_confirm_email = true`. If this is also the production setting, then new users are confirmed immediately upon signup — **no confirmation email is ever sent**, so the `emailRedirectTo` URL is never used for signup confirmation.
-
-However, the code still has a "Resend Verification Email" flow in both `Signup.tsx` and `Login.tsx`, which suggests email confirmation was expected at some point. There are two possibilities:
-
-- **If production has auto-confirm ON**: The redirect change is harmless but will only matter if auto-confirm is later disabled. The code change is still correct to make.
-- **If production has auto-confirm OFF** (dashboard override): The redirect change is essential and will work as expected.
-
-**Action**: Check Supabase Dashboard → Authentication → Providers → Email → "Confirm email" toggle to verify the production setting.
-
-→ https://supabase.com/dashboard/project/wfmvvpbpuqbzidptxbqx/auth/providers
-
-### Check 3: Website /confirm-email Page Handles Hash Params
-
-I reviewed the website project's `ConfirmEmail.tsx`. It correctly handles:
-- **Valid state**: Detects `access_token=` in URL hash or `type=signup` in hash/search params → shows success UI
-- **Invalid/expired state**: No matching params → shows "Invalid or Expired Link" UI
-- **Loading state**: Shows nothing while checking (`isValid === null`)
-
-This is correct for Supabase's confirmation flow, which appends `#access_token=...&type=signup` to the redirect URL.
-
-### Implementation (3 files in this project)
-
-**1. `src/pages/auth/Signup.tsx`** — 2 changes:
-- Line 211: `emailRedirectTo: '${window.location.origin}/'` → `'https://sessionmaster.site/confirm-email'`
-- Line 281: Same change for resend flow
-
-**2. `src/pages/auth/Login.tsx`** — 1 change:
-- Line 100: Same change for resend flow
-
-**3. `supabase/config.toml`** — 1 change:
-- Line 5: Add `"https://sessionmaster.site/*"` to `additional_redirect_urls` array (keeps local dev config in sync)
-
-### What stays unchanged
-- Login, forgot password, reset password flows
-- App UI, navigation, all other auth behavior
-- No changes to the website project
+### Everything else unchanged
+- White cards remain white with original text colors
+- Layout, spacing, icons, buttons, data flow untouched
+- No full dark theme
 
