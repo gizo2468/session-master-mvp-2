@@ -1,55 +1,89 @@
 
 
-## Update Signup Email Confirmation Redirect — With 3 Pre-Checks
+## App-Wide Premium Dark Mode — Implementation Plan
 
-### Check 1: Production Supabase Redirect URLs
+### Overview
+Build a complete dark mode with deep charcoal surfaces, warm gold accents, and premium poker atmosphere. User-controlled via Settings toggle. No layout/logic changes.
 
-The `supabase/config.toml` has `auto_confirm_email = true` and does **not** include `https://sessionmaster.site/*` in `additional_redirect_urls`. However, `config.toml` only controls the **local dev** Supabase instance — it does **not** control the production Supabase project settings.
+### Phase 1: Theme Infrastructure (2 files)
 
-**Action required before implementation**: You must verify in the Supabase Dashboard (Authentication → URL Configuration) that `https://sessionmaster.site/*` is listed under "Redirect URLs". If it is not, add it manually:
+**New: `src/context/ThemeContext.tsx`**
+- React context with `theme` state (`light` | `dark`) and `toggleTheme`
+- Reads/writes `localStorage('theme')`
+- Toggles `.dark` class on `document.documentElement`
+- Initializes from localStorage on mount (default: light)
 
-→ https://supabase.com/dashboard/project/wfmvvpbpuqbzidptxbqx/auth/url-configuration
+**Update: `src/main.tsx`**
+- Wrap `<App />` in `<ThemeProvider>`
 
-Without this, Supabase will reject the redirect to `sessionmaster.site/confirm-email`.
+### Phase 2: Premium Dark Palette (1 file)
 
-I will also update `config.toml` to keep it in sync for local dev.
+**Update: `src/index.css` — rewrite `.dark` block**
 
-### Check 2: auto_confirm_email = true
+```text
+Background:         0 0% 7%          (#121212)
+Foreground:         40 10% 95%       (#F5F3EF warm white)
+Card:               0 0% 11%        (#1C1C1C)
+Card-foreground:    40 10% 95%
+Popover:            0 0% 13%        (#212121)
+Primary:            43 77% 52%      (gold — KEEP)
+Primary-foreground: 0 0% 7%        (dark on gold)
+Secondary:          144 54% 20%     (darker felt green)
+Muted:              0 0% 15%       (#262626)
+Muted-foreground:   40 5% 55%      (warm gray)
+Accent:             0 0% 15%
+Border:             0 0% 18%       (#2E2E2E)
+Input:              0 0% 18%
+Destructive:        0 62% 45%
+Ring:               43 77% 52%     (gold ring)
+```
 
-The config shows `auto_confirm_email = true`. If this is also the production setting, then new users are confirmed immediately upon signup — **no confirmation email is ever sent**, so the `emailRedirectTo` URL is never used for signup confirmation.
+Also add dark-mode shadow overrides and autofill color overrides.
 
-However, the code still has a "Resend Verification Email" flow in both `Signup.tsx` and `Login.tsx`, which suggests email confirmation was expected at some point. There are two possibilities:
+### Phase 3: Enable Toggle (1 file)
 
-- **If production has auto-confirm ON**: The redirect change is harmless but will only matter if auto-confirm is later disabled. The code change is still correct to make.
-- **If production has auto-confirm OFF** (dashboard override): The redirect change is essential and will work as expected.
+**Update: `src/components/settings/AppSettings.tsx`**
+- Import `useTheme` from ThemeContext
+- Remove `disabled` from Switch, wire to `toggleTheme`
+- Remove "Coming soon" text
 
-**Action**: Check Supabase Dashboard → Authentication → Providers → Email → "Confirm email" toggle to verify the production setting.
+### Phase 4: Dark-Aware Classes Across Components (~50 files)
 
-→ https://supabase.com/dashboard/project/wfmvvpbpuqbzidptxbqx/auth/providers
+The strategy: add `dark:` variant classes alongside existing hardcoded colors. This is the bulk of the work.
 
-### Check 3: Website /confirm-email Page Handles Hash Params
+**Pattern replacements applied systematically:**
 
-I reviewed the website project's `ConfirmEmail.tsx`. It correctly handles:
-- **Valid state**: Detects `access_token=` in URL hash or `type=signup` in hash/search params → shows success UI
-- **Invalid/expired state**: No matching params → shows "Invalid or Expired Link" UI
-- **Loading state**: Shows nothing while checking (`isValid === null`)
+| Light class | Added dark variant |
+|---|---|
+| `bg-gray-50` | `dark:bg-background` |
+| `bg-white` | `dark:bg-card` |
+| `bg-gray-100` | `dark:bg-muted` |
+| `bg-gray-200` | `dark:bg-muted` |
+| `text-gray-900` | `dark:text-foreground` |
+| `text-gray-800` | `dark:text-foreground` |
+| `text-gray-700` | `dark:text-gray-300` |
+| `text-gray-600` | `dark:text-gray-400` |
+| `text-gray-500` | `dark:text-muted-foreground` |
+| `text-gray-400` | `dark:text-gray-500` |
+| `border-gray-*` | `dark:border-border` |
+| `shadow-sm/md` | `dark:shadow-black/20` |
+| `hover:bg-gray-100` | `dark:hover:bg-muted` |
+| `divide-gray-*` | `dark:divide-border` |
 
-This is correct for Supabase's confirmation flow, which appends `#access_token=...&type=signup` to the redirect URL.
+**Files to update (grouped):**
 
-### Implementation (3 files in this project)
+**Pages (~15):** Index, Dashboard, PlayerDashboard, CoachDashboard, SessionHistory, SessionDetail, SessionForm, LiveSession, EditSession, ConfirmSession, Settings, Subscription, Notifications, AddPastSession, PlayerProfile, CoachProfile, ChartsLibrary, auth pages (Login, Signup, ForgotPassword, ResetPassword), legal pages
 
-**1. `src/pages/auth/Signup.tsx`** — 2 changes:
-- Line 211: `emailRedirectTo: '${window.location.origin}/'` → `'https://sessionmaster.site/confirm-email'`
-- Line 281: Same change for resend flow
+**AppLayout:** `bg-gray-50` → `bg-gray-50 dark:bg-background`
 
-**2. `src/pages/auth/Login.tsx`** — 1 change:
-- Line 100: Same change for resend flow
-
-**3. `supabase/config.toml`** — 1 change:
-- Line 5: Add `"https://sessionmaster.site/*"` to `additional_redirect_urls` array (keeps local dev config in sync)
+**Components (~35):** SessionCard, ActiveSessionCard, StatsQuickView, FilterBar, NewSessionButton, Logo, NotificationBell, MyStatisticsSection, DonationCard, EndSessionSheet, all poker/* components (TableCard, HandsList, SessionDetailsCard, HandForm, CardSelector, PastSessionForm, etc.), all coaching/* components, all notes/* components, all settings/* cards, ui/PremiumBanner, ui/PremiumFeatureDialog
 
 ### What stays unchanged
-- Login, forgot password, reset password flows
-- App UI, navigation, all other auth behavior
-- No changes to the website project
+- All layout, spacing, navigation, routing
+- Business logic and data flow
+- Gold/green branding (preserved and enhanced in dark mode)
+- Component structure — no moving or restructuring
+
+### Scope
+~55 files total. 2 new files (ThemeContext, none else), ~53 edits. All changes are class additions (`dark:` variants) or CSS variable updates — no logic changes.
 
