@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -6,22 +6,61 @@ import Icon from '@/components/ui/Lucide';
 import PageContainer from '@/components/ui/PageContainer';
 import PositionMatrix from '@/components/charts/PositionMatrix';
 import SpotDetailView from '@/components/charts/SpotDetailView';
-import { useChartCollections, useChartSolutions, type ChartSolution } from '@/hooks/useChartsLibrary';
+import CreateCollectionDialog from '@/components/charts/CreateCollectionDialog';
+import CreateSolutionSheet from '@/components/charts/CreateSolutionSheet';
+import { useChartCollections, useChartSolutions, useDeleteCollection, type ChartSolution } from '@/hooks/useChartsLibrary';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const ChartsLibrary: React.FC = () => {
   const navigate = useNavigate();
   const { data: collections, isLoading: collectionsLoading } = useChartCollections();
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
   const [selectedSolution, setSelectedSolution] = useState<ChartSolution | null>(null);
+  const [showCreateCollection, setShowCreateCollection] = useState(false);
+  const [showCreateSolution, setShowCreateSolution] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [createSpotPrefill, setCreateSpotPrefill] = useState<{
+    hero: string;
+    villain: string | null;
+    actionType: string;
+  } | null>(null);
 
-  // Auto-select first collection
+  const deleteCollection = useDeleteCollection();
+
   const activeCollectionId = selectedCollectionId || collections?.[0]?.id || null;
   const activeCollection = collections?.find(c => c.id === activeCollectionId);
+  const isUserOwned = activeCollection ? !activeCollection.is_default : false;
 
   const { data: solutions, isLoading: solutionsLoading } = useChartSolutions(activeCollectionId);
-
   const isLoading = collectionsLoading || solutionsLoading;
+
+  const handleCreateSpot = (heroPos: string, scenario: { actionType: string; villain: string | null }) => {
+    setCreateSpotPrefill({ hero: heroPos, villain: scenario.villain, actionType: scenario.actionType });
+    setShowCreateSolution(true);
+  };
+
+  const handleDeleteCollection = async () => {
+    if (!activeCollectionId) return;
+    try {
+      await deleteCollection.mutateAsync(activeCollectionId);
+      setSelectedCollectionId(null);
+      toast.success('Collection deleted');
+    } catch {
+      toast.error('Failed to delete collection');
+    }
+    setShowDeleteConfirm(false);
+  };
 
   if (selectedSolution && activeCollection) {
     return (
@@ -40,12 +79,7 @@ const ChartsLibrary: React.FC = () => {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="shrink-0"
-          >
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
             <Icon name="ArrowLeft" className="h-5 w-5" />
           </Button>
           <div className="flex-1">
@@ -60,21 +94,31 @@ const ChartsLibrary: React.FC = () => {
           {collectionsLoading ? (
             <Skeleton className="h-9 w-48" />
           ) : (
-            <Select
-              value={activeCollectionId || ''}
-              onValueChange={setSelectedCollectionId}
-            >
+            <Select value={activeCollectionId || ''} onValueChange={setSelectedCollectionId}>
               <SelectTrigger className="w-auto min-w-[180px]">
                 <SelectValue placeholder="Select collection" />
               </SelectTrigger>
               <SelectContent>
                 {collections?.map(c => (
                   <SelectItem key={c.id} value={c.id}>
-                    {c.name} ({c.stack_depth_bb}bb)
+                    {c.name} ({c.stack_depth_bb}bb){!c.is_default && ' ✦'}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          )}
+          <Button variant="ghost" size="icon" onClick={() => setShowCreateCollection(true)} className="shrink-0">
+            <Icon name="Plus" className="h-4 w-4" />
+          </Button>
+          {isUserOwned && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="shrink-0 text-destructive hover:text-destructive"
+            >
+              <Icon name="Trash2" className="h-4 w-4" />
+            </Button>
           )}
         </div>
 
@@ -85,20 +129,51 @@ const ChartsLibrary: React.FC = () => {
               <Skeleton key={i} className="h-11 w-full" />
             ))}
           </div>
-        ) : solutions && solutions.length > 0 ? (
+        ) : (
           <PositionMatrix
-            solutions={solutions}
+            solutions={solutions || []}
             onSpotClick={setSelectedSolution}
             stackDepth={activeCollection?.stack_depth_bb || 100}
+            isUserOwned={isUserOwned}
+            onCreateSpot={handleCreateSpot}
           />
-        ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Icon name="LayoutGrid" className="h-12 w-12 text-muted-foreground/30 mb-3" />
-            <p className="text-muted-foreground font-medium">No solutions available</p>
-            <p className="text-sm text-muted-foreground/70">Select a collection to browse spots</p>
-          </div>
         )}
       </div>
+
+      {/* Dialogs */}
+      <CreateCollectionDialog
+        open={showCreateCollection}
+        onOpenChange={setShowCreateCollection}
+        onCreated={(id) => setSelectedCollectionId(id)}
+      />
+
+      {activeCollectionId && (
+        <CreateSolutionSheet
+          open={showCreateSolution}
+          onOpenChange={setShowCreateSolution}
+          collectionId={activeCollectionId}
+          prefillHero={createSpotPrefill?.hero}
+          prefillVillain={createSpotPrefill?.villain}
+          prefillActionType={createSpotPrefill?.actionType}
+        />
+      )}
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Collection</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{activeCollection?.name}" and all its solutions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCollection} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageContainer>
   );
 };
