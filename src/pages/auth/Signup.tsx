@@ -208,7 +208,7 @@ const Signup: React.FC = () => {
             experience: values.experience,
             hasAcceptedTerms: values.agreeToTerms
           },
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: 'https://sessionmaster.site/confirm-email'
         }
       });
 
@@ -278,7 +278,7 @@ const Signup: React.FC = () => {
         type: 'signup',
         email: userEmail,
         options: {
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: 'https://sessionmaster.site/confirm-email'
         }
       });
 

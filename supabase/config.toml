@@ -2,7 +2,7 @@ project_id = "wfmvvpbpuqbzidptxbqx"
 
 [auth]
 site_url = "https://session-master-mvp.lovable.app"
-additional_redirect_urls = ["https://session-master-mvp.lovable.app/*", "capacitor://localhost", "http://localhost:3000"]
+additional_redirect_urls = ["https://session-master-mvp.lovable.app/*", "capacitor://localhost", "http://localhost:3000", "https://sessionmaster.site/*"]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10
