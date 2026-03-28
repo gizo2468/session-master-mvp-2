@@ -249,15 +249,6 @@ textarea:-webkit-autofill:active {
     -ms-overflow-style: none;
   }
 }
-/* Night Mode overrides */
-html.night-mode .bg-gray-50 {
-  background-color: #111827 !important;
-}
-
-html.night-mode h1.text-poker-black {
-  color: #f3f4f6 !important;
-}
-
 /* iOS: prevent auto-zoom on input focus */
 @supports (-webkit-touch-callout: none) {
   input,

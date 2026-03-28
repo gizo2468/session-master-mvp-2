@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
-import { NightModeProvider } from "@/context/NightModeContext";
 import { CoachStudentProvider } from "@/context/CoachStudentContext";
 import { SessionProvider } from "@/context/SessionContext";
 import AuthGuard from "@/components/auth/AuthGuard";
@@ -65,7 +64,6 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <NightModeProvider>
           <AuthProvider>
             <CoachStudentProvider>
               <SessionProvider>
@@ -107,7 +105,6 @@ const App = () => {
               </SessionProvider>
             </CoachStudentProvider>
           </AuthProvider>
-          </NightModeProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
