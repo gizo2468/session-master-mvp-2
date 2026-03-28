@@ -1,55 +1,55 @@
 
 
-## Create New Solutions (No Editing of Existing Ranges)
+## Update Signup Email Confirmation Redirect — With 3 Pre-Checks
 
-### Scope
-Users can **create** their own custom solutions and collections from scratch. They **cannot** edit or override existing default hand ranges — those remain read-only.
+### Check 1: Production Supabase Redirect URLs
 
-### Changes
+The `supabase/config.toml` has `auto_confirm_email = true` and does **not** include `https://sessionmaster.site/*` in `additional_redirect_urls`. However, `config.toml` only controls the **local dev** Supabase instance — it does **not** control the production Supabase project settings.
 
-**1. Mutation hooks** (`src/hooks/useChartsLibrary.ts`)
-- `useCreateCollection` — inserts into `chart_collections` with `user_id`, `is_default: false`
-- `useCreateSolution` — inserts into `chart_solutions` with user-defined range data, hero/villain positions, action type
-- `useDeleteSolution` — deletes user-owned solutions only
-- `useDeleteCollection` — deletes user-owned collections only
-- All mutations invalidate relevant query keys
+**Action required before implementation**: You must verify in the Supabase Dashboard (Authentication → URL Configuration) that `https://sessionmaster.site/*` is listed under "Redirect URLs". If it is not, add it manually:
 
-**2. Create Collection Dialog** (`src/components/charts/CreateCollectionDialog.tsx`)
-- Simple dialog: name, stack depth (bb), game type (NLH/PLO)
-- Triggered by a "+" button next to the collection selector in `ChartsLibrary.tsx`
+→ https://supabase.com/dashboard/project/wfmvvpbpuqbzidptxbqx/auth/url-configuration
 
-**3. Create Solution Sheet** (`src/components/charts/CreateSolutionSheet.tsx`)
-- Bottom sheet with fields: hero position, villain position (optional for RFI), action type (RFI/DEFEND/3BET), spot label (auto-generated)
-- Includes a **HandRangeGrid in creation mode** — user taps cells to toggle Raise/Call/Fold
-- Save button creates the solution in the user's collection
-- Only available when viewing a user-owned collection (not default)
+Without this, Supabase will reject the redirect to `sessionmaster.site/confirm-email`.
 
-**4. HandRangeGrid update** (`src/components/charts/HandRangeGrid.tsx`)
-- Add `editable` prop — when true, tapping a cell cycles Raise → Call → Fold
-- Add `rangeState` + `onRangeChange` props for controlled editing during creation
-- Existing read-only usage (SpotDetailView) stays unchanged — no editing of existing charts
+I will also update `config.toml` to keep it in sync for local dev.
 
-**5. PositionMatrix update** (`src/components/charts/PositionMatrix.tsx`)
-- Empty "+" cells in user-owned collections open the CreateSolutionSheet with pre-filled hero position and scenario
-- "+" cells in default collections remain disabled (no creation into system collections)
+### Check 2: auto_confirm_email = true
 
-**6. ChartsLibrary page update** (`src/pages/ChartsLibrary.tsx`)
-- Add "+" button next to collection selector → opens CreateCollectionDialog
-- Pass collection ownership info to PositionMatrix so it knows if creation is allowed
-- Show delete option for user-owned collections
+The config shows `auto_confirm_email = true`. If this is also the production setting, then new users are confirmed immediately upon signup — **no confirmation email is ever sent**, so the `emailRedirectTo` URL is never used for signup confirmation.
 
-### What stays the same
-- Default ranges are **read-only** — no edit, no override, no `user_custom_charts` usage
-- SpotDetailView shows ranges without any edit controls
-- Existing grid colors/layout unchanged
+However, the code still has a "Resend Verification Email" flow in both `Signup.tsx` and `Login.tsx`, which suggests email confirmation was expected at some point. There are two possibilities:
 
-### Files
-| File | Action |
-|---|---|
-| `src/hooks/useChartsLibrary.ts` | Add mutation hooks |
-| `src/components/charts/CreateCollectionDialog.tsx` | New |
-| `src/components/charts/CreateSolutionSheet.tsx` | New |
-| `src/components/charts/HandRangeGrid.tsx` | Add `editable` mode for creation only |
-| `src/components/charts/PositionMatrix.tsx` | Enable "+" cells for user collections |
-| `src/pages/ChartsLibrary.tsx` | Add create collection button, pass ownership |
+- **If production has auto-confirm ON**: The redirect change is harmless but will only matter if auto-confirm is later disabled. The code change is still correct to make.
+- **If production has auto-confirm OFF** (dashboard override): The redirect change is essential and will work as expected.
+
+**Action**: Check Supabase Dashboard → Authentication → Providers → Email → "Confirm email" toggle to verify the production setting.
+
+→ https://supabase.com/dashboard/project/wfmvvpbpuqbzidptxbqx/auth/providers
+
+### Check 3: Website /confirm-email Page Handles Hash Params
+
+I reviewed the website project's `ConfirmEmail.tsx`. It correctly handles:
+- **Valid state**: Detects `access_token=` in URL hash or `type=signup` in hash/search params → shows success UI
+- **Invalid/expired state**: No matching params → shows "Invalid or Expired Link" UI
+- **Loading state**: Shows nothing while checking (`isValid === null`)
+
+This is correct for Supabase's confirmation flow, which appends `#access_token=...&type=signup` to the redirect URL.
+
+### Implementation (3 files in this project)
+
+**1. `src/pages/auth/Signup.tsx`** — 2 changes:
+- Line 211: `emailRedirectTo: '${window.location.origin}/'` → `'https://sessionmaster.site/confirm-email'`
+- Line 281: Same change for resend flow
+
+**2. `src/pages/auth/Login.tsx`** — 1 change:
+- Line 100: Same change for resend flow
+
+**3. `supabase/config.toml`** — 1 change:
+- Line 5: Add `"https://sessionmaster.site/*"` to `additional_redirect_urls` array (keeps local dev config in sync)
+
+### What stays unchanged
+- Login, forgot password, reset password flows
+- App UI, navigation, all other auth behavior
+- No changes to the website project
 
