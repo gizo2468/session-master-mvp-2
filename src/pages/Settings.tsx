@@ -16,6 +16,8 @@ import { useDefaultCurrency } from '@/hooks/useDefaultCurrency';
 import { useStackCheckInterval, STACK_CHECK_OPTIONS } from '@/hooks/useStackCheckInterval';
 import { supabase } from '@/integrations/supabase/client';
 import SupportSettings from '@/components/settings/SupportSettings';
+import { Switch } from '@/components/ui/switch';
+import { useNightMode } from '@/context/NightModeContext';
 import {
   Select,
   SelectContent,
@@ -31,6 +33,7 @@ const Settings: React.FC = () => {
   const { toast } = useToast();
   const { defaultCurrency } = useDefaultCurrency();
   const { interval: stackCheckInterval, updateInterval: updateStackCheckInterval, isLoading: stackCheckLoading } = useStackCheckInterval();
+  const { nightMode, toggleNightMode } = useNightMode();
   const [profile, setProfile] = useState<{ username?: string; role?: string; default_currency?: string; coaching_focus?: string[]; experience?: string } | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -574,6 +577,26 @@ const Settings: React.FC = () => {
                     <Icon name="ChevronRight" className="h-4 w-4" />
                   </Button>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Appearance */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Appearance</CardTitle>
+              <CardDescription className="text-center">Customize how the app looks</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Icon name="Moon" className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Night Mode</p>
+                    <p className="text-sm text-muted-foreground">Darken the app background</p>
+                  </div>
+                </div>
+                <Switch checked={nightMode} onCheckedChange={toggleNightMode} />
               </div>
             </CardContent>
           </Card>
