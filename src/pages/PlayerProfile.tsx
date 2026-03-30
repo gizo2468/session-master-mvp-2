@@ -395,7 +395,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
           <Button 
             onClick={() => navigate('/dashboard')} 
             variant="ghost"
-            className="mb-4 text-poker-feltGreen hover:text-poker-feltGreen/80"
+            className="mb-4 text-poker-feltGreen dark:text-primary hover:text-poker-feltGreen/80 dark:hover:text-primary/80"
           >
             <Icon name="ArrowLeft" className="mr-2 h-4 w-4" />
             Back to Dashboard

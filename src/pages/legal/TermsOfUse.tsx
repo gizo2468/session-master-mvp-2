@@ -16,7 +16,7 @@ const TermsOfUse: React.FC = () => {
           <Button 
             onClick={() => navigate(-1)} 
             variant="ghost"
-            className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:bg-transparent hover:text-poker-green"
+            className="text-poker-feltGreen dark:text-primary mb-4 flex items-center gap-1 hover:bg-transparent hover:text-poker-green dark:hover:text-primary/80"
           >
             <Icon name="ArrowLeft" size={16} />
             <span>Back</span>

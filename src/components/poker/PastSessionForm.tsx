@@ -329,7 +329,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
               onClick={onClose} 
               variant="ghost" 
               size="sm"
-              className="text-poker-feltGreen"
+              className="text-poker-feltGreen dark:text-primary"
             >
               <Icon name="ArrowLeft" size={20} />
             </Button>
