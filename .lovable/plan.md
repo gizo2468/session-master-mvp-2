@@ -1,30 +1,30 @@
 
 
-## Add Gold Neon Glow Behind Chip Area (Dark Mode Only)
+## Change All Header Back Buttons to Gold Color
 
 ### What
-Add a subtle, premium yellow/gold radial glow behind the main "Start Session" chip and three smaller chips on the Home screen. Visible only in dark mode.
+Replace `text-poker-feltGreen` with `text-primary` on all top-bar back/navigation buttons across the app. Settings page is already done — 9 more locations need updating.
 
-### How
+### Files and changes
 
-**Single file change: `src/pages/Index.tsx`**
+| File | Line area | Current | Change to |
+|---|---|---|---|
+| `src/components/poker/SessionDetailHeader.tsx` | ~line 59 | `text-poker-feltGreen` | `text-primary` |
+| `src/components/poker/LiveSessionHeader.tsx` | ~line 15 | `text-poker-feltGreen` | `text-primary` |
+| `src/components/poker/PastSessionForm.tsx` | ~line 332 | `text-poker-feltGreen` | `text-primary` |
+| `src/pages/Dashboard.tsx` | ~line 96 | `text-poker-feltGreen` | `text-primary` |
+| `src/pages/SessionHistory.tsx` | ~line 86 | `text-poker-feltGreen` | `text-primary` |
+| `src/pages/SimpleSettings.tsx` | ~line 80 | `text-poker-feltGreen` → `text-primary`, also fix hover |
+| `src/pages/PlayerProfile.tsx` | ~line 398 | `text-poker-feltGreen` | `text-primary` |
+| `src/pages/ConfirmSession.tsx` | ~line 200 | `text-poker-feltGreen` | `text-primary` |
+| `src/pages/CoachStudentDetail.tsx` | ~line 40 | `text-poker-feltGreen` | `text-primary` |
+| `src/pages/ConnectCoach.tsx` | ~line 76 | `text-poker-feltGreen` | `text-primary` |
+| `src/pages/CoachSessionReview.tsx` | ~lines 302, 335 | `text-poker-feltGreen` | `text-primary` |
+| `src/pages/legal/TermsOfUse.tsx` | ~line 19 | `text-poker-feltGreen` | `text-primary` |
 
-Inside the chip container div (line 191), add a decorative `<div>` as the first child — positioned absolutely, centered, behind the chips (`z-0`), hidden in light mode:
-
-```tsx
-<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0
-  w-[85%] h-[75%] rounded-full
-  hidden dark:block
-  bg-[radial-gradient(ellipse_at_center,rgba(218,165,32,0.18)_0%,rgba(218,165,32,0.08)_40%,transparent_70%)]
-  blur-2xl pointer-events-none"
-/>
-```
-
-- `hidden dark:block` — only visible in dark mode
-- Warm gold radial gradient (`goldenrod` tones at ~18% opacity center, fading to transparent)
-- `blur-2xl` for soft atmospheric spread
-- `pointer-events-none` so it never interferes with taps
-- `z-0` keeps it behind all chip buttons (`z-10`)
-
-No layout, sizing, or functionality changes.
+### Scope
+- Only back/home navigation buttons in page headers
+- Does NOT change data display colors (stats, badges, status labels)
+- Does NOT change auth page links (login/signup)
+- No layout or behavior changes
 
