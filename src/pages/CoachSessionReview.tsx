@@ -299,7 +299,7 @@ const CoachSessionReview = () => {
           <header className="mb-8">
             <button 
               onClick={() => navigate(`/coach/student/${studentId}`)} 
-              className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:underline"
+              className="text-poker-feltGreen dark:text-primary mb-4 flex items-center gap-1 hover:underline"
             >
               <Icon name="arrow-left" size={16} />
               <span>Back to Student</span>
@@ -332,7 +332,7 @@ const CoachSessionReview = () => {
         <header className="mb-8">
           <button 
             onClick={() => navigate(`/coach/student/${studentId}`)} 
-            className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:underline"
+            className="text-poker-feltGreen dark:text-primary mb-4 flex items-center gap-1 hover:underline"
           >
             <Icon name="arrow-left" size={16} />
             <span>Back to Student</span>

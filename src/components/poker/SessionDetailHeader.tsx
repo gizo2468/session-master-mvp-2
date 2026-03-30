@@ -56,7 +56,7 @@ const SessionDetailHeader: React.FC<SessionDetailHeaderProps> = ({
       <Button 
         onClick={navigateToHomeWithRefresh}
         variant="ghost" 
-        className="text-poker-feltGreen mb-4 flex items-center p-0 hover:bg-transparent"
+        className="text-poker-feltGreen dark:text-primary mb-4 flex items-center p-0 hover:bg-transparent"
         disabled={isRefreshing}
       >
         <Icon name={isRefreshing ? "Loader2" : "ArrowLeft"} size={16} className={`mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />

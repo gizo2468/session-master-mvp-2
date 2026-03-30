@@ -83,7 +83,7 @@ export default function SessionHistory() {
             <Button 
               onClick={navigateToHomeWithRefresh}
               variant="ghost"
-              className="text-poker-feltGreen p-0"
+              className="text-poker-feltGreen dark:text-primary p-0"
               disabled={isRefreshing}
             >
               <Icon name={isRefreshing ? "Loader2" : "ArrowLeft"} size={16} className={`mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />

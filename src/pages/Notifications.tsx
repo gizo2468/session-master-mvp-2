@@ -432,7 +432,7 @@ export default function Notifications() {
               onClick={() => navigate('/', { replace: true })}
               variant="outline"
               size="sm"
-              className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+              className="text-poker-feltGreen dark:text-primary border-poker-feltGreen dark:border-primary hover:bg-poker-feltGreen dark:hover:bg-primary hover:text-white"
             >
               <Icon name="ArrowLeft" size={16} />
             </Button>
@@ -441,7 +441,7 @@ export default function Notifications() {
               onClick={handleMarkAllAsRead}
               variant="outline"
               size="sm"
-              className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+              className="text-poker-feltGreen dark:text-primary border-poker-feltGreen dark:border-primary hover:bg-poker-feltGreen dark:hover:bg-primary hover:text-white"
               disabled={displayNotifications.length === 0 || displayNotifications.every(n => n.is_read)}
             >
               <Icon name="CheckCheck" size={16} />

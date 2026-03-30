@@ -197,7 +197,7 @@ export default function ConfirmSession() {
             <Button 
               onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/', { replace: true })}
               variant="ghost"
-              className="text-poker-feltGreen p-0"
+              className="text-poker-feltGreen dark:text-primary p-0"
             >
               <Icon name="arrow-left" size={16} className="mr-1" />
               <span>Home</span>
