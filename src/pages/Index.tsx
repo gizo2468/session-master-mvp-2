@@ -189,6 +189,8 @@ export default function Index() {
         <div className="flex flex-col items-center gap-0">
           {/* START SESSION chip + three icon buttons in one relative container */}
           <div className="relative flex justify-center -mt-36 mb-0">
+            {/* Premium gold glow — dark mode only */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 w-[85%] h-[75%] rounded-full hidden dark:block bg-[radial-gradient(ellipse_at_center,rgba(218,165,32,0.18)_0%,rgba(218,165,32,0.08)_40%,transparent_70%)] blur-2xl pointer-events-none" />
             <NewSessionButton />
 
             {/* Left icon – Player Card */}
