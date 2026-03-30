@@ -1,27 +1,30 @@
 
 
-## Replace Home Screen Header Logo
+## Add Gold Neon Glow Behind Chip Area (Dark Mode Only)
 
 ### What
-Replace the current logo image (`/lovable-uploads/9dacd61d-...`) with the new uploaded Session Master logo in the header, ensuring it looks crisp in both light and dark mode.
+Add a subtle, premium yellow/gold radial glow behind the main "Start Session" chip and three smaller chips on the Home screen. Visible only in dark mode.
 
-### Changes
+### How
 
-**1. Copy asset** — Copy `user-uploads://image-515.png` to `src/assets/session-master-logo.png`
+**Single file change: `src/pages/Index.tsx`**
 
-**2. Update `src/components/Logo.tsx`**
-- Import the new asset via ES module: `import logoSrc from '@/assets/session-master-logo.png'`
-- Replace the hardcoded `/lovable-uploads/...` path with the imported `logoSrc`
-- Increase size from `w-40` to `w-44` for better visual presence in the header
-- Add `dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]` for subtle glow/contrast boost in dark mode
-- The logo has a white/transparent background — it naturally works on light backgrounds; the drop shadow ensures visibility on dark
+Inside the chip container div (line 191), add a decorative `<div>` as the first child — positioned absolutely, centered, behind the chips (`z-0`), hidden in light mode:
 
-**3. Splash screen** — Same `<Logo />` component is used in the splash (line 144 of Index.tsx), so it updates automatically.
+```tsx
+<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0
+  w-[85%] h-[75%] rounded-full
+  hidden dark:block
+  bg-[radial-gradient(ellipse_at_center,rgba(218,165,32,0.18)_0%,rgba(218,165,32,0.08)_40%,transparent_70%)]
+  blur-2xl pointer-events-none"
+/>
+```
 
-### What stays the same
-- Header layout, button positions, spacing, navigation
-- Logo placement (center of header, flex justified)
-- All other pages and components
+- `hidden dark:block` — only visible in dark mode
+- Warm gold radial gradient (`goldenrod` tones at ~18% opacity center, fading to transparent)
+- `blur-2xl` for soft atmospheric spread
+- `pointer-events-none` so it never interferes with taps
+- `z-0` keeps it behind all chip buttons (`z-10`)
 
-Single asset copy + one component file edit.
+No layout, sizing, or functionality changes.
 
