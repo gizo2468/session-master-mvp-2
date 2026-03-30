@@ -1,17 +1,15 @@
 
 
-## Widen the Home Screen Logo Without Increasing Header Height
+## Fix Logo Size — Make It More Prominent
 
-### What
-Increase the logo width from `w-44` (~176px) to `w-56` (~224px) so it appears larger and more prominent, without changing the header bar's vertical size. The logo already uses `h-auto` so it scales proportionally — the header height stays the same as long as the aspect ratio doesn't cause it to grow taller than the current bar.
-
-To prevent any height increase, also add a `max-h` constraint (e.g., `max-h-12`) so the image scales wider but clips its height to the current bar size.
+### Problem
+The `max-h-12` (48px) height cap is too restrictive, keeping the logo tiny despite the `w-56` width.
 
 ### Change
 
 **`src/components/Logo.tsx`** — line 14:
-- `w-44` → `w-56`
-- Add `max-h-12` to cap the rendered height
+- Change `max-h-12` → `max-h-16` (64px max height)
+- This gives the logo ~33% more vertical room to render at a visible size while still fitting within the header bar
 
-Single line change, one file.
+Single line, single file.
 
