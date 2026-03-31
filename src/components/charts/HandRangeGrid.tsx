@@ -57,6 +57,7 @@ const HandRangeGrid: React.FC<HandRangeGridProps> = ({
   editable = false,
   rangeState,
   onRangeChange,
+  paintMode,
 }) => {
   const cellSize = compact ? 'w-6 h-6 text-[8px]' : 'w-8 h-8 text-[10px] sm:w-9 sm:h-9 sm:text-xs';
 
