@@ -151,8 +151,8 @@ export default function Index() {
         </div>
       )}
     <div className="min-h-screen">
-      <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 relative z-10 header-safe pt-0.5">
-        <div className="container mx-auto max-w-md px-4 pb-0.5">
+      <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 relative z-10 header-safe py-0">
+        <div className="container mx-auto max-w-md px-4 py-0">
           <div className="flex justify-between items-center">
             <div className="flex-1 flex justify-start gap-2">
               <Button 
