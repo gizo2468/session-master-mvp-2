@@ -63,9 +63,15 @@ const HandRangeGrid: React.FC<HandRangeGridProps> = ({
 
   const handleCellClick = (hand: string, row: number, col: number) => {
     if (editable && rangeState && onRangeChange) {
-      const current = rangeState[hand];
-      const next = cycleAction(current);
-      onRangeChange({ ...rangeState, [hand]: next });
+      if (paintMode) {
+        const current = rangeState[hand] || 'fold';
+        const next = current === paintMode ? 'fold' : paintMode;
+        onRangeChange({ ...rangeState, [hand]: next });
+      } else {
+        const current = rangeState[hand];
+        const next = cycleAction(current);
+        onRangeChange({ ...rangeState, [hand]: next });
+      }
     } else {
       onCellClick?.(hand, row, col);
     }
