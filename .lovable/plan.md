@@ -1,15 +1,14 @@
 
 
-## Fix Logo Size — Make It More Prominent
-
-### Problem
-The `max-h-12` (48px) height cap is too restrictive, keeping the logo tiny despite the `w-56` width.
+## Enlarge Session Master Logo in Header
 
 ### Change
 
 **`src/components/Logo.tsx`** — line 14:
-- Change `max-h-12` → `max-h-16` (64px max height)
-- This gives the logo ~33% more vertical room to render at a visible size while still fitting within the header bar
+- `w-56 max-h-16` → `w-72 max-h-20`
+- Width increases from 224px to 288px, height cap from 64px to 80px
+- The logo will fill significantly more of the header row
+- All other classes (object-contain, dark drop-shadow) unchanged
 
-Single line, single file.
+Single line, single file. No other header elements affected.
 
