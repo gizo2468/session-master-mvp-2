@@ -11,7 +11,7 @@ const Logo: React.FC<LogoProps> = ({ className }) => {
       <img 
         src={logoSrc} 
         alt="Session Master Logo" 
-        className="w-56 h-auto max-h-16 object-contain dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]"
+        className="w-72 h-auto max-h-20 object-contain dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]"
       />
     </div>
   );
