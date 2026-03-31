@@ -9,6 +9,7 @@ interface HandRangeGridProps {
   editable?: boolean;
   rangeState?: Record<string, string>;
   onRangeChange?: (newState: Record<string, string>) => void;
+  paintMode?: string | null;
 }
 
 const TIER_COLORS: Record<string, string> = {
@@ -56,14 +57,21 @@ const HandRangeGrid: React.FC<HandRangeGridProps> = ({
   editable = false,
   rangeState,
   onRangeChange,
+  paintMode,
 }) => {
   const cellSize = compact ? 'w-6 h-6 text-[8px]' : 'w-8 h-8 text-[10px] sm:w-9 sm:h-9 sm:text-xs';
 
   const handleCellClick = (hand: string, row: number, col: number) => {
     if (editable && rangeState && onRangeChange) {
-      const current = rangeState[hand];
-      const next = cycleAction(current);
-      onRangeChange({ ...rangeState, [hand]: next });
+      if (paintMode) {
+        const current = rangeState[hand] || 'fold';
+        const next = current === paintMode ? 'fold' : paintMode;
+        onRangeChange({ ...rangeState, [hand]: next });
+      } else {
+        const current = rangeState[hand];
+        const next = cycleAction(current);
+        onRangeChange({ ...rangeState, [hand]: next });
+      }
     } else {
       onCellClick?.(hand, row, col);
     }

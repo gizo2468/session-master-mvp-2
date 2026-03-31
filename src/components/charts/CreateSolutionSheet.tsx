@@ -34,6 +34,7 @@ const CreateSolutionSheet: React.FC<CreateSolutionSheetProps> = ({
   const [villainPosition, setVillainPosition] = useState<string>(prefillVillain || 'UTG');
   const [actionType, setActionType] = useState(prefillActionType || 'RFI');
   const [rangeData, setRangeData] = useState<Record<string, string>>({});
+  const [paintMode, setPaintMode] = useState<string | null>(null);
   const createSolution = useCreateSolution();
 
   // Reset when sheet opens with new prefills
@@ -43,6 +44,7 @@ const CreateSolutionSheet: React.FC<CreateSolutionSheetProps> = ({
       setVillainPosition(prefillVillain || 'UTG');
       setActionType(prefillActionType || 'RFI');
       setRangeData({});
+      setPaintMode(null);
     }
   }, [open, prefillHero, prefillVillain, prefillActionType]);
 
@@ -130,16 +132,26 @@ const CreateSolutionSheet: React.FC<CreateSolutionSheetProps> = ({
 
           {/* Legend */}
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span>Tap cells to cycle:</span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-sm bg-red-500/80 inline-block" /> Raise
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-sm bg-emerald-500/70 inline-block" /> Call
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-sm bg-blue-900/40 inline-block" /> Fold
-            </span>
+            <span>Tap to select brush:</span>
+            {[
+              { action: 'raise', label: 'Raise', colorClass: 'bg-red-500/80' },
+              { action: 'call', label: 'Call', colorClass: 'bg-emerald-500/70' },
+              { action: 'fold', label: 'Fold', colorClass: 'bg-blue-900/40' },
+            ].map(({ action, label, colorClass }) => (
+              <button
+                key={action}
+                type="button"
+                className={`flex items-center gap-1 px-1.5 py-0.5 rounded transition-all ${
+                  paintMode === action
+                    ? 'ring-2 ring-primary ring-offset-1 ring-offset-background scale-105'
+                    : 'opacity-70 hover:opacity-100'
+                }`}
+                onClick={() => setPaintMode(prev => prev === action ? null : action)}
+              >
+                <span className={`w-3 h-3 rounded-sm ${colorClass} inline-block`} />
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Editable grid */}
@@ -148,6 +160,7 @@ const CreateSolutionSheet: React.FC<CreateSolutionSheetProps> = ({
               editable
               rangeState={rangeData}
               onRangeChange={setRangeData}
+              paintMode={paintMode}
             />
           </div>
 
