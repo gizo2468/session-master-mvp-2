@@ -44,6 +44,7 @@ const CreateSolutionSheet: React.FC<CreateSolutionSheetProps> = ({
       setVillainPosition(prefillVillain || 'UTG');
       setActionType(prefillActionType || 'RFI');
       setRangeData({});
+      setPaintMode(null);
     }
   }, [open, prefillHero, prefillVillain, prefillActionType]);
 
