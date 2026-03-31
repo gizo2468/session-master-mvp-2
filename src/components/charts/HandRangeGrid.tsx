@@ -9,6 +9,7 @@ interface HandRangeGridProps {
   editable?: boolean;
   rangeState?: Record<string, string>;
   onRangeChange?: (newState: Record<string, string>) => void;
+  paintMode?: string | null;
 }
 
 const TIER_COLORS: Record<string, string> = {
