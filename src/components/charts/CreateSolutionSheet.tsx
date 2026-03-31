@@ -34,6 +34,7 @@ const CreateSolutionSheet: React.FC<CreateSolutionSheetProps> = ({
   const [villainPosition, setVillainPosition] = useState<string>(prefillVillain || 'UTG');
   const [actionType, setActionType] = useState(prefillActionType || 'RFI');
   const [rangeData, setRangeData] = useState<Record<string, string>>({});
+  const [paintMode, setPaintMode] = useState<string | null>(null);
   const createSolution = useCreateSolution();
 
   // Reset when sheet opens with new prefills
