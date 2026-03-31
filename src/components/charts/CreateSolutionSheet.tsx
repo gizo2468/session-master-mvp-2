@@ -160,6 +160,7 @@ const CreateSolutionSheet: React.FC<CreateSolutionSheetProps> = ({
               editable
               rangeState={rangeData}
               onRangeChange={setRangeData}
+              paintMode={paintMode}
             />
           </div>
 
