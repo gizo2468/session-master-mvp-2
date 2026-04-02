@@ -93,6 +93,9 @@ const ChartsLibrary: React.FC = () => {
             <h1 className="text-xl font-bold">Charts Library</h1>
             <p className="text-sm text-muted-foreground">GTO Solutions Workspace</p>
           </div>
+          <Button variant="ghost" size="icon" onClick={() => setShowHelp(true)} className="shrink-0 rounded-full h-8 w-8">
+            <Icon name="Info" className="h-4 w-4 text-muted-foreground" />
+          </Button>
         </div>
 
         {/* Collection selector */}
