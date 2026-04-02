@@ -21,6 +21,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const ChartsLibrary: React.FC = () => {
   const navigate = useNavigate();
@@ -30,6 +36,7 @@ const ChartsLibrary: React.FC = () => {
   const [showCreateCollection, setShowCreateCollection] = useState(false);
   const [showCreateSolution, setShowCreateSolution] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [createSpotPrefill, setCreateSpotPrefill] = useState<{
     hero: string;
     villain: string | null;
@@ -86,6 +93,9 @@ const ChartsLibrary: React.FC = () => {
             <h1 className="text-xl font-bold">Charts Library</h1>
             <p className="text-sm text-muted-foreground">GTO Solutions Workspace</p>
           </div>
+          <Button variant="ghost" size="icon" onClick={() => setShowHelp(true)} className="shrink-0 rounded-full h-8 w-8">
+            <Icon name="Info" className="h-4 w-4 text-muted-foreground" />
+          </Button>
         </div>
 
         {/* Collection selector */}
@@ -174,6 +184,40 @@ const ChartsLibrary: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-sm max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Charts Terminology</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div>
+              <p className="font-semibold text-foreground">RFI</p>
+              <p className="text-muted-foreground">Raise First In — opening the pot with a raise when no one has entered yet.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">Table Positions</p>
+              <p className="text-muted-foreground"><span className="font-medium text-foreground">UTG</span> (Under the Gun), <span className="font-medium text-foreground">MP</span> (Middle Position), <span className="font-medium text-foreground">LJ</span> (Lojack), <span className="font-medium text-foreground">HJ</span> (Hijack), <span className="font-medium text-foreground">CO</span> (Cutoff), <span className="font-medium text-foreground">BU</span> (Button), <span className="font-medium text-foreground">SB</span> (Small Blind), <span className="font-medium text-foreground">BB</span> (Big Blind) — ordered from earliest to latest position.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">vs UTG / vs MP / vs CO…</p>
+              <p className="text-muted-foreground">How you should respond when a player in that position raised before you.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">3Bet vs …</p>
+              <p className="text-muted-foreground">Re-raising against an opener from that position. A 3Bet is the second raise preflop.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">Percentages</p>
+              <p className="text-muted-foreground">The portion of all possible starting hands included in a range. Higher % = wider range.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">Grid Colors</p>
+              <p className="text-muted-foreground"><span className="text-red-500 font-medium">Red</span> = Raise, <span className="text-green-500 font-medium">Green</span> = Call, <span className="text-blue-400 font-medium">Blue</span> = Fold. Each cell shows the recommended action for that hand.</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 };
