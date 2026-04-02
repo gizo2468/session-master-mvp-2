@@ -1,97 +1,106 @@
 
 
-## Improve Hand Range Grid: Mobile Layout + Mixed Actions
+## Multi-Action Weighted Splits for Hand Range Cells
 
-### Two enhancements
+### What changes
+Replace the current simple string-based cell state (`"raise"`, `"call/raise"`) with a structured weighted-action system. Each cell stores an array of `{ action, weight }` entries, rendered as horizontal segments proportional to their weights. A new modal allows precise mix editing per cell.
 
-**1. Mobile-responsive grid**
+### New data model
 
-The current cells use fixed sizes (`w-8 h-8` on mobile, `w-9 h-9` on sm+). On a 390px viewport, 13 columns × 32px + gaps = ~420px, causing overflow/cramping.
+Current: `rangeState[hand] = "raise"` or `"call/raise"`
 
-Fix in `HandRangeGrid.tsx`:
-- Replace fixed cell sizes with responsive approach: use `aspect-square w-full text-[7px] sm:text-[10px]` so cells fill available width
-- Change the grid container from `inline-grid` to `grid w-full` so it stretches to fill its parent
-- Keep `grid-cols-13` and `gap-[1px]`
-- Remove the old `cellSize` variable with its fixed `w-` classes
-- On compact mode, use even smaller text (`text-[6px]`)
+New: `rangeState[hand]` stores a JSON-serializable structure:
+```typescript
+type CellAction = { action: string; weight: number };
+// Stored as JSON string in rangeState: 
+// Single: "raise" (backward-compat)
+// Mixed: '[{"action":"raise","weight":20},{"action":"call","weight":50},{"action":"fold","weight":30}]'
+```
 
-This makes the 13×13 grid fluid — each cell becomes 1/13th of the container width, always fitting the screen.
+Helper functions parse/serialize so the `Record<string, string>` type stays the same (no DB schema change). Simple single-action strings remain valid.
 
-**2. Mixed-action cell support**
+### Visual rendering (horizontal segments, not diagonal)
 
-Allow cells to hold two actions (e.g., 50% raise + 50% call) with a diagonal or horizontal split visual.
+Each cell renders horizontal color bands proportional to weights:
+```
+┌──────────┐
+│  Raise   │  20% height
+│──────────│
+│   Call   │  50% height  
+│──────────│
+│   Fold   │  30% height
+└──────────┘
+```
 
-Data model change:
-- `rangeState` values currently store a single string like `"raise"`. Mixed actions will be stored as `"raise/call"` (slash-separated, sorted alphabetically for consistency)
-- This is backward-compatible — single actions remain as-is
+Implemented via CSS `linear-gradient(to bottom, ...)` with percentage stops. Hand label rendered on top with text-shadow for readability.
 
-Interaction:
-- When in paint mode and a cell already has a *different* action (not fold, not the paint action), clicking it creates a mixed state combining both actions
-- Example: cell is `"raise"`, paint mode is `"call"` → cell becomes `"call/raise"`
-- Clicking a mixed cell that already contains the paint action removes that action, leaving the other one
-- Clicking a fold cell applies the paint action normally
-- Without paint mode, cycle behavior: fold → raise → call → raise/call → raise/fold → call/fold → fold
+For 1 action: solid background (unchanged).
+For 2 actions: two horizontal bands.
+For 3 actions: three horizontal bands.
 
-Visual rendering:
-- Single action: full background color (unchanged)
-- Mixed action: CSS diagonal gradient — top-left triangle is action 1, bottom-right is action 2
-- Use `background: linear-gradient(135deg, color1 50%, color2 50%)` via inline style
-- Color map: raise → `rgb(239 68 68 / 0.8)`, call → `rgb(16 185 129 / 0.7)`, fold → `rgb(30 58 138 / 0.4)`
+### New: Cell Mix Editor Modal
+
+A small dialog/sheet that opens when a cell is **long-pressed** (or tapped while in a new "mix edit" mode):
+- Shows the hand name (e.g., "AKs")
+- Lists available actions (Raise, Call, Fold — or whatever actions the node supports)
+- Each action has a slider (0-100%) or increment buttons
+- Total must equal 100% — auto-adjust the last/largest segment
+- "Apply" saves the mix; "Clear" resets to fold
+
+### Interaction changes
+
+**Paint mode (single-click)** — remains fast, sets cell to 100% of the paint action. If already that action, resets to fold.
+
+**Mix edit mode** — new button in the legend area: a "Mix" brush icon. When active, tapping a cell opens the Cell Mix Editor modal for that specific hand.
+
+**Cycle mode (no brush selected)** — cycles through simple actions only (raise → call → fold). For detailed mixes, user uses the mix editor.
+
+**Range-fill (double-click)** — still works, applies 100% of the paint action.
 
 ### Files changed
 
-**`src/components/charts/HandRangeGrid.tsx`**
-1. Replace fixed `cellSize` with responsive classes: `aspect-square w-full text-[7px] sm:text-xs`
-2. Change container to `grid w-full grid-cols-13 gap-[1px]`
-3. Add `ACTION_COLORS` map (hex/rgb values for inline gradient styles)
-4. Add `parseMixedAction()` and `formatMixedAction()` helpers
-5. Update `handleCellClick` paint-mode logic to support creating/toggling mixed states
-6. Update cell rendering: if action contains `/`, render with diagonal gradient via inline `style={{ background: ... }}`; otherwise use existing Tailwind classes
-7. Update `cycleAction` to include mixed states in the cycle
+**1. `src/components/charts/HandRangeGrid.tsx`**
+- Add `parseCellAction(value: string): CellAction[]` — parses both legacy strings and JSON arrays
+- Add `serializeCellAction(actions: CellAction[]): string` — serializes back
+- Replace `getMixedStyle()` with `getCellStyle(actions: CellAction[])` using horizontal gradient stops
+- Add `availableActions` prop (defaults to `['raise', 'call', 'fold']`)
+- Add `onCellLongPress` or `onMixEdit` callback
+- Render cells with new gradient logic; show hand label with `text-shadow` for contrast
 
-**`src/components/charts/CreateSolutionSheet.tsx`**
-- Update legend to show a 4th "Mixed" indicator or add a note explaining mixed behavior
-- No other changes needed — `rangeData` dict just holds string values
+**2. `src/components/charts/CellMixEditor.tsx`** (new file)
+- Small dialog component
+- Props: `hand: string`, `currentMix: CellAction[]`, `availableActions`, `onSave`, `onClose`
+- Renders a slider or +/- stepper per action (increments of 5% or 10%)
+- Enforces total = 100%
+- Clean, compact mobile-friendly design
 
-**`src/components/charts/SpotDetailView.tsx`**
-- Update legend to include "Mixed" indicator
-- HandRangeGrid used in read-only mode will render mixed cells from saved data automatically
+**3. `src/components/charts/CreateSolutionSheet.tsx`**
+- Add "Mix" button to the legend/brush row (alongside Raise, Call, Fold)
+- Add state for `mixEditHand` — which hand is being mix-edited
+- When mix mode is active and cell is tapped, open `CellMixEditor` for that hand
+- Update `handleSave` validation to accept mixed cells (not just raise/call)
 
-### Technical details
+**4. `src/components/charts/SpotDetailView.tsx`**
+- Update legend to show "Mixed" with a horizontal multi-band indicator instead of diagonal
+- Read-only grid automatically renders mixed cells from saved data
 
+**5. `src/hooks/useChartsLibrary.ts`**
+- No changes needed — `range_data` is already `jsonb`, stores any structure
+
+### Color map (extensible)
 ```typescript
 const ACTION_COLORS: Record<string, string> = {
-  raise: 'rgba(239,68,68,0.8)',
-  call: 'rgba(16,185,129,0.7)',
-  fold: 'rgba(30,58,138,0.4)',
+  raise: 'rgba(239,68,68,0.85)',
+  call: 'rgba(16,185,129,0.75)',
+  fold: 'rgba(30,58,138,0.5)',
+  '3bet': 'rgba(168,85,247,0.8)',  // purple, for future use
 };
-
-function getMixedStyle(action: string) {
-  if (!action.includes('/')) return null;
-  const [a1, a2] = action.split('/');
-  return {
-    background: `linear-gradient(135deg, ${ACTION_COLORS[a1]} 50%, ${ACTION_COLORS[a2]} 50%)`,
-  };
-}
 ```
 
-Cell rendering pseudo-code:
-```tsx
-const mixedStyle = getMixedStyle(action);
-<button
-  className={cn('aspect-square w-full ...', !mixedStyle && TIER_COLORS[action])}
-  style={mixedStyle || undefined}
->
-  {hand}
-</button>
-```
+New actions can be added to this map and to the `availableActions` prop without code changes to the grid.
 
-Paint mode click logic:
-```
-if cell is fold → set to paintMode
-if cell equals paintMode → set to fold  
-if cell is single action ≠ paintMode → set to mixed (sorted: "action/paintMode")
-if cell is mixed containing paintMode → remove paintMode, keep other
-if cell is mixed not containing paintMode → replace with paintMode
-```
+### Backward compatibility
+- Legacy `"raise"` strings parse as `[{action:"raise", weight:100}]`
+- Legacy `"call/raise"` strings parse as `[{action:"call", weight:50}, {action:"raise", weight:50}]`
+- New data saves as JSON array strings — old code that checks `v === 'raise'` in `handleSave` will be updated
 
