@@ -2,6 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 
+export interface ChartFolder {
+  id: string;
+  name: string;
+  user_id: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface ChartCollection {
   id: string;
   name: string;
@@ -9,6 +17,7 @@ export interface ChartCollection {
   game_type: string;
   is_default: boolean;
   user_id: string | null;
+  folder_id: string | null;
 }
 
 export interface ChartSolution {
@@ -24,6 +33,75 @@ export interface ChartSolution {
   user_id: string | null;
 }
 
+// ── Folder hooks ──
+
+export function useChartFolders() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['chart-folders', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('chart_folders' as any)
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('name');
+
+      if (error) throw error;
+      return (data || []) as unknown as ChartFolder[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useCreateFolder() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (name: string) => {
+      const { data, error } = await supabase
+        .from('chart_folders' as any)
+        .insert({ name, user_id: user?.id } as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as unknown as ChartFolder;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chart-folders'] });
+    },
+  });
+}
+
+export function useDeleteFolder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Unlink collections from this folder first (set folder_id to null)
+      await supabase
+        .from('chart_collections' as any)
+        .update({ folder_id: null } as any)
+        .eq('folder_id', id);
+
+      const { error } = await supabase
+        .from('chart_folders' as any)
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chart-folders'] });
+      queryClient.invalidateQueries({ queryKey: ['chart-collections'] });
+    },
+  });
+}
+
+// ── Collection hooks ──
+
 export function useChartCollections() {
   const { user } = useAuth();
 
@@ -33,8 +111,8 @@ export function useChartCollections() {
       const { data, error } = await supabase
         .from('chart_collections' as any)
         .select('*')
-        .or(`is_default.eq.true,user_id.eq.${user?.id}`)
-        .order('stack_depth_bb', { ascending: false });
+        .eq('user_id', user?.id)
+        .order('name');
 
       if (error) throw error;
       return (data || []) as unknown as ChartCollection[];
@@ -55,7 +133,7 @@ export function useChartSolutions(collectionId: string | null) {
         .from('chart_solutions' as any)
         .select('*')
         .eq('collection_id', collectionId)
-        .or(`is_default.eq.true,user_id.eq.${user?.id}`)
+        .eq('user_id', user?.id)
         .order('hero_position');
 
       if (error) throw error;
@@ -91,7 +169,7 @@ export function useCreateCollection() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { name: string; stack_depth_bb: number; game_type: string }) => {
+    mutationFn: async (params: { name: string; stack_depth_bb: number; game_type: string; folder_id?: string | null }) => {
       const { data, error } = await supabase
         .from('chart_collections' as any)
         .insert({
@@ -100,6 +178,7 @@ export function useCreateCollection() {
           game_type: params.game_type,
           user_id: user?.id,
           is_default: false,
+          folder_id: params.folder_id || null,
         } as any)
         .select()
         .single();
@@ -175,7 +254,6 @@ export function useDeleteCollection() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // Delete all solutions in the collection first
       await supabase
         .from('chart_solutions' as any)
         .delete()

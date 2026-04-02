@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/Lucide';
 import PageContainer from '@/components/ui/PageContainer';
 import PositionMatrix from '@/components/charts/PositionMatrix';
 import SpotDetailView from '@/components/charts/SpotDetailView';
 import CreateCollectionDialog from '@/components/charts/CreateCollectionDialog';
+import CreateFolderDialog from '@/components/charts/CreateFolderDialog';
 import CreateSolutionSheet from '@/components/charts/CreateSolutionSheet';
-import { useChartCollections, useChartSolutions, useDeleteCollection, type ChartSolution } from '@/hooks/useChartsLibrary';
+import {
+  useChartFolders,
+  useChartCollections,
+  useChartSolutions,
+  useDeleteCollection,
+  useDeleteFolder,
+  type ChartSolution,
+  type ChartFolder,
+  type ChartCollection,
+} from '@/hooks/useChartsLibrary';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -28,14 +38,23 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+type View =
+  | { type: 'root' }
+  | { type: 'folder'; folder: ChartFolder }
+  | { type: 'collection'; collection: ChartCollection }
+  | { type: 'spot'; solution: ChartSolution; collection: ChartCollection };
+
 const ChartsLibrary: React.FC = () => {
   const navigate = useNavigate();
+  const { data: folders, isLoading: foldersLoading } = useChartFolders();
   const { data: collections, isLoading: collectionsLoading } = useChartCollections();
-  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
-  const [selectedSolution, setSelectedSolution] = useState<ChartSolution | null>(null);
+
+  const [view, setView] = useState<View>({ type: 'root' });
+  const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [showCreateCollection, setShowCreateCollection] = useState(false);
+  const [createCollectionFolderId, setCreateCollectionFolderId] = useState<string | null>(null);
   const [showCreateSolution, setShowCreateSolution] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{ type: 'folder' | 'collection'; id: string; name: string } | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [createSpotPrefill, setCreateSpotPrefill] = useState<{
     hero: string;
@@ -44,42 +63,228 @@ const ChartsLibrary: React.FC = () => {
   } | null>(null);
 
   const deleteCollection = useDeleteCollection();
+  const deleteFolder = useDeleteFolder();
 
-  const activeCollectionId = selectedCollectionId || collections?.[0]?.id || null;
-  const activeCollection = collections?.find(c => c.id === activeCollectionId);
-  const isUserOwned = activeCollection ? !activeCollection.is_default : false;
-
+  const activeCollectionId = view.type === 'collection' ? view.collection.id : view.type === 'spot' ? view.collection.id : null;
   const { data: solutions, isLoading: solutionsLoading } = useChartSolutions(activeCollectionId);
-  const isLoading = collectionsLoading || solutionsLoading;
+
+  const isLoading = foldersLoading || collectionsLoading;
+
+  const collectionsInFolder = (folderId: string) =>
+    collections?.filter(c => c.folder_id === folderId) || [];
+
+  const unfiledCollections = collections?.filter(c => !c.folder_id) || [];
 
   const handleCreateSpot = (heroPos: string, scenario: { actionType: string; villain: string | null }) => {
     setCreateSpotPrefill({ hero: heroPos, villain: scenario.villain, actionType: scenario.actionType });
     setShowCreateSolution(true);
   };
 
-  const handleDeleteCollection = async () => {
-    if (!activeCollectionId) return;
+  const handleDelete = async () => {
+    if (!showDeleteConfirm) return;
     try {
-      await deleteCollection.mutateAsync(activeCollectionId);
-      setSelectedCollectionId(null);
-      toast.success('Collection deleted');
+      if (showDeleteConfirm.type === 'folder') {
+        await deleteFolder.mutateAsync(showDeleteConfirm.id);
+        toast.success('Folder deleted');
+      } else {
+        await deleteCollection.mutateAsync(showDeleteConfirm.id);
+        toast.success('Collection deleted');
+      }
+      setView({ type: 'root' });
     } catch {
-      toast.error('Failed to delete collection');
+      toast.error(`Failed to delete ${showDeleteConfirm.type}`);
     }
-    setShowDeleteConfirm(false);
+    setShowDeleteConfirm(null);
   };
 
-  if (selectedSolution && activeCollection) {
+  const handleOpenCreateCollection = (folderId: string | null) => {
+    setCreateCollectionFolderId(folderId);
+    setShowCreateCollection(true);
+  };
+
+  // ── Spot detail view ──
+  if (view.type === 'spot') {
     return (
       <PageContainer>
         <SpotDetailView
-          solution={selectedSolution}
-          stackDepth={activeCollection.stack_depth_bb}
-          onBack={() => setSelectedSolution(null)}
+          solution={view.solution}
+          stackDepth={view.collection.stack_depth_bb}
+          onBack={() => setView({ type: 'collection', collection: view.collection })}
         />
       </PageContainer>
     );
   }
+
+  // ── Collection / matrix view ──
+  if (view.type === 'collection') {
+    const col = view.collection;
+    return (
+      <PageContainer>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => {
+              const parentFolder = folders?.find(f => f.id === col.folder_id);
+              setView(parentFolder ? { type: 'folder', folder: parentFolder } : { type: 'root' });
+            }} className="shrink-0">
+              <Icon name="ArrowLeft" className="h-5 w-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-bold truncate">{col.name}</h1>
+              <p className="text-sm text-muted-foreground">{col.stack_depth_bb}bb · {col.game_type}</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowDeleteConfirm({ type: 'collection', id: col.id, name: col.name })}
+              className="shrink-0 text-destructive hover:text-destructive"
+            >
+              <Icon name="Trash2" className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {solutionsLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-11 w-full" />
+              ))}
+            </div>
+          ) : (
+            <PositionMatrix
+              solutions={solutions || []}
+              onSpotClick={(sol) => setView({ type: 'spot', solution: sol, collection: col })}
+              stackDepth={col.stack_depth_bb}
+              isUserOwned={true}
+              onCreateSpot={handleCreateSpot}
+            />
+          )}
+        </div>
+
+        {activeCollectionId && (
+          <CreateSolutionSheet
+            open={showCreateSolution}
+            onOpenChange={setShowCreateSolution}
+            collectionId={activeCollectionId}
+            prefillHero={createSpotPrefill?.hero}
+            prefillVillain={createSpotPrefill?.villain}
+            prefillActionType={createSpotPrefill?.actionType}
+          />
+        )}
+
+        <AlertDialog open={!!showDeleteConfirm} onOpenChange={(open) => !open && setShowDeleteConfirm(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Collection</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete "{showDeleteConfirm?.name}" and all its solutions.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </PageContainer>
+    );
+  }
+
+  // ── Folder view ──
+  if (view.type === 'folder') {
+    const folder = view.folder;
+    const folderCollections = collectionsInFolder(folder.id);
+
+    return (
+      <PageContainer>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => setView({ type: 'root' })} className="shrink-0">
+              <Icon name="ArrowLeft" className="h-5 w-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-bold truncate">{folder.name}</h1>
+              <p className="text-sm text-muted-foreground">{folderCollections.length} collection{folderCollections.length !== 1 ? 's' : ''}</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowDeleteConfirm({ type: 'folder', id: folder.id, name: folder.name })}
+              className="shrink-0 text-destructive hover:text-destructive"
+            >
+              <Icon name="Trash2" className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {folderCollections.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+                <Icon name="Layers" className="h-10 w-10 text-muted-foreground/40 mb-3" />
+                <p className="text-sm text-muted-foreground mb-3">No collections in this folder yet</p>
+                <Button variant="outline" size="sm" onClick={() => handleOpenCreateCollection(folder.id)}>
+                  <Icon name="Plus" className="h-4 w-4 mr-1" />
+                  New Collection
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {folderCollections.map(col => (
+                <Card
+                  key={col.id}
+                  className="cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => setView({ type: 'collection', collection: col })}
+                >
+                  <CardContent className="flex items-center gap-3 p-4">
+                    <Icon name="Grid3X3" className="h-5 w-5 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{col.name}</p>
+                      <p className="text-xs text-muted-foreground">{col.stack_depth_bb}bb · {col.game_type}</p>
+                    </div>
+                    <Icon name="ChevronRight" className="h-4 w-4 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+              ))}
+              <Button variant="outline" size="sm" className="w-full" onClick={() => handleOpenCreateCollection(folder.id)}>
+                <Icon name="Plus" className="h-4 w-4 mr-1" />
+                New Collection
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <CreateCollectionDialog
+          open={showCreateCollection}
+          onOpenChange={setShowCreateCollection}
+          folderId={createCollectionFolderId}
+          onCreated={(id) => {
+            const col = collections?.find(c => c.id === id);
+            if (col) setView({ type: 'collection', collection: col });
+          }}
+        />
+
+        <AlertDialog open={!!showDeleteConfirm} onOpenChange={(open) => !open && setShowDeleteConfirm(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Folder</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will delete the folder "{showDeleteConfirm?.name}". Collections inside will become unfiled.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </PageContainer>
+    );
+  }
+
+  // ── Root workspace view ──
+  const isEmpty = !isLoading && (!folders || folders.length === 0) && (!collections || collections.length === 0);
 
   return (
     <PageContainer>
@@ -98,93 +303,105 @@ const ChartsLibrary: React.FC = () => {
           </Button>
         </div>
 
-        {/* Collection selector */}
-        <div className="flex items-center gap-2">
-          <Icon name="Layers" className="h-4 w-4 text-muted-foreground" />
-          {collectionsLoading ? (
-            <Skeleton className="h-9 w-48" />
-          ) : (
-            <Select value={activeCollectionId || ''} onValueChange={setSelectedCollectionId}>
-              <SelectTrigger className="w-auto min-w-[180px]">
-                <SelectValue placeholder="Select collection" />
-              </SelectTrigger>
-              <SelectContent>
-                {collections?.map(c => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name} ({c.stack_depth_bb}bb){!c.is_default && ' ✦'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          <Button variant="ghost" size="icon" onClick={() => setShowCreateCollection(true)} className="shrink-0">
-            <Icon name="Plus" className="h-4 w-4" />
+        {/* Action buttons */}
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowCreateFolder(true)}>
+            <Icon name="FolderPlus" className="h-4 w-4 mr-1" />
+            New Folder
           </Button>
-          {isUserOwned && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="shrink-0 text-destructive hover:text-destructive"
-            >
-              <Icon name="Trash2" className="h-4 w-4" />
-            </Button>
-          )}
+          <Button variant="outline" size="sm" onClick={() => handleOpenCreateCollection(null)}>
+            <Icon name="Plus" className="h-4 w-4 mr-1" />
+            New Collection
+          </Button>
         </div>
 
-        {/* Matrix */}
         {isLoading ? (
           <div className="space-y-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-11 w-full" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-lg" />
             ))}
           </div>
+        ) : isEmpty ? (
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <Icon name="BookOpen" className="h-12 w-12 text-muted-foreground/30 mb-4" />
+              <h3 className="font-semibold text-lg mb-1">No charts yet</h3>
+              <p className="text-sm text-muted-foreground mb-5 max-w-[260px]">
+                Create your first folder or collection to start building your GTO workspace.
+              </p>
+              <div className="flex gap-2">
+                <Button variant="default" size="sm" onClick={() => setShowCreateFolder(true)}>
+                  <Icon name="FolderPlus" className="h-4 w-4 mr-1" />
+                  Create Folder
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
-          <PositionMatrix
-            solutions={solutions || []}
-            onSpotClick={setSelectedSolution}
-            stackDepth={activeCollection?.stack_depth_bb || 100}
-            isUserOwned={isUserOwned}
-            onCreateSpot={handleCreateSpot}
-          />
+          <div className="space-y-2">
+            {/* Folders */}
+            {folders?.map(folder => {
+              const count = collectionsInFolder(folder.id).length;
+              return (
+                <Card
+                  key={folder.id}
+                  className="cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => setView({ type: 'folder', folder })}
+                >
+                  <CardContent className="flex items-center gap-3 p-4">
+                    <Icon name="Folder" className="h-5 w-5 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{folder.name}</p>
+                      <p className="text-xs text-muted-foreground">{count} collection{count !== 1 ? 's' : ''}</p>
+                    </div>
+                    <Icon name="ChevronRight" className="h-4 w-4 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+              );
+            })}
+
+            {/* Unfiled collections */}
+            {unfiledCollections.length > 0 && (
+              <>
+                {(folders?.length ?? 0) > 0 && (
+                  <p className="text-xs text-muted-foreground font-medium pt-2 px-1">Unfiled</p>
+                )}
+                {unfiledCollections.map(col => (
+                  <Card
+                    key={col.id}
+                    className="cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => setView({ type: 'collection', collection: col })}
+                  >
+                    <CardContent className="flex items-center gap-3 p-4">
+                      <Icon name="Grid3X3" className="h-5 w-5 text-primary shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{col.name}</p>
+                        <p className="text-xs text-muted-foreground">{col.stack_depth_bb}bb · {col.game_type}</p>
+                      </div>
+                      <Icon name="ChevronRight" className="h-4 w-4 text-muted-foreground" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </>
+            )}
+          </div>
         )}
       </div>
 
       {/* Dialogs */}
+      <CreateFolderDialog open={showCreateFolder} onOpenChange={setShowCreateFolder} />
+
       <CreateCollectionDialog
         open={showCreateCollection}
         onOpenChange={setShowCreateCollection}
-        onCreated={(id) => setSelectedCollectionId(id)}
+        folderId={createCollectionFolderId}
+        onCreated={(id) => {
+          const col = collections?.find(c => c.id === id);
+          if (col) setView({ type: 'collection', collection: col });
+        }}
       />
 
-      {activeCollectionId && (
-        <CreateSolutionSheet
-          open={showCreateSolution}
-          onOpenChange={setShowCreateSolution}
-          collectionId={activeCollectionId}
-          prefillHero={createSpotPrefill?.hero}
-          prefillVillain={createSpotPrefill?.villain}
-          prefillActionType={createSpotPrefill?.actionType}
-        />
-      )}
-
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Collection</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete "{activeCollection?.name}" and all its solutions.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteCollection} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
+      {/* Help dialog */}
       <Dialog open={showHelp} onOpenChange={setShowHelp}>
         <DialogContent className="max-w-sm max-h-[80vh] overflow-y-auto">
           <DialogHeader>
