@@ -17,6 +17,7 @@ export type Database = {
       chart_collections: {
         Row: {
           created_at: string
+          folder_id: string | null
           game_type: string
           id: string
           is_default: boolean
@@ -27,6 +28,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          folder_id?: string | null
           game_type?: string
           id?: string
           is_default?: boolean
@@ -37,6 +39,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          folder_id?: string | null
           game_type?: string
           id?: string
           is_default?: boolean
@@ -44,6 +47,38 @@ export type Database = {
           stack_depth_bb?: number
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_collections_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "chart_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chart_folders: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
