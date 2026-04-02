@@ -11,9 +11,10 @@ interface CreateCollectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: (id: string) => void;
+  folderId?: string | null;
 }
 
-const CreateCollectionDialog: React.FC<CreateCollectionDialogProps> = ({ open, onOpenChange, onCreated }) => {
+const CreateCollectionDialog: React.FC<CreateCollectionDialogProps> = ({ open, onOpenChange, onCreated, folderId }) => {
   const [name, setName] = useState('');
   const [stackDepth, setStackDepth] = useState('100');
   const [gameType, setGameType] = useState('NLH');
@@ -35,6 +36,7 @@ const CreateCollectionDialog: React.FC<CreateCollectionDialogProps> = ({ open, o
         name: name.trim(),
         stack_depth_bb: depth,
         game_type: gameType,
+        folder_id: folderId || null,
       });
       toast.success('Collection created');
       onCreated?.(result.id);
