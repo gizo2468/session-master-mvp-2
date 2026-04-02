@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChartSolution } from '@/hooks/useChartsLibrary';
-import HandRangeGrid from './HandRangeGrid';
+import HandRangeGrid, { ACTION_COLORS } from './HandRangeGrid';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -65,7 +65,12 @@ const SpotDetailView: React.FC<SpotDetailViewProps> = ({ solution, stackDepth, o
           <span>Fold</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm" style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.8) 50%, rgba(16,185,129,0.7) 50%)' }} />
+          <div
+            className="w-3 h-3 rounded-sm"
+            style={{
+              background: `linear-gradient(to bottom, ${ACTION_COLORS.raise} 33%, ${ACTION_COLORS.call} 33% 66%, ${ACTION_COLORS.fold} 66%)`,
+            }}
+          />
           <span>Mixed</span>
         </div>
       </div>
