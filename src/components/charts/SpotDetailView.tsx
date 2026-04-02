@@ -51,7 +51,7 @@ const SpotDetailView: React.FC<SpotDetailViewProps> = ({ solution, stackDepth, o
       </Card>
 
       {/* Legend */}
-      <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+      <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground flex-wrap">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm bg-red-500/80" />
           <span>Raise</span>
@@ -63,6 +63,10 @@ const SpotDetailView: React.FC<SpotDetailViewProps> = ({ solution, stackDepth, o
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm bg-blue-900/40" />
           <span>Fold</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-sm" style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.8) 50%, rgba(16,185,129,0.7) 50%)' }} />
+          <span>Mixed</span>
         </div>
       </div>
 
