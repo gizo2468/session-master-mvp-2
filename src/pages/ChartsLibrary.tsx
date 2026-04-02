@@ -36,6 +36,7 @@ const ChartsLibrary: React.FC = () => {
   const [showCreateCollection, setShowCreateCollection] = useState(false);
   const [showCreateSolution, setShowCreateSolution] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [createSpotPrefill, setCreateSpotPrefill] = useState<{
     hero: string;
     villain: string | null;
