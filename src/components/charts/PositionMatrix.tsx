@@ -111,7 +111,7 @@ const PositionMatrix: React.FC<PositionMatrixProps> = ({ solutions, onSpotClick,
                           ? 'bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/20'
                           : 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/20'
                       : isUserOwned
-                        ? 'bg-muted/40 text-muted-foreground/50 border border-dashed border-muted-foreground/20 hover:border-primary/40 hover:text-primary/60'
+                        ? 'bg-muted/40 text-muted-foreground/70 border border-dashed border-muted-foreground/40 hover:border-primary/60 hover:text-primary'
                         : 'bg-muted/40 text-muted-foreground/50 border border-transparent'
                   )}
                   disabled={!solution && !isUserOwned}
@@ -119,7 +119,7 @@ const PositionMatrix: React.FC<PositionMatrixProps> = ({ solutions, onSpotClick,
                   {solution ? (
                     <span className="font-bold text-xs leading-none">{freq ? `${freq}%` : '—'}</span>
                   ) : (
-                    <Icon name="Plus" className="h-3 w-3 opacity-30" />
+                    <Icon name="Plus" className="h-4 w-4 opacity-60" />
                   )}
                 </button>
               );
