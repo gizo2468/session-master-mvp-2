@@ -119,7 +119,7 @@ const PositionMatrix: React.FC<PositionMatrixProps> = ({ solutions, onSpotClick,
                   {solution ? (
                     <span className="font-bold text-xs leading-none">{freq ? `${freq}%` : '—'}</span>
                   ) : (
-                    <Icon name="Plus" className="h-3 w-3 opacity-30" />
+                    <Icon name="Plus" className="h-4 w-4 opacity-60" />
                   )}
                 </button>
               );
