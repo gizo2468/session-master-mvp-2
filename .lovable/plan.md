@@ -1,86 +1,37 @@
 
 
-## Refactor Charts Library into Workspace with Folders
+## Add Range-Fill (Double-Click) to Hand Range Grid
 
-### What changes
-Transform the Charts Library from a demo-like screen (with a built-in default 100bb collection and 35 prefilled solutions) into a clean workspace where users create and organize their own content using folders.
+### What
+When paint mode is active, double-clicking a cell marks it as the range start. Double-clicking a second cell on the same logical line fills all cells between them with the active action. If they're not on the same line, nothing happens.
 
-### Database changes
+### Logic for "same line"
+- **Pairs**: both on diagonal (`row === col`) → fill all pairs between them
+- **Suited row**: both above diagonal with same row (`row1 === row2`, both `col > row`) → fill all suited hands in that row between the two columns
+- **Offsuit column**: both below diagonal with same col mapped to same high card (`col1 === col2`, both `row > col`) → fill all offsuit hands in that column between the two rows
 
-**1. Add `chart_folders` table**
-```sql
-CREATE TABLE public.chart_folders (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  name text NOT NULL,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
-ALTER TABLE public.chart_folders ENABLE ROW LEVEL SECURITY;
--- Users see only their own folders
-CREATE POLICY "Users manage own folders" ON public.chart_folders
-  FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+### Changes — single file: `src/components/charts/HandRangeGrid.tsx`
+
+1. Add `rangeStart` state: `{ row: number; col: number } | null`
+2. Add `onDoubleClick` handler to each cell button:
+   - Only active when `editable && paintMode`
+   - If no `rangeStart` → set it, visually highlight the cell (e.g. ring)
+   - If `rangeStart` exists → check if same line; if yes, compute all cells between, apply `paintMode` action to all, clear `rangeStart`; if no, reset `rangeStart` to this new cell
+3. Add visual indicator (ring/outline) on the start cell so user knows it's selected
+4. Single-click behavior stays exactly as-is (no changes to `handleCellClick`)
+
+### Line detection helper
+```
+function getCellsBetween(r1, c1, r2, c2):
+  if r1===c1 && r2===c2:  // both pairs
+    return all (i,i) between min/max
+  if c1>r1 && c2>r2 && r1===r2:  // same suited row
+    return all (r1, j) for j between min/max cols
+  if r1>c1 && r2>c2 && c1===c2:  // same offsuit col
+    return all (i, c1) for i between min/max rows
+  return null  // not same line
 ```
 
-**2. Add `folder_id` column to `chart_collections`**
-```sql
-ALTER TABLE public.chart_collections
-  ADD COLUMN folder_id uuid REFERENCES public.chart_folders(id) ON SET NULL;
-```
-Collections without a folder appear as "unfiled" at the root level.
-
-**3. Remove default data**
-```sql
-DELETE FROM chart_solutions WHERE is_default = true;
-DELETE FROM chart_collections WHERE is_default = true;
-```
-
-### Code changes
-
-**4. `src/hooks/useChartsLibrary.ts`**
-- Add `ChartFolder` interface and `useChartFolders()` query (fetch user's folders)
-- Add `useCreateFolder()` and `useDeleteFolder()` mutations
-- Update `useChartCollections()` to remove `is_default.eq.true` from the query — only fetch `user_id.eq.${user?.id}`
-- Add optional `folder_id` to `ChartCollection` interface and `useCreateCollection` params
-- Remove `is_default` references from queries (no longer relevant)
-
-**5. `src/pages/ChartsLibrary.tsx`** — Major restructure
-- Replace the flat collection selector with a folder-based workspace view
-- **Default view**: List of folders + unfiled collections
-  - Each folder shows as an expandable/clickable card with name and collection count
-  - Unfiled collections shown separately at bottom
-- **Empty state**: When no folders and no collections exist, show a clean message: "No charts yet — Create your first folder to get started" with a prominent "Create Folder" button
-- **Inside a folder**: Show the folder's collections as cards; tapping one enters the position matrix view (existing flow)
-- **Top bar**: Keep header + info icon; add "New Folder" button
-- **Folder actions**: Long-press or menu to rename/delete a folder
-
-**6. New component: `src/components/charts/CreateFolderDialog.tsx`**
-- Simple dialog with folder name input
-- Uses `useCreateFolder()` mutation
-
-**7. Update `src/components/charts/CreateCollectionDialog.tsx`**
-- Add optional `folderId` prop so collections can be created inside a specific folder
-- Pass `folder_id` to the mutation
-
-**8. `src/components/charts/PositionMatrix.tsx`** — No changes needed
-The matrix still works the same once a collection is selected.
-
-### Navigation flow
-
-```text
-Charts Library (workspace root)
-  ├── 📁 Folder: "Cash Games"
-  │     ├── Collection: "100bb NLH"  → Position Matrix → Spot Detail
-  │     └── Collection: "50bb NLH"   → Position Matrix → Spot Detail
-  ├── 📁 Folder: "Tournaments"
-  │     └── Collection: "40bb Push/Fold" → ...
-  └── [Unfiled collections if any]
-```
-
-### What stays the same
-- Position matrix grid, spot detail view, hand range grid, paint mode
-- Collection creation flow (just gains optional folder assignment)
-- Solution creation/editing/deletion
-- Info/help terminology dialog
-- All header styling and back button colors
+### No other files changed
+The `CreateSolutionSheet` already passes `paintMode` — no changes needed there.
 
