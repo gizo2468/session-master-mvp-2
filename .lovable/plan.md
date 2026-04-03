@@ -1,29 +1,39 @@
 
 
-## Update Card Color System for Dark Mode
+## Fix Missing Hand Result in Live Session Hand List
 
-### Problem
-The `CardDisplay` component has conflicting dark mode classes (`dark:bg-gray-50 dark:bg-background` — the second overrides the first, making cards dark-on-dark). Suit colors are too muted, and rank text has no explicit color, inheriting the parent's color which can be unreadable on a light card face.
+### Root cause
+The hand form saves `resultValue` (e.g., `500`) and `resultUnit` (e.g., `"BB"`), but the hand list displays `resultAmount` which maps to the DB column `amount_won`. Neither `resultAmount` nor `amountWon` are ever derived from `resultValue`, so they remain `undefined` in local state and `0` in the database.
 
-### Single file change: `src/components/poker/CardDisplay.tsx`
+### Fix — single file: `src/context/session/handlers.ts`
 
-**Line 58 — Card container classes:**
-- Remove conflicting `dark:bg-gray-50 dark:bg-background`
-- Set to `bg-white dark:bg-gray-100` — always a clean light card face
-- Upgrade border: `border-gray-400` → `border-gray-300 dark:border-gray-500` for subtle premium framing
-- Add `dark:shadow-md dark:shadow-black/30` for depth against dark backgrounds
+In the `addTableHand` function (~line 38), when constructing `newHand`, derive `resultAmount` from the submitted `resultValue`:
 
-**Line 34-50 — Suit colors:**
-- Hearts/Diamonds: `text-red-600` → `text-red-600 dark:text-red-500` (brighter, more saturated red in dark mode)
-- Spades/Clubs: `text-gray-900 dark:text-gray-100` → `text-gray-900 dark:text-gray-900` (keep them dark/black since the card face is light)
+```typescript
+const newHand: HandData = {
+  ...hand,
+  id: uuidv4(),
+  createdAt: new Date(),
+  tableId: tableId,
+  holeCards: holeCardsArray,
+  cards: hand.cards ? String(hand.cards) : '',
+  currencyType: tableFormat === 'Cash' ? 'currency' : 'chips',
+  // Derive resultAmount from resultValue for display in HandsList
+  resultAmount: hand.resultValue ?? hand.resultAmount,
+  amountWon: hand.resultValue ?? hand.amountWon ?? hand.resultAmount,
+};
+```
 
-**Line 60 — Rank text:**
-- Add explicit `text-gray-900` so rank is always dark on the light card face, regardless of parent color context
+Also apply the same fix in the `updateTableHand` function so edits are reflected too.
 
-### Result
-- Card face stays light and clean in both modes
-- Red suits are vivid and saturated
-- Black suits are solid black (not washed-out gray)
-- Rank text is always high-contrast
-- Applied globally since all 11+ files import from this single component
+### Why this works
+- `HandsList` checks `hand.resultAmount` (line 149) — now populated from `resultValue`
+- `handSync.ts` saves `amount_won: hand.amountWon || hand.resultAmount || 0` — now both are set
+- On reload from DB, `sessionDataLoader.ts` already maps `amount_won → resultAmount` correctly
+- Backward compatible: `??` means existing `resultAmount`/`amountWon` values are preserved
+
+### Scope
+- One file changed, two functions patched
+- No layout, styling, or DB changes
+- Fixes both the local state display and the DB persistence
 
