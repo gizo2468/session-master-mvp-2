@@ -128,6 +128,10 @@ export const convertDatabaseSessionToPokerSession = (
           riverActions: parseJsonField(hand.river_actions),
           resultValue: hand.result_value != null ? parseFloat(hand.result_value) : undefined,
           resultUnit: hand.result_unit || 'BB',
+          // Derive resultAmount from all possible sources so HandsList can always display it
+          resultAmount: hand.result_value != null 
+            ? parseFloat(hand.result_value) 
+            : (parseFloat(hand.amount_won || '0') !== 0 ? parseFloat(hand.amount_won || '0') : undefined),
           createdAt: new Date(hand.created_at)
         };
         

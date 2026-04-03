@@ -146,33 +146,53 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                   
                   
                   <TableCell className="md:py-2">
-                    {hand.resultAmount !== undefined && (
-                      <div className="flex flex-col items-center gap-0.5">
-                        <div className="flex items-center gap-1">
-                          {hand.currencyType === 'currency' ? (
-                            <CircleDollarSign className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
-                          ) : (
-                            <PokerChip className={`h-4 w-4 ${hand.resultAmount >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                    {(() => {
+                      // Derive display result: showdownResult > resultValue+resultUnit > resultAmount > amountWon
+                      const displayValue = hand.resultValue ?? hand.resultAmount ?? hand.amountWon;
+                      const unit = hand.resultUnit || (hand.currencyType === 'currency' ? '$' : 'chips');
+                      const isCurrency = hand.currencyType === 'currency' && unit === '$';
+                      
+                      if (displayValue === undefined && !hand.showdownResult) return null;
+                      
+                      // If we have showdownResult text, show it directly
+                      if (hand.showdownResult && displayValue === undefined) {
+                        return (
+                          <span className="text-sm text-muted-foreground">{hand.showdownResult}</span>
+                        );
+                      }
+                      
+                      const numValue = Number(displayValue) || 0;
+                      const isPositive = numValue >= 0;
+                      
+                      return (
+                        <div className="flex flex-col items-center gap-0.5">
+                          <div className="flex items-center gap-1">
+                            {isCurrency ? (
+                              <CircleDollarSign className={`h-4 w-4 ${isPositive ? 'text-green-600' : 'text-red-600'}`} />
+                            ) : (
+                              <PokerChip className={`h-4 w-4 ${isPositive ? 'text-green-600' : 'text-red-600'}`} />
+                            )}
+                            <span className={isPositive ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                              {isPositive ? '+' : ''}
+                              {isCurrency ? '$' : ''}
+                              {Math.abs(numValue).toFixed(2)}
+                              {!isCurrency && unit ? ` ${unit}` : ''}
+                            </span>
+                          </div>
+                          {(hand.smallBlind !== undefined || hand.bigBlind !== undefined) && (hand.smallBlind || hand.bigBlind) !== 0 && (
+                            <span className="text-xs text-gray-500 dark:text-muted-foreground text-center">
+                              (
+                              {hand.currencyType === 'currency' ? '$' : ''}
+                              {hand.smallBlind !== undefined ? Number(hand.smallBlind).toString() : '0'}
+                              /
+                              {hand.currencyType === 'currency' ? '$' : ''}
+                              {hand.bigBlind !== undefined ? Number(hand.bigBlind).toString() : '0'}
+                              )
+                            </span>
                           )}
-                          <span className={hand.resultAmount >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                            {hand.resultAmount >= 0 ? '+' : ''}
-                            {hand.currencyType === 'currency' ? '$' : ''}
-                            {Math.abs(hand.resultAmount).toFixed(2)}
-                          </span>
                         </div>
-                        {(hand.smallBlind !== undefined || hand.bigBlind !== undefined) && (hand.smallBlind || hand.bigBlind) !== 0 && (
-                          <span className="text-xs text-gray-500 dark:text-muted-foreground text-center">
-                            (
-                            {hand.currencyType === 'currency' ? '$' : ''}
-                            {hand.smallBlind !== undefined ? Number(hand.smallBlind).toString() : '0'}
-                            /
-                            {hand.currencyType === 'currency' ? '$' : ''}
-                            {hand.bigBlind !== undefined ? Number(hand.bigBlind).toString() : '0'}
-                            )
-                          </span>
-                        )}
-                      </div>
-                    )}
+                      );
+                    })()}
                   </TableCell>
                   {!readOnly && (
                     <TableCell className="text-right md:py-2">

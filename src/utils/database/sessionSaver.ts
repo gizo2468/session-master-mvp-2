@@ -202,7 +202,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
           showdown_result: hand.showdownResult,
           pot_size: hand.potSize || 0,
           amount_invested: hand.amountInvested || 0,
-          amount_won: hand.amountWon || 0,
+          amount_won: hand.amountWon || hand.resultValue ?? hand.resultAmount ?? 0,
           hand_notes: hand.notes,
           hand_image: hand.image,
           currency_type: hand.currencyType || 'currency',
