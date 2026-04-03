@@ -163,7 +163,7 @@ function ActiveSessionsList({ sessions, onResume }: ActiveSessionsListProps) {
 
   return (
     <div className="w-full space-y-3">
-      <h3 className="text-lg font-bold text-green-800 mb-3">
+      <h3 className="text-lg font-bold text-green-800 dark:text-green-400 mb-3">
         Active Sessions ({validSessions.length})
       </h3>
       
