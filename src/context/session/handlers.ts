@@ -42,7 +42,9 @@ export const createTableHandHandlers = (
       tableId: tableId,
       holeCards: holeCardsArray,
       cards: hand.cards ? String(hand.cards) : '',
-      currencyType: tableFormat === 'Cash' ? 'currency' : 'chips'
+      currencyType: tableFormat === 'Cash' ? 'currency' : 'chips',
+      resultAmount: hand.resultValue ?? hand.resultAmount,
+      amountWon: hand.resultValue ?? hand.amountWon ?? hand.resultAmount,
     };
     
     console.log('🔄 HANDLER: Created new hand with local ID:', {
@@ -137,8 +139,15 @@ export const createTableHandHandlers = (
     });
 
     // Update local state first
+    const updatedHandData = {
+      ...hand,
+      supabaseId: hand.supabaseId,
+      resultAmount: hand.resultValue ?? hand.resultAmount,
+      amountWon: hand.resultValue ?? hand.amountWon ?? hand.resultAmount,
+    };
+
     const updatedHands = table.hands.map(h => 
-      h.id === hand.id ? { ...hand, supabaseId: hand.supabaseId || h.supabaseId } : h
+      h.id === hand.id ? { ...updatedHandData, supabaseId: updatedHandData.supabaseId || h.supabaseId } : h
     );
     
     const updatedTable = {
