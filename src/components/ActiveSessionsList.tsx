@@ -40,7 +40,7 @@ const ActiveSessionItem = React.memo(({ session, onResume, handleDeleteClick }: 
   };
 
   return (
-    <div key={session.id} className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800/50 dark:shadow-[0_0px_12px_0_rgba(34,197,94,0.08)] rounded-lg p-4">
+    <div key={session.id} className="bg-green-50 dark:bg-[hsl(140,8%,15%)] border border-green-200 dark:border-green-800/50 dark:shadow-[0_0px_12px_0_rgba(34,197,94,0.1)] rounded-lg p-4">
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
