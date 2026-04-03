@@ -40,14 +40,14 @@ const ActiveSessionItem = React.memo(({ session, onResume, handleDeleteClick }: 
   };
 
   return (
-    <div key={session.id} className="bg-green-50 border border-green-200 rounded-lg p-4">
+    <div key={session.id} className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800/50 dark:shadow-[0_0px_12px_0_rgba(34,197,94,0.08)] rounded-lg p-4">
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-            <h4 className="text-md font-bold text-green-800">{session.location || 'Unknown Location'}</h4>
+            <h4 className="text-md font-bold text-green-800 dark:text-green-300">{session.location || 'Unknown Location'}</h4>
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-2">
+          <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 mb-2">
             <div className="flex items-center gap-1">
               <Icon name="MapPin" size={14} />
               <span>{session.location || 'N/A'}</span>
@@ -58,9 +58,9 @@ const ActiveSessionItem = React.memo(({ session, onResume, handleDeleteClick }: 
             </div>
           </div>
           <div className="flex items-center gap-3 text-sm">
-            <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">{session.gameType || 'N/A'}</span>
-            <span className="text-gray-400 dark:text-gray-500">|</span>
-            <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">{session.format || 'N/A'}</span>
+            <span className="text-gray-600 dark:text-gray-400">{session.gameType || 'N/A'}</span>
+            <span className="text-gray-400 dark:text-gray-600">|</span>
+            <span className="text-gray-600 dark:text-gray-400">{session.format || 'N/A'}</span>
           </div>
         </div>
         <div className="flex flex-col gap-2">
@@ -76,7 +76,7 @@ const ActiveSessionItem = React.memo(({ session, onResume, handleDeleteClick }: 
             onClick={() => handleDeleteClick(session)}
             variant="ghost"
             size="sm"
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40"
           >
             <Icon name="Trash2" size={16} className="mr-1" />
             Delete
@@ -163,7 +163,7 @@ function ActiveSessionsList({ sessions, onResume }: ActiveSessionsListProps) {
 
   return (
     <div className="w-full space-y-3">
-      <h3 className="text-lg font-bold text-green-800 mb-3">
+      <h3 className="text-lg font-bold text-green-800 dark:text-green-400 mb-3">
         Active Sessions ({validSessions.length})
       </h3>
       
