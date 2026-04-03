@@ -143,8 +143,8 @@ textarea:-webkit-autofill:active {
     --destructive: 0 62% 45%;
     --destructive-foreground: 40 10% 95%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
+    --border: 30 5% 22%;
+    --input: 30 5% 22%;
     --ring: 43 77% 52%;
 
     --sidebar-background: 0 0% 9%;
