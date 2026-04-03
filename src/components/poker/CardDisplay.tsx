@@ -34,19 +34,19 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
         switch (suit) {
           case 'h':
             suitSymbol = '♥';
-            suitColor = 'text-red-600';
+            suitColor = 'text-red-600 dark:text-red-500';
             break;
           case 'd':
             suitSymbol = '♦';
-            suitColor = 'text-red-600';
+            suitColor = 'text-red-600 dark:text-red-500';
             break;
           case 's':
             suitSymbol = '♠';
-            suitColor = 'text-gray-900 dark:text-gray-100';
+            suitColor = 'text-gray-900 dark:text-gray-900';
             break;
           case 'c':
             suitSymbol = '♣';
-            suitColor = 'text-gray-900 dark:text-gray-100';
+            suitColor = 'text-gray-900 dark:text-gray-900';
             break;
         }
         
