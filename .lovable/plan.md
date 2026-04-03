@@ -1,41 +1,36 @@
 
 
-## Improve Dark Mode Card Separation
+## Update Active Sessions Cards for Dark Mode
 
-### Problem
-In dark mode, `--background` is `0 0% 7%` (#121212) and `--card` is `0 0% 11%` (#1C1C1C) — only 4% lightness difference. Border is `0 0% 18%` which is too faint. Dividers inherit the same faint border color. No glow/shadow distinguishes layers.
+### What
+Replace the hardcoded green-on-white styling of Active Sessions cards with dark-mode-aware classes that use a subtle green-tinted dark background, proper text colors, and a green-accented glow — while keeping light mode unchanged.
 
-### Changes
+### Single file: `src/components/ActiveSessionsList.tsx`
 
-**1. CSS variables — `src/index.css` (`.dark` block)**
-- `--card`: `0 0% 11%` → `0 0% 13%` (slightly lighter, more separation)
-- `--popover`: `0 0% 13%` → `0 0% 15%` (modals/dialogs lift further)
-- `--border`: `0 0% 18%` → `30 5% 22%` (warmer, more visible)
-- `--input`: same as new border value
-- Add new custom property `--card-glow` for the warm gold shadow: `0 0px 12px 0 rgba(212, 175, 55, 0.06), 0 0px 4px 0 rgba(212, 175, 55, 0.04)`
+**Card container (line 43)**
+- Current: `bg-green-50 border border-green-200`
+- New: `bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800/50 dark:shadow-[0_0px_12px_0_rgba(34,197,94,0.08)]`
 
-**2. Card component — `src/components/ui/card.tsx`**
-- Update dark shadow: `dark:shadow-black/20` → `dark:shadow-[var(--card-glow)]`
-- Add slightly more visible dark border: `dark:border-[hsl(30,5%,22%)]` (already covered by the CSS var change, but reinforce with explicit class for clarity)
+**Title (line 48)**
+- Current: `text-green-800`
+- New: `text-green-800 dark:text-green-300`
 
-**3. Dialog component — `src/components/ui/dialog.tsx`**
-- Add dark mode classes to `DialogContent`: `dark:bg-popover dark:border-[hsl(30,5%,22%)] dark:shadow-[0_0px_20px_0_rgba(212,175,55,0.08)]`
+**Info text (lines 50, 60-63)**
+- Current: `text-gray-600 dark:text-gray-400 dark:text-gray-500`
+- New: `text-gray-600 dark:text-gray-400` (remove duplicate dark class)
 
-**4. Sheet component — `src/components/ui/sheet.tsx`**
-- Add dark mode classes to the base cva string: `dark:bg-popover dark:shadow-[0_0px_20px_0_rgba(212,175,55,0.08)]`
+**Pipe separator (line 62)**
+- Current: `text-gray-400 dark:text-gray-500`
+- New: `text-gray-400 dark:text-gray-600`
 
-**5. Separator/divider — `src/components/ui/separator.tsx`**
-- Check current styling and add `dark:bg-[hsl(30,5%,24%)]` to make internal dividers more visible than the outer border
+**Delete button (lines 79-80)**
+- Current: `hover:bg-red-50`
+- New: `hover:bg-red-50 dark:hover:bg-red-950/40`
 
-### What stays the same
-- Light mode is untouched
-- No layout, spacing, or structural changes
-- All changes are dark-mode-only visual refinements
+**Section heading (line ~97 in the parent)**
+- Current: `text-green-800`
+- New: `text-green-800 dark:text-green-400`
 
-### Files touched
-1. `src/index.css` — CSS variables
-2. `src/components/ui/card.tsx` — gold glow shadow
-3. `src/components/ui/dialog.tsx` — popover bg + glow
-4. `src/components/ui/sheet.tsx` — popover bg + glow  
-5. `src/components/ui/separator.tsx` — stronger divider color
+### No other changes
+Layout, structure, functionality, and light mode stay identical. Only dark-mode classes are added/updated.
 
