@@ -58,9 +58,9 @@ const ActiveSessionItem = React.memo(({ session, onResume, handleDeleteClick }: 
             </div>
           </div>
           <div className="flex items-center gap-3 text-sm">
-            <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">{session.gameType || 'N/A'}</span>
-            <span className="text-gray-400 dark:text-gray-500">|</span>
-            <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">{session.format || 'N/A'}</span>
+            <span className="text-gray-600 dark:text-gray-400">{session.gameType || 'N/A'}</span>
+            <span className="text-gray-400 dark:text-gray-600">|</span>
+            <span className="text-gray-600 dark:text-gray-400">{session.format || 'N/A'}</span>
           </div>
         </div>
         <div className="flex flex-col gap-2">
