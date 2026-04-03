@@ -47,7 +47,7 @@ const ActiveSessionItem = React.memo(({ session, onResume, handleDeleteClick }: 
             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
             <h4 className="text-md font-bold text-green-800 dark:text-green-300">{session.location || 'Unknown Location'}</h4>
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-2">
+          <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 mb-2">
             <div className="flex items-center gap-1">
               <Icon name="MapPin" size={14} />
               <span>{session.location || 'N/A'}</span>
