@@ -123,12 +123,11 @@ textarea:-webkit-autofill:active {
     --background: 0 0% 7%;
     --foreground: 40 10% 95%;
 
-    --card: 0 0% 11%;
+    --card: 0 0% 13%;
     --card-foreground: 40 10% 95%;
 
-    --popover: 0 0% 13%;
+    --popover: 0 0% 15%;
     --popover-foreground: 40 10% 95%;
-
     --primary: 43 77% 52%;
     --primary-foreground: 0 0% 7%;
 
