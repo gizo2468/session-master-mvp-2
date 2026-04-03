@@ -23,6 +23,18 @@ interface CellMixEditorProps {
 
 const STEP = 5;
 
+const PRESETS_2 = [
+  { label: '50/50', weights: [50, 50] },
+  { label: '70/30', weights: [70, 30] },
+  { label: '25/75', weights: [25, 75] },
+];
+
+const PRESETS_3 = [
+  { label: '33/33/34', weights: [33, 33, 34] },
+  { label: '50/25/25', weights: [50, 25, 25] },
+  { label: '40/40/20', weights: [40, 40, 20] },
+];
+
 const CellMixEditor: React.FC<CellMixEditorProps> = ({
   open,
   onOpenChange,
@@ -131,6 +143,26 @@ const CellMixEditor: React.FC<CellMixEditorProps> = ({
               </div>
             );
           })}
+        </div>
+
+        {/* Presets */}
+        <div className="flex flex-wrap gap-1.5 mt-1">
+          {(availableActions.length >= 3 ? [...PRESETS_2, ...PRESETS_3] : PRESETS_2).map(preset => (
+            <button
+              key={preset.label}
+              type="button"
+              className="px-2 py-0.5 text-[10px] font-medium rounded-full border border-border bg-muted/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => {
+                const w: Record<string, number> = {};
+                for (let i = 0; i < availableActions.length; i++) {
+                  w[availableActions[i]] = preset.weights[i] || 0;
+                }
+                setWeights(w);
+              }}
+            >
+              {preset.label}
+            </button>
+          ))}
         </div>
 
         {/* Sliders */}
