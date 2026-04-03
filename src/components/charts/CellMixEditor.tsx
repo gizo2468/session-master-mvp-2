@@ -23,6 +23,18 @@ interface CellMixEditorProps {
 
 const STEP = 5;
 
+const PRESETS_2 = [
+  { label: '50/50', weights: [50, 50] },
+  { label: '70/30', weights: [70, 30] },
+  { label: '25/75', weights: [25, 75] },
+];
+
+const PRESETS_3 = [
+  { label: '33/33/34', weights: [33, 33, 34] },
+  { label: '50/25/25', weights: [50, 25, 25] },
+  { label: '40/40/20', weights: [40, 40, 20] },
+];
+
 const CellMixEditor: React.FC<CellMixEditorProps> = ({
   open,
   onOpenChange,
