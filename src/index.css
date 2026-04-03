@@ -232,6 +232,18 @@ textarea:-webkit-autofill:active {
   }
 }
 
+/* Dark mode timer frame background */
+.dark-timer-frame {
+  background: white;
+}
+.dark .dark-timer-frame {
+  background: linear-gradient(
+    135deg,
+    hsla(0, 0%, 10%, 0.95),
+    hsla(30, 5%, 14%, 0.95)
+  );
+}
+
 /* Hide scrollbar on mobile/touch devices while keeping scroll functionality */
 @media (max-width: 768px) {
   /* Hide scrollbar for Chrome, Safari, Edge, Opera */
