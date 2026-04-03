@@ -55,7 +55,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
         cardArray.push(
           <div 
             key={`${rank}${suit}-${i}`}
-            className={`${styles.card} inline-flex bg-white dark:bg-gray-50 dark:bg-background border border-gray-400 rounded-lg shadow-sm dark:shadow-black/20 flex-col items-center justify-center gap-0.5 p-1 transition-transform hover:scale-105`}
+            className={`${styles.card} inline-flex bg-white dark:bg-gray-100 border border-gray-300 dark:border-gray-500 rounded-lg shadow-sm dark:shadow-md dark:shadow-black/30 flex-col items-center justify-center gap-0.5 p-1 transition-transform hover:scale-105`}
           >
             <div className={`${styles.rank} leading-tight`}>{rank}</div>
             <div className={`${suitColor} ${styles.suit} leading-tight`}>{suitSymbol}</div>
