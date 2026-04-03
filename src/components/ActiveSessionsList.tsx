@@ -76,7 +76,7 @@ const ActiveSessionItem = React.memo(({ session, onResume, handleDeleteClick }: 
             onClick={() => handleDeleteClick(session)}
             variant="ghost"
             size="sm"
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40"
           >
             <Icon name="Trash2" size={16} className="mr-1" />
             Delete
