@@ -145,19 +145,17 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                   </TableCell>
                   
                   
-                  <TableCell className="md:py-2">
+                  <TableCell className="md:py-2 px-1">
                     {(() => {
-                      // Derive display result: showdownResult > resultValue+resultUnit > resultAmount > amountWon
                       const displayValue = hand.resultValue ?? hand.resultAmount ?? hand.amountWon;
                       const unit = hand.resultUnit || (hand.currencyType === 'currency' ? '$' : 'chips');
                       const isCurrency = hand.currencyType === 'currency' && unit === '$';
                       
                       if (displayValue === undefined && !hand.showdownResult) return null;
                       
-                      // If we have showdownResult text, show it directly
                       if (hand.showdownResult && displayValue === undefined) {
                         return (
-                          <span className="text-sm text-muted-foreground">{hand.showdownResult}</span>
+                          <span className="inline-block text-[10px] leading-tight px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium truncate max-w-full">{hand.showdownResult}</span>
                         );
                       }
                       
@@ -165,32 +163,16 @@ const HandsList: React.FC<HandsListProps> = ({ hands, onEditHand, onDeleteHand, 
                       const isPositive = numValue >= 0;
                       
                       return (
-                        <div className="flex flex-col items-center gap-0.5">
-                          <div className="flex items-center gap-1">
-                            {isCurrency ? (
-                              <CircleDollarSign className={`h-4 w-4 ${isPositive ? 'text-green-600' : 'text-red-600'}`} />
-                            ) : (
-                              <PokerChip className={`h-4 w-4 ${isPositive ? 'text-green-600' : 'text-red-600'}`} />
-                            )}
-                            <span className={isPositive ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                              {isPositive ? '+' : ''}
-                              {isCurrency ? '$' : ''}
-                              {Math.abs(numValue).toFixed(2)}
-                              {!isCurrency && unit ? ` ${unit}` : ''}
-                            </span>
-                          </div>
-                          {(hand.smallBlind !== undefined || hand.bigBlind !== undefined) && (hand.smallBlind || hand.bigBlind) !== 0 && (
-                            <span className="text-xs text-gray-500 dark:text-muted-foreground text-center">
-                              (
-                              {hand.currencyType === 'currency' ? '$' : ''}
-                              {hand.smallBlind !== undefined ? Number(hand.smallBlind).toString() : '0'}
-                              /
-                              {hand.currencyType === 'currency' ? '$' : ''}
-                              {hand.bigBlind !== undefined ? Number(hand.bigBlind).toString() : '0'}
-                              )
-                            </span>
-                          )}
-                        </div>
+                        <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] leading-tight font-semibold whitespace-nowrap ${
+                          isPositive 
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' 
+                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                        }`}>
+                          {isPositive ? '+' : ''}
+                          {isCurrency ? '$' : ''}
+                          {Math.abs(numValue).toFixed(0)}
+                          {!isCurrency && unit ? ` ${unit}` : ''}
+                        </span>
                       );
                     })()}
                   </TableCell>
