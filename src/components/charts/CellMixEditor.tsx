@@ -145,6 +145,26 @@ const CellMixEditor: React.FC<CellMixEditorProps> = ({
           })}
         </div>
 
+        {/* Presets */}
+        <div className="flex flex-wrap gap-1.5 mt-1">
+          {(availableActions.length >= 3 ? [...PRESETS_2, ...PRESETS_3] : PRESETS_2).map(preset => (
+            <button
+              key={preset.label}
+              type="button"
+              className="px-2 py-0.5 text-[10px] font-medium rounded-full border border-border bg-muted/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => {
+                const w: Record<string, number> = {};
+                for (let i = 0; i < availableActions.length; i++) {
+                  w[availableActions[i]] = preset.weights[i] || 0;
+                }
+                setWeights(w);
+              }}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+
         {/* Sliders */}
         <div className="space-y-3 mt-2">
           {availableActions.map(a => {
