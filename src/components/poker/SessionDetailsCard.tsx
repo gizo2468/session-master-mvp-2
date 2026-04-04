@@ -145,9 +145,9 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             {totalPayouts > 0 && (
               <Badge
                 variant="outline"
-                className="flex items-center gap-1 border-green-400 bg-green-50 text-green-800 px-4 py-1.5 font-normal text-sm w-full justify-center"
+                className="flex items-center gap-1 border-green-400 bg-green-50 dark:bg-green-950/50 dark:border-green-700/60 text-green-800 px-4 py-1.5 font-normal text-sm w-full justify-center"
               >
-                <span className="font-bold text-green-700 text-base">Total Payouts: {currencySymbol}{totalPayouts.toFixed(2)}</span>
+                <span className="font-bold text-green-700 dark:text-green-300 text-base">Total Payouts: {currencySymbol}{totalPayouts.toFixed(2)}</span>
               </Badge>
             )}
             
