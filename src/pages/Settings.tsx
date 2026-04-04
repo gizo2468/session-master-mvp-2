@@ -282,8 +282,8 @@ const Settings: React.FC = () => {
           <Card>
             <CardHeader>
               <div className="flex items-start justify-between">
-                <div className="flex-1 pt-1 text-center">
-                  <CardTitle className="text-center">Account</CardTitle>
+                <div className="flex-1 pt-1">
+                  <CardTitle>Account</CardTitle>
                   <CardDescription className="text-center">Your account information</CardDescription>
                 </div>
                 {!profileLoading && (
@@ -328,62 +328,74 @@ const Settings: React.FC = () => {
             <CardContent>
               <div className="space-y-4">
                 {/* Full Name */}
-                <div className="flex flex-col items-center text-center">
-                  <Icon name="UserCircle2" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
-                  <p className="font-medium">{user?.fullName || '—'}</p>
-                  <p className="text-sm text-muted-foreground">Full Name</p>
+                <div className="flex items-center gap-3">
+                  <Icon name="UserCircle2" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">{user?.fullName || '—'}</p>
+                    <p className="text-sm text-gray-500 dark:text-muted-foreground">Full Name</p>
+                  </div>
                 </div>
 
                 {/* Email */}
-                <div className="flex flex-col items-center text-center">
-                  <Icon name="Mail" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
-                  <p className="font-medium">{user?.email || 'Not signed in'}</p>
-                  <p className="text-sm text-muted-foreground">Email</p>
+                <div className="flex items-center gap-3">
+                  <Icon name="Mail" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">{user?.email || 'Not signed in'}</p>
+                    <p className="text-sm text-gray-500 dark:text-muted-foreground">Email</p>
+                  </div>
                 </div>
 
                 {/* Username */}
                 {profileLoading ? (
-                  <div className="flex flex-col items-center text-center">
-                    <Icon name="AtSign" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
-                    <div className="h-4 w-24 bg-muted rounded animate-pulse"></div>
-                    <p className="text-sm text-muted-foreground">Username</p>
+                  <div className="flex items-center gap-3">
+                    <Icon name="AtSign" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
+                    <div>
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-muted rounded animate-pulse"></div>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Username</p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center text-center">
-                    <Icon name="AtSign" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
-                    {isEditing ? (
-                      <div>
-                        <Input
-                          value={editForm.username}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
-                          placeholder="Display handle"
-                          className="max-w-[200px] text-center"
-                          autoComplete="off"
-                          data-form-type="other"
-                        />
-                        <p className="text-sm text-muted-foreground mt-1">Username</p>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="font-medium">@{profile?.username || 'Not set'}</p>
-                        <p className="text-sm text-muted-foreground">Username</p>
-                      </>
-                    )}
+                  <div className="flex items-center gap-3 flex-1">
+                    <Icon name="AtSign" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
+                    <div className="flex-1">
+                      {isEditing ? (
+                        <div>
+                          <Input
+                            value={editForm.username}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
+                            placeholder="Display handle"
+                            className="max-w-[200px]"
+                            autoComplete="off"
+                            data-form-type="other"
+                          />
+                          <p className="text-sm text-gray-500 dark:text-muted-foreground mt-1">Username</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="font-medium">@{profile?.username || 'Not set'}</p>
+                          <p className="text-sm text-gray-500 dark:text-muted-foreground">Username</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
                 {/* Role */}
                 {profileLoading ? (
-                  <div className="flex flex-col items-center text-center">
-                    <Icon name="User" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
-                    <div className="h-4 w-16 bg-muted rounded animate-pulse"></div>
-                    <p className="text-sm text-muted-foreground">Role</p>
+                  <div className="flex items-center gap-3">
+                    <Icon name="User" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
+                    <div>
+                      <div className="h-4 w-16 bg-gray-200 dark:bg-muted rounded animate-pulse"></div>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Role</p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center text-center">
-                    <Icon name="User" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
-                    <p className="font-medium">{getDisplayRole(profile?.role)}</p>
-                    <p className="text-sm text-muted-foreground">Role</p>
+                  <div className="flex items-center gap-3">
+                    <Icon name="User" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">{getDisplayRole(profile?.role)}</p>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Role</p>
+                    </div>
                   </div>
                 )}
 
@@ -391,70 +403,74 @@ const Settings: React.FC = () => {
                 {profile?.role === 'coach' && (
                   <>
                     {/* Coaching Focus */}
-                    <div className="flex flex-col items-center text-center">
-                      <Icon name="Target" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
-                      <p className="font-medium">Coaching Focus</p>
-                      {isEditing ? (
-                        <div className="mt-2">
-                          <div className="flex flex-wrap justify-center gap-2">
-                            {coachingFocusOptions.map((option) => {
-                              const isSelected = editForm.coaching_focus.includes(option);
-                              const isDisabled = !isSelected && editForm.coaching_focus.length >= 3;
-                              
-                              return (
-                                <Badge
-                                  key={option}
-                                  variant={isSelected ? "default" : "outline"}
-                                  className={`cursor-pointer transition-colors ${
-                                    isSelected
-                                      ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
-                                      : isDisabled
-                                      ? "opacity-50 cursor-not-allowed bg-gray-50 dark:bg-background"
-                                      : "hover:bg-gray-100 dark:bg-muted"
-                                  }`}
-                                  onClick={() => !isDisabled && handleCoachingFocusToggle(option)}
-                                >
-                                  {option}
-                                </Badge>
-                              );
-                            })}
+                    <div className="flex items-start gap-3">
+                      <Icon name="Target" className="h-5 w-5 text-gray-500 dark:text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-medium">Coaching Focus</p>
+                        {isEditing ? (
+                          <div className="mt-2">
+                            <div className="flex flex-wrap gap-2">
+                              {coachingFocusOptions.map((option) => {
+                                const isSelected = editForm.coaching_focus.includes(option);
+                                const isDisabled = !isSelected && editForm.coaching_focus.length >= 3;
+                                
+                                return (
+                                  <Badge
+                                    key={option}
+                                    variant={isSelected ? "default" : "outline"}
+                                    className={`cursor-pointer transition-colors ${
+                                      isSelected
+                                        ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                                        : isDisabled
+                                        ? "opacity-50 cursor-not-allowed bg-gray-50 dark:bg-background"
+                                        : "hover:bg-gray-100 dark:bg-muted"
+                                    }`}
+                                    onClick={() => !isDisabled && handleCoachingFocusToggle(option)}
+                                  >
+                                    {option}
+                                  </Badge>
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="flex flex-wrap justify-center gap-1 mt-1">
-                          {profile?.coaching_focus && profile.coaching_focus.length > 0 ? (
-                            profile.coaching_focus.map((focus, index) => (
-                              <span
-                                key={index}
-                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                              >
-                                {focus}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-sm text-muted-foreground">No coaching focus areas set</span>
-                          )}
-                        </div>
-                      )}
+                        ) : (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {profile?.coaching_focus && profile.coaching_focus.length > 0 ? (
+                              profile.coaching_focus.map((focus, index) => (
+                                <span
+                                  key={index}
+                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                >
+                                  {focus}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-sm text-gray-500 dark:text-muted-foreground">No coaching focus areas set</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Experience */}
-                    <div className="flex flex-col items-center text-center">
-                      <Icon name="Award" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
-                      <p className="font-medium">Experience</p>
-                      {isEditing ? (
-                        <Textarea
-                          value={editForm.experience}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, experience: e.target.value }))}
-                          placeholder="Describe your coaching experience..."
-                          className="mt-1 w-full max-w-[280px]"
-                          rows={3}
-                        />
-                      ) : (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {profile?.experience || "No experience information provided"}
-                        </p>
-                      )}
+                    <div className="flex items-start gap-3">
+                      <Icon name="Award" className="h-5 w-5 text-gray-500 dark:text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-medium">Experience</p>
+                        {isEditing ? (
+                          <Textarea
+                            value={editForm.experience}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, experience: e.target.value }))}
+                            placeholder="Describe your coaching experience..."
+                            className="mt-1"
+                            rows={3}
+                          />
+                        ) : (
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                            {profile?.experience || "No experience information provided"}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </>
                 )}
