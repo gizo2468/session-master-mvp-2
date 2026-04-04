@@ -105,6 +105,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [reviewHandImage, setReviewHandImage] = useState<string | null>(null);
   const [loadingHandImage, setLoadingHandImage] = useState(false);
   const [handsWithFeedback, setHandsWithFeedback] = useState<Set<string>>(new Set());
+  const [handsWithImages, setHandsWithImages] = useState<Set<string>>(new Set());
   
   const { toast } = useToast();
   
