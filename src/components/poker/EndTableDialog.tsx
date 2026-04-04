@@ -128,7 +128,7 @@ export default function EndTableDialog({
                     type="number"
                     min="0"
                     step="0.01"
-                    className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                     placeholder="0.00"
                     value={cashOutAmount}
                     onChange={(e) => onCashOutAmountChange(e.target.value)}
