@@ -1,12 +1,18 @@
 
 import React, { useState } from 'react';
-import { Filter } from 'lucide-react';
+import { Filter, RotateCcw } from 'lucide-react';
 import { SessionFilter } from '@/types/poker';
 
 interface FilterBarProps {
   filters: SessionFilter;
   onFiltersChange: (filters: SessionFilter) => void;
 }
+
+const defaultFilters: SessionFilter = {
+  gameType: 'All',
+  format: 'All',
+  location: '',
+};
 
 export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,16 +23,29 @@ export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) 
       [key]: value,
     });
   };
+
+  const isFiltered = filters.gameType !== 'All' || filters.format !== 'All' || (filters.location && filters.location.length > 0);
   
   return (
     <div className="mb-4">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center text-gray-500 dark:text-muted-foreground text-sm"
-      >
-        <Filter className="w-4 h-4 mr-1" />
-        Filters
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center text-gray-500 dark:text-muted-foreground text-sm"
+        >
+          <Filter className="w-4 h-4 mr-1" />
+          Filters
+        </button>
+        {isFiltered && (
+          <button
+            onClick={() => onFiltersChange(defaultFilters)}
+            className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-md border border-border dark:border-[#2C2C2E] text-muted-foreground hover:text-foreground dark:hover:text-[#D4AF37] transition-colors"
+          >
+            <RotateCcw className="w-3 h-3" />
+            Reset
+          </button>
+        )}
+      </div>
       
       {isOpen && (
         <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-4 mt-2">
