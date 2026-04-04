@@ -20,6 +20,7 @@ interface CompletedTablesDisplayProps {
   tables: TableData[];
   sessionId: string;
   currency?: string; // Currency code from session
+  isLiveSession?: boolean;
 }
 
 export default function CompletedTablesDisplay({ tables, sessionId, currency }: CompletedTablesDisplayProps) {
