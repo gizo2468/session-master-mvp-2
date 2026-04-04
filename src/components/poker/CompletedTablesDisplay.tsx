@@ -126,7 +126,6 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
                   )}
                 </div>
               )}
-              </div>
               
               {/* Redesigned Start, Duration, End row with better visual balance */}
               <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 dark:border-border pb-4">
