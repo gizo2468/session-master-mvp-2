@@ -110,7 +110,7 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
             )}
             
             {inactiveTables.length > 0 && (
-              <CompletedTablesDisplay tables={inactiveTables} sessionId={currentSession.id} currency={currentSession.currency} />
+              <CompletedTablesDisplay tables={inactiveTables} sessionId={currentSession.id} currency={currentSession.currency} isLiveSession />
             )}
           </div>
         )}

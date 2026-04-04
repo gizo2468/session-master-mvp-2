@@ -20,9 +20,10 @@ interface CompletedTablesDisplayProps {
   tables: TableData[];
   sessionId: string;
   currency?: string; // Currency code from session
+  isLiveSession?: boolean;
 }
 
-export default function CompletedTablesDisplay({ tables, sessionId, currency }: CompletedTablesDisplayProps) {
+export default function CompletedTablesDisplay({ tables, sessionId, currency, isLiveSession }: CompletedTablesDisplayProps) {
   const { updateTable, deleteTable } = useSessionContext();
   // Remove global currencySymbol - calculate per table instead
   const [showEditForm, setShowEditForm] = useState(false);
@@ -102,7 +103,7 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency }: 
                     </span>
                   )}
                 </div>
-                {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
+                {table.cashOut !== undefined && !table.dayEndedWithoutElimination && !isLiveSession && (
                   <div className={`text-lg font-bold ${
                     table.cashOut >= table.buyIn ? 'text-green-600' : 'text-red-600'
                   }`}>
@@ -258,6 +259,16 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency }: 
                   <span className="font-bold text-xl text-poker-gold">
                     {currencySymbol}{actualPayout.toFixed(2)}
                   </span>
+                )}
+
+                {/* Profit/Loss moved to bottom for live sessions */}
+                {isLiveSession && table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
+                  <div className={`mt-2 text-lg font-bold ${
+                    profitLoss >= 0 ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {profitLoss >= 0 ? '+' : ''}
+                    {currencySymbol}{profitLoss.toFixed(2)}
+                  </div>
                 )}
               </div>
             </div>
