@@ -200,6 +200,19 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
                     )}
                   </div>
 
+                  {/* Duration - centered between tournament fields and summary */}
+                  {table.startTime && table.endTime && (
+                    <div className="text-center mb-4">
+                      <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Duration</div>
+                      <TableTimerDisplay 
+                        startTime={table.startTime} 
+                        endTime={table.endTime}
+                        isActive={false}
+                        className="flex justify-center"
+                      />
+                    </div>
+                  )}
+
                   {/* Multi-day tournament continuation details */}
                   {table.dayEndedWithoutElimination && (
                     <div className="bg-poker-feltGreen/5 p-3 rounded-lg mb-4 border border-poker-feltGreen/20">
