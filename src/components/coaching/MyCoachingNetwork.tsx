@@ -119,48 +119,72 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
         ];
 
         if (allUserIds.length > 0) {
-          // Get profiles and private data for all users
-          const [profilesResult, privateResult] = await Promise.all([
-            supabase
-              .from('profiles')
-              .select('id, username, bio, role')
-              .in('id', allUserIds),
-            supabase
-              .from('user_private_data')
-              .select('id, full_name, profile_picture')
-              .in('id', allUserIds)
-          ]);
+          const studentIds = studentConnections.map(c => c.student_id);
+          const coachIds = coachConnections.map(c => c.coach_id);
 
-          if (profilesResult.error) {
-            console.error('Error loading user profiles:', profilesResult.error);
+          // Get profiles for all users (public fields)
+          const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, username, bio, role')
+            .in('id', allUserIds);
+
+          if (profilesError) {
+            console.error('Error loading user profiles:', profilesError);
             return;
           }
 
-          const profileMap = new Map(profilesResult.data?.map(p => [p.id, p]) || []);
-          const privateMap = new Map(privateResult.data?.map(p => [p.id, p]) || []);
+          const profileMap = new Map(profilesData?.map(p => [p.id, p]) || []);
 
-          // Separate players and coaches
-          const players = studentConnections.map(c => c.student_id).map(id => {
+          // Use get_student_header_identity RPC for student identity (same as Player Profile header)
+          const studentIdentityMap = new Map<string, { full_name: string; profile_picture: string | null }>();
+          await Promise.all(
+            studentIds.map(async (studentId) => {
+              const { data } = await supabase.rpc('get_student_header_identity', { p_student_id: studentId });
+              if (data && data.length > 0) {
+                studentIdentityMap.set(studentId, {
+                  full_name: data[0].full_name,
+                  profile_picture: data[0].profile_picture
+                });
+              }
+            })
+          );
+
+          // For coach connections, use get_student_accessible_coach_data RPC
+          const coachIdentityMap = new Map<string, { full_name: string; profile_picture: string | null }>();
+          await Promise.all(
+            coachIds.map(async (coachId) => {
+              const { data } = await supabase.rpc('get_student_accessible_coach_data', { coach_user_id: coachId });
+              if (data && data.length > 0) {
+                coachIdentityMap.set(coachId, {
+                  full_name: data[0].full_name,
+                  profile_picture: data[0].profile_picture
+                });
+              }
+            })
+          );
+
+          // Build players from RPC identity data
+          const players = studentIds.map(id => {
             const profile = profileMap.get(id);
-            const privateInfo = privateMap.get(id);
+            const identity = studentIdentityMap.get(id);
             return {
               id,
-              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+              full_name: identity?.full_name || profile?.username || 'Unknown User',
               username: profile?.username || 'unknown',
-              profile_picture: privateInfo?.profile_picture,
+              profile_picture: identity?.profile_picture || undefined,
               bio: profile?.bio,
               role: profile?.role || 'student'
             };
           });
 
-          const coaches = coachConnections.map(c => c.coach_id).map(id => {
+          const coaches = coachIds.map(id => {
             const profile = profileMap.get(id);
-            const privateInfo = privateMap.get(id);
+            const identity = coachIdentityMap.get(id);
             return {
               id,
-              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+              full_name: identity?.full_name || profile?.username || 'Unknown User',
               username: profile?.username || 'unknown',
-              profile_picture: privateInfo?.profile_picture,
+              profile_picture: identity?.profile_picture || undefined,
               bio: profile?.bio,
               role: profile?.role || 'coach'
             };
