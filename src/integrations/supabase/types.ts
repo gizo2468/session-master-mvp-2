@@ -1694,6 +1694,14 @@ export type Database = {
           profile_picture: string
         }[]
       }
+      get_student_header_identity: {
+        Args: { p_student_id: string }
+        Returns: {
+          full_name: string
+          id: string
+          profile_picture: string
+        }[]
+      }
       get_unified_session_statistics: {
         Args: {
           p_currency?: string
