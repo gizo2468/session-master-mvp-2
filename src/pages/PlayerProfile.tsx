@@ -399,7 +399,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
             Back to Dashboard
           </Button>
           
-          <div className="flex items-center gap-4">
+          <div className="relative flex flex-col items-center gap-2">
             <div className="cursor-pointer" onClick={() => setBackCardOpen(true)}>
               <Avatar className="h-16 w-16">
                 <AvatarImage src={player.profile_picture || ''} />
@@ -408,7 +408,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
                 </AvatarFallback>
               </Avatar>
             </div>
-            <div>
+            <div className="text-center">
               <h1 className="text-2xl font-bold text-foreground">
                 {player.full_name || player.username}
               </h1>
@@ -417,7 +417,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
                 <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">{player.bio}</p>
               )}
             </div>
-            <div className="ml-auto">
+            <div className="absolute right-0 top-0">
               <AlertDialog>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
