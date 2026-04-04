@@ -47,7 +47,7 @@ export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) 
             <div>
               <label className="text-sm text-gray-500 dark:text-muted-foreground block mb-1">Format</label>
               <select 
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-white dark:bg-[#1C1C1E] dark:text-[#FFFFFF] dark:border-[#2C2C2E] dark:focus:border-[#D4AF37] focus:outline-none focus:ring-1 dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
                 value={filters.format}
                 onChange={(e) => handleFilterChange('format', e.target.value)}
               >
