@@ -1,19 +1,28 @@
 
 
-## Fix Start New Session Screen Styling
+## Update Home Screen Outlined Button Borders to Gold in Dark Mode
 
-### Problem
-1. The title "Start New Session" uses `text-poker-black` (#212121) which is nearly invisible on a dark background
-2. The Back button uses `text-poker-feltGreen` which doesn't match the app's gold accent system
+### What changes
+All outlined buttons on the Home screen that currently use green borders (`border-poker-feltGreen`) will get gold borders in dark mode only, using Tailwind's `dark:` prefix.
 
-### Changes — single file: `src/pages/SessionForm.tsx`
+### Files to edit
 
-**A. Fix the title color (line 355)**
-- Change `text-poker-black` to `text-foreground` so it automatically adapts to light/dark mode with proper contrast
+**1. `src/pages/Index.tsx`** — 5 buttons to update:
+- Settings button (line 162): add `dark:border-poker-gold dark:text-poker-gold`
+- User/Dashboard button (line 170): same
+- Plus button near Recent Sessions (line 249): same
+- First View All button (line 257): same
+- Second View All button (line 305): same
 
-**B. Fix the Back button color (line 350)**
-- Change `text-poker-feltGreen` to `text-poker-gold` so it uses the app's gold accent (#D4AF37) in both light and dark mode
-- This makes it consistent with the app's premium gold design language
+Each button currently has `className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"`. Will become:
+`className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white dark:border-poker-gold dark:text-poker-gold dark:hover:bg-poker-gold"`
 
-### No other files or layout changes needed.
+**2. `src/components/NotificationBell.tsx`** — 1 button (line 13):
+Same pattern — add dark-mode gold overrides to the notification bell outline button.
+
+### What stays the same
+- Light mode appearance (green outlines unchanged)
+- Button backgrounds remain transparent in default state
+- Layout, size, functionality untouched
+- Hover fill changes to gold in dark mode to match the new border color
 
