@@ -173,134 +173,234 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
                 </>
               )}
               
-              {/* Styled Buy-in and Rebuy section with rebuy count */}
-              <div className="flex items-center gap-4 mb-4 justify-center">
-                <div className="text-right">
-                  <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">BUY-IN</span>
-                  <span className="font-bold text-xl">
-                    {currencySymbol}{(table.initialBuyIn ?? table.buyIn).toFixed(2)}
-                  </span>
-                </div>
-                {(() => {
-                  const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
-                  const addOnTotal = table.addOns ? table.addOns : 0;
-                  const extra = rebuyTotal + addOnTotal;
-                  const rebuyCount = Math.floor(rebuyTotal / (table.initialBuyIn ?? table.buyIn));
-                  return extra > 0 ? (
-                    <div className="text-right">
-                      <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">REBUY</span>
-                      <div>
-                        <span className="font-bold text-xl text-amber-600">
-                          +{currencySymbol}{extra.toFixed(2)}
-                        </span>
-                        {rebuyCount > 0 && (
-                          <span className="text-sm text-gray-500 dark:text-muted-foreground ml-1">({rebuyCount})</span>
-                        )}
+              {isLiveSession ? (
+                <>
+                  {/* Tournament-specific fields */}
+                  <div className="text-xs space-y-1 mb-4">
+                    {table.format === 'Tournament' && table.startingBB && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Starting BBs:</span>
+                        <span className="font-medium">{table.startingBB}BB</span>
                       </div>
-                    </div>
-                  ) : null;
-                })()}
-              </div>
-              
-              {/* Tournament-specific fields */}
-              <div className="text-xs space-y-1 mb-4">
-                {table.format === 'Tournament' && table.startingBB && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Starting BBs:</span>
-                    <span className="font-medium">{table.startingBB}BB</span>
+                    )}
+                    {table.tournamentTypes && table.tournamentTypes.length > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Tournament Type:</span>
+                        <span className="inline-flex px-2 py-0.5 bg-gray-100 dark:bg-muted rounded-full text-xs">
+                          {table.tournamentTypes[0]}
+                        </span>
+                      </div>
+                    )}
+                    {table.format === 'Tournament' && 
+                    table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
+                    table.bountyCount !== undefined && 
+                    table.bountyCount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Players Eliminated:</span>
+                        <span className="font-medium">{table.bountyCount}</span>
+                      </div>
+                    )}
+                    {table.format === 'Tournament' && 
+                    table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
+                    table.bountyAmount !== undefined && 
+                    table.bountyAmount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Total Bounty Collected:</span>
+                        <span className="font-medium text-poker-gold">{currencySymbol}{table.bountyAmount.toFixed(2)}</span>
+                      </div>
+                    )}
                   </div>
-                )}
-                
-                {table.tournamentTypes && table.tournamentTypes.length > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Tournament Type:</span>
-                    <span className="inline-flex px-2 py-0.5 bg-gray-100 dark:bg-muted rounded-full text-xs">
-                      {table.tournamentTypes[0]}
-                    </span>
-                  </div>
-                )}
-                
-                {table.format === 'Tournament' && 
-                table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
-                table.bountyCount !== undefined && 
-                table.bountyCount > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Players Eliminated:</span>
-                    <span className="font-medium">{table.bountyCount}</span>
-                  </div>
-                )}
-                
-                {table.format === 'Tournament' && 
-                table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
-                table.bountyAmount !== undefined && 
-                table.bountyAmount > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Total Bounty Collected:</span>
-                    <span className="font-medium text-poker-gold">{currencySymbol}{table.bountyAmount.toFixed(2)}</span>
-                  </div>
-                )}
-              </div>
-              
-              {/* Multi-day tournament continuation details */}
-              {table.dayEndedWithoutElimination && (
-                <div className="bg-poker-feltGreen/5 p-3 rounded-lg mb-4 border border-poker-feltGreen/20">
-                  <h5 className="font-bold text-sm text-poker-feltGreen mb-2">Tournament Continuing</h5>
-                  
-                  {table.chipsCarryover && (
-                    <div className="flex justify-between text-sm mb-1.5">
-                      <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Continuing with:</span>
-                      <span className="font-medium">{table.chipsCarryover.toLocaleString()} chips</span>
-                    </div>
-                  )}
-                  
-                  {table.nextDayStart && (
-                    <div className="flex justify-between text-sm mb-1.5">
-                      <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Next Day:</span>
-                      <span className="font-medium">{format(new Date(table.nextDayStart), 'd MMM, HH:mm')}</span>
-                    </div>
-                  )}
-                  
-                  {/* We don't have explicit day tracking in the data model, 
-                     so we're showing a generic continuation message */}
-                  <div className="flex justify-between text-sm mb-1.5">
-                    <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Status:</span>
-                    <span className="font-medium">Day completed, continuing</span>
-                  </div>
-                  
-                  {table.notes && (
-                    <div className="mt-2 pt-2 border-t border-poker-feltGreen/10">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 italic">"{table.notes}"</p>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {/* Fixed: Total Payout display using actual cashOut amount */}
-              <div className="flex flex-col items-center justify-center mt-4 mb-2">
-                <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">
-                  {table.dayEndedWithoutElimination ? 'STATUS' : 'TOTAL PAYOUT'}
-                </span>
-                {table.dayEndedWithoutElimination ? (
-                  <span className="font-bold text-xl text-poker-feltGreen">Continuing</span>
-                ) : (
-                  <span className="font-bold text-xl text-poker-gold">
-                    {currencySymbol}{actualPayout.toFixed(2)}
-                  </span>
-                )}
 
-                {/* Profit/Loss moved to bottom for live sessions */}
-                {isLiveSession && table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
-                  <div className="flex flex-col items-center mt-3">
-                    <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">PROFIT/LOSS</span>
-                    <span className={`font-bold text-xl ${
-                      profitLoss >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {profitLoss >= 0 ? '+' : ''}
-                      {currencySymbol}{profitLoss.toFixed(2)}
-                    </span>
+                  {/* Multi-day tournament continuation details */}
+                  {table.dayEndedWithoutElimination && (
+                    <div className="bg-poker-feltGreen/5 p-3 rounded-lg mb-4 border border-poker-feltGreen/20">
+                      <h5 className="font-bold text-sm text-poker-feltGreen mb-2">Tournament Continuing</h5>
+                      {table.chipsCarryover && (
+                        <div className="flex justify-between text-sm mb-1.5">
+                          <span className="text-gray-600 dark:text-gray-400">Continuing with:</span>
+                          <span className="font-medium">{table.chipsCarryover.toLocaleString()} chips</span>
+                        </div>
+                      )}
+                      {table.nextDayStart && (
+                        <div className="flex justify-between text-sm mb-1.5">
+                          <span className="text-gray-600 dark:text-gray-400">Next Day:</span>
+                          <span className="font-medium">{format(new Date(table.nextDayStart), 'd MMM, HH:mm')}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm mb-1.5">
+                        <span className="text-gray-600 dark:text-gray-400">Status:</span>
+                        <span className="font-medium">Day completed, continuing</span>
+                      </div>
+                      {table.notes && (
+                        <div className="mt-2 pt-2 border-t border-poker-feltGreen/10">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 italic">"{table.notes}"</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Buy-In left, Total Payout + Profit/Loss right */}
+                  <div className="flex justify-between items-start mt-4 mb-2">
+                    <div>
+                      <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">BUY-IN</span>
+                      <span className="font-bold text-xl">
+                        {currencySymbol}{(table.initialBuyIn ?? table.buyIn).toFixed(2)}
+                      </span>
+                      {(() => {
+                        const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
+                        const addOnTotal = table.addOns ? table.addOns : 0;
+                        const extra = rebuyTotal + addOnTotal;
+                        const rebuyCount = Math.floor(rebuyTotal / (table.initialBuyIn ?? table.buyIn));
+                        return extra > 0 ? (
+                          <div className="mt-1">
+                            <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">REBUY</span>
+                            <div>
+                              <span className="font-bold text-xl text-amber-600">
+                                +{currencySymbol}{extra.toFixed(2)}
+                              </span>
+                              {rebuyCount > 0 && (
+                                <span className="text-sm text-gray-500 dark:text-muted-foreground ml-1">({rebuyCount})</span>
+                              )}
+                            </div>
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
+                    <div className="text-right">
+                      <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">
+                        {table.dayEndedWithoutElimination ? 'STATUS' : 'TOTAL PAYOUT'}
+                      </span>
+                      {table.dayEndedWithoutElimination ? (
+                        <span className="font-bold text-xl text-poker-feltGreen">Continuing</span>
+                      ) : (
+                        <span className="font-bold text-xl text-poker-gold">
+                          {currencySymbol}{actualPayout.toFixed(2)}
+                        </span>
+                      )}
+                      {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
+                        <div className="mt-1">
+                          <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">PROFIT/LOSS</span>
+                          <span className={`font-bold text-xl ${
+                            profitLoss >= 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {profitLoss >= 0 ? '+' : ''}
+                            {currencySymbol}{profitLoss.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <>
+                  {/* Styled Buy-in and Rebuy section with rebuy count */}
+                  <div className="flex items-center gap-4 mb-4 justify-center">
+                    <div className="text-right">
+                      <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">BUY-IN</span>
+                      <span className="font-bold text-xl">
+                        {currencySymbol}{(table.initialBuyIn ?? table.buyIn).toFixed(2)}
+                      </span>
+                    </div>
+                    {(() => {
+                      const rebuyTotal = (table.buyIn - (table.initialBuyIn ?? table.buyIn));
+                      const addOnTotal = table.addOns ? table.addOns : 0;
+                      const extra = rebuyTotal + addOnTotal;
+                      const rebuyCount = Math.floor(rebuyTotal / (table.initialBuyIn ?? table.buyIn));
+                      return extra > 0 ? (
+                        <div className="text-right">
+                          <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">REBUY</span>
+                          <div>
+                            <span className="font-bold text-xl text-amber-600">
+                              +{currencySymbol}{extra.toFixed(2)}
+                            </span>
+                            {rebuyCount > 0 && (
+                              <span className="text-sm text-gray-500 dark:text-muted-foreground ml-1">({rebuyCount})</span>
+                            )}
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
+                  
+                  {/* Tournament-specific fields */}
+                  <div className="text-xs space-y-1 mb-4">
+                    {table.format === 'Tournament' && table.startingBB && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Starting BBs:</span>
+                        <span className="font-medium">{table.startingBB}BB</span>
+                      </div>
+                    )}
+                    {table.tournamentTypes && table.tournamentTypes.length > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Tournament Type:</span>
+                        <span className="inline-flex px-2 py-0.5 bg-gray-100 dark:bg-muted rounded-full text-xs">
+                          {table.tournamentTypes[0]}
+                        </span>
+                      </div>
+                    )}
+                    {table.format === 'Tournament' && 
+                    table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
+                    table.bountyCount !== undefined && 
+                    table.bountyCount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Players Eliminated:</span>
+                        <span className="font-medium">{table.bountyCount}</span>
+                      </div>
+                    )}
+                    {table.format === 'Tournament' && 
+                    table.tournamentTypes?.some(type => ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)) && 
+                    table.bountyAmount !== undefined && 
+                    table.bountyAmount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Total Bounty Collected:</span>
+                        <span className="font-medium text-poker-gold">{currencySymbol}{table.bountyAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Multi-day tournament continuation details */}
+                  {table.dayEndedWithoutElimination && (
+                    <div className="bg-poker-feltGreen/5 p-3 rounded-lg mb-4 border border-poker-feltGreen/20">
+                      <h5 className="font-bold text-sm text-poker-feltGreen mb-2">Tournament Continuing</h5>
+                      {table.chipsCarryover && (
+                        <div className="flex justify-between text-sm mb-1.5">
+                          <span className="text-gray-600 dark:text-gray-400">Continuing with:</span>
+                          <span className="font-medium">{table.chipsCarryover.toLocaleString()} chips</span>
+                        </div>
+                      )}
+                      {table.nextDayStart && (
+                        <div className="flex justify-between text-sm mb-1.5">
+                          <span className="text-gray-600 dark:text-gray-400">Next Day:</span>
+                          <span className="font-medium">{format(new Date(table.nextDayStart), 'd MMM, HH:mm')}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm mb-1.5">
+                        <span className="text-gray-600 dark:text-gray-400">Status:</span>
+                        <span className="font-medium">Day completed, continuing</span>
+                      </div>
+                      {table.notes && (
+                        <div className="mt-2 pt-2 border-t border-poker-feltGreen/10">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 italic">"{table.notes}"</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Total Payout display */}
+                  <div className="flex flex-col items-center justify-center mt-4 mb-2">
+                    <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">
+                      {table.dayEndedWithoutElimination ? 'STATUS' : 'TOTAL PAYOUT'}
+                    </span>
+                    {table.dayEndedWithoutElimination ? (
+                      <span className="font-bold text-xl text-poker-feltGreen">Continuing</span>
+                    ) : (
+                      <span className="font-bold text-xl text-poker-gold">
+                        {currencySymbol}{actualPayout.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           );
         })}
