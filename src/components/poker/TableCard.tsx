@@ -736,7 +736,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               </label>
               <Textarea
                 id="tableNotes"
-                className="w-full min-h-[100px] border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                className="w-full min-h-[100px] border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#141414] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37]"
                 placeholder="Table notes"
                 value={tableNotes}
                 onChange={(e) => setTableNotes(e.target.value)}
