@@ -1018,7 +1018,7 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
+        <CardTitle className="flex items-center justify-center space-x-2">
           <Icon name="Network" className="h-5 w-5" />
           <span>{isCoach ? "My Coach Network" : "My Player Network"}</span>
         </CardTitle>
