@@ -648,19 +648,14 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                                    Pending
                                  </span>
                                )}
-                             {hand.hand_image && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedImage(hand.hand_image || null);
-                                  }}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border border-poker-gold/40 bg-poker-gold/10 text-poker-gold shadow-[0_0_6px_rgba(212,175,55,0.25)] hover:bg-poker-gold/20 transition-colors"
-                                  aria-label="View hand screenshot"
-                                >
-                                  <Icon name="Camera" size={12} />
-                                  <span>Screenshot</span>
-                                </button>
-                              )}
+                              {handsWithImages.has(hand.id) && (
+                                 <span
+                                   className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border border-poker-gold/40 bg-poker-gold/10 text-poker-gold shadow-[0_0_6px_rgba(212,175,55,0.25)]"
+                                 >
+                                   <Icon name="Camera" size={12} />
+                                   <span>Screenshot</span>
+                                 </span>
+                               )}
                            </div>
                           <div className="text-right">
                             {hand.amount_won !== undefined && hand.amount_invested !== undefined && (
