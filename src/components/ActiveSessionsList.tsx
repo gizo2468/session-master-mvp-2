@@ -163,8 +163,8 @@ function ActiveSessionsList({ sessions, onResume }: ActiveSessionsListProps) {
 
   return (
     <div className="w-full space-y-3">
-      <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
-        Active Sessions <span className="text-muted-foreground font-normal">({validSessions.length})</span>
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-primary mb-3">
+        Active Sessions <span className="dark:text-primary/60 font-normal">({validSessions.length})</span>
       </h3>
       
       {validSessions.map((session) => (
