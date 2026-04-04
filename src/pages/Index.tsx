@@ -167,7 +167,7 @@ export default function Index() {
                 onClick={() => navigate('/dashboard')}
                 variant="outline" 
                 size="sm"
-                className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+                className="text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white dark:border-poker-gold dark:text-poker-gold dark:hover:bg-poker-gold"
               >
                 <Icon name="User" size={16} />
               </Button>
