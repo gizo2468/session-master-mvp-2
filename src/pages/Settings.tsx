@@ -453,9 +453,8 @@ const Settings: React.FC = () => {
                       ) : (
                         <p className="text-sm text-muted-foreground mt-1">
                           {profile?.experience || "No experience information provided"}
-                          </p>
-                        )}
-                      </div>
+                        </p>
+                      )}
                     </div>
                   </>
                 )}
