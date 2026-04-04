@@ -260,6 +260,16 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
                     {currencySymbol}{actualPayout.toFixed(2)}
                   </span>
                 )}
+
+                {/* Profit/Loss moved to bottom for live sessions */}
+                {isLiveSession && table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
+                  <div className={`mt-2 text-lg font-bold ${
+                    profitLoss >= 0 ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {profitLoss >= 0 ? '+' : ''}
+                    {currencySymbol}{profitLoss.toFixed(2)}
+                  </div>
+                )}
               </div>
             </div>
           );
