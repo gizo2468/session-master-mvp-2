@@ -175,7 +175,7 @@ export default function EndTableDialog({
                       Total Bounty Collected (Optional)
                     </label>
                     <div className="flex rounded-md shadow-sm dark:shadow-black/20">
-                      <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-background border border-r-0 border-gray-300 dark:border-border rounded-l-md">
+                      <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-[hsl(0,0%,10%)] border border-r-0 border-gray-300 dark:border-[hsl(30,5%,24%)] rounded-l-md">
                         {currencySymbol}
                       </span>
                       <input
