@@ -226,8 +226,18 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
           
           const feedbackSet = new Set((feedbackData || []).map(f => f.hand_id));
           setHandsWithFeedback(feedbackSet);
+          // Fetch image existence for all hands (lightweight - no base64 data)
+          const { data: imageData } = await supabase
+            .from('session_hands_new')
+            .select('id')
+            .in('id', handIds)
+            .not('hand_image', 'is', null);
+          
+          const imageSet = new Set((imageData || []).map(i => i.id));
+          setHandsWithImages(imageSet);
         } else {
           setHandsWithFeedback(new Set());
+          setHandsWithImages(new Set());
         }
       }
 
