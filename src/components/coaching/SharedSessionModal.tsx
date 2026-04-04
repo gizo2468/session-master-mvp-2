@@ -105,6 +105,7 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
   const [reviewHandImage, setReviewHandImage] = useState<string | null>(null);
   const [loadingHandImage, setLoadingHandImage] = useState(false);
   const [handsWithFeedback, setHandsWithFeedback] = useState<Set<string>>(new Set());
+  const [handsWithImages, setHandsWithImages] = useState<Set<string>>(new Set());
   
   const { toast } = useToast();
   
@@ -225,8 +226,18 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
           
           const feedbackSet = new Set((feedbackData || []).map(f => f.hand_id));
           setHandsWithFeedback(feedbackSet);
+          // Fetch image existence for all hands (lightweight - no base64 data)
+          const { data: imageData } = await supabase
+            .from('session_hands_new')
+            .select('id')
+            .in('id', handIds)
+            .not('hand_image', 'is', null);
+          
+          const imageSet = new Set((imageData || []).map(i => i.id));
+          setHandsWithImages(imageSet);
         } else {
           setHandsWithFeedback(new Set());
+          setHandsWithImages(new Set());
         }
       }
 
@@ -637,19 +648,14 @@ export const SharedSessionModal: React.FC<SharedSessionModalProps> = ({
                                    Pending
                                  </span>
                                )}
-                             {hand.hand_image && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedImage(hand.hand_image || null);
-                                  }}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border border-poker-gold/40 bg-poker-gold/10 text-poker-gold shadow-[0_0_6px_rgba(212,175,55,0.25)] hover:bg-poker-gold/20 transition-colors"
-                                  aria-label="View hand screenshot"
-                                >
-                                  <Icon name="Camera" size={12} />
-                                  <span>Screenshot</span>
-                                </button>
-                              )}
+                              {handsWithImages.has(hand.id) && (
+                                 <span
+                                   className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border border-poker-gold/40 bg-poker-gold/10 text-poker-gold shadow-[0_0_6px_rgba(212,175,55,0.25)]"
+                                 >
+                                   <Icon name="Camera" size={12} />
+                                   <span>Screenshot</span>
+                                 </span>
+                               )}
                            </div>
                           <div className="text-right">
                             {hand.amount_won !== undefined && hand.amount_invested !== undefined && (
