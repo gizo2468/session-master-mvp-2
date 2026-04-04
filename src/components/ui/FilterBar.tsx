@@ -62,7 +62,7 @@ export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) 
               <input 
                 type="text"
                 placeholder="Filter by location..."
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-white dark:bg-[#1C1C1E] dark:text-[#FFFFFF] dark:placeholder:text-[#8E8E93] dark:border-[#2C2C2E] dark:focus:border-[#D4AF37] focus:outline-none focus:ring-1 dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
                 value={filters.location || ''}
                 onChange={(e) => handleFilterChange('location', e.target.value)}
               />
