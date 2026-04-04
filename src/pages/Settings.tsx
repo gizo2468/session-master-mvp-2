@@ -282,8 +282,8 @@ const Settings: React.FC = () => {
           <Card>
             <CardHeader>
               <div className="flex items-start justify-between">
-                <div className="flex-1 pt-1">
-                  <CardTitle>Account</CardTitle>
+                <div className="flex-1 pt-1 text-center">
+                  <CardTitle className="text-center">Account</CardTitle>
                   <CardDescription className="text-center">Your account information</CardDescription>
                 </div>
                 {!profileLoading && (
@@ -326,7 +326,7 @@ const Settings: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-4 flex flex-col items-center">
                 {/* Full Name */}
                 <div className="flex items-center gap-3">
                   <Icon name="UserCircle2" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
