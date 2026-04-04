@@ -398,7 +398,7 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
       <Dialog open={open} onOpenChange={() => onClose()}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center justify-center gap-2 text-poker-gold">
               <Icon name="Eye" size={20} />
               Hand Review
             </DialogTitle>
