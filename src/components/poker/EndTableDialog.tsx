@@ -145,7 +145,7 @@ export default function EndTableDialog({
                     id="finalPosition"
                     type="number"
                     min="1"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                     placeholder="Enter your final position (e.g. 3 for 3rd)"
                     value={finalPosition}
                     onChange={(e) => onFinalPositionChange(e.target.value)}
