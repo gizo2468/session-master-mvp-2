@@ -93,18 +93,7 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
               </div>
 
               {isLiveSession ? (
-                <div className="relative mb-2">
-                  {table.startTime && table.endTime && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 text-center">
-                      <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Duration</div>
-                      <TableTimerDisplay 
-                        startTime={table.startTime} 
-                        endTime={table.endTime}
-                        isActive={false}
-                        className="flex justify-center"
-                      />
-                    </div>
-                  )}
+                <div className="mb-2">
                   <div className="text-center">
                     <h3 className="font-bold">{table.name || table.location}</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">{table.gameType} • {table.format}</p>
@@ -211,6 +200,19 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
                     )}
                   </div>
 
+                  {/* Duration - centered between tournament fields and summary */}
+                  {table.startTime && table.endTime && (
+                    <div className="text-center mb-4">
+                      <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Duration</div>
+                      <TableTimerDisplay 
+                        startTime={table.startTime} 
+                        endTime={table.endTime}
+                        isActive={false}
+                        className="flex justify-center"
+                      />
+                    </div>
+                  )}
+
                   {/* Multi-day tournament continuation details */}
                   {table.dayEndedWithoutElimination && (
                     <div className="bg-poker-feltGreen/5 p-3 rounded-lg mb-4 border border-poker-feltGreen/20">
@@ -239,9 +241,9 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
                     </div>
                   )}
 
-                  {/* Buy-In left, Total Payout + Profit/Loss right */}
-                  <div className="flex justify-between items-start mt-4 mb-2 px-6">
-                    <div>
+                  {/* Buy-In and Total Payout side by side, centered */}
+                  <div className="flex justify-center items-start gap-8 mt-4 mb-2">
+                    <div className="text-center">
                       <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">BUY-IN</span>
                       <span className="font-bold text-xl">
                         {currencySymbol}{(table.initialBuyIn ?? table.buyIn).toFixed(2)}
@@ -266,7 +268,7 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
                         ) : null;
                       })()}
                     </div>
-                    <div className="text-right">
+                    <div className="text-center">
                       <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">
                         {table.dayEndedWithoutElimination ? 'STATUS' : 'TOTAL PAYOUT'}
                       </span>
@@ -277,19 +279,20 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
                           {currencySymbol}{actualPayout.toFixed(2)}
                         </span>
                       )}
-                      {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
-                        <div className="mt-1">
-                          <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">PROFIT/LOSS</span>
-                          <span className={`font-bold text-xl ${
-                            profitLoss >= 0 ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {profitLoss >= 0 ? '+' : ''}
-                            {currencySymbol}{profitLoss.toFixed(2)}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
+                  {/* Profit/Loss centered below */}
+                  {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
+                    <div className="text-center mt-2 mb-2">
+                      <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">PROFIT/LOSS</span>
+                      <span className={`font-bold text-xl ${
+                        profitLoss >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {profitLoss >= 0 ? '+' : ''}
+                        {currencySymbol}{profitLoss.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
                 </>
               ) : (
                 <>
