@@ -1248,7 +1248,7 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
           {/* Connected Players Section (for coaches) */}
           {isCoach && connectedPlayers.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold mb-3 flex items-center space-x-2">
+              <h3 className="text-lg font-semibold mb-3 flex items-center justify-center space-x-2">
                 <Icon name="Users" className="h-4 w-4" />
                 <span>Connected Players</span>
               </h3>
