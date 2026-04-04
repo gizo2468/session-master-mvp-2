@@ -256,7 +256,7 @@ export default function EndTableDialog({
                 <input
                   id="nextDayStart"
                   type="datetime-local"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[hsl(0,0%,13%)] dark:text-gray-100 dark:placeholder-gray-500 dark:border-[hsl(30,5%,24%)]"
                   value={nextDayStart ? nextDayStart.toISOString().slice(0, 16) : ''}
                   onChange={(e) => onNextDayStartChange(e.target.value ? new Date(e.target.value) : null)}
                 />
