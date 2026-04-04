@@ -352,7 +352,7 @@ export default function SessionForm() {
             <Icon name="ArrowLeft" size={16} />
             <span>Back</span>
           </button>
-          <h1 className="text-2xl font-bold text-poker-black">Start New Session</h1>
+          <h1 className="text-2xl font-bold text-foreground">Start New Session</h1>
           <p className="text-gray-500 dark:text-muted-foreground text-sm mt-1">Enter your first table details below</p>
         </header>
         
