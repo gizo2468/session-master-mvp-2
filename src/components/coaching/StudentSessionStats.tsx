@@ -126,22 +126,22 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-poker-feltGreen">{stats.totalSessions}</div>
+            <div className="text-2xl font-bold text-foreground">{stats.totalSessions}</div>
             <div className="text-xs text-gray-500 dark:text-muted-foreground">Total Sessions</div>
           </div>
           
           <div className="text-center">
-            <div className="text-2xl font-bold text-poker-feltGreen">{stats.totalHours}h</div>
+            <div className="text-2xl font-bold text-foreground">{stats.totalHours}h</div>
             <div className="text-xs text-gray-500 dark:text-muted-foreground">Total Hours</div>
           </div>
           
           <div className="text-center">
-            <div className="text-2xl font-bold text-poker-feltGreen">{stats.averageSessionLength}m</div>
+            <div className="text-2xl font-bold text-foreground">{stats.averageSessionLength}m</div>
             <div className="text-xs text-gray-500 dark:text-muted-foreground">Avg Length</div>
           </div>
           
           <div className="text-center">
-            <div className="text-sm font-medium text-poker-feltGreen">
+            <div className="text-sm font-medium text-foreground">
               {stats.mostPlayedGameType || 'N/A'}
             </div>
             <div className="text-xs text-gray-500 dark:text-muted-foreground">Most Played</div>

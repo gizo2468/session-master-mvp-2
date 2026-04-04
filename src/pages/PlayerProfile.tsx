@@ -411,7 +411,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
               </Avatar>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-poker-black">
+              <h1 className="text-2xl font-bold text-foreground">
                 {player.full_name || player.username}
               </h1>
               <p className="text-gray-500 dark:text-muted-foreground">@{player.username}</p>
