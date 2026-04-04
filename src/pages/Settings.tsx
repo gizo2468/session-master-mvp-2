@@ -326,7 +326,7 @@ const Settings: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-4 flex flex-col items-center">
                 {/* Full Name */}
                 <div className="flex items-center gap-3">
                   <Icon name="UserCircle2" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
