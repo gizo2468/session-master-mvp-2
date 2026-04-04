@@ -112,9 +112,7 @@ const PlayerProfile = () => {
           .eq('id', playerId)
           .single(),
         supabase
-          .from('user_private_data')
-          .select('full_name, profile_picture, email')
-          .eq('id', playerId)
+          .rpc('get_student_header_identity', { p_student_id: playerId })
           .single()
       ]);
 
@@ -127,9 +125,9 @@ const PlayerProfile = () => {
       // Combine the data
       const playerData = {
         ...profileResult.data,
-        full_name: privateResult.data?.full_name || profileResult.data.username,
+        full_name: privateResult.data?.full_name || '',
         profile_picture: resolveProfilePicture(privateResult.data?.profile_picture || null) || undefined,
-        email: privateResult.data?.email,
+        email: undefined,
         default_currency: profileResult.data.default_currency || 'USD'
       };
 
