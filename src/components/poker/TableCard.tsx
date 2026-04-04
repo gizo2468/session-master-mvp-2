@@ -609,7 +609,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                       id="finalPosition"
                       type="number"
                       min="1"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
                       placeholder="Enter your final position (e.g. 3 for 3rd)"
                       value={finalPosition}
                       onChange={(e) => setFinalPosition(e.target.value)}
