@@ -183,7 +183,7 @@ export default function EndTableDialog({
                         type="number"
                         min="0"
                         step="0.01"
-                        className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-border rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none"
+                        className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-border rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                         placeholder="0.00"
                         value={bountyAmount}
                         onChange={(e) => onBountyAmountChange(e.target.value)}
