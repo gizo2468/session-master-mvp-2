@@ -93,17 +93,15 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
               </div>
 
               {isLiveSession ? (
-                <>
-                  <div className="text-center mb-2 pr-16">
-                    <h3 className="font-bold">{table.name || table.location}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{table.gameType} • {table.format}</p>
-                    {table.isMultiDay && (
-                      <span className="inline-block mt-1 px-2 py-0.5 bg-poker-feltGreen/10 text-poker-feltGreen rounded-full text-xs">
-                        Multi-Day
-                      </span>
-                    )}
-                  </div>
-                </>
+                <div className="text-center mb-2">
+                  <h3 className="font-bold">{table.name || table.location}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{table.gameType} • {table.format}</p>
+                  {table.isMultiDay && (
+                    <span className="inline-block mt-1 px-2 py-0.5 bg-poker-feltGreen/10 text-poker-feltGreen rounded-full text-xs">
+                      Multi-Day
+                    </span>
+                  )}
+                </div>
               ) : (
                 <div className="flex justify-between items-start mb-2 pr-16">
                   <div>
