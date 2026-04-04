@@ -347,7 +347,7 @@ export default function SessionForm() {
         <header className="mb-8">
           <button 
             onClick={() => navigate(-1)} 
-            className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:underline"
+            className="text-poker-gold mb-4 flex items-center gap-1 hover:underline"
           >
             <Icon name="ArrowLeft" size={16} />
             <span>Back</span>
