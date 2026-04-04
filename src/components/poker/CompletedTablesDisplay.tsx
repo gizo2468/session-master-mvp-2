@@ -93,70 +93,87 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
               </div>
 
               {isLiveSession ? (
-                <div className="text-center mb-2">
-                  <h3 className="font-bold">{table.name || table.location}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{table.gameType} • {table.format}</p>
-                  {table.isMultiDay && (
-                    <span className="inline-block mt-1 px-2 py-0.5 bg-poker-feltGreen/10 text-poker-feltGreen rounded-full text-xs">
-                      Multi-Day
-                    </span>
-                  )}
-                </div>
+                <>
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    {table.startTime && table.endTime && (
+                      <div className="text-center">
+                        <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Duration</div>
+                        <TableTimerDisplay 
+                          startTime={table.startTime} 
+                          endTime={table.endTime}
+                          isActive={false}
+                          className="flex justify-center"
+                        />
+                      </div>
+                    )}
+                    <div className="text-center">
+                      <h3 className="font-bold">{table.name || table.location}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{table.gameType} • {table.format}</p>
+                      {table.isMultiDay && (
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-poker-feltGreen/10 text-poker-feltGreen rounded-full text-xs">
+                          Multi-Day
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </>
               ) : (
-                <div className="flex justify-between items-start mb-2 pr-16">
-                  <div>
-                    <h3 className="font-bold">{table.name || table.location}</h3>
-                    <p className="text-xs text-gray-500 dark:text-muted-foreground font-semibold mt-0.5">{table.location}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{table.gameType} • {table.format}</p>
-                    {table.isMultiDay && (
-                      <span className="inline-block mt-1 px-2 py-0.5 bg-poker-feltGreen/10 text-poker-feltGreen rounded-full text-xs">
-                        Multi-Day
-                      </span>
+                <>
+                  <div className="flex justify-between items-start mb-2 pr-16">
+                    <div>
+                      <h3 className="font-bold">{table.name || table.location}</h3>
+                      <p className="text-xs text-gray-500 dark:text-muted-foreground font-semibold mt-0.5">{table.location}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{table.gameType} • {table.format}</p>
+                      {table.isMultiDay && (
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-poker-feltGreen/10 text-poker-feltGreen rounded-full text-xs">
+                          Multi-Day
+                        </span>
+                      )}
+                    </div>
+                    {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
+                      <div className={`text-lg font-bold ${
+                        table.cashOut >= table.buyIn ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {table.cashOut >= table.buyIn ? '+' : ''}
+                        {currencySymbol}{(table.cashOut - table.buyIn).toFixed(2)}
+                      </div>
                     )}
                   </div>
-                  {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
-                    <div className={`text-lg font-bold ${
-                      table.cashOut >= table.buyIn ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {table.cashOut >= table.buyIn ? '+' : ''}
-                      {currencySymbol}{(table.cashOut - table.buyIn).toFixed(2)}
+                  
+                  {/* Start, Duration, End row */}
+                  <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 dark:border-border pb-4">
+                    <div className="flex flex-1 justify-center items-center">
+                      <div className="text-center">
+                        <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Start</div>
+                        <div className="font-medium">{format(new Date(table.startTime), 'd MMM, HH:mm')}</div>
+                      </div>
                     </div>
-                  )}
-                </div>
+                    
+                    {table.startTime && table.endTime && (
+                      <div className="flex-1 flex justify-center items-center border-x border-gray-100 dark:border-border px-4">
+                        <div className="text-center">
+                          <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Duration</div>
+                          <TableTimerDisplay 
+                            startTime={table.startTime} 
+                            endTime={table.endTime}
+                            isActive={false}
+                            className="flex justify-center"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {table.endTime && (
+                      <div className="flex-1 flex justify-center items-center">
+                        <div className="text-center">
+                          <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">End</div>
+                          <div className="font-medium">{format(new Date(table.endTime), 'd MMM, HH:mm')}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
-              
-              {/* Redesigned Start, Duration, End row with better visual balance */}
-              <div className="flex justify-center items-center mb-4 text-sm border-b border-gray-100 dark:border-border pb-4">
-                <div className="flex flex-1 justify-center items-center">
-                  <div className="text-center">
-                    <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Start</div>
-                    <div className="font-medium">{format(new Date(table.startTime), 'd MMM, HH:mm')}</div>
-                  </div>
-                </div>
-                
-                {table.startTime && table.endTime && (
-                  <div className="flex-1 flex justify-center items-center border-x border-gray-100 dark:border-border px-4">
-                    <div className="text-center">
-                      <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Duration</div>
-                      <TableTimerDisplay 
-                        startTime={table.startTime} 
-                        endTime={table.endTime}
-                        isActive={false}
-                        className="flex justify-center"
-                      />
-                    </div>
-                  </div>
-                )}
-                
-                {table.endTime && (
-                  <div className="flex-1 flex justify-center items-center">
-                    <div className="text-center">
-                      <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">End</div>
-                      <div className="font-medium">{format(new Date(table.endTime), 'd MMM, HH:mm')}</div>
-                    </div>
-                  </div>
-                )}
-              </div>
               
               {/* Styled Buy-in and Rebuy section with rebuy count */}
               <div className="flex items-center gap-4 mb-4 justify-center">
