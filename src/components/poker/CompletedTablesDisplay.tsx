@@ -93,18 +93,7 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
               </div>
 
               {isLiveSession ? (
-                <div className="relative mb-2">
-                  {table.startTime && table.endTime && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 text-center">
-                      <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Duration</div>
-                      <TableTimerDisplay 
-                        startTime={table.startTime} 
-                        endTime={table.endTime}
-                        isActive={false}
-                        className="flex justify-center"
-                      />
-                    </div>
-                  )}
+                <div className="mb-2">
                   <div className="text-center">
                     <h3 className="font-bold">{table.name || table.location}</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">{table.gameType} • {table.format}</p>
