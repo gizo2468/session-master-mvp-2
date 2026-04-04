@@ -214,7 +214,7 @@ export default function PlayerGoalsTasks({ studentId, mode, coachId }: PlayerGoa
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center justify-center gap-2 text-poker-gold">
           <Icon name="CheckSquare" size={18} />
           <span>{sectionTitle}</span>
           <Badge variant="secondary">{goals.length}</Badge>
