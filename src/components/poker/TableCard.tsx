@@ -591,7 +591,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                       type="number"
                       min="0"
                       step="0.01"
-                      className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
                       placeholder="0.00"
                       value={cashOutAmount}
                       onChange={(e) => setCashOutAmount(e.target.value)}
@@ -609,7 +609,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                       id="finalPosition"
                       type="number"
                       min="1"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
                       placeholder="Enter your final position (e.g. 3 for 3rd)"
                       value={finalPosition}
                       onChange={(e) => setFinalPosition(e.target.value)}
@@ -628,7 +628,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                         id="bountyCount"
                         type="number"
                         min="0"
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
                         placeholder="Number of players eliminated"
                         value={bountyCount}
                         onChange={(e) => setBountyCount(e.target.value)}
@@ -640,7 +640,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                         Total Bounty Collected (Optional)
                       </label>
                       <div className="flex rounded-md shadow-sm dark:shadow-black/20">
-                        <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-background border border-r-0 border-gray-300 dark:border-border rounded-l-md">
+                        <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-[#1C1C1E] border border-r-0 border-gray-300 dark:border-[#2C2C2E] rounded-l-md">
                           {currencySymbol}
                         </span>
                         <input
@@ -648,7 +648,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                           type="number"
                           min="0"
                           step="0.01"
-                          className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-border rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none"
+                          className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-[#2C2C2E] rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
                           placeholder="0.00"
                           value={bountyAmount}
                           onChange={(e) => setBountyAmount(e.target.value)}
@@ -705,7 +705,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                   <input
                     id="nextDayStart"
                     type="datetime-local"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
                     value={nextDayStart ? nextDayStart.toISOString().slice(0, 16) : ''}
                     onChange={(e) => setNextDayStart(e.target.value ? new Date(e.target.value) : null)}
                   />
@@ -720,7 +720,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                     id="chipsCarryover"
                     type="number"
                     min="0"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
                     placeholder="Number of chips"
                     value={chipsCarryover}
                     onChange={(e) => setChipsCarryover(e.target.value)}
@@ -736,7 +736,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               </label>
               <Textarea
                 id="tableNotes"
-                className="w-full min-h-[100px] border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                className="w-full min-h-[100px] border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#141414] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37]"
                 placeholder="Table notes"
                 value={tableNotes}
                 onChange={(e) => setTableNotes(e.target.value)}
