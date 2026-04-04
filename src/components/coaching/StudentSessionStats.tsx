@@ -131,7 +131,7 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
           </div>
           
           <div className="text-center">
-            <div className="text-2xl font-bold text-poker-feltGreen">{stats.totalHours}h</div>
+            <div className="text-2xl font-bold text-foreground">{stats.totalHours}h</div>
             <div className="text-xs text-gray-500 dark:text-muted-foreground">Total Hours</div>
           </div>
           
