@@ -84,9 +84,9 @@ const Subscription: React.FC = () => {
         <Card className={`mb-8 ${isPremium ? 'border-green-500 bg-green-50/50 dark:border-green-700 dark:bg-green-950/30' : 'border-orange-500 bg-orange-50/50 dark:border-poker-gold/50 dark:bg-poker-gold/5'}`}>
           <CardContent className="flex items-center justify-between p-6">
             <div className="flex items-center gap-3">
-              <Crown className={`h-6 w-6 ${isPremium ? 'text-green-600' : 'text-orange-600'}`} />
+              <Crown className={`h-6 w-6 ${isPremium ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-poker-gold'}`} />
               <div>
-                <h3 className="font-semibold text-lg">
+                <h3 className="font-semibold text-lg text-foreground">
                   {isPremium ? 'Premium Account' : 'Free Account'}
                 </h3>
                 <p className="text-muted-foreground">
