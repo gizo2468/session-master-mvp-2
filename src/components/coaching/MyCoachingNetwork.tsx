@@ -1281,7 +1281,7 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
                     onClick={() => navigate(`/coach/${coach.id}`)}
                   >
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={coach.profile_picture || ''} />
+                      <AvatarImage src={resolveProfilePicture(coach.profile_picture || null) || ''} />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         {getInitials(coach.full_name || coach.username || 'Coach')}
                       </AvatarFallback>
