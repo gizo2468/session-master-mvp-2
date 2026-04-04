@@ -34,7 +34,7 @@ export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) 
             <div>
               <label className="text-sm text-gray-500 dark:text-muted-foreground block mb-1">Game Type</label>
               <select 
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-white dark:bg-[#1C1C1E] dark:text-[#FFFFFF] dark:border-[#2C2C2E] dark:focus:border-[#D4AF37] focus:outline-none focus:ring-1 dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
                 value={filters.gameType}
                 onChange={(e) => handleFilterChange('gameType', e.target.value)}
               >
@@ -47,7 +47,7 @@ export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) 
             <div>
               <label className="text-sm text-gray-500 dark:text-muted-foreground block mb-1">Format</label>
               <select 
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-white dark:bg-[#1C1C1E] dark:text-[#FFFFFF] dark:border-[#2C2C2E] dark:focus:border-[#D4AF37] focus:outline-none focus:ring-1 dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
                 value={filters.format}
                 onChange={(e) => handleFilterChange('format', e.target.value)}
               >
@@ -62,7 +62,7 @@ export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) 
               <input 
                 type="text"
                 placeholder="Filter by location..."
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-white dark:bg-[#1C1C1E] dark:text-[#FFFFFF] dark:placeholder:text-[#8E8E93] dark:border-[#2C2C2E] dark:focus:border-[#D4AF37] focus:outline-none focus:ring-1 dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
                 value={filters.location || ''}
                 onChange={(e) => handleFilterChange('location', e.target.value)}
               />
