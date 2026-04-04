@@ -1,50 +1,31 @@
 
-Fix only the real screen the user is seeing.
 
-What I found
-- The selected End Table dialog in this flow is rendered from `src/components/poker/TableCard.tsx`, not from `src/components/poker/EndTableDialog.tsx`.
-- `LiveSessionTables` renders `TableCard`, and the selected element points directly to the inline dialog inside `TableCard`.
-- So the previous fix missed the real target. In `TableCard.tsx`, these fields still use generic dark classes and do not have the explicit high-contrast palette you requested.
+## Rearrange Completed Tables Card Layout (Active Session Only)
 
-Implementation
-1. Update only the inline End Table form inside `src/components/poker/TableCard.tsx`.
-2. Create local reusable class strings for this dialog only, so the styling stays isolated:
-   - one for all inputs
-   - one for the notes textarea
-3. Apply your exact dark-mode colors to every field in this dialog:
-   - Input background: `#1C1C1E`
-   - Text color: `#FFFFFF`
-   - Placeholder: `#8E8E93`
-   - Default border: `#2C2C2E`
-   - Focus border/ring: `#D4AF37`
-   - Textarea background: `#141414`
-4. Apply that styling to all fields in this specific screen:
-   - Total Payout
-   - Final Position
-   - Players Eliminated
-   - Total Bounty Collected
-   - Next Day Start
-   - Chips Carryover
-   - Notes textarea
-5. Also style the currency-prefix add-ons in this dialog so they match the input field dark palette and do not look lighter than the editable field.
-6. Add scoped mobile/WebKit-safe dark input handling if needed on these fields only so typed text remains clearly white while editing, especially on iPhone/Safari-style inputs.
+### Current layout (lines 95–292)
+1. **Header**: Duration (absolute left) + centered title/subtitle
+2. **Tournament fields** (Starting BBs, Tournament Type, etc.)
+3. **Summary row**: Buy-In left, Total Payout + Profit/Loss stacked on right (`px-6`)
 
-Scope protection
-- Do not touch the global `Input` or `Textarea` components.
-- Do not change `src/components/poker/EndTableDialog.tsx` for this request.
-- No layout, spacing, structure, labels, or behavior changes.
+### Target layout
+1. **Header**: Centered title/subtitle only (no Duration here)
+2. **Tournament fields** (unchanged)
+3. **Duration** — centered, between tournament fields and the buy-in/payout row
+4. **Buy-In + Total Payout** — side by side, closer together (centered group)
+5. **Profit/Loss** — centered below the buy-in/payout row
 
-Result
-- This exact screen will get strong dark-mode contrast while typing.
-- The form stays visually isolated to the Active Sessions > Active Tables > End Table flow only.
+### Changes — single file: `src/components/poker/CompletedTablesDisplay.tsx`
 
-Validation
-- Check in dark mode on the live session route:
-  `Active Sessions -> Active Tables -> End Table`
-- Confirm every field shows:
-  - dark background
-  - white typed text
-  - muted gray placeholder
-  - visible dark border
-  - gold focus border
-  - darker notes textarea
+**A. Remove Duration from the header (lines 96–117)**
+- Remove the absolute-positioned Duration block (lines 97–106)
+- Keep only the centered title/subtitle div
+
+**B. Insert Duration between tournament fields and summary (after line 212)**
+- Add a centered Duration block with the same label and `TableTimerDisplay`, placed after the tournament-specific fields section and before the summary area
+
+**C. Restructure the summary area (lines 242–292)**
+- Replace the current `flex justify-between px-6` layout with:
+  - A centered row using `flex justify-center gap-8` for Buy-In and Total Payout side by side (closer together)
+  - A separate centered div below for Profit/Loss
+- Move Profit/Loss out of the right-side div into its own `text-center mt-2` block beneath
+
