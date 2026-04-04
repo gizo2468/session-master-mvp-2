@@ -1,29 +1,32 @@
 
-## Fix Coach > Player Profile header name source
 
-### Root cause
-The header currently falls back to `username` when `full_name` is not resolved in the coach view, so the screen ends up rendering the username on both lines.
+## Add Screenshot Indicator to Hand Cards in Session Summary
 
-### Implementation
-1. **`src/pages/PlayerProfile.tsx`**
-- Stop using the current header fallback logic for the main name.
-- Keep `profiles` as the source for:
-  - `username`
-  - `bio`
-  - `default_currency`
-- Load the player’s stored **Full Name** from the same underlying account data used by their own Account screen, but through a **coach-safe access path** instead of the current direct approach.
+### Problem
+The hand list query intentionally excludes `hand_image` (base64 data) for performance. This means `hand.hand_image` is always undefined on the hand card, so the existing "Screenshot" badge (lines 640-652) never renders.
 
-2. **Secure data source**
-- Use the existing coach-accessible identity source if it already returns the player’s stored full name.
-- If that source is still blocked by the current privacy/RLS setup, add a **small Supabase migration** with a narrowly scoped function that returns only the connected player’s header identity (`id`, `full_name`, `profile_picture`) for an approved coach-student connection.
+### Solution
+Query only a boolean indicator of whether each hand has an image, without fetching the heavy base64 data.
 
-3. **Header rendering**
-- Top line: render the resolved **Full Name**
-- Second line: render **`@username`**
-- Remove the visible `full_name || username` fallback from the header so the username cannot appear twice again
+### Changes — single file: `src/components/coaching/SharedSessionModal.tsx`
 
-### Scope
-- No layout changes
-- No styling changes
-- No changes to Session Overview or other sections
-- This is only a data-source/display fix for the Player Profile header
+**A. Add state to track which hands have images**
+- Add a `Set<string>` state variable `handsWithImages` (similar to existing `handsWithFeedback`)
+
+**B. After fetching hands, query for image existence**
+- After the hands are loaded (around line 218), add a lightweight query:
+  ```sql
+  SELECT id FROM session_hands_new WHERE id IN (...) AND hand_image IS NOT NULL
+  ```
+  This returns only IDs, not the actual image data, keeping it fast.
+
+**C. Update the Screenshot badge condition (line 640)**
+- Change `hand.hand_image &&` to `handsWithImages.has(hand.id) &&`
+- Remove the `onClick` that tries to use `hand.hand_image` directly (since it's not loaded)
+- Instead, make the badge a visual-only indicator (no click action needed — clicking the card already opens the Hand Review modal which lazy-loads the image)
+
+### Result
+- A gold "Screenshot" pill badge appears on hand cards that have an attached image
+- No performance impact — only hand IDs are fetched, not base64 data
+- Clicking the hand card still opens Hand Review where the full image loads on demand
+
