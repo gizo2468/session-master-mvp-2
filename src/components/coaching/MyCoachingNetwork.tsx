@@ -177,14 +177,14 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
             };
           });
 
-          const coaches = coachConnections.map(c => c.coach_id).map(id => {
+          const coaches = coachIds.map(id => {
             const profile = profileMap.get(id);
-            const privateInfo = privateMap.get(id);
+            const identity = coachIdentityMap.get(id);
             return {
               id,
-              full_name: privateInfo?.full_name || profile?.username || 'Unknown User',
+              full_name: identity?.full_name || profile?.username || 'Unknown User',
               username: profile?.username || 'unknown',
-              profile_picture: privateInfo?.profile_picture,
+              profile_picture: identity?.profile_picture || undefined,
               bio: profile?.bio,
               role: profile?.role || 'coach'
             };
