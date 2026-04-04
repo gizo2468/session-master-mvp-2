@@ -118,7 +118,7 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
   return (
     <Card className="mb-4">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
+        <CardTitle className="text-lg flex items-center justify-center gap-2 text-poker-gold">
           <Icon name="BarChart3" size={18} />
           <span>Session Overview</span>
         </CardTitle>

@@ -529,7 +529,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
         {summary && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center justify-center gap-2 text-poker-gold">
                 <Icon name="TrendingUp" size={18} />
                 <span>Performance Summary</span>
               </CardTitle>
