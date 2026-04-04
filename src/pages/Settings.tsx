@@ -329,14 +329,14 @@ const Settings: React.FC = () => {
               <div className="space-y-4">
                 {/* Full Name */}
                 <div className="flex flex-col items-center text-center">
-                  <Icon name="UserCircle2" className="h-5 w-5 text-muted-foreground mb-1" />
+                  <Icon name="UserCircle2" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
                   <p className="font-medium">{user?.fullName || '—'}</p>
                   <p className="text-sm text-muted-foreground">Full Name</p>
                 </div>
 
                 {/* Email */}
                 <div className="flex flex-col items-center text-center">
-                  <Icon name="Mail" className="h-5 w-5 text-muted-foreground mb-1" />
+                  <Icon name="Mail" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
                   <p className="font-medium">{user?.email || 'Not signed in'}</p>
                   <p className="text-sm text-muted-foreground">Email</p>
                 </div>
@@ -344,13 +344,13 @@ const Settings: React.FC = () => {
                 {/* Username */}
                 {profileLoading ? (
                   <div className="flex flex-col items-center text-center">
-                    <Icon name="AtSign" className="h-5 w-5 text-muted-foreground mb-1" />
+                    <Icon name="AtSign" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
                     <div className="h-4 w-24 bg-muted rounded animate-pulse"></div>
                     <p className="text-sm text-muted-foreground">Username</p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center text-center">
-                    <Icon name="AtSign" className="h-5 w-5 text-muted-foreground mb-1" />
+                    <Icon name="AtSign" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
                     {isEditing ? (
                       <div>
                         <Input
@@ -375,13 +375,13 @@ const Settings: React.FC = () => {
                 {/* Role */}
                 {profileLoading ? (
                   <div className="flex flex-col items-center text-center">
-                    <Icon name="User" className="h-5 w-5 text-muted-foreground mb-1" />
+                    <Icon name="User" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
                     <div className="h-4 w-16 bg-muted rounded animate-pulse"></div>
                     <p className="text-sm text-muted-foreground">Role</p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center text-center">
-                    <Icon name="User" className="h-5 w-5 text-muted-foreground mb-1" />
+                    <Icon name="User" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
                     <p className="font-medium">{getDisplayRole(profile?.role)}</p>
                     <p className="text-sm text-muted-foreground">Role</p>
                   </div>
@@ -392,7 +392,7 @@ const Settings: React.FC = () => {
                   <>
                     {/* Coaching Focus */}
                     <div className="flex flex-col items-center text-center">
-                      <Icon name="Target" className="h-5 w-5 text-muted-foreground mb-1" />
+                      <Icon name="Target" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
                       <p className="font-medium">Coaching Focus</p>
                       {isEditing ? (
                         <div className="mt-2">
@@ -440,7 +440,7 @@ const Settings: React.FC = () => {
 
                     {/* Experience */}
                     <div className="flex flex-col items-center text-center">
-                      <Icon name="Award" className="h-5 w-5 text-muted-foreground mb-1" />
+                      <Icon name="Award" className="h-5 w-5 text-poker-gold mb-1" style={{ filter: "drop-shadow(0 0 3px hsl(43, 80%, 48%, 0.4))" }} />
                       <p className="font-medium">Experience</p>
                       {isEditing ? (
                         <Textarea
