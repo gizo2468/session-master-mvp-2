@@ -1349,7 +1349,7 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
                   }}
                 >
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={player.profile_picture || ''} />
+                    <AvatarImage src={resolveProfilePicture(player.profile_picture || null) || ''} />
                     <AvatarFallback className="bg-primary/10 text-primary">
                       {getInitials(player.full_name || player.username || 'Player')}
                     </AvatarFallback>
@@ -1359,7 +1359,7 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
                       {player.full_name || player.username || 'Player'}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Click to view player's shared content
+                      @{player.username || 'unknown'}
                     </p>
                   </div>
                   <Icon name="ChevronRight" className="h-4 w-4 text-muted-foreground" />
