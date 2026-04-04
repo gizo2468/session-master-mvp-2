@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/Lucide';
 import { usePremiumAccess } from '@/hooks/usePremiumAccess';
 import ConnectionLimitDialog from './ConnectionLimitDialog';
+import { resolveProfilePicture } from '@/hooks/usePlayerCard';
 
 interface ConnectedUser {
   id: string;
