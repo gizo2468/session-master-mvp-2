@@ -326,76 +326,64 @@ const Settings: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4 flex flex-col items-center">
+              <div className="space-y-4">
                 {/* Full Name */}
-                <div className="flex items-center gap-3">
-                  <Icon name="UserCircle2" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">{user?.fullName || '—'}</p>
-                    <p className="text-sm text-gray-500 dark:text-muted-foreground">Full Name</p>
-                  </div>
+                <div className="flex flex-col items-center text-center">
+                  <Icon name="UserCircle2" className="h-5 w-5 text-muted-foreground mb-1" />
+                  <p className="font-medium">{user?.fullName || '—'}</p>
+                  <p className="text-sm text-muted-foreground">Full Name</p>
                 </div>
 
                 {/* Email */}
-                <div className="flex items-center gap-3">
-                  <Icon name="Mail" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">{user?.email || 'Not signed in'}</p>
-                    <p className="text-sm text-gray-500 dark:text-muted-foreground">Email</p>
-                  </div>
+                <div className="flex flex-col items-center text-center">
+                  <Icon name="Mail" className="h-5 w-5 text-muted-foreground mb-1" />
+                  <p className="font-medium">{user?.email || 'Not signed in'}</p>
+                  <p className="text-sm text-muted-foreground">Email</p>
                 </div>
 
                 {/* Username */}
                 {profileLoading ? (
-                  <div className="flex items-center gap-3">
-                    <Icon name="AtSign" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
-                    <div>
-                      <div className="h-4 w-24 bg-gray-200 dark:bg-muted rounded animate-pulse"></div>
-                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Username</p>
-                    </div>
+                  <div className="flex flex-col items-center text-center">
+                    <Icon name="AtSign" className="h-5 w-5 text-muted-foreground mb-1" />
+                    <div className="h-4 w-24 bg-muted rounded animate-pulse"></div>
+                    <p className="text-sm text-muted-foreground">Username</p>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 flex-1">
-                    <Icon name="AtSign" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
-                    <div className="flex-1">
-                      {isEditing ? (
-                        <div>
-                          <Input
-                            value={editForm.username}
-                            onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
-                            placeholder="Display handle"
-                            className="max-w-[200px]"
-                            autoComplete="off"
-                            data-form-type="other"
-                          />
-                          <p className="text-sm text-gray-500 dark:text-muted-foreground mt-1">Username</p>
-                        </div>
-                      ) : (
-                        <div>
-                          <p className="font-medium">@{profile?.username || 'Not set'}</p>
-                          <p className="text-sm text-gray-500 dark:text-muted-foreground">Username</p>
-                        </div>
-                      )}
-                    </div>
+                  <div className="flex flex-col items-center text-center">
+                    <Icon name="AtSign" className="h-5 w-5 text-muted-foreground mb-1" />
+                    {isEditing ? (
+                      <div>
+                        <Input
+                          value={editForm.username}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
+                          placeholder="Display handle"
+                          className="max-w-[200px] text-center"
+                          autoComplete="off"
+                          data-form-type="other"
+                        />
+                        <p className="text-sm text-muted-foreground mt-1">Username</p>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="font-medium">@{profile?.username || 'Not set'}</p>
+                        <p className="text-sm text-muted-foreground">Username</p>
+                      </>
+                    )}
                   </div>
                 )}
 
                 {/* Role */}
                 {profileLoading ? (
-                  <div className="flex items-center gap-3">
-                    <Icon name="User" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
-                    <div>
-                      <div className="h-4 w-16 bg-gray-200 dark:bg-muted rounded animate-pulse"></div>
-                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Role</p>
-                    </div>
+                  <div className="flex flex-col items-center text-center">
+                    <Icon name="User" className="h-5 w-5 text-muted-foreground mb-1" />
+                    <div className="h-4 w-16 bg-muted rounded animate-pulse"></div>
+                    <p className="text-sm text-muted-foreground">Role</p>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3">
-                    <Icon name="User" className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{getDisplayRole(profile?.role)}</p>
-                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Role</p>
-                    </div>
+                  <div className="flex flex-col items-center text-center">
+                    <Icon name="User" className="h-5 w-5 text-muted-foreground mb-1" />
+                    <p className="font-medium">{getDisplayRole(profile?.role)}</p>
+                    <p className="text-sm text-muted-foreground">Role</p>
                   </div>
                 )}
 
