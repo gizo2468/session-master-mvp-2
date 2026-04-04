@@ -112,9 +112,7 @@ const PlayerProfile = () => {
           .eq('id', playerId)
           .single(),
         supabase
-          .from('user_private_data')
-          .select('full_name, profile_picture, email')
-          .eq('id', playerId)
+          .rpc('get_student_header_identity', { p_student_id: playerId })
           .single()
       ]);
 
