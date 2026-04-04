@@ -128,7 +128,7 @@ export default function EndTableDialog({
                     type="number"
                     min="0"
                     step="0.01"
-                    className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                     placeholder="0.00"
                     value={cashOutAmount}
                     onChange={(e) => onCashOutAmountChange(e.target.value)}
@@ -145,7 +145,7 @@ export default function EndTableDialog({
                     id="finalPosition"
                     type="number"
                     min="1"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                     placeholder="Enter your final position (e.g. 3 for 3rd)"
                     value={finalPosition}
                     onChange={(e) => onFinalPositionChange(e.target.value)}
@@ -163,7 +163,7 @@ export default function EndTableDialog({
                       id="bountyCount"
                       type="number"
                       min="0"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                       placeholder="Number of players eliminated"
                       value={bountyCount}
                       onChange={(e) => onBountyCountChange(e.target.value)}
@@ -183,7 +183,7 @@ export default function EndTableDialog({
                         type="number"
                         min="0"
                         step="0.01"
-                        className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-border rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none"
+                        className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-border rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                         placeholder="0.00"
                         value={bountyAmount}
                         onChange={(e) => onBountyAmountChange(e.target.value)}
@@ -236,7 +236,7 @@ export default function EndTableDialog({
                 </label>
                 <Textarea
                   id="tableNotes"
-                  className="w-full min-h-[100px] border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                  className="w-full min-h-[100px] border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                   placeholder="Table notes"
                   value={tableNotes}
                   onChange={(e) => onTableNotesChange(e.target.value)}
@@ -256,7 +256,7 @@ export default function EndTableDialog({
                 <input
                   id="nextDayStart"
                   type="datetime-local"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                   value={nextDayStart ? nextDayStart.toISOString().slice(0, 16) : ''}
                   onChange={(e) => onNextDayStartChange(e.target.value ? new Date(e.target.value) : null)}
                 />
@@ -273,7 +273,7 @@ export default function EndTableDialog({
                   id="chipsCarryover"
                   type="number"
                   min="0"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                   placeholder="Enter chip count"
                   value={chipsCarryover}
                   onChange={(e) => onChipsCarryoverChange(e.target.value)}
