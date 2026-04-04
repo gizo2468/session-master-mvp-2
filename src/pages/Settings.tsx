@@ -282,8 +282,8 @@ const Settings: React.FC = () => {
           <Card>
             <CardHeader>
               <div className="flex items-start justify-between">
-                <div className="flex-1 pt-1">
-                  <CardTitle>Account</CardTitle>
+                <div className="flex-1 pt-1 text-center">
+                  <CardTitle className="text-center">Account</CardTitle>
                   <CardDescription className="text-center">Your account information</CardDescription>
                 </div>
                 {!profileLoading && (
