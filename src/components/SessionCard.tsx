@@ -156,7 +156,7 @@ const SessionCard = ({ session, onClick, showActions = false }: SessionCardProps
     >
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="text-lg font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 underline decoration-1">{session.location || 'Unknown Location'}</h3>
+          <h3 className="text-lg font-bold text-gray-600 dark:text-primary underline decoration-1 dark:drop-shadow-[0_0_6px_rgba(212,175,55,0.35)]">{session.location || 'Unknown Location'}</h3>
           <p className="text-sm text-gray-500 dark:text-muted-foreground">{formattedDate} at {formattedTime}</p>
         </div>
         {session.isActive ? (
