@@ -23,7 +23,7 @@ interface CompletedTablesDisplayProps {
   isLiveSession?: boolean;
 }
 
-export default function CompletedTablesDisplay({ tables, sessionId, currency }: CompletedTablesDisplayProps) {
+export default function CompletedTablesDisplay({ tables, sessionId, currency, isLiveSession }: CompletedTablesDisplayProps) {
   const { updateTable, deleteTable } = useSessionContext();
   // Remove global currencySymbol - calculate per table instead
   const [showEditForm, setShowEditForm] = useState(false);
