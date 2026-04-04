@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Filter } from 'lucide-react';
+import { Filter, RotateCcw } from 'lucide-react';
 import { SessionFilter } from '@/types/poker';
 
 interface FilterBarProps {
