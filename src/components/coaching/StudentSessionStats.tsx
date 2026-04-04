@@ -141,7 +141,7 @@ export const StudentSessionStats = ({ studentId }: { studentId: string }) => {
           </div>
           
           <div className="text-center">
-            <div className="text-sm font-medium text-poker-feltGreen">
+            <div className="text-sm font-medium text-foreground">
               {stats.mostPlayedGameType || 'N/A'}
             </div>
             <div className="text-xs text-gray-500 dark:text-muted-foreground">Most Played</div>
