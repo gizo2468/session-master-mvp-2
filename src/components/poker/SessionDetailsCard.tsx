@@ -136,18 +136,18 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             {/* Total Buy-ins Badge */}
             <Badge
               variant="outline"
-              className="flex items-center gap-1 border-amber-400 bg-amber-50 text-amber-800 px-4 py-1.5 font-normal text-sm w-full mt-2 justify-center"
+              className="flex items-center gap-1 border-amber-400 bg-amber-50 dark:bg-amber-950/50 dark:border-amber-700/60 text-amber-800 px-4 py-1.5 font-normal text-sm w-full mt-2 justify-center"
             >
-              <span className="font-bold text-amber-700 text-base">Total Buy-Ins: {currencySymbol}{totalBuyIn.toFixed(2)}</span>
+              <span className="font-bold text-amber-700 dark:text-amber-300 text-base">Total Buy-Ins: {currencySymbol}{totalBuyIn.toFixed(2)}</span>
             </Badge>
             
             {/* Total Payouts Badge - only show if there are completed tables with payouts */}
             {totalPayouts > 0 && (
               <Badge
                 variant="outline"
-                className="flex items-center gap-1 border-green-400 bg-green-50 text-green-800 px-4 py-1.5 font-normal text-sm w-full justify-center"
+                className="flex items-center gap-1 border-green-400 bg-green-50 dark:bg-green-950/50 dark:border-green-700/60 text-green-800 px-4 py-1.5 font-normal text-sm w-full justify-center"
               >
-                <span className="font-bold text-green-700 text-base">Total Payouts: {currencySymbol}{totalPayouts.toFixed(2)}</span>
+                <span className="font-bold text-green-700 dark:text-green-300 text-base">Total Payouts: {currencySymbol}{totalPayouts.toFixed(2)}</span>
               </Badge>
             )}
             
