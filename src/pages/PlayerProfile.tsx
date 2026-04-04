@@ -537,45 +537,45 @@ const calculateSummary = (sessions: SharedSession[]) => {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-poker-feltGreen">
+                  <div className="text-2xl font-bold text-foreground">
                     {currencySymbol}{summary.averageBuyIn.toFixed(0)}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-muted-foreground">Average Buy-in</div>
                 </div>
                 
                 <div className="text-center">
-                  <div className={`text-2xl font-bold ${summary.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className="text-2xl font-bold text-foreground">
                     {summary.totalProfit >= 0 ? '+' : ''}{currencySymbol}{summary.totalProfit.toFixed(0)}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-muted-foreground">Total P&L</div>
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-poker-feltGreen">
+                  <div className="text-2xl font-bold text-foreground">
                     {summary.sessionFrequency}{summary.sessionFrequencyUnit === 'wk' ? '/wk' : '/mo'}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-muted-foreground">Session Frequency</div>
                 </div>
                 
                 <div className="text-center">
-                  <div className={`text-2xl font-bold ${summary.bestSharedResult >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className="text-2xl font-bold text-foreground">
                     {summary.bestSharedResult >= 0 ? '+' : ''}{currencySymbol}{summary.bestSharedResult.toFixed(0)}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-muted-foreground">Best Shared Result</div>
                 </div>
                 
                 <div className="text-center">
-                  <div className={`text-2xl font-bold ${summary.winRate >= 50 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className="text-2xl font-bold text-foreground">
                     {summary.winRate}%
                   </div>
                   <div className="text-xs text-gray-500 dark:text-muted-foreground">Win Rate</div>
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-lg font-bold text-poker-feltGreen">
+                  <div className="text-lg font-bold text-poker-gold">
                     {summary.mostPlayedFormat}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-muted-foreground">Favorite Format</div>
+                  <div className="text-xs text-foreground">Favorite Format</div>
                 </div>
               </div>
             </CardContent>
