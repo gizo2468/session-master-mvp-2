@@ -103,7 +103,7 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
                     </span>
                   )}
                 </div>
-                {table.cashOut !== undefined && !table.dayEndedWithoutElimination && (
+                {table.cashOut !== undefined && !table.dayEndedWithoutElimination && !isLiveSession && (
                   <div className={`text-lg font-bold ${
                     table.cashOut >= table.buyIn ? 'text-green-600' : 'text-red-600'
                   }`}>
