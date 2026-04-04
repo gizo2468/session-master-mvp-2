@@ -240,7 +240,7 @@ export default function CompletedTablesDisplay({ tables, sessionId, currency, is
                   )}
 
                   {/* Buy-In left, Total Payout + Profit/Loss right */}
-                  <div className="flex justify-between items-start mt-4 mb-2">
+                  <div className="flex justify-between items-start mt-4 mb-2 px-6">
                     <div>
                       <span className="block uppercase text-xs text-gray-500 dark:text-muted-foreground font-medium tracking-wider">BUY-IN</span>
                       <span className="font-bold text-xl">
