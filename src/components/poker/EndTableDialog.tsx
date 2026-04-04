@@ -273,7 +273,7 @@ export default function EndTableDialog({
                   id="chipsCarryover"
                   type="number"
                   min="0"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[hsl(0,0%,13%)] dark:text-gray-100 dark:placeholder-gray-500 dark:border-[hsl(30,5%,24%)]"
                   placeholder="Enter chip count"
                   value={chipsCarryover}
                   onChange={(e) => onChipsCarryoverChange(e.target.value)}
