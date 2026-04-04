@@ -591,7 +591,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
                       type="number"
                       min="0"
                       step="0.01"
-                      className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                      className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
                       placeholder="0.00"
                       value={cashOutAmount}
                       onChange={(e) => setCashOutAmount(e.target.value)}
