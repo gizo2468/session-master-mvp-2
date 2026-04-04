@@ -439,21 +439,20 @@ const Settings: React.FC = () => {
                     </div>
 
                     {/* Experience */}
-                    <div className="flex items-start gap-3">
-                      <Icon name="Award" className="h-5 w-5 text-gray-500 dark:text-muted-foreground mt-0.5" />
-                      <div className="flex-1">
-                        <p className="font-medium">Experience</p>
-                        {isEditing ? (
-                          <Textarea
-                            value={editForm.experience}
-                            onChange={(e) => setEditForm(prev => ({ ...prev, experience: e.target.value }))}
-                            placeholder="Describe your coaching experience..."
-                            className="mt-1"
-                            rows={3}
-                          />
-                        ) : (
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                            {profile?.experience || "No experience information provided"}
+                    <div className="flex flex-col items-center text-center">
+                      <Icon name="Award" className="h-5 w-5 text-muted-foreground mb-1" />
+                      <p className="font-medium">Experience</p>
+                      {isEditing ? (
+                        <Textarea
+                          value={editForm.experience}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, experience: e.target.value }))}
+                          placeholder="Describe your coaching experience..."
+                          className="mt-1 w-full max-w-[280px]"
+                          rows={3}
+                        />
+                      ) : (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {profile?.experience || "No experience information provided"}
                           </p>
                         )}
                       </div>
