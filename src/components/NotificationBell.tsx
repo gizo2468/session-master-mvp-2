@@ -13,7 +13,7 @@ export const NotificationBell: React.FC = () => {
       onClick={() => navigate('/notifications')}
       variant="outline"
       size="sm"
-      className="relative text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white"
+      className="relative text-poker-feltGreen border-poker-feltGreen hover:bg-poker-feltGreen hover:text-white dark:border-poker-gold dark:text-poker-gold dark:hover:bg-poker-gold"
     >
       <Icon name="Bell" size={16} />
       {unreadCount > 0 && (
