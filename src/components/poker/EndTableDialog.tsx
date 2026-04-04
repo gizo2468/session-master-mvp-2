@@ -236,7 +236,7 @@ export default function EndTableDialog({
                 </label>
                 <Textarea
                   id="tableNotes"
-                  className="w-full min-h-[100px] border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen"
+                  className="w-full min-h-[100px] border border-gray-300 rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[hsl(0,0%,13%)] dark:text-gray-100 dark:placeholder-gray-500 dark:border-[hsl(30,5%,24%)]"
                   placeholder="Table notes"
                   value={tableNotes}
                   onChange={(e) => onTableNotesChange(e.target.value)}
