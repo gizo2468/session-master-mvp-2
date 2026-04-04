@@ -238,7 +238,7 @@ export default function Index() {
           )}
           
           {/* Recent Sessions header - always visible */}
-          <div className="w-full space-y-4">
+          <div className="w-full space-y-4 mt-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-extrabold tracking-tight">Recent Sessions</h2>
               <div className="flex items-center gap-2">
