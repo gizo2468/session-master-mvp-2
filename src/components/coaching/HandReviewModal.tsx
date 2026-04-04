@@ -426,7 +426,7 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
                   <div className="flex justify-center">
                     <button
                       onClick={() => setSelectedImage(handImage)}
-                      className="flex items-center gap-2 p-3 rounded-lg border border-muted hover:bg-muted/20 transition-colors"
+                      className="flex items-center justify-center gap-2 p-3 rounded-lg border border-muted hover:bg-muted/20 transition-colors w-full text-poker-gold"
                       aria-label="View hand screenshot"
                     >
                       <Icon name="Image" size={20} />
