@@ -1,62 +1,50 @@
 
+Fix only the real screen the user is seeing.
 
-## Improve Mix Editor & Mixed-Cell Rendering
+What I found
+- The selected End Table dialog in this flow is rendered from `src/components/poker/TableCard.tsx`, not from `src/components/poker/EndTableDialog.tsx`.
+- `LiveSessionTables` renders `TableCard`, and the selected element points directly to the inline dialog inside `TableCard`.
+- So the previous fix missed the real target. In `TableCard.tsx`, these fields still use generic dark classes and do not have the explicit high-contrast palette you requested.
 
-### Two changes
+Implementation
+1. Update only the inline End Table form inside `src/components/poker/TableCard.tsx`.
+2. Create local reusable class strings for this dialog only, so the styling stays isolated:
+   - one for all inputs
+   - one for the notes textarea
+3. Apply your exact dark-mode colors to every field in this dialog:
+   - Input background: `#1C1C1E`
+   - Text color: `#FFFFFF`
+   - Placeholder: `#8E8E93`
+   - Default border: `#2C2C2E`
+   - Focus border/ring: `#D4AF37`
+   - Textarea background: `#141414`
+4. Apply that styling to all fields in this specific screen:
+   - Total Payout
+   - Final Position
+   - Players Eliminated
+   - Total Bounty Collected
+   - Next Day Start
+   - Chips Carryover
+   - Notes textarea
+5. Also style the currency-prefix add-ons in this dialog so they match the input field dark palette and do not look lighter than the editable field.
+6. Add scoped mobile/WebKit-safe dark input handling if needed on these fields only so typed text remains clearly white while editing, especially on iPhone/Safari-style inputs.
 
-**1. Change mixed-cell gradient from vertical to horizontal bands**
+Scope protection
+- Do not touch the global `Input` or `Textarea` components.
+- Do not change `src/components/poker/EndTableDialog.tsx` for this request.
+- No layout, spacing, structure, labels, or behavior changes.
 
-File: `src/components/charts/HandRangeGrid.tsx`
+Result
+- This exact screen will get strong dark-mode contrast while typing.
+- The form stays visually isolated to the Active Sessions > Active Tables > End Table flow only.
 
-The `getCellStyle` function (line 74) currently uses `linear-gradient(to bottom, ...)` which renders vertical stacking. But the user wants horizontal stacked bands (top-to-bottom segments like: top = Raise, middle = Call, bottom = Fold).
-
-Wait — "horizontal split segments" + "top section = Raise, middle = Call, bottom section = Fold" = the gradient should go top-to-bottom, which is what `to bottom` already does. Looking at the screenshot (image-540), the cell AJs shows exactly this: top red, middle green, bottom blue/fold — rendered as horizontal bands stacked vertically. So the current `to bottom` direction is actually correct for what the user describes.
-
-Re-reading: "Replace the vertical split with horizontal split segments." The user sees the current rendering as "vertical split" and wants "horizontal." Looking at the code — `to bottom` creates horizontal bands (colors stacked top-to-bottom). This is already what's implemented. Let me check if there's a `to right` somewhere or if the user is seeing something different.
-
-The code says `to bottom` on line 74, which should produce horizontal bands. The screenshot shows horizontal bands on AJs. So this is already working as intended. The user may be confused, or the rendering might look different at small cell sizes. I'll keep it as-is since it matches the desired behavior already.
-
-Actually, re-reading more carefully: the user says "Right now, the mixed action display inside each hand cell is split vertically" — they see it as vertical columns side by side. But the code uses `to bottom` which should be horizontal bands. Let me look at the screenshot more carefully — in image-540, AJs shows green on the left half and blue on the bottom-right... it looks like the segments might be rendering as side-by-side vertical columns at that small size? No, it looks like horizontal bands: green top, blue-purple bottom.
-
-The user explicitly says to change to horizontal bands. I'll ensure `to bottom` is used (it already is). Perhaps they want the preview bar in the editor to also be vertical? Let me just keep the grid as `to bottom` and move on to the presets.
-
-**Summary of changes:**
-
-No direction change needed — `to bottom` already renders horizontal bands. The grid cell rendering stays as-is.
-
-**2. Add preset buttons to CellMixEditor**
-
-File: `src/components/charts/CellMixEditor.tsx`
-
-Add a preset section between the preview bar and the sliders. Presets dynamically adapt to the number of available actions:
-
-Presets (showing only those that make sense for the action count):
-- **2-action presets**: 50/50, 70/30, 25/75
-- **3-action presets**: 33/33/34, 50/25/25, 40/40/20
-
-Logic: When a preset is tapped, distribute the weights across the first N actions in `availableActions` order. For a 2-way preset with 3+ actions, the remaining actions get 0%.
-
-Implementation:
-```
-const PRESETS_2 = [
-  { label: '50/50', weights: [50, 50] },
-  { label: '70/30', weights: [70, 30] },
-  { label: '25/75', weights: [25, 75] },
-];
-const PRESETS_3 = [
-  { label: '33/33/34', weights: [33, 33, 34] },
-  { label: '50/25/25', weights: [50, 25, 25] },
-  { label: '40/40/20', weights: [40, 40, 20] },
-];
-```
-
-Render as small pill buttons in a flex-wrap row. On tap, map the preset weights to the available actions (first action gets first weight, etc.), zero out any remaining actions.
-
-### Files changed
-1. `src/components/charts/CellMixEditor.tsx` — add preset buttons section
-
-### No changes to
-- Grid layout, cell sizes, gradient direction (already correct)
-- Slider functionality
-- Save/clear/cancel logic
-
+Validation
+- Check in dark mode on the live session route:
+  `Active Sessions -> Active Tables -> End Table`
+- Confirm every field shows:
+  - dark background
+  - white typed text
+  - muted gray placeholder
+  - visible dark border
+  - gold focus border
+  - darker notes textarea
