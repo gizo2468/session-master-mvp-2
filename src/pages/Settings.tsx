@@ -589,6 +589,31 @@ const Settings: React.FC = () => {
                   </div>
                   <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
                 </div>
+
+                {/* Reset Onboarding */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Icon name="RotateCcw" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
+                    <div>
+                      <p className="font-medium">Reset Onboarding</p>
+                      <p className="text-sm text-gray-500 dark:text-muted-foreground">Replay the Start Session hint on Home</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      localStorage.removeItem('onboarding_start_session_seen');
+                      toast({
+                        title: 'Onboarding reset',
+                        description: 'The hint will appear next time you visit Home.',
+                      });
+                    }}
+                  >
+                    <Icon name="RotateCcw" className="mr-2 h-4 w-4" />
+                    Reset
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
