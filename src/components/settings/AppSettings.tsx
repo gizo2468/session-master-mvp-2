@@ -56,6 +56,27 @@ const AppSettings = () => {
             </div>
             <Switch id="dark-mode" checked={theme === 'dark'} onCheckedChange={toggleTheme} />
           </div>
+
+          <div className="flex items-center justify-between gap-4 pt-2 border-t border-border">
+            <div className="flex-1">
+              <Label className="block mb-1">Reset Onboarding</Label>
+              <p className="text-sm text-muted-foreground">Replay the Start Session hint on Home</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                localStorage.removeItem('onboarding_start_session_seen');
+                toast({
+                  title: 'Onboarding reset',
+                  description: 'The hint will appear next time you visit Home.',
+                });
+              }}
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reset
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
