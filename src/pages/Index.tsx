@@ -23,6 +23,7 @@ import chipPlayerCard from '@/assets/chip-player-card.png';
 import chipMyNotes from '@/assets/chip-my-notes.png';
 import chipCoach from '@/assets/chip-coach.png';
 import ViewAllNotesModal from '@/components/notes/ViewAllNotesModal';
+import OnboardingHint from '@/components/OnboardingHint';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -62,6 +63,20 @@ export default function Index() {
   const allDataReady = !isLoading && !isRecovering && !statsLoading;
   const [splashVisible, setSplashVisible] = useState(true);
   const [splashRemoved, setSplashRemoved] = useState(false);
+
+  // Onboarding hint logic — show only for first-time users
+  const [showOnboardingHint, setShowOnboardingHint] = useState(
+    () => typeof window !== 'undefined' && !localStorage.getItem('onboarding_start_session_seen')
+  );
+
+  const handleOnboardingDismiss = () => {
+    try {
+      localStorage.setItem('onboarding_start_session_seen', 'true');
+    } catch (e) {
+      // ignore storage errors
+    }
+    setShowOnboardingHint(false);
+  };
 
   useEffect(() => {
     if (allDataReady && splashVisible) {
@@ -326,6 +341,11 @@ export default function Index() {
       
       <PlayerCardModal open={playerCardOpen} onOpenChange={setPlayerCardOpen} />
       <ViewAllNotesModal open={notesModalOpen} onOpenChange={setNotesModalOpen} />
+
+      {/* First-time onboarding hint near Start Session chip */}
+      {splashRemoved && showOnboardingHint && (
+        <OnboardingHint onDismiss={handleOnboardingDismiss} />
+      )}
 
       {/* Coach: Connected Players Modal */}
       <Dialog open={showPlayersModal} onOpenChange={setShowPlayersModal}>
