@@ -18,6 +18,7 @@ import { useStackCheckInterval, STACK_CHECK_OPTIONS } from '@/hooks/useStackChec
 import { supabase } from '@/integrations/supabase/client';
 import { Switch } from '@/components/ui/switch';
 import SupportSettings from '@/components/settings/SupportSettings';
+import { triggerOnboardingReset } from '@/hooks/useOnboardingTour';
 import {
   Select,
   SelectContent,
@@ -603,8 +604,7 @@ const Settings: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      localStorage.removeItem('onboarding_start_session_seen');
-                      window.dispatchEvent(new Event('onboarding-tour:reset'));
+                      triggerOnboardingReset();
                       toast({
                         title: 'Onboarding reset',
                         description: 'The guided tour will replay next time you visit Home.',
