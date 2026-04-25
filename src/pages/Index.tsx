@@ -23,7 +23,8 @@ import chipPlayerCard from '@/assets/chip-player-card.png';
 import chipMyNotes from '@/assets/chip-my-notes.png';
 import chipCoach from '@/assets/chip-coach.png';
 import ViewAllNotesModal from '@/components/notes/ViewAllNotesModal';
-import OnboardingHint from '@/components/OnboardingHint';
+import OnboardingTour from '@/components/onboarding/OnboardingTour';
+import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -64,19 +65,34 @@ export default function Index() {
   const [splashVisible, setSplashVisible] = useState(true);
   const [splashRemoved, setSplashRemoved] = useState(false);
 
-  // Onboarding hint logic — show only for first-time users
-  const [showOnboardingHint, setShowOnboardingHint] = useState(
-    () => typeof window !== 'undefined' && !localStorage.getItem('onboarding_start_session_seen')
-  );
+  // Onboarding tour — multi-step spotlight, shown to first-time users or after reset
+  const { shouldShow: showOnboardingTour, dismiss: dismissOnboardingTour } = useOnboardingTour();
 
-  const handleOnboardingDismiss = () => {
-    try {
-      localStorage.setItem('onboarding_start_session_seen', 'true');
-    } catch (e) {
-      // ignore storage errors
-    }
-    setShowOnboardingHint(false);
-  };
+  const tourSteps = React.useMemo(
+    () => [
+      {
+        selector: '[data-tour="logo"]',
+        title: 'Welcome to Session Master',
+        body: 'Your poker tracking HQ — let\'s take a quick tour.',
+      },
+      {
+        selector: '[data-tour="start-session"]',
+        title: 'Start a Session',
+        body: 'Tap here to begin tracking a new poker session.',
+      },
+      {
+        selector: '[data-tour="stats"]',
+        title: 'Your Session Stats',
+        body: 'Track your sessions, record, and win rate at a glance.',
+      },
+      {
+        selector: '[data-tour="nav"]',
+        title: 'Settings & Profile',
+        body: 'Open Settings or your Profile any time from here.',
+      },
+    ],
+    []
+  );
 
   useEffect(() => {
     if (allDataReady && splashVisible) {
