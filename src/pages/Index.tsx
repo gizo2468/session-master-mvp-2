@@ -185,7 +185,7 @@ export default function Index() {
       <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 relative z-10 header-safe py-0">
         <div className="container mx-auto max-w-md px-4 py-0">
           <div className="flex justify-between items-center">
-            <div className="flex-1 flex justify-start gap-2">
+            <div data-tour="nav" className="flex-1 flex justify-start gap-2">
               <Button 
                 onClick={() => navigate('/settings')}
                 variant="outline" 
@@ -203,7 +203,7 @@ export default function Index() {
                 <Icon name="User" size={16} />
               </Button>
             </div>
-            <div className="flex-1 flex justify-center">
+            <div data-tour="logo" className="flex-1 flex justify-center">
               <Logo />
             </div>
             <div className="flex-1 flex justify-end gap-2">
@@ -219,7 +219,7 @@ export default function Index() {
         
         <div className="flex flex-col items-center gap-0">
           {/* START SESSION chip + three icon buttons in one relative container */}
-          <div className="relative flex justify-center -mt-36 mb-0">
+          <div data-tour="start-session" className="relative flex justify-center -mt-36 mb-0">
             {/* Premium gold glow — dark mode only */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 w-[85%] h-[75%] rounded-full hidden dark:block bg-[radial-gradient(ellipse_at_center,rgba(218,165,32,0.18)_0%,rgba(218,165,32,0.08)_40%,transparent_70%)] blur-2xl pointer-events-none" />
             <NewSessionButton />
