@@ -24,6 +24,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import OnboardingTour from '@/components/onboarding/OnboardingTour';
+import { TOUR_STEPS } from '@/components/onboarding/tourSteps';
+import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 const TOURNAMENT_TYPES = [
   'Freezeout',
