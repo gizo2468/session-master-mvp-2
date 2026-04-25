@@ -256,6 +256,11 @@ export default function SessionForm() {
         });
       }
 
+      // Finish the onboarding tour if it's still active.
+      if (showOnboardingTour) {
+        dismissOnboardingTour();
+      }
+
       // FIXED: Navigate to the live session page with the correct session ID
       console.log('🔄 Navigating to live session page:', `/session/${finalSessionId}`);
       navigate(`/session/${finalSessionId}`, { replace: true });
