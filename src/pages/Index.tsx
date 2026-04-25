@@ -23,7 +23,8 @@ import chipPlayerCard from '@/assets/chip-player-card.png';
 import chipMyNotes from '@/assets/chip-my-notes.png';
 import chipCoach from '@/assets/chip-coach.png';
 import ViewAllNotesModal from '@/components/notes/ViewAllNotesModal';
-import OnboardingHint from '@/components/OnboardingHint';
+import OnboardingTour from '@/components/onboarding/OnboardingTour';
+import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -64,19 +65,34 @@ export default function Index() {
   const [splashVisible, setSplashVisible] = useState(true);
   const [splashRemoved, setSplashRemoved] = useState(false);
 
-  // Onboarding hint logic — show only for first-time users
-  const [showOnboardingHint, setShowOnboardingHint] = useState(
-    () => typeof window !== 'undefined' && !localStorage.getItem('onboarding_start_session_seen')
-  );
+  // Onboarding tour — multi-step spotlight, shown to first-time users or after reset
+  const { shouldShow: showOnboardingTour, dismiss: dismissOnboardingTour } = useOnboardingTour();
 
-  const handleOnboardingDismiss = () => {
-    try {
-      localStorage.setItem('onboarding_start_session_seen', 'true');
-    } catch (e) {
-      // ignore storage errors
-    }
-    setShowOnboardingHint(false);
-  };
+  const tourSteps = React.useMemo(
+    () => [
+      {
+        selector: '[data-tour="logo"]',
+        title: 'Welcome to Session Master',
+        body: 'Your poker tracking HQ — let\'s take a quick tour.',
+      },
+      {
+        selector: '[data-tour="start-session"]',
+        title: 'Start a Session',
+        body: 'Tap here to begin tracking a new poker session.',
+      },
+      {
+        selector: '[data-tour="stats"]',
+        title: 'Your Session Stats',
+        body: 'Track your sessions, record, and win rate at a glance.',
+      },
+      {
+        selector: '[data-tour="nav"]',
+        title: 'Settings & Profile',
+        body: 'Open Settings or your Profile any time from here.',
+      },
+    ],
+    []
+  );
 
   useEffect(() => {
     if (allDataReady && splashVisible) {
@@ -169,7 +185,7 @@ export default function Index() {
       <header className="bg-white dark:bg-card shadow-sm dark:shadow-black/20 relative z-10 header-safe py-0">
         <div className="container mx-auto max-w-md px-4 py-0">
           <div className="flex justify-between items-center">
-            <div className="flex-1 flex justify-start gap-2">
+            <div data-tour="nav" className="flex-1 flex justify-start gap-2">
               <Button 
                 onClick={() => navigate('/settings')}
                 variant="outline" 
@@ -187,7 +203,7 @@ export default function Index() {
                 <Icon name="User" size={16} />
               </Button>
             </div>
-            <div className="flex-1 flex justify-center">
+            <div data-tour="logo" className="flex-1 flex justify-center">
               <Logo />
             </div>
             <div className="flex-1 flex justify-end gap-2">
@@ -203,7 +219,7 @@ export default function Index() {
         
         <div className="flex flex-col items-center gap-0">
           {/* START SESSION chip + three icon buttons in one relative container */}
-          <div className="relative flex justify-center -mt-36 mb-0">
+          <div data-tour="start-session" className="relative flex justify-center -mt-36 mb-0">
             {/* Premium gold glow — dark mode only */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 w-[85%] h-[75%] rounded-full hidden dark:block bg-[radial-gradient(ellipse_at_center,rgba(218,165,32,0.18)_0%,rgba(218,165,32,0.08)_40%,transparent_70%)] blur-2xl pointer-events-none" />
             <NewSessionButton />
@@ -240,7 +256,7 @@ export default function Index() {
           </div>
 
           {/* Stats section appears after the button */}
-          <div className="w-full -mt-28">
+          <div data-tour="stats" className="w-full -mt-28">
             <StatsQuickView />
           </div>
           
@@ -342,9 +358,9 @@ export default function Index() {
       <PlayerCardModal open={playerCardOpen} onOpenChange={setPlayerCardOpen} />
       <ViewAllNotesModal open={notesModalOpen} onOpenChange={setNotesModalOpen} />
 
-      {/* First-time onboarding hint near Start Session chip */}
-      {splashRemoved && showOnboardingHint && (
-        <OnboardingHint onDismiss={handleOnboardingDismiss} />
+      {/* Multi-step onboarding spotlight tour */}
+      {splashRemoved && showOnboardingTour && (
+        <OnboardingTour steps={tourSteps} onClose={dismissOnboardingTour} />
       )}
 
       {/* Coach: Connected Players Modal */}
