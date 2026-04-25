@@ -81,6 +81,20 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
     };
   }, [measure]);
 
+  // Toggle a body-level class while the tour is highlighting the START SESSION chip,
+  // so the chip can pulse via CSS without coupling the button to tour state.
+  useEffect(() => {
+    const isStartSessionStep = step?.selector === '[data-tour="start-session"]';
+    if (isStartSessionStep) {
+      document.body.classList.add('onboarding-pulse-active');
+    } else {
+      document.body.classList.remove('onboarding-pulse-active');
+    }
+    return () => {
+      document.body.classList.remove('onboarding-pulse-active');
+    };
+  }, [step]);
+
   const handleNext = () => {
     if (isLast) {
       onClose();
