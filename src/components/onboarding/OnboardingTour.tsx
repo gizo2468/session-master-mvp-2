@@ -123,6 +123,17 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
       }
     : null;
 
+  // For specific steps, use a circular spotlight instead of rounded-rect.
+  const isCircleStep = step?.selector === '[data-tour="start-session"]';
+  const CIRCLE_PADDING = 8;
+  const circle = rect && isCircleStep
+    ? {
+        cx: rect.left + rect.width / 2,
+        cy: rect.top + rect.height / 2,
+        r: Math.max(rect.width, rect.height) / 2 + CIRCLE_PADDING,
+      }
+    : null;
+
   // Tooltip position: prefer below; fall back to above; if no rect, center
   let tooltipStyle: React.CSSProperties;
   if (!spotlight) {
