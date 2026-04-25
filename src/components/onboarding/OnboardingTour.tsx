@@ -172,7 +172,9 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
         <defs>
           <mask id="onboarding-spotlight-mask">
             <rect x="0" y="0" width="100%" height="100%" fill="white" />
-            {spotlight && (
+            {circle ? (
+              <circle cx={circle.cx} cy={circle.cy} r={circle.r} fill="black" />
+            ) : spotlight ? (
               <rect
                 x={spotlight.x}
                 y={spotlight.y}
@@ -182,7 +184,7 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
                 ry={RADIUS}
                 fill="black"
               />
-            )}
+            ) : null}
           </mask>
         </defs>
         <rect
@@ -197,7 +199,21 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
           }}
         />
         {/* Animated gold stroke around spotlight */}
-        {spotlight && (
+        {circle ? (
+          <circle
+            cx={circle.cx}
+            cy={circle.cy}
+            r={circle.r}
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="2"
+            opacity="0.85"
+            style={{
+              filter: 'drop-shadow(0 0 8px hsl(var(--primary) / 0.7))',
+              transition: 'all 300ms ease',
+            }}
+          />
+        ) : spotlight ? (
           <rect
             x={spotlight.x}
             y={spotlight.y}
@@ -214,7 +230,7 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
               transition: 'all 300ms ease',
             }}
           />
-        )}
+        ) : null}
       </svg>
 
       {/* Tooltip card */}
