@@ -83,6 +83,13 @@ export default function SessionForm() {
   const { defaultCurrency, getCurrencySymbol } = useDefaultCurrency();
   const { isPremium } = usePremiumAccess();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    shouldShow: showOnboardingTour,
+    currentStep: tourStep,
+    setStep: setTourStep,
+    dismiss: dismissOnboardingTour,
+  } = useOnboardingTour();
+  const isFormTourStep = TOUR_STEPS[tourStep]?.route === '/new-session';
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[2]);
   const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[2] * 2);
