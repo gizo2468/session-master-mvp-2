@@ -373,6 +373,7 @@ export default function SessionForm() {
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="off" className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 space-y-6">
+            <div data-tour="game-setup" className="space-y-6">
             <FormField
               control={form.control}
               name="gameType"
@@ -490,6 +491,7 @@ export default function SessionForm() {
                 </FormItem>
               )}
             />
+            </div>
 
             {format === 'Tournament' && (
               <Collapsible open={isTournamentTypeOpen} onOpenChange={setIsTournamentTypeOpen}>
@@ -559,7 +561,7 @@ export default function SessionForm() {
               )}
             />
             
-            
+            <div data-tour="stakes" className="space-y-6">
             <FormField
               control={form.control}
               name="buyIn"
@@ -658,6 +660,7 @@ export default function SessionForm() {
                 )}
               />
             )}
+            </div>
             
             {/* First Table / Session Name - moved before Advanced Options */}
             <FormField
@@ -779,6 +782,7 @@ export default function SessionForm() {
             
             <Button
               type="submit"
+              data-tour="submit-session"
               disabled={isSubmitting}
               className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md shadow-md dark:shadow-black/30 transition-all"
             >
