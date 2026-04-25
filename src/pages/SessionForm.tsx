@@ -858,6 +858,16 @@ export default function SessionForm() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Onboarding tour continuation on the New Session screen */}
+      {showOnboardingTour && isFormTourStep && (
+        <OnboardingTour
+          steps={TOUR_STEPS}
+          currentStep={tourStep}
+          onStepChange={setTourStep}
+          onClose={dismissOnboardingTour}
+        />
+      )}
     </div>
   );
 }
