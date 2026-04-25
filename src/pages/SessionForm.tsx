@@ -24,6 +24,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import OnboardingTour from '@/components/onboarding/OnboardingTour';
+import { TOUR_STEPS } from '@/components/onboarding/tourSteps';
+import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 const TOURNAMENT_TYPES = [
   'Freezeout',
@@ -80,6 +83,13 @@ export default function SessionForm() {
   const { defaultCurrency, getCurrencySymbol } = useDefaultCurrency();
   const { isPremium } = usePremiumAccess();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    shouldShow: showOnboardingTour,
+    currentStep: tourStep,
+    setStep: setTourStep,
+    dismiss: dismissOnboardingTour,
+  } = useOnboardingTour();
+  const isFormTourStep = TOUR_STEPS[tourStep]?.route === '/new-session';
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[2]);
   const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[2] * 2);
@@ -246,6 +256,11 @@ export default function SessionForm() {
         });
       }
 
+      // Finish the onboarding tour if it's still active.
+      if (showOnboardingTour) {
+        dismissOnboardingTour();
+      }
+
       // FIXED: Navigate to the live session page with the correct session ID
       console.log('🔄 Navigating to live session page:', `/session/${finalSessionId}`);
       navigate(`/session/${finalSessionId}`, { replace: true });
@@ -358,6 +373,7 @@ export default function SessionForm() {
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="off" className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 space-y-6">
+            <div data-tour="game-setup" className="space-y-6">
             <FormField
               control={form.control}
               name="gameType"
@@ -475,6 +491,7 @@ export default function SessionForm() {
                 </FormItem>
               )}
             />
+            </div>
 
             {format === 'Tournament' && (
               <Collapsible open={isTournamentTypeOpen} onOpenChange={setIsTournamentTypeOpen}>
@@ -544,7 +561,7 @@ export default function SessionForm() {
               )}
             />
             
-            
+            <div data-tour="stakes" className="space-y-6">
             <FormField
               control={form.control}
               name="buyIn"
@@ -643,6 +660,7 @@ export default function SessionForm() {
                 )}
               />
             )}
+            </div>
             
             {/* First Table / Session Name - moved before Advanced Options */}
             <FormField
@@ -764,6 +782,7 @@ export default function SessionForm() {
             
             <Button
               type="submit"
+              data-tour="submit-session"
               disabled={isSubmitting}
               className="w-full py-3 px-4 bg-poker-gold hover:bg-poker-darkGold text-white font-bold rounded-md shadow-md dark:shadow-black/30 transition-all"
             >
@@ -839,6 +858,16 @@ export default function SessionForm() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Onboarding tour continuation on the New Session screen */}
+      {showOnboardingTour && isFormTourStep && (
+        <OnboardingTour
+          steps={TOUR_STEPS}
+          currentStep={tourStep}
+          onStepChange={setTourStep}
+          onClose={dismissOnboardingTour}
+        />
+      )}
     </div>
   );
 }

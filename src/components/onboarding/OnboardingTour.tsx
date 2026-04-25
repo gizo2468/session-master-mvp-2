@@ -5,11 +5,19 @@ export interface TourStep {
   selector: string;
   title: string;
   body: string;
+  /** When true, the spotlight is click-through and underlying UI stays interactive. */
+  interactive?: boolean;
+  /** When true, render a circular spotlight instead of a rounded rectangle. */
+  circle?: boolean;
 }
 
 interface OnboardingTourProps {
   steps: TourStep[];
   onClose: () => void;
+  /** Optional controlled step index. If omitted, the component manages it internally. */
+  currentStep?: number;
+  /** Called whenever the active step changes (Next / Previous / programmatic advance). */
+  onStepChange?: (next: number) => void;
 }
 
 const PADDING = 10;
@@ -17,8 +25,25 @@ const RADIUS = 14;
 const TOOLTIP_GAP = 16;
 const TOOLTIP_WIDTH = 300;
 
-export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) {
-  const [currentStep, setCurrentStep] = useState(0);
+export default function OnboardingTour({
+  steps,
+  onClose,
+  currentStep: controlledStep,
+  onStepChange,
+}: OnboardingTourProps) {
+  const isControlled = typeof controlledStep === 'number';
+  const [internalStep, setInternalStep] = useState(0);
+  const currentStep = isControlled ? Math.max(0, Math.min(controlledStep!, steps.length - 1)) : internalStep;
+
+  const setStep = useCallback(
+    (next: number) => {
+      const clamped = Math.max(0, Math.min(next, steps.length - 1));
+      if (!isControlled) setInternalStep(clamped);
+      onStepChange?.(clamped);
+    },
+    [isControlled, onStepChange, steps.length]
+  );
+
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [viewport, setViewport] = useState({
     w: typeof window !== 'undefined' ? window.innerWidth : 0,
@@ -29,6 +54,7 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
 
   const step = steps[currentStep];
   const isLast = currentStep === steps.length - 1;
+  const isFirst = currentStep === 0;
 
   const measure = useCallback(() => {
     if (!step) return;
@@ -37,12 +63,10 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
       setRect(null);
       return;
     }
-    // Scroll into view first if off-screen
     const r = el.getBoundingClientRect();
     const vh = window.innerHeight;
     if (r.top < 60 || r.bottom > vh - 60) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // Re-measure after scroll settles
       window.setTimeout(() => {
         const r2 = el.getBoundingClientRect();
         setRect(r2);
@@ -52,19 +76,29 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
     setRect(r);
   }, [step]);
 
-  // Re-measure on step change with a tiny delay to allow paint
+  // Re-measure on step change with a tiny delay to allow paint, plus retries for elements
+  // that mount after navigation (e.g. SessionForm fields).
   useLayoutEffect(() => {
     setTooltipVisible(false);
     if (measureTimer.current) window.clearTimeout(measureTimer.current);
-    measureTimer.current = window.setTimeout(() => {
+
+    let attempts = 0;
+    const tryMeasure = () => {
+      const el = step ? (document.querySelector(step.selector) as HTMLElement | null) : null;
+      if (!el && attempts < 20) {
+        attempts++;
+        measureTimer.current = window.setTimeout(tryMeasure, 100);
+        return;
+      }
       measure();
-      // Trigger fade-in
       window.requestAnimationFrame(() => setTooltipVisible(true));
-    }, 50);
+    };
+    measureTimer.current = window.setTimeout(tryMeasure, 50);
+
     return () => {
       if (measureTimer.current) window.clearTimeout(measureTimer.current);
     };
-  }, [currentStep, measure]);
+  }, [currentStep, measure, step]);
 
   // Resize / scroll listeners
   useEffect(() => {
@@ -81,8 +115,7 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
     };
   }, [measure]);
 
-  // Toggle a body-level class while the tour is highlighting the START SESSION chip,
-  // so the chip can pulse via CSS without coupling the button to tour state.
+  // Toggle a body-level class while highlighting the START SESSION chip so it can pulse via CSS.
   useEffect(() => {
     const isStartSessionStep = step?.selector === '[data-tour="start-session"]';
     if (isStartSessionStep) {
@@ -95,36 +128,34 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
     };
   }, [step]);
 
-  // For the interactive START SESSION step, listen for a click on the chip itself
-  // and dismiss the tour. The chip's own onClick will still fire and navigate.
+  // For the START SESSION step, advance the tour (instead of closing) the moment the chip is clicked.
+  // The chip's own onClick still navigates to /new-session, where Step 3 picks up.
   useEffect(() => {
     if (step?.selector !== '[data-tour="start-session"]') return;
     const el = document.querySelector(step.selector) as HTMLElement | null;
     if (!el) return;
     const handler = () => {
-      onClose();
+      setStep(currentStep + 1);
     };
     el.addEventListener('click', handler, { once: true });
     return () => {
       el.removeEventListener('click', handler);
     };
-  }, [step, onClose, rect]);
+  }, [step, currentStep, setStep, rect]);
 
   const handleNext = () => {
     if (isLast) {
       onClose();
     } else {
-      setCurrentStep((s) => s + 1);
+      setStep(currentStep + 1);
     }
   };
 
   const handlePrev = () => {
-    if (currentStep > 0) setCurrentStep((s) => s - 1);
+    if (currentStep > 0) setStep(currentStep - 1);
   };
 
   const handleSkip = () => onClose();
-
-  const isFirst = currentStep === 0;
 
   if (!step) return null;
 
@@ -138,8 +169,7 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
       }
     : null;
 
-  // For specific steps, use a circular spotlight instead of rounded-rect.
-  const isCircleStep = step?.selector === '[data-tour="start-session"]';
+  const isCircleStep = !!step.circle;
   const CIRCLE_PADDING = 8;
   const circle = rect && isCircleStep
     ? {
@@ -168,13 +198,12 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
     tooltipStyle = { top, left, width: TOOLTIP_WIDTH };
   }
 
-  // For the interactive START SESSION step we want clicks inside the circle
-  // to fall through to the chip. We achieve this by making the root container
-  // pointer-events-none and rendering 4 "dim band" divs around the circle that
-  // capture pointer events. For all other steps we keep a single full-screen
-  // capture layer that blocks underlying interaction.
-  const interactive = !!circle;
-  const bands = interactive && circle
+  // Interactive steps render dim "bands" around the spotlight (instead of a full SVG mask),
+  // so the hole over the highlighted element lets clicks pass through to the underlying UI.
+  const interactive = !!step.interactive && !!rect;
+
+  // Bands for circular spotlight
+  const circleBands = interactive && circle
     ? {
         top: { left: 0, top: 0, width: viewport.w, height: Math.max(0, circle.cy - circle.r) },
         bottom: {
@@ -198,6 +227,33 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
       }
     : null;
 
+  // Bands for rectangular spotlight (interactive non-circle steps)
+  const rectBands = interactive && !circle && spotlight
+    ? {
+        top: { left: 0, top: 0, width: viewport.w, height: Math.max(0, spotlight.y) },
+        bottom: {
+          left: 0,
+          top: spotlight.y + spotlight.h,
+          width: viewport.w,
+          height: Math.max(0, viewport.h - (spotlight.y + spotlight.h)),
+        },
+        left: {
+          left: 0,
+          top: spotlight.y,
+          width: Math.max(0, spotlight.x),
+          height: spotlight.h,
+        },
+        right: {
+          left: spotlight.x + spotlight.w,
+          top: spotlight.y,
+          width: Math.max(0, viewport.w - (spotlight.x + spotlight.w)),
+          height: spotlight.h,
+        },
+      }
+    : null;
+
+  const bands = circleBands || rectBands;
+
   return (
     <div
       className="fixed inset-0 z-[100] pointer-events-none"
@@ -214,7 +270,7 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
         />
       )}
 
-      {/* Dim bands for the interactive circular spotlight step.
+      {/* Dim bands for the interactive spotlight (circle or rect).
           The hole in the middle has no element so clicks pass through. */}
       {interactive && bands && (
         <>
@@ -241,7 +297,7 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
         </>
       )}
 
-      {/* SVG visual layer: spotlight cutout (non-interactive) + gold stroke */}
+      {/* SVG visual layer: spotlight cutout (non-interactive only) + gold stroke */}
       <svg
         className="absolute inset-0 w-full h-full"
         width={viewport.w}
