@@ -89,7 +89,13 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
     }
   };
 
+  const handlePrev = () => {
+    if (currentStep > 0) setCurrentStep((s) => s - 1);
+  };
+
   const handleSkip = () => onClose();
+
+  const isFirst = currentStep === 0;
 
   if (!step) return null;
 
