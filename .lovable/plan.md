@@ -1,46 +1,76 @@
 ## Goal
 
-Make the Step 2 (Start a Session) spotlight interactive: the user can click the green START SESSION chip directly through the dimmed overlay. Clicking it triggers the chip's normal navigation AND closes the onboarding tour at the same time.
+After the user clicks the "START SESSION" chip on the Home screen (Step 2), the tour should persist and continue on the `/new-session` screen with 3 additional spotlight steps, all of which leave the underlying form fully interactive.
 
-## Changes
+## Approach
 
-### 1. `src/components/onboarding/OnboardingTour.tsx`
+### 1. Persist tour progress across navigation
 
-**a. Allow pointer events to pass through the spotlight cutout (Step 2 only).**
+Update `src/hooks/useOnboardingTour.ts` to track the **current step index** in `localStorage`, not just a "seen" boolean. This lets the tour resume on the next route after navigation.
 
-Currently the root overlay container uses `pointer-events-auto` and the SVG backdrop has `pointerEvents: 'auto'`, which blocks every click — including the cutout area.
+- New keys:
+  - `onboarding_tour_step` — current step index (number). Absent = not started OR finished.
+  - `onboarding_tour_completed` — `'true'` once tour ends/skipped (replaces the existing `onboarding_start_session_seen`).
+- New API exposed by the hook:
+  - `currentStep: number` — read from storage, kept in React state.
+  - `setStep(n: number)` — persists to storage and updates state.
+  - `dismiss()` — marks completed and stops showing.
+  - `shouldShow: boolean` — `true` when not completed.
+- Cross-tab/route sync: listen to a `storage` event and a custom `onboarding-tour:step-changed` window event so both pages stay in sync.
 
-For the interactive step (`[data-tour="start-session"]`):
-- Set the root container to `pointer-events-none` so the page underneath receives clicks by default.
-- Keep the SVG dark backdrop `pointer-events: auto` over the dimmed area, but render the circular cutout as a separate transparent `<circle>` (or sized div) with `pointer-events: none` on top, so clicks within the circle fall through to the chip.
-- Re-enable `pointer-events: auto` on the tooltip card so its buttons (Skip / Previous / Next) still work.
+### 2. Make `OnboardingTour` a controlled component
 
-The simplest robust approach: instead of one full-screen rect, render the dim as four rectangles surrounding the spotlight circle (top / bottom / left / right bands), each with `pointer-events: auto`. The hole in the middle naturally has no element, so clicks pass through to the chip. Keep the gold stroke `<circle>` with `pointer-events: none`.
+Currently `OnboardingTour` owns `currentStep` internally. Refactor it to accept `currentStep` and `onStepChange` props (with sensible defaults to remain backward compatible). Home and `SessionForm` will both render the tour but pass `currentStep` from the shared hook so progress carries across pages.
 
-**b. Detect click on the highlighted element and dismiss the tour.**
+### 3. Trigger navigation + step advance from Home Step 2
 
-Add a `useEffect` (active only on the `[data-tour="start-session"]` step) that:
-- Queries the highlighted element (`document.querySelector(step.selector)`).
-- Attaches a one-shot `click` listener that calls `onClose()` (the chip's own `onClick` will navigate as normal — we do not preventDefault).
-- Cleans up on step change / unmount.
+The existing one-shot click handler on `[data-tour="start-session"]` currently calls `onClose()`. Change it to:
+- Advance the tour to step 2 (the first SessionForm step) instead of closing.
+- The chip's own `onClick` still navigates to `/new-session`.
 
-This ensures the tour closes the moment the chip is tapped, while the chip's existing `NewSessionButton` navigation runs naturally.
+### 4. Render the tour on `SessionForm`
 
-### 2. `src/pages/Index.tsx`
+In `src/pages/SessionForm.tsx`:
+- Import the hook and `OnboardingTour`.
+- Add `data-tour` attributes to the relevant form elements:
+  - `data-tour="game-setup"` — wrapper `<div>` containing both the Game Type and Format `FormField`s.
+  - `data-tour="stakes"` — wrapper `<div>` containing Buy-in Amount + the Cash-mode Blinds block (or, for tournaments, Buy-in + Starting BB).
+  - `data-tour="submit-session"` — the bottom "Start Session" submit `<Button>`.
+- Render `<OnboardingTour />` with the full 5-step list, controlled by the hook, only when `shouldShow` is true and `currentStep >= 2`.
 
-Update Step 2 tooltip text in `tourSteps`:
+### 5. Define the full 5-step tour
 
-```ts
-{
-  selector: '[data-tour="start-session"]',
-  title: 'Start a Session',
-  body: 'Click the chip to start your first session and see the app in action!',
-},
-```
+The step array lives in a new shared file `src/components/onboarding/tourSteps.ts` so both pages reference the same list:
 
-## Technical notes
+1. Logo — *Welcome to Session Master* (Home)
+2. Start Session chip — *Start a Session* (Home, interactive circle)
+3. Game Type + Format — *Define Your Game* (SessionForm, interactive rect)
+4. Buy-in + Blinds — *Set the Stakes* (SessionForm, interactive rect)
+5. Start Session button — *You're All Set!* (SessionForm, interactive rect)
 
-- For non-interactive steps (1, 3, 4) behavior is unchanged — full-screen dim with no clickthrough.
-- The four-band dim approach avoids SVG mask pointer-event quirks (a masked SVG element still captures pointer events over the cutout in most browsers).
-- The tooltip card already uses absolute positioning with its own `pointerEvents: 'auto'`, so making the root `pointer-events-none` on the interactive step does not break the Skip/Previous/Next buttons.
-- No changes to `useOnboardingTour` — `dismiss()` already persists the seen flag, so tapping the chip permanently completes the tour.
+### 6. Make non-circle spotlight steps interactive too
+
+Currently only the circular (Step 2) spotlight is click-through; the rectangular SVG mask blocks pointer events for all other steps. Extend the "interactive" mode to rectangular spotlights for steps 3, 4, and 5:
+
+- Add an optional `interactive: true` flag per step (or infer it for these specific selectors).
+- When `interactive` is true and `spotlight` (rect) exists, render 4 dim-band divs around the rectangle (analogous to the existing circle bands) instead of the full SVG mask. The hole over the rect lets clicks reach inputs/buttons underneath.
+- The gold stroke outline (already drawn for both circle and rect) is unchanged.
+- The tooltip footer (Skip / Previous / Next) remains `pointer-events: auto`, so the user controls progression. Step 5 still requires the user to click "Done" or submit the form.
+
+### 7. Auto-finish on real submit (Step 5)
+
+When the user actually submits the form on Step 5 (regardless of whether they clicked "Done"), call `dismiss()` so the tour doesn't reappear. Hook this into the existing `onSubmit` success path in `SessionForm.tsx`.
+
+## Files Affected
+
+- `src/hooks/useOnboardingTour.ts` — track current step, expose `currentStep` / `setStep`.
+- `src/components/onboarding/OnboardingTour.tsx` — accept controlled `currentStep` / `onStepChange`; support interactive rectangular spotlights; advance (instead of close) on the START SESSION chip click.
+- `src/components/onboarding/tourSteps.ts` — new shared 5-step definition.
+- `src/pages/Index.tsx` — use shared steps; controlled tour.
+- `src/pages/SessionForm.tsx` — add `data-tour` attributes; render the tour; dismiss on successful submit.
+
+## Notes
+
+- Storage migration: if the legacy key `onboarding_start_session_seen` is set to `'true'`, treat the tour as completed (set `onboarding_tour_completed`) so existing users aren't shown the tour again.
+- The "Reset onboarding" trigger (`triggerOnboardingReset`) will clear both new keys and start at step 0.
+- Tooltip positioning logic already adapts to viewport and scrolls the target into view, so the existing measurement code handles the form fields without changes.
