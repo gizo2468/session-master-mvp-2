@@ -256,7 +256,7 @@ export default function Index() {
           </div>
 
           {/* Stats section appears after the button */}
-          <div className="w-full -mt-28">
+          <div data-tour="stats" className="w-full -mt-28">
             <StatsQuickView />
           </div>
           
@@ -358,9 +358,9 @@ export default function Index() {
       <PlayerCardModal open={playerCardOpen} onOpenChange={setPlayerCardOpen} />
       <ViewAllNotesModal open={notesModalOpen} onOpenChange={setNotesModalOpen} />
 
-      {/* First-time onboarding hint near Start Session chip */}
-      {splashRemoved && showOnboardingHint && (
-        <OnboardingHint onDismiss={handleOnboardingDismiss} />
+      {/* Multi-step onboarding spotlight tour */}
+      {splashRemoved && showOnboardingTour && (
+        <OnboardingTour steps={tourSteps} onClose={dismissOnboardingTour} />
       )}
 
       {/* Coach: Connected Players Modal */}
