@@ -24,6 +24,7 @@ import chipMyNotes from '@/assets/chip-my-notes.png';
 import chipCoach from '@/assets/chip-coach.png';
 import ViewAllNotesModal from '@/components/notes/ViewAllNotesModal';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
+import { TOUR_STEPS } from '@/components/onboarding/tourSteps';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -65,34 +66,17 @@ export default function Index() {
   const [splashVisible, setSplashVisible] = useState(true);
   const [splashRemoved, setSplashRemoved] = useState(false);
 
-  // Onboarding tour — multi-step spotlight, shown to first-time users or after reset
-  const { shouldShow: showOnboardingTour, dismiss: dismissOnboardingTour } = useOnboardingTour();
+  // Onboarding tour — multi-step spotlight, shown to first-time users or after reset.
+  // Tour state is persisted across pages via localStorage.
+  const {
+    shouldShow: showOnboardingTour,
+    currentStep: tourStep,
+    setStep: setTourStep,
+    dismiss: dismissOnboardingTour,
+  } = useOnboardingTour();
 
-  const tourSteps = React.useMemo(
-    () => [
-      {
-        selector: '[data-tour="logo"]',
-        title: 'Welcome to Session Master',
-        body: "We're glad to have you here! Before you jump into the action, let's take a quick 30-second tour to show you where everything is and how to track your first winning session.",
-      },
-      {
-        selector: '[data-tour="start-session"]',
-        title: 'Start a Session',
-        body: 'Click the chip to start your first session and see the app in action!',
-      },
-      {
-        selector: '[data-tour="stats"]',
-        title: 'Your Session Stats',
-        body: 'Track your sessions, record, and win rate at a glance.',
-      },
-      {
-        selector: '[data-tour="nav"]',
-        title: 'Settings & Profile',
-        body: 'Open Settings or your Profile any time from here.',
-      },
-    ],
-    []
-  );
+  // Only render the tour on Home for the steps anchored to this route.
+  const isHomeTourStep = TOUR_STEPS[tourStep]?.route === '/';
 
   useEffect(() => {
     if (allDataReady && splashVisible) {
@@ -359,8 +343,13 @@ export default function Index() {
       <ViewAllNotesModal open={notesModalOpen} onOpenChange={setNotesModalOpen} />
 
       {/* Multi-step onboarding spotlight tour */}
-      {splashRemoved && showOnboardingTour && (
-        <OnboardingTour steps={tourSteps} onClose={dismissOnboardingTour} />
+      {splashRemoved && showOnboardingTour && isHomeTourStep && (
+        <OnboardingTour
+          steps={TOUR_STEPS}
+          currentStep={tourStep}
+          onStepChange={setTourStep}
+          onClose={dismissOnboardingTour}
+        />
       )}
 
       {/* Coach: Connected Players Modal */}
