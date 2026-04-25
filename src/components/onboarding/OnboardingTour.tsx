@@ -168,51 +168,116 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
     tooltipStyle = { top, left, width: TOOLTIP_WIDTH };
   }
 
+  // For the interactive START SESSION step we want clicks inside the circle
+  // to fall through to the chip. We achieve this by making the root container
+  // pointer-events-none and rendering 4 "dim band" divs around the circle that
+  // capture pointer events. For all other steps we keep a single full-screen
+  // capture layer that blocks underlying interaction.
+  const interactive = !!circle;
+  const bands = interactive && circle
+    ? {
+        top: { left: 0, top: 0, width: viewport.w, height: Math.max(0, circle.cy - circle.r) },
+        bottom: {
+          left: 0,
+          top: circle.cy + circle.r,
+          width: viewport.w,
+          height: Math.max(0, viewport.h - (circle.cy + circle.r)),
+        },
+        left: {
+          left: 0,
+          top: Math.max(0, circle.cy - circle.r),
+          width: Math.max(0, circle.cx - circle.r),
+          height: Math.min(viewport.h, circle.r * 2),
+        },
+        right: {
+          left: circle.cx + circle.r,
+          top: Math.max(0, circle.cy - circle.r),
+          width: Math.max(0, viewport.w - (circle.cx + circle.r)),
+          height: Math.min(viewport.h, circle.r * 2),
+        },
+      }
+    : null;
+
   return (
     <div
-      className="fixed inset-0 z-[100] pointer-events-auto"
+      className="fixed inset-0 z-[100] pointer-events-none"
       role="dialog"
       aria-modal="true"
       aria-label="Onboarding tour"
-      // Block pointer events from reaching elements below; tooltip buttons re-enable themselves.
-      onClick={(e) => e.stopPropagation()}
     >
-      {/* SVG dark backdrop with spotlight cutout */}
+      {/* Full-screen click blocker for non-interactive steps */}
+      {!interactive && (
+        <div
+          className="absolute inset-0"
+          style={{ pointerEvents: 'auto' }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      )}
+
+      {/* Dim bands for the interactive circular spotlight step.
+          The hole in the middle has no element so clicks pass through. */}
+      {interactive && bands && (
+        <>
+          {(['top', 'bottom', 'left', 'right'] as const).map((k) => {
+            const b = bands[k];
+            if (b.width <= 0 || b.height <= 0) return null;
+            return (
+              <div
+                key={k}
+                className="absolute"
+                style={{
+                  left: b.left,
+                  top: b.top,
+                  width: b.width,
+                  height: b.height,
+                  background: 'rgba(0,0,0,0.72)',
+                  pointerEvents: 'auto',
+                  transition: 'all 300ms ease',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            );
+          })}
+        </>
+      )}
+
+      {/* SVG visual layer: spotlight cutout (non-interactive) + gold stroke */}
       <svg
         className="absolute inset-0 w-full h-full"
         width={viewport.w}
         height={viewport.h}
-        style={{ pointerEvents: 'auto' }}
+        style={{ pointerEvents: 'none' }}
       >
-        <defs>
-          <mask id="onboarding-spotlight-mask">
-            <rect x="0" y="0" width="100%" height="100%" fill="white" />
-            {circle ? (
-              <circle cx={circle.cx} cy={circle.cy} r={circle.r} fill="black" />
-            ) : spotlight ? (
-              <rect
-                x={spotlight.x}
-                y={spotlight.y}
-                width={spotlight.w}
-                height={spotlight.h}
-                rx={RADIUS}
-                ry={RADIUS}
-                fill="black"
-              />
-            ) : null}
-          </mask>
-        </defs>
-        <rect
-          x="0"
-          y="0"
-          width="100%"
-          height="100%"
-          fill="rgba(0,0,0,0.72)"
-          mask="url(#onboarding-spotlight-mask)"
-          style={{
-            transition: 'all 300ms ease',
-          }}
-        />
+        {!interactive && (
+          <>
+            <defs>
+              <mask id="onboarding-spotlight-mask">
+                <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                {spotlight ? (
+                  <rect
+                    x={spotlight.x}
+                    y={spotlight.y}
+                    width={spotlight.w}
+                    height={spotlight.h}
+                    rx={RADIUS}
+                    ry={RADIUS}
+                    fill="black"
+                  />
+                ) : null}
+              </mask>
+            </defs>
+            <rect
+              x="0"
+              y="0"
+              width="100%"
+              height="100%"
+              fill="rgba(0,0,0,0.72)"
+              mask="url(#onboarding-spotlight-mask)"
+              style={{ transition: 'all 300ms ease' }}
+            />
+          </>
+        )}
+
         {/* Animated gold stroke around spotlight */}
         {circle ? (
           <circle
