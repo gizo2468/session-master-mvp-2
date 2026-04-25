@@ -73,7 +73,7 @@ export default function Index() {
       {
         selector: '[data-tour="logo"]',
         title: 'Welcome to Session Master',
-        body: 'Your poker tracking HQ — let\'s take a quick tour.',
+        body: "We're glad to have you here! Before you jump into the action, let's take a quick 30-second tour to show you where everything is and how to track your first winning session.",
       },
       {
         selector: '[data-tour="start-session"]',
