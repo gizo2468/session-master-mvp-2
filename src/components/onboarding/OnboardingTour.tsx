@@ -192,15 +192,6 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
         )}
       </svg>
 
-      {/* Skip button - top right */}
-      <button
-        onClick={handleSkip}
-        className="absolute top-4 right-4 z-10 text-xs font-medium text-white/80 hover:text-white px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/10"
-        style={{ pointerEvents: 'auto' }}
-      >
-        Skip
-      </button>
-
       {/* Tooltip card */}
       <div
         className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4 transition-all duration-300 ease-out"
@@ -232,6 +223,11 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
             <Button variant="ghost" size="sm" onClick={handleSkip}>
               Skip
             </Button>
+            {!isFirst && (
+              <Button variant="outline" size="sm" onClick={handlePrev}>
+                Previous
+              </Button>
+            )}
             <Button size="sm" onClick={handleNext}>
               {isLast ? 'Done' : 'Next'}
             </Button>
