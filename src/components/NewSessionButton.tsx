@@ -29,8 +29,9 @@ export default function NewSessionButton() {
       </div>
       {/* Hit area - circular, sized to match the visible chip only */}
       <button
+        data-tour="start-session"
         onClick={handleClick}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[55%] aspect-square rounded-full bg-transparent cursor-pointer transition-transform hover:scale-105 focus:outline-none focus-visible:outline-none"
+        className="tour-pulse-target absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[55%] aspect-square rounded-full bg-transparent cursor-pointer transition-transform hover:scale-105 focus:outline-none focus-visible:outline-none"
         style={{ WebkitTapHighlightColor: 'transparent' }}
         aria-label="New session"
       />

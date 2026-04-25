@@ -70,6 +70,24 @@ textarea:-webkit-autofill:active {
 
 }
 
+/* Onboarding tour: pulsing tap-ripple on the START SESSION chip during step 2.
+   Preserves the existing -translate(-50%,-50%) centering on the hit-area button. */
+@keyframes tour-press-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.55);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.06);
+    box-shadow: 0 0 0 16px hsl(var(--primary) / 0);
+  }
+}
+
+body.onboarding-pulse-active .tour-pulse-target {
+  animation: tour-press-pulse 1.4s ease-in-out infinite;
+  border-radius: 9999px;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
