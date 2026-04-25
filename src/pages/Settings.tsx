@@ -604,9 +604,10 @@ const Settings: React.FC = () => {
                     size="sm"
                     onClick={() => {
                       localStorage.removeItem('onboarding_start_session_seen');
+                      window.dispatchEvent(new Event('onboarding-tour:reset'));
                       toast({
                         title: 'Onboarding reset',
-                        description: 'The hint will appear next time you visit Home.',
+                        description: 'The guided tour will replay next time you visit Home.',
                       });
                     }}
                   >
