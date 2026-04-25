@@ -1,76 +1,42 @@
-## Goal
+## Problem
 
-After the user clicks the "START SESSION" chip on the Home screen (Step 2), the tour should persist and continue on the `/new-session` screen with 3 additional spotlight steps, all of which leave the underlying form fully interactive.
+The "Reset Onboarding" button in Settings does not work because it only clears a legacy localStorage key (`onboarding_start_session_seen`) that the new multi-step tour no longer uses.
 
-## Approach
+The current onboarding tour reads from two new keys:
+- `onboarding_tour_completed`
+- `onboarding_tour_step`
 
-### 1. Persist tour progress across navigation
+Since neither is cleared on Reset, the tour stays "completed" and never replays.
 
-Update `src/hooks/useOnboardingTour.ts` to track the **current step index** in `localStorage`, not just a "seen" boolean. This lets the tour resume on the next route after navigation.
+A correct helper already exists in `src/hooks/useOnboardingTour.ts`:
 
-- New keys:
-  - `onboarding_tour_step` — current step index (number). Absent = not started OR finished.
-  - `onboarding_tour_completed` — `'true'` once tour ends/skipped (replaces the existing `onboarding_start_session_seen`).
-- New API exposed by the hook:
-  - `currentStep: number` — read from storage, kept in React state.
-  - `setStep(n: number)` — persists to storage and updates state.
-  - `dismiss()` — marks completed and stops showing.
-  - `shouldShow: boolean` — `true` when not completed.
-- Cross-tab/route sync: listen to a `storage` event and a custom `onboarding-tour:step-changed` window event so both pages stay in sync.
+```ts
+export function triggerOnboardingReset() {
+  localStorage.removeItem('onboarding_tour_completed');
+  localStorage.removeItem('onboarding_start_session_seen');
+  localStorage.setItem('onboarding_tour_step', '0');
+  window.dispatchEvent(new Event('onboarding-tour:reset'));
+}
+```
 
-### 2. Make `OnboardingTour` a controlled component
+Both Reset buttons should use this helper instead of inlining (incorrect) logic.
 
-Currently `OnboardingTour` owns `currentStep` internally. Refactor it to accept `currentStep` and `onStepChange` props (with sensible defaults to remain backward compatible). Home and `SessionForm` will both render the tour but pass `currentStep` from the shared hook so progress carries across pages.
+## Changes
 
-### 3. Trigger navigation + step advance from Home Step 2
+### 1. `src/pages/Settings.tsx`
+Replace the inline `onClick` handler of the Reset Onboarding button to call `triggerOnboardingReset()` from `@/hooks/useOnboardingTour`. Keep the toast feedback.
 
-The existing one-shot click handler on `[data-tour="start-session"]` currently calls `onClose()`. Change it to:
-- Advance the tour to step 2 (the first SessionForm step) instead of closing.
-- The chip's own `onClick` still navigates to `/new-session`.
+### 2. `src/components/settings/AppSettings.tsx`
+Same fix: import `triggerOnboardingReset` and call it from the button's `onClick`. Keep the toast feedback.
 
-### 4. Render the tour on `SessionForm`
+### 3. (Optional safety) Confirm `useOnboardingTour` listener
+The hook already listens for the `onboarding-tour:reset` event and resets state to `{ completed: false, step: 0 }`, then dispatches `onboarding-tour:step-changed`. No changes needed there — this confirms that pressing Reset will cause the tour to immediately re-render on the Home page (or next time the user navigates to it).
 
-In `src/pages/SessionForm.tsx`:
-- Import the hook and `OnboardingTour`.
-- Add `data-tour` attributes to the relevant form elements:
-  - `data-tour="game-setup"` — wrapper `<div>` containing both the Game Type and Format `FormField`s.
-  - `data-tour="stakes"` — wrapper `<div>` containing Buy-in Amount + the Cash-mode Blinds block (or, for tournaments, Buy-in + Starting BB).
-  - `data-tour="submit-session"` — the bottom "Start Session" submit `<Button>`.
-- Render `<OnboardingTour />` with the full 5-step list, controlled by the hook, only when `shouldShow` is true and `currentStep >= 2`.
+## Result
 
-### 5. Define the full 5-step tour
-
-The step array lives in a new shared file `src/components/onboarding/tourSteps.ts` so both pages reference the same list:
-
-1. Logo — *Welcome to Session Master* (Home)
-2. Start Session chip — *Start a Session* (Home, interactive circle)
-3. Game Type + Format — *Define Your Game* (SessionForm, interactive rect)
-4. Buy-in + Blinds — *Set the Stakes* (SessionForm, interactive rect)
-5. Start Session button — *You're All Set!* (SessionForm, interactive rect)
-
-### 6. Make non-circle spotlight steps interactive too
-
-Currently only the circular (Step 2) spotlight is click-through; the rectangular SVG mask blocks pointer events for all other steps. Extend the "interactive" mode to rectangular spotlights for steps 3, 4, and 5:
-
-- Add an optional `interactive: true` flag per step (or infer it for these specific selectors).
-- When `interactive` is true and `spotlight` (rect) exists, render 4 dim-band divs around the rectangle (analogous to the existing circle bands) instead of the full SVG mask. The hole over the rect lets clicks reach inputs/buttons underneath.
-- The gold stroke outline (already drawn for both circle and rect) is unchanged.
-- The tooltip footer (Skip / Previous / Next) remains `pointer-events: auto`, so the user controls progression. Step 5 still requires the user to click "Done" or submit the form.
-
-### 7. Auto-finish on real submit (Step 5)
-
-When the user actually submits the form on Step 5 (regardless of whether they clicked "Done"), call `dismiss()` so the tour doesn't reappear. Hook this into the existing `onSubmit` success path in `SessionForm.tsx`.
-
-## Files Affected
-
-- `src/hooks/useOnboardingTour.ts` — track current step, expose `currentStep` / `setStep`.
-- `src/components/onboarding/OnboardingTour.tsx` — accept controlled `currentStep` / `onStepChange`; support interactive rectangular spotlights; advance (instead of close) on the START SESSION chip click.
-- `src/components/onboarding/tourSteps.ts` — new shared 5-step definition.
-- `src/pages/Index.tsx` — use shared steps; controlled tour.
-- `src/pages/SessionForm.tsx` — add `data-tour` attributes; render the tour; dismiss on successful submit.
-
-## Notes
-
-- Storage migration: if the legacy key `onboarding_start_session_seen` is set to `'true'`, treat the tour as completed (set `onboarding_tour_completed`) so existing users aren't shown the tour again.
-- The "Reset onboarding" trigger (`triggerOnboardingReset`) will clear both new keys and start at step 0.
-- Tooltip positioning logic already adapts to viewport and scrolls the target into view, so the existing measurement code handles the form fields without changes.
+Pressing "Reset" will:
+1. Clear `onboarding_tour_completed` and reset `onboarding_tour_step` to `0`.
+2. Also clear the legacy key for safety.
+3. Fire `onboarding-tour:reset`, causing the `useOnboardingTour` hook to update state across the app immediately.
+4. Show the toast confirmation.
+5. The full guided tour (Welcome → Start a Session → Game Setup → Stakes → Final Action) replays the next time the user is on Home.

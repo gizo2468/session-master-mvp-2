@@ -9,6 +9,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { RotateCcw } from 'lucide-react';
+import { triggerOnboardingReset } from '@/hooks/useOnboardingTour';
 
 const AppSettings = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -66,10 +67,10 @@ const AppSettings = () => {
               variant="outline"
               size="sm"
               onClick={() => {
-                localStorage.removeItem('onboarding_start_session_seen');
+                triggerOnboardingReset();
                 toast({
                   title: 'Onboarding reset',
-                  description: 'The hint will appear next time you visit Home.',
+                  description: 'The guided tour will replay next time you visit Home.',
                 });
               }}
             >
