@@ -95,6 +95,21 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
     };
   }, [step]);
 
+  // For the interactive START SESSION step, listen for a click on the chip itself
+  // and dismiss the tour. The chip's own onClick will still fire and navigate.
+  useEffect(() => {
+    if (step?.selector !== '[data-tour="start-session"]') return;
+    const el = document.querySelector(step.selector) as HTMLElement | null;
+    if (!el) return;
+    const handler = () => {
+      onClose();
+    };
+    el.addEventListener('click', handler, { once: true });
+    return () => {
+      el.removeEventListener('click', handler);
+    };
+  }, [step, onClose, rect]);
+
   const handleNext = () => {
     if (isLast) {
       onClose();
