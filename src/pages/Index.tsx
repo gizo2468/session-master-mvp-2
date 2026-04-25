@@ -78,7 +78,7 @@ export default function Index() {
       {
         selector: '[data-tour="start-session"]',
         title: 'Start a Session',
-        body: 'Tap here to begin tracking a new poker session.',
+        body: 'Click the chip to start your first session and see the app in action!',
       },
       {
         selector: '[data-tour="stats"]',
