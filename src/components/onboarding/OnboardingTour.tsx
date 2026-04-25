@@ -242,10 +242,25 @@ export default function OnboardingTour({ steps, onClose }: OnboardingTourProps) 
           opacity: tooltipVisible ? 1 : 0,
           transform: tooltipVisible ? 'translateY(0)' : 'translateY(8px)',
           boxShadow: '0 20px 40px -10px rgba(0,0,0,0.6), 0 0 0 1px hsl(var(--primary) / 0.2)',
+          fontFamily: "'Poppins', system-ui, sans-serif",
         }}
       >
-        <h3 className="text-base font-bold text-primary mb-1.5">{step.title}</h3>
-        <p className="text-sm text-foreground/90 leading-relaxed mb-4">{step.body}</p>
+        <h3 className="text-base font-bold text-primary mb-1.5 text-center">{step.title}</h3>
+        <p className="text-sm text-foreground/80 leading-relaxed mb-4 text-center">
+          {(() => {
+            const idx = step.body.indexOf('! ');
+            if (idx === -1) return step.body;
+            const first = step.body.slice(0, idx + 1);
+            const rest = step.body.slice(idx + 2);
+            return (
+              <>
+                {first}
+                <br />
+                {rest}
+              </>
+            );
+          })()}
+        </p>
 
         <div className="flex items-center justify-between gap-2">
           {/* Step indicator dots */}
