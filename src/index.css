@@ -88,6 +88,22 @@ body.onboarding-pulse-active .tour-pulse-target {
   border-radius: 9999px;
 }
 
+/* Tap-hand overlay for Step 2 — sits on top of the chip and mimics a finger press. */
+@keyframes tour-tap-press {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1) translateY(0);
+    opacity: 0.95;
+  }
+  45%, 60% {
+    transform: translate(-50%, -50%) scale(0.82) translateY(3px);
+    opacity: 1;
+  }
+}
+.tour-tap-hand {
+  animation: tour-tap-press 1.4s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
