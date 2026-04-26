@@ -411,9 +411,11 @@ export default function OnboardingTour({
                   Previous
                 </Button>
               )}
-              <Button size="sm" onClick={handleNext}>
-                {isLast ? 'Done' : 'Next'}
-              </Button>
+              {!isStartSessionStep && (
+                <Button size="sm" onClick={handleNext}>
+                  {isLast ? 'Done' : 'Next'}
+                </Button>
+              )}
             </div>
           </div>
 
