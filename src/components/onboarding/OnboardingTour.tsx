@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
+import { Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export interface TourStep {
@@ -55,6 +56,7 @@ export default function OnboardingTour({
   const step = steps[currentStep];
   const isLast = currentStep === steps.length - 1;
   const isFirst = currentStep === 0;
+  const isStartSessionStep = step?.selector === '[data-tour="start-session"]';
 
   const measure = useCallback(() => {
     if (!step) return;
@@ -117,7 +119,6 @@ export default function OnboardingTour({
 
   // Toggle a body-level class while highlighting the START SESSION chip so it can pulse via CSS.
   useEffect(() => {
-    const isStartSessionStep = step?.selector === '[data-tour="start-session"]';
     if (isStartSessionStep) {
       document.body.classList.add('onboarding-pulse-active');
     } else {
@@ -126,7 +127,7 @@ export default function OnboardingTour({
     return () => {
       document.body.classList.remove('onboarding-pulse-active');
     };
-  }, [step]);
+  }, [isStartSessionStep]);
 
   // For the START SESSION step, advance the tour (instead of closing) the moment the chip is clicked.
   // The chip's own onClick still navigates to /new-session, where Step 3 picks up.
@@ -369,6 +370,21 @@ export default function OnboardingTour({
         ) : null}
       </svg>
 
+      {/* Pulsing tap-hand overlay centered on the START SESSION chip (Step 2 only) */}
+      {isStartSessionStep && rect && (
+        <div
+          className="absolute pointer-events-none tour-tap-hand"
+          style={{
+            left: rect.left + rect.width / 2,
+            top: rect.top + rect.height / 2,
+            zIndex: 2,
+          }}
+          aria-hidden="true"
+        >
+          <Hand className="w-12 h-12 text-primary drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
+        </div>
+      )}
+
       {/* Tooltip card */}
       <div
         className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4 transition-all duration-300 ease-out"
@@ -410,9 +426,11 @@ export default function OnboardingTour({
                   Previous
                 </Button>
               )}
-              <Button size="sm" onClick={handleNext}>
-                {isLast ? 'Done' : 'Next'}
-              </Button>
+              {!isStartSessionStep && (
+                <Button size="sm" onClick={handleNext}>
+                  {isLast ? 'Done' : 'Next'}
+                </Button>
+              )}
             </div>
           </div>
 
