@@ -119,7 +119,6 @@ export default function OnboardingTour({
 
   // Toggle a body-level class while highlighting the START SESSION chip so it can pulse via CSS.
   useEffect(() => {
-    const isStartSessionStep = step?.selector === '[data-tour="start-session"]';
     if (isStartSessionStep) {
       document.body.classList.add('onboarding-pulse-active');
     } else {
@@ -128,7 +127,7 @@ export default function OnboardingTour({
     return () => {
       document.body.classList.remove('onboarding-pulse-active');
     };
-  }, [step]);
+  }, [isStartSessionStep]);
 
   // For the START SESSION step, advance the tour (instead of closing) the moment the chip is clicked.
   // The chip's own onClick still navigates to /new-session, where Step 3 picks up.
