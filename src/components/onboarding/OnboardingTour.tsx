@@ -398,9 +398,26 @@ export default function OnboardingTour({
           })()}
         </p>
 
-        <div className="flex items-center justify-between gap-2">
-          {/* Step indicator dots */}
-          <div className="flex items-center gap-1.5">
+        <div className="flex flex-col gap-3">
+          {/* Buttons row */}
+          <div className="flex items-center justify-between gap-2">
+            <Button variant="ghost" size="sm" onClick={handleSkip}>
+              Skip
+            </Button>
+            <div className="flex items-center gap-2">
+              {!isFirst && (
+                <Button variant="outline" size="sm" onClick={handlePrev}>
+                  Previous
+                </Button>
+              )}
+              <Button size="sm" onClick={handleNext}>
+                {isLast ? 'Done' : 'Next'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Step indicator row */}
+          <div className="flex items-center justify-center gap-1.5">
             {steps.map((_, i) => (
               <span
                 key={i}
@@ -409,20 +426,6 @@ export default function OnboardingTour({
                 }`}
               />
             ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={handleSkip}>
-              Skip
-            </Button>
-            {!isFirst && (
-              <Button variant="outline" size="sm" onClick={handlePrev}>
-                Previous
-              </Button>
-            )}
-            <Button size="sm" onClick={handleNext}>
-              {isLast ? 'Done' : 'Next'}
-            </Button>
           </div>
         </div>
       </div>
