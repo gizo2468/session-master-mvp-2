@@ -370,6 +370,21 @@ export default function OnboardingTour({
         ) : null}
       </svg>
 
+      {/* Pulsing tap-hand overlay centered on the START SESSION chip (Step 2 only) */}
+      {isStartSessionStep && rect && (
+        <div
+          className="absolute pointer-events-none tour-tap-hand"
+          style={{
+            left: rect.left + rect.width / 2,
+            top: rect.top + rect.height / 2,
+            zIndex: 2,
+          }}
+          aria-hidden="true"
+        >
+          <Hand className="w-12 h-12 text-primary drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
+        </div>
+      )}
+
       {/* Tooltip card */}
       <div
         className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4 transition-all duration-300 ease-out"
