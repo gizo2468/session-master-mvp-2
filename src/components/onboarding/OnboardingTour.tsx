@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
+import { Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export interface TourStep {
