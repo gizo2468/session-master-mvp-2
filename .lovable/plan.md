@@ -1,19 +1,16 @@
-# Add Tap Hand to Step 5 (Start Session)
+# Hide Previous on "Define Your Game" Step
 
 ## What changes
 
-On Step 5 ("You're All Set!" — Start Session button), add the same pulsing tap-hand animation already used on Steps 2 and 4. This visually indicates that the golden Start Session button is the only way to advance.
+On the "Define Your Game" step (Step 3, selector `[data-tour="game-setup"]` — first step on the Start New Session page), the **Previous** button is removed from the tooltip footer. Skip stays on the left, Next stays on the right, and the page indicator dots remain on a separate row below — same layout as before, just without the Previous button.
 
-Already in place (no changes needed):
-- Next/Done button is hidden on this step.
-- Skip and Previous remain in the footer.
-- Spotlight is interactive — the real Start Session button is clickable.
-- On submit, `SessionForm.onSubmit` advances the tour to Step 6 on the Live Session dashboard.
+All other steps retain Previous as today.
 
 ## Implementation
 
 ### `src/components/onboarding/OnboardingTour.tsx`
-- Extend `showTapHand` to also include `isSubmitSessionStep`, so the existing pulsing `Hand` icon overlay renders centered on the Start Session button's bounding rect.
-- The submit-session spotlight already targets the button itself (not a wrapping container), so the default `rect.left + rect.width/2` / `rect.top + rect.height/2` centering will land directly on the button — no special anchor lookup needed (unlike the stakes step which targets a wrapper with multiple inputs).
+- Add a flag `isGameSetupStep = step?.selector === '[data-tour="game-setup"]'`.
+- Add a derived `hidePreviousButton = isFirst || isGameSetupStep`.
+- Change the Previous render condition from `{!isFirst && ...}` to `{!hidePreviousButton && ...}`.
 
-That's the only change.
+No other files affected. No layout/CSS changes — the existing flex row already collapses cleanly to just the Next button on the right.

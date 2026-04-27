@@ -59,8 +59,10 @@ export default function OnboardingTour({
   const isStartSessionStep = step?.selector === '[data-tour="start-session"]';
   const isStakesStep = step?.selector === '[data-tour="stakes"]';
   const isSubmitSessionStep = step?.selector === '[data-tour="submit-session"]';
+  const isGameSetupStep = step?.selector === '[data-tour="game-setup"]';
   const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep;
   const hideNextButton = isStartSessionStep || isSubmitSessionStep;
+  const hidePreviousButton = isGameSetupStep;
 
   const measure = useCallback(() => {
     if (!step) return;
@@ -442,7 +444,7 @@ export default function OnboardingTour({
               Skip
             </Button>
             <div className="flex items-center gap-2">
-              {!isFirst && (
+              {!isFirst && !hidePreviousButton && (
                 <Button variant="outline" size="sm" onClick={handlePrev}>
                   Previous
                 </Button>
