@@ -1,78 +1,49 @@
-## Step 2 (Start a Session) — focused action UI
+## Goal
 
-Two scoped changes apply ONLY to the "Start a Session" step (selector `[data-tour="start-session"]`). All other tour steps remain unchanged.
+Keep the onboarding tour alive after "Start Session" is pressed, and continue it on the Live Session page with three new spotlight steps (Track Your Edge → Stay Active → Finishing Up).
 
-### 1. Remove the Next button (Step 2 only)
+## Changes
 
-In `src/components/onboarding/OnboardingTour.tsx`, conditionally hide the right-side "Next" button when the current step targets the START SESSION chip. Skip (left) and Previous (right) stay in their current positions, so the footer layout — buttons row + centered indicator dots — is preserved.
+### 1. Don't dismiss the tour on session start
+`src/pages/SessionForm.tsx` (around line 260) currently calls `dismissOnboardingTour()` right before navigating to `/session/:id`. Remove that dismiss call and instead **advance** the tour to the next step (Step 6 — "Track Your Edge"). The tour will then automatically render on the Live Session page once it mounts.
 
-```tsx
-const isStartSessionStep = step?.selector === '[data-tour="start-session"]';
-// ...
-<div className="flex items-center gap-2">
-  {!isFirst && (
-    <Button variant="outline" size="sm" onClick={handlePrev}>Previous</Button>
-  )}
-  {!isStartSessionStep && (
-    <Button size="sm" onClick={handleNext}>{isLast ? 'Done' : 'Next'}</Button>
-  )}
-</div>
-```
+### 2. Add three new tour steps
+`src/components/onboarding/tourSteps.ts`:
+- Add a new route literal `'/session'` to the `TourStep['route']` union.
+- Append three steps after the existing "You're All Set!" step:
 
-The tour already auto-advances to Step 3 the moment the chip is clicked (existing click listener at lines 133–144), so removing Next does not block progression — the user must tap the spotlighted chip to continue.
+| # | Selector | Title | Body |
+|---|----------|-------|------|
+| 6 | `[data-tour="live-scoreboard"]` | Track Your Edge | This is your live scoreboard. Watch your profit or loss update in real-time as you log your hands and actions. |
+| 7 | `[data-tour="live-actions"]` | Stay Active | Use these buttons to log every important moment. Whether it's a big pot or a strategic note, keep your data fresh! |
+| 8 | `[data-tour="live-controls"]` | Finishing Up | When you're done for the day, click here to wrap up. We'll save all your stats and add them to your overall record. |
 
-### 2. Pulsing tap-hand overlay on the chip
+All three are `interactive: true` so the user can scroll/explore the page underneath the spotlight, and they all live on the `/session` route.
 
-Render a finger/hand icon centered on the START SESSION chip while Step 2 is active, with a continuous press animation. The overlay is purely visual (`pointer-events-none`) so the chip underneath stays clickable through the spotlight cutout.
+### 3. Tag the Live Session UI with tour selectors
+`src/components/poker/SessionTimerCard.tsx`:
+- Wrap the gold Session Timer block (the digital clock + Started/Total Tables/Hands Saved grid) in a container with `data-tour="live-scoreboard"`. This is the most prominent "live scoreboard" element at the top of the page in the current design (note: there is no separate P&L/bankroll card at the top — the running P&L lives inside the Session Details card lower down. The Session Timer is what visually anchors the top of the page, so we'll spotlight that as the live scoreboard).
+- Add `data-tour="live-actions"` to the row containing **Add Table** + **BB/Stack Update** + **Upload Hand** (the action buttons used to log activity during a session).
+- Add `data-tour="live-controls"` to the **End Session** button (the wrap-up control).
 
-```text
-       ┌──────────────────┐
-       │   START SESSION  │
-       │       👆 ←pulse  │  ← Hand icon, perfectly centered on chip
-       │     (chip face)  │
-       └──────────────────┘
-```
+To keep the markup clean, we'll wrap the existing `Add Table` / `End Session` row split: the `End Session` button gets its own wrapper with `data-tour="live-controls"`, and a new wrapper around the `BB/Stack Update` + `Upload Hand` stack (plus `Add Table`) gets `data-tour="live-actions"`.
 
-**Positioning**: Compute the chip's center from the existing `rect` (already measured by the tour), then absolutely position the overlay at that point inside the tour's fixed container. This guarantees the icon stays locked on the visible green chip even as the layout shifts.
+### 4. Render the tour on the Live Session page
+`src/pages/LiveSession.tsx`:
+- Import `OnboardingTour`, `TOUR_STEPS`, and `useOnboardingTour`.
+- Mirror the pattern used in `Index.tsx` / `SessionForm.tsx`: compute `isLiveTourStep = TOUR_STEPS[tourStep]?.route === '/session'` and render `<OnboardingTour …/>` only when `showOnboardingTour && isLiveTourStep`.
+- `onClose={dismissOnboardingTour}` so Skip/Done finishes the tour cleanly.
 
-```tsx
-{isStartSessionStep && rect && (
-  <div
-    className="absolute pointer-events-none tour-tap-hand"
-    style={{
-      left: rect.left + rect.width / 2,
-      top: rect.top + rect.height / 2,
-      transform: 'translate(-50%, -50%)',
-      zIndex: 2,
-    }}
-    aria-hidden="true"
-  >
-    <Hand className="w-12 h-12 text-primary drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
-  </div>
-)}
-```
+### 5. Final-step copy
+The existing tooltip already shows "Done" on the last step. With three new steps appended, Step 8 ("Finishing Up") will naturally be the last and show **Done** as the confirm button — matching the requested "Finish Tour" behavior.
 
-Use `lucide-react`'s `Hand` icon (already a project dependency) in the gold `--primary` color with a soft drop-shadow so it reads against both the cream and green portions of the chip.
+## Files Edited
 
-**Animation**: Add a dedicated keyframe in `src/index.css` that simulates a finger press — a gentle scale-down + slight downward nudge, looped smoothly. This is independent from the existing chip ripple (`tour-press-pulse`), which keeps pulsing the chip itself.
+- `src/components/onboarding/tourSteps.ts` — add `/session` route, append 3 new steps.
+- `src/pages/SessionForm.tsx` — replace `dismissOnboardingTour()` with `setTourStep(currentStep + 1)` (advance instead of dismiss) before navigating to the live session.
+- `src/components/poker/SessionTimerCard.tsx` — add three `data-tour` selectors to the relevant DOM regions.
+- `src/pages/LiveSession.tsx` — render `<OnboardingTour>` for `/session` route steps.
 
-```css
-@keyframes tour-tap-press {
-  0%, 100% { transform: translate(-50%, -50%) scale(1) translateY(0); opacity: 0.95; }
-  45%      { transform: translate(-50%, -50%) scale(0.82) translateY(3px); opacity: 1; }
-  60%      { transform: translate(-50%, -50%) scale(0.82) translateY(3px); opacity: 1; }
-}
-.tour-tap-hand {
-  animation: tour-tap-press 1.4s ease-in-out infinite;
-  will-change: transform, opacity;
-}
-```
+## Notes / Assumption
 
-The 1.4s cycle matches the existing chip ripple (`tour-press-pulse`) so the two animations stay in visual sync — the hand "presses down" exactly as the gold ripple expands.
-
-### Files touched
-
-- `src/components/onboarding/OnboardingTour.tsx` — conditional Next button + hand overlay JSX, import `Hand` from `lucide-react`.
-- `src/index.css` — add `@keyframes tour-tap-press` and `.tour-tap-hand` rule.
-
-No changes needed to `tourSteps.ts`, `useOnboardingTour.ts`, or any page component.
+The brief mentions a "P&L / Bankroll display at the top" but the current Live Session page has no dedicated bankroll widget at the top — the Session Timer is the prominent top element, and Profit/Loss appears inside the Session Details card below. We're spotlighting the **Session Timer card** for Step 6 ("Track Your Edge") as the closest match to the described "live scoreboard at the top". If you'd prefer to spotlight the Profit/Loss row inside Session Details instead (further down the page), let us know and we'll re-target that selector.
