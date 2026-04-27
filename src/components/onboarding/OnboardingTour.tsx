@@ -57,6 +57,8 @@ export default function OnboardingTour({
   const isLast = currentStep === steps.length - 1;
   const isFirst = currentStep === 0;
   const isStartSessionStep = step?.selector === '[data-tour="start-session"]';
+  const isStakesStep = step?.selector === '[data-tour="stakes"]';
+  const showTapHand = isStartSessionStep || isStakesStep;
 
   const measure = useCallback(() => {
     if (!step) return;
@@ -370,20 +372,37 @@ export default function OnboardingTour({
         ) : null}
       </svg>
 
-      {/* Pulsing tap-hand overlay centered on the START SESSION chip (Step 2 only) */}
-      {isStartSessionStep && rect && (
-        <div
-          className="absolute pointer-events-none tour-tap-hand"
-          style={{
-            left: rect.left + rect.width / 2,
-            top: rect.top + rect.height / 2,
-            zIndex: 2,
-          }}
-          aria-hidden="true"
-        >
-          <Hand className="w-12 h-12 text-primary drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
-        </div>
-      )}
+      {/* Pulsing tap-hand overlay (Start Session chip + Stakes buy-in field) */}
+      {showTapHand && rect && (() => {
+        // For the stakes step, the spotlight wraps Buy-in + Blinds. Anchor the hand on
+        // the Buy-in input specifically when we can find it; otherwise fall back to the
+        // top portion of the highlighted area.
+        let cx = rect.left + rect.width / 2;
+        let cy = rect.top + rect.height / 2;
+        if (isStakesStep) {
+          const input = document.querySelector(
+            '[data-tour="stakes"] input'
+          ) as HTMLElement | null;
+          if (input) {
+            const ir = input.getBoundingClientRect();
+            cx = ir.left + ir.width / 2;
+            cy = ir.top + ir.height / 2;
+          }
+        }
+        return (
+          <div
+            className="absolute pointer-events-none tour-tap-hand"
+            style={{
+              left: cx,
+              top: cy,
+              zIndex: 2,
+            }}
+            aria-hidden="true"
+          >
+            <Hand className="w-12 h-12 text-primary drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
+          </div>
+        );
+      })()}
 
       {/* Tooltip card */}
       <div
