@@ -14,6 +14,9 @@ import { useRebuyActions } from '@/hooks/useRebuyActions';
 import { useEndTableActions } from '@/hooks/useEndTableActions';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import OnboardingTour from '@/components/onboarding/OnboardingTour';
+import { TOUR_STEPS } from '@/components/onboarding/tourSteps';
+import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 export default function LiveSession() {
   const { id } = useParams<{ id: string }>();
