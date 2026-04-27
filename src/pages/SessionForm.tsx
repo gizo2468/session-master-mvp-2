@@ -256,9 +256,9 @@ export default function SessionForm() {
         });
       }
 
-      // Finish the onboarding tour if it's still active.
+      // Advance the onboarding tour to the Live Session steps (do NOT dismiss).
       if (showOnboardingTour) {
-        dismissOnboardingTour();
+        setTourStep(tourStep + 1);
       }
 
       // FIXED: Navigate to the live session page with the correct session ID
