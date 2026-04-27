@@ -261,44 +261,50 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       <div className="flex flex-col gap-2 w-full">
         <div className="flex justify-center gap-2">
           {onAddTable && (
-            <Button
-              onClick={handleAddTable}
-              className="bg-poker-gold hover:bg-poker-darkGold text-white flex items-center gap-2"
-            >
-              <Icon name="Plus" size={16} /> Add Table
-            </Button>
+            <div data-tour="live-actions" className="contents">
+              <Button
+                onClick={handleAddTable}
+                className="bg-poker-gold hover:bg-poker-darkGold text-white flex items-center gap-2"
+              >
+                <Icon name="Plus" size={16} /> Add Table
+              </Button>
+            </div>
           )}
-          <Button
-            onClick={handleEndSession}
-            variant="destructive"
-            className="flex items-center gap-2"
-          >
-            <Icon name="CircleStop" size={16} /> End Session
-          </Button>
+          <div data-tour="live-controls">
+            <Button
+              onClick={handleEndSession}
+              variant="destructive"
+              className="flex items-center gap-2"
+            >
+              <Icon name="CircleStop" size={16} /> End Session
+            </Button>
+          </div>
         </div>
-        
-        {/* Centered BB/Stack Update button */}
-        <div className="flex justify-center">
-          <Button
-            onClick={handleBBStackUpdate}
-            variant="outline"
-            className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground flex items-center gap-2"
-            size="sm"
-          >
-            <Icon name="CircleDot" size={14} /> BB/Stack Update
-          </Button>
-        </div>
-        
-        {/* Centered Upload Hand button */}
-        <div className="flex justify-center">
-          <Button
-            onClick={handleUploadHand}
-            variant="outline"
-            className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground flex items-center gap-2"
-            size="sm"
-          >
-            <Icon name="Hand" size={14} /> Upload Hand
-          </Button>
+
+        <div data-tour="live-actions" className="flex flex-col gap-2 w-full">
+          {/* Centered BB/Stack Update button */}
+          <div className="flex justify-center">
+            <Button
+              onClick={handleBBStackUpdate}
+              variant="outline"
+              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground flex items-center gap-2"
+              size="sm"
+            >
+              <Icon name="CircleDot" size={14} /> BB/Stack Update
+            </Button>
+          </div>
+
+          {/* Centered Upload Hand button */}
+          <div className="flex justify-center">
+            <Button
+              onClick={handleUploadHand}
+              variant="outline"
+              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground flex items-center gap-2"
+              size="sm"
+            >
+              <Icon name="Hand" size={14} /> Upload Hand
+            </Button>
+          </div>
         </div>
       </div>
 
