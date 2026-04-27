@@ -444,7 +444,7 @@ export default function OnboardingTour({
               Skip
             </Button>
             <div className="flex items-center gap-2">
-              {!isFirst && (
+              {!isFirst && !hidePreviousButton && (
                 <Button variant="outline" size="sm" onClick={handlePrev}>
                   Previous
                 </Button>
