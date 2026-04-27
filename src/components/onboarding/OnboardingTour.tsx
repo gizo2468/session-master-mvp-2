@@ -447,7 +447,7 @@ export default function OnboardingTour({
                   Previous
                 </Button>
               )}
-              {!isStartSessionStep && (
+              {!hideNextButton && (
                 <Button size="sm" onClick={handleNext}>
                   {isLast ? 'Done' : 'Next'}
                 </Button>
