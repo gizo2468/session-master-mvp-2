@@ -261,14 +261,12 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       <div className="flex flex-col gap-2 w-full">
         <div className="flex justify-center gap-2">
           {onAddTable && (
-            <div data-tour="live-actions" className="contents">
-              <Button
-                onClick={handleAddTable}
-                className="bg-poker-gold hover:bg-poker-darkGold text-white flex items-center gap-2"
-              >
-                <Icon name="Plus" size={16} /> Add Table
-              </Button>
-            </div>
+            <Button
+              onClick={handleAddTable}
+              className="bg-poker-gold hover:bg-poker-darkGold text-white flex items-center gap-2"
+            >
+              <Icon name="Plus" size={16} /> Add Table
+            </Button>
           )}
           <div data-tour="live-controls">
             <Button
