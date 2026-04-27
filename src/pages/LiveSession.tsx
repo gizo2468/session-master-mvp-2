@@ -30,7 +30,15 @@ export default function LiveSession() {
   const sessionActions = useSessionActions(currentSession);
   const rebuyActions = useRebuyActions(currentSession?.id);
   const endTableActions = useEndTableActions(currentSession);
-  
+
+  const {
+    shouldShow: showOnboardingTour,
+    currentStep: tourStep,
+    setStep: setTourStep,
+    dismiss: dismissOnboardingTour,
+  } = useOnboardingTour();
+  const isLiveTourStep = TOUR_STEPS[tourStep]?.route === '/session';
+
   // Scroll to top when component mounts and clear navigation state
   useEffect(() => {
     window.scrollTo(0, 0);
