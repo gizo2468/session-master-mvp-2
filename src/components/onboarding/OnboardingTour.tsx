@@ -59,7 +59,7 @@ export default function OnboardingTour({
   const isStartSessionStep = step?.selector === '[data-tour="start-session"]';
   const isStakesStep = step?.selector === '[data-tour="stakes"]';
   const isSubmitSessionStep = step?.selector === '[data-tour="submit-session"]';
-  const showTapHand = isStartSessionStep || isStakesStep;
+  const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep;
   const hideNextButton = isStartSessionStep || isSubmitSessionStep;
 
   const measure = useCallback(() => {
