@@ -57,6 +57,8 @@ export default function OnboardingTour({
   const isLast = currentStep === steps.length - 1;
   const isFirst = currentStep === 0;
   const isStartSessionStep = step?.selector === '[data-tour="start-session"]';
+  const isStakesStep = step?.selector === '[data-tour="stakes"]';
+  const showTapHand = isStartSessionStep || isStakesStep;
 
   const measure = useCallback(() => {
     if (!step) return;
