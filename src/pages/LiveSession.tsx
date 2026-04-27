@@ -229,6 +229,15 @@ export default function LiveSession() {
         sessionCurrency={currentSession.currency}
         onAddTable={sessionActions.handleAddTable}
       />
+
+      {showOnboardingTour && isLiveTourStep && (
+        <OnboardingTour
+          steps={TOUR_STEPS}
+          currentStep={tourStep}
+          onStepChange={setTourStep}
+          onClose={dismissOnboardingTour}
+        />
+      )}
     </div>
   );
 }
