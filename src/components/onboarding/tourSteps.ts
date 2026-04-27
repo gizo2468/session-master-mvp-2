@@ -7,7 +7,7 @@ export interface TourStep {
   /** When true, render a circular spotlight instead of a rounded rectangle. */
   circle?: boolean;
   /** Route this step lives on, used to know when to render the tour on each page. */
-  route: '/' | '/new-session';
+  route: '/' | '/new-session' | '/session';
 }
 
 export const TOUR_STEPS: TourStep[] = [
@@ -45,5 +45,26 @@ export const TOUR_STEPS: TourStep[] = [
     body: "Fill in the details and hit 'Start Session' to begin tracking. Good luck at the tables!",
     interactive: true,
     route: '/new-session',
+  },
+  {
+    selector: '[data-tour="live-scoreboard"]',
+    title: 'Track Your Edge',
+    body: 'This is your live scoreboard. Watch your profit or loss update in real-time as you log your hands and actions.',
+    interactive: true,
+    route: '/session',
+  },
+  {
+    selector: '[data-tour="live-actions"]',
+    title: 'Stay Active',
+    body: "Use these buttons to log every important moment. Whether it's a big pot or a strategic note, keep your data fresh!",
+    interactive: true,
+    route: '/session',
+  },
+  {
+    selector: '[data-tour="live-controls"]',
+    title: 'Finishing Up',
+    body: "When you're done for the day, click here to wrap up. We'll save all your stats and add them to your overall record.",
+    interactive: true,
+    route: '/session',
   },
 ];

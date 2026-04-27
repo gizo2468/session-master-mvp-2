@@ -14,6 +14,9 @@ import { useRebuyActions } from '@/hooks/useRebuyActions';
 import { useEndTableActions } from '@/hooks/useEndTableActions';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import OnboardingTour from '@/components/onboarding/OnboardingTour';
+import { TOUR_STEPS } from '@/components/onboarding/tourSteps';
+import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 export default function LiveSession() {
   const { id } = useParams<{ id: string }>();
@@ -27,7 +30,15 @@ export default function LiveSession() {
   const sessionActions = useSessionActions(currentSession);
   const rebuyActions = useRebuyActions(currentSession?.id);
   const endTableActions = useEndTableActions(currentSession);
-  
+
+  const {
+    shouldShow: showOnboardingTour,
+    currentStep: tourStep,
+    setStep: setTourStep,
+    dismiss: dismissOnboardingTour,
+  } = useOnboardingTour();
+  const isLiveTourStep = TOUR_STEPS[tourStep]?.route === '/session';
+
   // Scroll to top when component mounts and clear navigation state
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -218,6 +229,15 @@ export default function LiveSession() {
         sessionCurrency={currentSession.currency}
         onAddTable={sessionActions.handleAddTable}
       />
+
+      {showOnboardingTour && isLiveTourStep && (
+        <OnboardingTour
+          steps={TOUR_STEPS}
+          currentStep={tourStep}
+          onStepChange={setTourStep}
+          onClose={dismissOnboardingTour}
+        />
+      )}
     </div>
   );
 }
