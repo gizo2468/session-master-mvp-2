@@ -24,6 +24,8 @@ interface OnboardingTourProps {
   activePath?: TourPathId | null;
   /** Called when the user picks a tutorial path from the welcome menu. */
   onSelectPath?: (id: TourPathId) => void;
+  /** Called when the user wants to go back to the welcome menu from a sub-guide. */
+  onReturnToMenu?: () => void;
 }
 
 const PADDING = 10;
