@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
 import { Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { TourPathId } from '@/components/onboarding/tourSteps';
 
 export interface TourStep {
   selector: string;
@@ -19,6 +20,10 @@ interface OnboardingTourProps {
   currentStep?: number;
   /** Called whenever the active step changes (Next / Previous / programmatic advance). */
   onStepChange?: (next: number) => void;
+  /** Currently selected tutorial path. When null, the welcome menu is shown. */
+  activePath?: TourPathId | null;
+  /** Called when the user picks a tutorial path from the welcome menu. */
+  onSelectPath?: (id: TourPathId) => void;
 }
 
 const PADDING = 10;
