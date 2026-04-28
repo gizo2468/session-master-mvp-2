@@ -54,6 +54,15 @@ export function useOnboardingTour() {
     window.dispatchEvent(new CustomEvent(STEP_CHANGED_EVENT, { detail: 0 }));
   }, []);
 
+  const returnToMenu = useCallback(() => {
+    try {
+      localStorage.removeItem(PATH_KEY);
+      localStorage.setItem(STEP_KEY, '0');
+    } catch {}
+    setState((s) => ({ ...s, activePath: null, step: 0 }));
+    window.dispatchEvent(new CustomEvent(STEP_CHANGED_EVENT, { detail: 0 }));
+  }, []);
+
   const dismiss = useCallback(() => {
     try {
       localStorage.setItem(COMPLETED_KEY, 'true');
