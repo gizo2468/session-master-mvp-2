@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
 import { Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { TourPathId } from '@/components/onboarding/tourSteps';
 
 export interface TourStep {
   selector: string;
@@ -19,6 +20,10 @@ interface OnboardingTourProps {
   currentStep?: number;
   /** Called whenever the active step changes (Next / Previous / programmatic advance). */
   onStepChange?: (next: number) => void;
+  /** Currently selected tutorial path. When null, the welcome menu is shown. */
+  activePath?: TourPathId | null;
+  /** Called when the user picks a tutorial path from the welcome menu. */
+  onSelectPath?: (id: TourPathId) => void;
 }
 
 const PADDING = 10;
@@ -31,7 +36,10 @@ export default function OnboardingTour({
   onClose,
   currentStep: controlledStep,
   onStepChange,
+  activePath = null,
+  onSelectPath,
 }: OnboardingTourProps) {
+  const isMenu = activePath === null;
   const isControlled = typeof controlledStep === 'number';
   const [internalStep, setInternalStep] = useState(0);
   const currentStep = isControlled ? Math.max(0, Math.min(controlledStep!, steps.length - 1)) : internalStep;
@@ -163,6 +171,79 @@ export default function OnboardingTour({
   };
 
   const handleSkip = () => onClose();
+
+  // ===== Menu mode: Welcome screen with 3 path-selection buttons =====
+  if (isMenu) {
+    const TOOLTIP_W = 320;
+    const menuStyle: React.CSSProperties = {
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: TOOLTIP_W,
+      maxWidth: 'calc(100vw - 24px)',
+      pointerEvents: 'auto',
+      boxShadow: '0 20px 40px -10px rgba(0,0,0,0.6), 0 0 0 1px hsl(var(--primary) / 0.2)',
+      fontFamily: "'Poppins', system-ui, sans-serif",
+    };
+    return (
+      <div
+        className="fixed inset-0 z-[100]"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Onboarding tour menu"
+      >
+        <div
+          className="absolute inset-0"
+          style={{ background: 'rgba(0,0,0,0.72)' }}
+          onClick={(e) => e.stopPropagation()}
+        />
+        <div
+          className="absolute bg-card border border-primary/30 rounded-xl p-5"
+          style={menuStyle}
+        >
+          <h3 className="text-lg font-bold text-primary mb-1.5 text-center">
+            Welcome to Session Master
+          </h3>
+          <p className="text-sm text-foreground/80 leading-relaxed mb-4 text-center">
+            What would you like to learn?
+          </p>
+
+          <div className="flex flex-col gap-2 mb-4">
+            <Button
+              variant="poker"
+              size="sm"
+              className="w-full"
+              onClick={() => onSelectPath?.('start-session')}
+            >
+              Start a Session Guide
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+              onClick={() => onSelectPath?.('home-guide')}
+            >
+              Home Page Guide
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+              onClick={() => onSelectPath?.('dashboard-guide')}
+            >
+              Dashboard Guide
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-start">
+            <Button variant="ghost" size="sm" onClick={handleSkip}>
+              Skip
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!step) return null;
 

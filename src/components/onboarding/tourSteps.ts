@@ -10,68 +10,87 @@ export interface TourStep {
   route: '/' | '/new-session' | '/session';
 }
 
-export const TOUR_STEPS: TourStep[] = [
-  {
-    selector: '[data-tour="logo"]',
-    title: 'Welcome to Session Master',
-    body: "We're glad to have you here! Before you jump into the action, let's take a quick 30-second tour to show you where everything is and how to track your first winning session.",
-    route: '/',
-  },
-  {
-    selector: '[data-tour="start-session"]',
-    title: 'Start a Session',
-    body: 'Click the chip to start your first session and see the app in action!',
-    interactive: true,
-    circle: true,
-    route: '/',
-  },
-  {
-    selector: '[data-tour="game-setup"]',
-    title: 'Define Your Game',
-    body: 'Select your preferred game type and format. These settings help us categorize your data correctly.',
-    interactive: true,
-    route: '/new-session',
-  },
-  {
-    selector: '[data-tour="stakes"]',
-    title: 'Set the Stakes',
-    body: 'Enter your starting buy-in and the table blinds. This is essential for calculating your profit and loss accurately.',
-    interactive: true,
-    route: '/new-session',
-  },
-  {
-    selector: '[data-tour="optional-details"]',
-    title: 'Optional Details (Optional)',
-    body: "Give your session or first table a custom name so it's easier to find in your history. You can also log the location or online poker site here. Don't worry, you can skip this if you're in a rush!",
-    interactive: true,
-    route: '/new-session',
-  },
-  {
-    selector: '[data-tour="submit-session"]',
-    title: "You're All Set!",
-    body: "Fill in the details and hit 'Start Session' to begin tracking. Good luck at the tables!",
-    interactive: true,
-    route: '/new-session',
-  },
-  {
-    selector: '[data-tour="live-scoreboard"]',
-    title: 'Track Your Edge',
-    body: 'This is your live scoreboard. Watch your profit or loss update in real-time as you log your hands and actions.',
-    interactive: true,
-    route: '/session',
-  },
-  {
-    selector: '[data-tour="live-actions"]',
-    title: 'Stay Active',
-    body: "Use these buttons to log every important moment. Whether it's a big pot or a strategic note, keep your data fresh!",
-    interactive: true,
-    route: '/session',
-  },
-  {
-    selector: '[data-tour="live-controls"]',
-    title: 'Finishing Up',
-    body: "When you're done for the day, click here to wrap up. We'll save all your stats and add them to your overall record.",
-    interactive: true,
-    route: '/session',
-  },
-];
+export type TourPathId = 'start-session' | 'home-guide' | 'dashboard-guide';
+
+export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
+  'start-session': [
+    {
+      selector: '[data-tour="start-session"]',
+      title: 'Start a Session',
+      body: 'Click the chip to start your first session and see the app in action!',
+      interactive: true,
+      circle: true,
+      route: '/',
+    },
+    {
+      selector: '[data-tour="game-setup"]',
+      title: 'Define Your Game',
+      body: 'Select your preferred game type and format. These settings help us categorize your data correctly.',
+      interactive: true,
+      route: '/new-session',
+    },
+    {
+      selector: '[data-tour="stakes"]',
+      title: 'Set the Stakes',
+      body: 'Enter your starting buy-in and the table blinds. This is essential for calculating your profit and loss accurately.',
+      interactive: true,
+      route: '/new-session',
+    },
+    {
+      selector: '[data-tour="optional-details"]',
+      title: 'Optional Details (Optional)',
+      body: "Give your session or first table a custom name so it's easier to find in your history. You can also log the location or online poker site here. Don't worry, you can skip this if you're in a rush!",
+      interactive: true,
+      route: '/new-session',
+    },
+    {
+      selector: '[data-tour="submit-session"]',
+      title: "You're All Set!",
+      body: "Fill in the details and hit 'Start Session' to begin tracking. Good luck at the tables!",
+      interactive: true,
+      route: '/new-session',
+    },
+    {
+      selector: '[data-tour="live-scoreboard"]',
+      title: 'Track Your Edge',
+      body: 'This is your live scoreboard. Watch your profit or loss update in real-time as you log your hands and actions.',
+      interactive: true,
+      route: '/session',
+    },
+    {
+      selector: '[data-tour="live-actions"]',
+      title: 'Stay Active',
+      body: "Use these buttons to log every important moment. Whether it's a big pot or a strategic note, keep your data fresh!",
+      interactive: true,
+      route: '/session',
+    },
+    {
+      selector: '[data-tour="live-controls"]',
+      title: 'Finishing Up',
+      body: "When you're done for the day, click here to wrap up. We'll save all your stats and add them to your overall record.",
+      interactive: true,
+      route: '/session',
+    },
+  ],
+  'home-guide': [
+    {
+      selector: '[data-tour="logo"]',
+      title: 'Home Page Guide',
+      body: "More home tips coming soon! For now, explore the chips, stats, and notes on this screen at your own pace.",
+      interactive: true,
+      route: '/',
+    },
+  ],
+  'dashboard-guide': [
+    {
+      selector: '[data-tour="logo"]',
+      title: 'Dashboard Guide',
+      body: "Dashboard guide coming soon! Head to the Dashboard from the menu to see your full stats breakdown.",
+      interactive: true,
+      route: '/',
+    },
+  ],
+};
+
+/** Backwards compat re-export for any leftover imports. */
+export const TOUR_STEPS: TourStep[] = TOUR_PATHS['start-session'];
