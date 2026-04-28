@@ -74,6 +74,7 @@ export default function Index() {
     activePath: tourPath,
     setStep: setTourStep,
     selectPath: selectTourPath,
+    returnToMenu: returnToTourMenu,
     dismiss: dismissOnboardingTour,
   } = useOnboardingTour();
 
@@ -354,6 +355,7 @@ export default function Index() {
           onClose={dismissOnboardingTour}
           activePath={tourPath}
           onSelectPath={selectTourPath}
+          onReturnToMenu={returnToTourMenu}
         />
       )}
 

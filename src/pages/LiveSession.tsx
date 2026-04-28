@@ -37,6 +37,7 @@ export default function LiveSession() {
     activePath: tourPath,
     setStep: setTourStep,
     selectPath: selectTourPath,
+    returnToMenu: returnToTourMenu,
     dismiss: dismissOnboardingTour,
   } = useOnboardingTour();
   const tourSteps = tourPath ? TOUR_PATHS[tourPath] : [];
@@ -242,6 +243,7 @@ export default function LiveSession() {
           onClose={dismissOnboardingTour}
           activePath={tourPath}
           onSelectPath={selectTourPath}
+          onReturnToMenu={returnToTourMenu}
         />
       )}
     </div>

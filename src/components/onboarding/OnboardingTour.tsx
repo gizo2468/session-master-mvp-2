@@ -24,6 +24,8 @@ interface OnboardingTourProps {
   activePath?: TourPathId | null;
   /** Called when the user picks a tutorial path from the welcome menu. */
   onSelectPath?: (id: TourPathId) => void;
+  /** Called when the user wants to go back to the welcome menu from a sub-guide. */
+  onReturnToMenu?: () => void;
 }
 
 const PADDING = 10;
@@ -38,6 +40,7 @@ export default function OnboardingTour({
   onStepChange,
   activePath = null,
   onSelectPath,
+  onReturnToMenu,
 }: OnboardingTourProps) {
   const isMenu = activePath === null;
   const isControlled = typeof controlledStep === 'number';
@@ -521,15 +524,18 @@ export default function OnboardingTour({
         <div className="flex flex-col gap-3">
           {/* Buttons row */}
           <div className="flex items-center justify-between gap-2">
-            <Button variant="ghost" size="sm" onClick={handleSkip}>
-              Skip
-            </Button>
+            {hidePreviousButton ? (
+              <span />
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={isFirst ? () => onReturnToMenu?.() : handlePrev}
+              >
+                Previous
+              </Button>
+            )}
             <div className="flex items-center gap-2">
-              {!isFirst && !hidePreviousButton && (
-                <Button variant="outline" size="sm" onClick={handlePrev}>
-                  Previous
-                </Button>
-              )}
               {!hideNextButton && (
                 <Button size="sm" onClick={handleNext}>
                   {isLast ? 'Done' : 'Next'}
