@@ -1,63 +1,53 @@
-# Onboarding: Welcome screen as 3-path menu
+## Goal
 
-## What changes (visible)
+Inside any active sub-guide (Start Session, Home, Dashboard), the bottom-left footer button should no longer end the tour. Instead, it becomes a **Previous** button that, when on the first step of that path, returns the user to the **Welcome menu** (the path-selection screen). The standalone Welcome menu keeps its existing **Skip** button (the only place to close the tour without finishing).
 
-Step 1 (Welcome) becomes a menu:
-- Title: "Welcome to Session Master" (kept)
-- Short intro line: "What would you like to learn?"
-- Three vertically stacked, centered buttons:
-  1. **Start a Session Guide** — gold (`variant="poker"`), primary action
-  2. **Home Page Guide** — outlined gold
-  3. **Dashboard Guide** — outlined gold
-- **No Next button** on this step. Skip remains (top-left of footer).
-- Tooltip auto-expands vertically; dots row hidden until a path is chosen.
+## Behavior
 
-After a button click → tour switches to the chosen path's step list and advances to its first real step. Skip closes the tour entirely at any time.
+**Welcome Menu (no active path):**
+- Unchanged: `Skip` (left) closes the tour entirely. Three path buttons remain.
 
-## Paths
+**All sub-guides (Start Session / Home / Dashboard), first step:**
+- Replace bottom-left `Skip` with `Previous`.
+- Clicking `Previous` clears the active path and returns to the Welcome menu (does NOT close the tour).
 
-- **start-session** (existing flow): Start chip → Game setup → Stakes → Optional details → Submit → live scoreboard → live actions → live controls.
-- **home-guide** (placeholder, single step): highlights `[data-tour="logo"]` area with copy "More home tips coming soon!" + Done button. (Real steps can be added later — the structure supports it.)
-- **dashboard-guide** (placeholder, single step): same pattern, copy "Dashboard guide coming soon!" + Done.
+**All sub-guides, subsequent steps:**
+- Bottom-left becomes `Previous` (steps back through the path). This is already the case for most steps — we just unify so it appears on every step (including the ones that currently hide it, except where it would break flow on `[data-tour="game-setup"]` post-navigation, which we'll keep hidden).
+- Right side: `Next` advances; on the final step shows `Done` which closes the tour.
 
-Dots reflect the length of the chosen path; current index shown.
+**Home Guide & Dashboard Guide specifics:**
+- These currently have a single step. The footer shows `Previous` (left, back to menu) and `Done` (right, closes tour).
 
-## Files to edit
+**Start Session Guide specifics:**
+- Step 1 (logo/chip spotlight): `Previous` left (back to menu). Right side stays as it is today (the `Next` button is hidden because the chip click itself advances).
+- Final live-controls step: `Done` continues to close the tour.
 
-1. **`src/components/onboarding/tourSteps.ts`**
-   - Add `export type TourPathId = 'start-session' | 'home-guide' | 'dashboard-guide'`.
-   - Replace `TOUR_STEPS` with `TOUR_PATHS: Record<TourPathId, TourStep[]>`.
-   - Keep a re-export `export const TOUR_STEPS = TOUR_PATHS['start-session']` for any leftover imports during transition.
-   - The Welcome step is NOT inside any path — it's the menu, owned by `OnboardingTour`.
+## Technical Changes
 
-2. **`src/hooks/useOnboardingTour.ts`**
-   - Persist `activePath: TourPathId | null` in `localStorage` under `onboarding_tour_path`.
-   - Expose `activePath`, `selectPath(id)` (sets path + step 0 + dispatches change event), and existing `setStep` / `dismiss` (dismiss also clears path).
-   - Reset event clears path too.
+**`src/hooks/useOnboardingTour.ts`**
+- Add a `returnToMenu()` action that clears `activePath` (removes `PATH_KEY`), resets `step` to 0, but does NOT set `COMPLETED_KEY`. Dispatches `STEP_CHANGED_EVENT` so listeners refresh. The tour stays visible and the menu re-renders.
 
-3. **`src/components/onboarding/OnboardingTour.tsx`**
-   - New props: `activePath: TourPathId | null`, `onSelectPath: (id) => void`.
-   - When `activePath === null`: render a **menu tooltip** centered on screen (no spotlight, no SVG cutout, no tap-hand). Body shows the 3 stacked buttons; hide Next/Previous/dots; keep Skip.
-   - When `activePath !== null`: behave as today using `steps` (passed from page), with `currentStep` controlled.
+**`src/components/onboarding/OnboardingTour.tsx`**
+- Add new prop `onReturnToMenu?: () => void`.
+- In the sub-guide render block (lines ~521-539), replace the left-side `Skip` button with a `Previous` button:
+  - If `isFirst` (currentStep === 0): label `Previous`, onClick → `onReturnToMenu?.()`.
+  - Else: label `Previous`, onClick → `handlePrev()`.
+  - Remove the duplicate `Previous` from the right-side button cluster (since it now lives on the left). Keep `hidePreviousButton` exception for `[data-tour="game-setup"]` by rendering a spacer instead so `Next/Done` stays right-aligned.
+- Style: use `variant="outline"` size `sm`, consistent with existing Previous styling, aligned left via the existing `justify-between` flex row.
+- Welcome menu block (lines ~238-242) is untouched — `Skip` remains there.
 
-4. **`src/pages/Index.tsx`**, **`src/pages/SessionForm.tsx`**, **`src/pages/LiveSession.tsx`**
-   - Import `TOUR_PATHS` + `selectPath`/`activePath` from hook.
-   - Compute `steps = activePath ? TOUR_PATHS[activePath] : []`.
-   - Gating per page:
-     - `Index`: show tour when `activePath === null` (menu) OR when `activePath` step's route is `/`.
-     - `SessionForm`: show only when `activePath === 'start-session'` and current step's route is `/new-session`.
-     - `LiveSession`: show only when current step's route is `/session`.
-   - Pass `activePath` and `onSelectPath` to `OnboardingTour`.
-   - In `SessionForm`, the existing `setTourStep(tourStep + 1)` call after submit stays (still valid within `start-session` path).
+**`src/pages/Index.tsx`, `src/pages/SessionForm.tsx`, `src/pages/LiveSession.tsx`**
+- Wire the new `onReturnToMenu` prop on every `<OnboardingTour>` instance to call the hook's `returnToMenu()` from `useOnboardingTour()`.
 
-## Technical notes
+## Files Edited
 
-- Welcome menu tooltip uses fixed center positioning (reuse existing "no spotlight" branch by passing `step` with a non-existent selector — but cleaner: add an explicit `mode === 'menu'` early-return block inside `OnboardingTour` that renders only the tooltip card, identical styling, with the 3 buttons).
-- Buttons use existing variants: primary = `variant="poker"`, others = `variant="outline"`. Stack with `flex flex-col gap-2`. Each `size="sm"` and `w-full`.
-- Dots indicator and Previous/Next entirely hidden in menu mode.
-- Skip in menu mode calls `dismiss()` (sets completed, clears path).
-- Selecting **Home Page Guide** or **Dashboard Guide** while user is on `/` works without navigation since their first step also targets a `/` element. **Dashboard Guide** placeholder uses `[data-tour="logo"]` for now so it renders on `/` without needing a route change; a follow-up can add real `/dashboard` anchors.
+- `src/hooks/useOnboardingTour.ts`
+- `src/components/onboarding/OnboardingTour.tsx`
+- `src/pages/Index.tsx`
+- `src/pages/SessionForm.tsx`
+- `src/pages/LiveSession.tsx`
 
-## Out of scope (follow-up)
+## Out of Scope
 
-- Filling out real steps for Home and Dashboard guides — current change ships placeholders so the menu + path machinery works end-to-end. You can tell me which elements to highlight next and I'll add them.
+- No changes to step content, path definitions, or pagination dot logic.
+- The `Done` label on the last step of every path is preserved.
