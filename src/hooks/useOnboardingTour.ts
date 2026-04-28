@@ -106,6 +106,7 @@ export function useOnboardingTour() {
     activePath,
     setStep,
     selectPath,
+    returnToMenu,
     dismiss,
   };
 }
