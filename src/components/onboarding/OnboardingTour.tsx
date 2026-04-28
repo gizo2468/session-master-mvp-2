@@ -36,7 +36,10 @@ export default function OnboardingTour({
   onClose,
   currentStep: controlledStep,
   onStepChange,
+  activePath = null,
+  onSelectPath,
 }: OnboardingTourProps) {
+  const isMenu = activePath === null;
   const isControlled = typeof controlledStep === 'number';
   const [internalStep, setInternalStep] = useState(0);
   const currentStep = isControlled ? Math.max(0, Math.min(controlledStep!, steps.length - 1)) : internalStep;
