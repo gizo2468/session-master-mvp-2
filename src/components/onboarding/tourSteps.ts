@@ -40,6 +40,13 @@ export const TOUR_STEPS: TourStep[] = [
     route: '/new-session',
   },
   {
+    selector: '[data-tour="optional-details"]',
+    title: 'Optional Details (Optional)',
+    body: "Give your session or first table a custom name so it's easier to find in your history. You can also log the location or online poker site here. Don't worry, you can skip this if you're in a rush!",
+    interactive: true,
+    route: '/new-session',
+  },
+  {
     selector: '[data-tour="submit-session"]',
     title: "You're All Set!",
     body: "Fill in the details and hit 'Start Session' to begin tracking. Good luck at the tables!",

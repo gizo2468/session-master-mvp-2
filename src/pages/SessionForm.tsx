@@ -667,7 +667,7 @@ export default function SessionForm() {
               control={form.control}
               name="location"
               render={({ field }) => (
-                <FormItem>
+                <FormItem data-tour="optional-details">
                   <FormLabel className="text-base font-medium">First Table / Session Name</FormLabel>
                   <FormControl>
                     <Input 
