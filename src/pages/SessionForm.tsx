@@ -89,6 +89,7 @@ export default function SessionForm() {
     activePath: tourPath,
     setStep: setTourStep,
     selectPath: selectTourPath,
+    returnToMenu: returnToTourMenu,
     dismiss: dismissOnboardingTour,
   } = useOnboardingTour();
   const tourSteps = tourPath ? TOUR_PATHS[tourPath] : [];
@@ -872,6 +873,7 @@ export default function SessionForm() {
           onClose={dismissOnboardingTour}
           activePath={tourPath}
           onSelectPath={selectTourPath}
+          onReturnToMenu={returnToTourMenu}
         />
       )}
     </div>
