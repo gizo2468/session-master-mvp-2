@@ -524,15 +524,18 @@ export default function OnboardingTour({
         <div className="flex flex-col gap-3">
           {/* Buttons row */}
           <div className="flex items-center justify-between gap-2">
-            <Button variant="ghost" size="sm" onClick={handleSkip}>
-              Skip
-            </Button>
+            {hidePreviousButton ? (
+              <span />
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={isFirst ? () => onReturnToMenu?.() : handlePrev}
+              >
+                Previous
+              </Button>
+            )}
             <div className="flex items-center gap-2">
-              {!isFirst && !hidePreviousButton && (
-                <Button variant="outline" size="sm" onClick={handlePrev}>
-                  Previous
-                </Button>
-              )}
               {!hideNextButton && (
                 <Button size="sm" onClick={handleNext}>
                   {isLast ? 'Done' : 'Next'}
