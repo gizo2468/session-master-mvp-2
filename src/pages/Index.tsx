@@ -24,7 +24,7 @@ import chipMyNotes from '@/assets/chip-my-notes.png';
 import chipCoach from '@/assets/chip-coach.png';
 import ViewAllNotesModal from '@/components/notes/ViewAllNotesModal';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
-import { TOUR_STEPS } from '@/components/onboarding/tourSteps';
+import { TOUR_PATHS } from '@/components/onboarding/tourSteps';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -71,12 +71,15 @@ export default function Index() {
   const {
     shouldShow: showOnboardingTour,
     currentStep: tourStep,
+    activePath: tourPath,
     setStep: setTourStep,
+    selectPath: selectTourPath,
     dismiss: dismissOnboardingTour,
   } = useOnboardingTour();
 
-  // Only render the tour on Home for the steps anchored to this route.
-  const isHomeTourStep = TOUR_STEPS[tourStep]?.route === '/';
+  const tourSteps = tourPath ? TOUR_PATHS[tourPath] : [];
+  // Render on Home when: menu mode (no path yet), OR current step is anchored to '/'.
+  const isHomeTourStep = !tourPath || tourSteps[tourStep]?.route === '/';
 
   useEffect(() => {
     if (allDataReady && splashVisible) {
@@ -345,10 +348,12 @@ export default function Index() {
       {/* Multi-step onboarding spotlight tour */}
       {splashRemoved && showOnboardingTour && isHomeTourStep && (
         <OnboardingTour
-          steps={TOUR_STEPS}
+          steps={tourSteps}
           currentStep={tourStep}
           onStepChange={setTourStep}
           onClose={dismissOnboardingTour}
+          activePath={tourPath}
+          onSelectPath={selectTourPath}
         />
       )}
 

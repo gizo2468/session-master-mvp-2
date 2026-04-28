@@ -25,7 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
-import { TOUR_STEPS } from '@/components/onboarding/tourSteps';
+import { TOUR_PATHS } from '@/components/onboarding/tourSteps';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 const TOURNAMENT_TYPES = [
@@ -86,10 +86,14 @@ export default function SessionForm() {
   const {
     shouldShow: showOnboardingTour,
     currentStep: tourStep,
+    activePath: tourPath,
     setStep: setTourStep,
+    selectPath: selectTourPath,
     dismiss: dismissOnboardingTour,
   } = useOnboardingTour();
-  const isFormTourStep = TOUR_STEPS[tourStep]?.route === '/new-session';
+  const tourSteps = tourPath ? TOUR_PATHS[tourPath] : [];
+  const isFormTourStep =
+    tourPath === 'start-session' && tourSteps[tourStep]?.route === '/new-session';
   const [smallBlindIndex, setSmallBlindIndex] = useState(2); // Default to $1
   const [smallBlind, setSmallBlind] = useState(BLIND_PRESETS.smallBlind[2]);
   const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[2] * 2);
@@ -862,10 +866,12 @@ export default function SessionForm() {
       {/* Onboarding tour continuation on the New Session screen */}
       {showOnboardingTour && isFormTourStep && (
         <OnboardingTour
-          steps={TOUR_STEPS}
+          steps={tourSteps}
           currentStep={tourStep}
           onStepChange={setTourStep}
           onClose={dismissOnboardingTour}
+          activePath={tourPath}
+          onSelectPath={selectTourPath}
         />
       )}
     </div>

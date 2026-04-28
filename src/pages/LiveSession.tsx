@@ -15,7 +15,7 @@ import { useEndTableActions } from '@/hooks/useEndTableActions';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
-import { TOUR_STEPS } from '@/components/onboarding/tourSteps';
+import { TOUR_PATHS } from '@/components/onboarding/tourSteps';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 export default function LiveSession() {
@@ -34,10 +34,14 @@ export default function LiveSession() {
   const {
     shouldShow: showOnboardingTour,
     currentStep: tourStep,
+    activePath: tourPath,
     setStep: setTourStep,
+    selectPath: selectTourPath,
     dismiss: dismissOnboardingTour,
   } = useOnboardingTour();
-  const isLiveTourStep = TOUR_STEPS[tourStep]?.route === '/session';
+  const tourSteps = tourPath ? TOUR_PATHS[tourPath] : [];
+  const isLiveTourStep =
+    tourPath === 'start-session' && tourSteps[tourStep]?.route === '/session';
 
   // Scroll to top when component mounts and clear navigation state
   useEffect(() => {
@@ -232,10 +236,12 @@ export default function LiveSession() {
 
       {showOnboardingTour && isLiveTourStep && (
         <OnboardingTour
-          steps={TOUR_STEPS}
+          steps={tourSteps}
           currentStep={tourStep}
           onStepChange={setTourStep}
           onClose={dismissOnboardingTour}
+          activePath={tourPath}
+          onSelectPath={selectTourPath}
         />
       )}
     </div>
