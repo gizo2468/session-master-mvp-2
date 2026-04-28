@@ -40,6 +40,7 @@ export default function OnboardingTour({
   onStepChange,
   activePath = null,
   onSelectPath,
+  onReturnToMenu,
 }: OnboardingTourProps) {
   const isMenu = activePath === null;
   const isControlled = typeof controlledStep === 'number';
