@@ -535,7 +535,7 @@ export default function OnboardingTour({
                   height: b.height,
                   background: 'rgba(0,0,0,0.72)',
                   pointerEvents: 'auto',
-                  transition: 'all 300ms ease',
+                  transition: 'none',
                 }}
                 onClick={(e) => e.stopPropagation()}
               />
@@ -576,7 +576,7 @@ export default function OnboardingTour({
               height="100%"
               fill="rgba(0,0,0,0.72)"
               mask="url(#onboarding-spotlight-mask)"
-              style={{ transition: 'all 300ms ease' }}
+              style={{ transition: 'none' }}
             />
           </>
         )}
@@ -593,7 +593,7 @@ export default function OnboardingTour({
             opacity="0.85"
             style={{
               filter: 'drop-shadow(0 0 8px hsl(var(--primary) / 0.7))',
-              transition: 'all 300ms ease',
+              transition: 'none',
             }}
           />
         ) : spotlight ? (
@@ -610,7 +610,7 @@ export default function OnboardingTour({
             opacity="0.85"
             style={{
               filter: 'drop-shadow(0 0 8px hsl(var(--primary) / 0.7))',
-              transition: 'all 300ms ease',
+              transition: 'none',
             }}
           />
         ) : null}
@@ -654,13 +654,12 @@ export default function OnboardingTour({
         className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4 sm:p-5"
         style={{
           ...tooltipStyle,
-          maxWidth: 'calc(100vw - 24px)',
+          maxWidth: '90vw',
           pointerEvents: 'auto',
           opacity: tooltipVisible ? 1 : 0,
-          // Smoothly track scroll/resize once the tooltip is visible; instant on first reveal.
-          transition: tooltipVisible
-            ? 'top 180ms ease-out, left 180ms ease-out, opacity 200ms ease-out'
-            : 'opacity 200ms ease-out',
+          // Snap position instantly; only fade in on reveal so the tooltip
+          // never visibly slides between updates.
+          transition: 'opacity 200ms ease-out',
           boxShadow: '0 20px 40px -10px rgba(0,0,0,0.6), 0 0 0 1px hsl(var(--primary) / 0.2)',
           fontFamily: "'Poppins', system-ui, sans-serif",
         }}
