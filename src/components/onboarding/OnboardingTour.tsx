@@ -11,6 +11,8 @@ export interface TourStep {
   interactive?: boolean;
   /** When true, render a circular spotlight instead of a rounded rectangle. */
   circle?: boolean;
+  /** Optional pre-step hook: open accordions, switch tabs, etc. before measuring. */
+  prepare?: () => void | Promise<void>;
 }
 
 interface OnboardingTourProps {
