@@ -187,30 +187,61 @@ export default function OnboardingTour({
     };
   }, [readRect]);
 
-  // Scroll & touch lockdown for the entire app while the tour is mounted.
-  // Prevents background scrolling/swiping (incl. iOS Safari rubber-banding) and
-  // makes the tutorial feel locked in place.
+  // STRICT scroll & interaction lockdown across html, body, AND the app's
+  // real scroll root (AppLayout's `fixed inset-0 overflow-y-auto` div). Without
+  // locking the app scroll root, the background drifts and the spotlight feels
+  // detached. We also block wheel/touchmove/scroll-keys as a hard fallback.
   useEffect(() => {
-    const body = document.body;
     const html = document.documentElement;
-    const prev = {
-      bodyOverflow: body.style.overflow,
-      bodyTouch: body.style.touchAction,
-      bodyOverscroll: body.style.overscrollBehavior,
-      htmlOverflow: html.style.overflow,
-      htmlTouch: html.style.touchAction,
+    const body = document.body;
+    const appRoot = document.querySelector('[data-app-scroll-root="true"]') as HTMLElement | null;
+
+    const targets: Array<{ el: HTMLElement; prev: Record<string, string> }> = [];
+    const lock = (el: HTMLElement) => {
+      targets.push({
+        el,
+        prev: {
+          overflow: el.style.overflow,
+          height: el.style.height,
+          touchAction: el.style.touchAction,
+          overscrollBehavior: el.style.overscrollBehavior,
+        },
+      });
+      el.style.overflow = 'hidden';
+      el.style.height = '100vh';
+      el.style.touchAction = 'none';
+      el.style.overscrollBehavior = 'none';
     };
-    body.style.overflow = 'hidden';
-    body.style.touchAction = 'none';
-    body.style.overscrollBehavior = 'none';
-    html.style.overflow = 'hidden';
-    html.style.touchAction = 'none';
+    lock(html);
+    lock(body);
+    if (appRoot) lock(appRoot);
+
+    // Allow scroll/touch only inside the tooltip card; block everything else.
+    const isInsideTooltip = (target: EventTarget | null) =>
+      target instanceof Node && tooltipRef.current?.contains(target);
+    const blockEvent = (e: Event) => {
+      if (isInsideTooltip(e.target)) return;
+      e.preventDefault();
+    };
+    const blockKeys = (e: KeyboardEvent) => {
+      if (isInsideTooltip(e.target)) return;
+      const keys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Spacebar'];
+      if (keys.includes(e.key)) e.preventDefault();
+    };
+    window.addEventListener('wheel', blockEvent, { passive: false });
+    window.addEventListener('touchmove', blockEvent, { passive: false });
+    window.addEventListener('keydown', blockKeys);
+
     return () => {
-      body.style.overflow = prev.bodyOverflow;
-      body.style.touchAction = prev.bodyTouch;
-      body.style.overscrollBehavior = prev.bodyOverscroll;
-      html.style.overflow = prev.htmlOverflow;
-      html.style.touchAction = prev.htmlTouch;
+      targets.forEach(({ el, prev }) => {
+        el.style.overflow = prev.overflow;
+        el.style.height = prev.height;
+        el.style.touchAction = prev.touchAction;
+        el.style.overscrollBehavior = prev.overscrollBehavior;
+      });
+      window.removeEventListener('wheel', blockEvent);
+      window.removeEventListener('touchmove', blockEvent);
+      window.removeEventListener('keydown', blockKeys);
     };
   }, []);
 
