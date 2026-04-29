@@ -418,24 +418,19 @@ export default function OnboardingTour({
     const required = tooltipHeight + TOOLTIP_GAP + VIEWPORT_MARGIN;
     const spaceBelow = viewport.h - (spotlight.y + spotlight.h);
     const spaceAbove = spotlight.y;
-    const fitsBelow = spaceBelow >= required;
-    const fitsAbove = spaceAbove >= required;
     let top: number;
-    // Prefer the side that fits AND has more room. If neither fits, pick the
-    // larger side and clamp so we still avoid overlapping the spotlight.
-    const placeBelow =
-      (fitsBelow && (!fitsAbove || spaceBelow >= spaceAbove)) ||
-      (!fitsAbove && spaceBelow >= spaceAbove);
+    // RULE: Tooltip ALWAYS sits below the spotlight, with a clean gap and zero
+    // overlap. Only flip ABOVE when there is genuinely no room below AND above
+    // has meaningfully more space (e.g. spotlight near the bottom edge).
+    const placeBelow = spaceBelow >= required || spaceBelow >= spaceAbove;
     if (placeBelow) {
-      top = Math.min(
-        spotlight.y + spotlight.h + TOOLTIP_GAP,
-        viewport.h - tooltipHeight - VIEWPORT_MARGIN
-      );
-      // Guard: never allow the tooltip to overlap the spotlight rectangle.
-      top = Math.max(top, spotlight.y + spotlight.h + TOOLTIP_GAP);
+      // Anchor strictly below the spotlight bottom edge. Do NOT clamp upward —
+      // overlapping the spotlight is forbidden. If the tooltip extends past the
+      // viewport bottom, the 90vw width keeps it readable; users can always see
+      // the highlighted element clearly.
+      top = spotlight.y + spotlight.h + TOOLTIP_GAP;
     } else {
       top = Math.max(VIEWPORT_MARGIN, spotlight.y - TOOLTIP_GAP - tooltipHeight);
-      top = Math.min(top, spotlight.y - TOOLTIP_GAP - tooltipHeight);
     }
     let left = spotlight.x + spotlight.w / 2 - tooltipWidth / 2;
     left = Math.max(
@@ -639,7 +634,7 @@ export default function OnboardingTour({
             style={{
               left: cx,
               top: cy,
-              zIndex: 2,
+              zIndex: 20,
             }}
             aria-hidden="true"
           >
@@ -657,6 +652,7 @@ export default function OnboardingTour({
           maxWidth: '90vw',
           pointerEvents: 'auto',
           opacity: tooltipVisible ? 1 : 0,
+          zIndex: 10,
           // Snap position instantly; only fade in on reveal so the tooltip
           // never visibly slides between updates.
           transition: 'opacity 200ms ease-out',
