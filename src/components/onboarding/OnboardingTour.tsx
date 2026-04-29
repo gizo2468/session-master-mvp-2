@@ -570,12 +570,16 @@ export default function OnboardingTour({
 
       {/* Tooltip card */}
       <div
-        className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4 transition-all duration-300 ease-out"
+        ref={tooltipRef}
+        className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4"
         style={{
           ...tooltipStyle,
           pointerEvents: 'auto',
           opacity: tooltipVisible ? 1 : 0,
-          transform: tooltipVisible ? 'translateY(0)' : 'translateY(8px)',
+          // Smoothly track scroll/resize once the tooltip is visible; instant on first reveal.
+          transition: tooltipVisible
+            ? 'top 180ms ease-out, left 180ms ease-out, opacity 200ms ease-out'
+            : 'opacity 200ms ease-out',
           boxShadow: '0 20px 40px -10px rgba(0,0,0,0.6), 0 0 0 1px hsl(var(--primary) / 0.2)',
           fontFamily: "'Poppins', system-ui, sans-serif",
         }}
