@@ -100,6 +100,13 @@ export default function SessionForm() {
   const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[2] * 2);
   const [isTournamentTypeOpen, setIsTournamentTypeOpen] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+
+  // Onboarding: auto-open Advanced Options when the tour requests it.
+  useEffect(() => {
+    const handler = () => setIsAdvancedOpen(true);
+    window.addEventListener('onboarding:open-advanced', handler);
+    return () => window.removeEventListener('onboarding:open-advanced', handler);
+  }, []);
   
   // Premium manual blinds state
   const [isManualBlindsOpen, setIsManualBlindsOpen] = useState(false);
