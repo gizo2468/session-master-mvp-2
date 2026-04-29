@@ -652,6 +652,7 @@ export default function OnboardingTour({
           maxWidth: '90vw',
           pointerEvents: 'auto',
           opacity: tooltipVisible ? 1 : 0,
+          zIndex: 10,
           // Snap position instantly; only fade in on reveal so the tooltip
           // never visibly slides between updates.
           transition: 'opacity 200ms ease-out',
