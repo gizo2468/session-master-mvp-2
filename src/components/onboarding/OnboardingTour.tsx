@@ -33,7 +33,9 @@ interface OnboardingTourProps {
 const PADDING = 10;
 const RADIUS = 14;
 const TOOLTIP_GAP = 16;
-const TOOLTIP_WIDTH = 300;
+const TOOLTIP_MAX_WIDTH = 320;
+const TOOLTIP_MIN_WIDTH = 240;
+const VIEWPORT_MARGIN = 12;
 
 export default function OnboardingTour({
   steps,
@@ -192,6 +194,44 @@ export default function OnboardingTour({
     };
   }, [readRect]);
 
+  // Scroll & touch lockdown for the entire app while the tour is mounted.
+  // Prevents background scrolling/swiping (incl. iOS Safari rubber-banding) and
+  // makes the tutorial feel locked in place.
+  useEffect(() => {
+    const body = document.body;
+    const html = document.documentElement;
+    const prev = {
+      bodyOverflow: body.style.overflow,
+      bodyTouch: body.style.touchAction,
+      bodyOverscroll: body.style.overscrollBehavior,
+      htmlOverflow: html.style.overflow,
+      htmlTouch: html.style.touchAction,
+    };
+    body.style.overflow = 'hidden';
+    body.style.touchAction = 'none';
+    body.style.overscrollBehavior = 'none';
+    html.style.overflow = 'hidden';
+    html.style.touchAction = 'none';
+    return () => {
+      body.style.overflow = prev.bodyOverflow;
+      body.style.touchAction = prev.bodyTouch;
+      body.style.overscrollBehavior = prev.bodyOverscroll;
+      html.style.overflow = prev.htmlOverflow;
+      html.style.touchAction = prev.htmlTouch;
+    };
+  }, []);
+
+  // Observe size changes on the spotlighted element (e.g. accordion expanding)
+  // so the spotlight re-measures immediately instead of waiting for scroll/resize.
+  useEffect(() => {
+    if (!step || typeof ResizeObserver === 'undefined') return;
+    const el = document.querySelector(step.selector) as HTMLElement | null;
+    if (!el) return;
+    const ro = new ResizeObserver(() => readRect());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [step, readRect, currentStep]);
+
   // Measure tooltip's actual height so we can place it without overlap.
   useLayoutEffect(() => {
     if (!tooltipRef.current) return;
@@ -335,34 +375,49 @@ export default function OnboardingTour({
       }
     : null;
 
-  // Tooltip position: prefer below; fall back to above; if no rect, center.
-  // Uses real tooltipHeight so the gap from the spotlight is consistent and never overlaps.
+  // Tooltip position: pick the side (above/below) with more available room,
+  // size width responsively, and clamp into viewport so it never runs off-screen
+  // or overlaps the spotlighted element.
+  const tooltipWidth = Math.max(
+    TOOLTIP_MIN_WIDTH,
+    Math.min(TOOLTIP_MAX_WIDTH, viewport.w - VIEWPORT_MARGIN * 2)
+  );
   let tooltipStyle: React.CSSProperties;
   if (!spotlight) {
     tooltipStyle = {
-      top: Math.max(16, viewport.h / 2 - tooltipHeight / 2),
-      left: viewport.w / 2 - TOOLTIP_WIDTH / 2,
-      width: TOOLTIP_WIDTH,
+      top: Math.max(VIEWPORT_MARGIN, viewport.h / 2 - tooltipHeight / 2),
+      left: Math.max(VIEWPORT_MARGIN, viewport.w / 2 - tooltipWidth / 2),
+      width: tooltipWidth,
     };
   } else {
-    const required = tooltipHeight + TOOLTIP_GAP + 16;
+    const required = tooltipHeight + TOOLTIP_GAP + VIEWPORT_MARGIN;
     const spaceBelow = viewport.h - (spotlight.y + spotlight.h);
     const spaceAbove = spotlight.y;
+    const fitsBelow = spaceBelow >= required;
+    const fitsAbove = spaceAbove >= required;
     let top: number;
-    if (spaceBelow >= required) {
-      top = spotlight.y + spotlight.h + TOOLTIP_GAP;
-    } else if (spaceAbove >= required) {
-      top = spotlight.y - TOOLTIP_GAP - tooltipHeight;
+    // Prefer the side that fits AND has more room. If neither fits, pick the
+    // larger side and clamp so we still avoid overlapping the spotlight.
+    const placeBelow =
+      (fitsBelow && (!fitsAbove || spaceBelow >= spaceAbove)) ||
+      (!fitsAbove && spaceBelow >= spaceAbove);
+    if (placeBelow) {
+      top = Math.min(
+        spotlight.y + spotlight.h + TOOLTIP_GAP,
+        viewport.h - tooltipHeight - VIEWPORT_MARGIN
+      );
+      // Guard: never allow the tooltip to overlap the spotlight rectangle.
+      top = Math.max(top, spotlight.y + spotlight.h + TOOLTIP_GAP);
     } else {
-      // Neither side fits comfortably — pin to the side with more room, clamped to viewport.
-      top =
-        spaceBelow >= spaceAbove
-          ? Math.min(spotlight.y + spotlight.h + TOOLTIP_GAP, viewport.h - tooltipHeight - 16)
-          : Math.max(16, spotlight.y - TOOLTIP_GAP - tooltipHeight);
+      top = Math.max(VIEWPORT_MARGIN, spotlight.y - TOOLTIP_GAP - tooltipHeight);
+      top = Math.min(top, spotlight.y - TOOLTIP_GAP - tooltipHeight);
     }
-    let left = spotlight.x + spotlight.w / 2 - TOOLTIP_WIDTH / 2;
-    left = Math.max(12, Math.min(left, viewport.w - TOOLTIP_WIDTH - 12));
-    tooltipStyle = { top, left, width: TOOLTIP_WIDTH };
+    let left = spotlight.x + spotlight.w / 2 - tooltipWidth / 2;
+    left = Math.max(
+      VIEWPORT_MARGIN,
+      Math.min(left, viewport.w - tooltipWidth - VIEWPORT_MARGIN)
+    );
+    tooltipStyle = { top, left, width: tooltipWidth };
   }
 
   // Interactive steps render dim "bands" around the spotlight (instead of a full SVG mask),
@@ -571,9 +626,10 @@ export default function OnboardingTour({
       {/* Tooltip card */}
       <div
         ref={tooltipRef}
-        className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4"
+        className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4 sm:p-5"
         style={{
           ...tooltipStyle,
+          maxWidth: 'calc(100vw - 24px)',
           pointerEvents: 'auto',
           opacity: tooltipVisible ? 1 : 0,
           // Smoothly track scroll/resize once the tooltip is visible; instant on first reveal.
@@ -584,8 +640,8 @@ export default function OnboardingTour({
           fontFamily: "'Poppins', system-ui, sans-serif",
         }}
       >
-        <h3 className="text-base font-bold text-primary mb-1.5 text-center">{step.title}</h3>
-        <p className="text-sm text-foreground/80 leading-relaxed mb-4 text-center">
+        <h3 className="text-base sm:text-lg font-bold text-primary mb-1.5 text-center">{step.title}</h3>
+        <p className="text-sm sm:text-[0.95rem] text-foreground/80 leading-relaxed mb-4 text-center">
           {(() => {
             const idx = step.body.indexOf('! ');
             if (idx === -1) return step.body;

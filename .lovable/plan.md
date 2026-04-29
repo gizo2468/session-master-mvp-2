@@ -1,87 +1,69 @@
-# Onboarding Spotlight Stability + Auto-Expand Fix
+## Goal
 
-Focused fix on positioning math and pre-step DOM preparation. **No text/label changes.**
+Stabilize the onboarding tutorial so it feels locked and professional: no background scroll, no stray interactions, tooltip never overlaps the spotlight or runs off-screen, and Advanced Options is open before any of its child steps are spotlighted.
 
-## Part 1 — Tooltip Positioning Stability (`OnboardingTour.tsx`)
+All changes are isolated to the tour layer and `SessionForm`. No copy, button labels, or step ordering will change.
 
-Current bugs:
-- `measure()` uses a fixed `180` height assumption for above/below decisions — wrong for taller tooltips, causing the tooltip to overlap the spotlight (image_0 case).
-- On scroll, `measure()` is debounced via the same `setTimeout` retry path; if the element is near a viewport edge it triggers a `scrollIntoView` which fights the user's scroll → jitter.
-- Horizontal centering is correct, but vertical "prefer below / fall back to above" never accounts for actual tooltip height, so the gap is inconsistent.
+---
 
-Changes:
-1. **Measure the tooltip itself**: add a `tooltipRef` and read its real `offsetHeight` after first paint via `useLayoutEffect`. Store as `tooltipHeight` state.
-2. **Recompute placement using real height**:
-   - `spaceBelow = viewport.h - (spotlight.y + spotlight.h)`
-   - `spaceAbove = spotlight.y`
-   - Place below if `spaceBelow >= tooltipHeight + TOOLTIP_GAP + 16`, else above if `spaceAbove >= tooltipHeight + TOOLTIP_GAP + 16`, else clamp to viewport with `TOOLTIP_GAP` away from spotlight (never overlapping).
-   - Always center horizontally on `spotlight.x + spotlight.w/2`, then clamp to viewport edges.
-3. **Stop fighting the user on scroll**:
-   - Remove the auto `scrollIntoView` from `measure()`. Keep `scrollIntoView` only inside the step-change effect (initial focus on a new step).
-   - Replace per-event `measure()` on `scroll`/`resize` with a `requestAnimationFrame`-throttled measurer so the spotlight rect updates in lockstep with the page (no debounce lag).
-   - Keep listeners with `capture: true` so nested scrollers also trigger updates.
-4. **Initial-focus scroll** (step change only): if element is outside viewport, `scrollIntoView({block: 'center'})`, then start the rAF loop until the rect stabilizes (two consecutive equal rects), then reveal the tooltip with `setTooltipVisible(true)`. This kills the visible "jump" when a step opens.
-5. Apply a CSS `transition: top/left 200ms ease-out` only when the spotlight already exists (skip transition on first appearance) to keep scroll-tracking crisp without animation lag.
+## 1. Scroll lock + interaction lockdown (`OnboardingTour.tsx`)
 
-## Part 2 — State-Aware Steps (auto-expand before spotlight)
+While the tour overlay is mounted (menu OR any active step):
 
-Goal: a step targeting an element inside a collapsed section must open the section first, then spotlight the actual control — no floating box over a closed accordion.
+- Add `overflow: hidden` and `touch-action: none` to `document.body` and `document.documentElement` for the lifetime of the component (cleanup on unmount). Preserve the previous values to restore on cleanup so we don't fight other modals.
+- Keep the existing dim-bands approach for `interactive` steps (clicks pass through the hole) but ensure the bands cover the entire viewport with no gaps even after rect changes (the band math already handles this; we'll add `overflow: hidden` on the root overlay so any rounding won't leak).
+- For non-interactive steps the existing full-screen click blocker stays.
+- Add `aria-hidden="true"` and `inert` (best-effort) to `#root` siblings is not needed; the dim layer already swallows pointer events. The new body-level `touch-action: none` is what kills swipe/scroll on iOS Safari.
 
-### Step config extension (`tourSteps.ts`)
+Result: user can ONLY interact with the spotlighted element (or the tooltip buttons), and cannot scroll the page underneath.
 
-Add an optional pre-step hook:
+---
 
-```ts
-export interface TourStep {
-  // ...existing fields
-  /** Run before measuring; use to open accordions, switch tabs, etc. Return when DOM is ready. */
-  prepare?: () => void | Promise<void>;
-}
-```
+## 2. Smart, responsive tooltip placement (`OnboardingTour.tsx`)
 
-### New "Advanced Options" steps
+Replace the current fixed `TOOLTIP_WIDTH = 300` and "below, else above" logic with a width- and space-aware placement:
 
-Add three sub-steps in the `start-session` path, inserted **after** `optional-details` and **before** `submit-session`:
+- Compute `tooltipWidth = min(320, viewport.w - 24)` so it always fits with 12px side margins on phones.
+- Decide vertical side by *largest available space* rather than just "fits below":
+  - `spaceBelow = viewport.h - (spotlight.y + spotlight.h) - 16`
+  - `spaceAbove = spotlight.y - 16`
+  - Place on the side where `tooltipHeight + TOOLTIP_GAP` fits AND has more clearance.
+  - If neither side fits, pick the larger side and clamp `top` so the tooltip never overlaps the spotlight rect (subtract/add `TOOLTIP_GAP` against the spotlight edge, then clamp into viewport with 16px margin).
+- Horizontal: center on the spotlight, then clamp into `[12, viewport.w - tooltipWidth - 12]`.
+- Add a final guard: if the computed tooltip rectangle still intersects the spotlight rectangle (can happen on very small screens with tall spotlights), shrink `tooltipWidth` further or scroll the target so the tooltip wins. We'll prefer scrolling the target to a position that leaves the larger of the two halves of the viewport free, then re-measure.
+- Tooltip container: add responsive classes (`text-sm sm:text-base`, `p-4 sm:p-5`, `max-w-[calc(100vw-24px)]`) so font and padding scale cleanly across breakpoints.
 
-1. `selector: '[data-tour="advanced-online"]'` — Online Game checkbox row
-2. `selector: '[data-tour="advanced-multiday"]'` — Multi-Day Tournament row (only when format = Tournament; otherwise skipped at runtime)
-3. `selector: '[data-tour="advanced-late-reg"]'` — Late Registration row (same condition)
+Result: tooltip is always fully visible, never overlaps the spotlight or its action buttons, and reads cleanly on mobile / tablet / desktop.
 
-Each carries:
-```ts
-prepare: () => {
-  window.dispatchEvent(new CustomEvent('onboarding:open-advanced'));
-  // wait for collapsible animation
-  return new Promise(r => setTimeout(r, 250));
-}
-```
+---
 
-### `SessionForm.tsx` changes
+## 3. Advanced Options opens before Optional Details (`tourSteps.ts`)
 
-- Add `data-tour` attributes to the three `FormItem`s above (Online Game, Multi-Day, Late Registration).
-- Add an effect that listens for `onboarding:open-advanced` and calls `setIsAdvancedOpen(true)`.
-- Skip-step logic: if the step's selector resolves to no element after `prepare()` (e.g. Multi-Day when format is Cash), `OnboardingTour` auto-advances to the next step. Implemented in the existing measure-retry loop: after N failed attempts, call `setStep(currentStep + 1)` instead of leaving the tooltip stranded.
+Per the screenshot, the "Optional Details" step is meant to spotlight the Advanced Options block. Today only `advanced-online`, `advanced-multiday`, and `advanced-late-reg` carry the `prepare: openAdvanced` hook; the `optional-details` step does not, and it points at the "First Table / Session Name" field which sits *above* the accordion.
 
-### `OnboardingTour.tsx` integration
+Fix:
 
-In the step-change `useLayoutEffect`:
-```ts
-async function run() {
-  setTooltipVisible(false);
-  await step.prepare?.();
-  // existing tryMeasure() retry, then reveal
-}
-```
+- Add `prepare: openAdvanced` to the `optional-details` step so the accordion expands before measurement.
+- Keep the selector as `[data-tour="optional-details"]` for now (the field is the labeled "Optional details" target). With Advanced Options expanded, the spotlight + tooltip have room to lay out below without colliding with the accordion content.
+- The existing `onboarding:open-advanced` listener in `SessionForm.tsx` and the 280ms settle delay already handle the expansion animation — no changes needed there.
 
-## Technical Notes
+(No new steps, no relabeling.)
 
-- `tooltipHeight` defaults to a safe `200` until first measured to avoid a placement flicker.
-- Use `getBoundingClientRect` + rAF (no `setInterval`) for scroll tracking — cheap and tear-free.
-- Collapsible currently uses Radix `data-[state=open]/closed` animations (~200ms) — the 250ms `prepare` delay covers it.
-- No changes to existing copy, button labels, menu structure, or the `home-guide` / `dashboard-guide` paths.
+---
 
-## Files Touched
+## 4. Snap & stability (`OnboardingTour.tsx`)
 
-- `src/components/onboarding/OnboardingTour.tsx` — placement math, scroll tracking, prepare hook, auto-skip on missing element.
-- `src/components/onboarding/tourSteps.ts` — `prepare` field; three new advanced-options steps.
-- `src/pages/SessionForm.tsx` — `data-tour` attributes on three rows; listener for `onboarding:open-advanced`.
+The rAF-throttled `readRect` already keeps the spotlight glued to the target. Two small hardening tweaks:
+
+- Run one extra `readRect()` on the next frame after `tooltipVisible` flips to true, so the first paint is always against the final layout (eliminates the 1-frame jump some users see after `prepare` runs).
+- Add a `ResizeObserver` on the target element (when available) so changes inside the spotlighted element (e.g. the accordion finishing its open animation) immediately re-measure instead of waiting for a scroll/resize event.
+- Keep `transition: all 300ms ease` on the dim bands but set `transition: none` on the very first paint per step (when `hadRectRef.current === false`) so the spotlight snaps into place on step entry instead of sliding from the previous step's coordinates.
+
+---
+
+## Files touched
+
+- `src/components/onboarding/OnboardingTour.tsx` — scroll lock, lockdown, smart placement, ResizeObserver, snap-on-entry, responsive tooltip classes.
+- `src/components/onboarding/tourSteps.ts` — add `prepare: openAdvanced` to the `optional-details` step.
+
+No other files change. No copy or button labels change.
