@@ -11,6 +11,8 @@ export interface TourStep {
   interactive?: boolean;
   /** When true, render a circular spotlight instead of a rounded rectangle. */
   circle?: boolean;
+  /** Optional pre-step hook: open accordions, switch tabs, etc. before measuring. */
+  prepare?: () => void | Promise<void>;
 }
 
 interface OnboardingTourProps {
@@ -62,7 +64,11 @@ export default function OnboardingTour({
     h: typeof window !== 'undefined' ? window.innerHeight : 0,
   });
   const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [tooltipHeight, setTooltipHeight] = useState(200);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
   const measureTimer = useRef<number | null>(null);
+  const rafId = useRef<number | null>(null);
+  const hadRectRef = useRef(false);
 
   const step = steps[currentStep];
   const isLast = currentStep === steps.length - 1;
@@ -75,64 +81,123 @@ export default function OnboardingTour({
   const hideNextButton = isStartSessionStep || isSubmitSessionStep;
   const hidePreviousButton = isGameSetupStep;
 
-  const measure = useCallback(() => {
+  // Lightweight rect read — no scroll-into-view, no state churn if unchanged.
+  const readRect = useCallback(() => {
     if (!step) return;
     const el = document.querySelector(step.selector) as HTMLElement | null;
     if (!el) {
-      setRect(null);
+      setRect((prev) => (prev === null ? prev : null));
       return;
     }
     const r = el.getBoundingClientRect();
-    const vh = window.innerHeight;
-    if (r.top < 60 || r.bottom > vh - 60) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      window.setTimeout(() => {
-        const r2 = el.getBoundingClientRect();
-        setRect(r2);
-      }, 350);
-      return;
-    }
-    setRect(r);
+    setRect((prev) => {
+      if (
+        prev &&
+        prev.top === r.top &&
+        prev.left === r.left &&
+        prev.width === r.width &&
+        prev.height === r.height
+      ) {
+        return prev;
+      }
+      return r;
+    });
   }, [step]);
 
-  // Re-measure on step change with a tiny delay to allow paint, plus retries for elements
-  // that mount after navigation (e.g. SessionForm fields).
+  // Step-change effect: run prepare hook, scroll element into view if needed,
+  // then poll for the element until found (or auto-skip after retries).
   useLayoutEffect(() => {
     setTooltipVisible(false);
+    hadRectRef.current = false;
     if (measureTimer.current) window.clearTimeout(measureTimer.current);
 
+    let cancelled = false;
     let attempts = 0;
-    const tryMeasure = () => {
-      const el = step ? (document.querySelector(step.selector) as HTMLElement | null) : null;
-      if (!el && attempts < 20) {
+
+    const focusAndMeasure = () => {
+      if (cancelled || !step) return;
+      const el = document.querySelector(step.selector) as HTMLElement | null;
+      if (!el) {
+        if (attempts >= 25) {
+          // Element never appeared (e.g. Multi-Day step on a Cash format) — auto-skip.
+          if (!isLast) setStep(currentStep + 1);
+          return;
+        }
         attempts++;
-        measureTimer.current = window.setTimeout(tryMeasure, 100);
+        measureTimer.current = window.setTimeout(focusAndMeasure, 100);
         return;
       }
-      measure();
-      window.requestAnimationFrame(() => setTooltipVisible(true));
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      if (r.top < 80 || r.bottom > vh - 80) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        measureTimer.current = window.setTimeout(() => {
+          if (cancelled) return;
+          readRect();
+          window.requestAnimationFrame(() => !cancelled && setTooltipVisible(true));
+        }, 380);
+        return;
+      }
+      readRect();
+      window.requestAnimationFrame(() => !cancelled && setTooltipVisible(true));
     };
-    measureTimer.current = window.setTimeout(tryMeasure, 50);
+
+    const run = async () => {
+      try {
+        await step?.prepare?.();
+      } catch {
+        /* ignore */
+      }
+      if (cancelled) return;
+      // Small delay so any layout from prepare() settles before first measurement.
+      measureTimer.current = window.setTimeout(focusAndMeasure, 60);
+    };
+    run();
 
     return () => {
+      cancelled = true;
       if (measureTimer.current) window.clearTimeout(measureTimer.current);
     };
-  }, [currentStep, measure, step]);
+  }, [currentStep, step, readRect, setStep, isLast]);
 
-  // Resize / scroll listeners
+  // Track when we have a rect (to enable position transitions only after first paint).
   useEffect(() => {
+    if (rect) hadRectRef.current = true;
+  }, [rect]);
+
+  // rAF-throttled scroll/resize tracking — keeps spotlight glued to the target
+  // without fighting the user's scroll.
+  useEffect(() => {
+    let scheduled = false;
+    const tick = () => {
+      scheduled = false;
+      rafId.current = null;
+      readRect();
+    };
+    const schedule = () => {
+      if (scheduled) return;
+      scheduled = true;
+      rafId.current = window.requestAnimationFrame(tick);
+    };
     const onResize = () => {
       setViewport({ w: window.innerWidth, h: window.innerHeight });
-      measure();
+      schedule();
     };
-    const onScroll = () => measure();
     window.addEventListener('resize', onResize);
-    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('scroll', schedule, true);
     return () => {
       window.removeEventListener('resize', onResize);
-      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('scroll', schedule, true);
+      if (rafId.current) window.cancelAnimationFrame(rafId.current);
     };
-  }, [measure]);
+  }, [readRect]);
+
+  // Measure tooltip's actual height so we can place it without overlap.
+  useLayoutEffect(() => {
+    if (!tooltipRef.current) return;
+    const h = tooltipRef.current.offsetHeight;
+    if (h && Math.abs(h - tooltipHeight) > 2) setTooltipHeight(h);
+  });
 
   // Toggle a body-level class while highlighting the START SESSION chip so it can pulse via CSS.
   useEffect(() => {
@@ -270,20 +335,31 @@ export default function OnboardingTour({
       }
     : null;
 
-  // Tooltip position: prefer below; fall back to above; if no rect, center
+  // Tooltip position: prefer below; fall back to above; if no rect, center.
+  // Uses real tooltipHeight so the gap from the spotlight is consistent and never overlaps.
   let tooltipStyle: React.CSSProperties;
   if (!spotlight) {
     tooltipStyle = {
-      top: viewport.h / 2 - 80,
+      top: Math.max(16, viewport.h / 2 - tooltipHeight / 2),
       left: viewport.w / 2 - TOOLTIP_WIDTH / 2,
       width: TOOLTIP_WIDTH,
     };
   } else {
+    const required = tooltipHeight + TOOLTIP_GAP + 16;
     const spaceBelow = viewport.h - (spotlight.y + spotlight.h);
-    const showBelow = spaceBelow > 180;
-    const top = showBelow
-      ? spotlight.y + spotlight.h + TOOLTIP_GAP
-      : Math.max(16, spotlight.y - TOOLTIP_GAP - 180);
+    const spaceAbove = spotlight.y;
+    let top: number;
+    if (spaceBelow >= required) {
+      top = spotlight.y + spotlight.h + TOOLTIP_GAP;
+    } else if (spaceAbove >= required) {
+      top = spotlight.y - TOOLTIP_GAP - tooltipHeight;
+    } else {
+      // Neither side fits comfortably — pin to the side with more room, clamped to viewport.
+      top =
+        spaceBelow >= spaceAbove
+          ? Math.min(spotlight.y + spotlight.h + TOOLTIP_GAP, viewport.h - tooltipHeight - 16)
+          : Math.max(16, spotlight.y - TOOLTIP_GAP - tooltipHeight);
+    }
     let left = spotlight.x + spotlight.w / 2 - TOOLTIP_WIDTH / 2;
     left = Math.max(12, Math.min(left, viewport.w - TOOLTIP_WIDTH - 12));
     tooltipStyle = { top, left, width: TOOLTIP_WIDTH };
@@ -494,12 +570,16 @@ export default function OnboardingTour({
 
       {/* Tooltip card */}
       <div
-        className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4 transition-all duration-300 ease-out"
+        ref={tooltipRef}
+        className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4"
         style={{
           ...tooltipStyle,
           pointerEvents: 'auto',
           opacity: tooltipVisible ? 1 : 0,
-          transform: tooltipVisible ? 'translateY(0)' : 'translateY(8px)',
+          // Smoothly track scroll/resize once the tooltip is visible; instant on first reveal.
+          transition: tooltipVisible
+            ? 'top 180ms ease-out, left 180ms ease-out, opacity 200ms ease-out'
+            : 'opacity 200ms ease-out',
           boxShadow: '0 20px 40px -10px rgba(0,0,0,0.6), 0 0 0 1px hsl(var(--primary) / 0.2)',
           fontFamily: "'Poppins', system-ui, sans-serif",
         }}

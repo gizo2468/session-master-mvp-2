@@ -100,6 +100,13 @@ export default function SessionForm() {
   const [bigBlind, setBigBlind] = useState(BLIND_PRESETS.smallBlind[2] * 2);
   const [isTournamentTypeOpen, setIsTournamentTypeOpen] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+
+  // Onboarding: auto-open Advanced Options when the tour requests it.
+  useEffect(() => {
+    const handler = () => setIsAdvancedOpen(true);
+    window.addEventListener('onboarding:open-advanced', handler);
+    return () => window.removeEventListener('onboarding:open-advanced', handler);
+  }, []);
   
   // Premium manual blinds state
   const [isManualBlindsOpen, setIsManualBlindsOpen] = useState(false);
@@ -699,7 +706,7 @@ export default function SessionForm() {
                   control={form.control}
                   name="isOnline"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormItem data-tour="advanced-online" className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                       <FormControl>
                         <Checkbox
                           checked={field.value}
@@ -741,7 +748,7 @@ export default function SessionForm() {
                     control={form.control}
                     name="isMultiDay"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormItem data-tour="advanced-multiday" className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -765,7 +772,7 @@ export default function SessionForm() {
                     control={form.control}
                     name="lateRegistration"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormItem data-tour="advanced-late-reg" className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                         <FormControl>
                           <Checkbox
                             checked={field.value}

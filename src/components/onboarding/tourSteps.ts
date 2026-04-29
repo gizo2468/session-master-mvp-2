@@ -8,9 +8,16 @@ export interface TourStep {
   circle?: boolean;
   /** Route this step lives on, used to know when to render the tour on each page. */
   route: '/' | '/new-session' | '/session';
+  /** Run before measuring; use to open accordions, switch tabs, etc. Return when DOM is ready. */
+  prepare?: () => void | Promise<void>;
 }
 
 export type TourPathId = 'start-session' | 'home-guide' | 'dashboard-guide';
+
+const openAdvanced = () => {
+  window.dispatchEvent(new CustomEvent('onboarding:open-advanced'));
+  return new Promise<void>((r) => setTimeout(r, 280));
+};
 
 export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
   'start-session': [
@@ -42,6 +49,30 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
       body: "Give your session or first table a custom name so it's easier to find in your history. You can also log the location or online poker site here. Don't worry, you can skip this if you're in a rush!",
       interactive: true,
       route: '/new-session',
+    },
+    {
+      selector: '[data-tour="advanced-online"]',
+      title: 'Online Game',
+      body: "Toggle this on if you're playing online. You can also note where you're playing from.",
+      interactive: true,
+      route: '/new-session',
+      prepare: openAdvanced,
+    },
+    {
+      selector: '[data-tour="advanced-multiday"]',
+      title: 'Multi-Day Tournament',
+      body: 'For tournaments that span multiple days, enable this so we track each day correctly.',
+      interactive: true,
+      route: '/new-session',
+      prepare: openAdvanced,
+    },
+    {
+      selector: '[data-tour="advanced-late-reg"]',
+      title: 'Late Registration',
+      body: 'Enable this if late registration is still available for the tournament.',
+      interactive: true,
+      route: '/new-session',
+      prepare: openAdvanced,
     },
     {
       selector: '[data-tour="submit-session"]',
