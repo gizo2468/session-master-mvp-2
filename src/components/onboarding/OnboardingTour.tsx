@@ -33,7 +33,9 @@ interface OnboardingTourProps {
 const PADDING = 10;
 const RADIUS = 14;
 const TOOLTIP_GAP = 16;
-const TOOLTIP_WIDTH = 300;
+const TOOLTIP_MAX_WIDTH = 320;
+const TOOLTIP_MIN_WIDTH = 240;
+const VIEWPORT_MARGIN = 12;
 
 export default function OnboardingTour({
   steps,
