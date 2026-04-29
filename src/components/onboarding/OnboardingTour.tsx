@@ -402,9 +402,10 @@ export default function OnboardingTour({
   // Tooltip position: pick the side (above/below) with more available room,
   // size width responsively, and clamp into viewport so it never runs off-screen
   // or overlaps the spotlighted element.
+  // Width: never wider than viewport - margins, and never wider than 90vw.
   const tooltipWidth = Math.max(
-    TOOLTIP_MIN_WIDTH,
-    Math.min(TOOLTIP_MAX_WIDTH, viewport.w - VIEWPORT_MARGIN * 2)
+    Math.min(TOOLTIP_MIN_WIDTH, viewport.w - VIEWPORT_MARGIN * 2),
+    Math.min(TOOLTIP_MAX_WIDTH, viewport.w - VIEWPORT_MARGIN * 2, viewport.w * 0.9)
   );
   let tooltipStyle: React.CSSProperties;
   if (!spotlight) {
