@@ -106,8 +106,9 @@ export default function OnboardingTour({
     });
   }, [step]);
 
-  // Step-change effect: run prepare hook, scroll element into view if needed,
-  // then poll for the element until found (or auto-skip after retries).
+  // Step-change effect: run prepare hook, then poll for the element until found
+  // (or auto-skip after retries). NO smooth scrollIntoView — that causes the
+  // spotlight/tooltip to drift visibly. We snap directly to the rect instead.
   useLayoutEffect(() => {
     setTooltipVisible(false);
     hadRectRef.current = false;
@@ -121,7 +122,6 @@ export default function OnboardingTour({
       const el = document.querySelector(step.selector) as HTMLElement | null;
       if (!el) {
         if (attempts >= 25) {
-          // Element never appeared (e.g. Multi-Day step on a Cash format) — auto-skip.
           if (!isLast) setStep(currentStep + 1);
           return;
         }
@@ -129,19 +129,13 @@ export default function OnboardingTour({
         measureTimer.current = window.setTimeout(focusAndMeasure, 100);
         return;
       }
-      const r = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-      if (r.top < 80 || r.bottom > vh - 80) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        measureTimer.current = window.setTimeout(() => {
-          if (cancelled) return;
-          readRect();
-          window.requestAnimationFrame(() => !cancelled && setTooltipVisible(true));
-        }, 380);
-        return;
-      }
       readRect();
-      window.requestAnimationFrame(() => !cancelled && setTooltipVisible(true));
+      // Two rAFs: ensure layout settled (esp. after prepare()) before reveal.
+      window.requestAnimationFrame(() => {
+        if (cancelled) return;
+        readRect();
+        window.requestAnimationFrame(() => !cancelled && setTooltipVisible(true));
+      });
     };
 
     const run = async () => {
@@ -151,7 +145,6 @@ export default function OnboardingTour({
         /* ignore */
       }
       if (cancelled) return;
-      // Small delay so any layout from prepare() settles before first measurement.
       measureTimer.current = window.setTimeout(focusAndMeasure, 60);
     };
     run();
@@ -194,30 +187,61 @@ export default function OnboardingTour({
     };
   }, [readRect]);
 
-  // Scroll & touch lockdown for the entire app while the tour is mounted.
-  // Prevents background scrolling/swiping (incl. iOS Safari rubber-banding) and
-  // makes the tutorial feel locked in place.
+  // STRICT scroll & interaction lockdown across html, body, AND the app's
+  // real scroll root (AppLayout's `fixed inset-0 overflow-y-auto` div). Without
+  // locking the app scroll root, the background drifts and the spotlight feels
+  // detached. We also block wheel/touchmove/scroll-keys as a hard fallback.
   useEffect(() => {
-    const body = document.body;
     const html = document.documentElement;
-    const prev = {
-      bodyOverflow: body.style.overflow,
-      bodyTouch: body.style.touchAction,
-      bodyOverscroll: body.style.overscrollBehavior,
-      htmlOverflow: html.style.overflow,
-      htmlTouch: html.style.touchAction,
+    const body = document.body;
+    const appRoot = document.querySelector('[data-app-scroll-root="true"]') as HTMLElement | null;
+
+    const targets: Array<{ el: HTMLElement; prev: Record<string, string> }> = [];
+    const lock = (el: HTMLElement) => {
+      targets.push({
+        el,
+        prev: {
+          overflow: el.style.overflow,
+          height: el.style.height,
+          touchAction: el.style.touchAction,
+          overscrollBehavior: el.style.overscrollBehavior,
+        },
+      });
+      el.style.overflow = 'hidden';
+      el.style.height = '100vh';
+      el.style.touchAction = 'none';
+      el.style.overscrollBehavior = 'none';
     };
-    body.style.overflow = 'hidden';
-    body.style.touchAction = 'none';
-    body.style.overscrollBehavior = 'none';
-    html.style.overflow = 'hidden';
-    html.style.touchAction = 'none';
+    lock(html);
+    lock(body);
+    if (appRoot) lock(appRoot);
+
+    // Allow scroll/touch only inside the tooltip card; block everything else.
+    const isInsideTooltip = (target: EventTarget | null) =>
+      target instanceof Node && tooltipRef.current?.contains(target);
+    const blockEvent = (e: Event) => {
+      if (isInsideTooltip(e.target)) return;
+      e.preventDefault();
+    };
+    const blockKeys = (e: KeyboardEvent) => {
+      if (isInsideTooltip(e.target)) return;
+      const keys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Spacebar'];
+      if (keys.includes(e.key)) e.preventDefault();
+    };
+    window.addEventListener('wheel', blockEvent, { passive: false });
+    window.addEventListener('touchmove', blockEvent, { passive: false });
+    window.addEventListener('keydown', blockKeys);
+
     return () => {
-      body.style.overflow = prev.bodyOverflow;
-      body.style.touchAction = prev.bodyTouch;
-      body.style.overscrollBehavior = prev.bodyOverscroll;
-      html.style.overflow = prev.htmlOverflow;
-      html.style.touchAction = prev.htmlTouch;
+      targets.forEach(({ el, prev }) => {
+        el.style.overflow = prev.overflow;
+        el.style.height = prev.height;
+        el.style.touchAction = prev.touchAction;
+        el.style.overscrollBehavior = prev.overscrollBehavior;
+      });
+      window.removeEventListener('wheel', blockEvent);
+      window.removeEventListener('touchmove', blockEvent);
+      window.removeEventListener('keydown', blockKeys);
     };
   }, []);
 
@@ -378,9 +402,10 @@ export default function OnboardingTour({
   // Tooltip position: pick the side (above/below) with more available room,
   // size width responsively, and clamp into viewport so it never runs off-screen
   // or overlaps the spotlighted element.
+  // Width: never wider than viewport - margins, and never wider than 90vw.
   const tooltipWidth = Math.max(
-    TOOLTIP_MIN_WIDTH,
-    Math.min(TOOLTIP_MAX_WIDTH, viewport.w - VIEWPORT_MARGIN * 2)
+    Math.min(TOOLTIP_MIN_WIDTH, viewport.w - VIEWPORT_MARGIN * 2),
+    Math.min(TOOLTIP_MAX_WIDTH, viewport.w - VIEWPORT_MARGIN * 2, viewport.w * 0.9)
   );
   let tooltipStyle: React.CSSProperties;
   if (!spotlight) {
@@ -510,7 +535,7 @@ export default function OnboardingTour({
                   height: b.height,
                   background: 'rgba(0,0,0,0.72)',
                   pointerEvents: 'auto',
-                  transition: 'all 300ms ease',
+                  transition: 'none',
                 }}
                 onClick={(e) => e.stopPropagation()}
               />
@@ -551,7 +576,7 @@ export default function OnboardingTour({
               height="100%"
               fill="rgba(0,0,0,0.72)"
               mask="url(#onboarding-spotlight-mask)"
-              style={{ transition: 'all 300ms ease' }}
+              style={{ transition: 'none' }}
             />
           </>
         )}
@@ -568,7 +593,7 @@ export default function OnboardingTour({
             opacity="0.85"
             style={{
               filter: 'drop-shadow(0 0 8px hsl(var(--primary) / 0.7))',
-              transition: 'all 300ms ease',
+              transition: 'none',
             }}
           />
         ) : spotlight ? (
@@ -585,7 +610,7 @@ export default function OnboardingTour({
             opacity="0.85"
             style={{
               filter: 'drop-shadow(0 0 8px hsl(var(--primary) / 0.7))',
-              transition: 'all 300ms ease',
+              transition: 'none',
             }}
           />
         ) : null}
@@ -629,13 +654,12 @@ export default function OnboardingTour({
         className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4 sm:p-5"
         style={{
           ...tooltipStyle,
-          maxWidth: 'calc(100vw - 24px)',
+          maxWidth: '90vw',
           pointerEvents: 'auto',
           opacity: tooltipVisible ? 1 : 0,
-          // Smoothly track scroll/resize once the tooltip is visible; instant on first reveal.
-          transition: tooltipVisible
-            ? 'top 180ms ease-out, left 180ms ease-out, opacity 200ms ease-out'
-            : 'opacity 200ms ease-out',
+          // Snap position instantly; only fade in on reveal so the tooltip
+          // never visibly slides between updates.
+          transition: 'opacity 200ms ease-out',
           boxShadow: '0 20px 40px -10px rgba(0,0,0,0.6), 0 0 0 1px hsl(var(--primary) / 0.2)',
           fontFamily: "'Poppins', system-ui, sans-serif",
         }}

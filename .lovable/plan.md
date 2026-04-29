@@ -1,69 +1,83 @@
 ## Goal
+Make the onboarding tour fully locked and stable: no background scrolling, no drifting spotlight, no animated detachment, and correct pre-expansion of Advanced Options before measurement.
 
-Stabilize the onboarding tutorial so it feels locked and professional: no background scroll, no stray interactions, tooltip never overlaps the spotlight or runs off-screen, and Advanced Options is open before any of its child steps are spotlighted.
+## What will change
 
-All changes are isolated to the tour layer and `SessionForm`. No copy, button labels, or step ordering will change.
+### 1. Lock the real scrolling surface, not just `body`
+The current tour already sets `overflow: hidden` on `html`/`body`, but the app’s main scrollable container is `AppLayout` (`fixed inset-0 overflow-y-auto`). That is why the background can still move and the spotlight drifts.
 
----
+I will update the tour to lock all relevant scroll roots while it is mounted:
+- `document.documentElement`
+- `document.body`
+- the app scroll container in `AppLayout`
 
-## 1. Scroll lock + interaction lockdown (`OnboardingTour.tsx`)
+Lock behavior while a tour step is active:
+- apply `overflow: hidden`
+- apply `height: 100vh`
+- apply `touch-action: none`
+- apply `overscroll-behavior: none`
+- preserve and restore previous inline styles on cleanup
+- prevent wheel / touchmove / scroll-key input as a fallback so iOS and nested-scroll cases cannot bypass the lock
 
-While the tour overlay is mounted (menu OR any active step):
+To make this reliable, `AppLayout` will expose its scroll root in a stable way (for example via a data attribute), and `OnboardingTour` will target that exact node.
 
-- Add `overflow: hidden` and `touch-action: none` to `document.body` and `document.documentElement` for the lifetime of the component (cleanup on unmount). Preserve the previous values to restore on cleanup so we don't fight other modals.
-- Keep the existing dim-bands approach for `interactive` steps (clicks pass through the hole) but ensure the bands cover the entire viewport with no gaps even after rect changes (the band math already handles this; we'll add `overflow: hidden` on the root overlay so any rounding won't leak).
-- For non-interactive steps the existing full-screen click blocker stays.
-- Add `aria-hidden="true"` and `inert` (best-effort) to `#root` siblings is not needed; the dim layer already swallows pointer events. The new body-level `touch-action: none` is what kills swipe/scroll on iOS Safari.
+Result: zero page swiping, zero scrollbar movement, zero background drift until the tour closes.
 
-Result: user can ONLY interact with the spotlighted element (or the tooltip buttons), and cannot scroll the page underneath.
+### 2. Remove movement-causing tour behavior and snap to `getBoundingClientRect()`
+The tour currently still performs `scrollIntoView({ behavior: 'smooth' })` when a target is off-center, and the tooltip/overlay use animated top/left transitions. Both of those create visible motion and make the tour feel detached.
 
----
+I will change the tour to:
+- stop using smooth `scrollIntoView` during active steps
+- measure the target directly from `getBoundingClientRect()`
+- render spotlight and tooltip with fixed positioning from that rect
+- recalculate instantly on resize, orientation change, and target size changes
+- keep `ResizeObserver` on the target
+- use rAF scheduling only to batch reads, not to animate movement
+- remove top/left transitions from spotlight bands, outline, and tooltip so position updates snap immediately
 
-## 2. Smart, responsive tooltip placement (`OnboardingTour.tsx`)
+Result: spotlight and tooltip stay glued to the target with no visible slide or lag.
 
-Replace the current fixed `TOOLTIP_WIDTH = 300` and "below, else above" logic with a width- and space-aware placement:
+### 3. Keep tooltip responsive and edge-aware on all devices
+The tooltip will remain centered on the target horizontally, but constrained to the viewport.
 
-- Compute `tooltipWidth = min(320, viewport.w - 24)` so it always fits with 12px side margins on phones.
-- Decide vertical side by *largest available space* rather than just "fits below":
-  - `spaceBelow = viewport.h - (spotlight.y + spotlight.h) - 16`
-  - `spaceAbove = spotlight.y - 16`
-  - Place on the side where `tooltipHeight + TOOLTIP_GAP` fits AND has more clearance.
-  - If neither side fits, pick the larger side and clamp `top` so the tooltip never overlaps the spotlight rect (subtract/add `TOOLTIP_GAP` against the spotlight edge, then clamp into viewport with 16px margin).
-- Horizontal: center on the spotlight, then clamp into `[12, viewport.w - tooltipWidth - 12]`.
-- Add a final guard: if the computed tooltip rectangle still intersects the spotlight rectangle (can happen on very small screens with tall spotlights), shrink `tooltipWidth` further or scroll the target so the tooltip wins. We'll prefer scrolling the target to a position that leaves the larger of the two halves of the viewport free, then re-measure.
-- Tooltip container: add responsive classes (`text-sm sm:text-base`, `p-4 sm:p-5`, `max-w-[calc(100vw-24px)]`) so font and padding scale cleanly across breakpoints.
+Placement rules:
+- width capped to available screen space, e.g. `max-width: 90vw` / viewport minus side padding
+- choose above or below based on available vertical space
+- flip to the bottom automatically when there is not enough room above on smaller screens
+- clamp left/right so it never runs off-screen
+- maintain a fixed gap from the spotlight
+- if neither side has enough room, choose the larger side and clamp safely without overlapping the spotlight
 
-Result: tooltip is always fully visible, never overlaps the spotlight or its action buttons, and reads cleanly on mobile / tablet / desktop.
+Result: tooltip stays readable and fully visible on phone, tablet, and desktop.
 
----
+### 4. Prepare UI state before measuring `Optional Details`
+The `optional-details` tour step already has a `prepare` hook, but I will keep this path explicit and tied to measurement order:
+- trigger `onboarding:open-advanced`
+- wait for the accordion open state / animation settle
+- only then measure the target and render the spotlight/tooltip
 
-## 3. Advanced Options opens before Optional Details (`tourSteps.ts`)
+If needed, I will harden the settle logic so measurement does not occur until the expanded layout is actually visible.
 
-Per the screenshot, the "Optional Details" step is meant to spotlight the Advanced Options block. Today only `advanced-online`, `advanced-multiday`, and `advanced-late-reg` carry the `prepare: openAdvanced` hook; the `optional-details` step does not, and it points at the "First Table / Session Name" field which sits *above* the accordion.
+Result: the spotlight calculates against the final expanded DOM, not the collapsed layout.
 
-Fix:
+## Files to update
+- `src/components/onboarding/OnboardingTour.tsx`
+  - strict multi-root scroll lock
+  - event-level scroll prevention fallback
+  - fixed snap-to-target positioning
+  - instant recalculation behavior
+  - responsive tooltip clamping / flip logic
+  - remove motion that causes drift
+- `src/components/AppLayout.tsx`
+  - expose the real app scroll container so the tour can lock it reliably
+- `src/components/onboarding/tourSteps.ts`
+  - verify `optional-details` keeps `prepare: openAdvanced`
+- `src/pages/SessionForm.tsx`
+  - keep / harden the accordion-open listener if measurement timing needs tightening
 
-- Add `prepare: openAdvanced` to the `optional-details` step so the accordion expands before measurement.
-- Keep the selector as `[data-tour="optional-details"]` for now (the field is the labeled "Optional details" target). With Advanced Options expanded, the spotlight + tooltip have room to lay out below without colliding with the accordion content.
-- The existing `onboarding:open-advanced` listener in `SessionForm.tsx` and the 280ms settle delay already handle the expansion animation — no changes needed there.
-
-(No new steps, no relabeling.)
-
----
-
-## 4. Snap & stability (`OnboardingTour.tsx`)
-
-The rAF-throttled `readRect` already keeps the spotlight glued to the target. Two small hardening tweaks:
-
-- Run one extra `readRect()` on the next frame after `tooltipVisible` flips to true, so the first paint is always against the final layout (eliminates the 1-frame jump some users see after `prepare` runs).
-- Add a `ResizeObserver` on the target element (when available) so changes inside the spotlighted element (e.g. the accordion finishing its open animation) immediately re-measure instead of waiting for a scroll/resize event.
-- Keep `transition: all 300ms ease` on the dim bands but set `transition: none` on the very first paint per step (when `hadRectRef.current === false`) so the spotlight snaps into place on step entry instead of sliding from the previous step's coordinates.
-
----
-
-## Files touched
-
-- `src/components/onboarding/OnboardingTour.tsx` — scroll lock, lockdown, smart placement, ResizeObserver, snap-on-entry, responsive tooltip classes.
-- `src/components/onboarding/tourSteps.ts` — add `prepare: openAdvanced` to the `optional-details` step.
-
-No other files change. No copy or button labels change.
+## Technical notes
+- No copy changes
+- No button label changes
+- No step order changes
+- The update stays isolated to onboarding behavior and the app scroll root
+- Cleanup will fully restore normal scrolling when the tour closes or is dismissed
