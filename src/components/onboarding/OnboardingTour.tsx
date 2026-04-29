@@ -335,20 +335,31 @@ export default function OnboardingTour({
       }
     : null;
 
-  // Tooltip position: prefer below; fall back to above; if no rect, center
+  // Tooltip position: prefer below; fall back to above; if no rect, center.
+  // Uses real tooltipHeight so the gap from the spotlight is consistent and never overlaps.
   let tooltipStyle: React.CSSProperties;
   if (!spotlight) {
     tooltipStyle = {
-      top: viewport.h / 2 - 80,
+      top: Math.max(16, viewport.h / 2 - tooltipHeight / 2),
       left: viewport.w / 2 - TOOLTIP_WIDTH / 2,
       width: TOOLTIP_WIDTH,
     };
   } else {
+    const required = tooltipHeight + TOOLTIP_GAP + 16;
     const spaceBelow = viewport.h - (spotlight.y + spotlight.h);
-    const showBelow = spaceBelow > 180;
-    const top = showBelow
-      ? spotlight.y + spotlight.h + TOOLTIP_GAP
-      : Math.max(16, spotlight.y - TOOLTIP_GAP - 180);
+    const spaceAbove = spotlight.y;
+    let top: number;
+    if (spaceBelow >= required) {
+      top = spotlight.y + spotlight.h + TOOLTIP_GAP;
+    } else if (spaceAbove >= required) {
+      top = spotlight.y - TOOLTIP_GAP - tooltipHeight;
+    } else {
+      // Neither side fits comfortably — pin to the side with more room, clamped to viewport.
+      top =
+        spaceBelow >= spaceAbove
+          ? Math.min(spotlight.y + spotlight.h + TOOLTIP_GAP, viewport.h - tooltipHeight - 16)
+          : Math.max(16, spotlight.y - TOOLTIP_GAP - tooltipHeight);
+    }
     let left = spotlight.x + spotlight.w / 2 - TOOLTIP_WIDTH / 2;
     left = Math.max(12, Math.min(left, viewport.w - TOOLTIP_WIDTH - 12));
     tooltipStyle = { top, left, width: TOOLTIP_WIDTH };
