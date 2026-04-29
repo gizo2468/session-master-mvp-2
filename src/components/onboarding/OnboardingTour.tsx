@@ -634,7 +634,7 @@ export default function OnboardingTour({
             style={{
               left: cx,
               top: cy,
-              zIndex: 2,
+              zIndex: 20,
             }}
             aria-hidden="true"
           >
