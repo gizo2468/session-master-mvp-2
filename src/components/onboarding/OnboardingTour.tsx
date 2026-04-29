@@ -194,6 +194,44 @@ export default function OnboardingTour({
     };
   }, [readRect]);
 
+  // Scroll & touch lockdown for the entire app while the tour is mounted.
+  // Prevents background scrolling/swiping (incl. iOS Safari rubber-banding) and
+  // makes the tutorial feel locked in place.
+  useEffect(() => {
+    const body = document.body;
+    const html = document.documentElement;
+    const prev = {
+      bodyOverflow: body.style.overflow,
+      bodyTouch: body.style.touchAction,
+      bodyOverscroll: body.style.overscrollBehavior,
+      htmlOverflow: html.style.overflow,
+      htmlTouch: html.style.touchAction,
+    };
+    body.style.overflow = 'hidden';
+    body.style.touchAction = 'none';
+    body.style.overscrollBehavior = 'none';
+    html.style.overflow = 'hidden';
+    html.style.touchAction = 'none';
+    return () => {
+      body.style.overflow = prev.bodyOverflow;
+      body.style.touchAction = prev.bodyTouch;
+      body.style.overscrollBehavior = prev.bodyOverscroll;
+      html.style.overflow = prev.htmlOverflow;
+      html.style.touchAction = prev.htmlTouch;
+    };
+  }, []);
+
+  // Observe size changes on the spotlighted element (e.g. accordion expanding)
+  // so the spotlight re-measures immediately instead of waiting for scroll/resize.
+  useEffect(() => {
+    if (!step || typeof ResizeObserver === 'undefined') return;
+    const el = document.querySelector(step.selector) as HTMLElement | null;
+    if (!el) return;
+    const ro = new ResizeObserver(() => readRect());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [step, readRect, currentStep]);
+
   // Measure tooltip's actual height so we can place it without overlap.
   useLayoutEffect(() => {
     if (!tooltipRef.current) return;
