@@ -1,83 +1,80 @@
 ## Goal
-Make the onboarding tour fully locked and stable: no background scrolling, no drifting spotlight, no animated detachment, and correct pre-expansion of Advanced Options before measurement.
 
-## What will change
+Force the onboarding tooltip to **always sit below the spotlighted element**, with zero overlap and clean centering. Only flip above when there is genuinely no room below.
 
-### 1. Lock the real scrolling surface, not just `body`
-The current tour already sets `overflow: hidden` on `html`/`body`, but the app’s main scrollable container is `AppLayout` (`fixed inset-0 overflow-y-auto`). That is why the background can still move and the spotlight drifts.
+## The Problem
 
-I will update the tour to lock all relevant scroll roots while it is mounted:
-- `document.documentElement`
-- `document.body`
-- the app scroll container in `AppLayout`
+Current placement logic (`OnboardingTour.tsx`, ~lines 426-439) picks the side with *more* available space. On the home screen the START SESSION chip sits roughly mid-viewport, so the algorithm flips the tooltip above the chip — and because the chip is large, the tooltip card visually overlaps the spotlight (see screenshot). The rule "below by default, flip only when impossible" is not implemented.
 
-Lock behavior while a tour step is active:
-- apply `overflow: hidden`
-- apply `height: 100vh`
-- apply `touch-action: none`
-- apply `overscroll-behavior: none`
-- preserve and restore previous inline styles on cleanup
-- prevent wheel / touchmove / scroll-key input as a fallback so iOS and nested-scroll cases cannot bypass the lock
+Additional issues:
+- The pulsing tap-hand uses `zIndex: 2` but the tooltip is a sibling rendered later in the DOM with a much higher effective stacking. The tap-hand needs to be guaranteed on top of the tooltip's layer so the user always sees the interaction cue clearly.
+- No hard guard preventing the tooltip rect from overlapping the spotlight rect when "below" is forced and space is tight.
 
-To make this reliable, `AppLayout` will expose its scroll root in a stable way (for example via a data attribute), and `OnboardingTour` will target that exact node.
+## Changes (single file: `src/components/onboarding/OnboardingTour.tsx`)
 
-Result: zero page swiping, zero scrollbar movement, zero background drift until the tour closes.
+### 1. Rewrite tooltip placement to "below-first"
 
-### 2. Remove movement-causing tour behavior and snap to `getBoundingClientRect()`
-The tour currently still performs `scrollIntoView({ behavior: 'smooth' })` when a target is off-center, and the tooltip/overlay use animated top/left transitions. Both of those create visible motion and make the tour feel detached.
+Replace the `placeBelow = (fitsBelow && ...) || ...` heuristic with a strict rule:
 
-I will change the tour to:
-- stop using smooth `scrollIntoView` during active steps
-- measure the target directly from `getBoundingClientRect()`
-- render spotlight and tooltip with fixed positioning from that rect
-- recalculate instantly on resize, orientation change, and target size changes
-- keep `ResizeObserver` on the target
-- use rAF scheduling only to batch reads, not to animate movement
-- remove top/left transitions from spotlight bands, outline, and tooltip so position updates snap immediately
+```ts
+const required = tooltipHeight + TOOLTIP_GAP + VIEWPORT_MARGIN;
+const spaceBelow = viewport.h - (spotlight.y + spotlight.h);
+const spaceAbove = spotlight.y;
 
-Result: spotlight and tooltip stay glued to the target with no visible slide or lag.
+// Default: below. Only flip above when below physically cannot fit
+// AND above has meaningfully more room.
+const placeBelow = spaceBelow >= required || spaceBelow >= spaceAbove;
+```
 
-### 3. Keep tooltip responsive and edge-aware on all devices
-The tooltip will remain centered on the target horizontally, but constrained to the viewport.
+Then when `placeBelow` is true, always anchor at `spotlight.y + spotlight.h + TOOLTIP_GAP` and clamp downward only — never let `top` go above the spotlight bottom edge:
 
-Placement rules:
-- width capped to available screen space, e.g. `max-width: 90vw` / viewport minus side padding
-- choose above or below based on available vertical space
-- flip to the bottom automatically when there is not enough room above on smaller screens
-- clamp left/right so it never runs off-screen
-- maintain a fixed gap from the spotlight
-- if neither side has enough room, choose the larger side and clamp safely without overlapping the spotlight
+```ts
+if (placeBelow) {
+  const anchor = spotlight.y + spotlight.h + TOOLTIP_GAP;
+  // Allow the tooltip to extend past the viewport bottom rather than overlap
+  // the spotlight. The card is scrollable/visible via 90vw width clamp.
+  top = anchor;
+} else {
+  top = Math.max(VIEWPORT_MARGIN, spotlight.y - TOOLTIP_GAP - tooltipHeight);
+}
+```
 
-Result: tooltip stays readable and fully visible on phone, tablet, and desktop.
+This guarantees zero overlap with the spotlight.
 
-### 4. Prepare UI state before measuring `Optional Details`
-The `optional-details` tour step already has a `prepare` hook, but I will keep this path explicit and tied to measurement order:
-- trigger `onboarding:open-advanced`
-- wait for the accordion open state / animation settle
-- only then measure the target and render the spotlight/tooltip
+### 2. Center-align horizontally (already done, verify)
 
-If needed, I will harden the settle logic so measurement does not occur until the expanded layout is actually visible.
+Keep current logic:
+```ts
+let left = spotlight.x + spotlight.w / 2 - tooltipWidth / 2;
+left = Math.max(VIEWPORT_MARGIN, Math.min(left, viewport.w - tooltipWidth - VIEWPORT_MARGIN));
+```
+No change needed — it already centers and clamps.
 
-Result: the spotlight calculates against the final expanded DOM, not the collapsed layout.
+### 3. Z-index hierarchy fix
 
-## Files to update
-- `src/components/onboarding/OnboardingTour.tsx`
-  - strict multi-root scroll lock
-  - event-level scroll prevention fallback
-  - fixed snap-to-target positioning
-  - instant recalculation behavior
-  - responsive tooltip clamping / flip logic
-  - remove motion that causes drift
-- `src/components/AppLayout.tsx`
-  - expose the real app scroll container so the tour can lock it reliably
-- `src/components/onboarding/tourSteps.ts`
-  - verify `optional-details` keeps `prepare: openAdvanced`
-- `src/pages/SessionForm.tsx`
-  - keep / harden the accordion-open listener if measurement timing needs tightening
+Current order in the overlay container (z-[100]):
+- bands (no z) → SVG stroke (no z) → tap-hand (z:2) → tooltip card (no z)
 
-## Technical notes
-- No copy changes
-- No button label changes
-- No step order changes
-- The update stays isolated to onboarding behavior and the app scroll root
-- Cleanup will fully restore normal scrolling when the tour closes or is dismissed
+The tooltip ends up on top of the tap-hand because of DOM order. Fix by:
+- Setting tap-hand `zIndex: 20` (stays above everything in the overlay).
+- Setting tooltip card `zIndex: 10`.
+- Setting SVG stroke wrapper `zIndex: 5`.
+
+Result: spotlight outline < tooltip < tap-hand, while the actual UI element under the spotlight remains fully visible (the bands have a hole over it).
+
+### 4. Reduce TOOLTIP_GAP slightly on small viewports
+
+Keep `TOOLTIP_GAP = 16`. No change unless QA shows it's too tight — current value is fine.
+
+## Out of Scope
+
+- Text content, button labels, step copy: untouched.
+- Scroll lock logic (already working per the user).
+- `tourSteps.ts`, `AppLayout.tsx`, `SessionForm.tsx`: no changes.
+
+## Acceptance
+
+- On the home screen with the START SESSION chip highlighted, the tooltip appears **below** the chip with a clean ~16px gap and the chip is fully visible (matches the reference image).
+- The tap-hand pulsing icon renders on top of all overlay layers.
+- Across all 11 tour steps, the tooltip never visually overlaps the spotlight rectangle.
+- The tooltip flips above only when the spotlighted element is near the bottom of the viewport (e.g., bottom action bar on `/session`).
