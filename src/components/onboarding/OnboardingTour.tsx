@@ -640,8 +640,8 @@ export default function OnboardingTour({
           fontFamily: "'Poppins', system-ui, sans-serif",
         }}
       >
-        <h3 className="text-base font-bold text-primary mb-1.5 text-center">{step.title}</h3>
-        <p className="text-sm text-foreground/80 leading-relaxed mb-4 text-center">
+        <h3 className="text-base sm:text-lg font-bold text-primary mb-1.5 text-center">{step.title}</h3>
+        <p className="text-sm sm:text-[0.95rem] text-foreground/80 leading-relaxed mb-4 text-center">
           {(() => {
             const idx = step.body.indexOf('! ');
             if (idx === -1) return step.body;
