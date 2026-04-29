@@ -626,9 +626,10 @@ export default function OnboardingTour({
       {/* Tooltip card */}
       <div
         ref={tooltipRef}
-        className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4"
+        className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4 sm:p-5"
         style={{
           ...tooltipStyle,
+          maxWidth: 'calc(100vw - 24px)',
           pointerEvents: 'auto',
           opacity: tooltipVisible ? 1 : 0,
           // Smoothly track scroll/resize once the tooltip is visible; instant on first reveal.
