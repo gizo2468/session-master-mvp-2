@@ -106,8 +106,9 @@ export default function OnboardingTour({
     });
   }, [step]);
 
-  // Step-change effect: run prepare hook, scroll element into view if needed,
-  // then poll for the element until found (or auto-skip after retries).
+  // Step-change effect: run prepare hook, then poll for the element until found
+  // (or auto-skip after retries). NO smooth scrollIntoView — that causes the
+  // spotlight/tooltip to drift visibly. We snap directly to the rect instead.
   useLayoutEffect(() => {
     setTooltipVisible(false);
     hadRectRef.current = false;
@@ -121,7 +122,6 @@ export default function OnboardingTour({
       const el = document.querySelector(step.selector) as HTMLElement | null;
       if (!el) {
         if (attempts >= 25) {
-          // Element never appeared (e.g. Multi-Day step on a Cash format) — auto-skip.
           if (!isLast) setStep(currentStep + 1);
           return;
         }
@@ -129,19 +129,13 @@ export default function OnboardingTour({
         measureTimer.current = window.setTimeout(focusAndMeasure, 100);
         return;
       }
-      const r = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-      if (r.top < 80 || r.bottom > vh - 80) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        measureTimer.current = window.setTimeout(() => {
-          if (cancelled) return;
-          readRect();
-          window.requestAnimationFrame(() => !cancelled && setTooltipVisible(true));
-        }, 380);
-        return;
-      }
       readRect();
-      window.requestAnimationFrame(() => !cancelled && setTooltipVisible(true));
+      // Two rAFs: ensure layout settled (esp. after prepare()) before reveal.
+      window.requestAnimationFrame(() => {
+        if (cancelled) return;
+        readRect();
+        window.requestAnimationFrame(() => !cancelled && setTooltipVisible(true));
+      });
     };
 
     const run = async () => {
@@ -151,7 +145,6 @@ export default function OnboardingTour({
         /* ignore */
       }
       if (cancelled) return;
-      // Small delay so any layout from prepare() settles before first measurement.
       measureTimer.current = window.setTimeout(focusAndMeasure, 60);
     };
     run();
