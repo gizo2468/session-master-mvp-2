@@ -1,104 +1,44 @@
 ## Goal
 
-For every tour step, automatically scroll the target element to the **vertical center** of the viewport before showing the spotlight, while keeping manual scroll locked. Tooltip continues to render below by default and flips above only for bottom-pinned targets that can't be centered (e.g. fixed bottom action bars).
+Make the **Back** button on the New Session page (and any other element we explicitly mark) clickable while the onboarding tour is active, and guarantee that every scroll/interaction lock is released the moment the tour unmounts.
 
-## Problem
+## Root cause
 
-Right now `OnboardingTour.tsx` applies a strict scroll lock the moment it mounts (`html`, `body`, and `[data-app-scroll-root]` all get `overflow:hidden`). That lock prevents *any* scrolling — including programmatic — so steps whose target sits below the fold (e.g. `Optional Details`, `submit-session`) render with the tooltip clipped or off-screen. The user can't scroll, and the tour doesn't scroll for them.
+`OnboardingTour.tsx` renders four full-width dim "bands" around the spotlight for `interactive` steps. Each band is `pointer-events: auto` with `onClick={stopPropagation}`. On the "Define Your Game" step the Back button is geometrically inside the **top** band, so the band swallows the tap before it can reach the button.
 
-The tooltip flip logic ("below-first, flip above only when no room") is already correct and stays.
+## Changes
 
-## Changes (single file: `src/components/onboarding/OnboardingTour.tsx`)
+### 1. `src/components/onboarding/OnboardingTour.tsx` — let opted-in elements stay clickable
 
-### 1. Add a programmatic scroll helper that bypasses the lock
+- Introduce a small helper `isInsideAllowed(target)` that returns true when the click target is inside an element with `data-tour-allow="true"` (or one of its ancestors).
+- In each band's `onClick`, **only** call `stopPropagation` when the click is *not* inside an allowed element. Allowed clicks fall through to the underlying button.
+- In the wheel/touchmove/keydown blockers (lines ~253–264), apply the same exception so a tap on the Back button isn't cancelled by `preventDefault`.
+- In the full-screen click blocker for non-interactive steps (line 538), do the same allowed-element check.
 
-Helper that temporarily restores `overflow` on the app scroll root (and `html`/`body`), calls `el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' })`, waits for two `requestAnimationFrame` ticks for layout to settle, then re-applies the lock.
+### 2. `src/components/onboarding/OnboardingTour.tsx` — raise allowed elements above the overlay
 
-```ts
-const scrollTargetIntoCenter = (el: HTMLElement) => {
-  const html = document.documentElement;
-  const body = document.body;
-  const appRoot = document.querySelector('[data-app-scroll-root="true"]') as HTMLElement | null;
+- Add a one-time effect that, while the tour is mounted, finds every `[data-tour-allow="true"]` element and applies inline `position: relative; z-index: 101; pointer-events: auto;`. On cleanup (unmount, route change, dismiss) it restores the previous inline values.
+- This guarantees the Back button is visually above the dim band as well as logically clickable.
 
-  // Temporarily release overflow on whichever element is the real scroller.
-  const released: Array<{ el: HTMLElement; prev: string }> = [];
-  [html, body, appRoot].forEach((node) => {
-    if (!node) return;
-    released.push({ el: node, prev: node.style.overflow });
-    node.style.overflow = '';
-  });
+### 3. `src/pages/SessionForm.tsx` — mark the Back button
 
-  // Center the target. block:'center' guarantees vertical centering when possible.
-  el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+- Add `data-tour-allow="true"` to the existing Back button (the `<Button variant="ghost">` near the top of the page that calls `navigate(-1)` / fallback `/`).
+- No other behavior changes.
 
-  // Re-lock on the next frame so layout has committed.
-  return new Promise<void>((resolve) => {
-    requestAnimationFrame(() => {
-      released.forEach(({ el, prev }) => {
-        el.style.overflow = prev || 'hidden';
-      });
-      requestAnimationFrame(() => resolve());
-    });
-  });
-};
-```
+### 4. Hardening cleanup ("Reset State")
 
-### 2. Call the helper inside the step-change effect (`focusAndMeasure`)
+Verify the existing cleanup in `OnboardingTour.tsx`:
+- The lock effect (lines 225–277) already restores `overflow / height / touchAction / overscrollBehavior` on `html`, `body`, and `[data-app-scroll-root]`, and removes wheel/touchmove/keydown listeners on unmount.
+- The pulse effect (lines 298–307) already removes `onboarding-pulse-active`.
+- Add an extra safety net: a top-level `useEffect(() => () => { ... }, [])` that, on unmount, force-clears any leftover inline `overflow`, `height`, `touchAction`, `overscrollBehavior` on `html`, `body`, and `[data-app-scroll-root]` and removes `onboarding-pulse-active`. This protects against edge cases where the lock effect's prev-value restore doesn't fully clear styles (e.g. if the tour unmounts mid-transition).
 
-In the existing `useLayoutEffect` that runs `step?.prepare?.()` then polls for the target, after the element is found and *before* `readRect()`, await `scrollTargetIntoCenter(el)`. Then read the rect and reveal the tooltip with the existing two-rAF settle.
+## Out of scope
 
-```ts
-const focusAndMeasure = async () => {
-  if (cancelled || !step) return;
-  const el = document.querySelector(step.selector) as HTMLElement | null;
-  if (!el) {
-    if (attempts >= 25) { if (!isLast) setStep(currentStep + 1); return; }
-    attempts++;
-    measureTimer.current = window.setTimeout(focusAndMeasure, 100);
-    return;
-  }
-  await scrollTargetIntoCenter(el);
-  if (cancelled) return;
-  readRect();
-  requestAnimationFrame(() => {
-    if (cancelled) return;
-    readRect();
-    requestAnimationFrame(() => !cancelled && setTooltipVisible(true));
-  });
-};
-```
-
-### 3. Keep the strict lock effect as-is
-
-The `useEffect` at lines 194–246 (locks `html`, `body`, `appRoot` and blocks `wheel`/`touchmove`/scroll keys) stays unchanged. The helper above only releases `overflow` momentarily for the programmatic `scrollIntoView` call — wheel/touchmove/keys remain blocked the entire time, so the user still cannot scroll manually.
-
-To make sure the wheel/touch blockers don't suppress our programmatic scroll: `scrollIntoView` is a direct DOM API call, not a wheel/touch event, so the existing `preventDefault` on those listeners doesn't interfere.
-
-### 4. Tooltip placement: no change
-
-Existing logic (lines 418–441) already implements:
-- below-by-default (`placeBelow = spaceBelow >= required || spaceBelow >= spaceAbove`)
-- flip above only when bottom has no room
-- horizontal centering with viewport clamp
-- `90vw` max-width
-
-After auto-centering, mid-viewport targets naturally satisfy `spaceBelow >= required` → tooltip below. Bottom-pinned targets like `[data-tour="live-controls"]` (fixed action bar) cannot be centered by `scrollIntoView` because they're position:fixed at the bottom — for those, `spaceBelow` stays tiny and the existing flip-above branch kicks in. No code change needed here.
-
-### 5. Edge case: `position: fixed` targets
-
-`scrollIntoView` is a no-op on fixed elements relative to viewport, which is the desired behavior — they're already visible. The flip-above branch handles tooltip placement for them automatically.
-
-## Out of Scope
-
-- Tooltip flip logic (already correct).
-- Scroll lock structure (unchanged; only momentary overflow release for programmatic scroll).
-- `tourSteps.ts`, `AppLayout.tsx`: no changes.
-- Smooth scroll animation: explicitly using `behavior: 'auto'` (instant) to match the "snap, no drift" rule from the previous stabilization pass.
+- Tooltip positioning, scroll-into-center logic, and band/spotlight geometry — all unchanged.
+- `tourSteps.ts` — no step changes; the existing `data-tour-allow` mechanism is generic and reusable for future "must remain clickable" elements (e.g. a global Skip button, header nav).
 
 ## Acceptance
 
-- Each of the 11 steps auto-scrolls its target to the vertical center before the spotlight appears.
-- The user cannot scroll manually at any time (wheel, touch, keyboard all still blocked).
-- Mid-viewport targets show the tooltip **below** with a clean ~16px gap.
-- Bottom-pinned targets (`live-controls`, `submit-session` when keyboard collapses layout) flip the tooltip **above**.
-- No visible drift — the spotlight snaps to its final position without sliding.
+- On `/new-session` while the tour is at the "Define Your Game" / "Set the Stakes" / etc. steps, tapping **Back** navigates home immediately.
+- Back button is visually visible (not dimmed) above the overlay.
+- After dismissing the tour or navigating away, `html`/`body` have no leftover `overflow:hidden / height:100vh`, the page scrolls normally, and no event listeners remain attached.
