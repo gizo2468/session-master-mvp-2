@@ -128,9 +128,10 @@ export default function OnboardingTour({
       if (!container) return Promise.resolve();
       const targetRect = el.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
-      const targetCenter = targetRect.top + targetRect.height / 2;
-      const containerCenter = containerRect.top + containerRect.height / 2;
-      const deltaY = targetCenter - containerCenter;
+      // Anchor the highlighted element near the TOP of the container so the
+      // tooltip has plenty of room below it on short mobile viewports.
+      const TOP_OFFSET = 80;
+      const deltaY = targetRect.top - containerRect.top - TOP_OFFSET;
       const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
       const nextTop = Math.max(0, Math.min(maxScroll, container.scrollTop + deltaY));
       try {
