@@ -117,32 +117,29 @@ export default function OnboardingTour({
     let cancelled = false;
     let attempts = 0;
 
-    // Programmatically center the target in the viewport while the strict
-    // scroll-lock is active. Temporarily releases overflow on the scroll
-    // containers, calls scrollIntoView (instant), then re-locks. Wheel/touch/
-    // key blockers stay active throughout — user still cannot scroll manually.
+    // Programmatically center the target inside the real scroll container.
+    // We DO NOT touch overflow/height locks here — `overflow: hidden` does not
+    // block programmatic scrollTop writes, so the user-level scroll lock stays
+    // fully intact while we still snap the page into place.
     const scrollTargetIntoCenter = (el: HTMLElement) => {
-      const html = document.documentElement;
-      const body = document.body;
       const appRoot = document.querySelector('[data-app-scroll-root="true"]') as HTMLElement | null;
-      const released: Array<{ el: HTMLElement; prev: string }> = [];
-      [html, body, appRoot].forEach((node) => {
-        if (!node) return;
-        released.push({ el: node, prev: node.style.overflow });
-        node.style.overflow = '';
-      });
+      const container: HTMLElement | null =
+        appRoot ?? (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
+      if (!container) return Promise.resolve();
+      const targetRect = el.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const targetCenter = targetRect.top + targetRect.height / 2;
+      const containerCenter = containerRect.top + containerRect.height / 2;
+      const deltaY = targetCenter - containerCenter;
+      const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+      const nextTop = Math.max(0, Math.min(maxScroll, container.scrollTop + deltaY));
       try {
-        el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+        container.scrollTo({ top: nextTop, behavior: 'auto' });
       } catch {
-        /* ignore */
+        container.scrollTop = nextTop;
       }
       return new Promise<void>((resolve) => {
-        window.requestAnimationFrame(() => {
-          released.forEach(({ el: node, prev }) => {
-            node.style.overflow = prev || 'hidden';
-          });
-          window.requestAnimationFrame(() => resolve());
-        });
+        window.requestAnimationFrame(() => resolve());
       });
     };
 
