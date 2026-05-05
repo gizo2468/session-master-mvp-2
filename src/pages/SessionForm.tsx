@@ -373,9 +373,20 @@ export default function SessionForm() {
       <div className="container mx-auto max-w-md px-4 pb-8">
         <header className="mb-8">
           <button 
+            type="button"
             data-tour-allow="true"
-            onClick={() => navigate(-1)} 
-            className="text-poker-gold mb-4 flex items-center gap-1 hover:underline"
+            onClick={() => {
+              const idx = (window.history.state && typeof window.history.state.idx === 'number')
+                ? window.history.state.idx
+                : null;
+              const canGoBack = idx !== null ? idx > 0 : window.history.length > 1;
+              if (canGoBack) {
+                navigate(-1);
+              } else {
+                navigate('/', { replace: true });
+              }
+            }} 
+            className="text-poker-gold mb-4 flex items-center gap-1 hover:underline relative z-[101]"
           >
             <Icon name="ArrowLeft" size={16} />
             <span>Back</span>

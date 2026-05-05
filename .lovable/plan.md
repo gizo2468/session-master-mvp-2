@@ -1,44 +1,29 @@
-## Goal
+1. Update the Start New Session Back button to use a safe navigation rule instead of raw `navigate(-1)`.
+   - In `src/pages/SessionForm.tsx`, replace the current inline back handler with logic that checks React Router history (`window.history.state?.idx`).
+   - If there is a valid in-app history entry, go back once.
+   - If there is no valid history entry, or the page was opened directly / via redirect / after auth, navigate explicitly to Home (`'/'`) with `replace: true`.
+   - This matches the project’s existing safe-navigation pattern and prevents the current “tap Back and stay on /new-session” failure mode.
 
-Make the **Back** button on the New Session page (and any other element we explicitly mark) clickable while the onboarding tour is active, and guarantee that every scroll/interaction lock is released the moment the tour unmounts.
+2. Keep the onboarding tour from interfering with navigation.
+   - In `src/components/onboarding/OnboardingTour.tsx`, verify the allowlist path for `data-tour-allow="true"` covers both click and touch interception consistently.
+   - Harden the cleanup so the tour fully releases any temporary interaction locks, lifted z-index styles, and scroll restrictions when the tour closes, unmounts, or the route changes.
+   - Preserve the current spotlight behavior, tooltip positioning, and scroll-lock rules for active tour steps.
 
-## Root cause
+3. Validate the navigation behavior against the actual failure cases.
+   - Confirm the Back button works when arriving from Home.
+   - Confirm it still works when `/new-session` is opened with no usable history stack.
+   - Confirm closing or leaving the tour does not leave behind invisible blockers.
 
-`OnboardingTour.tsx` renders four full-width dim "bands" around the spotlight for `interactive` steps. Each band is `pointer-events: auto` with `onClick={stopPropagation}`. On the "Define Your Game" step the Back button is geometrically inside the **top** band, so the band swallows the tap before it can reach the button.
+Technical details
+- Root cause is likely not just layering. `SessionForm.tsx` currently uses `onClick={() => navigate(-1)}` on the Back button.
+- In this app, `SessionForm` is a flow page, but browser/native preview history can be empty, replaced, or point to the same route. In those cases `navigate(-1)` can be a no-op or effectively keep the user on `/new-session`.
+- The onboarding overlay was already partially hardened with `data-tour-allow`, but it still needs route-exit cleanup verification so no stale lock remains.
+- Files to update:
+  - `src/pages/SessionForm.tsx`
+  - `src/components/onboarding/OnboardingTour.tsx`
 
-## Changes
-
-### 1. `src/components/onboarding/OnboardingTour.tsx` — let opted-in elements stay clickable
-
-- Introduce a small helper `isInsideAllowed(target)` that returns true when the click target is inside an element with `data-tour-allow="true"` (or one of its ancestors).
-- In each band's `onClick`, **only** call `stopPropagation` when the click is *not* inside an allowed element. Allowed clicks fall through to the underlying button.
-- In the wheel/touchmove/keydown blockers (lines ~253–264), apply the same exception so a tap on the Back button isn't cancelled by `preventDefault`.
-- In the full-screen click blocker for non-interactive steps (line 538), do the same allowed-element check.
-
-### 2. `src/components/onboarding/OnboardingTour.tsx` — raise allowed elements above the overlay
-
-- Add a one-time effect that, while the tour is mounted, finds every `[data-tour-allow="true"]` element and applies inline `position: relative; z-index: 101; pointer-events: auto;`. On cleanup (unmount, route change, dismiss) it restores the previous inline values.
-- This guarantees the Back button is visually above the dim band as well as logically clickable.
-
-### 3. `src/pages/SessionForm.tsx` — mark the Back button
-
-- Add `data-tour-allow="true"` to the existing Back button (the `<Button variant="ghost">` near the top of the page that calls `navigate(-1)` / fallback `/`).
-- No other behavior changes.
-
-### 4. Hardening cleanup ("Reset State")
-
-Verify the existing cleanup in `OnboardingTour.tsx`:
-- The lock effect (lines 225–277) already restores `overflow / height / touchAction / overscrollBehavior` on `html`, `body`, and `[data-app-scroll-root]`, and removes wheel/touchmove/keydown listeners on unmount.
-- The pulse effect (lines 298–307) already removes `onboarding-pulse-active`.
-- Add an extra safety net: a top-level `useEffect(() => () => { ... }, [])` that, on unmount, force-clears any leftover inline `overflow`, `height`, `touchAction`, `overscrollBehavior` on `html`, `body`, and `[data-app-scroll-root]` and removes `onboarding-pulse-active`. This protects against edge cases where the lock effect's prev-value restore doesn't fully clear styles (e.g. if the tour unmounts mid-transition).
-
-## Out of scope
-
-- Tooltip positioning, scroll-into-center logic, and band/spotlight geometry — all unchanged.
-- `tourSteps.ts` — no step changes; the existing `data-tour-allow` mechanism is generic and reusable for future "must remain clickable" elements (e.g. a global Skip button, header nav).
-
-## Acceptance
-
-- On `/new-session` while the tour is at the "Define Your Game" / "Set the Stakes" / etc. steps, tapping **Back** navigates home immediately.
-- Back button is visually visible (not dimmed) above the overlay.
-- After dismissing the tour or navigating away, `html`/`body` have no leftover `overflow:hidden / height:100vh`, the page scrolls normally, and no event listeners remain attached.
+Expected result
+- The Back button always responds.
+- Users return to the previous in-app page when history is valid.
+- Users fall back to Home when history is invalid or missing.
+- No leftover invisible overlay or scroll lock remains after the tutorial closes or the user leaves the page.
