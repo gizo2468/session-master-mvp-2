@@ -587,7 +587,11 @@ export default function OnboardingTour({
         <div
           className="absolute inset-0"
           style={{ pointerEvents: 'auto' }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            const t = e.target as Element | null;
+            if (t && t.closest('[data-tour-allow="true"]')) return;
+            e.stopPropagation();
+          }}
         />
       )}
 
@@ -611,7 +615,11 @@ export default function OnboardingTour({
                   pointerEvents: 'auto',
                   transition: 'none',
                 }}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  const t = e.target as Element | null;
+                  if (t && t.closest('[data-tour-allow="true"]')) return;
+                  e.stopPropagation();
+                }}
               />
             );
           })}
