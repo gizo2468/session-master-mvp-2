@@ -117,7 +117,36 @@ export default function OnboardingTour({
     let cancelled = false;
     let attempts = 0;
 
-    const focusAndMeasure = () => {
+    // Programmatically center the target in the viewport while the strict
+    // scroll-lock is active. Temporarily releases overflow on the scroll
+    // containers, calls scrollIntoView (instant), then re-locks. Wheel/touch/
+    // key blockers stay active throughout — user still cannot scroll manually.
+    const scrollTargetIntoCenter = (el: HTMLElement) => {
+      const html = document.documentElement;
+      const body = document.body;
+      const appRoot = document.querySelector('[data-app-scroll-root="true"]') as HTMLElement | null;
+      const released: Array<{ el: HTMLElement; prev: string }> = [];
+      [html, body, appRoot].forEach((node) => {
+        if (!node) return;
+        released.push({ el: node, prev: node.style.overflow });
+        node.style.overflow = '';
+      });
+      try {
+        el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+      } catch {
+        /* ignore */
+      }
+      return new Promise<void>((resolve) => {
+        window.requestAnimationFrame(() => {
+          released.forEach(({ el: node, prev }) => {
+            node.style.overflow = prev || 'hidden';
+          });
+          window.requestAnimationFrame(() => resolve());
+        });
+      });
+    };
+
+    const focusAndMeasure = async () => {
       if (cancelled || !step) return;
       const el = document.querySelector(step.selector) as HTMLElement | null;
       if (!el) {
@@ -129,6 +158,8 @@ export default function OnboardingTour({
         measureTimer.current = window.setTimeout(focusAndMeasure, 100);
         return;
       }
+      await scrollTargetIntoCenter(el);
+      if (cancelled) return;
       readRect();
       // Two rAFs: ensure layout settled (esp. after prepare()) before reveal.
       window.requestAnimationFrame(() => {
