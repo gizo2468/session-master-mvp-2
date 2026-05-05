@@ -1,80 +1,104 @@
 ## Goal
 
-Force the onboarding tooltip to **always sit below the spotlighted element**, with zero overlap and clean centering. Only flip above when there is genuinely no room below.
+For every tour step, automatically scroll the target element to the **vertical center** of the viewport before showing the spotlight, while keeping manual scroll locked. Tooltip continues to render below by default and flips above only for bottom-pinned targets that can't be centered (e.g. fixed bottom action bars).
 
-## The Problem
+## Problem
 
-Current placement logic (`OnboardingTour.tsx`, ~lines 426-439) picks the side with *more* available space. On the home screen the START SESSION chip sits roughly mid-viewport, so the algorithm flips the tooltip above the chip — and because the chip is large, the tooltip card visually overlaps the spotlight (see screenshot). The rule "below by default, flip only when impossible" is not implemented.
+Right now `OnboardingTour.tsx` applies a strict scroll lock the moment it mounts (`html`, `body`, and `[data-app-scroll-root]` all get `overflow:hidden`). That lock prevents *any* scrolling — including programmatic — so steps whose target sits below the fold (e.g. `Optional Details`, `submit-session`) render with the tooltip clipped or off-screen. The user can't scroll, and the tour doesn't scroll for them.
 
-Additional issues:
-- The pulsing tap-hand uses `zIndex: 2` but the tooltip is a sibling rendered later in the DOM with a much higher effective stacking. The tap-hand needs to be guaranteed on top of the tooltip's layer so the user always sees the interaction cue clearly.
-- No hard guard preventing the tooltip rect from overlapping the spotlight rect when "below" is forced and space is tight.
+The tooltip flip logic ("below-first, flip above only when no room") is already correct and stays.
 
 ## Changes (single file: `src/components/onboarding/OnboardingTour.tsx`)
 
-### 1. Rewrite tooltip placement to "below-first"
+### 1. Add a programmatic scroll helper that bypasses the lock
 
-Replace the `placeBelow = (fitsBelow && ...) || ...` heuristic with a strict rule:
-
-```ts
-const required = tooltipHeight + TOOLTIP_GAP + VIEWPORT_MARGIN;
-const spaceBelow = viewport.h - (spotlight.y + spotlight.h);
-const spaceAbove = spotlight.y;
-
-// Default: below. Only flip above when below physically cannot fit
-// AND above has meaningfully more room.
-const placeBelow = spaceBelow >= required || spaceBelow >= spaceAbove;
-```
-
-Then when `placeBelow` is true, always anchor at `spotlight.y + spotlight.h + TOOLTIP_GAP` and clamp downward only — never let `top` go above the spotlight bottom edge:
+Helper that temporarily restores `overflow` on the app scroll root (and `html`/`body`), calls `el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' })`, waits for two `requestAnimationFrame` ticks for layout to settle, then re-applies the lock.
 
 ```ts
-if (placeBelow) {
-  const anchor = spotlight.y + spotlight.h + TOOLTIP_GAP;
-  // Allow the tooltip to extend past the viewport bottom rather than overlap
-  // the spotlight. The card is scrollable/visible via 90vw width clamp.
-  top = anchor;
-} else {
-  top = Math.max(VIEWPORT_MARGIN, spotlight.y - TOOLTIP_GAP - tooltipHeight);
-}
+const scrollTargetIntoCenter = (el: HTMLElement) => {
+  const html = document.documentElement;
+  const body = document.body;
+  const appRoot = document.querySelector('[data-app-scroll-root="true"]') as HTMLElement | null;
+
+  // Temporarily release overflow on whichever element is the real scroller.
+  const released: Array<{ el: HTMLElement; prev: string }> = [];
+  [html, body, appRoot].forEach((node) => {
+    if (!node) return;
+    released.push({ el: node, prev: node.style.overflow });
+    node.style.overflow = '';
+  });
+
+  // Center the target. block:'center' guarantees vertical centering when possible.
+  el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+
+  // Re-lock on the next frame so layout has committed.
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => {
+      released.forEach(({ el, prev }) => {
+        el.style.overflow = prev || 'hidden';
+      });
+      requestAnimationFrame(() => resolve());
+    });
+  });
+};
 ```
 
-This guarantees zero overlap with the spotlight.
+### 2. Call the helper inside the step-change effect (`focusAndMeasure`)
 
-### 2. Center-align horizontally (already done, verify)
+In the existing `useLayoutEffect` that runs `step?.prepare?.()` then polls for the target, after the element is found and *before* `readRect()`, await `scrollTargetIntoCenter(el)`. Then read the rect and reveal the tooltip with the existing two-rAF settle.
 
-Keep current logic:
 ```ts
-let left = spotlight.x + spotlight.w / 2 - tooltipWidth / 2;
-left = Math.max(VIEWPORT_MARGIN, Math.min(left, viewport.w - tooltipWidth - VIEWPORT_MARGIN));
+const focusAndMeasure = async () => {
+  if (cancelled || !step) return;
+  const el = document.querySelector(step.selector) as HTMLElement | null;
+  if (!el) {
+    if (attempts >= 25) { if (!isLast) setStep(currentStep + 1); return; }
+    attempts++;
+    measureTimer.current = window.setTimeout(focusAndMeasure, 100);
+    return;
+  }
+  await scrollTargetIntoCenter(el);
+  if (cancelled) return;
+  readRect();
+  requestAnimationFrame(() => {
+    if (cancelled) return;
+    readRect();
+    requestAnimationFrame(() => !cancelled && setTooltipVisible(true));
+  });
+};
 ```
-No change needed — it already centers and clamps.
 
-### 3. Z-index hierarchy fix
+### 3. Keep the strict lock effect as-is
 
-Current order in the overlay container (z-[100]):
-- bands (no z) → SVG stroke (no z) → tap-hand (z:2) → tooltip card (no z)
+The `useEffect` at lines 194–246 (locks `html`, `body`, `appRoot` and blocks `wheel`/`touchmove`/scroll keys) stays unchanged. The helper above only releases `overflow` momentarily for the programmatic `scrollIntoView` call — wheel/touchmove/keys remain blocked the entire time, so the user still cannot scroll manually.
 
-The tooltip ends up on top of the tap-hand because of DOM order. Fix by:
-- Setting tap-hand `zIndex: 20` (stays above everything in the overlay).
-- Setting tooltip card `zIndex: 10`.
-- Setting SVG stroke wrapper `zIndex: 5`.
+To make sure the wheel/touch blockers don't suppress our programmatic scroll: `scrollIntoView` is a direct DOM API call, not a wheel/touch event, so the existing `preventDefault` on those listeners doesn't interfere.
 
-Result: spotlight outline < tooltip < tap-hand, while the actual UI element under the spotlight remains fully visible (the bands have a hole over it).
+### 4. Tooltip placement: no change
 
-### 4. Reduce TOOLTIP_GAP slightly on small viewports
+Existing logic (lines 418–441) already implements:
+- below-by-default (`placeBelow = spaceBelow >= required || spaceBelow >= spaceAbove`)
+- flip above only when bottom has no room
+- horizontal centering with viewport clamp
+- `90vw` max-width
 
-Keep `TOOLTIP_GAP = 16`. No change unless QA shows it's too tight — current value is fine.
+After auto-centering, mid-viewport targets naturally satisfy `spaceBelow >= required` → tooltip below. Bottom-pinned targets like `[data-tour="live-controls"]` (fixed action bar) cannot be centered by `scrollIntoView` because they're position:fixed at the bottom — for those, `spaceBelow` stays tiny and the existing flip-above branch kicks in. No code change needed here.
+
+### 5. Edge case: `position: fixed` targets
+
+`scrollIntoView` is a no-op on fixed elements relative to viewport, which is the desired behavior — they're already visible. The flip-above branch handles tooltip placement for them automatically.
 
 ## Out of Scope
 
-- Text content, button labels, step copy: untouched.
-- Scroll lock logic (already working per the user).
-- `tourSteps.ts`, `AppLayout.tsx`, `SessionForm.tsx`: no changes.
+- Tooltip flip logic (already correct).
+- Scroll lock structure (unchanged; only momentary overflow release for programmatic scroll).
+- `tourSteps.ts`, `AppLayout.tsx`: no changes.
+- Smooth scroll animation: explicitly using `behavior: 'auto'` (instant) to match the "snap, no drift" rule from the previous stabilization pass.
 
 ## Acceptance
 
-- On the home screen with the START SESSION chip highlighted, the tooltip appears **below** the chip with a clean ~16px gap and the chip is fully visible (matches the reference image).
-- The tap-hand pulsing icon renders on top of all overlay layers.
-- Across all 11 tour steps, the tooltip never visually overlaps the spotlight rectangle.
-- The tooltip flips above only when the spotlighted element is near the bottom of the viewport (e.g., bottom action bar on `/session`).
+- Each of the 11 steps auto-scrolls its target to the vertical center before the spotlight appears.
+- The user cannot scroll manually at any time (wheel, touch, keyboard all still blocked).
+- Mid-viewport targets show the tooltip **below** with a clean ~16px gap.
+- Bottom-pinned targets (`live-controls`, `submit-session` when keyboard collapses layout) flip the tooltip **above**.
+- No visible drift — the spotlight snaps to its final position without sliding.
