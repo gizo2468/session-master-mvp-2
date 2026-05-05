@@ -1,29 +1,44 @@
-1. Update the Start New Session Back button to use a safe navigation rule instead of raw `navigate(-1)`.
-   - In `src/pages/SessionForm.tsx`, replace the current inline back handler with logic that checks React Router history (`window.history.state?.idx`).
-   - If there is a valid in-app history entry, go back once.
-   - If there is no valid history entry, or the page was opened directly / via redirect / after auth, navigate explicitly to Home (`'/'`) with `replace: true`.
-   - This matches the project’s existing safe-navigation pattern and prevents the current “tap Back and stay on /new-session” failure mode.
+## Problem
 
-2. Keep the onboarding tour from interfering with navigation.
-   - In `src/components/onboarding/OnboardingTour.tsx`, verify the allowlist path for `data-tour-allow="true"` covers both click and touch interception consistently.
-   - Harden the cleanup so the tour fully releases any temporary interaction locks, lifted z-index styles, and scroll restrictions when the tour closes, unmounts, or the route changes.
-   - Preserve the current spotlight behavior, tooltip positioning, and scroll-lock rules for active tour steps.
+When the tutorial advances to a step whose target is below the fold (e.g. "Stakes", "Optional Details", "Submit Session" on `/new-session`), the page does not scroll. The spotlight gets drawn off-screen and the user is stuck.
 
-3. Validate the navigation behavior against the actual failure cases.
-   - Confirm the Back button works when arriving from Home.
-   - Confirm it still works when `/new-session` is opened with no usable history stack.
-   - Confirm closing or leaving the tour does not leave behind invisible blockers.
+## Root cause
 
-Technical details
-- Root cause is likely not just layering. `SessionForm.tsx` currently uses `onClick={() => navigate(-1)}` on the Back button.
-- In this app, `SessionForm` is a flow page, but browser/native preview history can be empty, replaced, or point to the same route. In those cases `navigate(-1)` can be a no-op or effectively keep the user on `/new-session`.
-- The onboarding overlay was already partially hardened with `data-tour-allow`, but it still needs route-exit cleanup verification so no stale lock remains.
-- Files to update:
-  - `src/pages/SessionForm.tsx`
-  - `src/components/onboarding/OnboardingTour.tsx`
+`OnboardingTour.tsx → scrollTargetIntoCenter()` tries to scroll by:
+1. Temporarily setting `overflow = ''` on `<html>`, `<body>`, and `[data-app-scroll-root]`.
+2. Calling `el.scrollIntoView({ block: 'center' })`.
+3. Restoring `overflow = 'hidden'` on the next frame.
 
-Expected result
-- The Back button always responds.
-- Users return to the previous in-app page when history is valid.
-- Users fall back to Home when history is invalid or missing.
-- No leftover invisible overlay or scroll lock remains after the tutorial closes or the user leaves the page.
+This does not work in this app because `AppLayout` is `fixed inset-0 overflow-y-auto` — i.e. the **only real scroll container** is the app-scroll-root div. When the lock effect sets that div's inline `overflow: hidden` plus `height: 100vh`, then the temporary release sets `overflow: ''`, which makes the div "visible" overflow. At that moment there is no scrollable ancestor for `scrollIntoView` to act on (html/body are not scrollable in this layout), so the call is a no-op. By the next frame the lock is reapplied — net result: zero scroll.
+
+The screen replay confirms it: the user is on `/new-session` showing the "Define Your Game" step, and pressing Next never moves the page to bring later targets into view.
+
+A second, smaller issue: the lock `useEffect` has an empty dependency array, but `tooltipRef.current` is captured by closure inside `isInsideTooltip`. That's fine, but the ResizeObserver is not the issue here — the scroll path is.
+
+## Fix
+
+Rewrite `scrollTargetIntoCenter` to scroll the real scroll container **without unlocking it**. `overflow: hidden` does not block programmatic `scrollTo` / `scrollTop` writes, so we can keep the user-level scroll lock fully intact while still moving the page.
+
+Logic (in `src/components/onboarding/OnboardingTour.tsx`):
+
+1. Find the scroll container: `document.querySelector('[data-app-scroll-root="true"]')`. Fallback to `document.scrollingElement` if absent.
+2. Read the target rect (`getBoundingClientRect`) and the container rect.
+3. Compute the desired delta so the target's vertical center aligns with the container's vertical center:
+   `deltaY = (targetRect.top + targetRect.height / 2) - (containerRect.top + containerRect.height / 2)`
+4. Apply `container.scrollTop += deltaY` (clamped to `[0, scrollHeight - clientHeight]`). Use `scrollTo({ top, behavior: 'auto' })` so it snaps instantly (matches the existing "no smooth drift" rule).
+5. Wait one rAF, then `readRect()` and reveal the tooltip (existing two-rAF pattern preserved).
+6. Do **not** mutate `overflow`, `height`, `touchAction`, or `overscrollBehavior` here. The mount-time lock effect remains the single source of truth for those styles.
+
+Also harden the same function so it works on `/` (Index) and `/session` if the scroll root differs — by always querying at call time, never caching.
+
+## Validation
+
+- Step 2 → 3 transition on `/new-session`: page snaps so "Stakes" is centered, spotlight aligns, tooltip appears below.
+- Steps 4–7 (Optional Details, Online, Multi-day, Late Reg, Submit): all scroll into center, including after `prepare()` opens the Advanced accordion.
+- Manual scroll (wheel/touch/keys) remains blocked — the existing event blockers and overflow lock are untouched.
+- Closing the tour (Skip / Done / route change) still releases all locks via the existing cleanup effect (no behavior change there).
+- Back button on `/new-session` continues to work (no changes to that path).
+
+## Files to update
+
+- `src/components/onboarding/OnboardingTour.tsx` — replace `scrollTargetIntoCenter` with the container-relative scroll implementation; keep all other tour logic (locks, blockers, tooltip placement, `data-tour-allow` lift) unchanged.
