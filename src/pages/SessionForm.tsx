@@ -373,6 +373,7 @@ export default function SessionForm() {
       <div className="container mx-auto max-w-md px-4 pb-8">
         <header className="mb-8">
           <button 
+            data-tour-allow="true"
             onClick={() => navigate(-1)} 
             className="text-poker-gold mb-4 flex items-center gap-1 hover:underline"
           >
