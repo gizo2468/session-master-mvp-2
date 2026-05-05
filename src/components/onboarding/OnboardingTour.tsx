@@ -247,15 +247,17 @@ export default function OnboardingTour({
     lock(body);
     if (appRoot) lock(appRoot);
 
-    // Allow scroll/touch only inside the tooltip card; block everything else.
+    // Allow scroll/touch only inside the tooltip card OR opt-in [data-tour-allow] elements; block everything else.
     const isInsideTooltip = (target: EventTarget | null) =>
       target instanceof Node && tooltipRef.current?.contains(target);
+    const isInsideAllowed = (target: EventTarget | null) =>
+      target instanceof Element && !!target.closest('[data-tour-allow="true"]');
     const blockEvent = (e: Event) => {
-      if (isInsideTooltip(e.target)) return;
+      if (isInsideTooltip(e.target) || isInsideAllowed(e.target)) return;
       e.preventDefault();
     };
     const blockKeys = (e: KeyboardEvent) => {
-      if (isInsideTooltip(e.target)) return;
+      if (isInsideTooltip(e.target) || isInsideAllowed(e.target)) return;
       const keys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Spacebar'];
       if (keys.includes(e.key)) e.preventDefault();
     };
@@ -273,6 +275,52 @@ export default function OnboardingTour({
       window.removeEventListener('wheel', blockEvent);
       window.removeEventListener('touchmove', blockEvent);
       window.removeEventListener('keydown', blockKeys);
+    };
+  }, []);
+
+  // Lift opted-in elements (e.g. Back button) above the overlay so they remain
+  // visible AND clickable while the tour is active. Restored on unmount.
+  useEffect(() => {
+    const els = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-tour-allow="true"]')
+    );
+    const prev = els.map((el) => ({
+      el,
+      position: el.style.position,
+      zIndex: el.style.zIndex,
+      pointerEvents: el.style.pointerEvents,
+    }));
+    els.forEach((el) => {
+      if (!el.style.position || el.style.position === 'static') {
+        el.style.position = 'relative';
+      }
+      el.style.zIndex = '101';
+      el.style.pointerEvents = 'auto';
+    });
+    return () => {
+      prev.forEach(({ el, position, zIndex, pointerEvents }) => {
+        el.style.position = position;
+        el.style.zIndex = zIndex;
+        el.style.pointerEvents = pointerEvents;
+      });
+    };
+  }, [currentStep, activePath]);
+
+  // Safety net: on unmount force-clear any leftover lock styles/classes so the
+  // app is fully interactive after the tour closes or unmounts mid-transition.
+  useEffect(() => {
+    return () => {
+      const html = document.documentElement;
+      const body = document.body;
+      const appRoot = document.querySelector('[data-app-scroll-root="true"]') as HTMLElement | null;
+      [html, body, appRoot].forEach((node) => {
+        if (!node) return;
+        node.style.overflow = '';
+        node.style.height = '';
+        node.style.touchAction = '';
+        node.style.overscrollBehavior = '';
+      });
+      document.body.classList.remove('onboarding-pulse-active');
     };
   }, []);
 
