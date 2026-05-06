@@ -1,24 +1,37 @@
-## Problem
+I investigated the tour flow on `/new-session` and found the main issue: the Start Session guide includes steps whose targets only exist in specific form states, especially the tournament-only advanced options (`advanced-multiday`, `advanced-late-reg`). On the default cash-game form, those elements do not exist, so when the user taps Previous from the final `submit-session` step, the tour moves backward to a missing step and then auto-skips forward again. That makes the tour look stuck and makes Previous feel broken.
 
-The tour now scrolls, but it centers the spotlighted element vertically. On a short mobile viewport (538px tall), that puts the headline/element in the middle of the screen and pushes the tooltip card off the bottom — exactly what the screenshot shows for the "Stakes" step.
+## Plan
 
-## Fix
+1. Make the tour navigation direction-aware
+- Update `OnboardingTour` so unavailable targets are skipped in the direction the user requested.
+- If the user presses Previous, the tour should search backward for the nearest valid step instead of falling back into a forward auto-skip loop.
+- If the user presses Next, it should search forward for the next valid step.
 
-In `src/components/onboarding/OnboardingTour.tsx → scrollTargetIntoCenter`, anchor the target near the **top** of the scroll container instead of the center. Replace the center math with a top-aligned offset:
+2. Stop relying on “missing target -> jump forward” as the main recovery path
+- Replace the current retry-then-advance behavior with a more explicit “resolve next valid step” flow.
+- Keep a small retry window for elements that are about to render after a `prepare()` hook, but only skip after checking whether the step is truly unavailable.
+- Prevent repeated re-entry into the same invalid step so the UI cannot appear frozen.
 
-```ts
-const TOP_OFFSET = 80; // leaves room for spotlight padding + stroke
-const deltaY = targetRect.top - containerRect.top - TOP_OFFSET;
-```
+3. Align conditional session-form steps with the actual form state
+- Add step availability logic for `SessionForm` so tournament-only steps are only included when the form is in tournament mode, or programmatically switch the form into the required state before those steps run.
+- I’ll use the approach that best matches the intended walkthrough while preserving the user’s current inputs.
 
-Everything else (clamping to `[0, maxScroll]`, `scrollTo({ behavior: 'auto' })`, single rAF before reveal) stays the same. The tooltip placement logic already prefers below the spotlight when there is room — anchoring high guarantees that room exists, so the instructions card stays fully on screen.
+4. Verify tooltip flow on the problematic final steps
+- Re-check the `submit-session` step and the advanced options sequence to ensure:
+  - Previous takes the user to a visible prior step
+  - Next continues normally
+  - the tour does not bounce back to the same card
+  - the highlight and tooltip remain correctly positioned on mobile
 
-## Validation
-
-- Step 3 ("Set the Stakes"): the Buy-in / Blinds card snaps to the upper portion of the viewport; the tooltip "Set the Stakes" appears fully below it.
-- Steps 4–7 (Optional Details, Online, Multi-day, Late Reg, Submit): each highlighted block lands near the top with the tooltip visible underneath.
-- Steps whose target is already near the bottom of the document (no headroom to scroll further) still behave correctly because of the `Math.min(maxScroll, ...)` clamp; the tooltip's existing flip-above logic handles those edge cases.
-
-## File to update
-
-- `src/components/onboarding/OnboardingTour.tsx` — change the delta calculation in `scrollTargetIntoCenter` from center-alignment to top-alignment with an 80px offset. No other changes.
+## Technical details
+- Files likely involved:
+  - `src/components/onboarding/OnboardingTour.tsx`
+  - `src/pages/SessionForm.tsx`
+  - possibly `src/components/onboarding/tourSteps.ts`
+- Root cause:
+  - the tour step list contains selectors that are conditionally absent from the DOM
+  - `focusAndMeasure()` currently resolves missing targets by moving forward, which breaks backward navigation semantics
+- Expected result after fix:
+  - Previous works consistently
+  - no “stuck on You’re All Set” loop
+  - hidden conditional steps no longer trap the tour
