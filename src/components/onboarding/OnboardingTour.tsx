@@ -71,6 +71,9 @@ export default function OnboardingTour({
   const measureTimer = useRef<number | null>(null);
   const rafId = useRef<number | null>(null);
   const hadRectRef = useRef(false);
+  // Direction the user last navigated. Used to skip missing/conditional steps
+  // in the same direction so Previous never bounces forward and vice versa.
+  const directionRef = useRef<1 | -1>(1);
 
   const step = steps[currentStep];
   const isLast = currentStep === steps.length - 1;
@@ -148,12 +151,25 @@ export default function OnboardingTour({
       if (cancelled || !step) return;
       const el = document.querySelector(step.selector) as HTMLElement | null;
       if (!el) {
-        if (attempts >= 25) {
-          if (!isLast) setStep(currentStep + 1);
+        // Short retry window for elements that mount after a prepare() hook.
+        if (attempts < 8) {
+          attempts++;
+          measureTimer.current = window.setTimeout(focusAndMeasure, 80);
           return;
         }
-        attempts++;
-        measureTimer.current = window.setTimeout(focusAndMeasure, 100);
+        // Skip in the direction the user navigated. If we run off either end,
+        // close gracefully (forward = finish, backward = return to menu/first).
+        const dir = directionRef.current;
+        const next = currentStep + dir;
+        if (next < 0) {
+          onReturnToMenu?.();
+          return;
+        }
+        if (next > steps.length - 1) {
+          onClose();
+          return;
+        }
+        setStep(next);
         return;
       }
       await scrollTargetIntoCenter(el);
@@ -368,6 +384,7 @@ export default function OnboardingTour({
   }, [step, currentStep, setStep, rect]);
 
   const handleNext = () => {
+    directionRef.current = 1;
     if (isLast) {
       onClose();
     } else {
@@ -376,6 +393,7 @@ export default function OnboardingTour({
   };
 
   const handlePrev = () => {
+    directionRef.current = -1;
     if (currentStep > 0) setStep(currentStep - 1);
   };
 
