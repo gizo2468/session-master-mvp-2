@@ -242,14 +242,17 @@ export default function OnboardingTour({
     const tick = () => {
       scheduled = false;
       rafId.current = null;
+      if (frozenRef.current) return;
       readRect();
     };
     const schedule = () => {
+      if (frozenRef.current) return;
       if (scheduled) return;
       scheduled = true;
       rafId.current = window.requestAnimationFrame(tick);
     };
     const onResize = () => {
+      if (frozenRef.current) return;
       setViewport({ w: window.innerWidth, h: window.innerHeight });
       schedule();
     };
