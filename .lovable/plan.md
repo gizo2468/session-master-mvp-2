@@ -1,45 +1,37 @@
-# Lock the Stakes tooltip while the user types in Buy-in
+## 1. Update tooltip text
 
-## Problem
+**`src/components/onboarding/tourSteps.ts`** — Replace the `body` of the `[data-tour="stakes"]` step with:
 
-On the Stakes step, tapping the Buy-in field makes the tooltip and gold spotlight jump. Two things cause this:
+> "Buy-in is the only required field to start a session. All other settings are optional. If it is a freeroll, you can simply enter 0. Enter your buy-in to continue or adjust the blinds for better accuracy."
 
-1. iOS opens the soft keyboard, which fires a `resize` event and shrinks `window.innerHeight`. Our rAF tick recomputes `viewport` + `rect` and re-runs the tooltip placement math, so the card snaps to a new top/left.
-2. iOS auto-scrolls focused inputs into view. Even with the app scroll root locked, the focused field can shift relative to the viewport, causing `getBoundingClientRect()` to return new values, which the rAF tick picks up and feeds into the spotlight + tooltip position.
+Also update the `buyInFilled` gate in `OnboardingTour.tsx` so the Next button enables when the input has any non-empty numeric value (including `0`), not only `> 0`. Freerolls must be allowed to proceed.
 
-The result is the tooltip moving away from its "directly below the highlighted block" anchor while typing.
+## 2. Lock spotlight + tooltip on focus (true freeze)
 
-## Goal
+The current freeze flag mostly works, but the spotlight still shifts upward on tap because:
+- `focusin` fires AFTER iOS has already started its auto-scroll-to-input adjustment, so one rect read sneaks in.
+- The freeze is keyed off `[data-tour="stakes"]`'s `focusin`, but the focus event from the Buy-in input bubbles through React's event system in a way that can race with the rAF scroll tick.
+- On `focusout` we immediately re-run `readRect()` + `setViewport()`, which re-measures while the keyboard is still collapsing — causing a second visible jump.
 
-While the Buy-in input is focused (or any input inside the highlighted Stakes block is focused), freeze the spotlight rect, the viewport size, and therefore the tooltip position. Resume normal live tracking when focus leaves.
+**`src/components/onboarding/OnboardingTour.tsx`** changes:
 
-## Changes (single file)
+1. **Pre-emptive freeze**: attach `pointerdown` / `touchstart` / `mousedown` listeners (capture phase) on the highlighted element. If the event target is an editable field, set `frozenRef.current = true` immediately — before iOS can begin auto-scroll. This closes the race that lets one stale rect read through.
 
-**`src/components/onboarding/OnboardingTour.tsx`**
+2. **Listen on document**, not only the highlighted element: focus events can target nested inputs whose bubbling path goes through portals (e.g. Currency Select). Use `document.addEventListener('focusin' / 'focusout', ..., true)` and check `el.contains(target)` so we always catch the editable inside the stakes block.
 
-1. Add a `frozenRef = useRef(false)` flag plus a `useState` mirror so re-renders pick it up where needed.
-2. Add focus tracking, scoped to the active step's selector:
-   - On step change, find the spotlighted element (`document.querySelector(step.selector)`).
-   - Attach `focusin` / `focusout` listeners. If the focus target is an `<input>`, `<textarea>`, or `[contenteditable]` inside that element, set frozen = true on focusin and false on focusout.
-   - Also listen on `window.visualViewport` `resize`; if its height shrinks below `window.innerHeight` by > 100px (keyboard heuristic), keep frozen = true even if focus tracking missed it.
-   - Clean up listeners when the step changes or component unmounts.
-3. Gate the live-tracking effects on `frozenRef.current`:
-   - `readRect`: early-return if frozen, so spotlight rect is preserved.
-   - The `resize` handler: skip the `setViewport(...)` update while frozen, so `tooltipStyle` math keeps using the pre-keyboard viewport height.
-   - The `scroll` rAF schedule: skip while frozen.
-   - The `ResizeObserver` callback on the target element: skip while frozen.
-4. When unfreezing (blur / keyboard closes), trigger a single `readRect()` + `setViewport({ w: window.innerWidth, h: window.innerHeight })` to re-sync to the real layout.
-5. Keep the existing `transition: 'none'` on spotlight visuals so when freeze releases there is still no perceptible drift.
-6. Leave the gating logic for the Next button (`buyInFilled`) untouched. The freeze is purely positional.
+3. **Cache last-good rect & viewport** in refs (`frozenRectRef`, `frozenViewportRef`). While frozen, the spotlight SVG and tooltip math read from these refs instead of from live state, even if a stray re-render slips through.
 
-## Why this works
+4. **Delay unfreeze**: on `focusout` / keyboard-close, do NOT immediately re-measure. Wait ~250ms (long enough for iOS keyboard collapse + scroll settle), then call `setViewport()` + `readRect()` once. This eliminates the second jump on blur.
 
-- Frozen rect → SVG spotlight, gold stroke, and dim bands all keep their last-good geometry while the keyboard is up.
-- Frozen viewport → tooltip's `top/left/width` math uses the pre-keyboard values, so the card stays exactly where it was when the user tapped Buy-in.
-- The vertical `TOOLTIP_GAP` between the spotlight and the tooltip is therefore preserved 1:1.
-- Because we still let the user type, scroll-block and click-block layers continue to behave as before — only the measurement loop is paused.
+5. **Keep CSS `transition: 'none'`** on spotlight visuals (already in place) so position changes never animate.
+
+6. **No business-logic changes** — only positioning + tooltip text + the `0` gate adjustment.
+
+## Order of execution
+
+Text update first (step 1), then the focus-stability work (step 2). Both land in the two files above; no other files touched.
 
 ## Out of scope
 
-- No changes to step content, navigation, or `tourSteps.ts`.
-- No changes to `SessionForm.tsx` or any business logic. Pure presentation/positioning fix.
+- No changes to `SessionForm.tsx`, scroll-lock infrastructure, or other tour steps.
+- No design system / token changes.

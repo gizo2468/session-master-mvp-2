@@ -102,8 +102,14 @@ export default function OnboardingTour({
       (container.querySelector('input') as HTMLInputElement | null);
     if (!input) return;
     const evaluate = () => {
-      const v = parseFloat((input.value || '').replace(/,/g, '.'));
-      setBuyInFilled(Number.isFinite(v) && v > 0);
+      const raw = (input.value || '').replace(/,/g, '.').trim();
+      if (raw === '') {
+        setBuyInFilled(false);
+        return;
+      }
+      const v = parseFloat(raw);
+      // Allow 0 (freeroll) — any finite numeric value counts.
+      setBuyInFilled(Number.isFinite(v));
     };
     evaluate();
     input.addEventListener('input', evaluate);
@@ -400,49 +406,93 @@ export default function OnboardingTour({
       if (t.isContentEditable) return true;
       return false;
     };
+    const isInsideHighlighted = (t: EventTarget | null) =>
+      t instanceof Node && el.contains(t);
 
     let focusFrozen = false;
     let keyboardFrozen = false;
+    let unfreezeTimer: number | null = null;
     const sync = () => {
       frozenRef.current = focusFrozen || keyboardFrozen;
     };
+    const cancelUnfreeze = () => {
+      if (unfreezeTimer !== null) {
+        window.clearTimeout(unfreezeTimer);
+        unfreezeTimer = null;
+      }
+    };
 
-    const onFocusIn = (e: FocusEvent) => {
+    // Pre-emptive freeze: as soon as the user touches an editable field inside
+    // the highlighted area, lock measurements BEFORE iOS can begin its
+    // auto-scroll-to-input or fire focusin. Closes the race that lets one
+    // stale rect read leak through and shift the spotlight.
+    const onPointerDown = (e: Event) => {
+      if (!isInsideHighlighted(e.target)) return;
       if (!isEditable(e.target)) return;
+      cancelUnfreeze();
       focusFrozen = true;
       sync();
     };
-    const onFocusOut = () => {
-      focusFrozen = false;
+
+    const onFocusIn = (e: FocusEvent) => {
+      if (!isInsideHighlighted(e.target)) return;
+      if (!isEditable(e.target)) return;
+      cancelUnfreeze();
+      focusFrozen = true;
       sync();
-      // Re-sync layout once focus leaves so any lingering scroll/keyboard delta
-      // is reflected on the next frame.
-      window.requestAnimationFrame(() => {
+    };
+    const onFocusOut = (e: FocusEvent) => {
+      if (!isInsideHighlighted(e.target)) return;
+      focusFrozen = false;
+      // Delay the actual unfreeze + re-measure so the iOS keyboard has time to
+      // fully collapse and any auto-scroll has settled. Prevents a second jump.
+      cancelUnfreeze();
+      unfreezeTimer = window.setTimeout(() => {
+        unfreezeTimer = null;
+        sync();
         if (frozenRef.current) return;
         setViewport({ w: window.innerWidth, h: window.innerHeight });
         readRect();
-      });
+      }, 280);
     };
 
-    el.addEventListener('focusin', onFocusIn);
-    el.addEventListener('focusout', onFocusOut);
+    document.addEventListener('pointerdown', onPointerDown, true);
+    document.addEventListener('touchstart', onPointerDown, true);
+    document.addEventListener('mousedown', onPointerDown, true);
+    document.addEventListener('focusin', onFocusIn, true);
+    document.addEventListener('focusout', onFocusOut, true);
 
     const vv = window.visualViewport;
     const onVVResize = () => {
       if (!vv) return;
       const delta = window.innerHeight - vv.height;
-      keyboardFrozen = delta > 100; // heuristic: keyboard open
-      sync();
-      if (!frozenRef.current) {
-        setViewport({ w: window.innerWidth, h: window.innerHeight });
-        readRect();
+      const open = delta > 100; // heuristic: keyboard open
+      if (open) {
+        cancelUnfreeze();
+        keyboardFrozen = true;
+        sync();
+      } else {
+        keyboardFrozen = false;
+        // Delay unfreeze on keyboard close as well.
+        cancelUnfreeze();
+        unfreezeTimer = window.setTimeout(() => {
+          unfreezeTimer = null;
+          sync();
+          if (frozenRef.current) return;
+          setViewport({ w: window.innerWidth, h: window.innerHeight });
+          readRect();
+        }, 280);
       }
     };
     vv?.addEventListener('resize', onVVResize);
 
     return () => {
-      el.removeEventListener('focusin', onFocusIn);
-      el.removeEventListener('focusout', onFocusOut);
+      cancelUnfreeze();
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('touchstart', onPointerDown, true);
+      document.removeEventListener('mousedown', onPointerDown, true);
+      document.removeEventListener('focusin', onFocusIn, true);
+      document.removeEventListener('focusout', onFocusOut, true);
       vv?.removeEventListener('resize', onVVResize);
       frozenRef.current = false;
     };
