@@ -86,6 +86,31 @@ export default function OnboardingTour({
   const hideNextButton = isStartSessionStep || isSubmitSessionStep;
   const hidePreviousButton = isGameSetupStep;
 
+  // Gate: on the Stakes step, require the Buy-in input to have a positive value.
+  const [buyInFilled, setBuyInFilled] = useState(false);
+  useEffect(() => {
+    if (!isStakesStep) return;
+    const container = document.querySelector('[data-tour="stakes"]') as HTMLElement | null;
+    if (!container) return;
+    const input =
+      (container.querySelector('input[inputmode="decimal"]') as HTMLInputElement | null) ??
+      (container.querySelector('input[type="number"]') as HTMLInputElement | null) ??
+      (container.querySelector('input') as HTMLInputElement | null);
+    if (!input) return;
+    const evaluate = () => {
+      const v = parseFloat((input.value || '').replace(/,/g, '.'));
+      setBuyInFilled(Number.isFinite(v) && v > 0);
+    };
+    evaluate();
+    input.addEventListener('input', evaluate);
+    input.addEventListener('change', evaluate);
+    return () => {
+      input.removeEventListener('input', evaluate);
+      input.removeEventListener('change', evaluate);
+    };
+  }, [isStakesStep, rect]);
+  const nextDisabled = isStakesStep && !buyInFilled;
+
   // Lightweight rect read — no scroll-into-view, no state churn if unchanged.
   const readRect = useCallback(() => {
     if (!step) return;
@@ -796,7 +821,7 @@ export default function OnboardingTour({
             )}
             <div className="flex items-center gap-2">
               {!hideNextButton && (
-                <Button size="sm" onClick={handleNext}>
+                <Button size="sm" onClick={handleNext} disabled={nextDisabled} aria-disabled={nextDisabled}>
                   {isLast ? 'Done' : 'Next'}
                 </Button>
               )}

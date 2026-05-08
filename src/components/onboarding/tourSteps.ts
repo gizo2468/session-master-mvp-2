@@ -39,7 +39,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     {
       selector: '[data-tour="stakes"]',
       title: 'Set the Stakes',
-      body: 'Enter your starting buy-in and the table blinds. This is essential for calculating your profit and loss accurately.',
+      body: 'Buy-in is the only field you need to start a session — everything else is optional. Enter your starting buy-in to continue, or adjust the blinds if you want more accurate stats.',
       interactive: true,
       route: '/new-session',
     },
