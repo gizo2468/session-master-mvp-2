@@ -821,7 +821,7 @@ export default function OnboardingTour({
             )}
             <div className="flex items-center gap-2">
               {!hideNextButton && (
-                <Button size="sm" onClick={handleNext}>
+                <Button size="sm" onClick={handleNext} disabled={nextDisabled} aria-disabled={nextDisabled}>
                   {isLast ? 'Done' : 'Next'}
                 </Button>
               )}
