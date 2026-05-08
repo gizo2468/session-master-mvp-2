@@ -102,8 +102,14 @@ export default function OnboardingTour({
       (container.querySelector('input') as HTMLInputElement | null);
     if (!input) return;
     const evaluate = () => {
-      const v = parseFloat((input.value || '').replace(/,/g, '.'));
-      setBuyInFilled(Number.isFinite(v) && v > 0);
+      const raw = (input.value || '').replace(/,/g, '.').trim();
+      if (raw === '') {
+        setBuyInFilled(false);
+        return;
+      }
+      const v = parseFloat(raw);
+      // Allow 0 (freeroll) — any finite numeric value counts.
+      setBuyInFilled(Number.isFinite(v));
     };
     evaluate();
     input.addEventListener('input', evaluate);
