@@ -74,6 +74,10 @@ export default function OnboardingTour({
   // Direction the user last navigated. Used to skip missing/conditional steps
   // in the same direction so Previous never bounces forward and vice versa.
   const directionRef = useRef<1 | -1>(1);
+  // Freeze flag: while true, we pause rect/viewport updates so the spotlight
+  // and tooltip stay rock-solid (e.g. when an input inside the highlighted area
+  // is focused and the mobile keyboard opens).
+  const frozenRef = useRef(false);
 
   const step = steps[currentStep];
   const isLast = currentStep === steps.length - 1;
