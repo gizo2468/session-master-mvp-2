@@ -1,37 +1,34 @@
-I investigated the tour flow on `/new-session` and found the main issue: the Start Session guide includes steps whose targets only exist in specific form states, especially the tournament-only advanced options (`advanced-multiday`, `advanced-late-reg`). On the default cash-game form, those elements do not exist, so when the user taps Previous from the final `submit-session` step, the tour moves backward to a missing step and then auto-skips forward again. That makes the tour look stuck and makes Previous feel broken.
+## Goal
+Gate the tour's "Set the Stakes" step so the user must enter a Buy-in amount before progressing, and update the tooltip copy to reflect that Buy-in is the only required field.
 
-## Plan
+## Changes
 
-1. Make the tour navigation direction-aware
-- Update `OnboardingTour` so unavailable targets are skipped in the direction the user requested.
-- If the user presses Previous, the tour should search backward for the nearest valid step instead of falling back into a forward auto-skip loop.
-- If the user presses Next, it should search forward for the next valid step.
+### 1. `src/components/onboarding/tourSteps.ts`
+Update the body of the `[data-tour="stakes"]` step to:
+> "Buy-in is the only field you need to start a session — everything else is optional. Enter your starting buy-in to continue, or adjust the blinds if you want more accurate stats."
 
-2. Stop relying on “missing target -> jump forward” as the main recovery path
-- Replace the current retry-then-advance behavior with a more explicit “resolve next valid step” flow.
-- Keep a small retry window for elements that are about to render after a `prepare()` hook, but only skip after checking whether the step is truly unavailable.
-- Prevent repeated re-entry into the same invalid step so the UI cannot appear frozen.
+(Title stays "Set the Stakes".)
 
-3. Align conditional session-form steps with the actual form state
-- Add step availability logic for `SessionForm` so tournament-only steps are only included when the form is in tournament mode, or programmatically switch the form into the required state before those steps run.
-- I’ll use the approach that best matches the intended walkthrough while preserving the user’s current inputs.
+### 2. `src/components/onboarding/OnboardingTour.tsx`
+Add a Buy-in gating mechanism active only when `isStakesStep` is true:
 
-4. Verify tooltip flow on the problematic final steps
-- Re-check the `submit-session` step and the advanced options sequence to ensure:
-  - Previous takes the user to a visible prior step
-  - Next continues normally
-  - the tour does not bounce back to the same card
-  - the highlight and tooltip remain correctly positioned on mobile
+- Add state `buyInFilled: boolean`.
+- In an effect keyed on `isStakesStep` + `rect`: locate the buy-in input inside the spotlighted block (`document.querySelector('[data-tour="stakes"] input[inputmode="decimal"]')`, falling back to the first `input` inside the `[data-tour="stakes"]` container). Read its current value, set `buyInFilled` to `parseFloat(value) > 0`. Attach an `input` listener that re-evaluates on every keystroke. Clean up on unmount/step change.
+- In the tooltip footer, when `isStakesStep && !buyInFilled`:
+  - `disabled` the Next button.
+  - Add `aria-disabled` and a muted style so it is visually clear it's inactive.
+  - Optionally add a small helper line above the buttons: "Enter a Buy-in amount to continue." (only shown on this step while disabled).
+- When the user types a value, the listener flips `buyInFilled` to true and Next becomes enabled immediately. No other step is affected.
 
-## Technical details
-- Files likely involved:
-  - `src/components/onboarding/OnboardingTour.tsx`
-  - `src/pages/SessionForm.tsx`
-  - possibly `src/components/onboarding/tourSteps.ts`
-- Root cause:
-  - the tour step list contains selectors that are conditionally absent from the DOM
-  - `focusAndMeasure()` currently resolves missing targets by moving forward, which breaks backward navigation semantics
-- Expected result after fix:
-  - Previous works consistently
-  - no “stuck on You’re All Set” loop
-  - hidden conditional steps no longer trap the tour
+### 3. No changes to `SessionForm.tsx`
+The buy-in input already lives inside `[data-tour="stakes"]`, so we read its value directly via DOM. This keeps the gate purely a tutorial-layer concern and avoids coupling form state to the tour.
+
+## Technical notes
+- DOM-level reading (rather than lifting form state) keeps the change isolated to the tour component and matches the existing pattern (the tour already queries the DOM for spotlight measurement).
+- Listener uses `input` event (covers typing, paste, programmatic change via React because React dispatches `input`).
+- Gate only applies to the stakes step; all other steps behave exactly as today.
+- Previous button remains enabled on the stakes step.
+
+## Files touched
+- `src/components/onboarding/tourSteps.ts`
+- `src/components/onboarding/OnboardingTour.tsx`
