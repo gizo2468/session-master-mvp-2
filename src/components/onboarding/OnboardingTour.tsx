@@ -118,6 +118,7 @@ export default function OnboardingTour({
   // Lightweight rect read — no scroll-into-view, no state churn if unchanged.
   const readRect = useCallback(() => {
     if (!step) return;
+    if (frozenRef.current) return;
     const el = document.querySelector(step.selector) as HTMLElement | null;
     if (!el) {
       setRect((prev) => (prev === null ? prev : null));
