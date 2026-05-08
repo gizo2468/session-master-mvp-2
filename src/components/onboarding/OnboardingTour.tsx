@@ -377,10 +377,76 @@ export default function OnboardingTour({
     if (!step || typeof ResizeObserver === 'undefined') return;
     const el = document.querySelector(step.selector) as HTMLElement | null;
     if (!el) return;
-    const ro = new ResizeObserver(() => readRect());
+    const ro = new ResizeObserver(() => {
+      if (frozenRef.current) return;
+      readRect();
+    });
     ro.observe(el);
     return () => ro.disconnect();
   }, [step, readRect, currentStep]);
+
+  // Freeze the tour position while an input/textarea inside the highlighted
+  // area is focused, OR while the mobile keyboard is detected as open via
+  // visualViewport. Prevents the tooltip & spotlight from jumping when iOS
+  // opens the keyboard and shrinks innerHeight / auto-scrolls the field.
+  useEffect(() => {
+    if (!step) return;
+    const el = document.querySelector(step.selector) as HTMLElement | null;
+    if (!el) return;
+
+    const isEditable = (t: EventTarget | null) => {
+      if (!(t instanceof HTMLElement)) return false;
+      if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') return true;
+      if (t.isContentEditable) return true;
+      return false;
+    };
+
+    let focusFrozen = false;
+    let keyboardFrozen = false;
+    const sync = () => {
+      frozenRef.current = focusFrozen || keyboardFrozen;
+    };
+
+    const onFocusIn = (e: FocusEvent) => {
+      if (!isEditable(e.target)) return;
+      focusFrozen = true;
+      sync();
+    };
+    const onFocusOut = () => {
+      focusFrozen = false;
+      sync();
+      // Re-sync layout once focus leaves so any lingering scroll/keyboard delta
+      // is reflected on the next frame.
+      window.requestAnimationFrame(() => {
+        if (frozenRef.current) return;
+        setViewport({ w: window.innerWidth, h: window.innerHeight });
+        readRect();
+      });
+    };
+
+    el.addEventListener('focusin', onFocusIn);
+    el.addEventListener('focusout', onFocusOut);
+
+    const vv = window.visualViewport;
+    const onVVResize = () => {
+      if (!vv) return;
+      const delta = window.innerHeight - vv.height;
+      keyboardFrozen = delta > 100; // heuristic: keyboard open
+      sync();
+      if (!frozenRef.current) {
+        setViewport({ w: window.innerWidth, h: window.innerHeight });
+        readRect();
+      }
+    };
+    vv?.addEventListener('resize', onVVResize);
+
+    return () => {
+      el.removeEventListener('focusin', onFocusIn);
+      el.removeEventListener('focusout', onFocusOut);
+      vv?.removeEventListener('resize', onVVResize);
+      frozenRef.current = false;
+    };
+  }, [step, currentStep, readRect]);
 
   // Measure tooltip's actual height so we can place it without overlap.
   useLayoutEffect(() => {
