@@ -165,8 +165,9 @@ export default function SessionForm() {
         throw new Error('Invalid buy-in amount');
       }
 
-      const sessionLabel = values.location?.trim() || '';
-      const tableLabel = values.firstTableName?.trim() || sessionLabel;
+      const monthDay = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const sessionLabel = values.location?.trim() || `Session ${monthDay}`;
+      const tableLabel = values.firstTableName?.trim() || 'Table 1';
 
       // Create the initial table object from form data
       const initialTable: TableData = {
