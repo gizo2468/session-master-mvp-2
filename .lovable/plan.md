@@ -1,8 +1,6 @@
-## Final Placeholder Adjustments in `src/pages/SessionForm.tsx`
+## Update checkbox descriptions in `src/pages/SessionForm.tsx`
 
-1. **Festival Name** (line 853): restore `placeholder="e.g., WSOP, EPT, or Winter Series"`.
-2. **First Table Name** (line 828): change `placeholder="e.g.,"` → `placeholder=""` (empty).
-3. **Session Name** (line 707): keep `placeholder=""` (already empty).
-4. **Helper text** under First Table Name: confirm it stays removed (already deleted in prior turn).
+1. **Multi-Day Tournament** (line 783): replace `Check this for tournaments that span multiple days` with `Check this if your first tournament is a multi-day tournament for multiple days`.
+2. **Late Registration** (line 807): replace `Enable if late registration is available` with `Check this if your first tournament was entered in late registration`.
 
-No other files or logic are touched.
+Text-only changes; styling and layout untouched.

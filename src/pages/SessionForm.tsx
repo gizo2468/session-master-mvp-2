@@ -780,7 +780,7 @@ export default function SessionForm() {
                         <div className="space-y-1 leading-none">
                           <FormLabel>Multi-Day Tournament</FormLabel>
                           <p className="text-sm text-muted-foreground">
-                            Check this for tournaments that span multiple days
+                            Check this if your first tournament is a multi-day tournament for multiple days
                           </p>
                         </div>
                       </FormItem>
