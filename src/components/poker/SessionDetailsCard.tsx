@@ -237,6 +237,14 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           )}
         </div>
       </CardContent>
+      <CoachSelectionModal
+        isOpen={showCoachModal}
+        onClose={() => setShowCoachModal(false)}
+        coaches={connectedCoaches}
+        onSelectCoaches={async (coachIds) => { await shareSession(coachIds); }}
+        selectedCoaches={sharedCoaches}
+        loading={sharingLoading}
+      />
     </Card>
   );
 };
