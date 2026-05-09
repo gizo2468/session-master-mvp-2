@@ -825,15 +825,12 @@ export default function SessionForm() {
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="e.g., Main Event, Table 5"
+                          placeholder="e.g.,"
                           autoComplete="off"
                           data-form-type="other"
                           {...field}
                         />
                       </FormControl>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Leave blank to use the Session Name as the name for this table.
-                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
