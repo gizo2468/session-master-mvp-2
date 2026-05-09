@@ -124,6 +124,7 @@ export default function SessionForm() {
       currency: (defaultCurrency && ['USD', 'EUR', 'GBP', 'CAD', 'ILS', 'BRL', 'CNY', 'THB', 'INR'].includes(defaultCurrency)) ? defaultCurrency as 'USD' | 'EUR' | 'GBP' | 'CAD' | 'ILS' | 'BRL' | 'CNY' | 'THB' | 'INR' : 'USD',
       location: '',
       physicalLocation: '',
+      festivalName: '',
       buyIn: '',
       isOnline: false,
       startingBB: '',
