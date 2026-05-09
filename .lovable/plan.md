@@ -1,37 +1,44 @@
-## 1. Update tooltip text
+## Problem
 
-**`src/components/onboarding/tourSteps.ts`** — Replace the `body` of the `[data-tour="stakes"]` step with:
+When the user taps the **Buy-in Amount** input on iOS during the Stakes tour step, the page shifts upward — the browser's native "scroll-focused-input-into-view" behavior runs even though we apply `overflow:hidden` + `height:100vh` to html/body/appRoot. The spotlight is positioned from `getBoundingClientRect()` and we currently freeze that rect on focus, so when the page silently scrolls under us, the spotlight stays pinned to viewport coordinates while the actual field moves — visually misaligning/cutting off the highlight.
 
-> "Buy-in is the only required field to start a session. All other settings are optional. If it is a freeroll, you can simply enter 0. Enter your buy-in to continue or adjust the blinds for better accuracy."
+`overflow:hidden` does NOT prevent iOS Safari/WKWebView from programmatically scrolling the *root* on input focus. We have to either prevent the focus-scroll itself or detect the scroll and immediately restore it.
 
-Also update the `buyInFilled` gate in `OnboardingTour.tsx` so the Next button enables when the input has any non-empty numeric value (including `0`), not only `> 0`. Freerolls must be allowed to proceed.
+## Fix (single file: `src/components/onboarding/OnboardingTour.tsx`)
 
-## 2. Lock spotlight + tooltip on focus (true freeze)
+### 1. Prevent the iOS focus-scroll at the source
 
-The current freeze flag mostly works, but the spotlight still shifts upward on tap because:
-- `focusin` fires AFTER iOS has already started its auto-scroll-to-input adjustment, so one rect read sneaks in.
-- The freeze is keyed off `[data-tour="stakes"]`'s `focusin`, but the focus event from the Buy-in input bubbles through React's event system in a way that can race with the rAF scroll tick.
-- On `focusout` we immediately re-run `readRect()` + `setViewport()`, which re-measures while the keyboard is still collapsing — causing a second visible jump.
+In the existing freeze `useEffect` (around lines 398–499):
 
-**`src/components/onboarding/OnboardingTour.tsx`** changes:
+- On `pointerdown` / `mousedown` / `touchstart` (capture) for an editable target inside the spotlight, **snapshot scroll positions** of `window`, `documentElement`, `body`, and `[data-app-scroll-root="true"]` into a ref, then set `frozenRef.current = true` (already done).
+- Intercept the tap to bypass iOS auto-scroll:
+  - On `mousedown` for an editable input inside the highlighted area, call `e.preventDefault()` and then `el.focus({ preventScroll: true })`. `preventScroll` is supported in WKWebView and skips the focus-scroll-into-view side effect.
+  - Use `mousedown` (not `touchstart`) because preventing default on `touchstart` blocks the synthesized click; `mousedown` fires after touchend on iOS and preventing it is safe for inputs.
 
-1. **Pre-emptive freeze**: attach `pointerdown` / `touchstart` / `mousedown` listeners (capture phase) on the highlighted element. If the event target is an editable field, set `frozenRef.current = true` immediately — before iOS can begin auto-scroll. This closes the race that lets one stale rect read through.
+### 2. Restore scroll if it slips through
 
-2. **Listen on document**, not only the highlighted element: focus events can target nested inputs whose bubbling path goes through portals (e.g. Currency Select). Use `document.addEventListener('focusin' / 'focusout', ..., true)` and check `el.contains(target)` so we always catch the editable inside the stakes block.
+Some WKWebView versions still scroll despite `preventScroll`. Add a short "scroll-guard" window:
 
-3. **Cache last-good rect & viewport** in refs (`frozenRectRef`, `frozenViewportRef`). While frozen, the spotlight SVG and tooltip math read from these refs instead of from live state, even if a stray re-render slips through.
+- After `focusin` on an editable inside the spotlight, run a **rAF + 0/50/150/300ms timer chain** that re-applies the snapshot scroll positions to window/html/body/appRoot.
+- Add a temporary `scroll` listener (capture, on `window` and on the appRoot) that, while the input is focused, immediately writes the snapshot back. Remove on `focusout`.
 
-4. **Delay unfreeze**: on `focusout` / keyboard-close, do NOT immediately re-measure. Wait ~250ms (long enough for iOS keyboard collapse + scroll settle), then call `setViewport()` + `readRect()` once. This eliminates the second jump on blur.
+### 3. Keep the rect/tooltip frozen during the focused window
 
-5. **Keep CSS `transition: 'none'`** on spotlight visuals (already in place) so position changes never animate.
+- Keep `frozenRef.current = true` for the entire duration the input is focused (already done).
+- On `focusout`, after the existing 280ms delay, re-snapshot scroll positions and call `readRect()` once. (already done — keep.)
+- Confirm the `visualViewport.resize` keyboard-open branch keeps `frozenRef.current = true` so the spotlight uses the cached rect even if iOS shrinks `innerHeight` (already done — keep).
 
-6. **No business-logic changes** — only positioning + tooltip text + the `0` gate adjustment.
+### 4. Cleanup
 
-## Order of execution
-
-Text update first (step 1), then the focus-stability work (step 2). Both land in the two files above; no other files touched.
+- Remove the scroll-guard listeners and any pending timers in the effect cleanup.
+- Defensive: clear `frozenRef.current = false` on unmount (already done).
 
 ## Out of scope
 
-- No changes to `SessionForm.tsx`, scroll-lock infrastructure, or other tour steps.
+- No changes to tooltip text, `tourSteps.ts`, `SessionForm.tsx`, scroll-lock infrastructure, or other tour steps.
 - No design system / token changes.
+- No business-logic changes.
+
+## Why this works
+
+`preventScroll: true` plus restoring the snapshot scroll positions on every scroll event during the focus window guarantees the page does not move while the input is focused. With the page locked, the existing rect freeze keeps the spotlight and tooltip exactly where they were when the user tapped — eliminating the upward shift seen in the screenshots.

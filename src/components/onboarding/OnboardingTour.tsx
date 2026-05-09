@@ -412,6 +412,38 @@ export default function OnboardingTour({
     let focusFrozen = false;
     let keyboardFrozen = false;
     let unfreezeTimer: number | null = null;
+    let restoreTimers: number[] = [];
+    const appRoot = document.querySelector('[data-app-scroll-root="true"]') as HTMLElement | null;
+    // Snapshot of scroll positions captured the moment the user taps an
+    // editable field. Used to undo any iOS focus-induced scroll-into-view.
+    let snap = {
+      win: { x: 0, y: 0 },
+      html: 0,
+      body: 0,
+      app: 0,
+    };
+    const captureScroll = () => {
+      snap = {
+        win: { x: window.scrollX, y: window.scrollY },
+        html: document.documentElement.scrollTop,
+        body: document.body.scrollTop,
+        app: appRoot ? appRoot.scrollTop : 0,
+      };
+    };
+    const restoreScroll = () => {
+      if (window.scrollX !== snap.win.x || window.scrollY !== snap.win.y) {
+        window.scrollTo(snap.win.x, snap.win.y);
+      }
+      if (document.documentElement.scrollTop !== snap.html) {
+        document.documentElement.scrollTop = snap.html;
+      }
+      if (document.body.scrollTop !== snap.body) {
+        document.body.scrollTop = snap.body;
+      }
+      if (appRoot && appRoot.scrollTop !== snap.app) {
+        appRoot.scrollTop = snap.app;
+      }
+    };
     const sync = () => {
       frozenRef.current = focusFrozen || keyboardFrozen;
     };
@@ -421,29 +453,72 @@ export default function OnboardingTour({
         unfreezeTimer = null;
       }
     };
+    const clearRestoreTimers = () => {
+      restoreTimers.forEach((t) => window.clearTimeout(t));
+      restoreTimers = [];
+    };
+    // Scroll-guard: while focused, immediately undo any scroll the browser
+    // performs (iOS focus-into-view side effect).
+    const onScrollGuard = () => {
+      if (!focusFrozen) return;
+      restoreScroll();
+    };
 
-    // Pre-emptive freeze: as soon as the user touches an editable field inside
-    // the highlighted area, lock measurements BEFORE iOS can begin its
-    // auto-scroll-to-input or fire focusin. Closes the race that lets one
-    // stale rect read leak through and shift the spotlight.
+    // Pre-emptive freeze + scroll snapshot. Run on pointerdown/mousedown so we
+    // capture state BEFORE iOS begins its auto-scroll-to-input.
     const onPointerDown = (e: Event) => {
       if (!isInsideHighlighted(e.target)) return;
       if (!isEditable(e.target)) return;
       cancelUnfreeze();
+      captureScroll();
       focusFrozen = true;
       sync();
+    };
+
+    // mousedown intercept: prevent the default focus path that triggers iOS
+    // scroll-into-view, then focus the input ourselves with preventScroll.
+    const onMouseDown = (e: MouseEvent) => {
+      if (!isInsideHighlighted(e.target)) return;
+      if (!isEditable(e.target)) return;
+      const target = e.target as HTMLElement;
+      cancelUnfreeze();
+      captureScroll();
+      focusFrozen = true;
+      sync();
+      e.preventDefault();
+      try {
+        (target as HTMLInputElement).focus({ preventScroll: true });
+      } catch {
+        target.focus();
+      }
     };
 
     const onFocusIn = (e: FocusEvent) => {
       if (!isInsideHighlighted(e.target)) return;
       if (!isEditable(e.target)) return;
       cancelUnfreeze();
+      // Capture only if we haven't already (pointerdown should have fired first).
+      if (!focusFrozen) captureScroll();
       focusFrozen = true;
       sync();
+      // Repeatedly restore scroll over the first ~400ms to defeat any
+      // delayed iOS focus-scroll that slips past preventScroll.
+      clearRestoreTimers();
+      [0, 30, 80, 160, 280, 400].forEach((ms) => {
+        restoreTimers.push(
+          window.setTimeout(() => {
+            if (focusFrozen) restoreScroll();
+          }, ms)
+        );
+      });
+      window.requestAnimationFrame(() => {
+        if (focusFrozen) restoreScroll();
+      });
     };
     const onFocusOut = (e: FocusEvent) => {
       if (!isInsideHighlighted(e.target)) return;
       focusFrozen = false;
+      clearRestoreTimers();
       // Delay the actual unfreeze + re-measure so the iOS keyboard has time to
       // fully collapse and any auto-scroll has settled. Prevents a second jump.
       cancelUnfreeze();
@@ -458,9 +533,11 @@ export default function OnboardingTour({
 
     document.addEventListener('pointerdown', onPointerDown, true);
     document.addEventListener('touchstart', onPointerDown, true);
-    document.addEventListener('mousedown', onPointerDown, true);
+    document.addEventListener('mousedown', onMouseDown, true);
     document.addEventListener('focusin', onFocusIn, true);
     document.addEventListener('focusout', onFocusOut, true);
+    window.addEventListener('scroll', onScrollGuard, true);
+    appRoot?.addEventListener('scroll', onScrollGuard, true);
 
     const vv = window.visualViewport;
     const onVVResize = () => {
@@ -471,6 +548,7 @@ export default function OnboardingTour({
         cancelUnfreeze();
         keyboardFrozen = true;
         sync();
+        if (focusFrozen) restoreScroll();
       } else {
         keyboardFrozen = false;
         // Delay unfreeze on keyboard close as well.
@@ -488,11 +566,14 @@ export default function OnboardingTour({
 
     return () => {
       cancelUnfreeze();
+      clearRestoreTimers();
       document.removeEventListener('pointerdown', onPointerDown, true);
       document.removeEventListener('touchstart', onPointerDown, true);
-      document.removeEventListener('mousedown', onPointerDown, true);
+      document.removeEventListener('mousedown', onMouseDown, true);
       document.removeEventListener('focusin', onFocusIn, true);
       document.removeEventListener('focusout', onFocusOut, true);
+      window.removeEventListener('scroll', onScrollGuard, true);
+      appRoot?.removeEventListener('scroll', onScrollGuard, true);
       vv?.removeEventListener('resize', onVVResize);
       frozenRef.current = false;
     };
