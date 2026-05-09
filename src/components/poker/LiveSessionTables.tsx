@@ -1,11 +1,6 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { PokerSession } from '@/types/poker';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
-import { useSessionSharing } from '@/hooks/useSessionSharing';
-import CoachSelectionModal from '@/components/coaching/CoachSelectionModal';
-import Icon from '@/components/ui/Lucide';
 import TableCard from './TableCard';
 import CompletedTablesDisplay from './CompletedTablesDisplay';
 
@@ -34,96 +29,42 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
   onEndTable,
   onAddTableRebuy
 }) => {
-  const { user } = useAuth();
-  const [showCoachModal, setShowCoachModal] = useState(false);
-  
-  // Only show the toggle for players (students), not coaches
-  const showShareToggle = user?.role === 'student';
-  
-  // Use the session sharing hook
-  const {
-    isShared,
-    sharedCoaches,
-    connectedCoaches,
-    loading: sharingLoading,
-    shareSession,
-    unshareSession
-  } = useSessionSharing(currentSession.id);
-
-  const handleOpenShareModal = () => {
-    setShowCoachModal(true);
-  };
-
-  const handleSelectCoaches = async (coachIds: string[]) => {
-    await shareSession(coachIds);
-  };
-
   const activeTables = currentSession.tables?.filter(table => table.isActive) || [];
   const inactiveTables = currentSession.tables?.filter(table => !table.isActive) || [];
 
   return (
-    <>
-      <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6">
-        <div className="flex justify-end items-center mb-4">
-          {showShareToggle && (
-            <Button
-              onClick={handleOpenShareModal}
-              disabled={sharingLoading || connectedCoaches.length === 0}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              {sharingLoading ? (
-                <Icon name="Loader2" size={14} className="animate-spin" />
-              ) : (
-                <Icon name="Share" size={14} />
-              )}
-              {isShared ? `Shared with ${sharedCoaches.length} coach${sharedCoaches.length !== 1 ? 'es' : ''}` : 'Share with Coach'}
-            </Button>
+    <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6">
+      {activeTables.length === 0 && inactiveTables.length === 0 ? (
+        <div className="text-center py-8 text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-background rounded-md">
+          <p className="mb-2">No tables added yet.</p>
+          <p className="text-sm">Click "Add Table" to start tracking multiple tables.</p>
+        </div>
+      ) : (
+        <div>
+          {activeTables.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-lg font-bold mb-2 text-poker-gold">Active Tables ({activeTables.length})</h4>
+              <div className="space-y-5">
+                {activeTables.map((table) => (
+                  <TableCard
+                    key={table.id}
+                    table={table}
+                    currency={table.currency || currentSession.currency}
+                    sessionId={currentSession.id}
+                    onEndTable={onEndTable}
+                    onAddRebuy={onAddTableRebuy}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {inactiveTables.length > 0 && (
+            <CompletedTablesDisplay tables={inactiveTables} sessionId={currentSession.id} currency={currentSession.currency} isLiveSession />
           )}
         </div>
-        
-        {activeTables.length === 0 && inactiveTables.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-background rounded-md">
-            <p className="mb-2">No tables added yet.</p>
-            <p className="text-sm">Click "Add Table" to start tracking multiple tables.</p>
-          </div>
-        ) : (
-          <div>
-            {activeTables.length > 0 && (
-              <div className="mb-4">
-                <h4 className="text-lg font-bold mb-2">Active Tables ({activeTables.length})</h4>
-                <div className="space-y-5">
-                  {activeTables.map((table) => (
-                    <TableCard
-                      key={table.id}
-                      table={table}
-                      currency={table.currency || currentSession.currency}
-                      sessionId={currentSession.id}
-                      onEndTable={onEndTable}
-                      onAddRebuy={onAddTableRebuy}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {inactiveTables.length > 0 && (
-              <CompletedTablesDisplay tables={inactiveTables} sessionId={currentSession.id} currency={currentSession.currency} isLiveSession />
-            )}
-          </div>
-        )}
-      </div>
-
-      <CoachSelectionModal
-        isOpen={showCoachModal}
-        onClose={() => setShowCoachModal(false)}
-        coaches={connectedCoaches}
-        onSelectCoaches={handleSelectCoaches}
-        selectedCoaches={sharedCoaches}
-        loading={sharingLoading}
-      />
-    </>
+      )}
+    </div>
   );
 };
 
