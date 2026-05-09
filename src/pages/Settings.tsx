@@ -596,7 +596,7 @@ const Settings: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <Icon name="RotateCcw" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
                     <div>
-                      <p className="font-medium">Reset Onboarding</p>
+                      <p className="font-medium">Reset Onboarding Tutorial</p>
                       <p className="text-sm text-gray-500 dark:text-muted-foreground">Replay the Start Session hint on Home</p>
                     </div>
                   </div>
