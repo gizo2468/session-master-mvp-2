@@ -366,7 +366,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                           htmlFor="nlh" 
                           className={`flex-1 cursor-pointer py-2 px-3 rounded-md border text-center text-sm ${
                             field.value === 'NLH' 
-                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
+                              ? 'bg-poker-gold text-white border-poker-gold' 
                               : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border hover:bg-gray-50 dark:bg-background'
                           }`}
                         >
@@ -382,7 +382,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                           htmlFor="plo" 
                           className={`flex-1 cursor-pointer py-2 px-3 rounded-md border text-center text-sm ${
                             field.value === 'PLO' 
-                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
+                              ? 'bg-poker-gold text-white border-poker-gold' 
                               : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border hover:bg-gray-50 dark:bg-background'
                           }`}
                         >
@@ -417,7 +417,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                           htmlFor="cash" 
                           className={`flex-1 cursor-pointer py-2 px-3 rounded-md border text-center text-sm ${
                             field.value === 'Cash' 
-                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
+                              ? 'bg-poker-gold text-white border-poker-gold' 
                               : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border hover:bg-gray-50 dark:bg-background'
                           }`}
                         >
@@ -433,7 +433,7 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
                           htmlFor="tournament" 
                           className={`flex-1 cursor-pointer py-2 px-3 rounded-md border text-center text-sm ${
                             field.value === 'Tournament' 
-                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
+                              ? 'bg-poker-gold text-white border-poker-gold' 
                               : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border hover:bg-gray-50 dark:bg-background'
                           }`}
                         >
