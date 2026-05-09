@@ -55,11 +55,12 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     },
     {
       selector: '[data-tour="advanced-checkboxes"]',
-      title: 'Advanced Session Settings',
-      body: 'If any of these conditions apply to your session, select them here to ensure accurate tracking and specialized features for your game.',
+      title: 'Session Settings',
+      body: 'Select any that apply to your session for accurate tracking and specialized features.',
       interactive: true,
       route: '/new-session',
       prepare: openAdvanced,
+      compact: true,
     },
     {
       selector: '[data-tour="submit-session"]',
