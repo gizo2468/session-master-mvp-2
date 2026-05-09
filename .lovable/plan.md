@@ -1,19 +1,25 @@
-# Active Session Card — Compact Bottom Row
+# Active Session Card — 3-Row Layout
 
-In `src/components/ActiveSessionsList.tsx`, restructure the inner card body (currently lines 50–64).
+In `src/components/ActiveSessionsList.tsx`, replace the current single info row (lines 50–59) with two rows.
 
-## Change
+## Result
 
-- Remove the entire middle row that currently holds MapPin "Total Tables" + Clock duration (lines 50–59).
-- Append the Clock icon + duration onto the existing NLH | Cash row, separated by an em dash.
+Row 1 (existing, unchanged): green dot + bold session name.
 
-Resulting markup for that block:
+Row 2 (restore): `Total Tables: N`, left-aligned, no icon.
+```tsx
+<div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+  Total Tables: {session.tables?.length ?? 0}
+</div>
+```
+
+Row 3 (replace dash with `|`): `NLH | Cash | 🕒 36m`
 ```tsx
 <div className="flex items-center gap-3 text-sm">
   <span className="text-gray-600 dark:text-gray-400">{session.gameType || 'N/A'}</span>
   <span className="text-gray-400 dark:text-gray-600">|</span>
   <span className="text-gray-600 dark:text-gray-400">{session.format || 'N/A'}</span>
-  <span className="text-gray-400 dark:text-gray-600">–</span>
+  <span className="text-gray-400 dark:text-gray-600">|</span>
   <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
     <Icon name="Clock" size={14} />
     <span>{formatDuration(session.startTime)}</span>
@@ -22,5 +28,4 @@ Resulting markup for that block:
 ```
 
 ## Out of scope
-- Top session-name row, Resume/Delete buttons, container styling — unchanged.
-- Note: the "Total Tables" line added previously will be dropped per this request.
+- Top name row, Resume/Delete buttons, container styling — unchanged.

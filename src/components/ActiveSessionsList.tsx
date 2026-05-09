@@ -47,11 +47,14 @@ const ActiveSessionItem = React.memo(({ session, onResume, handleDeleteClick }: 
             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
             <h4 className="text-md font-bold text-green-800 dark:text-green-300">{session.location || 'Unknown Location'}</h4>
           </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+            Total Tables: {session.tables?.length ?? 0}
+          </div>
           <div className="flex items-center gap-3 text-sm">
             <span className="text-gray-600 dark:text-gray-400">{session.gameType || 'N/A'}</span>
             <span className="text-gray-400 dark:text-gray-600">|</span>
             <span className="text-gray-600 dark:text-gray-400">{session.format || 'N/A'}</span>
-            <span className="text-gray-400 dark:text-gray-600">–</span>
+            <span className="text-gray-400 dark:text-gray-600">|</span>
             <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
               <Icon name="Clock" size={14} />
               <span>{formatDuration(session.startTime)}</span>
