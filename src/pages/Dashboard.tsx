@@ -93,7 +93,7 @@ const Dashboard: React.FC = () => {
             <Button 
               onClick={navigateToHomeWithRefresh}
               variant="ghost"
-              className="text-poker-feltGreen dark:text-primary p-0"
+              className="text-poker-gold hover:text-poker-gold/80 p-0"
               disabled={isRefreshing}
             >
               <Icon name={isRefreshing ? "Loader2" : "ArrowLeft"} size={16} className={`mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -131,7 +131,6 @@ const Dashboard: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-6">
-                <p className="text-lg font-medium text-poker-feltGreen">Dashboard</p>
                 <MyCoachingNetwork highlightIncomingRequests={focusIncomingRequests} autoOpenConnect={autoOpenConnect} />
                 <MyNotesCard />
                 <StatsQuickView showExtendedMetrics />
