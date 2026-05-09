@@ -1,31 +1,39 @@
-# Active Session Card — 3-Row Layout
+## Update Active Session Card: Total Buy-Ins
 
-In `src/components/ActiveSessionsList.tsx`, replace the current single info row (lines 50–59) with two rows.
+Replace the "Total Tables" line in `src/components/ActiveSessionsList.tsx` with a real-time **Total Buy-Ins** value, in the same row 2 position with matching font size/style. Rows 1 (name) and 3 (NLH | Cash | timer) stay unchanged.
 
-## Result
+### Display
 
-Row 1 (existing, unchanged): green dot + bold session name.
+- Label/value: `Total Buy-Ins: $565.00`
+- Same classes: `text-sm text-gray-600 dark:text-gray-400 mb-2`
+- Currency formatted via existing `formatCurrency(amount, currency)` from `src/utils/statisticsCalculator.ts`
 
-Row 2 (restore): `Total Tables: N`, left-aligned, no icon.
-```tsx
-<div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-  Total Tables: {session.tables?.length ?? 0}
-</div>
+### Calculation
+
+Use the same logic already proven in `useSessionStats.ts` and `statisticsCalculator.ts`:
+
+```
+total = sum over session.tables of (table.buyIn + (table.rebuyAmount || 0))
 ```
 
-Row 3 (replace dash with `|`): `NLH | Cash | 🕒 36m`
-```tsx
-<div className="flex items-center gap-3 text-sm">
-  <span className="text-gray-600 dark:text-gray-400">{session.gameType || 'N/A'}</span>
-  <span className="text-gray-400 dark:text-gray-600">|</span>
-  <span className="text-gray-600 dark:text-gray-400">{session.format || 'N/A'}</span>
-  <span className="text-gray-400 dark:text-gray-600">|</span>
-  <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-    <Icon name="Clock" size={14} />
-    <span>{formatDuration(session.startTime)}</span>
-  </div>
-</div>
+Fallback when a session has no tables array (legacy sessions):
+```
+total = (session.buyIn || 0) + (session.rebuyAmount || 0)
 ```
 
-## Out of scope
-- Top name row, Resume/Delete buttons, container styling — unchanged.
+This is real-time because `session.tables` already reflects the live session state via `SessionContext` / `useSessionsQuery`.
+
+### Currency resolution
+
+Order of preference:
+1. `session.currency`
+2. First table's `currency` (`session.tables?.[0]?.currency`)
+3. `'USD'` default
+
+Pass result into `formatCurrency(total, currency)`.
+
+### Scope
+
+- File touched: `src/components/ActiveSessionsList.tsx` only (single line replacement in the `ActiveSessionItem` render).
+- No DB, no type, no business-logic changes.
+- Resume/Delete buttons, layout, dark theme, separators all untouched.
