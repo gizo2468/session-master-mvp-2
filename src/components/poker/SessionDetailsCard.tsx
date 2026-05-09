@@ -81,7 +81,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   return (
     <Card className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
       <CardHeader className="pb-2 text-center">
-        <CardTitle className="text-lg font-medium">Session Details</CardTitle>
+        <CardTitle className="text-lg font-bold text-poker-gold">Session Details</CardTitle>
         {session.location?.trim() && (
           <p className="text-base font-semibold text-foreground mt-1">
             {session.location.trim()}
