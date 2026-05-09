@@ -62,6 +62,7 @@ const formSchema = z.object({
   location: z.string().optional(),
   physicalLocation: z.string().optional(),
   festivalName: z.string().optional(),
+  firstTableName: z.string().optional(),
   buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "Buy-in amount must be a valid number",
   }),
