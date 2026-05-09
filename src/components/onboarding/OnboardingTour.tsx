@@ -658,7 +658,7 @@ export default function OnboardingTour({
           className="absolute bg-card border border-primary/30 rounded-xl p-5"
           style={menuStyle}
         >
-          <h3 className="text-lg font-bold mb-1.5 text-center" style={{ color: '#1e293b' }}>
+          <h3 className="text-lg font-bold text-primary mb-1.5 text-center">
             Welcome to Session Master
           </h3>
           <p className="text-sm text-foreground/80 leading-relaxed mb-4 text-center">
@@ -693,7 +693,7 @@ export default function OnboardingTour({
           </div>
 
           <div className="flex items-center justify-start">
-            <Button variant="ghost" size="sm" onClick={handleSkip}>
+            <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10" onClick={handleSkip}>
               Skip
             </Button>
           </div>
