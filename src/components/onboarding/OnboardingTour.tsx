@@ -693,7 +693,7 @@ export default function OnboardingTour({
           </div>
 
           <div className="flex items-center justify-start">
-            <Button variant="ghost" size="sm" onClick={handleSkip}>
+            <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10" onClick={handleSkip}>
               Skip
             </Button>
           </div>
