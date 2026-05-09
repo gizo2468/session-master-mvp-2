@@ -770,7 +770,7 @@ export default function SessionForm() {
                     control={form.control}
                     name="isMultiDay"
                     render={({ field }) => (
-                      <FormItem data-tour="advanced-multiday" className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
