@@ -91,11 +91,47 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
       <CardContent className="pt-0">
         <div className="space-y-3">
 
+          {/* Format (dynamic from tables) */}
+          {(() => {
+            const formats = Array.from(new Set((session.tables ?? []).map(t => t.format))).filter(Boolean);
+            const formatDisplay = formats.length ? formats.join(', ') : session.format;
+            return (
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-muted-foreground">Format:</span>
+                <span className="font-medium">{formatDisplay}</span>
+              </div>
+            );
+          })()}
+
           {/* Game Type */}
           <div className="flex justify-between">
             <span className="text-gray-500 dark:text-muted-foreground">Game Type:</span>
             <span className="font-medium">{session.gameType}</span>
           </div>
+
+          {/* Currency */}
+          {session.currency && (
+            <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-muted-foreground">Currency:</span>
+              <span className="font-medium">{session.currency} ({currencySymbol})</span>
+            </div>
+          )}
+
+          {/* Online physical location */}
+          {session.isOnline && session.physicalLocation?.trim() && (
+            <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-muted-foreground">Location:</span>
+              <span className="font-medium">{session.physicalLocation.trim()}</span>
+            </div>
+          )}
+
+          {/* Festival Name */}
+          {session.festivalName?.trim() && (
+            <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-muted-foreground">Festival:</span>
+              <span className="font-medium">{session.festivalName.trim()}</span>
+            </div>
+          )}
           
           {/* Share with Coach button */}
           {showShareToggle && (
