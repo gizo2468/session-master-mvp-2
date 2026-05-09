@@ -1026,7 +1026,7 @@ export default function OnboardingTour({
           })()}
         </p>
 
-        <div className="flex flex-col gap-3">
+        <div className={`flex flex-col ${step.compact ? 'gap-2' : 'gap-3'}`}>
           {/* Buttons row */}
           <div className="flex items-center justify-between gap-2">
             {hidePreviousButton ? (
