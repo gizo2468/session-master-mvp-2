@@ -39,7 +39,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     {
       selector: '[data-tour="stakes"]',
       title: 'Set the Stakes',
-      body: 'This is the buy in for the first table in your session. This is the only field you must fill.',
+      body: 'Enter the **buy-in** of your first table in your session. This is the only field you **must** fill.',
       interactive: true,
       route: '/new-session',
     },
