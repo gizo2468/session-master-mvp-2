@@ -126,6 +126,7 @@ export default function SessionForm() {
       location: '',
       physicalLocation: '',
       festivalName: '',
+      firstTableName: '',
       buyIn: '',
       isOnline: false,
       startingBB: '',
