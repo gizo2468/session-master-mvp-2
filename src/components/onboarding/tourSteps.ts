@@ -39,7 +39,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     {
       selector: '[data-tour="stakes"]',
       title: 'Set the Stakes',
-      body: 'Buy-in is the only required field to start a session. All other settings are optional. If it is a freeroll, you can simply enter 0. Enter your buy-in to continue or adjust the blinds for better accuracy.',
+      body: 'This is the buy in for the first table in your session. This is the only field you must fill.',
       interactive: true,
       route: '/new-session',
     },
