@@ -1,39 +1,19 @@
-## Update Active Session Card: Total Buy-Ins
+## Prevent Active Session Card Wrapping on Long Sessions
 
-Replace the "Total Tables" line in `src/components/ActiveSessionsList.tsx` with a real-time **Total Buy-Ins** value, in the same row 2 position with matching font size/style. Rows 1 (name) and 3 (NLH | Cash | timer) stay unchanged.
+Update `formatDuration` inside `ActiveSessionItem` in `src/components/ActiveSessionsList.tsx` so very long sessions don't push the bottom row onto two lines.
 
-### Display
+### New rule
 
-- Label/value: `Total Buy-Ins: $565.00`
-- Same classes: `text-sm text-gray-600 dark:text-gray-400 mb-2`
-- Currency formatted via existing `formatCurrency(amount, currency)` from `src/utils/statisticsCalculator.ts`
+- `hours >= 100` → render `${hours}h` (drop minutes entirely)
+- `hours > 0 && hours < 100` → render `${hours}h ${minutes}m` (unchanged)
+- `hours === 0` → render `${minutes}m` (unchanged)
 
-### Calculation
+### Belt-and-suspenders for layout
 
-Use the same logic already proven in `useSessionStats.ts` and `statisticsCalculator.ts`:
-
-```
-total = sum over session.tables of (table.buyIn + (table.rebuyAmount || 0))
-```
-
-Fallback when a session has no tables array (legacy sessions):
-```
-total = (session.buyIn || 0) + (session.rebuyAmount || 0)
-```
-
-This is real-time because `session.tables` already reflects the live session state via `SessionContext` / `useSessionsQuery`.
-
-### Currency resolution
-
-Order of preference:
-1. `session.currency`
-2. First table's `currency` (`session.tables?.[0]?.currency`)
-3. `'USD'` default
-
-Pass result into `formatCurrency(total, currency)`.
+Add `whitespace-nowrap` to the timer's container span so the value can never wrap mid-string. The row already uses `flex items-center gap-3`; no other layout change is needed.
 
 ### Scope
 
-- File touched: `src/components/ActiveSessionsList.tsx` only (single line replacement in the `ActiveSessionItem` render).
-- No DB, no type, no business-logic changes.
-- Resume/Delete buttons, layout, dark theme, separators all untouched.
+- Single file: `src/components/ActiveSessionsList.tsx`
+- No data, type, or business-logic changes
+- Applies to every card in the Active Sessions list automatically

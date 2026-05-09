@@ -30,6 +30,9 @@ const ActiveSessionItem = React.memo(({ session, onResume, handleDeleteClick }: 
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       
+      if (hours >= 100) {
+        return `${hours}h`;
+      }
       if (hours > 0) {
         return `${hours}h ${minutes}m`;
       }
@@ -65,9 +68,9 @@ const ActiveSessionItem = React.memo(({ session, onResume, handleDeleteClick }: 
             <span className="text-gray-400 dark:text-gray-600">|</span>
             <span className="text-gray-600 dark:text-gray-400">{session.format || 'N/A'}</span>
             <span className="text-gray-400 dark:text-gray-600">|</span>
-            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400 whitespace-nowrap">
               <Icon name="Clock" size={14} />
-              <span>{formatDuration(session.startTime)}</span>
+              <span className="whitespace-nowrap">{formatDuration(session.startTime)}</span>
             </div>
           </div>
         </div>
