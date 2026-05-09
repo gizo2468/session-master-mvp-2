@@ -12,7 +12,7 @@ const LiveSessionHeader: React.FC = () => {
       <button 
         onClick={navigateToHomeWithRefresh}
         disabled={isRefreshing}
-        className="absolute left-4 flex items-center gap-1 text-poker-feltGreen dark:text-primary bg-transparent border-none cursor-pointer p-0 text-sm font-medium"
+        className="absolute left-4 flex items-center gap-1 text-poker-gold dark:text-primary bg-transparent border-none cursor-pointer p-0 text-sm font-medium"
       >
         <Icon name={isRefreshing ? "Loader2" : "ArrowLeft"} size={16} className={isRefreshing ? 'animate-spin' : ''} />
         <span>Home</span>
