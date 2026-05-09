@@ -1,21 +1,29 @@
 ## Plan
 
-Change the active/selected pill states in the session setup forms from felt-green to brand gold, keeping white text for legibility.
+### 1. Move "Share with Coach" button into Session Details card
 
-### Changes
+**`src/components/poker/SessionDetailsCard.tsx`**
+- Add modal state and import `CoachSelectionModal`, `Button`, and `useAuth` (the hook `useSessionSharing` is already imported here).
+- Render the button centered horizontally between the Game Type row and the Total Buy-Ins pill, only for player accounts (`user?.role === 'student'`) — same condition currently used in `LiveSessionTables`.
+- Same button visuals/behavior as today: outline button, share icon, label switches between "Share with Coach" and "Shared with N coach(es)", disabled while loading or when no connected coaches.
+- Reuse existing `shareSession` / `sharedCoaches` / `connectedCoaches` from `useSessionSharing(session.id)`.
+- Mount `CoachSelectionModal` from this card.
 
-1. **`src/pages/SessionForm.tsx`** — In the four selection labels (Game Type: NLH/PLO; Format: Cash/Tournament), replace the active classes:
-   - From: `bg-poker-feltGreen text-white border-poker-feltGreen`
-   - To: `bg-poker-gold text-white border-poker-gold`
+**`src/components/poker/LiveSessionTables.tsx`**
+- Remove the share button, modal, and the `useSessionSharing` / `useAuth` / modal state code paths that exist solely to render it.
+- Keep the Active Tables list and Completed Tables display unchanged.
 
-2. **`src/components/poker/PastSessionForm.tsx`** — Same replacement on the four mirror selection pills (lines 369, 385, 420, 436) so the past-session entry flow stays consistent.
+### 2. Color the "Active Tables (N)" heading gold
 
-### Out of scope (intentionally untouched)
+**`src/components/poker/LiveSessionTables.tsx`**
+- Change the `<h4>Active Tables ({activeTables.length})</h4>` className from `text-lg font-bold mb-2` to `text-lg font-bold mb-2 text-poker-gold`.
+- No other element in this section is recolored.
 
-- The submit button (`bg-poker-feltGreen` on PastSessionForm L780) — primary CTA, not a selection state.
-- Status badges, focus-ring inputs, "Continuing" labels, and back-button text colors that use `poker-feltGreen` for non-selection meanings.
-- Tournament-type chevron and Advanced Options text already use `text-poker-gold`.
+### Out of scope
+- "Shared With:" status row in Session Details (already exists, unchanged).
+- Total Buy-Ins / Game Type styling.
+- Any other sharing entry points.
 
 ### Expected result
-
-Selecting "No Limit Hold'em", "Pot Limit Omaha", "Cash Game", or "Tournament" highlights the chosen pill in the brand gold (`poker-gold`) with white text, matching the rest of the gold accent system. Unselected pills remain unchanged.
+- Session Details card shows: "Session Details" → name → Game Type row → centered "Share with Coach" button → Total Buy-Ins pill.
+- Active Tables block no longer shows the share button; its heading is gold.
