@@ -1,13 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession, TableData } from '@/types/poker';
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe, Calendar, CreditCard, Share2 } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe, Calendar, CreditCard, Share2, Loader2 } from "lucide-react";
 import { format } from 'date-fns';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useSessionSharing } from '@/hooks/useSessionSharing';
+import { useAuth } from '@/context/AuthContext';
+import CoachSelectionModal from '@/components/coaching/CoachSelectionModal';
 
 interface SessionDetailsCardProps {
   session: PokerSession;
@@ -15,11 +18,14 @@ interface SessionDetailsCardProps {
 
 const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const tables = session.tables || [];
   const currencySymbol = getCurrencySymbol(session.currency);
-  
+  const [showCoachModal, setShowCoachModal] = useState(false);
+
   // Get session sharing status
-  const { isShared, sharedCoaches, connectedCoaches } = useSessionSharing(session.id);
+  const { isShared, sharedCoaches, connectedCoaches, loading: sharingLoading, shareSession } = useSessionSharing(session.id);
+  const showShareToggle = user?.role === 'student';
 
   // Calculate total initial buy-ins and rebuys across all tables
   let totalInitialBuyin = 0, totalRebuyAmount = 0, rebuyCount = 0;
@@ -90,6 +96,26 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             <span className="text-gray-500 dark:text-muted-foreground">Game Type:</span>
             <span className="font-medium">{session.gameType}</span>
           </div>
+          
+          {/* Share with Coach button */}
+          {showShareToggle && (
+            <div className="flex justify-center pt-1">
+              <Button
+                onClick={() => setShowCoachModal(true)}
+                disabled={sharingLoading || connectedCoaches.length === 0}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                {sharingLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Share2 className="h-3.5 w-3.5" />
+                )}
+                {isShared ? `Shared with ${sharedCoaches.length} coach${sharedCoaches.length !== 1 ? 'es' : ''}` : 'Share with Coach'}
+              </Button>
+            </div>
+          )}
           
           {/* Session Sharing Status - only show if shared */}
           {isShared && sharedCoaches.length > 0 && (
@@ -211,6 +237,14 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           )}
         </div>
       </CardContent>
+      <CoachSelectionModal
+        isOpen={showCoachModal}
+        onClose={() => setShowCoachModal(false)}
+        coaches={connectedCoaches}
+        onSelectCoaches={async (coachIds) => { await shareSession(coachIds); }}
+        selectedCoaches={sharedCoaches}
+        loading={sharingLoading}
+      />
     </Card>
   );
 };
