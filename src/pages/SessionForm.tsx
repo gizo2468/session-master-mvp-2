@@ -810,6 +810,31 @@ export default function SessionForm() {
                   />
                 )}
 
+                {/* First Table Name - optional override for the initial table */}
+                <FormField
+                  control={form.control}
+                  name="firstTableName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-medium">
+                        First Table Name <span className="text-muted-foreground font-normal">(Optional)</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Main Event, Table 5"
+                          autoComplete="off"
+                          data-form-type="other"
+                          {...field}
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Leave blank to use the Session Name for this table.
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 {/* Festival Name - optional metadata */}
                 <FormField
                   control={form.control}
