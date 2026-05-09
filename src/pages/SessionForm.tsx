@@ -722,12 +722,13 @@ export default function SessionForm() {
                 <ChevronDown className={`h-4 w-4 text-poker-gold transition-transform duration-200 ${isAdvancedOpen ? 'rotate-180' : ''}`} />
               </CollapsibleTrigger>
               <CollapsibleContent className="pt-4 space-y-4 overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                <div data-tour="advanced-checkboxes" className="space-y-4">
                 {/* Online Game */}
                 <FormField
                   control={form.control}
                   name="isOnline"
                   render={({ field }) => (
-                    <FormItem data-tour="advanced-online" className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                       <FormControl>
                         <Checkbox
                           checked={field.value}
