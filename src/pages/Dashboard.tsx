@@ -108,10 +108,10 @@ const Dashboard: React.FC = () => {
       <main className="container mx-auto max-w-md px-4 py-6">
         <div className="text-center space-y-4">
           <div className="bg-white dark:bg-card rounded-lg p-6 shadow-sm dark:shadow-black/20">
-            <h2 className="text-2xl font-bold mb-2 text-foreground">
+            <h2 className="text-2xl font-bold mb-2 text-green-600">
               Welcome, {user.username || user.fullName}!
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-4">
+            <p className="text-green-600 mb-4">
               Role: <span className="font-semibold">{getDisplayRole(user.role)}</span>
             </p>
             
