@@ -75,29 +75,13 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   return (
     <Card className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium">Session Details</CardTitle>
+        <CardTitle className="text-lg font-medium text-center">
+          {session.location?.trim() || 'Session Details'}
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-3">
-          {/* Only show "Playing From" if it's not an online game */}
-          {!session.isOnline && (
-            <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-muted-foreground">Playing From:</span>
-              <span className="font-medium">{session.location}</span>
-            </div>
-          )}
-          
-          {/* Show online game information */}
-          {session.isOnline && (
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-1.5">
-                <Globe className="h-4 w-4 text-gray-600 dark:text-gray-400 dark:text-gray-500" />
-                <span className="text-gray-500 dark:text-muted-foreground">Online Game – Played from:</span>
-              </div>
-              <span className="font-medium">{session.physicalLocation || "Not specified"}</span>
-            </div>
-          )}
-          
+
           {/* Game Type */}
           <div className="flex justify-between">
             <span className="text-gray-500 dark:text-muted-foreground">Game Type:</span>

@@ -1,45 +1,27 @@
 ## Goal
 
-Fully decouple Session Name and First Table Name. Each has its own independent fallback — neither ever borrows from the other.
+In the Live Session view, the Session Details card should be **titled with the Session Name**, no longer show a "Playing From" row, and never inherit the online site as its title. The Active Table card already pulls from `tables[0].name` (the First Table Name) — no change needed there.
 
-## The bug
+## Change — `src/components/poker/SessionDetailsCard.tsx` (only file)
 
-In `src/pages/SessionForm.tsx` `onSubmit`, the current logic is:
+1. **Card title** — replace the static "Session Details" with the session name:
+   ```tsx
+   <CardTitle className="text-lg font-medium text-center">
+     {session.location?.trim() || 'Session Details'}
+   </CardTitle>
+   ```
+   Pulled strictly from `session.location` (Session Name). `physicalLocation` (online site) is never used as the title.
 
-```ts
-const sessionLabel = values.location?.trim() || '';
-const tableLabel = values.firstTableName?.trim() || sessionLabel; // ← borrows from session
-```
+2. **Remove both "Playing From" rows** — delete the entire block at lines 82–99 (both the offline `Playing From:` row and the online `Online Game – Played from:` row). The card now starts with `Game Type`.
 
-So when the user fills only the Session Name, the first table inherits it, producing the duplicate display in the screenshot.
-
-## Fix — `src/pages/SessionForm.tsx` only
-
-Replace the fallback logic with two independent defaults:
-
-```ts
-const today = new Date();
-const monthDay = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-// e.g. "May 9"
-
-const sessionLabel = values.location?.trim() || `Session ${monthDay}`;
-const tableLabel   = values.firstTableName?.trim() || 'Table 1';
-```
-
-Then:
-- `initialTable.name` = `tableLabel`
-- `initialTable.location` = `tableLabel`
-- `newSession.location` = `sessionLabel`
-- `newSession.tableName` = `tableLabel`
-
-No other files need changes — `SessionCard` / `SessionDetail` already read `session.location`, and the Active Tables view already reads `tables[0].name`. They just need the form to stop crossing the streams.
+That's it. The Active Table card (`Active Tables` list) renders `table.name`, which since the prior fix is sourced from the independent `firstTableName` field with its own `Table 1` fallback — no overlap.
 
 ## Out of scope
 
-- No DB changes.
-- No edits to display components.
-- Festival Name and other fields untouched.
+- No DB changes, no form changes (Session Name and First Table Name are already independent).
+- No changes to the Active Tables component.
+- Online site / `physicalLocation` data remains stored on the session for filtering/history, just not displayed in this card.
 
 ## Files touched
 
-- `src/pages/SessionForm.tsx` (only)
+- `src/components/poker/SessionDetailsCard.tsx` (only)
