@@ -1,24 +1,26 @@
-# Active Session Card — Replace Location with Table Count
+# Active Session Card — Compact Bottom Row
 
-In `src/components/ActiveSessionsList.tsx` (lines 50–59), replace the duplicate location row with a table count.
+In `src/components/ActiveSessionsList.tsx`, restructure the inner card body (currently lines 50–64).
 
 ## Change
 
-Remove:
-```tsx
-<Icon name="MapPin" size={14} />
-<span>{session.location || 'N/A'}</span>
-```
+- Remove the entire middle row that currently holds MapPin "Total Tables" + Clock duration (lines 50–59).
+- Append the Clock icon + duration onto the existing NLH | Cash row, separated by an em dash.
 
-Replace with:
+Resulting markup for that block:
 ```tsx
-<Icon name="MapPin" size={14} />
-<span>Total Tables: {session.tables?.length ?? 0}</span>
+<div className="flex items-center gap-3 text-sm">
+  <span className="text-gray-600 dark:text-gray-400">{session.gameType || 'N/A'}</span>
+  <span className="text-gray-400 dark:text-gray-600">|</span>
+  <span className="text-gray-600 dark:text-gray-400">{session.format || 'N/A'}</span>
+  <span className="text-gray-400 dark:text-gray-600">–</span>
+  <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+    <Icon name="Clock" size={14} />
+    <span>{formatDuration(session.startTime)}</span>
+  </div>
+</div>
 ```
-
-Keep the Clock + duration block unchanged on the same row.
 
 ## Out of scope
-- Top bold session name (line 48) — unchanged.
-- NLH | Cash row, Resume/Delete buttons — unchanged.
-- `ActiveSessionCard.tsx` (different component, not used in this list).
+- Top session-name row, Resume/Delete buttons, container styling — unchanged.
+- Note: the "Total Tables" line added previously will be dropped per this request.
