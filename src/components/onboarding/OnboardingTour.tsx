@@ -1041,6 +1041,16 @@ export default function OnboardingTour({
               </Button>
             )}
             <div className="flex items-center gap-2">
+              {step?.selector === '[data-tour="game-setup"]' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSkip}
+                  className="text-muted-foreground hover:text-foreground hover:bg-transparent"
+                >
+                  Skip
+                </Button>
+              )}
               {!hideNextButton && (
                 <Button size="sm" onClick={handleNext} disabled={nextDisabled} aria-disabled={nextDisabled}>
                   {isLast ? 'Done' : 'Next'}
