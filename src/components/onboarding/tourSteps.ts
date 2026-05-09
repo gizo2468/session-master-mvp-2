@@ -56,7 +56,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     },
     {
       selector: '[data-tour="advanced-checkboxes"]',
-      title: 'Session Settings',
+      title: 'Advanced Options (Optional)',
       body: 'Select any that apply to your session for accurate tracking and specialized features.',
       interactive: true,
       route: '/new-session',
