@@ -1064,6 +1064,7 @@ export type Database = {
           current_status: string | null
           email: string | null
           end_time: string | null
+          festival_name: string | null
           format: string
           game_type: string
           id: string
@@ -1099,6 +1100,7 @@ export type Database = {
           current_status?: string | null
           email?: string | null
           end_time?: string | null
+          festival_name?: string | null
           format?: string
           game_type?: string
           id?: string
@@ -1134,6 +1136,7 @@ export type Database = {
           current_status?: string | null
           email?: string | null
           end_time?: string | null
+          festival_name?: string | null
           format?: string
           game_type?: string
           id?: string
@@ -1815,23 +1818,42 @@ export type Database = {
           username: string
         }[]
       }
-      start_session: {
-        Args: {
-          p_big_blind?: number
-          p_buy_in?: number
-          p_format: string
-          p_game_type: string
-          p_is_multi_day?: boolean
-          p_is_online?: boolean
-          p_location: string
-          p_physical_location?: string
-          p_small_blind?: number
-          p_starting_bb?: number
-          p_table_name?: string
-          p_tournament_types?: string[]
-        }
-        Returns: string
-      }
+      start_session:
+        | {
+            Args: {
+              p_big_blind?: number
+              p_buy_in?: number
+              p_format: string
+              p_game_type: string
+              p_is_multi_day?: boolean
+              p_is_online?: boolean
+              p_location: string
+              p_physical_location?: string
+              p_small_blind?: number
+              p_starting_bb?: number
+              p_table_name?: string
+              p_tournament_types?: string[]
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_big_blind?: number
+              p_buy_in?: number
+              p_festival_name?: string
+              p_format: string
+              p_game_type: string
+              p_is_multi_day?: boolean
+              p_is_online?: boolean
+              p_location: string
+              p_physical_location?: string
+              p_small_blind?: number
+              p_starting_bb?: number
+              p_table_name?: string
+              p_tournament_types?: string[]
+            }
+            Returns: string
+          }
       update_terms_acceptance: {
         Args: { accepted: boolean; user_id: string }
         Returns: boolean
