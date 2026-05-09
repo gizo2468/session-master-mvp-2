@@ -1,31 +1,22 @@
-## Goal
+## Plan
 
-Restore the "Session Details" heading and show the Session Name as a centered subtitle directly below it. Active Tables card already independently shows the First Table Name — no change needed there.
+1. Update the `LiveSession` data handoff so `SessionDetailsCard` receives the original session object without overriding `location` with `tableName`.
+2. Keep `SessionDetailsCard` bound only to `session.location`, which already represents the Session Name entered on the Home/start screen.
+3. Leave the Active Tables area bound to each table’s own title (`table.location` / first table label), so the First Table Name continues to appear there independently.
+4. Validate the mapping path end-to-end against the existing session creation logic in `SessionForm`, where:
+   - `location` = Session Name
+   - `tableName` / initial table `location` = First Table Name or `Table 1`
 
-## Change — `src/components/poker/SessionDetailsCard.tsx` (only file)
+## Expected result
 
-Currently the CardHeader renders only `{session.location}`. Replace it with both the static heading and a centered Session Name line:
+- **Session Details** shows the Session Name exactly as entered on the Home screen.
+- **Session Details** no longer shows the First Table Name by mistake.
+- **Active Tables** continues showing the First Table Name.
+- The two labels only match when the user intentionally typed the same text in both inputs.
 
-```tsx
-<CardHeader className="pb-2 text-center">
-  <CardTitle className="text-lg font-medium">Session Details</CardTitle>
-  {session.location?.trim() && (
-    <p className="text-base font-semibold text-foreground mt-1">
-      {session.location.trim()}
-    </p>
-  )}
-</CardHeader>
-```
+## Technical details
 
-- Heading "Session Details" always visible.
-- Session Name shown below, centered, only when present (no fallback to anything else — never derived from `physicalLocation` or table name).
-- Active Tables card untouched; it continues to render `tables[0].name` from the independent First Table Name field.
-
-## Out of scope
-
-- No DB changes, no form changes.
-- No edits to ActiveTables / table card components.
-
-## Files touched
-
-- `src/components/poker/SessionDetailsCard.tsx` (only)
+Relevant files:
+- `src/pages/LiveSession.tsx` — remove the incorrect `location: currentSession.tableName || currentSession.location` override.
+- `src/components/poker/SessionDetailsCard.tsx` — keep rendering from `session.location` only.
+- `src/pages/SessionForm.tsx` — no behavior change needed; it already creates separate session and table values.

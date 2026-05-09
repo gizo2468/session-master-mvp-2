@@ -167,12 +167,7 @@ export default function LiveSession() {
             autoOpenBBStackModal={shouldOpenBBStackModal}
           />
           
-          <SessionDetailsCard 
-            session={{
-              ...currentSession,
-              location: currentSession.tableName || currentSession.location
-            }}
-          />
+          <SessionDetailsCard session={currentSession} />
           
           <LiveSessionTables
             currentSession={currentSession}
