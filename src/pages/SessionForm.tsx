@@ -829,7 +829,7 @@ export default function SessionForm() {
                         />
                       </FormControl>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Leave blank to use the Session Name for this table.
+                        Leave blank to use the Session Name as the name for this table.
                       </p>
                       <FormMessage />
                     </FormItem>
