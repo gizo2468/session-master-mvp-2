@@ -25,7 +25,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
 
   // Get session sharing status
   const { isShared, sharedCoaches, connectedCoaches, loading: sharingLoading, shareSession } = useSessionSharing(session.id);
-  const showShareToggle = user?.role === 'student' && session.isActive;
+  const showShareToggle = user?.role === 'student';
 
   // Calculate total initial buy-ins and rebuys across all tables
   let totalInitialBuyin = 0, totalRebuyAmount = 0, rebuyCount = 0;
