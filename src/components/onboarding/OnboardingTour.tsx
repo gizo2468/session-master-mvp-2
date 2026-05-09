@@ -13,6 +13,8 @@ export interface TourStep {
   circle?: boolean;
   /** Optional pre-step hook: open accordions, switch tabs, etc. before measuring. */
   prepare?: () => void | Promise<void>;
+  /** When true, the tooltip uses tighter padding/gap. */
+  compact?: boolean;
 }
 
 interface OnboardingTourProps {
