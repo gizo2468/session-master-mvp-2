@@ -858,6 +858,7 @@ export default function SessionForm() {
                     </FormItem>
                   )}
                 />
+                </div>
               </CollapsibleContent>
             </Collapsible>
 
