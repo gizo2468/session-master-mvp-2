@@ -689,16 +689,16 @@ export default function SessionForm() {
             )}
             </div>
             
-            {/* First Table / Session Name - moved before Advanced Options */}
+            {/* Session Name - moved before Advanced Options */}
             <FormField
               control={form.control}
               name="location"
               render={({ field }) => (
                 <FormItem data-tour="optional-details">
-                  <FormLabel className="text-base font-medium">First Table / Session Name</FormLabel>
+                  <FormLabel className="text-base font-medium">Session Name</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="Venue or site" 
+                      placeholder="e.g., Friday Cash Night" 
                       autoComplete="off"
                       data-form-type="other"
                       {...field} 
