@@ -62,6 +62,7 @@ const formSchema = z.object({
   location: z.string().optional(),
   physicalLocation: z.string().optional(),
   festivalName: z.string().optional(),
+  firstTableName: z.string().optional(),
   buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "Buy-in amount must be a valid number",
   }),
@@ -125,6 +126,7 @@ export default function SessionForm() {
       location: '',
       physicalLocation: '',
       festivalName: '',
+      firstTableName: '',
       buyIn: '',
       isOnline: false,
       startingBB: '',
@@ -163,13 +165,16 @@ export default function SessionForm() {
         throw new Error('Invalid buy-in amount');
       }
 
+      const sessionLabel = values.location?.trim() || '';
+      const tableLabel = values.firstTableName?.trim() || sessionLabel;
+
       // Create the initial table object from form data
       const initialTable: TableData = {
         id: uuidv4(),
-        name: values.location,
+        name: tableLabel,
         format: values.format as 'Cash' | 'Tournament',
         gameType: values.gameType,
-        location: values.location,
+        location: tableLabel,
         buyIn: buyInAmount,
         initialBuyIn: buyInAmount,
         startTime: new Date(),
@@ -194,9 +199,9 @@ export default function SessionForm() {
         id: uuidv4(),
         gameType: values.gameType,
         format: values.format,
-        location: values.location,
+        location: sessionLabel,
         physicalLocation: values.isOnline ? values.physicalLocation : undefined,
-        tableName: values.location,
+        tableName: tableLabel,
         buyIn: buyInAmount,
         initialBuyIn: buyInAmount,
         smallBlind: values.format === 'Cash' ? (values.smallBlind || smallBlind) : 0,
@@ -804,6 +809,31 @@ export default function SessionForm() {
                     )}
                   />
                 )}
+
+                {/* First Table Name - optional override for the initial table */}
+                <FormField
+                  control={form.control}
+                  name="firstTableName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-medium">
+                        First Table Name <span className="text-muted-foreground font-normal">(Optional)</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Main Event, Table 5"
+                          autoComplete="off"
+                          data-form-type="other"
+                          {...field}
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Leave blank to use the Session Name for this table.
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 {/* Festival Name - optional metadata */}
                 <FormField
