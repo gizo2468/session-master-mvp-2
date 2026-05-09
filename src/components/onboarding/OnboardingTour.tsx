@@ -13,6 +13,8 @@ export interface TourStep {
   circle?: boolean;
   /** Optional pre-step hook: open accordions, switch tabs, etc. before measuring. */
   prepare?: () => void | Promise<void>;
+  /** When true, the tooltip uses tighter padding/gap. */
+  compact?: boolean;
 }
 
 interface OnboardingTourProps {
@@ -740,7 +742,8 @@ export default function OnboardingTour({
       width: tooltipWidth,
     };
   } else {
-    const required = tooltipHeight + TOOLTIP_GAP + VIEWPORT_MARGIN;
+    const gap = step.compact ? 8 : TOOLTIP_GAP;
+    const required = tooltipHeight + gap + VIEWPORT_MARGIN;
     const spaceBelow = viewport.h - (spotlight.y + spotlight.h);
     const spaceAbove = spotlight.y;
     let top: number;
@@ -753,9 +756,9 @@ export default function OnboardingTour({
       // overlapping the spotlight is forbidden. If the tooltip extends past the
       // viewport bottom, the 90vw width keeps it readable; users can always see
       // the highlighted element clearly.
-      top = spotlight.y + spotlight.h + TOOLTIP_GAP;
+      top = spotlight.y + spotlight.h + gap;
     } else {
-      top = Math.max(VIEWPORT_MARGIN, spotlight.y - TOOLTIP_GAP - tooltipHeight);
+      top = Math.max(VIEWPORT_MARGIN, spotlight.y - gap - tooltipHeight);
     }
     let left = spotlight.x + spotlight.w / 2 - tooltipWidth / 2;
     left = Math.max(
@@ -979,7 +982,7 @@ export default function OnboardingTour({
       {/* Tooltip card */}
       <div
         ref={tooltipRef}
-        className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4 sm:p-5"
+        className={`absolute bg-card border border-primary/30 rounded-xl shadow-2xl ${step.compact ? 'p-3 sm:p-3.5' : 'p-4 sm:p-5'}`}
         style={{
           ...tooltipStyle,
           maxWidth: '90vw',
@@ -993,8 +996,8 @@ export default function OnboardingTour({
           fontFamily: "'Poppins', system-ui, sans-serif",
         }}
       >
-        <h3 className="text-base sm:text-lg font-bold text-primary mb-1.5 text-center">{step.title}</h3>
-        <p className="text-sm sm:text-[0.95rem] text-foreground/80 leading-relaxed mb-4 text-center">
+        <h3 className={`text-base sm:text-lg font-bold text-primary text-center ${step.compact ? 'mb-1' : 'mb-1.5'}`}>{step.title}</h3>
+        <p className={`text-sm sm:text-[0.95rem] text-foreground/80 leading-relaxed text-center ${step.compact ? 'mb-2' : 'mb-4'}`}>
           {(() => {
             const renderHighlighted = (text: string) => {
               const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -1023,7 +1026,7 @@ export default function OnboardingTour({
           })()}
         </p>
 
-        <div className="flex flex-col gap-3">
+        <div className={`flex flex-col ${step.compact ? 'gap-2' : 'gap-3'}`}>
           {/* Buttons row */}
           <div className="flex items-center justify-between gap-2">
             {hidePreviousButton ? (

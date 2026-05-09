@@ -1,26 +1,18 @@
-## Consolidate Advanced Options Tour Steps
-
-Merge the three separate tour steps (Online Game, Multi-Day Tournament, Late Registration) into one consolidated step that highlights all advanced checkboxes together.
+## Compact Advanced Settings Tour Step
 
 ### Changes
 
-**1. `src/pages/SessionForm.tsx`**
-- Wrap the three checkbox `FormItem`s (Online Game, Multi-Day Tournament, Late Registration) in a single container `<div data-tour="advanced-checkboxes" className="space-y-4">` inside the `CollapsibleContent`.
-- Remove the existing `data-tour="advanced-online"`, `data-tour="advanced-multiday"`, and `data-tour="advanced-late-reg"` attributes from the individual `FormItem`s (they no longer need their own selectors).
-- The Physical Location input (which appears conditionally when Online is checked) stays outside the wrapper so it doesn't get highlighted.
+**1. `src/components/onboarding/tourSteps.ts`** — update the consolidated step:
+- `title`: `'Session Settings'` (was `'Advanced Session Settings'`)
+- `body`: `'Select any that apply to your session for accurate tracking and specialized features.'`
+- Add new optional flag `compact?: boolean` to the `TourStep` interface, set `compact: true` on this step.
 
-**2. `src/components/onboarding/tourSteps.ts`**
-- Remove the three steps: `advanced-online`, `advanced-multiday`, `advanced-late-reg`.
-- Insert a single step in their place:
-  - `selector: '[data-tour="advanced-checkboxes"]'`
-  - `title: 'Advanced Session Settings'`
-  - `body: 'If any of these conditions apply to your session, select them here to ensure accurate tracking and specialized features for your game.'`
-  - `interactive: true`, `route: '/new-session'`, `prepare: openAdvanced`
-- Order in the `start-session` array becomes: start → game-setup → stakes → optional-details → **advanced-checkboxes** → submit-session → live steps.
-
-### Visual / styling
-No changes to the tour box, gold spotlight, or button styling — the existing OnboardingTour component renders all steps with the same styling, so the consolidated step inherits the look automatically.
+**2. `src/components/onboarding/OnboardingTour.tsx`** — apply compact styling when `step.compact` is true:
+- Tooltip container (line 982): swap `p-4 sm:p-5` → `p-3 sm:p-4` when compact, plus tighten the inner `flex flex-col gap-3` (line 1026) → `gap-2`.
+- Increase `TOOLTIP_GAP` for this step from 16 → 24 px (computed locally as `step.compact ? 24 : TOOLTIP_GAP`) so the tooltip sits higher above the highlighted checkboxes and clears the First Table Name input below.
+- Re-export `TourStep` already exists; just propagate the new field.
 
 ### Out of scope
-- No changes to checkbox layout, labels, or form behavior.
-- No changes to localStorage step persistence (existing users mid-tour will simply skip past the removed indices on next render).
+- No changes to the spotlight/highlight grouping (still wraps all three checkboxes via `data-tour="advanced-checkboxes"`).
+- No changes to step ordering or flow — remains a single replacement step.
+- No changes to other steps' padding or gap.
