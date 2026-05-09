@@ -131,7 +131,6 @@ const Dashboard: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-6">
-                <p className="text-lg font-medium text-poker-feltGreen">Dashboard</p>
                 <MyCoachingNetwork highlightIncomingRequests={focusIncomingRequests} autoOpenConnect={autoOpenConnect} />
                 <MyNotesCard />
                 <StatsQuickView showExtendedMetrics />
