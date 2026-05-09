@@ -431,7 +431,7 @@ export default function SessionForm() {
                           htmlFor="nlh" 
                           className={`flex-1 cursor-pointer py-3 px-4 rounded-md border text-center ${
                             field.value === 'NLH' 
-                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
+                              ? 'bg-poker-gold text-white border-poker-gold' 
                               : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border'
                           }`}
                         >
@@ -451,7 +451,7 @@ export default function SessionForm() {
                           htmlFor="plo" 
                           className={`flex-1 cursor-pointer py-3 px-4 rounded-md border text-center ${
                             field.value === 'PLO' 
-                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
+                              ? 'bg-poker-gold text-white border-poker-gold' 
                               : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border'
                           }`}
                         >
@@ -491,7 +491,7 @@ export default function SessionForm() {
                           htmlFor="cash" 
                           className={`flex-1 cursor-pointer py-3 px-4 rounded-md border text-center ${
                             field.value === 'Cash' 
-                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
+                              ? 'bg-poker-gold text-white border-poker-gold' 
                               : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border'
                           }`}
                         >
@@ -511,7 +511,7 @@ export default function SessionForm() {
                           htmlFor="tournament" 
                           className={`flex-1 cursor-pointer py-3 px-4 rounded-md border text-center ${
                             field.value === 'Tournament' 
-                              ? 'bg-poker-feltGreen text-white border-poker-feltGreen' 
+                              ? 'bg-poker-gold text-white border-poker-gold' 
                               : 'bg-white dark:bg-card text-gray-700 dark:text-gray-300 border-gray-300 dark:border-border'
                           }`}
                         >
