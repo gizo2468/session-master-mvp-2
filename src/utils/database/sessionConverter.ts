@@ -285,6 +285,7 @@ export const convertDatabaseSessionToPokerSession = (
       startingBB: sessionData.starting_bb,
       tournamentTypes: sessionData.tournament_types,
       isMultiDay: sessionData.is_multi_day || false,
+      festivalName: sessionData.festival_name || undefined,
       currency: sessionData.currency || 'USD',
       startTime,
       startTimeUTC,

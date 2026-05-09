@@ -172,6 +172,7 @@ export interface PokerSession {
   startingBB?: number;
   tournamentTypes?: string[];
   isMultiDay?: boolean;
+  festivalName?: string;
   currency?: string; // Currency code (e.g., 'USD', 'EUR', 'ILS')
   startTime: Date;
   startTimeUTC?: number; // Raw UTC timestamp for accurate calculations

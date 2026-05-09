@@ -61,6 +61,7 @@ const formSchema = z.object({
   currency: z.enum(['USD', 'EUR', 'GBP', 'CAD', 'ILS', 'BRL', 'CNY', 'THB', 'INR']),
   location: z.string().optional(),
   physicalLocation: z.string().optional(),
+  festivalName: z.string().optional(),
   buyIn: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0, {
     message: "Buy-in amount must be a valid number",
   }),
@@ -123,6 +124,7 @@ export default function SessionForm() {
       currency: (defaultCurrency && ['USD', 'EUR', 'GBP', 'CAD', 'ILS', 'BRL', 'CNY', 'THB', 'INR'].includes(defaultCurrency)) ? defaultCurrency as 'USD' | 'EUR' | 'GBP' | 'CAD' | 'ILS' | 'BRL' | 'CNY' | 'THB' | 'INR' : 'USD',
       location: '',
       physicalLocation: '',
+      festivalName: '',
       buyIn: '',
       isOnline: false,
       startingBB: '',
@@ -203,6 +205,7 @@ export default function SessionForm() {
         startingBB: values.format === 'Tournament' && values.startingBB ? parseInt(values.startingBB) : undefined,
         tournamentTypes: values.format === 'Tournament' && values.tournamentType ? [values.tournamentType] : undefined,
         isMultiDay: values.isMultiDay,
+        festivalName: values.festivalName?.trim() || undefined,
         currency: values.currency || defaultCurrency,
         startTime: new Date(),
         isActive: true,
@@ -686,16 +689,16 @@ export default function SessionForm() {
             )}
             </div>
             
-            {/* First Table / Session Name - moved before Advanced Options */}
+            {/* Session Name - moved before Advanced Options */}
             <FormField
               control={form.control}
               name="location"
               render={({ field }) => (
                 <FormItem data-tour="optional-details">
-                  <FormLabel className="text-base font-medium">First Table / Session Name</FormLabel>
+                  <FormLabel className="text-base font-medium">Session Name</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="Venue or site" 
+                      placeholder="e.g., Friday Cash Night" 
                       autoComplete="off"
                       data-form-type="other"
                       {...field} 
@@ -801,9 +804,31 @@ export default function SessionForm() {
                     )}
                   />
                 )}
+
+                {/* Festival Name - optional metadata */}
+                <FormField
+                  control={form.control}
+                  name="festivalName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-medium">
+                        Festival Name <span className="text-muted-foreground font-normal">(Optional)</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., WSOP, EPT, or Winter Series"
+                          autoComplete="off"
+                          data-form-type="other"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CollapsibleContent>
             </Collapsible>
-            
+
             <Button
               type="submit"
               data-tour="submit-session"
