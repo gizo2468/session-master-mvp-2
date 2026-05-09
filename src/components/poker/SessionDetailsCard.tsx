@@ -97,6 +97,26 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             <span className="font-medium">{session.gameType}</span>
           </div>
           
+          {/* Share with Coach button */}
+          {showShareToggle && (
+            <div className="flex justify-center pt-1">
+              <Button
+                onClick={() => setShowCoachModal(true)}
+                disabled={sharingLoading || connectedCoaches.length === 0}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                {sharingLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Share2 className="h-3.5 w-3.5" />
+                )}
+                {isShared ? `Shared with ${sharedCoaches.length} coach${sharedCoaches.length !== 1 ? 'es' : ''}` : 'Share with Coach'}
+              </Button>
+            </div>
+          )}
+          
           {/* Session Sharing Status - only show if shared */}
           {isShared && sharedCoaches.length > 0 && (
             <div className="flex justify-between items-center">
