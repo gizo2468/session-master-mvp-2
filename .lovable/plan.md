@@ -1,41 +1,39 @@
 ## Goal
 
-Make the top input represent the **Session Name** only, and add a separate optional **Festival Name** field inside Advanced Options that's stored as metadata for filtering/grouping.
+Make **Session Name** and **First Table Name** two independent fields. The session label flows to history/details views; the first table label flows to the active table/live view.
 
-## Changes
+## Changes — `src/pages/SessionForm.tsx`
 
-### 1. `src/pages/SessionForm.tsx`
-- Rename the `location` field label from `First Table / Session Name` to `Session Name`. Update placeholder to something neutral like `e.g., Friday Cash Night` (instead of `Venue or site`).
-- Add a new optional `festivalName` field to the Zod `formSchema` and `useForm` defaults.
-- Inside the `Advanced Options` `<CollapsibleContent>`, after the existing checkboxes, add a new `FormField` for `festivalName`:
-  - Label: `Festival Name` with a muted `(Optional)` suffix
-  - Placeholder: `e.g., WSOP, EPT, or Winter Series`
-- On submit, pass `festivalName` through to `startSession` (will be persisted via the new column below).
+### Schema & defaults
+- Add `firstTableName: z.string().optional()` to the Zod schema.
+- Add `firstTableName: ''` to `useForm` defaults.
 
-### 2. Database — add `festival_name` column
+### UI
+- Inside `Advanced Options` (`<CollapsibleContent>`), above the new `Festival Name` field, add a `First Table Name (Optional)` input:
+  - Label: `First Table Name` with muted `(Optional)` suffix
+  - Placeholder: `e.g., Main Event, Table 5`
+  - Helper text under it: `Leave blank to use the Session Name for this table.`
 
-Migration on `public.sessions`:
-- `ALTER TABLE public.sessions ADD COLUMN festival_name TEXT;`
-- Update the `start_session` RPC to accept and persist a `p_festival_name TEXT DEFAULT NULL` parameter.
+### onSubmit logic
+Currently both the session and the initial table are set from `values.location`. Update so:
 
-(No RLS changes — column inherits existing session policies.)
+```
+const sessionLabel = values.location?.trim() || '';
+const tableLabel = values.firstTableName?.trim() || sessionLabel;
+```
 
-### 3. Wire-through types/services
-- `src/services/sessionPersistence.ts`: add `festivalName?: string` to `SessionStartData` and pass `p_festival_name` to the RPC.
-- `src/types/poker.ts` (`PokerSession`): add optional `festivalName?: string`.
-- `src/utils/database/sessionConverter.ts` & `sessionFetcher.ts`: map `festival_name` ↔ `festivalName` on read/write.
-- Session creation flow in `SessionForm` continues to use `location` as the session/table identifier; `festivalName` is purely metadata (no impact on dashboard naming).
+- `initialTable.name` and `initialTable.location` → `tableLabel`
+- `newSession.location` → `sessionLabel` (unchanged behavior)
+- `newSession.tableName` → `tableLabel` (was `values.location`)
+
+This ensures `session.location` (used by SessionCard / SessionDetail / history) shows the **Session Name**, and the first table row (used by Live Session active table display via `tables[0].name`) shows the **First Table Name** — falling back to the session name only if the user leaves it blank.
 
 ## Out of scope
 
-- No filtering UI is built yet — column is added so future filters can use it.
-- `table_name` for the first table continues to default from `location` (the renamed Session Name). Per-table renaming already exists elsewhere.
+- No DB migration. `sessions.table_name` and `session_tables.table_name` columns already exist; we just stop overwriting them with the session name.
+- No changes to history, live session, or session detail components — they already read from the correct fields.
+- The Festival Name field added in the prior task is preserved.
 
 ## Files touched
 
-- `src/pages/SessionForm.tsx`
-- `src/services/sessionPersistence.ts`
-- `src/types/poker.ts`
-- `src/utils/database/sessionConverter.ts`
-- `src/utils/database/sessionFetcher.ts`
-- DB migration: add column + update `start_session` function
+- `src/pages/SessionForm.tsx` (only)
