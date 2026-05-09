@@ -1,11 +1,11 @@
-## Restore Brand Gold on Welcome Menu
+## Update "Set the Stakes" tooltip text + highlights
 
-In `src/components/onboarding/OnboardingTour.tsx`:
+In `src/components/onboarding/tourSteps.ts`, update the `body` for the `[data-tour="stakes"]` step to:
 
-1. **Title** (line ~661): Revert the `Welcome to Session Master` heading to the gold brand token — remove the inline `style={{ color: '#1e293b' }}` and restore `text-primary`.
+```
+Enter the **buy-in** of your first table in your session. This is the only field you **must** fill.
+```
 
-2. **Skip button** (line ~696): Currently `variant="ghost"` (renders foreground/dark text on the white card). Add `className="text-primary hover:text-primary hover:bg-primary/10"` so it shows in brand gold and keeps a subtle hover.
+The existing `**word**` markdown rendering (added in the previous step) will color `buy-in` and `must` in brand gold automatically. No changes to the renderer needed.
 
-3. **Buttons unchanged** — the three outlined gold guide buttons stay as they are.
-
-No other files affected.
+**File:** `src/components/onboarding/tourSteps.ts` — single-line body change.
