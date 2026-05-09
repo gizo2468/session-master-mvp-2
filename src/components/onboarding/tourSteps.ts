@@ -32,7 +32,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     {
       selector: '[data-tour="game-setup"]',
       title: 'Define Your Game',
-      body: 'Select your preferred game type and format. These settings help us categorize your data correctly.',
+      body: 'Select the game type and format for your first table. This ensures your session starts with the correct settings and tracking.',
       interactive: true,
       route: '/new-session',
     },
