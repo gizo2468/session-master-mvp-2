@@ -825,7 +825,7 @@ export default function SessionForm() {
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="e.g.,"
+                          placeholder=""
                           autoComplete="off"
                           data-form-type="other"
                           {...field}
@@ -847,7 +847,7 @@ export default function SessionForm() {
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="e.g.,"
+                          placeholder="e.g., WSOP, EPT, or Winter Series"
                           autoComplete="off"
                           data-form-type="other"
                           {...field}
