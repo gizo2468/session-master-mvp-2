@@ -40,6 +40,7 @@ export const saveSessionToDatabase = async (session: PokerSession): Promise<bool
       starting_bb: session.startingBB,
       tournament_types: session.tournamentTypes,
       is_multi_day: session.isMultiDay,
+      festival_name: session.festivalName || null,
       currency: session.currency || 'USD',
       cash_out: session.cashOut,
       notes: session.notes,
