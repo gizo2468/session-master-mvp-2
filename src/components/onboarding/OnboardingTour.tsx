@@ -996,15 +996,28 @@ export default function OnboardingTour({
         <h3 className="text-base sm:text-lg font-bold text-primary mb-1.5 text-center">{step.title}</h3>
         <p className="text-sm sm:text-[0.95rem] text-foreground/80 leading-relaxed mb-4 text-center">
           {(() => {
+            const renderHighlighted = (text: string) => {
+              const parts = text.split(/(\*\*[^*]+\*\*)/g);
+              return parts.map((part, i) => {
+                if (part.startsWith('**') && part.endsWith('**')) {
+                  return (
+                    <span key={i} className="text-primary font-semibold">
+                      {part.slice(2, -2)}
+                    </span>
+                  );
+                }
+                return <span key={i}>{part}</span>;
+              });
+            };
             const idx = step.body.indexOf('! ');
-            if (idx === -1) return step.body;
+            if (idx === -1) return renderHighlighted(step.body);
             const first = step.body.slice(0, idx + 1);
             const rest = step.body.slice(idx + 2);
             return (
               <>
-                {first}
+                {renderHighlighted(first)}
                 <br />
-                {rest}
+                {renderHighlighted(rest)}
               </>
             );
           })()}
