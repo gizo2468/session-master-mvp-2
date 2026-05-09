@@ -1,26 +1,30 @@
 ## Goal
 
-In the Live Session view, the Session Details card should be **titled with the Session Name**, no longer show a "Playing From" row, and never inherit the online site as its title. The Active Table card already pulls from `tables[0].name` (the First Table Name) — no change needed there.
+Restore the "Session Details" heading and show the Session Name as a centered subtitle directly below it. Active Tables card already independently shows the First Table Name — no change needed there.
 
 ## Change — `src/components/poker/SessionDetailsCard.tsx` (only file)
 
-1. **Card title** — replace the static "Session Details" with the session name:
-   ```tsx
-   <CardTitle className="text-lg font-medium text-center">
-     {session.location?.trim() || 'Session Details'}
-   </CardTitle>
-   ```
-   Pulled strictly from `session.location` (Session Name). `physicalLocation` (online site) is never used as the title.
+Currently the CardHeader renders only `{session.location}`. Replace it with both the static heading and a centered Session Name line:
 
-2. **Remove both "Playing From" rows** — delete the entire block at lines 82–99 (both the offline `Playing From:` row and the online `Online Game – Played from:` row). The card now starts with `Game Type`.
+```tsx
+<CardHeader className="pb-2 text-center">
+  <CardTitle className="text-lg font-medium">Session Details</CardTitle>
+  {session.location?.trim() && (
+    <p className="text-base font-semibold text-foreground mt-1">
+      {session.location.trim()}
+    </p>
+  )}
+</CardHeader>
+```
 
-That's it. The Active Table card (`Active Tables` list) renders `table.name`, which since the prior fix is sourced from the independent `firstTableName` field with its own `Table 1` fallback — no overlap.
+- Heading "Session Details" always visible.
+- Session Name shown below, centered, only when present (no fallback to anything else — never derived from `physicalLocation` or table name).
+- Active Tables card untouched; it continues to render `tables[0].name` from the independent First Table Name field.
 
 ## Out of scope
 
-- No DB changes, no form changes (Session Name and First Table Name are already independent).
-- No changes to the Active Tables component.
-- Online site / `physicalLocation` data remains stored on the session for filtering/history, just not displayed in this card.
+- No DB changes, no form changes.
+- No edits to ActiveTables / table card components.
 
 ## Files touched
 
