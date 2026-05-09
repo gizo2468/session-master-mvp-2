@@ -27,7 +27,7 @@ const AllTimeChart: React.FC = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>All Time Chart</CardTitle>
+        <CardTitle className="text-poker-gold">All Time Chart</CardTitle>
         <AllTimeChartFilters
           dateRange={dateRange}
           setDateRange={setDateRange}

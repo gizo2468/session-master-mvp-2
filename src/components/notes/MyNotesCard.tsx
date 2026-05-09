@@ -230,7 +230,7 @@ const MyNotesCard: React.FC = () => {
     <>
       <Card className="border-border/50">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center justify-center gap-2 text-lg">
+          <CardTitle className="flex items-center justify-center gap-2 text-lg text-poker-gold">
             <StickyNote className="h-5 w-5" />
             My Notes
           </CardTitle>
