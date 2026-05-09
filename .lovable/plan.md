@@ -1,11 +1,10 @@
-## Dashboard Header Color Update
+## Dashboard Header — Use Primary Brand Green
 
-In `src/pages/Dashboard.tsx`, change the welcome heading and role line to the Resume-button green (`green-600`).
+In `src/pages/Dashboard.tsx`, replace the bright `text-green-600` applied previously with the app's primary brand green token `text-poker-feltGreen` (#35654D, used throughout the app for main UI accents like back buttons).
 
 ### Changes
-- **Welcome heading** (line ~111): swap `text-foreground` → `text-green-600` on the `<h2>` "Welcome, {username}!".
-- **Role line** (line ~113): change the wrapping `<p>` from `text-gray-600 dark:text-gray-400 dark:text-gray-500` → `text-green-600` so both "Role:" and the role value render in the same brand green. Font weight stays as-is (semibold on the value).
+- **Welcome heading** (`<h2>` "Welcome, {username}!"): `text-green-600` → `text-poker-feltGreen`.
+- **Role line** (`<p>` "Role: …"): `text-green-600` → `text-poker-feltGreen`.
 
 ### Scope
-- Single file: `src/pages/Dashboard.tsx`.
-- No other styling, layout, or data changes.
+- Single file: `src/pages/Dashboard.tsx`. No other layout, weight, or data changes.
