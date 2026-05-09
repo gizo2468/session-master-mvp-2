@@ -1,38 +1,44 @@
 ## Goal
 
-Make **Session Name** and **First Table Name** two independent fields. The session label flows to history/details views; the first table label flows to the active table/live view.
+Fully decouple Session Name and First Table Name. Each has its own independent fallback — neither ever borrows from the other.
 
-## Changes — `src/pages/SessionForm.tsx`
+## The bug
 
-### Schema & defaults
-- Add `firstTableName: z.string().optional()` to the Zod schema.
-- Add `firstTableName: ''` to `useForm` defaults.
+In `src/pages/SessionForm.tsx` `onSubmit`, the current logic is:
 
-### UI
-- Inside `Advanced Options` (`<CollapsibleContent>`), above the new `Festival Name` field, add a `First Table Name (Optional)` input:
-  - Label: `First Table Name` with muted `(Optional)` suffix
-  - Placeholder: `e.g., Main Event, Table 5`
-  - Helper text under it: `Leave blank to use the Session Name for this table.`
-
-### onSubmit logic
-Currently both the session and the initial table are set from `values.location`. Update so:
-
-```
+```ts
 const sessionLabel = values.location?.trim() || '';
-const tableLabel = values.firstTableName?.trim() || sessionLabel;
+const tableLabel = values.firstTableName?.trim() || sessionLabel; // ← borrows from session
 ```
 
-- `initialTable.name` and `initialTable.location` → `tableLabel`
-- `newSession.location` → `sessionLabel` (unchanged behavior)
-- `newSession.tableName` → `tableLabel` (was `values.location`)
+So when the user fills only the Session Name, the first table inherits it, producing the duplicate display in the screenshot.
 
-This ensures `session.location` (used by SessionCard / SessionDetail / history) shows the **Session Name**, and the first table row (used by Live Session active table display via `tables[0].name`) shows the **First Table Name** — falling back to the session name only if the user leaves it blank.
+## Fix — `src/pages/SessionForm.tsx` only
+
+Replace the fallback logic with two independent defaults:
+
+```ts
+const today = new Date();
+const monthDay = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+// e.g. "May 9"
+
+const sessionLabel = values.location?.trim() || `Session ${monthDay}`;
+const tableLabel   = values.firstTableName?.trim() || 'Table 1';
+```
+
+Then:
+- `initialTable.name` = `tableLabel`
+- `initialTable.location` = `tableLabel`
+- `newSession.location` = `sessionLabel`
+- `newSession.tableName` = `tableLabel`
+
+No other files need changes — `SessionCard` / `SessionDetail` already read `session.location`, and the Active Tables view already reads `tables[0].name`. They just need the form to stop crossing the streams.
 
 ## Out of scope
 
-- No DB migration. `sessions.table_name` and `session_tables.table_name` columns already exist; we just stop overwriting them with the session name.
-- No changes to history, live session, or session detail components — they already read from the correct fields.
-- The Festival Name field added in the prior task is preserved.
+- No DB changes.
+- No edits to display components.
+- Festival Name and other fields untouched.
 
 ## Files touched
 
