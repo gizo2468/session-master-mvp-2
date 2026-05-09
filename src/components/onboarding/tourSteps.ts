@@ -47,9 +47,10 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     },
     {
       selector: '[data-tour="optional-details"]',
-      title: 'Optional Details (Optional)',
-      body: "Give your session a custom name so it's easier to find in your history. You can also log the location or online poker site here.",
+      title: 'Session Name',
+      body: 'Give your session a custom name to easily identify it in your history later.',
       interactive: true,
+      compact: true,
       route: '/new-session',
       prepare: openAdvanced,
     },
