@@ -662,7 +662,7 @@ export default function OnboardingTour({
             Welcome to Session Master
           </h3>
           <p className="text-sm text-foreground/80 leading-relaxed mb-4 text-center">
-            Select a guide to begin your journey or explore a specific feature.
+            Select a guide to begin your journey
           </p>
 
           <div className="flex flex-col gap-2 mb-4">
