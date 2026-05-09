@@ -742,7 +742,8 @@ export default function OnboardingTour({
       width: tooltipWidth,
     };
   } else {
-    const required = tooltipHeight + TOOLTIP_GAP + VIEWPORT_MARGIN;
+    const gap = step.compact ? 8 : TOOLTIP_GAP;
+    const required = tooltipHeight + gap + VIEWPORT_MARGIN;
     const spaceBelow = viewport.h - (spotlight.y + spotlight.h);
     const spaceAbove = spotlight.y;
     let top: number;
@@ -755,9 +756,9 @@ export default function OnboardingTour({
       // overlapping the spotlight is forbidden. If the tooltip extends past the
       // viewport bottom, the 90vw width keeps it readable; users can always see
       // the highlighted element clearly.
-      top = spotlight.y + spotlight.h + TOOLTIP_GAP;
+      top = spotlight.y + spotlight.h + gap;
     } else {
-      top = Math.max(VIEWPORT_MARGIN, spotlight.y - TOOLTIP_GAP - tooltipHeight);
+      top = Math.max(VIEWPORT_MARGIN, spotlight.y - gap - tooltipHeight);
     }
     let left = spotlight.x + spotlight.w / 2 - tooltipWidth / 2;
     left = Math.max(
