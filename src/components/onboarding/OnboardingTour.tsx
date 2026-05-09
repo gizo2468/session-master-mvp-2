@@ -982,7 +982,7 @@ export default function OnboardingTour({
       {/* Tooltip card */}
       <div
         ref={tooltipRef}
-        className="absolute bg-card border border-primary/30 rounded-xl shadow-2xl p-4 sm:p-5"
+        className={`absolute bg-card border border-primary/30 rounded-xl shadow-2xl ${step.compact ? 'p-3 sm:p-3.5' : 'p-4 sm:p-5'}`}
         style={{
           ...tooltipStyle,
           maxWidth: '90vw',
