@@ -60,7 +60,7 @@ const AppSettings = () => {
 
           <div className="flex items-center justify-between gap-4 pt-2 border-t border-border">
             <div className="flex-1">
-              <Label className="block mb-1">Reset Onboarding</Label>
+              <Label className="block mb-1">Reset Onboarding Tutorial</Label>
               <p className="text-sm text-muted-foreground">Replay the Start Session hint on Home</p>
             </div>
             <Button
