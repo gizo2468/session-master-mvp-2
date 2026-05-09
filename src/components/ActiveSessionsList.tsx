@@ -4,6 +4,7 @@ import Icon from '@/components/ui/Lucide';
 import { PokerSession } from '@/types/poker';
 import { useToast } from '@/hooks/use-toast';
 import { useSessionContext } from '@/context/SessionContext';
+import { formatCurrency } from '@/utils/statisticsCalculator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,9 +48,18 @@ const ActiveSessionItem = React.memo(({ session, onResume, handleDeleteClick }: 
             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
             <h4 className="text-md font-bold text-green-800 dark:text-green-300">{session.location || 'Unknown Location'}</h4>
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-            Total Tables: {session.tables?.length ?? 0}
-          </div>
+          {(() => {
+            const tables = session.tables ?? [];
+            const total = tables.length > 0
+              ? tables.reduce((sum, t) => sum + (t.buyIn || 0) + (t.rebuyAmount || 0), 0)
+              : (session.buyIn || 0) + (session.rebuyAmount || 0);
+            const currency = session.currency || tables[0]?.currency || 'USD';
+            return (
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                Total Buy-Ins: {formatCurrency(total, currency)}
+              </div>
+            );
+          })()}
           <div className="flex items-center gap-3 text-sm">
             <span className="text-gray-600 dark:text-gray-400">{session.gameType || 'N/A'}</span>
             <span className="text-gray-400 dark:text-gray-600">|</span>
