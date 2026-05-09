@@ -1,10 +1,20 @@
-## Dashboard Header — Use Primary Brand Green
+## Plan: Update Session Setup Instructional Text
 
-In `src/pages/Dashboard.tsx`, replace the bright `text-green-600` applied previously with the app's primary brand green token `text-poker-feltGreen` (#35654D, used throughout the app for main UI accents like back buttons).
+Only string updates — no layout, color, or logic changes.
 
-### Changes
-- **Welcome heading** (`<h2>` "Welcome, {username}!"): `text-green-600` → `text-poker-feltGreen`.
-- **Role line** (`<p>` "Role: …"): `text-green-600` → `text-poker-feltGreen`.
+### 1. `src/components/onboarding/tourSteps.ts` (line 49)
+Update the "Optional Details" tour body:
 
-### Scope
-- Single file: `src/pages/Dashboard.tsx`. No other layout, weight, or data changes.
+- **From:** "Give your session or first table a custom name so it's easier to find in your history. You can also log the location or online poker site here. Don't worry, you can skip this if you're in a rush!"
+- **To:** "Give your session a custom name so it's easier to find in your history. You can also log the location or online poker site here."
+
+### 2. `src/pages/SessionForm.tsx` (line 832)
+Update the First Table Name helper text:
+
+- **From:** "Leave blank to use the Session Name for this table."
+- **To:** "Leave blank to use the Session Name as the name for this table."
+
+### 3. Physical Location placeholder (line 756)
+Already "Where are you playing from?" — no change needed, verified in place.
+
+No other files affected. No data binding or navigation logic touched.
