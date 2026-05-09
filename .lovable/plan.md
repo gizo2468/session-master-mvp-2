@@ -1,11 +1,16 @@
-## Update "Stay Active" tour step body text
+## Hide "Previous" on the Live Session Tracking step
 
-In `src/components/onboarding/tourSteps.ts`, in the `live-actions` step, change the `body` from:
+In `src/components/onboarding/OnboardingTour.tsx`:
 
-> Use these buttons to log every important moment. Whether it's a big pot or a strategic note, keep your data fresh!
+- Add a new flag identifying the Live Session Tracking step:
+  ```ts
+  const isLiveOverviewStep = step?.selector === '[data-tour="live-overview"]';
+  ```
+- Update `hidePreviousButton` to include it:
+  ```ts
+  const hidePreviousButton = isGameSetupStep || isLiveOverviewStep;
+  ```
 
-to:
+The existing render branch at line ~1032 already handles `hidePreviousButton` (renders a spacer in place of the Previous button so the Next button stays right-aligned within the tooltip's flex layout — matching how the "Define Your Game" step behaves today). No layout changes needed; the Next button will sit on the right side of the tooltip exactly like on the game-setup step.
 
-> Use these buttons to log every important moment. Whether it's a specific player read or a note on an opponent, keep your data fresh!
-
-Title and all other steps untouched.
+No changes to other steps, tour flow, or `tourSteps.ts`.
