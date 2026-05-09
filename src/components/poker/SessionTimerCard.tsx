@@ -184,8 +184,10 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   };
   
   return (
-    <div data-tour="live-scoreboard" className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6 flex flex-col items-center">
+    <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6 flex flex-col items-center">
+      <div data-tour="live-overview" className="w-full flex flex-col items-center">
       <div 
+
         className="rounded-xl mb-3 relative w-fit flex flex-col items-center dark-timer-frame"
         style={{
           border: '3px solid hsl(43, 77%, 52%)',
@@ -257,11 +259,13 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
           </div>
         </div>
       </div>
+      </div>
       
       <div className="flex flex-col gap-2 w-full">
         <div className="flex justify-center gap-2">
           {onAddTable && (
             <Button
+              data-tour="live-add-table"
               onClick={handleAddTable}
               className="bg-poker-gold hover:bg-poker-darkGold text-white flex items-center gap-2"
             >

@@ -80,11 +80,20 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
       route: '/new-session',
     },
     {
-      selector: '[data-tour="live-scoreboard"]',
-      title: 'Track Your Edge',
-      body: 'This is your live scoreboard. Watch your profit or loss update in real-time as you log your hands and actions.',
+      selector: '[data-tour="live-overview"]',
+      title: 'Live Session Tracking',
+      body: 'Monitor your total session duration and overall investment in real-time.',
       interactive: true,
       route: '/session',
+      compact: true,
+    },
+    {
+      selector: '[data-tour="live-add-table"]',
+      title: 'Expand Your Session',
+      body: 'Quickly add new tables or tournaments to your active session as you play.',
+      interactive: true,
+      route: '/session',
+      compact: true,
     },
     {
       selector: '[data-tour="live-actions"]',
