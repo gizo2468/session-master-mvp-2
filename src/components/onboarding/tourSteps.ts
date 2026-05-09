@@ -98,7 +98,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     {
       selector: '[data-tour="live-actions"]',
       title: 'Stay Active',
-      body: "Use these buttons to log every important moment. Whether it's a big pot or a strategic note, keep your data fresh!",
+      body: "Use these buttons to log every important moment. Whether it's a specific player read or a note on an opponent, keep your data fresh!",
       interactive: true,
       route: '/session',
     },
