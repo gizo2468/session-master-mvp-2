@@ -704,7 +704,7 @@ export default function SessionForm() {
                   <FormLabel className="text-base font-medium">Session Name</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="e.g., Friday Cash Night" 
+                      placeholder="" 
                       autoComplete="off"
                       data-form-type="other"
                       {...field} 
