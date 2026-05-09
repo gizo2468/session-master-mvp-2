@@ -573,7 +573,7 @@ const Settings: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate('/subscription')}
-                    className="text-poker-feltGreen hover:text-poker-green"
+                    className="text-poker-gold hover:text-poker-gold/80"
                   >
                     <Icon name="ChevronRight" className="h-4 w-4" />
                   </Button>
