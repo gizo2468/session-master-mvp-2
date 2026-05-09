@@ -804,9 +804,31 @@ export default function SessionForm() {
                     )}
                   />
                 )}
+
+                {/* Festival Name - optional metadata */}
+                <FormField
+                  control={form.control}
+                  name="festivalName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-medium">
+                        Festival Name <span className="text-muted-foreground font-normal">(Optional)</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., WSOP, EPT, or Winter Series"
+                          autoComplete="off"
+                          data-form-type="other"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CollapsibleContent>
             </Collapsible>
-            
+
             <Button
               type="submit"
               data-tour="submit-session"
