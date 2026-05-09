@@ -814,6 +814,7 @@ export default function SessionForm() {
                 </div>
 
 
+                <div data-tour="additional-details" className="space-y-6">
                 {/* First Table Name - optional override for the initial table */}
                 <FormField
                   control={form.control}
