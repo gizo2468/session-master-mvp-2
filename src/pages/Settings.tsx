@@ -330,7 +330,7 @@ const Settings: React.FC = () => {
               <div className="space-y-4">
                 {/* Full Name */}
                 <div className="flex items-center gap-3">
-                  <Icon name="UserCircle2" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
+                  <Icon name="UserCircle2" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
                   <div>
                     <p className="font-medium">{user?.fullName || '—'}</p>
                     <p className="text-sm text-gray-500 dark:text-muted-foreground">Full Name</p>
@@ -339,7 +339,7 @@ const Settings: React.FC = () => {
 
                 {/* Email */}
                 <div className="flex items-center gap-3">
-                  <Icon name="Mail" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
+                  <Icon name="Mail" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
                   <div>
                     <p className="font-medium">{user?.email || 'Not signed in'}</p>
                     <p className="text-sm text-gray-500 dark:text-muted-foreground">Email</p>
@@ -349,7 +349,7 @@ const Settings: React.FC = () => {
                 {/* Username */}
                 {profileLoading ? (
                   <div className="flex items-center gap-3">
-                    <Icon name="AtSign" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
+                    <Icon name="AtSign" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
                     <div>
                       <div className="h-4 w-24 bg-gray-200 dark:bg-muted rounded animate-pulse"></div>
                       <p className="text-sm text-gray-500 dark:text-muted-foreground">Username</p>
@@ -357,7 +357,7 @@ const Settings: React.FC = () => {
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 flex-1">
-                    <Icon name="AtSign" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
+                    <Icon name="AtSign" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
                     <div className="flex-1">
                       {isEditing ? (
                         <div>
@@ -384,7 +384,7 @@ const Settings: React.FC = () => {
                 {/* Role */}
                 {profileLoading ? (
                   <div className="flex items-center gap-3">
-                    <Icon name="User" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
+                    <Icon name="User" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
                     <div>
                       <div className="h-4 w-16 bg-gray-200 dark:bg-muted rounded animate-pulse"></div>
                       <p className="text-sm text-gray-500 dark:text-muted-foreground">Role</p>
@@ -392,7 +392,7 @@ const Settings: React.FC = () => {
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <Icon name="User" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
+                    <Icon name="User" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
                     <div>
                       <p className="font-medium">{getDisplayRole(profile?.role)}</p>
                       <p className="text-sm text-gray-500 dark:text-muted-foreground">Role</p>
@@ -405,7 +405,7 @@ const Settings: React.FC = () => {
                   <>
                     {/* Coaching Focus */}
                     <div className="flex items-start gap-3">
-                      <Icon name="Target" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)] mt-0.5" />
+                      <Icon name="Target" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)] mt-0.5" />
                       <div className="flex-1">
                         <p className="font-medium">Coaching Focus</p>
                         {isEditing ? (
@@ -455,7 +455,7 @@ const Settings: React.FC = () => {
 
                     {/* Experience */}
                     <div className="flex items-start gap-3">
-                      <Icon name="Award" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)] mt-0.5" />
+                      <Icon name="Award" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)] mt-0.5" />
                       <div className="flex-1">
                         <p className="font-medium">Experience</p>
                         {isEditing ? (
@@ -490,7 +490,7 @@ const Settings: React.FC = () => {
                 {/* Default Currency */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Icon name="DollarSign" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
+                    <Icon name="DollarSign" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
                     <div>
                       <p className="font-medium">Default Currency</p>
                       <p className="text-sm text-gray-500 dark:text-muted-foreground">Currency for new sessions</p>
@@ -512,7 +512,7 @@ const Settings: React.FC = () => {
                 {/* Stack Check Reminder */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Icon name="Timer" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
+                    <Icon name="Timer" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
                     <div>
                       <p className="font-medium">Check my stack every</p>
                       <p className="text-sm text-gray-500 dark:text-muted-foreground">Reminder during live sessions</p>
@@ -563,7 +563,7 @@ const Settings: React.FC = () => {
                 {/* Subscription */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Icon name="Crown" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
+                    <Icon name="Crown" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
                     <div>
                       <p className="font-medium">Subscription</p>
                       <p className="text-sm text-gray-500 dark:text-muted-foreground">Manage your premium plan</p>
@@ -582,7 +582,7 @@ const Settings: React.FC = () => {
                 {/* Dark Mode */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Icon name="Moon" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
+                    <Icon name="Moon" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
                     <div>
                       <p className="font-medium">Dark Mode</p>
                       <p className="text-sm text-gray-500 dark:text-muted-foreground">Premium poker atmosphere</p>
@@ -594,7 +594,7 @@ const Settings: React.FC = () => {
                 {/* Reset Onboarding */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Icon name="RotateCcw" className="h-5 w-5 text-gray-500 dark:text-poker-gold dark:drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
+                    <Icon name="RotateCcw" className="h-5 w-5 text-poker-gold drop-shadow-[0_0_3px_rgba(212,175,55,0.4)]" />
                     <div>
                       <p className="font-medium">Reset Onboarding</p>
                       <p className="text-sm text-gray-500 dark:text-muted-foreground">Replay the Start Session hint on Home</p>
