@@ -90,7 +90,7 @@ const SupportSettings: React.FC = () => {
                  role="button"
                  aria-label="View privacy policy">
               <div className="flex items-center">
-                <Icon name="Shield" className="mr-3 text-gray-500 dark:text-muted-foreground h-4 w-4" />
+                <Icon name="Shield" className="mr-3 text-poker-gold h-4 w-4" />
                 <span>Privacy Policy</span>
               </div>
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
@@ -100,7 +100,7 @@ const SupportSettings: React.FC = () => {
                  role="button"
                  aria-label="View terms of use">
               <div className="flex items-center">
-                <Icon name="FileText" className="mr-3 text-gray-500 dark:text-muted-foreground h-4 w-4" />
+                <Icon name="FileText" className="mr-3 text-poker-gold h-4 w-4" />
                 <span>Terms of Use</span>
               </div>
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
@@ -110,7 +110,7 @@ const SupportSettings: React.FC = () => {
                  role="button"
                  aria-label="View cookie policy">
               <div className="flex items-center">
-                <Icon name="Cookie" className="mr-3 text-gray-500 dark:text-muted-foreground h-4 w-4" />
+                <Icon name="Cookie" className="mr-3 text-poker-gold h-4 w-4" />
                 <span>Cookie Policy</span>
               </div>
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
@@ -120,7 +120,7 @@ const SupportSettings: React.FC = () => {
                  role="button"
                  aria-label="View help">
               <div className="flex items-center">
-                <Icon name="HelpCircle" className="mr-3 text-gray-500 dark:text-muted-foreground h-4 w-4" />
+                <Icon name="HelpCircle" className="mr-3 text-poker-gold h-4 w-4" />
                 <span>FAQ</span>
               </div>
               <Icon name="ChevronRight" className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
