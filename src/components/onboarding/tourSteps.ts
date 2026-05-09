@@ -64,6 +64,15 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
       compact: true,
     },
     {
+      selector: '[data-tour="additional-details"]',
+      title: 'Additional Details (Optional)',
+      body: 'Specify a starting table name or group this session under a major poker festival.',
+      interactive: true,
+      route: '/new-session',
+      prepare: openAdvanced,
+      compact: true,
+    },
+    {
       selector: '[data-tour="submit-session"]',
       title: "You're All Set!",
       body: "Fill in the details and hit 'Start Session' to begin tracking. Good luck at the tables!",
