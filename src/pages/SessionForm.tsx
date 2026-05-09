@@ -825,7 +825,7 @@ export default function SessionForm() {
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="e.g.,"
+                          placeholder=""
                           autoComplete="off"
                           data-form-type="other"
                           {...field}
