@@ -1,15 +1,11 @@
-## Dashboard UI Cleanup
+## Dashboard Welcome Message Update
 
-Two small changes in `src/pages/Dashboard.tsx`.
+In `src/pages/Dashboard.tsx`, update the welcome heading:
 
-### 1. Remove redundant "Dashboard" label
-Delete the `<p className="text-lg font-medium text-poker-feltGreen">Dashboard</p>` line that appears under "Role: Player" in the player branch (and the matching "Coach Dashboard" line for coaches, only the player one was flagged but we'll leave the coach label since it's a different label — only the literal duplicate "Dashboard" under the player role is removed).
-
-### 2. Gold "Home" button in header
-Update the back button in the Dashboard header:
-- Change `className="text-poker-feltGreen dark:text-primary p-0"` to `className="text-poker-gold p-0 hover:text-poker-gold/80"`
-- Arrow icon inherits color via `currentColor`, so it turns gold automatically.
+### Changes
+- **Text color**: change `text-primary` (gold) → `text-foreground` so it renders black in light mode (and remains readable in dark mode per the theme).
+- **Data source**: replace `{user.fullName || user.username}` with `{user.username || user.fullName}` so the username takes priority. Keep `fullName` as a fallback in case a user has no username set.
 
 ### Scope
-- Single file: `src/pages/Dashboard.tsx`
-- No logic, routing, or data changes.
+- Single file: `src/pages/Dashboard.tsx`, line ~111.
+- No other styling, layout, or data changes.
