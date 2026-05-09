@@ -1,29 +1,48 @@
-## Plan
+# Session Details Card — Full Metadata Mapping
 
-### 1. Move "Share with Coach" button into Session Details card
+Update `src/components/poker/SessionDetailsCard.tsx` so the card serves as the global container for the entire session's metadata. Active Tables section remains untouched.
 
-**`src/components/poker/SessionDetailsCard.tsx`**
-- Add modal state and import `CoachSelectionModal`, `Button`, and `useAuth` (the hook `useSessionSharing` is already imported here).
-- Render the button centered horizontally between the Game Type row and the Total Buy-Ins pill, only for player accounts (`user?.role === 'student'`) — same condition currently used in `LiveSessionTables`.
-- Same button visuals/behavior as today: outline button, share icon, label switches between "Share with Coach" and "Shared with N coach(es)", disabled while loading or when no connected coaches.
-- Reuse existing `shareSession` / `sharedCoaches` / `connectedCoaches` from `useSessionSharing(session.id)`.
-- Mount `CoachSelectionModal` from this card.
+## Field mapping (from `PokerSession`)
 
-**`src/components/poker/LiveSessionTables.tsx`**
-- Remove the share button, modal, and the `useSessionSharing` / `useAuth` / modal state code paths that exist solely to render it.
-- Keep the Active Tables list and Completed Tables display unchanged.
+- **Session Name** → `session.location` — main card title (replaces current "Session Details" label as the primary heading? No — keep "Session Details" gold header, then show the Session Name as the bold black title beneath it, as it already does on line 86–88).
+- **Currency** → `session.currency` + `getCurrencySymbol(session.currency)` — new label/value row, e.g. `Currency: USD ($)`.
+- **Format (dynamic)** → derived from `session.tables`:
+  - Collect unique `format` values from `tables` (`Cash`, `Tournament`).
+  - If tables is empty, fall back to `session.format`.
+  - Display joined by `, ` (e.g. `Cash`, `Tournament`, or `Cash, Tournament`).
+- **Game Type** → `session.gameType` (already shown — keep).
+- **Online / Physical Location** → if `session.isOnline` and `session.physicalLocation` is non-empty, show `Location: <physicalLocation>` row.
+- **Festival Name** → if `session.festivalName` non-empty, show `Festival: <festivalName>` row.
+- **First Table Name (`session.tableName`)** → explicitly NOT rendered in this card.
 
-### 2. Color the "Active Tables (N)" heading gold
+## Layout (top → bottom inside CardContent)
 
-**`src/components/poker/LiveSessionTables.tsx`**
-- Change the `<h4>Active Tables ({activeTables.length})</h4>` className from `text-lg font-bold mb-2` to `text-lg font-bold mb-2 text-poker-gold`.
-- No other element in this section is recolored.
+1. Label/value rows, all centered as `flex justify-between` pairs (matching existing Game Type row styling):
+   - Format
+   - Game Type (existing)
+   - Currency
+   - Location (only if online + value present)
+   - Festival (only if value present)
+2. Centered "Share with Coach" button (already in place between Game Type and Total Buy-Ins — keep position so it sits between the metadata rows and the Total Buy-Ins badge).
+3. Existing Total Buy-Ins / Payouts / Profit / multi-day / notes blocks — unchanged.
 
-### Out of scope
-- "Shared With:" status row in Session Details (already exists, unchanged).
-- Total Buy-Ins / Game Type styling.
-- Any other sharing entry points.
+## Header styling
 
-### Expected result
-- Session Details card shows: "Session Details" → name → Game Type row → centered "Share with Coach" button → Total Buy-Ins pill.
-- Active Tables block no longer shows the share button; its heading is gold.
+Already correct from previous step: `text-lg font-bold text-poker-gold` centered, with Session Name (`session.location`) shown below in bold foreground. No change needed unless we discover mismatch with Active Tables — confirmed both use `text-lg font-bold text-poker-gold`.
+
+## Out of scope
+
+- `LiveSessionTables.tsx` (Active Tables section) — no edits.
+- Buy-in calculations, sharing logic, multi-day rendering, notes — unchanged.
+- Form / data model — unchanged; we only consume existing fields on `PokerSession`.
+
+## Technical notes
+
+- Use existing imports; no new dependencies.
+- Currency display format: `${session.currency} (${currencySymbol})` when `session.currency` is set; otherwise hide row.
+- Format derivation:
+  ```ts
+  const formats = Array.from(new Set((session.tables ?? []).map(t => t.format))).filter(Boolean);
+  const formatDisplay = formats.length ? formats.join(', ') : session.format;
+  ```
+- Each new row mirrors the existing Game Type row markup for visual consistency.
