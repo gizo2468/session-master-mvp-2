@@ -165,13 +165,16 @@ export default function SessionForm() {
         throw new Error('Invalid buy-in amount');
       }
 
+      const sessionLabel = values.location?.trim() || '';
+      const tableLabel = values.firstTableName?.trim() || sessionLabel;
+
       // Create the initial table object from form data
       const initialTable: TableData = {
         id: uuidv4(),
-        name: values.location,
+        name: tableLabel,
         format: values.format as 'Cash' | 'Tournament',
         gameType: values.gameType,
-        location: values.location,
+        location: tableLabel,
         buyIn: buyInAmount,
         initialBuyIn: buyInAmount,
         startTime: new Date(),
@@ -196,9 +199,9 @@ export default function SessionForm() {
         id: uuidv4(),
         gameType: values.gameType,
         format: values.format,
-        location: values.location,
+        location: sessionLabel,
         physicalLocation: values.isOnline ? values.physicalLocation : undefined,
-        tableName: values.location,
+        tableName: tableLabel,
         buyIn: buyInAmount,
         initialBuyIn: buyInAmount,
         smallBlind: values.format === 'Cash' ? (values.smallBlind || smallBlind) : 0,
