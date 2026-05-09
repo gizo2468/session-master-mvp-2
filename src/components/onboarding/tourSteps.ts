@@ -10,6 +10,8 @@ export interface TourStep {
   route: '/' | '/new-session' | '/session';
   /** Run before measuring; use to open accordions, switch tabs, etc. Return when DOM is ready. */
   prepare?: () => void | Promise<void>;
+  /** When true, the tooltip uses tighter padding/gap and a larger gap from the spotlight. */
+  compact?: boolean;
 }
 
 export type TourPathId = 'start-session' | 'home-guide' | 'dashboard-guide';
