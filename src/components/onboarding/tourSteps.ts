@@ -124,7 +124,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     {
       selector: '[data-tour="table-actions"]',
       title: 'Active Tables',
-      body: 'All your currently running tables and tournaments will appear here. You can track individual progress and update results for each one.',
+      body: 'Quickly log a Rebuy, add a Hand History note, or use End Table to close this specific table and finalize its results.',
       interactive: true,
       route: '/session',
       compact: true,
