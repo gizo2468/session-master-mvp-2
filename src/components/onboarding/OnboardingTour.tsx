@@ -1001,6 +1001,24 @@ export default function OnboardingTour({
         );
       })()}
 
+      {/* Looping tap-hand over the End Table button (Active Tables step 2) */}
+      {isTableActionsStep && rect && (() => {
+        const btn = document.querySelector('[data-tour="end-table-button"]') as HTMLElement | null;
+        if (!btn) return null;
+        const br = btn.getBoundingClientRect();
+        const cx = br.left + br.width / 2;
+        const cy = br.top + br.height / 2;
+        return (
+          <div
+            className="absolute pointer-events-none tour-tap-hand"
+            style={{ left: cx, top: cy, zIndex: 20 }}
+            aria-hidden="true"
+          >
+            <Hand className="w-12 h-12 text-primary drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
+          </div>
+        );
+      })()}
+
       {/* Tooltip card */}
       <div
         ref={tooltipRef}
