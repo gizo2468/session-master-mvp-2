@@ -92,8 +92,10 @@ export default function OnboardingTour({
   const isGameSetupStep = step?.selector === '[data-tour="game-setup"]';
   const isLiveOverviewStep = step?.selector === '[data-tour="live-overview"]';
   const isTableActionsStep = step?.selector === '[data-tour="table-actions"]';
+  const isEndTableCashoutStep = step?.selector === '[data-tour="end-table-cashout"]';
+  const isEndTableConfirmStep = step?.selector === '[data-tour="end-table-confirm"]';
   const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep;
-  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep;
+  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableCashoutStep || isEndTableConfirmStep;
   const hidePreviousButton = isGameSetupStep || isLiveOverviewStep;
 
   // Gate: on the Stakes step, require the Buy-in input to have a positive value.
