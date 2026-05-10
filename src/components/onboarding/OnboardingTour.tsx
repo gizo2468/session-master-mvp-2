@@ -637,6 +637,45 @@ export default function OnboardingTour({
     };
   }, [isTableActionsStep, currentStep, setStep, rect]);
 
+  // For the END TABLE CASHOUT step, advance the tour as soon as a numeric value is entered.
+  useEffect(() => {
+    if (!isEndTableCashoutStep) return;
+    const container = document.querySelector('[data-tour="end-table-cashout"]') as HTMLElement | null;
+    if (!container) return;
+    const input = container.querySelector('input') as HTMLInputElement | null;
+    if (!input) return;
+    const evaluate = () => {
+      const raw = (input.value || '').replace(/,/g, '.').trim();
+      if (raw === '') return;
+      const v = parseFloat(raw);
+      if (Number.isFinite(v) && v > 0) {
+        directionRef.current = 1;
+        setStep(currentStep + 1);
+      }
+    };
+    input.addEventListener('input', evaluate);
+    input.addEventListener('change', evaluate);
+    return () => {
+      input.removeEventListener('input', evaluate);
+      input.removeEventListener('change', evaluate);
+    };
+  }, [isEndTableCashoutStep, currentStep, setStep, rect]);
+
+  // For the END TABLE CONFIRM step, advance the tour when the user taps End Table in the dialog.
+  useEffect(() => {
+    if (!isEndTableConfirmStep) return;
+    const btn = document.querySelector('[data-tour="end-table-confirm"]') as HTMLElement | null;
+    if (!btn) return;
+    const handler = () => {
+      directionRef.current = 1;
+      setStep(currentStep + 1);
+    };
+    btn.addEventListener('click', handler, { once: true });
+    return () => {
+      btn.removeEventListener('click', handler);
+    };
+  }, [isEndTableConfirmStep, currentStep, setStep, rect]);
+
   const handleNext = () => {
     directionRef.current = 1;
     if (isLast) {
