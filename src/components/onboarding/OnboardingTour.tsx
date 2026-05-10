@@ -1060,6 +1060,21 @@ export default function OnboardingTour({
         );
       })()}
 
+      {/* Looping tap-hand over the End Table confirm button (inside dialog) */}
+      {isEndTableConfirmStep && rect && (() => {
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        return (
+          <div
+            className="absolute pointer-events-none tour-tap-hand"
+            style={{ left: cx, top: cy, zIndex: 20 }}
+            aria-hidden="true"
+          >
+            <Hand className="w-12 h-12 text-primary drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
+          </div>
+        );
+      })()}
+
       {/* Tooltip card */}
       <div
         ref={tooltipRef}
