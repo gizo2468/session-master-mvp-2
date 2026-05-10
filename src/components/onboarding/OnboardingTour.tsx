@@ -753,7 +753,9 @@ export default function OnboardingTour({
     // RULE: Tooltip ALWAYS sits below the spotlight, with a clean gap and zero
     // overlap. Only flip ABOVE when there is genuinely no room below AND above
     // has meaningfully more space (e.g. spotlight near the bottom edge).
-    const placeBelow = spaceBelow >= required || spaceBelow >= spaceAbove;
+    let placeBelow = spaceBelow >= required || spaceBelow >= spaceAbove;
+    if (step.placement === 'above') placeBelow = false;
+    else if (step.placement === 'below') placeBelow = true;
     if (placeBelow) {
       // Anchor strictly below the spotlight bottom edge. Do NOT clamp upward —
       // overlapping the spotlight is forbidden. If the tooltip extends past the
