@@ -80,7 +80,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
 
   return (
     <Card className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
-      <div data-tour="live-session-details">
+      <div>
         <CardHeader className="pb-2 text-center">
           <CardTitle className="text-lg font-bold text-poker-gold">Session Details</CardTitle>
           {session.location?.trim() && (
@@ -185,7 +185,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           )}
           
           {/* Center-aligned summary pills */}
-          <div className="flex flex-row flex-wrap items-start justify-center gap-2 mt-1 mb-1">
+          <div data-tour="live-session-details" className="flex flex-row flex-wrap items-start justify-center gap-2 mt-1 mb-1">
             {/* Total Buy-ins Badge */}
             <Badge
               variant="outline"
