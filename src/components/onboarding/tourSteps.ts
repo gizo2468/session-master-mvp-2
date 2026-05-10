@@ -104,8 +104,8 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     },
     {
       selector: '[data-tour="live-session-details"]',
-      title: 'Session Overview',
-      body: 'View your session timer and key metadata like game format, location, and currency settings in one place.',
+      title: 'Session Details',
+      body: 'Here you can find all the essential information about your session, including game settings, location, and your total investment at a glance.',
       interactive: true,
       route: '/session',
       compact: true,
