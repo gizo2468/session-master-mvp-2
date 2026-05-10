@@ -1,36 +1,24 @@
-## Insert two tutorial steps between "Stay Active" and "Finishing Up"
+## Goal
+Shrink the "Session Overview" tutorial highlight to focus only on the top metadata block of the Session Details card, so the tooltip fits comfortably below it. Keep title, copy, and all other steps unchanged.
 
-### 1. Add tour anchor attributes
-- `src/components/poker/SessionDetailsCard.tsx`: add `data-tour="live-session-details"` to the outer container of the Session Details card.
-- `src/components/poker/LiveSessionTables.tsx`: add `data-tour="live-active-tables"` to the outer "Active Tables" section container.
+## Changes
 
-### 2. Insert two new steps in `src/components/onboarding/tourSteps.ts`
-Insert between the existing `live-actions` ("Stay Active") step and the `live-controls` ("Finishing Up") step:
+### 1. `src/components/poker/SessionDetailsCard.tsx`
+- Remove `data-tour="live-session-details"` from the outer `<Card>` (line 82).
+- Add a new inner wrapper `<div data-tour="live-session-details">` that wraps:
+  - the existing `<CardHeader>` (title "Session Details" + optional location subtitle), and
+  - the top metadata rows only: **Format**, **Game Type**, **Currency** (and the optional Online physical-location / Festival rows that sit alongside them).
+- The Share with Coach button, sharing status, summary pills (Total Buy-Ins, Total Payouts, multi-day), Profit/Loss, multi-day details, and Notes stay **outside** the wrapper so they aren't highlighted.
 
-```ts
-{
-  selector: '[data-tour="live-session-details"]',
-  title: 'Session Overview',
-  body: 'View your session timer and key metadata like game format, location, and currency settings in one place.',
-  interactive: true,
-  route: '/session',
-  compact: true,
-},
-{
-  selector: '[data-tour="live-active-tables"]',
-  title: 'Manage Your Games',
-  body: 'All your currently running tables and tournaments will appear here. You can track individual progress and update results for each one.',
-  interactive: true,
-  route: '/session',
-  compact: true,
-},
-```
+This restricts the spotlight to roughly the area shown in the user's screenshot (header + Format/Game Type/Currency).
 
-Because the tour navigation uses array index for Previous/Next, this automatically wires:
-- Stay Active → Session Overview → Manage Your Games → Finishing Up
-- Finishing Up's Previous now leads back to Manage Your Games.
+### 2. Tooltip position — no code change needed
+`OnboardingTour.tsx` already places the tooltip below the spotlight whenever there is room (`placeBelow` rule at lines 754-760), with `TOOLTIP_GAP = 16px` padding. Once the highlight is reduced to just the top block, there will be ample space below, so the tooltip will naturally render below the highlighted area without overlapping the rest of the card.
 
-No changes needed in `OnboardingTour.tsx` (the `compact` flag handles tighter spotlight; existing scroll-into-view logic applies).
+### 3. Untouched
+- `tourSteps.ts`: the `live-session-details` step (selector, title, body, `compact: true`) stays exactly as is.
+- The "Stay Active" step and every other tutorial step are not modified.
+- No styling/visual changes to `SessionDetailsCard` (only an extra wrapping `<div>` around existing children).
 
-### Out of scope
-No styling, copy, or other tutorial steps changed.
+## Verification
+- Manually confirm in the live tour that the gold spotlight now covers only the header + Format/Game Type/Currency rows, and the tooltip sits below with a clean gap.

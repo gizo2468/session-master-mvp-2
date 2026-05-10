@@ -79,60 +79,64 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   const hasMultiDayTables = multiDayTables.length > 0;
 
   return (
-    <Card data-tour="live-session-details" className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
-      <CardHeader className="pb-2 text-center">
-        <CardTitle className="text-lg font-bold text-poker-gold">Session Details</CardTitle>
-        {session.location?.trim() && (
-          <p className="text-base font-semibold text-foreground mt-1">
-            {session.location.trim()}
-          </p>
-        )}
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-3">
+    <Card className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
+      <div data-tour="live-session-details">
+        <CardHeader className="pb-2 text-center">
+          <CardTitle className="text-lg font-bold text-poker-gold">Session Details</CardTitle>
+          {session.location?.trim() && (
+            <p className="text-base font-semibold text-foreground mt-1">
+              {session.location.trim()}
+            </p>
+          )}
+        </CardHeader>
+        <div className="px-6 pb-2">
+          <div className="space-y-3">
+            {/* Format (dynamic from tables) */}
+            {(() => {
+              const formats = Array.from(new Set((session.tables ?? []).map(t => t.format))).filter(Boolean);
+              const formatDisplay = formats.length ? formats.join(', ') : session.format;
+              return (
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-muted-foreground">Format:</span>
+                  <span className="font-medium">{formatDisplay}</span>
+                </div>
+              );
+            })()}
 
-          {/* Format (dynamic from tables) */}
-          {(() => {
-            const formats = Array.from(new Set((session.tables ?? []).map(t => t.format))).filter(Boolean);
-            const formatDisplay = formats.length ? formats.join(', ') : session.format;
-            return (
+            {/* Game Type */}
+            <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-muted-foreground">Game Type:</span>
+              <span className="font-medium">{session.gameType}</span>
+            </div>
+
+            {/* Currency */}
+            {session.currency && (
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-muted-foreground">Format:</span>
-                <span className="font-medium">{formatDisplay}</span>
+                <span className="text-gray-500 dark:text-muted-foreground">Currency:</span>
+                <span className="font-medium">{session.currency} ({currencySymbol})</span>
               </div>
-            );
-          })()}
+            )}
 
-          {/* Game Type */}
-          <div className="flex justify-between">
-            <span className="text-gray-500 dark:text-muted-foreground">Game Type:</span>
-            <span className="font-medium">{session.gameType}</span>
+            {/* Online physical location */}
+            {session.isOnline && session.physicalLocation?.trim() && (
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-muted-foreground">Location:</span>
+                <span className="font-medium">{session.physicalLocation.trim()}</span>
+              </div>
+            )}
+
+            {/* Festival Name */}
+            {session.festivalName?.trim() && (
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-muted-foreground">Festival:</span>
+                <span className="font-medium">{session.festivalName.trim()}</span>
+              </div>
+            )}
           </div>
-
-          {/* Currency */}
-          {session.currency && (
-            <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-muted-foreground">Currency:</span>
-              <span className="font-medium">{session.currency} ({currencySymbol})</span>
-            </div>
-          )}
-
-          {/* Online physical location */}
-          {session.isOnline && session.physicalLocation?.trim() && (
-            <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-muted-foreground">Location:</span>
-              <span className="font-medium">{session.physicalLocation.trim()}</span>
-            </div>
-          )}
-
-          {/* Festival Name */}
-          {session.festivalName?.trim() && (
-            <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-muted-foreground">Festival:</span>
-              <span className="font-medium">{session.festivalName.trim()}</span>
-            </div>
-          )}
-          
+        </div>
+      </div>
+      <CardContent className="pt-3">
+        <div className="space-y-3">
           {/* Share with Coach button */}
           {showShareToggle && (
             <div className="flex justify-center pt-1">
