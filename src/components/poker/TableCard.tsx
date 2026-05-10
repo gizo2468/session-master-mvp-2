@@ -416,6 +416,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
             <Button 
               variant="destructive" 
               className="flex-1"
+              data-tour="end-table-button"
               onClick={() => setShowEndTableDialog(true)}
             >
               <Icon name="CircleStop" className="mr-1 h-4 w-4" /> End Table

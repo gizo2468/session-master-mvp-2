@@ -91,8 +91,9 @@ export default function OnboardingTour({
   const isSubmitSessionStep = step?.selector === '[data-tour="submit-session"]';
   const isGameSetupStep = step?.selector === '[data-tour="game-setup"]';
   const isLiveOverviewStep = step?.selector === '[data-tour="live-overview"]';
+  const isTableActionsStep = step?.selector === '[data-tour="table-actions"]';
   const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep;
-  const hideNextButton = isStartSessionStep || isSubmitSessionStep;
+  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep;
   const hidePreviousButton = isGameSetupStep || isLiveOverviewStep;
 
   // Gate: on the Stakes step, require the Buy-in input to have a positive value.
@@ -618,6 +619,22 @@ export default function OnboardingTour({
     };
   }, [step, currentStep, setStep, rect]);
 
+  // For the TABLE ACTIONS step, advance the tour when the user taps End Table.
+  // The button's own onClick still opens the End Table dialog.
+  useEffect(() => {
+    if (!isTableActionsStep) return;
+    const btn = document.querySelector('[data-tour="end-table-button"]') as HTMLElement | null;
+    if (!btn) return;
+    const handler = () => {
+      directionRef.current = 1;
+      setStep(currentStep + 1);
+    };
+    btn.addEventListener('click', handler, { once: true });
+    return () => {
+      btn.removeEventListener('click', handler);
+    };
+  }, [isTableActionsStep, currentStep, setStep, rect]);
+
   const handleNext = () => {
     directionRef.current = 1;
     if (isLast) {
@@ -977,6 +994,24 @@ export default function OnboardingTour({
               top: cy,
               zIndex: 20,
             }}
+            aria-hidden="true"
+          >
+            <Hand className="w-12 h-12 text-primary drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
+          </div>
+        );
+      })()}
+
+      {/* Looping tap-hand over the End Table button (Active Tables step 2) */}
+      {isTableActionsStep && rect && (() => {
+        const btn = document.querySelector('[data-tour="end-table-button"]') as HTMLElement | null;
+        if (!btn) return null;
+        const br = btn.getBoundingClientRect();
+        const cx = br.left + br.width / 2;
+        const cy = br.top + br.height / 2;
+        return (
+          <div
+            className="absolute pointer-events-none tour-tap-hand"
+            style={{ left: cx, top: cy, zIndex: 20 }}
             aria-hidden="true"
           >
             <Hand className="w-12 h-12 text-primary drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
