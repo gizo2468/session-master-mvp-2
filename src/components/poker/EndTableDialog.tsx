@@ -115,7 +115,7 @@ export default function EndTableDialog({
             endReason === 'eliminated' ||
             table.format === 'Cash') && (
             <div className="space-y-4">
-              <div>
+              <div data-tour="end-table-cashout">
                 <label htmlFor="tableCashout" className="block text-sm font-medium mb-1">
                   Cash Out Amount
                 </label>
@@ -291,6 +291,7 @@ export default function EndTableDialog({
             Cancel
           </Button>
           <Button 
+            data-tour="end-table-confirm"
             className="bg-poker-gold hover:bg-poker-darkGold text-white"
             onClick={onConfirm}
             disabled={(endReason !== 'day-ended' && !cashOutAmount) || 
