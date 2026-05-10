@@ -1,17 +1,31 @@
-## Plan: Move Session Details Highlight to Investment Section + Update Text
+## Goal
 
-### 1. `src/components/poker/SessionDetailsCard.tsx`
-- Remove `data-tour="live-session-details"` from the inner `<div>` wrapping the header/metadata (line 83).
-- Add `data-tour="live-session-details"` to the summary pills container (line 188), the `<div className="flex flex-row flex-wrap ... gap-2 mt-1 mb-1">` that holds **Total Buy-Ins**, **Total Payouts**, and the multi-day badge. This centers the highlight on the investment area exactly as requested.
+Resize the "Session Details" tutorial spotlight so the gold rectangle covers the column from the **Format** row down through the **Total Buy-Ins** badge, without including the "Session Details" title at the top.
 
-### 2. `src/components/onboarding/tourSteps.ts`
-Update the "Session Overview" step (currently between "Stay Active" and "Manage Your Games"):
-- **Title:** `Session Details`
-- **Body:** `Here you can find all the essential information about your session, including game settings, location, and your total investment at a glance.`
-- Keep `interactive: true`, `route: '/session'`, `compact: true`. No flow/order changes.
+## Current state
 
-### 3. Tooltip positioning
-No changes needed. The existing `OnboardingTour` logic places the tooltip below the spotlight when there's room; the buy-in pills sit lower in the column so the tooltip will naturally render below or above without overlap, and Previous/Next remain functional.
+In `src/components/poker/SessionDetailsCard.tsx`:
+- The `data-tour="live-session-details"` attribute is currently on the inner pills container (line 188), so only the Total Buy-Ins / Payouts badges are highlighted.
+- The metadata rows (Format, Game Type, Currency, Location, Festival) live in a separate block on lines 92–136.
+- The "Share with Coach" button and summary pills live inside `<CardContent>` (lines 138–188+), as a sibling of the metadata block.
 
-### Untouched
-- Other tour steps, `OnboardingTour.tsx`, layout/styling of `SessionDetailsCard`, all other components.
+To highlight Format → Total Buy-Ins as one rectangle, the metadata block and the pills container need to share a single wrapper element.
+
+## Change
+
+In `src/components/poker/SessionDetailsCard.tsx`:
+
+1. **Remove** `data-tour="live-session-details"` from the summary pills `<div>` on line 188.
+2. **Wrap** the metadata block (`<div className="px-6 pb-2">…</div>`, lines 92–136) **and** the existing `<CardContent>` (lines 138 to its closing tag) inside a single new `<div data-tour="live-session-details">…</div>`.
+   - The "Session Details" title (`<CardHeader>`) stays **outside** this wrapper so it is not part of the highlight.
+   - "Share with Coach" button and the optional "Shared With" row sit between Format and Total Buy-Ins inside the column already, so they are naturally inside the new wrapper. This matches the visual area the user requested.
+
+No changes to copy, ordering, styles, or `tourSteps.ts`.
+
+## Tooltip placement
+
+`OnboardingTour` automatically positions the tooltip above or below the spotlight depending on available space. Because the new highlight is centered vertically in the column, the tooltip will continue to render with adequate padding above or below it without overlapping the highlighted content. No tour-config change needed.
+
+## Files touched
+
+- `src/components/poker/SessionDetailsCard.tsx` (single wrapper restructure)
