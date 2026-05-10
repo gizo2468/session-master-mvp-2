@@ -276,6 +276,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           )}
         </div>
       </CardContent>
+      </div>
       <CoachSelectionModal
         isOpen={showCoachModal}
         onClose={() => setShowCoachModal(false)}
