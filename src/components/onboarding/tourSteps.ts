@@ -107,7 +107,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     {
       selector: '[data-tour="live-session-details"]',
       title: 'Session Details',
-      body: 'Here you can find all the essential information about your session, including game settings, location, and your total investment at a glance.',
+      body: 'View all the essential information about your session. From here, you can also share your live session with your coach for real-time review and feedback.',
       interactive: true,
       route: '/session',
       compact: true,
