@@ -134,7 +134,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             )}
           </div>
         </div>
-      </div>
       <CardContent className="pt-3">
         <div className="space-y-3">
           {/* Share with Coach button */}
