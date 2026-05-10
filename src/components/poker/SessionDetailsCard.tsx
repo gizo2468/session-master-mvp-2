@@ -80,16 +80,15 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
 
   return (
     <Card className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
-      <div>
-        <CardHeader className="pb-2 text-center">
-          <CardTitle className="text-lg font-bold text-poker-gold">Session Details</CardTitle>
-          {session.location?.trim() && (
-            <p className="text-base font-semibold text-foreground mt-1">
-              {session.location.trim()}
-            </p>
-          )}
-        </CardHeader>
-        <div data-tour="live-session-details">
+      <CardHeader className="pb-2 text-center">
+        <CardTitle className="text-lg font-bold text-poker-gold">Session Details</CardTitle>
+        {session.location?.trim() && (
+          <p className="text-base font-semibold text-foreground mt-1">
+            {session.location.trim()}
+          </p>
+        )}
+      </CardHeader>
+      <div data-tour="live-session-details">
         <div className="px-6 pb-2">
           <div className="space-y-3">
             {/* Format (dynamic from tables) */}
