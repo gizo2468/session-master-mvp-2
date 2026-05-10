@@ -80,15 +80,15 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
 
   return (
     <Card className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
-      <div>
-        <CardHeader className="pb-2 text-center">
-          <CardTitle className="text-lg font-bold text-poker-gold">Session Details</CardTitle>
-          {session.location?.trim() && (
-            <p className="text-base font-semibold text-foreground mt-1">
-              {session.location.trim()}
-            </p>
-          )}
-        </CardHeader>
+      <CardHeader className="pb-2 text-center">
+        <CardTitle className="text-lg font-bold text-poker-gold">Session Details</CardTitle>
+        {session.location?.trim() && (
+          <p className="text-base font-semibold text-foreground mt-1">
+            {session.location.trim()}
+          </p>
+        )}
+      </CardHeader>
+      <div data-tour="live-session-details">
         <div className="px-6 pb-2">
           <div className="space-y-3">
             {/* Format (dynamic from tables) */}
@@ -134,7 +134,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             )}
           </div>
         </div>
-      </div>
       <CardContent className="pt-3">
         <div className="space-y-3">
           {/* Share with Coach button */}
@@ -185,7 +184,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           )}
           
           {/* Center-aligned summary pills */}
-          <div data-tour="live-session-details" className="flex flex-row flex-wrap items-start justify-center gap-2 mt-1 mb-1">
+          <div className="flex flex-row flex-wrap items-start justify-center gap-2 mt-1 mb-1">
             {/* Total Buy-ins Badge */}
             <Badge
               variant="outline"
@@ -277,6 +276,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           )}
         </div>
       </CardContent>
+      </div>
       <CoachSelectionModal
         isOpen={showCoachModal}
         onClose={() => setShowCoachModal(false)}
