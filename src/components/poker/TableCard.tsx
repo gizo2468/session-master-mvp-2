@@ -507,6 +507,8 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
           previewLimit={2}
         />
         </div>
+        </div>
+        {/* end data-tour="table-actions" */}
       </Card>
 
       {/* Blind History Modal */}
