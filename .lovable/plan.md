@@ -1,31 +1,81 @@
 ## Goal
 
-Resize the "Session Details" tutorial spotlight so the gold rectangle covers the column from the **Format** row down through the **Total Buy-Ins** badge, without including the "Session Details" title at the top.
+Split the current "Manage Your Games" tutorial step into two sub-steps that highlight the **top stats area** and the **bottom action buttons** of an active table card individually, with forced tooltip placement so the tooltip covers the *other* half of the card on each step.
 
-## Current state
+## Changes
 
-In `src/components/poker/SessionDetailsCard.tsx`:
-- The `data-tour="live-session-details"` attribute is currently on the inner pills container (line 188), so only the Total Buy-Ins / Payouts badges are highlighted.
-- The metadata rows (Format, Game Type, Currency, Location, Festival) live in a separate block on lines 92–136.
-- The "Share with Coach" button and summary pills live inside `<CardContent>` (lines 138–188+), as a sibling of the metadata block.
+### 1. `src/components/onboarding/OnboardingTour.tsx`
 
-To highlight Format → Total Buy-Ins as one rectangle, the metadata block and the pills container need to share a single wrapper element.
+Add a new optional `placement` field to the local `TourStep` interface:
 
-## Change
+```ts
+placement?: 'auto' | 'above' | 'below';
+```
 
-In `src/components/poker/SessionDetailsCard.tsx`:
+In the tooltip placement block (around line 754, the `placeBelow` calculation), respect the override:
 
-1. **Remove** `data-tour="live-session-details"` from the summary pills `<div>` on line 188.
-2. **Wrap** the metadata block (`<div className="px-6 pb-2">…</div>`, lines 92–136) **and** the existing `<CardContent>` (lines 138 to its closing tag) inside a single new `<div data-tour="live-session-details">…</div>`.
-   - The "Session Details" title (`<CardHeader>`) stays **outside** this wrapper so it is not part of the highlight.
-   - "Share with Coach" button and the optional "Shared With" row sit between Format and Total Buy-Ins inside the column already, so they are naturally inside the new wrapper. This matches the visual area the user requested.
+- If `step.placement === 'above'` → force `placeBelow = false`.
+- If `step.placement === 'below'` → force `placeBelow = true`.
+- Otherwise keep current auto logic.
 
-No changes to copy, ordering, styles, or `tourSteps.ts`.
+No other behavior changes (gap, clamping, width all stay the same).
 
-## Tooltip placement
+### 2. `src/components/onboarding/tourSteps.ts`
 
-`OnboardingTour` automatically positions the tooltip above or below the spotlight depending on available space. Because the new highlight is centered vertically in the column, the tooltip will continue to render with adequate padding above or below it without overlapping the highlighted content. No tour-config change needed.
+- Add the same optional `placement` field to the exported `TourStep` interface.
+- Replace the single `live-active-tables` step inside `'start-session'` with **two** steps, keeping the existing positional order (between `live-session-details` and `live-controls`):
 
-## Files touched
+```ts
+{
+  selector: '[data-tour="table-stats"]',
+  title: 'Active Tables',
+  body: 'All your currently running tables and tournaments will appear here. You can track individual progress and update results for each one.',
+  interactive: true,
+  route: '/session',
+  compact: true,
+  placement: 'below', // tooltip below → covers action buttons
+},
+{
+  selector: '[data-tour="table-actions"]',
+  title: 'Active Tables',
+  body: 'All your currently running tables and tournaments will appear here. You can track individual progress and update results for each one.',
+  interactive: true,
+  route: '/session',
+  compact: true,
+  placement: 'above', // tooltip above → covers stats section
+},
+```
 
-- `src/components/poker/SessionDetailsCard.tsx` (single wrapper restructure)
+Description text reused from the original step per the task requirement ("Keep the current description as is").
+
+### 3. `src/components/poker/TableCard.tsx`
+
+Add two new wrapper `<div data-tour="...">` elements **inside** the existing `<Card>` so the tour can target them on the first active table on the page:
+
+- Wrap the **top stats block** (the title/meta block at lines 175–197 plus the start/duration row at 199–229, the multi-day row at 231–251, and the buy-in/blinds block at 253–382) in:
+
+  ```tsx
+  <div data-tour="table-stats"> … </div>
+  ```
+
+- Wrap the **bottom actions block** — the active-table buttons row (lines 384–419) **and** the `HandManagementPanel` wrapper (lines 496–end-of-panel, which contains the Add Hand button) — in:
+
+  ```tsx
+  <div data-tour="table-actions"> … </div>
+  ```
+
+  Only wrap when `table.isActive` is true (the inactive branch shows summary, not action buttons; we keep that branch unchanged but still need a wrapper for `Add Hand`. Simplest: wrap both the active button row and the HandManagementPanel section together; the inactive summary stays inside `table-stats` since it has no action buttons we're highlighting).
+
+  Concretely: keep `table.isActive ? (...) : (...)` ternary intact, and wrap the **active branch's button row + the `HandManagementPanel` block** in `data-tour="table-actions"`. For inactive tables this wrapper is absent, which is fine — the tutorial only fires on a fresh live session with an active table.
+
+`OnboardingTour` queries `document.querySelector(...)` — first match — so multiple tables don't break anything; the spotlight lands on the first table card.
+
+### 4. Flow / navigation
+
+No changes needed. `OnboardingTour` already wires `Previous` / `Next` through index changes and supports adding/removing steps freely, so the two new sub-steps integrate automatically. The existing skip-on-missing logic also handles the case where the page mounts without any active table (rare during this tour, but safe).
+
+## Out of scope
+
+- No copy changes other than the title rename and the step duplication.
+- No styling, no changes to `LiveSessionTables.tsx` or any other component.
+- No behavioral changes to the existing auto placement on other steps (they don't set `placement`, so they keep the current logic).
