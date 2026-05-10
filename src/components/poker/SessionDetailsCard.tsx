@@ -89,6 +89,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
             </p>
           )}
         </CardHeader>
+        <div data-tour="live-session-details">
         <div className="px-6 pb-2">
           <div className="space-y-3">
             {/* Format (dynamic from tables) */}
