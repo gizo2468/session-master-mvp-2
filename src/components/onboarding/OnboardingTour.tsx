@@ -619,6 +619,22 @@ export default function OnboardingTour({
     };
   }, [step, currentStep, setStep, rect]);
 
+  // For the TABLE ACTIONS step, advance the tour when the user taps End Table.
+  // The button's own onClick still opens the End Table dialog.
+  useEffect(() => {
+    if (!isTableActionsStep) return;
+    const btn = document.querySelector('[data-tour="end-table-button"]') as HTMLElement | null;
+    if (!btn) return;
+    const handler = () => {
+      directionRef.current = 1;
+      setStep(currentStep + 1);
+    };
+    btn.addEventListener('click', handler, { once: true });
+    return () => {
+      btn.removeEventListener('click', handler);
+    };
+  }, [isTableActionsStep, currentStep, setStep, rect]);
+
   const handleNext = () => {
     directionRef.current = 1;
     if (isLast) {
