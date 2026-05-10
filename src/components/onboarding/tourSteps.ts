@@ -12,6 +12,8 @@ export interface TourStep {
   prepare?: () => void | Promise<void>;
   /** When true, the tooltip uses tighter padding/gap and a larger gap from the spotlight. */
   compact?: boolean;
+  /** Force tooltip placement relative to the spotlight. Defaults to auto. */
+  placement?: 'auto' | 'above' | 'below';
 }
 
 export type TourPathId = 'start-session' | 'home-guide' | 'dashboard-guide';
