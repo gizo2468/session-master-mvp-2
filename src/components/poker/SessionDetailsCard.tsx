@@ -186,7 +186,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
           )}
           
           {/* Center-aligned summary pills */}
-          <div data-tour="live-session-details" className="flex flex-row flex-wrap items-start justify-center gap-2 mt-1 mb-1">
+          <div className="flex flex-row flex-wrap items-start justify-center gap-2 mt-1 mb-1">
             {/* Total Buy-ins Badge */}
             <Badge
               variant="outline"
