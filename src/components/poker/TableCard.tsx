@@ -172,6 +172,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
           <Pencil className="h-4 w-4 text-gray-600 dark:text-gray-400 dark:text-gray-500" />
         </Button>
 
+        <div data-tour="table-stats">
         <div className="text-center mb-2 pr-8">
           <h3 className="text-xl font-bold">{table.location}</h3>
           <div className="flex items-center justify-center gap-2 text-base text-gray-600 dark:text-gray-400 dark:text-gray-500">
@@ -380,7 +381,10 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
             </div>
           )}
         </div>
+        </div>
+        {/* end data-tour="table-stats" */}
 
+        <div data-tour="table-actions">
         {table.isActive ? (
           <div className="mt-4 flex gap-2 justify-between">
             {isFreezeout ? (
@@ -503,6 +507,8 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
           previewLimit={2}
         />
         </div>
+        </div>
+        {/* end data-tour="table-actions" */}
       </Card>
 
       {/* Blind History Modal */}

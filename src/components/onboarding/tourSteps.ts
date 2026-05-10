@@ -12,6 +12,8 @@ export interface TourStep {
   prepare?: () => void | Promise<void>;
   /** When true, the tooltip uses tighter padding/gap and a larger gap from the spotlight. */
   compact?: boolean;
+  /** Force tooltip placement relative to the spotlight. Defaults to auto. */
+  placement?: 'auto' | 'above' | 'below';
 }
 
 export type TourPathId = 'start-session' | 'home-guide' | 'dashboard-guide';
@@ -111,12 +113,22 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
       compact: true,
     },
     {
-      selector: '[data-tour="live-active-tables"]',
-      title: 'Manage Your Games',
+      selector: '[data-tour="table-stats"]',
+      title: 'Active Tables',
       body: 'All your currently running tables and tournaments will appear here. You can track individual progress and update results for each one.',
       interactive: true,
       route: '/session',
       compact: true,
+      placement: 'below',
+    },
+    {
+      selector: '[data-tour="table-actions"]',
+      title: 'Active Tables',
+      body: 'All your currently running tables and tournaments will appear here. You can track individual progress and update results for each one.',
+      interactive: true,
+      route: '/session',
+      compact: true,
+      placement: 'above',
     },
     {
       selector: '[data-tour="live-controls"]',
