@@ -381,7 +381,10 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
             </div>
           )}
         </div>
+        </div>
+        {/* end data-tour="table-stats" */}
 
+        <div data-tour="table-actions">
         {table.isActive ? (
           <div className="mt-4 flex gap-2 justify-between">
             {isFreezeout ? (
