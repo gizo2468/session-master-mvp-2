@@ -15,6 +15,8 @@ export interface TourStep {
   prepare?: () => void | Promise<void>;
   /** When true, the tooltip uses tighter padding/gap. */
   compact?: boolean;
+  /** Force tooltip placement relative to the spotlight. Defaults to auto. */
+  placement?: 'auto' | 'above' | 'below';
 }
 
 interface OnboardingTourProps {
