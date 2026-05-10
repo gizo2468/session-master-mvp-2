@@ -33,7 +33,7 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
   const inactiveTables = currentSession.tables?.filter(table => !table.isActive) || [];
 
   return (
-    <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6">
+    <div data-tour="live-active-tables" className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6 mb-6">
       {activeTables.length === 0 && inactiveTables.length === 0 ? (
         <div className="text-center py-8 text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-background rounded-md">
           <p className="mb-2">No tables added yet.</p>

@@ -103,6 +103,22 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
       route: '/session',
     },
     {
+      selector: '[data-tour="live-session-details"]',
+      title: 'Session Overview',
+      body: 'View your session timer and key metadata like game format, location, and currency settings in one place.',
+      interactive: true,
+      route: '/session',
+      compact: true,
+    },
+    {
+      selector: '[data-tour="live-active-tables"]',
+      title: 'Manage Your Games',
+      body: 'All your currently running tables and tournaments will appear here. You can track individual progress and update results for each one.',
+      interactive: true,
+      route: '/session',
+      compact: true,
+    },
+    {
       selector: '[data-tour="live-controls"]',
       title: 'Finishing Up',
       body: "When you're done for the day, click here to wrap up. We'll save all your stats and add them to your overall record.",

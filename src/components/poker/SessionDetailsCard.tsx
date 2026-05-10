@@ -79,7 +79,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   const hasMultiDayTables = multiDayTables.length > 0;
 
   return (
-    <Card className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
+    <Card data-tour="live-session-details" className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
       <CardHeader className="pb-2 text-center">
         <CardTitle className="text-lg font-bold text-poker-gold">Session Details</CardTitle>
         {session.location?.trim() && (
