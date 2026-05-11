@@ -944,13 +944,15 @@ export default function OnboardingTour({
 
   return (
     <div
-      className={`fixed inset-0 ${dialogLifted ? 'z-[210]' : 'z-[100]'} pointer-events-none`}
+      className={`fixed inset-0 ${stepInsideDialog ? 'z-[60]' : 'z-[100]'} pointer-events-none`}
       role="dialog"
       aria-modal="true"
       aria-label="Onboarding tour"
     >
-      {/* Full-screen click blocker for non-interactive steps */}
-      {!stepIsInteractive && (
+      {/* Full-screen click blocker for non-interactive steps. Skip when the
+          target is inside a Radix Dialog — the dialog's own overlay handles
+          dimming and click-blocking. */}
+      {!stepIsInteractive && !stepInsideDialog && (
         <div
           className="absolute inset-0"
           style={{ pointerEvents: 'auto' }}
@@ -963,8 +965,10 @@ export default function OnboardingTour({
       )}
 
       {/* Dim bands for the interactive spotlight (circle or rect).
-          The hole in the middle has no element so clicks pass through. */}
-      {interactive && bands && (
+          Skipped when the spotlight target lives inside a Radix Dialog so the
+          dialog content stays visible — the dialog's own overlay provides
+          the dimming. */}
+      {interactive && bands && !stepInsideDialog && (
         <>
           {(['top', 'bottom', 'left', 'right'] as const).map((k) => {
             const b = bands[k];
