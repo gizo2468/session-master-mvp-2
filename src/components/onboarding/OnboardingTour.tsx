@@ -1130,8 +1130,18 @@ export default function OnboardingTour({
 
       {/* Looping tap-hand over the End Table confirm button (inside dialog) */}
       {(isEndTableConfirmStep || isEndTableCashoutStep) && rect && (() => {
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
+        let cx = rect.left + rect.width / 2;
+        let cy = rect.top + rect.height / 2;
+        if (isEndTableCashoutStep) {
+          const input = document.querySelector(
+            '[data-tour="end-table-cashout"] input'
+          ) as HTMLElement | null;
+          if (input) {
+            const ir = input.getBoundingClientRect();
+            cx = ir.left + ir.width / 2;
+            cy = ir.top + ir.height / 2;
+          }
+        }
         return (
           <div
             className="absolute pointer-events-none tour-tap-hand"
