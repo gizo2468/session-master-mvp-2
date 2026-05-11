@@ -1,18 +1,33 @@
 ## Goal
 
-Refine the existing End Table modal tour steps: update tooltip copy and add the looping hand-tap animation over the Total Payout input. The transition logic and gating are already wired up from the previous task — only copy + the extra hand animation need changes.
+Make the End Table modal tour flow reliably from Total Payout → yellow End Table → "Finishing Up" on the dashboard, and update the two tooltip strings.
+
+## Root cause of "tutorial stops"
+
+In `OnboardingTour.tsx` the auto-advance effect for the cashout step (lines ~641–662) only advances when `Number.isFinite(v) && v > 0`. The tooltip explicitly invites the user to enter `0` if they were eliminated, but `0` fails the gate, so the tour appears frozen on the payout field.
 
 ## Changes
 
-### 1. `src/components/onboarding/tourSteps.ts`
+### 1. `src/components/onboarding/OnboardingTour.tsx`
 
-Update body text on the two End Table modal steps (selectors already exist, no structural changes):
+In the `isEndTableCashoutStep` effect, relax the condition so any finite non-negative numeric value advances the tour (matches the Stakes-step pattern, which already allows 0 for freerolls):
 
-- `[data-tour="end-table-cashout"]` → "Enter your final payout amount here. If you were eliminated, simply enter 0."
-- `[data-tour="end-table-confirm"]` → "Great! Now tap the yellow End Table button to finalize this game."
+```ts
+if (Number.isFinite(v) && v >= 0) {
+  directionRef.current = 1;
+  setStep(currentStep + 1);
+}
+```
 
-### 2. `src/components/onboarding/OnboardingTour.tsx`
+No other logic changes — the one-shot click listener on `[data-tour="end-table-confirm"]` already advances to the next step (`live-controls` = "Finishing Up") when the user taps the yellow button, and `EndTableDialog`'s own `onConfirm` closes the modal, so the next step renders against the live session controls automatically. The hand-tap overlay already renders for both `isEndTableCashoutStep` and `isEndTableConfirmStep` and anchors to the current `rect`.
 
-Extend the hand-tap overlay so it also renders on the cashout step (currently it only renders for `isEndTableConfirmStep`). Change the conditional render block at line ~1064 to fire for `isEndTableCashoutStep || isEndTableConfirmStep`, anchoring the `Hand` icon to the current `rect`.
+### 2. `src/components/onboarding/tourSteps.ts`
 
-No other logic changes — gating (Next hidden, auto-advance on numeric entry, one-shot click listener on confirm to advance to the "Finishing Up" step) is already in place.
+Update tooltip copy on the two modal steps (no structural changes):
+
+- `[data-tour="end-table-cashout"]` body → `"Enter your payout here (enter 0 if you were eliminated)."`
+- `[data-tour="end-table-confirm"]` body → `"Now tap here to close the table."`
+
+## Out of scope
+
+No changes to `EndTableDialog.tsx`, no new selectors, no changes to the live-controls step.
