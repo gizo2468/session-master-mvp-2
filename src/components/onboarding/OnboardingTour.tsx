@@ -393,7 +393,7 @@ export default function OnboardingTour({
       setDialogLifted(false);
       return;
     }
-    const target = document.querySelector(step.selector) as HTMLElement | null;
+    const target = getVisibleElement(step.selector);
     const dialogContent = target?.closest('[role="dialog"]') as HTMLElement | null;
     if (!target || !dialogContent) {
       setDialogLifted(false);
