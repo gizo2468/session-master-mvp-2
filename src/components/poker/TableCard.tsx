@@ -415,7 +415,13 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onIn
               variant="destructive" 
               className="flex-1"
               data-tour="end-table-button"
-              onClick={() => setShowEndTableDialog(true)}
+              onClick={() => {
+                if (onInitiateEndTable) {
+                  onInitiateEndTable(table.id);
+                  return;
+                }
+                setShowEndTableDialog(true);
+              }}
             >
               <Icon name="CircleStop" className="mr-1 h-4 w-4" /> End Table
             </Button>
@@ -550,6 +556,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onIn
         sessionCurrency={currency}
       />
 
+      {!onInitiateEndTable && (
       <Dialog open={showEndTableDialog} onOpenChange={setShowEndTableDialog}>
         <DialogContent>
           <DialogHeader>
@@ -787,6 +794,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onIn
           </div>
         </DialogContent>
       </Dialog>
+      )}
 
       <Dialog open={showRebuyDialog} onOpenChange={setShowRebuyDialog}>
         <DialogContent className={table.format === 'Tournament' ? "max-w-sm" : ""}>
