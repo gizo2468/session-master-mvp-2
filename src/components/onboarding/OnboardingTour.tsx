@@ -204,7 +204,10 @@ export default function OnboardingTour({
     // than 640ms to appear (animation + focus trap). Use a generous retry
     // window so we never auto-skip the End Table popup steps.
     const isModalStep =
+      step?.selector === '[data-tour="end-table-intro"]' ||
       step?.selector === '[data-tour="end-table-cashout"]' ||
+      step?.selector === '[data-tour="end-table-profit"]' ||
+      step?.selector === '[data-tour="end-table-notes"]' ||
       step?.selector === '[data-tour="end-table-confirm"]';
     const maxAttempts = isModalStep ? 60 : 8; // ~4.8s vs ~640ms
 
