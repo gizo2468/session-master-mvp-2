@@ -231,7 +231,7 @@ export default function EndTableDialog({
                 </div>
               )}
               
-              <div>
+              <div data-tour="end-table-notes">
                 <label htmlFor="tableNotes" className="block text-sm font-medium mb-1">
                   Notes (Optional)
                 </label>
