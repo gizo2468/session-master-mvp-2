@@ -1,42 +1,31 @@
-## Goal
-Make the tutorial continue seamlessly after tapping the red **End Table** button: first highlight **Total Payout**, then highlight the yellow **End Table** confirm button, then resume on the final **Finishing Up** step on the dashboard.
-
 ## What’s actually broken
-The tutorial steps for `end-table-cashout` and `end-table-confirm` were added to `src/components/poker/EndTableDialog.tsx`, but the red **End Table** button inside the live table card does **not** open that component.
-
-Instead, the live flow opens a separate inline Radix `Dialog` inside `src/components/poker/TableCard.tsx`.
-That means the tour advances, but its selectors don’t exist in the modal the user is actually seeing, so the tutorial appears to stop or disappear.
+After the user taps the red **End Table** button on the **Active Tables** step, the tutorial advances immediately to the next step **before the modal target exists**. The tour keeps using the **old spotlight rect** for a moment, so its dark interactive overlay stays anchored to the old step and effectively blocks the new modal view, which is why the screen looks frozen under a weird shade.
 
 ## Implementation plan
+1. **Stabilize step transitions in `src/components/onboarding/OnboardingTour.tsx`**
+   - Clear the previous spotlight rect as soon as the step changes.
+   - Do not render the interactive dim bands for a new step until its real target has mounted and been measured.
+   - Keep the tooltip/overlay from blocking the screen during the short gap between clicking the red button and the modal content appearing.
 
-### 1. Put the tutorial anchors on the real modal used by the red button
-Update `src/components/poker/TableCard.tsx` so the inline End Table dialog contains the same tutorial hooks the tour is waiting for:
-- Add `data-tour="end-table-cashout"` around the **Total Payout** field container
-- Add `data-tour="end-table-confirm"` to the yellow confirm button
-- Keep the labels/text in the modal aligned with the requested tutorial wording and field meaning
+2. **Make the End Table modal transition reliable**
+   - Keep the current behavior where clicking the red **End Table** button advances the tutorial.
+   - Wait for `[data-tour="end-table-cashout"]` to exist before showing the spotlight/highlight for the modal step.
+   - Ensure the dialog lift only applies when the modal target actually exists, so the tutorial layers above the right modal state instead of trapping the previous one.
 
-### 2. Keep the tutorial alive across the transition from card to modal
-Refine `src/components/onboarding/OnboardingTour.tsx` so the step change from **Active Tables** → **Total Payout** survives the modal opening timing:
-- Wait for the real dialog target to mount before skipping or hiding the step
-- Preserve the current behavior where clicking the red button advances the tour
-- Ensure the spotlight, tooltip, and tap-hand render above the modal content during these two dialog steps
+3. **Preserve the intended modal tutorial flow**
+   - Step 1 in the modal highlights **Total Payout** with the hand-tap animation and copy: **“Enter your payout (or 0 if eliminated).”**
+   - Once a valid number is entered, move to Step 2 and highlight the yellow **End Table** button with the hand-tap animation and copy: **“Tap here to close the table.”**
+   - Clicking the yellow button closes the modal and advances the tutorial to **Finishing Up** on the main session screen.
 
-### 3. Enforce the two-step modal sequence exactly as requested
-In `src/components/onboarding/OnboardingTour.tsx`:
-- Step 1: highlight **Total Payout** with the hand-tap animation and tutorial copy
-- After any valid numeric value is entered, auto-advance to Step 2
-- Step 2: move the highlight + hand-tap animation to the yellow **End Table** button
-- Hide the normal Next button for these guided steps so the user follows the intended flow
-
-### 4. Resume on the dashboard’s final tutorial step after confirm
-Keep the confirm action behavior synchronized so that when the yellow button is tapped:
-- the modal closes
-- the table is ended normally
-- the tutorial advances immediately to **Finishing Up** on the main live session screen
+4. **Validate the broken path specifically**
+   - Re-test the exact sequence: **Active Tables → red End Table → Total Payout → yellow End Table → Finishing Up**.
+   - Confirm there is no lingering dark overlay, no stuck pointer-blocking layer, and no skipped tutorial step.
 
 ## Files to update
-- `src/components/poker/TableCard.tsx`
 - `src/components/onboarding/OnboardingTour.tsx`
+- `src/components/poker/TableCard.tsx` only if a tiny marker/timing adjustment is still needed after the tour fix
 
-## Expected result
-On the live session page, tapping the red **End Table** button during the tutorial will open the real End Table modal and continue the tutorial inside it, with the correct highlight order and final return to the dashboard step.
+## Technical notes
+- The likely primary fix is in `OnboardingTour.tsx`, not in route state or session logic.
+- The bug is a **stale spotlight / missing-target timing issue** during a modal transition.
+- I’ll avoid changing unrelated session behavior and keep this focused on the onboarding flow only.

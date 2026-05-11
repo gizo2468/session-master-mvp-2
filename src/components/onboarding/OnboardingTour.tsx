@@ -159,6 +159,7 @@ export default function OnboardingTour({
   useLayoutEffect(() => {
     setTooltipVisible(false);
     hadRectRef.current = false;
+    setRect(null);
     if (measureTimer.current) window.clearTimeout(measureTimer.current);
 
     let cancelled = false;
@@ -882,7 +883,8 @@ export default function OnboardingTour({
 
   // Interactive steps render dim "bands" around the spotlight (instead of a full SVG mask),
   // so the hole over the highlighted element lets clicks pass through to the underlying UI.
-  const interactive = !!step.interactive && !!rect;
+  const stepIsInteractive = !!step.interactive;
+  const interactive = stepIsInteractive && !!rect;
 
   // Bands for circular spotlight
   const circleBands = interactive && circle
@@ -944,7 +946,7 @@ export default function OnboardingTour({
       aria-label="Onboarding tour"
     >
       {/* Full-screen click blocker for non-interactive steps */}
-      {!interactive && (
+      {!stepIsInteractive && (
         <div
           className="absolute inset-0"
           style={{ pointerEvents: 'auto' }}
@@ -994,7 +996,7 @@ export default function OnboardingTour({
         height={viewport.h}
         style={{ pointerEvents: 'none' }}
       >
-        {!interactive && (
+        {!stepIsInteractive && (
           <>
             <defs>
               <mask id="onboarding-spotlight-mask">
@@ -1125,22 +1127,21 @@ export default function OnboardingTour({
       })()}
 
       {/* Tooltip card */}
-      <div
-        ref={tooltipRef}
-        className={`absolute bg-card border border-primary/30 rounded-xl shadow-2xl ${step.compact ? 'p-3 sm:p-3.5' : 'p-4 sm:p-5'}`}
-        style={{
-          ...tooltipStyle,
-          maxWidth: '90vw',
-          pointerEvents: 'auto',
-          opacity: tooltipVisible ? 1 : 0,
-          zIndex: 10,
-          // Snap position instantly; only fade in on reveal so the tooltip
-          // never visibly slides between updates.
-          transition: 'opacity 200ms ease-out',
-          boxShadow: '0 20px 40px -10px rgba(0,0,0,0.6), 0 0 0 1px hsl(var(--primary) / 0.2)',
-          fontFamily: "'Poppins', system-ui, sans-serif",
-        }}
-      >
+      {(!stepIsInteractive || rect) && (
+        <div
+          ref={tooltipRef}
+          className={`absolute bg-card border border-primary/30 rounded-xl shadow-2xl ${step.compact ? 'p-3 sm:p-3.5' : 'p-4 sm:p-5'}`}
+          style={{
+            ...tooltipStyle,
+            maxWidth: '90vw',
+            pointerEvents: tooltipVisible ? 'auto' : 'none',
+            opacity: tooltipVisible ? 1 : 0,
+            zIndex: 10,
+            transition: 'opacity 200ms ease-out',
+            boxShadow: '0 20px 40px -10px rgba(0,0,0,0.6), 0 0 0 1px hsl(var(--primary) / 0.2)',
+            fontFamily: "'Poppins', system-ui, sans-serif",
+          }}
+        >
         <h3 className={`text-base sm:text-lg font-bold text-primary text-center ${step.compact ? 'mb-1' : 'mb-1.5'}`}>{step.title}</h3>
         <p className={`text-sm sm:text-[0.95rem] text-foreground/80 leading-relaxed text-center ${step.compact ? 'mb-2' : 'mb-4'}`}>
           {(() => {
@@ -1216,7 +1217,8 @@ export default function OnboardingTour({
             ))}
           </div>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
