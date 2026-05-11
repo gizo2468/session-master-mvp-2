@@ -678,6 +678,12 @@ export default function OnboardingTour({
         if (target) {
           advanced = true;
           setStep(currentStep + 1);
+          // Force an immediate measure on the next frame so the spotlight
+          // appears the instant the popup is visible (no perceived "stop").
+          window.requestAnimationFrame(() => {
+            readRect();
+            window.requestAnimationFrame(() => setTooltipVisible(true));
+          });
           return;
         }
         if (tries++ < 80) {
@@ -947,7 +953,7 @@ export default function OnboardingTour({
 
   return (
     <div
-      className={`fixed inset-0 ${stepInsideDialog ? 'z-[60]' : 'z-[100]'} pointer-events-none`}
+      className={`fixed inset-0 ${stepInsideDialog ? 'z-[120]' : 'z-[100]'} pointer-events-none`}
       role="dialog"
       aria-modal="true"
       aria-label="Onboarding tour"
@@ -1124,8 +1130,18 @@ export default function OnboardingTour({
 
       {/* Looping tap-hand over the End Table confirm button (inside dialog) */}
       {(isEndTableConfirmStep || isEndTableCashoutStep) && rect && (() => {
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
+        let cx = rect.left + rect.width / 2;
+        let cy = rect.top + rect.height / 2;
+        if (isEndTableCashoutStep) {
+          const input = document.querySelector(
+            '[data-tour="end-table-cashout"] input'
+          ) as HTMLElement | null;
+          if (input) {
+            const ir = input.getBoundingClientRect();
+            cx = ir.left + ir.width / 2;
+            cy = ir.top + ir.height / 2;
+          }
+        }
         return (
           <div
             className="absolute pointer-events-none tour-tap-hand"
