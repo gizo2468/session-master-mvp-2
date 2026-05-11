@@ -80,7 +80,7 @@ export default function EndTableDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent data-tour="end-table-intro">
         <DialogHeader>
           <DialogTitle>End Table</DialogTitle>
           <DialogDescription>
@@ -195,7 +195,7 @@ export default function EndTableDialog({
               )}
               
               {endReason !== 'day-ended' && (
-                <div className="mb-6">
+                <div className="mb-6" data-tour="end-table-profit">
                   <div className="flex justify-between mb-1">
                     <span className="text-sm">Profit/Loss:</span>
                     <span className={`text-sm font-bold ${
@@ -231,7 +231,7 @@ export default function EndTableDialog({
                 </div>
               )}
               
-              <div>
+              <div data-tour="end-table-notes">
                 <label htmlFor="tableNotes" className="block text-sm font-medium mb-1">
                   Notes (Optional)
                 </label>
