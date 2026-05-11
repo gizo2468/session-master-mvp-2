@@ -133,7 +133,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     {
       selector: '[data-tour="end-table-cashout"]',
       title: 'Enter Your Payout',
-      body: 'Enter your final payout amount here. This value is required to calculate your net profit or loss for this specific table.',
+      body: 'Enter your final payout amount here. If you were eliminated, simply enter 0.',
       interactive: true,
       compact: true,
       route: '/session',
@@ -142,7 +142,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     {
       selector: '[data-tour="end-table-confirm"]',
       title: 'Finalize This Table',
-      body: 'Now, tap End Table to finalize this game and save your data.',
+      body: 'Great! Now tap the yellow End Table button to finalize this game.',
       interactive: true,
       compact: true,
       route: '/session',

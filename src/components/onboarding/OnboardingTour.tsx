@@ -1061,7 +1061,7 @@ export default function OnboardingTour({
       })()}
 
       {/* Looping tap-hand over the End Table confirm button (inside dialog) */}
-      {isEndTableConfirmStep && rect && (() => {
+      {(isEndTableConfirmStep || isEndTableCashoutStep) && rect && (() => {
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
         return (
