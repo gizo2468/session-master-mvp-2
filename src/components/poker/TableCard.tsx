@@ -6,6 +6,15 @@ import { format as dateFormat, differenceInMinutes, isValid } from 'date-fns';
 import Icon from '@/components/ui/Lucide';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useSessionLiveState } from '@/hooks/useSessionLiveState';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import TableTimerDisplay from './TableTimerDisplay';
 import { Badge } from '@/components/ui/badge';
@@ -21,23 +30,33 @@ import { BBStackUpdateService } from '@/services/bbStackUpdateService';
 interface TableCardProps {
   table: TableData;
   currency?: string; // Currency code from session
-  onInitiateEndTable: (tableId: string) => void;
+  onEndTable?: (tableId: string, cashOut: number, notes?: string, bounty?: { bountyCount?: number, bountyAmount?: number, finalPosition?: number }, multiDayInfo?: { nextDayStart?: Date, chipsCarryover?: number, dayEndedWithoutElimination?: boolean }) => void;
+  onInitiateEndTable?: (tableId: string) => void;
   onAddRebuy: (tableId: string, amount: number) => void;
   sessionId: string;
 }
 
-const TableCard: React.FC<TableCardProps> = ({ table, currency, onInitiateEndTable, onAddRebuy, sessionId }) => {
+const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onInitiateEndTable, onAddRebuy, sessionId }) => {
   const { updateTable, deleteTable } = useSessionContext();
   const { liveState } = useSessionLiveState(sessionId);
   const { history: blindHistory, refreshHistory } = useBBStackHistory(table.id);
   const currencySymbol = getCurrencySymbol(table.currency || currency);
+  const [showEndTableDialog, setShowEndTableDialog] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showBlindHistory, setShowBlindHistory] = useState(false);
   const [showBBStackUpdateModal, setShowBBStackUpdateModal] = useState(false);
   const [editingLevel, setEditingLevel] = useState<number | undefined>();
   const [editingBB, setEditingBB] = useState<number | undefined>();
   const [editingStack, setEditingStack] = useState<number | undefined>();
+  const [cashOutAmount, setCashOutAmount] = useState('');
+  const [tableNotes, setTableNotes] = useState(table.notes || '');
   const [showRebuyDialog, setShowRebuyDialog] = useState(false);
+  const [bountyCount, setBountyCount] = useState('');
+  const [bountyAmount, setBountyAmount] = useState('');
+  const [finalPosition, setFinalPosition] = useState('');
+  const [endReason, setEndReason] = useState<'eliminated' | 'day-ended' | null>(null);
+  const [nextDayStart, setNextDayStart] = useState<Date | null>(null);
+  const [chipsCarryover, setChipsCarryover] = useState('');
 
   const initialRebuyAmount = table.format === 'Tournament' 
     ? (table.tournamentBuyIn || table.initialBuyIn || table.buyIn).toString()
@@ -54,8 +73,47 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onInitiateEndTab
   const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
   const rebuyCount = Math.floor(rebuyAmount / (table.initialBuyIn || table.buyIn || 1));
 
+  const isBountyTournament = table.format === 'Tournament' &&
+    table.tournamentTypes?.some(type =>
+      ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
+    );
+
   const isFreezeout = table.format === 'Tournament' && 
     table.tournamentTypes?.some(type => type === 'Freezeout');
+  const handleEndTable = () => {
+    if (!onEndTable) return;
+    const finalCashOut = endReason === 'day-ended' ? 0 : parseFloat(cashOutAmount);
+
+    onEndTable(
+      table.id,
+      finalCashOut,
+      tableNotes,
+      {
+        bountyCount: bountyCount ? parseInt(bountyCount) : undefined,
+        bountyAmount: bountyAmount ? parseFloat(bountyAmount) : undefined,
+        finalPosition: finalPosition ? parseInt(finalPosition) : undefined
+      },
+      endReason === 'day-ended' ? {
+        nextDayStart: nextDayStart || undefined,
+        chipsCarryover: chipsCarryover ? parseInt(chipsCarryover) : undefined,
+        dayEndedWithoutElimination: true
+      } : undefined
+    );
+    setShowEndTableDialog(false);
+    resetEndTableForm();
+  };
+
+  const resetEndTableForm = () => {
+    setCashOutAmount('');
+    setTableNotes(table.notes || '');
+    setBountyCount('');
+    setBountyAmount('');
+    setFinalPosition('');
+    setEndReason(null);
+    setNextDayStart(null);
+    setChipsCarryover('');
+  };
+
 
   const handleEditTable = (updatedTable: TableData) => {
     updateTable(sessionId, updatedTable);
