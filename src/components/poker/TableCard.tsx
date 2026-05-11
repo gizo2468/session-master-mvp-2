@@ -6,13 +6,13 @@ import { format as dateFormat, differenceInMinutes, isValid } from 'date-fns';
 import Icon from '@/components/ui/Lucide';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useSessionLiveState } from '@/hooks/useSessionLiveState';
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle 
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -30,12 +30,13 @@ import { BBStackUpdateService } from '@/services/bbStackUpdateService';
 interface TableCardProps {
   table: TableData;
   currency?: string; // Currency code from session
-  onEndTable: (tableId: string, cashOut: number, notes?: string, bounty?: { bountyCount?: number, bountyAmount?: number, finalPosition?: number }, multiDayInfo?: { nextDayStart?: Date, chipsCarryover?: number, dayEndedWithoutElimination?: boolean }) => void;
+  onEndTable?: (tableId: string, cashOut: number, notes?: string, bounty?: { bountyCount?: number, bountyAmount?: number, finalPosition?: number }, multiDayInfo?: { nextDayStart?: Date, chipsCarryover?: number, dayEndedWithoutElimination?: boolean }) => void;
+  onInitiateEndTable?: (tableId: string) => void;
   onAddRebuy: (tableId: string, amount: number) => void;
   sessionId: string;
 }
 
-const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAddRebuy, sessionId }) => {
+const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onInitiateEndTable, onAddRebuy, sessionId }) => {
   const { updateTable, deleteTable } = useSessionContext();
   const { liveState } = useSessionLiveState(sessionId);
   const { history: blindHistory, refreshHistory } = useBBStackHistory(table.id);
@@ -72,49 +73,19 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
   const rebuyAmount = (table.buyIn - (table.initialBuyIn || 0)) > 0 ? table.buyIn - (table.initialBuyIn || 0) : 0;
   const rebuyCount = Math.floor(rebuyAmount / (table.initialBuyIn || table.buyIn || 1));
 
-  const isBountyTournament = table.format === 'Tournament' && 
-    table.tournamentTypes?.some(type => 
+  const isBountyTournament = table.format === 'Tournament' &&
+    table.tournamentTypes?.some(type =>
       ['Bounty', 'Progressive Bounty (PKO)', 'Mystery Bounty'].includes(type)
     );
-    
+
   const isFreezeout = table.format === 'Tournament' && 
     table.tournamentTypes?.some(type => type === 'Freezeout');
-
-  const handleEditTable = (updatedTable: TableData) => {
-    updateTable(sessionId, updatedTable);
-  };
-
-  const handleDeleteTable = (tableId: string) => {
-    if (deleteTable) {
-      deleteTable(sessionId, tableId);
-    }
-  };
-
-  const handleEditLevel = (level: number, currentBB?: number, currentStack?: number) => {
-    setEditingLevel(level);
-    setEditingBB(currentBB);
-    setEditingStack(currentStack);
-    setShowBBStackUpdateModal(true);
-  };
-
-  const handleBBStackUpdateSaved = () => {
-    // Reset editing state
-    setEditingLevel(undefined);
-    setEditingBB(undefined);
-    setEditingStack(undefined);
-    // Refresh the blind history
-    refreshHistory();
-  };
-
   const handleEndTable = () => {
+    if (!onEndTable) return;
     const finalCashOut = endReason === 'day-ended' ? 0 : parseFloat(cashOutAmount);
-    
-    console.log('TableCard handleEndTable - cashOutAmount entered:', cashOutAmount);
-    console.log('TableCard handleEndTable - finalCashOut to be saved:', finalCashOut);
-    console.log('TableCard handleEndTable - bountyAmount entered (separate):', bountyAmount);
-    
+
     onEndTable(
-      table.id, 
+      table.id,
       finalCashOut,
       tableNotes,
       {
@@ -141,6 +112,33 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
     setEndReason(null);
     setNextDayStart(null);
     setChipsCarryover('');
+  };
+
+
+  const handleEditTable = (updatedTable: TableData) => {
+    updateTable(sessionId, updatedTable);
+  };
+
+  const handleDeleteTable = (tableId: string) => {
+    if (deleteTable) {
+      deleteTable(sessionId, tableId);
+    }
+  };
+
+  const handleEditLevel = (level: number, currentBB?: number, currentStack?: number) => {
+    setEditingLevel(level);
+    setEditingBB(currentBB);
+    setEditingStack(currentStack);
+    setShowBBStackUpdateModal(true);
+  };
+
+  const handleBBStackUpdateSaved = () => {
+    // Reset editing state
+    setEditingLevel(undefined);
+    setEditingBB(undefined);
+    setEditingStack(undefined);
+    // Refresh the blind history
+    refreshHistory();
   };
 
   const handleAddRebuy = () => {
@@ -417,7 +415,13 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
               variant="destructive" 
               className="flex-1"
               data-tour="end-table-button"
-              onClick={() => setShowEndTableDialog(true)}
+              onClick={() => {
+                if (onInitiateEndTable) {
+                  onInitiateEndTable(table.id);
+                  return;
+                }
+                setShowEndTableDialog(true);
+              }}
             >
               <Icon name="CircleStop" className="mr-1 h-4 w-4" /> End Table
             </Button>
@@ -552,6 +556,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
         sessionCurrency={currency}
       />
 
+      {!onInitiateEndTable && (
       <Dialog open={showEndTableDialog} onOpenChange={setShowEndTableDialog}>
         <DialogContent>
           <DialogHeader>
@@ -789,6 +794,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onAd
           </div>
         </DialogContent>
       </Dialog>
+      )}
 
       <Dialog open={showRebuyDialog} onOpenChange={setShowRebuyDialog}>
         <DialogContent className={table.format === 'Tournament' ? "max-w-sm" : ""}>

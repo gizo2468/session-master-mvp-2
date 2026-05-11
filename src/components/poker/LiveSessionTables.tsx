@@ -6,27 +6,13 @@ import CompletedTablesDisplay from './CompletedTablesDisplay';
 
 interface LiveSessionTablesProps {
   currentSession: PokerSession;
-  onEndTable: (
-    tableId: string, 
-    cashOut: number, 
-    notes?: string,
-    bounty?: { 
-      bountyCount?: number, 
-      bountyAmount?: number, 
-      finalPosition?: number 
-    },
-    multiDayInfo?: {
-      nextDayStart?: Date,
-      chipsCarryover?: number,
-      dayEndedWithoutElimination?: boolean
-    }
-  ) => void;
+  onInitiateEndTable: (tableId: string) => void;
   onAddTableRebuy: (tableId: string, amount: number) => void;
 }
 
 const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
   currentSession,
-  onEndTable,
+  onInitiateEndTable,
   onAddTableRebuy
 }) => {
   const activeTables = currentSession.tables?.filter(table => table.isActive) || [];
@@ -51,7 +37,7 @@ const LiveSessionTables: React.FC<LiveSessionTablesProps> = ({
                     table={table}
                     currency={table.currency || currentSession.currency}
                     sessionId={currentSession.id}
-                    onEndTable={onEndTable}
+                    onInitiateEndTable={onInitiateEndTable}
                     onAddRebuy={onAddTableRebuy}
                   />
                 ))}
