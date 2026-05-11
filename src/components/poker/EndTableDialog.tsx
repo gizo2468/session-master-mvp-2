@@ -80,7 +80,7 @@ export default function EndTableDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent data-tour="end-table-intro">
         <DialogHeader>
           <DialogTitle>End Table</DialogTitle>
           <DialogDescription>
