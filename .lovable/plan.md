@@ -1,32 +1,42 @@
 ## Goal
+Make the tutorial continue seamlessly after tapping the red **End Table** button: first highlight **Total Payout**, then highlight the yellow **End Table** confirm button, then resume on the final **Finishing Up** step on the dashboard.
 
-Make the tour UI render correctly inside the End Table modal so Step 1 (Total Payout) and Step 2 (yellow End Table button) are visible and interactive, then auto-resume on the dashboard at the "Finishing Up" step after the modal closes.
+## What’s actually broken
+The tutorial steps for `end-table-cashout` and `end-table-confirm` were added to `src/components/poker/EndTableDialog.tsx`, but the red **End Table** button inside the live table card does **not** open that component.
 
-## Root cause
+Instead, the live flow opens a separate inline Radix `Dialog` inside `src/components/poker/TableCard.tsx`.
+That means the tour advances, but its selectors don’t exist in the modal the user is actually seeing, so the tutorial appears to stop or disappear.
 
-The Radix Dialog (`DialogOverlay` + `DialogContent`) is `z-50`. The tour root overlay is `z-[100]`. When `EndTableDialog` opens, the tour's full-screen layer sits ABOVE the dialog, so the dialog (and its `[data-tour="end-table-cashout"]` / `[data-tour="end-table-confirm"]` anchors) is visually covered. The spotlight's existing trick of setting `el.style.zIndex='101'` on the target (and `data-tour-allow` elements) doesn't escape the dialog's `z-50` stacking context, so nothing pops above the dim layer.
+## Implementation plan
 
-Both tooltip copy and the auto-advance gate (`v >= 0`) are already correct from prior edits; only the layering needs fixing.
+### 1. Put the tutorial anchors on the real modal used by the red button
+Update `src/components/poker/TableCard.tsx` so the inline End Table dialog contains the same tutorial hooks the tour is waiting for:
+- Add `data-tour="end-table-cashout"` around the **Total Payout** field container
+- Add `data-tour="end-table-confirm"` to the yellow confirm button
+- Keep the labels/text in the modal aligned with the requested tutorial wording and field meaning
 
-## Changes
+### 2. Keep the tutorial alive across the transition from card to modal
+Refine `src/components/onboarding/OnboardingTour.tsx` so the step change from **Active Tables** → **Total Payout** survives the modal opening timing:
+- Wait for the real dialog target to mount before skipping or hiding the step
+- Preserve the current behavior where clicking the red button advances the tour
+- Ensure the spotlight, tooltip, and tap-hand render above the modal content during these two dialog steps
 
-### `src/components/onboarding/OnboardingTour.tsx`
+### 3. Enforce the two-step modal sequence exactly as requested
+In `src/components/onboarding/OnboardingTour.tsx`:
+- Step 1: highlight **Total Payout** with the hand-tap animation and tutorial copy
+- After any valid numeric value is entered, auto-advance to Step 2
+- Step 2: move the highlight + hand-tap animation to the yellow **End Table** button
+- Hide the normal Next button for these guided steps so the user follows the intended flow
 
-Add an effect that runs whenever the active step changes. When the target element for the current step lives inside a Radix Dialog portal (walk up from the resolved target to the closest `[role="dialog"]` node, then to that node's portal wrapper — typically the parent of the overlay + content), temporarily promote the dialog above the tour:
+### 4. Resume on the dashboard’s final tutorial step after confirm
+Keep the confirm action behavior synchronized so that when the yellow button is tapped:
+- the modal closes
+- the table is ended normally
+- the tutorial advances immediately to **Finishing Up** on the main live session screen
 
-- Find the portal container (the closest ancestor that is either the `[role="dialog"]` element itself or its direct parent if it contains the matching `[data-radix-portal]` / overlay sibling).
-- Save its current `position`, `zIndex`.
-- Set `position: relative` (if static) and `zIndex: 200` so the entire dialog subtree renders above the tour root (`z-[100]`).
-- Also set `zIndex: 200` on the sibling `DialogOverlay` element so its dim layer doesn't sit behind the tour bands.
+## Files to update
+- `src/components/poker/TableCard.tsx`
+- `src/components/onboarding/OnboardingTour.tsx`
 
-In the same effect, raise the tour root container's z-index to `z-[210]` (via a state flag passed to the root `<div>`'s className) so the spotlight bands, hand-tap animation, and tooltip render above the elevated dialog. Restore everything on cleanup / step change.
-
-No changes to the bands/tooltip computation — they already anchor to `rect`, which `readRect()` derives from `getBoundingClientRect()` on the live target inside the dialog, so the spotlight will correctly hug the Total Payout input (Step 1) and the yellow End Table button (Step 2).
-
-The hand-tap animation already renders for both `isEndTableCashoutStep` and `isEndTableConfirmStep` (prior edit), and the one-shot click listener on `[data-tour="end-table-confirm"]` already advances to the next step (`live-controls` = "Finishing Up") while `EndTableDialog`'s own `onConfirm` closes the modal — so once the layering is fixed, the full flow works end-to-end.
-
-## Out of scope
-
-- No changes to `EndTableDialog.tsx`, `tourSteps.ts`, or the `useOnboardingTour` hook.
-- No new selectors. No copy changes (already shipped).
-- No change to the cashout `v >= 0` auto-advance gate (already shipped).
+## Expected result
+On the live session page, tapping the red **End Table** button during the tutorial will open the real End Table modal and continue the tutorial inside it, with the correct highlight order and final return to the dashboard step.
