@@ -938,7 +938,7 @@ export default function OnboardingTour({
 
   return (
     <div
-      className="fixed inset-0 z-[100] pointer-events-none"
+      className={`fixed inset-0 ${dialogLifted ? 'z-[210]' : 'z-[100]'} pointer-events-none`}
       role="dialog"
       aria-modal="true"
       aria-label="Onboarding tour"
