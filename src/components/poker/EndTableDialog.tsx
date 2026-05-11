@@ -117,7 +117,7 @@ export default function EndTableDialog({
             <div className="space-y-4">
               <div data-tour="end-table-cashout">
                 <label htmlFor="tableCashout" className="block text-sm font-medium mb-1">
-                  Cash Out Amount
+                  Total Payout
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -134,6 +134,7 @@ export default function EndTableDialog({
                     onChange={(e) => onCashOutAmountChange(e.target.value)}
                   />
                 </div>
+                <p className="text-xs text-gray-500 dark:text-muted-foreground mt-1">Enter the total amount you received (including all earnings)</p>
               </div>
 
               {table && table.format === 'Tournament' && endReason !== 'day-ended' && (
