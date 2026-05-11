@@ -195,7 +195,7 @@ export default function EndTableDialog({
               )}
               
               {endReason !== 'day-ended' && (
-                <div className="mb-6">
+                <div className="mb-6" data-tour="end-table-profit">
                   <div className="flex justify-between mb-1">
                     <span className="text-sm">Profit/Loss:</span>
                     <span className={`text-sm font-bold ${
