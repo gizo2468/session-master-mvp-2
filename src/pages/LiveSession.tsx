@@ -171,7 +171,7 @@ export default function LiveSession() {
           
           <LiveSessionTables
             currentSession={currentSession}
-            onEndTable={sessionActions.handleEndTable}
+            onInitiateEndTable={endTableActions.handleInitiateEndTable}
             onAddTableRebuy={sessionActions.handleAddTableRebuy}
           />
         </div>
