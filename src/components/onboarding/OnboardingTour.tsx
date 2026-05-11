@@ -84,6 +84,14 @@ export default function OnboardingTour({
   const frozenRef = useRef(false);
 
   const step = steps[currentStep];
+  const getVisibleElement = useCallback((selector: string) => {
+    const matches = Array.from(document.querySelectorAll(selector)) as HTMLElement[];
+    return matches.find((el) => {
+      const style = window.getComputedStyle(el);
+      const bounds = el.getBoundingClientRect();
+      return style.display !== 'none' && style.visibility !== 'hidden' && bounds.width > 0 && bounds.height > 0;
+    }) ?? matches[0] ?? null;
+  }, []);
   const isLast = currentStep === steps.length - 1;
   const isFirst = currentStep === 0;
   const isStartSessionStep = step?.selector === '[data-tour="start-session"]';
@@ -133,7 +141,7 @@ export default function OnboardingTour({
   const readRect = useCallback(() => {
     if (!step) return;
     if (frozenRef.current) return;
-    const el = document.querySelector(step.selector) as HTMLElement | null;
+    const el = getVisibleElement(step.selector);
     if (!el) {
       setRect((prev) => (prev === null ? prev : null));
       return;
@@ -151,7 +159,7 @@ export default function OnboardingTour({
       }
       return r;
     });
-  }, [step]);
+  }, [getVisibleElement, step]);
 
   // Step-change effect: run prepare hook, then poll for the element until found
   // (or auto-skip after retries). NO smooth scrollIntoView — that causes the
@@ -194,7 +202,7 @@ export default function OnboardingTour({
 
     const focusAndMeasure = async () => {
       if (cancelled || !step) return;
-      const el = document.querySelector(step.selector) as HTMLElement | null;
+      const el = getVisibleElement(step.selector);
       if (!el) {
         // Short retry window for elements that mount after a prepare() hook.
         if (attempts < 8) {
@@ -243,7 +251,7 @@ export default function OnboardingTour({
       cancelled = true;
       if (measureTimer.current) window.clearTimeout(measureTimer.current);
     };
-  }, [currentStep, step, readRect, setStep, isLast]);
+  }, [currentStep, step, readRect, setStep, isLast, getVisibleElement]);
 
   // Track when we have a rect (to enable position transitions only after first paint).
   useEffect(() => {
