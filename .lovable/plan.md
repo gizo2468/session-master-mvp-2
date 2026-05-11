@@ -1,44 +1,27 @@
 ## Goal
+Make the tutorial continue reliably after tapping **End Table**, and add a dedicated highlighted step on **Total Payout** with the existing hand animation.
 
-Now that the End Table modal opens correctly during the tour, add a proper "End Table" tutorial stage — like a sibling to the Active Tables stage — with an intro step plus highlighted fields for Total Payout, Profit/Loss, Notes, and the End Table confirm button.
+## Plan
+1. **Fix the modal handoff in `OnboardingTour.tsx`**
+   - Change the End Table transition so the tutorial advances only after the modal target for the next visible step is actually mounted and measurable.
+   - Make the End Table modal steps use the same stable handoff path as other auto-advance steps so the tour cannot appear to stop behind the dialog overlay.
+   - Expand the hand animation logic so the tap-hand explicitly appears on the **Total Payout** step, not just the generic cashout/confirm logic.
 
-## Changes
+2. **Adjust the End Table step order in `tourSteps.ts` for mobile reliability**
+   - Move the first in-modal step to the **Total Payout** field so the tutorial lands on a concrete, visible input immediately after the button tap.
+   - Keep the rest of the End Table flow after it: Profit/Loss, Notes, Confirm.
+   - Preserve the overall tutorial flow and keep this as the next stage after **Active Tables**.
 
-### 1. `src/components/poker/EndTableDialog.tsx`
-Add two new `data-tour` anchors so the tour has stable targets inside the modal:
-- `data-tour="end-table-intro"` on the `DialogContent` wrapper (intro step highlights the whole modal).
-- `data-tour="end-table-profit"` on the Profit/Loss block (lines 198–231).
-- `data-tour="end-table-notes"` on the Notes (Optional) block (lines 234–247).
+3. **Add a dedicated Total Payout tour anchor if needed in `EndTableDialog.tsx`**
+   - If the current `end-table-cashout` wrapper is too broad for a clean spotlight on mobile, split out a more precise target around the input/label block while keeping existing functionality unchanged.
+   - Ensure the selector stays stable inside the shared End Table dialog rendered on `LiveSession`.
 
-(`end-table-cashout` and `end-table-confirm` already exist.)
+## Expected result
+- Tapping the red **End Table** button keeps the tutorial running inside the popup.
+- The next highlighted stage appears on **Total Payout**.
+- The hand animation visibly points to that Total Payout step.
+- The rest of the End Table tutorial continues instead of stopping on a black fade.
 
-### 2. `src/components/onboarding/tourSteps.ts`
-Replace the current two End Table steps with a 5-step End Table stage inserted right after the `table-actions` step, before `live-controls`:
-
-1. **End Table** — selector `[data-tour="end-table-intro"]`, title "End Table", body "This is where you finalize a table. Fill in your payout and any details before closing it."
-2. **Enter Your Payout** — selector `[data-tour="end-table-cashout"]`, placement `below`, body "Enter the total amount you cashed out (or 0 if you were eliminated)."
-3. **Profit / Loss** — selector `[data-tour="end-table-profit"]`, placement `below`, body "We instantly calculate your result against your buy-in so you can see how the table went."
-4. **Notes (Optional)** — selector `[data-tour="end-table-notes"]`, placement `above`, body "Add quick notes about the table — table dynamics, key hands, opponents, anything worth remembering."
-5. **Finalize This Table** — selector `[data-tour="end-table-confirm"]`, placement `above`, body "Tap End Table to save everything and close this table."
-
-All steps: `interactive: true`, `route: '/session'`, `compact: true` (except the intro which can be non-compact so the title is prominent).
-
-### 3. `src/components/onboarding/OnboardingTour.tsx`
-- Add the new selectors (`end-table-intro`, `end-table-profit`, `end-table-notes`) to the existing modal-aware retry list so they get the long retry window like the other modal-step selectors.
-- For the intro and notes/profit steps, no special advancement handler is needed — they advance via the normal Next click since the modal is now correctly layered.
-
-## Out of scope
-
-- No business logic changes to EndTableDialog (payout calc, validation, submit).
-- No styling changes beyond adding `data-tour` anchors.
-- No changes to other tour stages.
-
-## Validation
-
-1. Start a live session with a table, run the tour from Active Tables.
-2. Tap End Table → modal opens, intro step highlights the whole modal.
-3. Next → Total Payout highlighted.
-4. Next → Profit/Loss highlighted.
-5. Next → Notes highlighted.
-6. Next → End Table confirm button highlighted.
-7. Confirming closes the modal and the tour continues to `live-controls`.
+## Technical notes
+- Root cause is the current first modal step targeting the full dialog (`end-table-intro`), which is fragile on the current mobile viewport because tooltip placement can make the tour look invisible even though the dialog opened.
+- I will keep this frontend-only and avoid changing business logic or non-tutorial behavior.

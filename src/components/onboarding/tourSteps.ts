@@ -131,16 +131,9 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
       placement: 'above',
     },
     {
-      selector: '[data-tour="end-table-intro"]',
-      title: 'End Table',
-      body: 'This is where you finalize a table. Fill in your payout and any details before closing it.',
-      interactive: true,
-      route: '/session',
-    },
-    {
       selector: '[data-tour="end-table-cashout"]',
-      title: 'Enter Your Payout',
-      body: 'Enter the total amount you cashed out (or 0 if you were eliminated).',
+      title: 'Total Payout',
+      body: 'Enter the total amount you cashed out (or 0 if you were eliminated). This is the first step to finalize this table.',
       interactive: true,
       compact: true,
       route: '/session',
