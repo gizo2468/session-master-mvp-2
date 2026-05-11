@@ -367,6 +367,55 @@ export default function OnboardingTour({
     };
   }, [currentStep, activePath]);
 
+  // If the current step's target lives inside a Radix Dialog, elevate the dialog
+  // (overlay + content + portal wrapper) above the tour overlay so the modal UI
+  // and its spotlight anchors are visible. Restored on step change / unmount.
+  const [dialogLifted, setDialogLifted] = useState(false);
+  useEffect(() => {
+    if (!step) {
+      setDialogLifted(false);
+      return;
+    }
+    const target = document.querySelector(step.selector) as HTMLElement | null;
+    const dialogContent = target?.closest('[role="dialog"]') as HTMLElement | null;
+    if (!target || !dialogContent) {
+      setDialogLifted(false);
+      return;
+    }
+    // Collect elements to lift: the dialog content, its overlay sibling, and the
+    // portal wrapper (parent). Radix renders overlay + content as siblings inside
+    // a portal div appended to <body>.
+    const portalWrapper = dialogContent.parentElement as HTMLElement | null;
+    const elements: HTMLElement[] = [dialogContent];
+    if (portalWrapper) {
+      elements.push(portalWrapper);
+      Array.from(portalWrapper.children).forEach((child) => {
+        if (child !== dialogContent && child instanceof HTMLElement) {
+          elements.push(child);
+        }
+      });
+    }
+    const prev = elements.map((el) => ({
+      el,
+      position: el.style.position,
+      zIndex: el.style.zIndex,
+    }));
+    elements.forEach((el) => {
+      if (!el.style.position || el.style.position === 'static') {
+        el.style.position = 'relative';
+      }
+      el.style.zIndex = '200';
+    });
+    setDialogLifted(true);
+    return () => {
+      prev.forEach(({ el, position, zIndex }) => {
+        el.style.position = position;
+        el.style.zIndex = zIndex;
+      });
+      setDialogLifted(false);
+    };
+  }, [step, currentStep, activePath, rect]);
+
   // Safety net: on unmount force-clear any leftover lock styles/classes so the
   // app is fully interactive after the tour closes or unmounts mid-transition.
   useEffect(() => {
