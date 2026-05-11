@@ -200,12 +200,20 @@ export default function OnboardingTour({
       });
     };
 
+    // Modal-step selectors mount inside a Radix portal that may take longer
+    // than 640ms to appear (animation + focus trap). Use a generous retry
+    // window so we never auto-skip the End Table popup steps.
+    const isModalStep =
+      step?.selector === '[data-tour="end-table-cashout"]' ||
+      step?.selector === '[data-tour="end-table-confirm"]';
+    const maxAttempts = isModalStep ? 60 : 8; // ~4.8s vs ~640ms
+
     const focusAndMeasure = async () => {
       if (cancelled || !step) return;
       const el = getVisibleElement(step.selector);
       if (!el) {
         // Short retry window for elements that mount after a prepare() hook.
-        if (attempts < 8) {
+        if (attempts < maxAttempts) {
           attempts++;
           measureTimer.current = window.setTimeout(focusAndMeasure, 80);
           return;
