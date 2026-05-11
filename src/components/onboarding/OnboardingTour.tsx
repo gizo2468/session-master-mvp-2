@@ -678,6 +678,12 @@ export default function OnboardingTour({
         if (target) {
           advanced = true;
           setStep(currentStep + 1);
+          // Force an immediate measure on the next frame so the spotlight
+          // appears the instant the popup is visible (no perceived "stop").
+          window.requestAnimationFrame(() => {
+            readRect();
+            window.requestAnimationFrame(() => setTooltipVisible(true));
+          });
           return;
         }
         if (tries++ < 80) {
@@ -947,7 +953,7 @@ export default function OnboardingTour({
 
   return (
     <div
-      className={`fixed inset-0 ${stepInsideDialog ? 'z-[60]' : 'z-[100]'} pointer-events-none`}
+      className={`fixed inset-0 ${stepInsideDialog ? 'z-[120]' : 'z-[100]'} pointer-events-none`}
       role="dialog"
       aria-modal="true"
       aria-label="Onboarding tour"

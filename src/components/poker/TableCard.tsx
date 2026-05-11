@@ -590,7 +590,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onIn
             
             {(!table.isMultiDay || endReason === 'eliminated' || (table.format === 'Cash')) && (
               <div className="space-y-4">
-                <div data-tour="end-table-cashout">
+                <div>
                   <label htmlFor="tableCashout" className="block text-sm font-medium mb-1">
                     Total Payout
                   </label>
@@ -777,7 +777,6 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onIn
                 Cancel
               </Button>
               <Button
-                data-tour="end-table-confirm"
                 onClick={handleEndTable}
                 disabled={
                   (endReason === 'eliminated' || !table.isMultiDay || table.format === 'Cash') 
