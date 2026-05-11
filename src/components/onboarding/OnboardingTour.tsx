@@ -648,7 +648,7 @@ export default function OnboardingTour({
       const raw = (input.value || '').replace(/,/g, '.').trim();
       if (raw === '') return;
       const v = parseFloat(raw);
-      if (Number.isFinite(v) && v > 0) {
+      if (Number.isFinite(v) && v >= 0) {
         directionRef.current = 1;
         setStep(currentStep + 1);
       }
