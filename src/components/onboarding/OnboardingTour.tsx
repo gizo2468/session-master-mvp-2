@@ -200,12 +200,20 @@ export default function OnboardingTour({
       });
     };
 
+    // Modal-step selectors mount inside a Radix portal that may take longer
+    // than 640ms to appear (animation + focus trap). Use a generous retry
+    // window so we never auto-skip the End Table popup steps.
+    const isModalStep =
+      step?.selector === '[data-tour="end-table-cashout"]' ||
+      step?.selector === '[data-tour="end-table-confirm"]';
+    const maxAttempts = isModalStep ? 60 : 8; // ~4.8s vs ~640ms
+
     const focusAndMeasure = async () => {
       if (cancelled || !step) return;
       const el = getVisibleElement(step.selector);
       if (!el) {
         // Short retry window for elements that mount after a prepare() hook.
-        if (attempts < 8) {
+        if (attempts < maxAttempts) {
           attempts++;
           measureTimer.current = window.setTimeout(focusAndMeasure, 80);
           return;
@@ -385,7 +393,7 @@ export default function OnboardingTour({
       setDialogLifted(false);
       return;
     }
-    const target = document.querySelector(step.selector) as HTMLElement | null;
+    const target = getVisibleElement(step.selector);
     const dialogContent = target?.closest('[role="dialog"]') as HTMLElement | null;
     if (!target || !dialogContent) {
       setDialogLifted(false);
@@ -423,7 +431,7 @@ export default function OnboardingTour({
       });
       setDialogLifted(false);
     };
-  }, [step, currentStep, activePath, rect]);
+  }, [step, currentStep, activePath, rect, getVisibleElement]);
 
   // Safety net: on unmount force-clear any leftover lock styles/classes so the
   // app is fully interactive after the tour closes or unmounts mid-transition.
@@ -680,20 +688,41 @@ export default function OnboardingTour({
   }, [step, currentStep, setStep, rect]);
 
   // For the TABLE ACTIONS step, advance the tour when the user taps End Table.
-  // The button's own onClick still opens the End Table dialog.
+  // The button's own onClick opens the shared End Table dialog. We wait for
+  // the dialog's [data-tour="end-table-cashout"] anchor to mount before
+  // advancing, so the next step never lands on an empty DOM and the tour
+  // never gets stuck behind the dark modal overlay.
   useEffect(() => {
     if (!isTableActionsStep) return;
     const btn = document.querySelector('[data-tour="end-table-button"]') as HTMLElement | null;
     if (!btn) return;
+    let pollTimer: number | null = null;
+    let advanced = false;
     const handler = () => {
+      if (advanced) return;
       directionRef.current = 1;
-      setStep(currentStep + 1);
+      let tries = 0;
+      const waitForDialog = () => {
+        if (advanced) return;
+        const target = getVisibleElement('[data-tour="end-table-cashout"]');
+        if (target) {
+          advanced = true;
+          setStep(currentStep + 1);
+          return;
+        }
+        if (tries++ < 80) {
+          // ~6.4s window to cover Radix mount + animation on slow devices.
+          pollTimer = window.setTimeout(waitForDialog, 80);
+        }
+      };
+      waitForDialog();
     };
-    btn.addEventListener('click', handler, { once: true });
+    btn.addEventListener('click', handler);
     return () => {
       btn.removeEventListener('click', handler);
+      if (pollTimer) window.clearTimeout(pollTimer);
     };
-  }, [isTableActionsStep, currentStep, setStep, rect]);
+  }, [isTableActionsStep, currentStep, setStep, rect, getVisibleElement]);
 
   // For the END TABLE CASHOUT step, advance the tour as soon as a numeric value is entered.
   useEffect(() => {

@@ -1,50 +1,62 @@
-## Diagnosis
-**Do I know what the issue is? Yes.**
+## Goal
+Make the **End Table** button reliably open the payout dialog during the onboarding tutorial and let the tutorial continue inside that popup instead of freezing behind a dark overlay.
 
-The big problem is not just z-index. The app currently has **two different End Table modal implementations**:
+## What I found
+The bug is in the **frontend interaction between the onboarding tour and the shared End Table dialog**, not in Supabase or session saving.
 
-- `src/components/poker/TableCard.tsx` opens its **own local inline Dialog**
-- `src/pages/LiveSession.tsx` also mounts a separate shared `src/components/poker/EndTableDialog.tsx`
+The current failure point is:
+1. The tutorial advances from **`table-actions`** as soon as the red **End Table** button is tapped.
+2. The next tutorial step immediately looks for **`[data-tour="end-table-cashout"]`**.
+3. There is a short mount gap where the shared Radix dialog is not fully measurable yet.
+4. During that gap, the tour cannot bind to the popup target, so the dialog-lifting / spotlight logic does not stabilize correctly.
+5. The result is the dark modal shade without the expected payout popup/tutorial continuation.
 
-Both dialog implementations contain the same tutorial markers:
-- `data-tour="end-table-cashout"`
-- `data-tour="end-table-confirm"`
+## Plan
+### 1. Stabilize the transition from button tap to popup step
+Update the onboarding flow so the tutorial does **not** blindly advance on button click alone.
+Instead, it should advance only after the shared End Table dialog has actually mounted and the **Total Payout** field is present.
 
-So the onboarding system is trying to follow a flow that is **split across duplicate modal systems**, which makes the selector-based tutorial fragile and is the likely reason it keeps freezing or showing only a dark shade instead of reliably continuing into the popup.
+### 2. Harden modal target detection inside `OnboardingTour`
+Refactor the modal-step measurement logic to:
+- use the existing **visible-element lookup** consistently
+- wait for the actual popup target instead of skipping too early
+- avoid losing the tooltip / spotlight state during the dialog mount gap
+- stop the end-table steps from auto-falling through when the target is only temporarily unavailable
 
-## What to change
-1. **Use one End Table modal only**
-   - Remove the local End Table dialog flow from `TableCard.tsx`
-   - Route the red **End Table** button through the centralized `useEndTableActions` + `EndTableDialog.tsx` flow used by `LiveSession.tsx`
-   - Keep only one source of truth for modal open state and confirm/cancel behavior
+### 3. Fix dialog layering for tutorial-controlled modal steps
+Ensure the actual Radix dialog portal/content/overlay are lifted consistently once the End Table popup exists, so the popup remains visible and interactive above the live-session screen and the tour overlay.
 
-2. **Keep tutorial markers only on the real shared dialog**
-   - `data-tour="end-table-cashout"` and `data-tour="end-table-confirm"` should exist in exactly one modal implementation
-   - Remove duplicate tutorial targets from `TableCard.tsx` so `querySelector()` can never lock onto the wrong DOM branch
+### 4. Keep the single shared End Table flow
+Preserve the unified live-session path through:
+- `LiveSession.tsx`
+- `useEndTableActions.ts`
+- `EndTableDialog.tsx`
 
-3. **Rewire the Active Tables step to the shared modal flow**
-   - The red **End Table** button inside `TableCard.tsx` should call a passed-in handler like `onInitiateEndTable(table.id)` instead of toggling local dialog state
-   - The tutorial step for `table-actions` should advance into the centralized popup flow
+and make sure the tutorial only follows that shared popup flow.
 
-4. **Harden the transition in `OnboardingTour.tsx`**
-   - Keep the stale-rect fix already identified
-   - Ensure the tour only renders interactive spotlight layers after the shared modal target has mounted
-   - Make the Active Tables → popup transition tolerant to the short render gap
+### 5. Validate the exact broken sequence
+I’ll verify this exact path after the code change:
+- Active Tables tutorial step
+- tap **End Table**
+- popup opens immediately
+- **Total Payout** is highlighted
+- entering a payout advances the tour
+- confirm button is highlighted
+- ending the table closes the popup and continues the tutorial
+- no frozen dark shade remains
 
-5. **Validate the exact sequence end-to-end**
-   - Active Tables step shows the red button highlight
-   - Tapping red **End Table** opens the popup and continues tutorial inside it
-   - Step 1 highlights **Total Payout** with hand-tap
-   - Entering a value advances to Step 2 highlighting the yellow **End Table** button
-   - Tapping yellow **End Table** closes the popup and continues to **Finishing Up**
-   - No stuck dark overlay remains
-
-## Files likely involved
-- `src/components/poker/TableCard.tsx`
-- `src/components/poker/EndTableDialog.tsx`
-- `src/pages/LiveSession.tsx`
-- `src/hooks/useEndTableActions.ts`
+## Files to update
 - `src/components/onboarding/OnboardingTour.tsx`
+- `src/components/onboarding/tourSteps.ts` if step timing/prepare hooks need adjustment
+- `src/components/poker/EndTableDialog.tsx` only if a stable dialog anchor is needed
+- `src/pages/LiveSession.tsx` or `src/hooks/useEndTableActions.ts` only if the tour needs a reliable dialog-open signal
 
-## Why previous fixes didn’t stick
-They were mostly trying to patch **overlay behavior**, but the underlying flow still had **two competing modal implementations with duplicated tutorial anchors**. That means even a correct overlay fix can still fail because the tour may be targeting the wrong popup structure.
+## Technical details
+I expect the main fix to be in `OnboardingTour.tsx`:
+- replace direct `document.querySelector(...)` calls in modal-related effects with the visible-target helper
+- wait for the popup selector before advancing from the End Table button step
+- add a more reliable modal-step readiness check instead of the current short retry/auto-skip behavior
+- keep the interactive overlay logic stable while `rect` is still being established
+- lift the real Radix dialog portal/content when the modal step becomes active
+
+Once approved, I’ll implement and verify it in the preview.
