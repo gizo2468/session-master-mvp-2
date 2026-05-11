@@ -431,7 +431,7 @@ export default function OnboardingTour({
       });
       setDialogLifted(false);
     };
-  }, [step, currentStep, activePath, rect]);
+  }, [step, currentStep, activePath, rect, getVisibleElement]);
 
   // Safety net: on unmount force-clear any leftover lock styles/classes so the
   // app is fully interactive after the tour closes or unmounts mid-transition.
