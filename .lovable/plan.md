@@ -1,62 +1,53 @@
 ## Goal
-Make the **End Table** button reliably open the payout dialog during the onboarding tutorial and let the tutorial continue inside that popup instead of freezing behind a dark overlay.
+Fix the onboarding tutorial so tapping the red **End Table** button opens the actual **End Table** modal and the tutorial continues inside that popup instead of leaving the screen under a black fade.
 
-## What I found
-The bug is in the **frontend interaction between the onboarding tour and the shared End Table dialog**, not in Supabase or session saving.
+## What is actually broken
+The main issue is the **layer order inside `OnboardingTour.tsx`**:
+- the tour tries to “lift” the Radix dialog to `z-index: 200`
+- but when that happens, the **entire tour overlay root** is moved to `z-[210]`
+- that puts the dark tutorial layer back **above** the dialog again
+- result: the modal mounts, but it is visually buried behind the tutorial fade, so the user mostly sees a dark/black overlay instead of the End Table popup
 
-The current failure point is:
-1. The tutorial advances from **`table-actions`** as soon as the red **End Table** button is tapped.
-2. The next tutorial step immediately looks for **`[data-tour="end-table-cashout"]`**.
-3. There is a short mount gap where the shared Radix dialog is not fully measurable yet.
-4. During that gap, the tour cannot bind to the popup target, so the dialog-lifting / spotlight logic does not stabilize correctly.
-5. The result is the dark modal shade without the expected payout popup/tutorial continuation.
+There is also a secondary reliability issue:
+- some modal-step effects still use direct `document.querySelector(...)`
+- that makes the modal step measurement less stable than the newer visible-element lookup during the handoff from button -> dialog -> cashout field
 
 ## Plan
-### 1. Stabilize the transition from button tap to popup step
-Update the onboarding flow so the tutorial does **not** blindly advance on button click alone.
-Instead, it should advance only after the shared End Table dialog has actually mounted and the **Total Payout** field is present.
+### 1. Fix the z-index/layering model for tutorial modal steps
+Update `src/components/onboarding/OnboardingTour.tsx` so the tutorial no longer raises the **entire** overlay above the dialog.
 
-### 2. Harden modal target detection inside `OnboardingTour`
-Refactor the modal-step measurement logic to:
-- use the existing **visible-element lookup** consistently
-- wait for the actual popup target instead of skipping too early
-- avoid losing the tooltip / spotlight state during the dialog mount gap
-- stop the end-table steps from auto-falling through when the target is only temporarily unavailable
+Instead:
+- keep the **dim background / blocker layer** below the lifted Radix dialog
+- keep only the **guide UI** that must remain visible (spotlight stroke, hand cue, tooltip if needed) in a separate layer
+- ensure the lifted End Table dialog portal/content/overlay sits above the page but below only the non-blocking tutorial chrome
 
-### 3. Fix dialog layering for tutorial-controlled modal steps
-Ensure the actual Radix dialog portal/content/overlay are lifted consistently once the End Table popup exists, so the popup remains visible and interactive above the live-session screen and the tour overlay.
+This will let the real End Table modal stay visible and interactive.
 
-### 4. Keep the single shared End Table flow
-Preserve the unified live-session path through:
-- `LiveSession.tsx`
-- `useEndTableActions.ts`
-- `EndTableDialog.tsx`
+### 2. Harden modal target lookup during the End Table steps
+In `src/components/onboarding/OnboardingTour.tsx`:
+- replace remaining direct `document.querySelector(...)` lookups for modal-related steps with the visible-element helper where appropriate
+- make the resize/focus/step handoff logic bind to the actual visible modal target
+- keep the existing wait-for-dialog behavior, but ensure it measures the correct mounted node consistently
 
-and make sure the tutorial only follows that shared popup flow.
+### 3. Add a stable dialog-level anchor if needed
+If the current field/button anchors are still too fragile, add a stable marker on `src/components/poker/EndTableDialog.tsx` for the shared dialog content so the tour can reliably detect “the modal is open” before it measures step targets.
 
-### 5. Validate the exact broken sequence
-I’ll verify this exact path after the code change:
-- Active Tables tutorial step
-- tap **End Table**
-- popup opens immediately
-- **Total Payout** is highlighted
-- entering a payout advances the tour
-- confirm button is highlighted
-- ending the table closes the popup and continues the tutorial
-- no frozen dark shade remains
+### 4. Verify the exact broken flow
+Validate this sequence in the preview:
+1. tutorial reaches **Active Tables**
+2. user taps **End Table**
+3. End Table modal becomes visibly open
+4. **Total Payout** is highlighted inside the popup
+5. entering a value advances the tour
+6. **End Table** confirm button is highlighted
+7. confirming closes the popup and the tutorial continues
+8. no black/frozen fade remains
 
-## Files to update
+## Files likely involved
 - `src/components/onboarding/OnboardingTour.tsx`
-- `src/components/onboarding/tourSteps.ts` if step timing/prepare hooks need adjustment
-- `src/components/poker/EndTableDialog.tsx` only if a stable dialog anchor is needed
-- `src/pages/LiveSession.tsx` or `src/hooks/useEndTableActions.ts` only if the tour needs a reliable dialog-open signal
+- `src/components/poker/EndTableDialog.tsx`
 
-## Technical details
-I expect the main fix to be in `OnboardingTour.tsx`:
-- replace direct `document.querySelector(...)` calls in modal-related effects with the visible-target helper
-- wait for the popup selector before advancing from the End Table button step
-- add a more reliable modal-step readiness check instead of the current short retry/auto-skip behavior
-- keep the interactive overlay logic stable while `rect` is still being established
-- lift the real Radix dialog portal/content when the modal step becomes active
-
-Once approved, I’ll implement and verify it in the preview.
+## Technical notes
+- Radix Dialog does not guarantee automatic stacking above unrelated overlays; explicit portal layering is expected.
+- The current bug is not Supabase or session-save related.
+- This should stay a frontend-only fix focused on tutorial/modal coordination.

@@ -384,53 +384,20 @@ export default function OnboardingTour({
     };
   }, [currentStep, activePath]);
 
-  // If the current step's target lives inside a Radix Dialog, elevate the dialog
-  // (overlay + content + portal wrapper) above the tour overlay so the modal UI
-  // and its spotlight anchors are visible. Restored on step change / unmount.
-  const [dialogLifted, setDialogLifted] = useState(false);
+  // Detect whether the current spotlight target lives inside a Radix Dialog.
+  // When it does, we MUST NOT cover the dialog with our dim bands (the dialog
+  // already has its own overlay). We simply let the tour's transparent root
+  // sit above the dialog so the spotlight stroke and tooltip remain visible,
+  // while the dialog content is fully visible and interactive below them.
+  const [stepInsideDialog, setStepInsideDialog] = useState(false);
   useEffect(() => {
     if (!step) {
-      setDialogLifted(false);
+      setStepInsideDialog(false);
       return;
     }
     const target = getVisibleElement(step.selector);
     const dialogContent = target?.closest('[role="dialog"]') as HTMLElement | null;
-    if (!target || !dialogContent) {
-      setDialogLifted(false);
-      return;
-    }
-    // Collect elements to lift: the dialog content, its overlay sibling, and the
-    // portal wrapper (parent). Radix renders overlay + content as siblings inside
-    // a portal div appended to <body>.
-    const portalWrapper = dialogContent.parentElement as HTMLElement | null;
-    const elements: HTMLElement[] = [dialogContent];
-    if (portalWrapper) {
-      elements.push(portalWrapper);
-      Array.from(portalWrapper.children).forEach((child) => {
-        if (child !== dialogContent && child instanceof HTMLElement) {
-          elements.push(child);
-        }
-      });
-    }
-    const prev = elements.map((el) => ({
-      el,
-      position: el.style.position,
-      zIndex: el.style.zIndex,
-    }));
-    elements.forEach((el) => {
-      if (!el.style.position || el.style.position === 'static') {
-        el.style.position = 'relative';
-      }
-      el.style.zIndex = '200';
-    });
-    setDialogLifted(true);
-    return () => {
-      prev.forEach(({ el, position, zIndex }) => {
-        el.style.position = position;
-        el.style.zIndex = zIndex;
-      });
-      setDialogLifted(false);
-    };
+    setStepInsideDialog(!!dialogContent);
   }, [step, currentStep, activePath, rect, getVisibleElement]);
 
   // Safety net: on unmount force-clear any leftover lock styles/classes so the
@@ -977,13 +944,15 @@ export default function OnboardingTour({
 
   return (
     <div
-      className={`fixed inset-0 ${dialogLifted ? 'z-[210]' : 'z-[100]'} pointer-events-none`}
+      className={`fixed inset-0 ${stepInsideDialog ? 'z-[60]' : 'z-[100]'} pointer-events-none`}
       role="dialog"
       aria-modal="true"
       aria-label="Onboarding tour"
     >
-      {/* Full-screen click blocker for non-interactive steps */}
-      {!stepIsInteractive && (
+      {/* Full-screen click blocker for non-interactive steps. Skip when the
+          target is inside a Radix Dialog — the dialog's own overlay handles
+          dimming and click-blocking. */}
+      {!stepIsInteractive && !stepInsideDialog && (
         <div
           className="absolute inset-0"
           style={{ pointerEvents: 'auto' }}
@@ -996,8 +965,10 @@ export default function OnboardingTour({
       )}
 
       {/* Dim bands for the interactive spotlight (circle or rect).
-          The hole in the middle has no element so clicks pass through. */}
-      {interactive && bands && (
+          Skipped when the spotlight target lives inside a Radix Dialog so the
+          dialog content stays visible — the dialog's own overlay provides
+          the dimming. */}
+      {interactive && bands && !stepInsideDialog && (
         <>
           {(['top', 'bottom', 'left', 'right'] as const).map((k) => {
             const b = bands[k];
