@@ -1,32 +1,24 @@
 ## Goal
-After tapping **End Table** on the Active Tables step, the tutorial must continue inside the End Table popup with a highlighted **Total Payout** stage (gold spotlight + tooltip + tap-hand), then continue through Profit/Loss → Notes → Confirm.
+Make the onboarding tutorial continue inside the End Table dialog and reliably highlight the Total Payout step, instead of stopping after the user taps End Table.
 
-## What's already in place
-- A step exists for `[data-tour="end-table-cashout"]` titled "Total Payout".
-- `EndTableDialog.tsx` wraps the Total Payout block with `data-tour="end-table-cashout"`.
-- `OnboardingTour.tsx` has a click handler that, when the user is on the Active Tables step, waits for `end-table-cashout` to mount and advances the tour.
+## What I’ll change
+1. Update the tutorial handoff logic in `OnboardingTour.tsx` so it reacts to the End Table button the user actually tapped, not just the first matching button on the page.
+2. Make the End Table tutorial flow resilient to alternate dialog entry states:
+   - if the dialog opens directly on Total Payout, continue there
+   - if the dialog opens on an intro/reason-selection screen first, wait for that flow to reveal Total Payout instead of silently stalling
+3. Keep the spotlight/tooltip/tap-hand anchored to the Total Payout input once that field is visible inside the dialog.
+4. Verify the Live Session page still renders the onboarding overlay for the session-route steps without changing unrelated tutorial behavior.
 
-## Why it still appears to stop
-Two concrete problems remaining:
-
-1. **Duplicate `data-tour="end-table-cashout"` anchor.** `TableCard.tsx` (lines 593–613) contains a legacy local End Table dialog with the same `data-tour` attribute. When React mounts/unmounts during the dialog handoff there's a real risk of the tour resolving to the wrong (hidden) anchor on slow renders, which leaves the spotlight invisible.
-2. **Tour overlay z-index vs. Radix Dialog.** When the spotlight target is inside a dialog, the tour root drops to `z-[60]`. Radix `DialogContent` typically renders at `z-50`, but its portal can re-stack above siblings, leaving the spotlight stroke/tooltip hidden underneath the dialog content on some renders.
-
-## Plan
-
-1. **`src/components/poker/TableCard.tsx`** — remove the duplicate `data-tour="end-table-cashout"` attribute (and the duplicate `data-tour="end-table-confirm"` on the legacy local dialog), since the shared `EndTableDialog` from `LiveSession` is the one actually used. Keep the legacy dialog markup intact for safety, just strip the tour anchors so there is exactly one source of truth.
-
-2. **`src/components/onboarding/OnboardingTour.tsx`**
-   - Bump the tour root z-index when `stepInsideDialog` is true so the spotlight stroke, dim bands, tap-hand and tooltip render reliably above Radix `DialogContent`.
-   - On the Active Tables → End Table handoff, when the polling finds the cashout anchor, force an immediate `readRect()` + `setTooltipVisible(true)` on the next frame so the spotlight appears the instant the popup is visible (no perceived "stop").
-   - Ensure the tap-hand animation explicitly renders on the Total Payout step (already wired via `isEndTableCashoutStep`) and is anchored to the input rect, not the wrapper, so it sits visibly inside the field.
-
-3. **`src/components/onboarding/tourSteps.ts`** — minor polish only: keep the End Table step order (Total Payout → Profit/Loss → Notes → Finalize) and verify the Total Payout copy reads naturally as the first in-popup step.
+## Technical details
+- `OnboardingTour.tsx`
+  - Replace the single `document.querySelector('[data-tour="end-table-button"]')` binding with logic that supports multiple End Table buttons.
+  - Tie progression to the clicked button / resulting dialog state instead of assuming the first button is always the correct one.
+  - Expand the dialog-step waiting logic so the tour doesn’t die when the modal first shows a different screen before `data-tour="end-table-cashout"` appears.
+  - Preserve the existing high z-index + dialog-safe spotlight behavior.
+- `EndTableDialog.tsx`
+  - If needed, add a stable tour anchor for the intro state so the controller can detect that the dialog did open even before Total Payout is available.
+- `tourSteps.ts`
+  - Keep the requested ordering centered on Total Payout as the first in-dialog tutorial highlight once that section exists.
 
 ## Expected result
-- Tapping the red **End Table** button on the Active Tables stage opens the End Table popup AND immediately shows the next tutorial stage with a gold spotlight on **Total Payout**, a tooltip explaining the field, and a tap-hand animation pointing at the input.
-- The tutorial then continues through Profit/Loss, Notes and the Finalize button as before.
-- No more "tutorial just stops" behavior when the popup opens.
-
-## Scope notes
-- Frontend/presentation only. No business logic, no DB, no behavior changes to the End Table flow itself.
+After tapping End Table from Active Tables, the tutorial will keep running in the popup and will highlight the Total Payout section as requested instead of appearing to stop.

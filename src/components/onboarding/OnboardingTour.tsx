@@ -657,48 +657,59 @@ export default function OnboardingTour({
     };
   }, [step, currentStep, setStep, rect]);
 
-  // For the TABLE ACTIONS step, advance the tour when the user taps End Table.
-  // The button's own onClick opens the shared End Table dialog. We wait for
-  // the dialog's [data-tour="end-table-cashout"] anchor to mount before
-  // advancing, so the next step never lands on an empty DOM and the tour
-  // never gets stuck behind the dark modal overlay.
+  // For the TABLE ACTIONS step, advance the tour when the End Table popup
+  // actually shows the Total Payout field — regardless of WHICH End Table
+  // button the user tapped (there can be multiple table cards) or whether
+  // the dialog opens directly on Total Payout vs an intro/reason picker
+  // screen first. We watch the DOM continuously and advance the moment
+  // [data-tour="end-table-cashout"] becomes visible anywhere on the page.
   useEffect(() => {
     if (!isTableActionsStep) return;
-    const btn = document.querySelector('[data-tour="end-table-button"]') as HTMLElement | null;
-    if (!btn) return;
-    let pollTimer: number | null = null;
     let advanced = false;
-    const handler = () => {
+    let pollTimer: number | null = null;
+
+    const tryAdvance = () => {
       if (advanced) return;
+      const target = getVisibleElement('[data-tour="end-table-cashout"]');
+      if (!target) return;
+      advanced = true;
       directionRef.current = 1;
-      let tries = 0;
-      const waitForDialog = () => {
-        if (advanced) return;
-        const target = getVisibleElement('[data-tour="end-table-cashout"]');
-        if (target) {
-          advanced = true;
-          setStep(currentStep + 1);
-          // Force an immediate measure on the next frame so the spotlight
-          // appears the instant the popup is visible (no perceived "stop").
-          window.requestAnimationFrame(() => {
-            readRect();
-            window.requestAnimationFrame(() => setTooltipVisible(true));
-          });
-          return;
-        }
-        if (tries++ < 80) {
-          // ~6.4s window to cover Radix mount + animation on slow devices.
-          pollTimer = window.setTimeout(waitForDialog, 80);
-        }
-      };
-      waitForDialog();
+      setStep(currentStep + 1);
+      window.requestAnimationFrame(() => {
+        readRect();
+        window.requestAnimationFrame(() => setTooltipVisible(true));
+      });
     };
-    btn.addEventListener('click', handler);
+
+    // Delegated click listener: catches a tap on ANY End Table button across
+    // every table card (querySelector only matched the first one before).
+    const onDocClick = (e: Event) => {
+      const t = e.target as Element | null;
+      if (!t) return;
+      if (t.closest('[data-tour="end-table-button"]')) {
+        directionRef.current = 1;
+      }
+    };
+    document.addEventListener('click', onDocClick, true);
+
+    // MutationObserver: fires the moment the dialog (or its inner cashout
+    // section) mounts, regardless of which path the user took inside it.
+    const observer = new MutationObserver(() => tryAdvance());
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Safety poll covers Radix portal + animation timing on slow devices.
+    const poll = () => {
+      tryAdvance();
+      if (!advanced) pollTimer = window.setTimeout(poll, 150);
+    };
+    pollTimer = window.setTimeout(poll, 150);
+
     return () => {
-      btn.removeEventListener('click', handler);
+      document.removeEventListener('click', onDocClick, true);
+      observer.disconnect();
       if (pollTimer) window.clearTimeout(pollTimer);
     };
-  }, [isTableActionsStep, currentStep, setStep, rect, getVisibleElement]);
+  }, [isTableActionsStep, currentStep, setStep, getVisibleElement, readRect]);
 
   // For the END TABLE CASHOUT step, advance the tour as soon as a numeric value is entered.
   useEffect(() => {
