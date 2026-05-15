@@ -45,7 +45,16 @@ export const useActiveSessionRecovery = () => {
       }
 
       console.log('✅ Session found and validated, navigating to live session page');
-      
+
+      // Defensive: ensure the onboarding tour cannot resurrect on resume.
+      // The tour is first-flow only — resuming a session must bypass all tour logic.
+      try {
+        localStorage.setItem('onboarding_tour_completed', 'true');
+        localStorage.removeItem('onboarding_tour_step');
+        localStorage.removeItem('onboarding_tour_path');
+        window.dispatchEvent(new CustomEvent('onboarding-tour:step-changed', { detail: -1 }));
+      } catch {}
+
       // Navigate with replace to avoid back button issues
       navigate(`/session/${sessionId}`, { replace: true });
       
