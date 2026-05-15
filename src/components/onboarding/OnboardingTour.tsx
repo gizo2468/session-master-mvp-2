@@ -447,7 +447,23 @@ export default function OnboardingTour({
       readRect();
     });
     ro.observe(el);
-    return () => ro.disconnect();
+    // Re-measure when the surrounding Radix dialog finishes its enter animation.
+    const dialog = el.closest('[role="dialog"]') as HTMLElement | null;
+    const onSettle = () => {
+      if (frozenRef.current) return;
+      readRect();
+    };
+    if (dialog) {
+      dialog.addEventListener('animationend', onSettle);
+      dialog.addEventListener('transitionend', onSettle);
+    }
+    return () => {
+      ro.disconnect();
+      if (dialog) {
+        dialog.removeEventListener('animationend', onSettle);
+        dialog.removeEventListener('transitionend', onSettle);
+      }
+    };
   }, [step, readRect, currentStep]);
 
   // Freeze the tour position while an input/textarea inside the highlighted
