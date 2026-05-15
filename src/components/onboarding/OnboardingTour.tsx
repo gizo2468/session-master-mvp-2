@@ -247,7 +247,18 @@ export default function OnboardingTour({
       window.requestAnimationFrame(() => {
         if (cancelled) return;
         readRect();
-        window.requestAnimationFrame(() => !cancelled && setTooltipVisible(true));
+        window.requestAnimationFrame(() => {
+          if (cancelled) return;
+          setTooltipVisible(true);
+          if (isModalStep) {
+            // Radix dialog enter animation is ~150ms; re-measure after it settles
+            // so the spotlight snaps onto the post-transform rect.
+            measureTimer.current = window.setTimeout(() => {
+              if (cancelled) return;
+              readRect();
+            }, 220);
+          }
+        });
       });
     };
 
