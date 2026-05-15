@@ -90,7 +90,7 @@ export default function EndTableDialog({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="py-4">
+        <div className="py-4" data-tour="end-table-cashout">
           {table && isMultiDayTournament(table) && table.format === 'Tournament' && !endReason && (
             <div className="flex flex-col gap-4 mb-6">
               <Button
@@ -115,7 +115,7 @@ export default function EndTableDialog({
             endReason === 'eliminated' ||
             table.format === 'Cash') && (
             <div className="space-y-4">
-              <div data-tour="end-table-cashout">
+              <div>
                 <label htmlFor="tableCashout" className="block text-sm font-medium mb-1">
                   Total Payout
                 </label>
