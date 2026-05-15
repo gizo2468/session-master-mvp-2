@@ -178,6 +178,10 @@ export default function OnboardingTour({
     // block programmatic scrollTop writes, so the user-level scroll lock stays
     // fully intact while we still snap the page into place.
     const scrollTargetIntoCenter = (el: HTMLElement) => {
+      // Dialog/portal targets are position:fixed and already centered in the viewport.
+      // Scrolling the app root drifts the underlying page and makes the spotlight
+      // rect land off-screen on small viewports. Short-circuit for them.
+      if (el.closest('[role="dialog"]')) return Promise.resolve();
       const appRoot = document.querySelector('[data-app-scroll-root="true"]') as HTMLElement | null;
       const container: HTMLElement | null =
         appRoot ?? (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
