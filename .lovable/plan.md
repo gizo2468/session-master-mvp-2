@@ -1,68 +1,38 @@
-# Resume Live Session — Fix Plan
+## Goal
+Make the onboarding tutorial a one-shot, first-flow-only experience. The moment the user leaves the live session screen (back to home, app close, etc.), the tutorial is permanently marked completed. Resuming a session never re-triggers tour overlays.
 
 ## Root cause
+`useOnboardingTour` persists `onboarding_tour_step` and `onboarding_tour_path` in `localStorage` and only clears them when the user explicitly hits "Done"/dismiss inside the tour (`dismiss()`). Nothing clears them when the user navigates away from `/session/:id`. On Resume, `LiveSession` mounts, reads the persisted `tourPath = 'start-session'` + saved step, computes `isLiveTourStep = true`, and renders `<OnboardingTour />` again.
 
-`session_hands_new` has **two duplicate foreign keys** pointing at `sessions(id)`:
+## Changes (frontend only)
 
-- `fk_session_hands_session_id`
-- `session_hands_new_session_id_fkey`
+### 1. `src/pages/LiveSession.tsx`
+Add a single unmount effect that, if the start-session tour is active (`tourPath === 'start-session'` and not yet completed), calls `dismissOnboardingTour()` when the component unmounts. This covers:
+- navigating to home / any other route
+- iOS swipe-back
+- app close (state already persisted as completed before next mount)
 
-(verified via `pg_constraint`)
-
-PostgREST refuses to embed `session_hands_new(*)` when more than one FK is found and returns error code `PGRST201` ("more than one relationship was found"). Every fetcher in the project that talks to `session_hands_new` already disambiguates the FK with `session_hands_new!fk_session_hands_session_id(...)`.
-
-**The Resume path uses one fetcher that does NOT disambiguate:** `src/hooks/useSessionLoader.ts` (lines 51–58):
-
-```ts
-.from('sessions')
-.select(`
-  *,
-  session_tables(*),
-  session_hands_new(*)        // ← ambiguous embed, 400 error
-`)
-.eq('id', id)
-.maybeSingle();
+```text
+useEffect(() => {
+  return () => {
+    if (tourPath === 'start-session' && showOnboardingTour) {
+      dismissOnboardingTour();
+    }
+  };
+}, [tourPath, showOnboardingTour, dismissOnboardingTour]);
 ```
 
-### Why this triggers on Resume specifically
+### 2. `src/hooks/useActiveSessionRecovery.ts` (defensive)
+Before `navigate(/session/:id)` inside `resumeSession`, proactively mark the tour completed so the resumed screen never flashes a tooltip even if the unmount-cleanup above didn't run (e.g. hard refresh while on home with stale storage). Use the existing dismiss pattern by writing the same `localStorage` flags directly, or import `triggerOnboardingReset`'s sibling — simplest: inline-set `onboarding_tour_completed=true` and remove `onboarding_tour_step` / `onboarding_tour_path`, then dispatch the `onboarding-tour:step-changed` event so subscribers refresh.
 
-When the user taps Resume, `useActiveSessionRecovery.resumeSession` navigates to `/session/:id`. `useSessionLoader` mounts immediately. On the first render the session context's `sessions` array can still be empty (or `activeSession` may point to the *other* of the two active sessions in the DB — there are currently 2 `is_active=true` rows for this user). The context lookup at lines 33–49 misses, so the hook falls through to the DB query above, which returns `PGRST201`, throws "Database error", and shows the red **Error Loading Session** toast (lines 116–122). The session is fine in the DB; the embed is what's broken.
+### 3. No changes to tour logic itself
+We are not changing `OnboardingTour.tsx` or `tourSteps.ts`. The tour still works on the very first run; it just can no longer resurrect itself after the user leaves `/session/:id`.
 
-A second active session also slows context hydration enough that this race almost always loses on Resume.
-
-## Fix
-
-### 1. `src/hooks/useSessionLoader.ts`
-
-Disambiguate the embedded query to match the rest of the codebase:
-
-```ts
-.from('sessions')
-.select(`
-  *,
-  session_tables(*),
-  session_hands_new!fk_session_hands_session_id(*)
-`)
-```
-
-This matches `fetchUserSessions` / `fetchActiveSession` in `src/utils/database/sessionFetcher.ts` and removes the PGRST201 failure.
-
-### 2. (Optional, recommended) Drop the duplicate FK constraint
-
-To prevent this class of bug from biting any future query, run a migration:
-
-```sql
-ALTER TABLE public.session_hands_new
-  DROP CONSTRAINT IF EXISTS session_hands_new_session_id_fkey;
-ALTER TABLE public.session_hands_new
-  DROP CONSTRAINT IF EXISTS session_hands_new_table_id_fkey;
-```
-
-Both are exact duplicates of the `fk_session_hands_*` constraints (same column, same target, same `ON DELETE CASCADE`), so dropping them is safe and keeps PostgREST embeds unambiguous everywhere.
-
-I'll only ship step 2 if you confirm — step 1 alone fixes the Resume bug.
+## Out of scope
+- The earlier End Table tour deadlock (separate bug).
+- The Resume FK fix already shipped in `useSessionLoader.ts`.
 
 ## Verification
-
-1. Reload the home page and tap **Resume** on the Tournament card → navigates to `/session/:id`, timer + tables + buy-ins render, no red toast.
-2. Console should show `✅ Found valid session in context` (or `✅ Session loaded and converted successfully` on a cold context) with no `❌ Database error loading session` line.
+1. Fresh account → start tour → reach Live Session → tap home → return: Resume opens session with no tooltips.
+2. Start tour → reach Live Session → kill app → reopen → Resume: no tooltips.
+3. First-ever live session flow still shows the tour normally up until the user leaves the screen.
