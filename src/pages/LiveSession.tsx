@@ -44,6 +44,16 @@ export default function LiveSession() {
   const isLiveTourStep =
     tourPath === 'start-session' && tourSteps[tourStep]?.route === '/session';
 
+  // Mark onboarding tour as completed when leaving the live session screen.
+  // The tour is one-shot: once the user navigates away, it must never resurrect.
+  useEffect(() => {
+    return () => {
+      if (tourPath === 'start-session' && showOnboardingTour) {
+        dismissOnboardingTour();
+      }
+    };
+  }, [tourPath, showOnboardingTour, dismissOnboardingTour]);
+
   // Scroll to top when component mounts and clear navigation state
   useEffect(() => {
     window.scrollTo(0, 0);
