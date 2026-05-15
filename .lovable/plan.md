@@ -1,24 +1,68 @@
-## Goal
-Make the onboarding tutorial continue inside the End Table dialog and reliably highlight the Total Payout step, instead of stopping after the user taps End Table.
+# Resume Live Session — Fix Plan
 
-## What I’ll change
-1. Update the tutorial handoff logic in `OnboardingTour.tsx` so it reacts to the End Table button the user actually tapped, not just the first matching button on the page.
-2. Make the End Table tutorial flow resilient to alternate dialog entry states:
-   - if the dialog opens directly on Total Payout, continue there
-   - if the dialog opens on an intro/reason-selection screen first, wait for that flow to reveal Total Payout instead of silently stalling
-3. Keep the spotlight/tooltip/tap-hand anchored to the Total Payout input once that field is visible inside the dialog.
-4. Verify the Live Session page still renders the onboarding overlay for the session-route steps without changing unrelated tutorial behavior.
+## Root cause
 
-## Technical details
-- `OnboardingTour.tsx`
-  - Replace the single `document.querySelector('[data-tour="end-table-button"]')` binding with logic that supports multiple End Table buttons.
-  - Tie progression to the clicked button / resulting dialog state instead of assuming the first button is always the correct one.
-  - Expand the dialog-step waiting logic so the tour doesn’t die when the modal first shows a different screen before `data-tour="end-table-cashout"` appears.
-  - Preserve the existing high z-index + dialog-safe spotlight behavior.
-- `EndTableDialog.tsx`
-  - If needed, add a stable tour anchor for the intro state so the controller can detect that the dialog did open even before Total Payout is available.
-- `tourSteps.ts`
-  - Keep the requested ordering centered on Total Payout as the first in-dialog tutorial highlight once that section exists.
+`session_hands_new` has **two duplicate foreign keys** pointing at `sessions(id)`:
 
-## Expected result
-After tapping End Table from Active Tables, the tutorial will keep running in the popup and will highlight the Total Payout section as requested instead of appearing to stop.
+- `fk_session_hands_session_id`
+- `session_hands_new_session_id_fkey`
+
+(verified via `pg_constraint`)
+
+PostgREST refuses to embed `session_hands_new(*)` when more than one FK is found and returns error code `PGRST201` ("more than one relationship was found"). Every fetcher in the project that talks to `session_hands_new` already disambiguates the FK with `session_hands_new!fk_session_hands_session_id(...)`.
+
+**The Resume path uses one fetcher that does NOT disambiguate:** `src/hooks/useSessionLoader.ts` (lines 51–58):
+
+```ts
+.from('sessions')
+.select(`
+  *,
+  session_tables(*),
+  session_hands_new(*)        // ← ambiguous embed, 400 error
+`)
+.eq('id', id)
+.maybeSingle();
+```
+
+### Why this triggers on Resume specifically
+
+When the user taps Resume, `useActiveSessionRecovery.resumeSession` navigates to `/session/:id`. `useSessionLoader` mounts immediately. On the first render the session context's `sessions` array can still be empty (or `activeSession` may point to the *other* of the two active sessions in the DB — there are currently 2 `is_active=true` rows for this user). The context lookup at lines 33–49 misses, so the hook falls through to the DB query above, which returns `PGRST201`, throws "Database error", and shows the red **Error Loading Session** toast (lines 116–122). The session is fine in the DB; the embed is what's broken.
+
+A second active session also slows context hydration enough that this race almost always loses on Resume.
+
+## Fix
+
+### 1. `src/hooks/useSessionLoader.ts`
+
+Disambiguate the embedded query to match the rest of the codebase:
+
+```ts
+.from('sessions')
+.select(`
+  *,
+  session_tables(*),
+  session_hands_new!fk_session_hands_session_id(*)
+`)
+```
+
+This matches `fetchUserSessions` / `fetchActiveSession` in `src/utils/database/sessionFetcher.ts` and removes the PGRST201 failure.
+
+### 2. (Optional, recommended) Drop the duplicate FK constraint
+
+To prevent this class of bug from biting any future query, run a migration:
+
+```sql
+ALTER TABLE public.session_hands_new
+  DROP CONSTRAINT IF EXISTS session_hands_new_session_id_fkey;
+ALTER TABLE public.session_hands_new
+  DROP CONSTRAINT IF EXISTS session_hands_new_table_id_fkey;
+```
+
+Both are exact duplicates of the `fk_session_hands_*` constraints (same column, same target, same `ON DELETE CASCADE`), so dropping them is safe and keeps PostgREST embeds unambiguous everywhere.
+
+I'll only ship step 2 if you confirm — step 1 alone fixes the Resume bug.
+
+## Verification
+
+1. Reload the home page and tap **Resume** on the Tournament card → navigates to `/session/:id`, timer + tables + buy-ins render, no red toast.
+2. Console should show `✅ Found valid session in context` (or `✅ Session loaded and converted successfully` on a cold context) with no `❌ Database error loading session` line.
