@@ -1,38 +1,38 @@
 ## Goal
-Make the onboarding tutorial a one-shot, first-flow-only experience. The moment the user leaves the live session screen (back to home, app close, etc.), the tutorial is permanently marked completed. Resuming a session never re-triggers tour overlays.
+After the user taps the red **End Table** button during the Active Tables tutorial, the End Table modal opens and a tour tooltip immediately highlights the **Total Payout** input with the new copy. The user is blocked from submitting until they enter a value (which also auto-advances the tour).
 
-## Root cause
-`useOnboardingTour` persists `onboarding_tour_step` and `onboarding_tour_path` in `localStorage` and only clears them when the user explicitly hits "Done"/dismiss inside the tour (`dismiss()`). Nothing clears them when the user navigates away from `/session/:id`. On Resume, `LiveSession` mounts, reads the persisted `tourPath = 'start-session'` + saved step, computes `isLiveTourStep = true`, and renders `<OnboardingTour />` again.
+## Current state (already in place)
+The whole pipeline is already wired — no new infrastructure is needed:
 
-## Changes (frontend only)
+- `EndTableDialog.tsx` already exposes `data-tour="end-table-cashout"`, `end-table-profit`, `end-table-notes`, `end-table-confirm`.
+- `tourSteps.ts` already has an `end-table-cashout` step in the `start-session` path (right after `table-actions`).
+- `OnboardingTour.tsx` already:
+  - Auto-advances from the **Active Tables** step the moment the End Table dialog mounts (MutationObserver on `[data-tour="end-table-cashout"]`).
+  - Hides the **Next** button on the cashout step (`hideNextButton` includes `isEndTableCashoutStep`) so the user must interact with the input.
+  - Auto-advances the cashout step the moment a finite numeric value is typed into the Total Payout input.
+  - Shows the looping tap-hand over the input.
+- `EndTableDialog.tsx` already disables the yellow **End Table** submit button while `cashOutAmount` is empty, so the user physically cannot submit before fulfilling the tour requirement.
 
-### 1. `src/pages/LiveSession.tsx`
-Add a single unmount effect that, if the start-session tour is active (`tourPath === 'start-session'` and not yet completed), calls `dismissOnboardingTour()` when the component unmounts. This covers:
-- navigating to home / any other route
-- iOS swipe-back
-- app close (state already persisted as completed before next mount)
+## The only change needed
 
-```text
-useEffect(() => {
-  return () => {
-    if (tourPath === 'start-session' && showOnboardingTour) {
-      dismissOnboardingTour();
-    }
-  };
-}, [tourPath, showOnboardingTour, dismissOnboardingTour]);
-```
+### `src/components/onboarding/tourSteps.ts`
+Update the `end-table-cashout` step copy (currently *"Enter the total amount you cashed out (or 0 if you were eliminated)..."*) to the requested text:
 
-### 2. `src/hooks/useActiveSessionRecovery.ts` (defensive)
-Before `navigate(/session/:id)` inside `resumeSession`, proactively mark the tour completed so the resumed screen never flashes a tooltip even if the unmount-cleanup above didn't run (e.g. hard refresh while on home with stale storage). Use the existing dismiss pattern by writing the same `localStorage` flags directly, or import `triggerOnboardingReset`'s sibling — simplest: inline-set `onboarding_tour_completed=true` and remove `onboarding_tour_step` / `onboarding_tour_path`, then dispatch the `onboarding-tour:step-changed` event so subscribers refresh.
+> **Title:** Total Payout
+> **Body:** "Enter your final cash-out amount here to calculate your net profit or loss for this table."
 
-### 3. No changes to tour logic itself
-We are not changing `OnboardingTour.tsx` or `tourSteps.ts`. The tour still works on the very first run; it just can no longer resurrect itself after the user leaves `/session/:id`.
+No other step properties change (`interactive`, `compact`, `route: '/session'`, `placement: 'below'` stay the same).
+
+## Why no other code changes
+- "Appear automatically as soon as the modal opens" → already handled by the existing MutationObserver-based auto-advance from the Active Tables step.
+- "Block the user from clicking the yellow End Table submit button" → already handled by the dialog's `disabled` prop on the submit button (requires a non-empty `cashOutAmount`). Combined with the cashout step auto-advancing on input, the gating is implicit and automatic.
+- "Advance past this tutorial step (or enter a value)" → entering a value advances the tour; the Next button is intentionally hidden so the user is nudged to type a value, which is also the only way to enable the submit button.
 
 ## Out of scope
-- The earlier End Table tour deadlock (separate bug).
-- The Resume FK fix already shipped in `useSessionLoader.ts`.
+- The downstream `end-table-profit`, `end-table-notes`, and `end-table-confirm` steps. They already work and are not part of this request.
+- Any styling / placement tweaks of the tooltip card.
 
 ## Verification
-1. Fresh account → start tour → reach Live Session → tap home → return: Resume opens session with no tooltips.
-2. Start tour → reach Live Session → kill app → reopen → Resume: no tooltips.
-3. First-ever live session flow still shows the tour normally up until the user leaves the screen.
+1. Run the start-session tour through to **Active Tables** → tap red **End Table** → modal opens → tooltip immediately appears below the **Total Payout** input with the new copy.
+2. Yellow **End Table** submit stays disabled while Total Payout is empty.
+3. Type any numeric value (e.g. `0`, `120`) → tour advances to **Profit / Loss**, submit becomes enabled.

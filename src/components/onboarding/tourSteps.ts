@@ -133,7 +133,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     {
       selector: '[data-tour="end-table-cashout"]',
       title: 'Total Payout',
-      body: 'Enter the total amount you cashed out (or 0 if you were eliminated). This is the first step to finalize this table.',
+      body: 'Enter your final cash-out amount here to calculate your net profit or loss for this table.',
       interactive: true,
       compact: true,
       route: '/session',
