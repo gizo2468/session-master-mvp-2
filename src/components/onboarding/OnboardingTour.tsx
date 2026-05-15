@@ -178,6 +178,10 @@ export default function OnboardingTour({
     // block programmatic scrollTop writes, so the user-level scroll lock stays
     // fully intact while we still snap the page into place.
     const scrollTargetIntoCenter = (el: HTMLElement) => {
+      // Dialog/portal targets are position:fixed and already centered in the viewport.
+      // Scrolling the app root drifts the underlying page and makes the spotlight
+      // rect land off-screen on small viewports. Short-circuit for them.
+      if (el.closest('[role="dialog"]')) return Promise.resolve();
       const appRoot = document.querySelector('[data-app-scroll-root="true"]') as HTMLElement | null;
       const container: HTMLElement | null =
         appRoot ?? (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
@@ -243,7 +247,18 @@ export default function OnboardingTour({
       window.requestAnimationFrame(() => {
         if (cancelled) return;
         readRect();
-        window.requestAnimationFrame(() => !cancelled && setTooltipVisible(true));
+        window.requestAnimationFrame(() => {
+          if (cancelled) return;
+          setTooltipVisible(true);
+          if (isModalStep) {
+            // Radix dialog enter animation is ~150ms; re-measure after it settles
+            // so the spotlight snaps onto the post-transform rect.
+            measureTimer.current = window.setTimeout(() => {
+              if (cancelled) return;
+              readRect();
+            }, 220);
+          }
+        });
       });
     };
 
@@ -432,7 +447,23 @@ export default function OnboardingTour({
       readRect();
     });
     ro.observe(el);
-    return () => ro.disconnect();
+    // Re-measure when the surrounding Radix dialog finishes its enter animation.
+    const dialog = el.closest('[role="dialog"]') as HTMLElement | null;
+    const onSettle = () => {
+      if (frozenRef.current) return;
+      readRect();
+    };
+    if (dialog) {
+      dialog.addEventListener('animationend', onSettle);
+      dialog.addEventListener('transitionend', onSettle);
+    }
+    return () => {
+      ro.disconnect();
+      if (dialog) {
+        dialog.removeEventListener('animationend', onSettle);
+        dialog.removeEventListener('transitionend', onSettle);
+      }
+    };
   }, [step, readRect, currentStep]);
 
   // Freeze the tour position while an input/textarea inside the highlighted
