@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { TourPathId } from '@/components/onboarding/tourSteps';
@@ -40,6 +41,15 @@ const TOOLTIP_GAP = 16;
 const TOOLTIP_MAX_WIDTH = 320;
 const TOOLTIP_MIN_WIDTH = 240;
 const VIEWPORT_MARGIN = 12;
+const END_TABLE_CASHOUT_SELECTOR = '[data-tour="end-table-cashout-input"]';
+const END_TABLE_CONFIRM_SELECTOR = '[data-tour="end-table-confirm"]';
+const MODAL_STEP_SELECTORS = [
+  '[data-tour="end-table-intro"]',
+  END_TABLE_CASHOUT_SELECTOR,
+  '[data-tour="end-table-profit"]',
+  '[data-tour="end-table-notes"]',
+  END_TABLE_CONFIRM_SELECTOR,
+] as const;
 
 export default function OnboardingTour({
   steps,
@@ -92,6 +102,11 @@ export default function OnboardingTour({
       return style.display !== 'none' && style.visibility !== 'hidden' && bounds.width > 0 && bounds.height > 0;
     }) ?? matches[0] ?? null;
   }, []);
+  const resolveTargetElement = useCallback((selector?: string | null) => {
+    if (!selector) return null;
+    return getVisibleElement(selector);
+  }, [getVisibleElement]);
+  const resolveCurrentTarget = useCallback(() => resolveTargetElement(step?.selector), [resolveTargetElement, step]);
   const isLast = currentStep === steps.length - 1;
   const isFirst = currentStep === 0;
   const isStartSessionStep = step?.selector === '[data-tour="start-session"]';
@@ -100,8 +115,9 @@ export default function OnboardingTour({
   const isGameSetupStep = step?.selector === '[data-tour="game-setup"]';
   const isLiveOverviewStep = step?.selector === '[data-tour="live-overview"]';
   const isTableActionsStep = step?.selector === '[data-tour="table-actions"]';
-  const isEndTableCashoutStep = step?.selector === '[data-tour="end-table-cashout"]';
-  const isEndTableConfirmStep = step?.selector === '[data-tour="end-table-confirm"]';
+  const isEndTableCashoutStep = step?.selector === END_TABLE_CASHOUT_SELECTOR;
+  const isEndTableConfirmStep = step?.selector === END_TABLE_CONFIRM_SELECTOR;
+  const isModalStep = !!step && MODAL_STEP_SELECTORS.some((selector) => selector === step.selector);
   const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep;
   const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableCashoutStep || isEndTableConfirmStep;
   const hidePreviousButton = isGameSetupStep || isLiveOverviewStep;
@@ -141,7 +157,7 @@ export default function OnboardingTour({
   const readRect = useCallback(() => {
     if (!step) return;
     if (frozenRef.current) return;
-    const el = getVisibleElement(step.selector);
+    const el = resolveCurrentTarget();
     if (!el) {
       setRect((prev) => (prev === null ? prev : null));
       return;
@@ -159,7 +175,7 @@ export default function OnboardingTour({
       }
       return r;
     });
-  }, [getVisibleElement, step]);
+  }, [resolveCurrentTarget, step]);
 
   // Step-change effect: run prepare hook, then poll for the element until found
   // (or auto-skip after retries). NO smooth scrollIntoView — that causes the
@@ -207,17 +223,11 @@ export default function OnboardingTour({
     // Modal-step selectors mount inside a Radix portal that may take longer
     // than 640ms to appear (animation + focus trap). Use a generous retry
     // window so we never auto-skip the End Table popup steps.
-    const isModalStep =
-      step?.selector === '[data-tour="end-table-intro"]' ||
-      step?.selector === '[data-tour="end-table-cashout"]' ||
-      step?.selector === '[data-tour="end-table-profit"]' ||
-      step?.selector === '[data-tour="end-table-notes"]' ||
-      step?.selector === '[data-tour="end-table-confirm"]';
     const maxAttempts = isModalStep ? 60 : 8; // ~4.8s vs ~640ms
 
     const focusAndMeasure = async () => {
       if (cancelled || !step) return;
-      const el = getVisibleElement(step.selector);
+      const el = resolveCurrentTarget();
       if (!el) {
         // Short retry window for elements that mount after a prepare() hook.
         if (attempts < maxAttempts) {
@@ -277,7 +287,7 @@ export default function OnboardingTour({
       cancelled = true;
       if (measureTimer.current) window.clearTimeout(measureTimer.current);
     };
-  }, [currentStep, step, readRect, setStep, isLast, getVisibleElement]);
+  }, [currentStep, step, readRect, setStep, isLast, resolveCurrentTarget, isModalStep]);
 
   // Track when we have a rect (to enable position transitions only after first paint).
   useEffect(() => {
