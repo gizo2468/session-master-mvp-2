@@ -1187,9 +1187,7 @@ export default function OnboardingTour({
         let cx = rect.left + rect.width / 2;
         let cy = rect.top + rect.height / 2;
         if (isEndTableCashoutStep) {
-          const input = document.querySelector(
-            '[data-tour="end-table-cashout"] input'
-          ) as HTMLElement | null;
+          const input = resolveTargetElement(END_TABLE_CASHOUT_SELECTOR);
           if (input) {
             const ir = input.getBoundingClientRect();
             cx = ir.left + ir.width / 2;
