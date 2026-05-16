@@ -423,10 +423,10 @@ export default function OnboardingTour({
       setStepInsideDialog(false);
       return;
     }
-    const target = getVisibleElement(step.selector);
+    const target = resolveCurrentTarget();
     const dialogContent = target?.closest('[role="dialog"]') as HTMLElement | null;
     setStepInsideDialog(!!dialogContent);
-  }, [step, currentStep, activePath, rect, getVisibleElement]);
+  }, [step, currentStep, activePath, rect, resolveCurrentTarget]);
 
   // Safety net: on unmount force-clear any leftover lock styles/classes so the
   // app is fully interactive after the tour closes or unmounts mid-transition.
@@ -450,7 +450,7 @@ export default function OnboardingTour({
   // so the spotlight re-measures immediately instead of waiting for scroll/resize.
   useEffect(() => {
     if (!step || typeof ResizeObserver === 'undefined') return;
-    const el = document.querySelector(step.selector) as HTMLElement | null;
+    const el = resolveCurrentTarget();
     if (!el) return;
     const ro = new ResizeObserver(() => {
       if (frozenRef.current) return;
@@ -474,7 +474,7 @@ export default function OnboardingTour({
         dialog.removeEventListener('transitionend', onSettle);
       }
     };
-  }, [step, readRect, currentStep]);
+  }, [step, readRect, currentStep, resolveCurrentTarget]);
 
   // Freeze the tour position while an input/textarea inside the highlighted
   // area is focused, OR while the mobile keyboard is detected as open via
@@ -482,7 +482,7 @@ export default function OnboardingTour({
   // opens the keyboard and shrinks innerHeight / auto-scrolls the field.
   useEffect(() => {
     if (!step) return;
-    const el = document.querySelector(step.selector) as HTMLElement | null;
+    const el = resolveCurrentTarget();
     if (!el) return;
 
     const isEditable = (t: EventTarget | null) => {
@@ -662,7 +662,7 @@ export default function OnboardingTour({
       vv?.removeEventListener('resize', onVVResize);
       frozenRef.current = false;
     };
-  }, [step, currentStep, readRect]);
+  }, [step, currentStep, readRect, resolveCurrentTarget]);
 
   // Measure tooltip's actual height so we can place it without overlap.
   useLayoutEffect(() => {
@@ -687,7 +687,7 @@ export default function OnboardingTour({
   // The chip's own onClick still navigates to /new-session, where Step 3 picks up.
   useEffect(() => {
     if (step?.selector !== '[data-tour="start-session"]') return;
-    const el = document.querySelector(step.selector) as HTMLElement | null;
+    const el = resolveCurrentTarget();
     if (!el) return;
     const handler = () => {
       setStep(currentStep + 1);
@@ -696,14 +696,14 @@ export default function OnboardingTour({
     return () => {
       el.removeEventListener('click', handler);
     };
-  }, [step, currentStep, setStep, rect]);
+  }, [step, currentStep, setStep, rect, resolveCurrentTarget]);
 
   // For the TABLE ACTIONS step, advance the tour when the End Table popup
   // actually shows the Total Payout field — regardless of WHICH End Table
   // button the user tapped (there can be multiple table cards) or whether
   // the dialog opens directly on Total Payout vs an intro/reason picker
   // screen first. We watch the DOM continuously and advance the moment
-  // [data-tour="end-table-cashout"] becomes visible anywhere on the page.
+  // Total Payout input becomes visible anywhere on the page.
   useEffect(() => {
     if (!isTableActionsStep) return;
     let advanced = false;
@@ -711,14 +711,16 @@ export default function OnboardingTour({
 
     const tryAdvance = () => {
       if (advanced) return;
-      const target = getVisibleElement('[data-tour="end-table-cashout"]');
+      const target = resolveTargetElement(END_TABLE_CASHOUT_SELECTOR);
       if (!target) return;
       advanced = true;
       directionRef.current = 1;
       setStep(currentStep + 1);
       window.requestAnimationFrame(() => {
         readRect();
-        window.requestAnimationFrame(() => setTooltipVisible(true));
+        window.requestAnimationFrame(() => {
+          if (resolveCurrentTarget()) setTooltipVisible(true);
+        });
       });
     };
 
@@ -750,14 +752,12 @@ export default function OnboardingTour({
       observer.disconnect();
       if (pollTimer) window.clearTimeout(pollTimer);
     };
-  }, [isTableActionsStep, currentStep, setStep, getVisibleElement, readRect]);
+  }, [isTableActionsStep, currentStep, setStep, resolveTargetElement, readRect, resolveCurrentTarget]);
 
   // For the END TABLE CASHOUT step, advance the tour as soon as a numeric value is entered.
   useEffect(() => {
     if (!isEndTableCashoutStep) return;
-    const container = document.querySelector('[data-tour="end-table-cashout"]') as HTMLElement | null;
-    if (!container) return;
-    const input = container.querySelector('input') as HTMLInputElement | null;
+    const input = resolveTargetElement(END_TABLE_CASHOUT_SELECTOR) as HTMLInputElement | null;
     if (!input) return;
     const evaluate = () => {
       const raw = (input.value || '').replace(/,/g, '.').trim();
@@ -774,12 +774,12 @@ export default function OnboardingTour({
       input.removeEventListener('input', evaluate);
       input.removeEventListener('change', evaluate);
     };
-  }, [isEndTableCashoutStep, currentStep, setStep, rect]);
+  }, [isEndTableCashoutStep, currentStep, setStep, rect, resolveTargetElement]);
 
   // For the END TABLE CONFIRM step, advance the tour when the user taps End Table in the dialog.
   useEffect(() => {
     if (!isEndTableConfirmStep) return;
-    const btn = document.querySelector('[data-tour="end-table-confirm"]') as HTMLElement | null;
+    const btn = resolveTargetElement(END_TABLE_CONFIRM_SELECTOR);
     if (!btn) return;
     const handler = () => {
       directionRef.current = 1;
@@ -789,7 +789,7 @@ export default function OnboardingTour({
     return () => {
       btn.removeEventListener('click', handler);
     };
-  }, [isEndTableConfirmStep, currentStep, setStep, rect]);
+  }, [isEndTableConfirmStep, currentStep, setStep, rect, resolveTargetElement]);
 
   const handleNext = () => {
     directionRef.current = 1;
