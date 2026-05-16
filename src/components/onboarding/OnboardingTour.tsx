@@ -390,7 +390,7 @@ export default function OnboardingTour({
       if (!el.style.position || el.style.position === 'static') {
         el.style.position = 'relative';
       }
-      el.style.zIndex = '101';
+      el.style.zIndex = '10000';
       el.style.pointerEvents = 'auto';
     });
     return () => {
