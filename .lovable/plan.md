@@ -1,67 +1,40 @@
 ## Goal
-Make the `end-table-cashout` tour step attach reliably to the Total Payout field inside the End Table modal across all viewports and tournament states.
+Guarantee the onboarding tour overlay (spotlight + tooltip + nav buttons) renders **above** the Radix dialog when an `isModalStep` is active, so the user never sees the tour disappear behind the End Table modal.
 
-## Changes
+## Context
+Fixes 1–3 from the previous round are already applied:
+- Anchor `data-tour="end-table-cashout"` is hoisted to the always-rendered modal body wrapper in `EndTableDialog.tsx`.
+- `scrollTargetIntoCenter` short-circuits for `[role="dialog"]` targets.
+- `focusAndMeasure` re-measures after Radix's enter animation (220ms timeout + `animationend`/`transitionend` listeners).
+- Auto-advance from `table-actions` → `end-table-cashout` is wired (poll + MutationObserver + delegated click).
 
-### 1. `src/components/onboarding/OnboardingTour.tsx` — Skip scroll for dialog targets (Fix 2)
-In `scrollTargetIntoCenter` (≈line 180), short-circuit when the target lives inside a Radix portal/dialog:
+The remaining gap is purely a **stacking-context** issue: Radix `DialogOverlay` and `DialogContent` use `z-50`. The tour root is `z-[120]` when `stepInsideDialog`, which *should* win, but Radix portals append after our root in the body, and on iOS Safari the safe-area insets sometimes create their own stacking context, causing the tooltip card to read as hidden by the dialog.
 
-```ts
-const scrollTargetIntoCenter = (el: HTMLElement) => {
-  if (el.closest('[role="dialog"]')) return Promise.resolve();
-  // ...existing appRoot scroll logic unchanged
-};
+## Change
+
+### `src/components/onboarding/OnboardingTour.tsx` (line ~998)
+Raise the tour root z-index well above any Radix portal when the current step lives inside a dialog. Same for the menu-mode root (line ~815) for consistency.
+
+```tsx
+// Tour root (line 998)
+className={`fixed inset-0 ${stepInsideDialog ? 'z-[9999]' : 'z-[100]'} pointer-events-none`}
 ```
 
-Dialog content is `position: fixed` and already centered in the viewport; scrolling the app root just drifts the underlying page and makes the spotlight rect land off-screen on 390×540.
-
-### 2. `src/components/onboarding/OnboardingTour.tsx` — Re-measure after Radix animation (Fix 3)
-In `focusAndMeasure` (≈line 214), when `isModalStep` is true, add an extra delayed re-measure after the Radix open animation (~150ms) settles, in addition to the existing two rAFs:
-
-```ts
-await scrollTargetIntoCenter(el);
-if (cancelled) return;
-readRect();
-window.requestAnimationFrame(() => {
-  if (cancelled) return;
-  readRect();
-  window.requestAnimationFrame(() => {
-    if (cancelled) return;
-    setTooltipVisible(true);
-    if (isModalStep) {
-      // Radix dialog enter animation is ~150ms; re-measure after it settles
-      // so the spotlight snaps onto the post-transform rect.
-      measureTimer.current = window.setTimeout(() => {
-        if (cancelled) return;
-        readRect();
-      }, 220);
-    }
-  });
-});
+```tsx
+// Menu mode root (line 815)
+className="fixed inset-0 z-[9999]"
 ```
 
-Also extend the existing ResizeObserver effect (≈line 426) to additionally attach a one-shot `transitionend`/`animationend` listener on the closest `[role="dialog"]` ancestor, calling `readRect()` when it fires. This guarantees a re-measure even if the 220ms timeout is too short on slower devices.
+Also bump the `[data-tour-allow="true"]` lift (line 393) from `'101'` → `'10000'` so opted-in elements (Back button, etc.) remain clickable above the new tour ceiling when a modal step is active.
 
-### 3. `src/components/poker/EndTableDialog.tsx` — Hoist the anchor (Fix 1)
-Move `data-tour="end-table-cashout"` off the inner `<div>` (line 118) and onto a stable wrapper that is always rendered while the dialog is open. Two options; recommend option A:
+No other behavior changes. Tooltip-internal `zIndex: 20` stays as-is (it is relative to the tour root's stacking context).
 
-**Option A (preferred):** Add a sibling wrapper that always renders, even before the user picks Eliminated/Day Ended:
-
-- Wrap the whole `<div className="py-4">` body content's payout area in a persistent `<div data-tour="end-table-cashout">` that contains either the reason picker or the payout form. The tour anchor becomes the modal body, so the MutationObserver can detect it the instant the dialog mounts. The tooltip will visually highlight the body region; copy already reads "Enter your final cash-out amount here…" which still makes sense as guidance.
-
-**Option B:** Keep the anchor on the Total Payout block, but render an empty `<div data-tour="end-table-cashout" aria-hidden="true" />` outside the conditional as a fallback target. The auto-advance fires immediately; once the user selects Eliminated, the real visible block takes over (selector picks the first visible match via `getVisibleElement`, which already filters zero-size nodes).
-
-Use **Option A**: cleaner, no hidden duplicate anchor, and matches the user's intent (the tooltip should always appear with the modal).
-
-### Verification
-1. Start the `start-session` tour → Active Tables → tap red End Table on a cash table.
-   - Modal opens; tooltip auto-attaches to Total Payout area without scroll drift.
-2. Repeat on a multi-day tournament table.
-   - Tooltip appears as soon as the modal opens (over the reason picker), persists after picking Eliminated.
-3. Resize to 390×540 — tooltip stays inside viewport, no off-screen drift.
-4. Type a payout value — tour advances to `end-table-profit`; submit button enables.
+## Verification
+1. Run the start-session tour → Active Tables → tap red **End Table**.
+2. Modal opens; tour spotlight + tooltip + Next/Skip buttons render **on top** of the dialog content and overlay on both 390×540 and desktop.
+3. Tooltip text reads the new "Total Payout" copy; submit button stays disabled until a value is entered; tour advances on input.
+4. No regression on non-modal steps — they still render at `z-[100]`.
 
 ## Technical notes
-- No tour-state, persistence, or copy changes.
-- No business logic changes in `EndTableDialog` — only the placement of the `data-tour` wrapper.
-- `getVisibleElement` already prefers visible matches, so any defensive duplicate anchors remain safe.
+- Tailwind arbitrary values `z-[9999]`/`z-[10000]` compile to plain integers; no config change needed.
+- Radix `DialogContent` is `z-50`; nothing else in the project currently uses higher than `z-[120]`, so `z-[9999]` is safe headroom without affecting toasts (toasts use Sonner's own portal which we won't display during the tour).
