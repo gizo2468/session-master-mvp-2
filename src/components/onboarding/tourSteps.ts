@@ -131,7 +131,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
       placement: 'above',
     },
     {
-      selector: '[data-tour="end-table-cashout"]',
+      selector: '[data-tour="end-table-cashout-input"]',
       title: 'Total Payout',
       body: 'Enter your final cash-out amount here to calculate your net profit or loss for this table.',
       interactive: true,
