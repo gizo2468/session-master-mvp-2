@@ -390,7 +390,7 @@ export default function OnboardingTour({
       if (!el.style.position || el.style.position === 'static') {
         el.style.position = 'relative';
       }
-      el.style.zIndex = '101';
+      el.style.zIndex = '10000';
       el.style.pointerEvents = 'auto';
     });
     return () => {
@@ -812,7 +812,7 @@ export default function OnboardingTour({
     };
     return (
       <div
-        className="fixed inset-0 z-[100]"
+        className="fixed inset-0 z-[9999]"
         role="dialog"
         aria-modal="true"
         aria-label="Onboarding tour menu"
@@ -995,7 +995,7 @@ export default function OnboardingTour({
 
   return (
     <div
-      className={`fixed inset-0 ${stepInsideDialog ? 'z-[120]' : 'z-[100]'} pointer-events-none`}
+      className={`fixed inset-0 ${stepInsideDialog ? 'z-[9999]' : 'z-[100]'} pointer-events-none`}
       role="dialog"
       aria-modal="true"
       aria-label="Onboarding tour"
