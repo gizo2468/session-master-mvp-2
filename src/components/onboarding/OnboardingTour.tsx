@@ -400,7 +400,7 @@ export default function OnboardingTour({
       if (!el.style.position || el.style.position === 'static') {
         el.style.position = 'relative';
       }
-      el.style.zIndex = '10000';
+      el.style.zIndex = '100000';
       el.style.pointerEvents = 'auto';
     });
     return () => {
@@ -820,9 +820,9 @@ export default function OnboardingTour({
       boxShadow: '0 20px 40px -10px rgba(0,0,0,0.6), 0 0 0 1px hsl(var(--primary) / 0.2)',
       fontFamily: "'Poppins', system-ui, sans-serif",
     };
-    return (
+    return createPortal(
       <div
-        className="fixed inset-0 z-[9999]"
+        className="fixed inset-0 z-[99999]"
         role="dialog"
         aria-modal="true"
         aria-label="Onboarding tour menu"
@@ -876,7 +876,8 @@ export default function OnboardingTour({
             </Button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
@@ -1003,12 +1004,13 @@ export default function OnboardingTour({
 
   const bands = circleBands || rectBands;
 
-  return (
+  return createPortal(
     <div
-      className={`fixed inset-0 ${stepInsideDialog ? 'z-[9999]' : 'z-[100]'} pointer-events-none`}
+      className={`fixed inset-0 ${stepInsideDialog ? 'z-[99999]' : 'z-[100]'} pointer-events-none`}
       role="dialog"
       aria-modal="true"
       aria-label="Onboarding tour"
+      style={stepInsideDialog ? { zIndex: 99999 } : undefined}
     >
       {/* Full-screen click blocker for non-interactive steps. Skip when the
           target is inside a Radix Dialog — the dialog's own overlay handles
@@ -1206,7 +1208,7 @@ export default function OnboardingTour({
       })()}
 
       {/* Tooltip card */}
-      {(!stepIsInteractive || rect) && (
+      {(!stepIsInteractive || rect) && (!isModalStep || rect) && (
         <div
           ref={tooltipRef}
           className={`absolute bg-card border border-primary/30 rounded-xl shadow-2xl ${step.compact ? 'p-3 sm:p-3.5' : 'p-4 sm:p-5'}`}
@@ -1298,6 +1300,7 @@ export default function OnboardingTour({
         </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
