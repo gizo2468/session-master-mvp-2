@@ -995,7 +995,7 @@ export default function OnboardingTour({
 
   return (
     <div
-      className={`fixed inset-0 ${stepInsideDialog ? 'z-[120]' : 'z-[100]'} pointer-events-none`}
+      className={`fixed inset-0 ${stepInsideDialog ? 'z-[9999]' : 'z-[100]'} pointer-events-none`}
       role="dialog"
       aria-modal="true"
       aria-label="Onboarding tour"
