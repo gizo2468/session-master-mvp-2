@@ -124,6 +124,7 @@ export default function EndTableDialog({
                     <span className="text-gray-500 dark:text-muted-foreground">{currencySymbol}</span>
                   </div>
                   <input
+                    data-tour="end-table-cashout-input"
                     id="tableCashout"
                     type="number"
                     min="0"

@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { TourPathId } from '@/components/onboarding/tourSteps';
@@ -40,6 +41,15 @@ const TOOLTIP_GAP = 16;
 const TOOLTIP_MAX_WIDTH = 320;
 const TOOLTIP_MIN_WIDTH = 240;
 const VIEWPORT_MARGIN = 12;
+const END_TABLE_CASHOUT_SELECTOR = '[data-tour="end-table-cashout-input"]';
+const END_TABLE_CONFIRM_SELECTOR = '[data-tour="end-table-confirm"]';
+const MODAL_STEP_SELECTORS = [
+  '[data-tour="end-table-intro"]',
+  END_TABLE_CASHOUT_SELECTOR,
+  '[data-tour="end-table-profit"]',
+  '[data-tour="end-table-notes"]',
+  END_TABLE_CONFIRM_SELECTOR,
+] as const;
 
 export default function OnboardingTour({
   steps,
@@ -92,6 +102,11 @@ export default function OnboardingTour({
       return style.display !== 'none' && style.visibility !== 'hidden' && bounds.width > 0 && bounds.height > 0;
     }) ?? matches[0] ?? null;
   }, []);
+  const resolveTargetElement = useCallback((selector?: string | null) => {
+    if (!selector) return null;
+    return getVisibleElement(selector);
+  }, [getVisibleElement]);
+  const resolveCurrentTarget = useCallback(() => resolveTargetElement(step?.selector), [resolveTargetElement, step]);
   const isLast = currentStep === steps.length - 1;
   const isFirst = currentStep === 0;
   const isStartSessionStep = step?.selector === '[data-tour="start-session"]';
@@ -100,8 +115,9 @@ export default function OnboardingTour({
   const isGameSetupStep = step?.selector === '[data-tour="game-setup"]';
   const isLiveOverviewStep = step?.selector === '[data-tour="live-overview"]';
   const isTableActionsStep = step?.selector === '[data-tour="table-actions"]';
-  const isEndTableCashoutStep = step?.selector === '[data-tour="end-table-cashout"]';
-  const isEndTableConfirmStep = step?.selector === '[data-tour="end-table-confirm"]';
+  const isEndTableCashoutStep = step?.selector === END_TABLE_CASHOUT_SELECTOR;
+  const isEndTableConfirmStep = step?.selector === END_TABLE_CONFIRM_SELECTOR;
+  const isModalStep = !!step && MODAL_STEP_SELECTORS.some((selector) => selector === step.selector);
   const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep;
   const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableCashoutStep || isEndTableConfirmStep;
   const hidePreviousButton = isGameSetupStep || isLiveOverviewStep;
@@ -141,7 +157,7 @@ export default function OnboardingTour({
   const readRect = useCallback(() => {
     if (!step) return;
     if (frozenRef.current) return;
-    const el = getVisibleElement(step.selector);
+    const el = resolveCurrentTarget();
     if (!el) {
       setRect((prev) => (prev === null ? prev : null));
       return;
@@ -159,7 +175,7 @@ export default function OnboardingTour({
       }
       return r;
     });
-  }, [getVisibleElement, step]);
+  }, [resolveCurrentTarget, step]);
 
   // Step-change effect: run prepare hook, then poll for the element until found
   // (or auto-skip after retries). NO smooth scrollIntoView — that causes the
@@ -207,17 +223,11 @@ export default function OnboardingTour({
     // Modal-step selectors mount inside a Radix portal that may take longer
     // than 640ms to appear (animation + focus trap). Use a generous retry
     // window so we never auto-skip the End Table popup steps.
-    const isModalStep =
-      step?.selector === '[data-tour="end-table-intro"]' ||
-      step?.selector === '[data-tour="end-table-cashout"]' ||
-      step?.selector === '[data-tour="end-table-profit"]' ||
-      step?.selector === '[data-tour="end-table-notes"]' ||
-      step?.selector === '[data-tour="end-table-confirm"]';
     const maxAttempts = isModalStep ? 60 : 8; // ~4.8s vs ~640ms
 
     const focusAndMeasure = async () => {
       if (cancelled || !step) return;
-      const el = getVisibleElement(step.selector);
+      const el = resolveCurrentTarget();
       if (!el) {
         // Short retry window for elements that mount after a prepare() hook.
         if (attempts < maxAttempts) {
@@ -277,7 +287,7 @@ export default function OnboardingTour({
       cancelled = true;
       if (measureTimer.current) window.clearTimeout(measureTimer.current);
     };
-  }, [currentStep, step, readRect, setStep, isLast, getVisibleElement]);
+  }, [currentStep, step, readRect, setStep, isLast, resolveCurrentTarget, isModalStep]);
 
   // Track when we have a rect (to enable position transitions only after first paint).
   useEffect(() => {
@@ -390,7 +400,7 @@ export default function OnboardingTour({
       if (!el.style.position || el.style.position === 'static') {
         el.style.position = 'relative';
       }
-      el.style.zIndex = '10000';
+      el.style.zIndex = '100000';
       el.style.pointerEvents = 'auto';
     });
     return () => {
@@ -413,10 +423,10 @@ export default function OnboardingTour({
       setStepInsideDialog(false);
       return;
     }
-    const target = getVisibleElement(step.selector);
+    const target = resolveCurrentTarget();
     const dialogContent = target?.closest('[role="dialog"]') as HTMLElement | null;
     setStepInsideDialog(!!dialogContent);
-  }, [step, currentStep, activePath, rect, getVisibleElement]);
+  }, [step, currentStep, activePath, rect, resolveCurrentTarget]);
 
   // Safety net: on unmount force-clear any leftover lock styles/classes so the
   // app is fully interactive after the tour closes or unmounts mid-transition.
@@ -440,7 +450,7 @@ export default function OnboardingTour({
   // so the spotlight re-measures immediately instead of waiting for scroll/resize.
   useEffect(() => {
     if (!step || typeof ResizeObserver === 'undefined') return;
-    const el = document.querySelector(step.selector) as HTMLElement | null;
+    const el = resolveCurrentTarget();
     if (!el) return;
     const ro = new ResizeObserver(() => {
       if (frozenRef.current) return;
@@ -464,7 +474,7 @@ export default function OnboardingTour({
         dialog.removeEventListener('transitionend', onSettle);
       }
     };
-  }, [step, readRect, currentStep]);
+  }, [step, readRect, currentStep, resolveCurrentTarget]);
 
   // Freeze the tour position while an input/textarea inside the highlighted
   // area is focused, OR while the mobile keyboard is detected as open via
@@ -472,7 +482,7 @@ export default function OnboardingTour({
   // opens the keyboard and shrinks innerHeight / auto-scrolls the field.
   useEffect(() => {
     if (!step) return;
-    const el = document.querySelector(step.selector) as HTMLElement | null;
+    const el = resolveCurrentTarget();
     if (!el) return;
 
     const isEditable = (t: EventTarget | null) => {
@@ -652,7 +662,7 @@ export default function OnboardingTour({
       vv?.removeEventListener('resize', onVVResize);
       frozenRef.current = false;
     };
-  }, [step, currentStep, readRect]);
+  }, [step, currentStep, readRect, resolveCurrentTarget]);
 
   // Measure tooltip's actual height so we can place it without overlap.
   useLayoutEffect(() => {
@@ -677,7 +687,7 @@ export default function OnboardingTour({
   // The chip's own onClick still navigates to /new-session, where Step 3 picks up.
   useEffect(() => {
     if (step?.selector !== '[data-tour="start-session"]') return;
-    const el = document.querySelector(step.selector) as HTMLElement | null;
+    const el = resolveCurrentTarget();
     if (!el) return;
     const handler = () => {
       setStep(currentStep + 1);
@@ -686,14 +696,14 @@ export default function OnboardingTour({
     return () => {
       el.removeEventListener('click', handler);
     };
-  }, [step, currentStep, setStep, rect]);
+  }, [step, currentStep, setStep, rect, resolveCurrentTarget]);
 
   // For the TABLE ACTIONS step, advance the tour when the End Table popup
   // actually shows the Total Payout field — regardless of WHICH End Table
   // button the user tapped (there can be multiple table cards) or whether
   // the dialog opens directly on Total Payout vs an intro/reason picker
   // screen first. We watch the DOM continuously and advance the moment
-  // [data-tour="end-table-cashout"] becomes visible anywhere on the page.
+  // Total Payout input becomes visible anywhere on the page.
   useEffect(() => {
     if (!isTableActionsStep) return;
     let advanced = false;
@@ -701,14 +711,16 @@ export default function OnboardingTour({
 
     const tryAdvance = () => {
       if (advanced) return;
-      const target = getVisibleElement('[data-tour="end-table-cashout"]');
+      const target = resolveTargetElement(END_TABLE_CASHOUT_SELECTOR);
       if (!target) return;
       advanced = true;
       directionRef.current = 1;
       setStep(currentStep + 1);
       window.requestAnimationFrame(() => {
         readRect();
-        window.requestAnimationFrame(() => setTooltipVisible(true));
+        window.requestAnimationFrame(() => {
+          if (resolveCurrentTarget()) setTooltipVisible(true);
+        });
       });
     };
 
@@ -740,14 +752,12 @@ export default function OnboardingTour({
       observer.disconnect();
       if (pollTimer) window.clearTimeout(pollTimer);
     };
-  }, [isTableActionsStep, currentStep, setStep, getVisibleElement, readRect]);
+  }, [isTableActionsStep, currentStep, setStep, resolveTargetElement, readRect, resolveCurrentTarget]);
 
   // For the END TABLE CASHOUT step, advance the tour as soon as a numeric value is entered.
   useEffect(() => {
     if (!isEndTableCashoutStep) return;
-    const container = document.querySelector('[data-tour="end-table-cashout"]') as HTMLElement | null;
-    if (!container) return;
-    const input = container.querySelector('input') as HTMLInputElement | null;
+    const input = resolveTargetElement(END_TABLE_CASHOUT_SELECTOR) as HTMLInputElement | null;
     if (!input) return;
     const evaluate = () => {
       const raw = (input.value || '').replace(/,/g, '.').trim();
@@ -764,12 +774,12 @@ export default function OnboardingTour({
       input.removeEventListener('input', evaluate);
       input.removeEventListener('change', evaluate);
     };
-  }, [isEndTableCashoutStep, currentStep, setStep, rect]);
+  }, [isEndTableCashoutStep, currentStep, setStep, rect, resolveTargetElement]);
 
   // For the END TABLE CONFIRM step, advance the tour when the user taps End Table in the dialog.
   useEffect(() => {
     if (!isEndTableConfirmStep) return;
-    const btn = document.querySelector('[data-tour="end-table-confirm"]') as HTMLElement | null;
+    const btn = resolveTargetElement(END_TABLE_CONFIRM_SELECTOR);
     if (!btn) return;
     const handler = () => {
       directionRef.current = 1;
@@ -779,7 +789,7 @@ export default function OnboardingTour({
     return () => {
       btn.removeEventListener('click', handler);
     };
-  }, [isEndTableConfirmStep, currentStep, setStep, rect]);
+  }, [isEndTableConfirmStep, currentStep, setStep, rect, resolveTargetElement]);
 
   const handleNext = () => {
     directionRef.current = 1;
@@ -810,9 +820,9 @@ export default function OnboardingTour({
       boxShadow: '0 20px 40px -10px rgba(0,0,0,0.6), 0 0 0 1px hsl(var(--primary) / 0.2)',
       fontFamily: "'Poppins', system-ui, sans-serif",
     };
-    return (
+    return createPortal(
       <div
-        className="fixed inset-0 z-[9999]"
+        className="fixed inset-0 z-[99999]"
         role="dialog"
         aria-modal="true"
         aria-label="Onboarding tour menu"
@@ -866,7 +876,8 @@ export default function OnboardingTour({
             </Button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
@@ -993,12 +1004,13 @@ export default function OnboardingTour({
 
   const bands = circleBands || rectBands;
 
-  return (
+  return createPortal(
     <div
-      className={`fixed inset-0 ${stepInsideDialog ? 'z-[9999]' : 'z-[100]'} pointer-events-none`}
+      className={`fixed inset-0 ${stepInsideDialog ? 'z-[99999]' : 'z-[100]'} pointer-events-none`}
       role="dialog"
       aria-modal="true"
       aria-label="Onboarding tour"
+      style={stepInsideDialog ? { zIndex: 99999 } : undefined}
     >
       {/* Full-screen click blocker for non-interactive steps. Skip when the
           target is inside a Radix Dialog — the dialog's own overlay handles
@@ -1175,9 +1187,7 @@ export default function OnboardingTour({
         let cx = rect.left + rect.width / 2;
         let cy = rect.top + rect.height / 2;
         if (isEndTableCashoutStep) {
-          const input = document.querySelector(
-            '[data-tour="end-table-cashout"] input'
-          ) as HTMLElement | null;
+          const input = resolveTargetElement(END_TABLE_CASHOUT_SELECTOR);
           if (input) {
             const ir = input.getBoundingClientRect();
             cx = ir.left + ir.width / 2;
@@ -1196,7 +1206,7 @@ export default function OnboardingTour({
       })()}
 
       {/* Tooltip card */}
-      {(!stepIsInteractive || rect) && (
+      {(!stepIsInteractive || rect) && (!isModalStep || rect) && (
         <div
           ref={tooltipRef}
           className={`absolute bg-card border border-primary/30 rounded-xl shadow-2xl ${step.compact ? 'p-3 sm:p-3.5' : 'p-4 sm:p-5'}`}
@@ -1288,6 +1298,7 @@ export default function OnboardingTour({
         </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
