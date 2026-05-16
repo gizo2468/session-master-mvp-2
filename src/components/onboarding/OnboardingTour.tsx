@@ -812,7 +812,7 @@ export default function OnboardingTour({
     };
     return (
       <div
-        className="fixed inset-0 z-[100]"
+        className="fixed inset-0 z-[9999]"
         role="dialog"
         aria-modal="true"
         aria-label="Onboarding tour menu"
