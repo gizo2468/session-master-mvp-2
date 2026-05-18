@@ -667,7 +667,7 @@ export default function OnboardingTour({
       vv?.removeEventListener('resize', onVVResize);
       frozenRef.current = false;
     };
-  }, [step, currentStep, readRect, resolveCurrentTarget]);
+  }, [step, currentStep, readRect, resolveCurrentTarget, isModalStep, stepInsideDialog]);
 
   // Measure tooltip's actual height so we can place it without overlap.
   useLayoutEffect(() => {
