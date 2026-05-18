@@ -831,6 +831,7 @@ export default function OnboardingTour({
         role="dialog"
         aria-modal="true"
         aria-label="Onboarding tour menu"
+        data-onboarding-tour="true"
       >
         <div
           className="absolute inset-0"
