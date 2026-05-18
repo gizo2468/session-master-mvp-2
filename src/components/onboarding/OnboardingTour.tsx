@@ -482,6 +482,11 @@ export default function OnboardingTour({
   // opens the keyboard and shrinks innerHeight / auto-scrolls the field.
   useEffect(() => {
     if (!step) return;
+    // Skip the iOS scroll-restore / mousedown interception for modal steps.
+    // Inside a Radix position:fixed dialog there is no page scroll-into-view
+    // to fight, and preventDefault on mousedown blocks the numeric keyboard
+    // from opening on the Total Payout input.
+    if (isModalStep || stepInsideDialog) return;
     const el = resolveCurrentTarget();
     if (!el) return;
 
@@ -662,7 +667,7 @@ export default function OnboardingTour({
       vv?.removeEventListener('resize', onVVResize);
       frozenRef.current = false;
     };
-  }, [step, currentStep, readRect, resolveCurrentTarget]);
+  }, [step, currentStep, readRect, resolveCurrentTarget, isModalStep, stepInsideDialog]);
 
   // Measure tooltip's actual height so we can place it without overlap.
   useLayoutEffect(() => {
@@ -826,6 +831,7 @@ export default function OnboardingTour({
         role="dialog"
         aria-modal="true"
         aria-label="Onboarding tour menu"
+        data-onboarding-tour="true"
       >
         <div
           className="absolute inset-0"
@@ -1010,6 +1016,7 @@ export default function OnboardingTour({
       role="dialog"
       aria-modal="true"
       aria-label="Onboarding tour"
+      data-onboarding-tour="true"
       style={stepInsideDialog ? { zIndex: 99999 } : undefined}
     >
       {/* Full-screen click blocker for non-interactive steps. Skip when the
