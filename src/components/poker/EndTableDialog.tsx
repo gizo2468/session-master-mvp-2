@@ -80,7 +80,19 @@ export default function EndTableDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-tour="end-table-intro">
+      <DialogContent
+        data-tour="end-table-intro"
+        onPointerDownOutside={(e) => {
+          if ((e.target as Element | null)?.closest('[data-onboarding-tour="true"]')) {
+            e.preventDefault();
+          }
+        }}
+        onInteractOutside={(e) => {
+          if ((e.target as Element | null)?.closest('[data-onboarding-tour="true"]')) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>End Table</DialogTitle>
           <DialogDescription>
