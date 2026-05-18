@@ -482,6 +482,11 @@ export default function OnboardingTour({
   // opens the keyboard and shrinks innerHeight / auto-scrolls the field.
   useEffect(() => {
     if (!step) return;
+    // Skip the iOS scroll-restore / mousedown interception for modal steps.
+    // Inside a Radix position:fixed dialog there is no page scroll-into-view
+    // to fight, and preventDefault on mousedown blocks the numeric keyboard
+    // from opening on the Total Payout input.
+    if (isModalStep || stepInsideDialog) return;
     const el = resolveCurrentTarget();
     if (!el) return;
 

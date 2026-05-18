@@ -1,71 +1,60 @@
-## Goal
-Make the onboarding step for **Total Payout** render above the End Table Radix dialog and anchor directly to the actual input field instead of falling to the bottom-center fallback position.
+## Root causes
 
-## What will change
+### 1. Total Payout input is not editable
+`OnboardingTour.tsx` installs a document-level **capture-phase `mousedown` listener** (`onMouseDown`, line ~565) for the focus-freeze / iOS scroll-restore logic. When the highlighted element IS the input itself (the cashout step), this listener fires on the very tap that should open the keyboard, calls `e.preventDefault()`, and then manually focuses the input with `{ preventScroll: true }`.
 
-### 1. Render the tour at the true top layer
-Update `src/components/onboarding/OnboardingTour.tsx` so the entire tour UI renders through a **React portal to `document.body`** instead of inside each page component tree.
+On iOS/mobile this kills the user-gesture chain that opens the numeric keyboard, and on desktop it interferes with caret placement / native click handling. The freeze machinery was designed for a non-modal scenario where iOS auto-scrolls the page on focus — inside a Radix `position: fixed` dialog there is nothing to fight, so the whole interception is harmful here.
 
-Why:
-- Right now `OnboardingTour` is mounted inside `LiveSession.tsx` / `Index.tsx` / `SessionForm.tsx`.
-- Radix `DialogContent` and `DialogOverlay` are portaled to `document.body`.
-- Even with a larger z-index, the in-page tour can still lose to the modal portal / stacking context behavior.
+### 2. Profit/Loss Next + Previous "freeze" the tour
+The tour root is portaled to `document.body` (a sibling of the Radix `DialogContent`). Radix Dialog by default treats any pointer event outside `DialogContent` as an outside-interaction and fires `onPointerDownOutside` → closes the dialog.
 
-Implementation:
-- Import `createPortal` from `react-dom`.
-- Wrap the existing tour root/menu root in a portal targetting `document.body`.
-- Keep the tour root at a very high z-index during modal steps (`z-[99999]` / inline `zIndex: 99999` if needed).
-- Raise `[data-tour-allow="true"]` lifted elements above that same ceiling.
+So when the user clicks **Next** or **Previous** in the tooltip card on the Profit/Loss step:
+- Radix dispatches close → `EndTableDialog` unmounts.
+- The next step's selector (`end-table-notes` or `end-table-cashout-input`) is no longer in the DOM.
+- The tour's polling logic retries for ~4.8s then "skips" — visually identical to a freeze/crash.
 
-### 2. Anchor the cashout step to the actual input, not the wrapper
-Update the **cashout tour step selector** so the step targets the real Total Payout field instead of the outer wrapper.
+The same mechanism breaks Previous on every modal step.
 
-Why:
-- The current step selector is `[data-tour="end-table-cashout"]`.
-- In `EndTableDialog.tsx`, that attribute is on the whole modal body wrapper (`<div className="py-4" ...>`), not the input.
-- The tour therefore measures a large block, while the hand icon separately tries to aim at `[data-tour="end-table-cashout"] input`, causing inconsistent geometry.
+## Fixes
 
-Implementation options:
-- Preferred: move the step selector in `tourSteps.ts` to `#tableCashout` or a dedicated stable attribute on the input such as `data-tour="end-table-cashout-input"`.
-- Keep the existing wrapper-level `data-tour="end-table-cashout"` only if it is still needed for modal-detection / flow wiring.
-- Update all cashout-step-specific queries in `OnboardingTour.tsx` to use the same single source of truth selector.
+### Fix A — `src/components/onboarding/OnboardingTour.tsx`
+1. **Tag the tour root** for outside-interaction detection: add `data-onboarding-tour="true"` to both portal roots (menu mode root around line 824 and tour root around line 1008).
+2. **Disable the focus-freeze interception for modal steps.** In the big `useEffect` starting at line 483, early-return when `stepInsideDialog` is true (or when `isModalStep` is true). The dialog is `position: fixed` and centered — no iOS scroll-into-view to neutralize, and the `preventDefault` on mousedown is what blocks typing into the Total Payout field.
+   - Keep all existing behavior for non-modal steps (Stakes, etc.) untouched.
 
-### 3. Make rect measurement modal-aware
-Refine the measurement path in `OnboardingTour.tsx` so modal steps read the **final post-animation input rect** and do not fall back to centered tooltip placement.
+### Fix B — `src/components/poker/EndTableDialog.tsx`
+Prevent Radix from closing the dialog when the user interacts with the tour overlay:
 
-Implementation:
-- Add a resolver/helper for the current step target element instead of mixing `step.selector`, hardcoded input queries, and generic wrapper lookups.
-- Use that same resolver in:
-  - `readRect()`
-  - `stepInsideDialog` detection
-  - `ResizeObserver` setup
-  - focused-input freeze logic
-  - cashout hand-position logic
-- For modal steps, re-measure after the dialog settles (existing timeout/listeners stay, but now they re-read the input rect, not the wrapper rect).
-- If the target is missing temporarily, keep polling; do not reveal tooltip until a real rect exists.
+```tsx
+<DialogContent
+  data-tour="end-table-intro"
+  onPointerDownOutside={(e) => {
+    if ((e.target as Element | null)?.closest('[data-onboarding-tour="true"]')) {
+      e.preventDefault();
+    }
+  }}
+  onInteractOutside={(e) => {
+    if ((e.target as Element | null)?.closest('[data-onboarding-tour="true"]')) {
+      e.preventDefault();
+    }
+  }}
+>
+```
 
-### 4. Prevent the bottom-center fallback for this modal step
-Adjust tooltip reveal behavior so the cashout step does not show the card in the generic centered fallback state while the modal target is still unresolved.
-
-Implementation:
-- For modal steps, gate tooltip visibility on a valid rect from the resolved target.
-- Only compute tooltip placement from the resolved spotlight box.
-- This prevents the text from bleeding out underneath the dialog at the bottom of the viewport.
+This keeps normal "click outside to close" behavior for real outside clicks, but ignores clicks that originate inside the onboarding tour overlay (Next/Previous buttons, tooltip body, bands, hand icon).
 
 ## Files to update
 - `src/components/onboarding/OnboardingTour.tsx`
-- `src/components/onboarding/tourSteps.ts`
 - `src/components/poker/EndTableDialog.tsx`
 
 ## Verification
-1. Start the onboarding flow and reach **Active Tables**.
-2. Tap the red **End Table** button.
-3. Confirm the End Table dialog opens and the tour immediately advances.
-4. Confirm the spotlight/tooltip render **above** the Radix overlay and dialog.
-5. Confirm the tooltip is positioned next to the **Total Payout** input, not bottom-center.
-6. Enter a payout value and confirm the tour advances to the next modal step.
-7. Re-check non-modal tour steps for regressions.
+1. Run the tour to the **Total Payout** step. The tooltip is visible above the dialog; the input accepts typed digits and the mobile keyboard opens on tap.
+2. Type a value → tour auto-advances to **Profit/Loss**.
+3. On Profit/Loss, press **Previous** → returns to **Total Payout** with the dialog still open.
+4. Press **Next** on Profit/Loss → advances to **Notes** with the dialog still open.
+5. Continue to **End Table** confirm step; pressing the button advances to the final step as before.
+6. Regression check: non-modal steps (Stakes, Game Setup, Submit) still behave correctly — iOS focus does not visibly scroll the page out from under the spotlight.
 
-## Technical notes
-- This keeps the current modal-step flow logic, but fixes the two structural causes: incorrect mount layer and incorrect target selector.
-- No backend or database changes are needed.
+## Notes
+- No backend or schema changes.
+- The current modal integration, z-index layering, selectors, and portal mount are preserved — only the two interaction bugs are addressed.
