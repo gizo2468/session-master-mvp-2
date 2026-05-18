@@ -119,7 +119,7 @@ export default function OnboardingTour({
   const isEndTableConfirmStep = step?.selector === END_TABLE_CONFIRM_SELECTOR;
   const isModalStep = !!step && MODAL_STEP_SELECTORS.some((selector) => selector === step.selector);
   const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep;
-  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableCashoutStep || isEndTableConfirmStep;
+  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableConfirmStep;
   const hidePreviousButton = isGameSetupStep || isLiveOverviewStep;
 
   // Gate: on the Stakes step, require the Buy-in input to have a positive value.
@@ -759,27 +759,10 @@ export default function OnboardingTour({
     };
   }, [isTableActionsStep, currentStep, setStep, resolveTargetElement, readRect, resolveCurrentTarget]);
 
-  // For the END TABLE CASHOUT step, advance the tour as soon as a numeric value is entered.
-  useEffect(() => {
-    if (!isEndTableCashoutStep) return;
-    const input = resolveTargetElement(END_TABLE_CASHOUT_SELECTOR) as HTMLInputElement | null;
-    if (!input) return;
-    const evaluate = () => {
-      const raw = (input.value || '').replace(/,/g, '.').trim();
-      if (raw === '') return;
-      const v = parseFloat(raw);
-      if (Number.isFinite(v) && v >= 0) {
-        directionRef.current = 1;
-        setStep(currentStep + 1);
-      }
-    };
-    input.addEventListener('input', evaluate);
-    input.addEventListener('change', evaluate);
-    return () => {
-      input.removeEventListener('input', evaluate);
-      input.removeEventListener('change', evaluate);
-    };
-  }, [isEndTableCashoutStep, currentStep, setStep, rect, resolveTargetElement]);
+  // NOTE: The END TABLE CASHOUT step intentionally does NOT auto-advance on input.
+  // Auto-advancing on the first typed character was interrupting normal editing —
+  // the step would exit mid-keystroke and the input would appear "uneditable".
+  // Users now type freely and tap Next when ready.
 
   // For the END TABLE CONFIRM step, advance the tour when the user taps End Table in the dialog.
   useEffect(() => {
