@@ -1016,6 +1016,7 @@ export default function OnboardingTour({
       role="dialog"
       aria-modal="true"
       aria-label="Onboarding tour"
+      data-onboarding-tour="true"
       style={stepInsideDialog ? { zIndex: 99999 } : undefined}
     >
       {/* Full-screen click blocker for non-interactive steps. Skip when the
