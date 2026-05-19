@@ -790,6 +790,35 @@ export default function OnboardingTour({
 
   const handlePrev = () => {
     directionRef.current = -1;
+    const findIdx = (sel: string) => steps.findIndex((s) => s.selector === sel);
+    const tableActionsIdx = findIdx('[data-tour="table-actions"]');
+
+    // Previous from "Finishing Up" (live-controls): the in-between steps live
+    // inside the End Table modal which is gone by now. Jump straight back to
+    // the table-actions step so we don't auto-skip through missing targets.
+    if (step?.selector === '[data-tour="live-controls"]' && tableActionsIdx >= 0) {
+      setStep(tableActionsIdx);
+      return;
+    }
+
+    // Previous from "Total Payout" (cashout-input, inside modal): close the
+    // End Table modal first, then jump back to the table-actions step on the
+    // live session page so the spotlight isn't hidden behind the dialog.
+    if (isEndTableCashoutStep && tableActionsIdx >= 0) {
+      const dialog = document.querySelector('[role="dialog"]') as HTMLElement | null;
+      const closeBtn = dialog?.querySelector(
+        '[data-tour="end-table-cancel"], button[aria-label="Close"], [data-radix-dialog-close]'
+      ) as HTMLElement | null;
+      if (closeBtn) {
+        closeBtn.click();
+      } else {
+        // Fallback: dispatch Escape on the dialog to trigger Radix close.
+        dialog?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      }
+      setStep(tableActionsIdx);
+      return;
+    }
+
     if (currentStep > 0) setStep(currentStep - 1);
   };
 
