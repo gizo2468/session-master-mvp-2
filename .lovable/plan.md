@@ -1,45 +1,36 @@
-## Fix: Previous button on two End-flow tutorial steps
+## Fix: "Finishing Up" tutorial step (live-controls)
 
-### Problem
+### Problems
 
-Two tour steps break when the user presses **Previous**:
+1. **Done button shouldn't be there.** "Finishing Up" is the last step in `TOUR_PATHS['start-session']`, so `isLast` is true and the right-side button renders as **Done** (calls `onClose`). User wants no Done button on this step at all — the tour ends naturally when the player taps the real **End Session** button (which navigates away).
 
-1. **"Finishing Up"** (selector `[data-tour="live-controls"]`, last step) — the previous step in the array is `end-table-confirm`, which only exists inside the End Table modal. By the time the user reaches Finishing Up, the table has already been ended and the modal is gone, so the selector can never be found. The retry loop in `useLayoutEffect` (OnboardingTour.tsx lines 228–252) then auto-walks backwards in the same direction through `end-table-notes`, `end-table-profit`, `end-table-cashout-input` (all modal-only, also missing), until it lands on `table-actions` — feeling like the tour "freezes" or "skips multiple steps".
+2. **Previous freezes / closes the tour.** Current `handlePrev` jumps from `live-controls` to the `table-actions` step. But by the time the user reaches "Finishing Up", the table has already been ended — so `[data-tour="table-actions"]` no longer exists in the DOM. The retry loop in `useLayoutEffect` (lines 228–252) burns through `maxAttempts`, then auto-skips backwards through more missing modal-only steps (`end-table-confirm`, `end-table-notes`, `end-table-profit`, `end-table-cashout-input`), eventually running off the start and calling `onReturnToMenu` / closing the tour. That's the "freeze then close" the user sees.
 
-2. **"Total Payout"** (`end-table-cashout-input`, inside modal) — Previous targets `table-actions`, which lives on the live session page *behind* the open End Table modal. The modal stays open, hides the spotlight, and the user perceives Previous as a no-op or as breaking the flow.
+### Fix (scoped to `OnboardingTour.tsx` only)
 
-`handlePrev` itself is fine; the issue is purely the destination step being unreachable in the current UI state.
+1. **Hide the Done button on `live-controls`**
+   - Add `step?.selector === '[data-tour="live-controls"]'` to the `hideNextButton` condition (currently line 122). This makes the step show only **Previous** + the progress dots, no right-side action button. The tour terminates when the user taps End Session (which unmounts the live session route).
 
-### Fix (scoped, surgical)
+2. **Make Previous from `live-controls` land on a step that actually exists**
+   - Replace the current "jump to table-actions" shortcut for this step with a dynamic lookup: walk the `steps` array backwards from `currentStep - 1` and pick the first step whose `selector` resolves to a visible element via the existing `getVisibleElement` helper.
+   - In practice this will land on `live-session-details` / `live-actions` / `live-overview` (whichever is visible) instead of the missing `end-table-confirm` or the missing `table-actions`.
+   - Set `directionRef.current = -1` and `setStep(targetIdx)` exactly once — no retry loop, no auto-skip cascade.
+   - Fallback: if nothing resolves, stay on the current step (do not close the tour).
 
-In `src/components/onboarding/OnboardingTour.tsx`, special-case the Previous handler for exactly these two steps. Do not touch Next, Done, design, positioning, or any other step.
-
-1. **Previous from `live-controls` ("Finishing Up")**
-   - Jump directly to the `table-actions` step (index of `[data-tour="table-actions"]` in `steps`), skipping the modal-only steps that no longer have a host in the DOM.
-   - Set `directionRef.current = -1` so any auto-skip behaves correctly, then call `setStep(targetIndex)`.
-
-2. **Previous from `end-table-cashout-input` ("Total Payout")**
-   - Close the End Table modal first, then jump to `table-actions`.
-   - Closing is done by dispatching a small custom event the dialog already can listen for, or by clicking the dialog's existing Cancel button via `document.querySelector` inside the active `[role="dialog"]`. Reuse whatever the dialog exposes; do not change `EndTableDialog` props/behavior beyond adding a listener if needed.
-   - Then `directionRef.current = -1` and `setStep(tableActionsIndex)`.
-
-3. **Helper**
-   - Add a tiny `findStepIndex(selector)` lookup inside the component so the indices stay correct if `tourSteps.ts` is reordered later.
+3. **Leave the existing `end-table-cashout-input` Previous special-case alone** — that one already works and is not part of this request.
 
 ### Out of scope
 
-- No changes to `tourSteps.ts` ordering or copy.
-- No changes to Next / Done handlers.
-- No changes to the cashout input editability fix or the modal-portal layering fix.
-- No changes to `useOnboardingTour` state machine.
+- No changes to `tourSteps.ts`.
+- No changes to Next handler, design, positioning, dots, or any other step.
+- No changes to `EndTableDialog`, `useOnboardingTour`, or the modal-portal layering.
 
 ### Files
 
 - `src/components/onboarding/OnboardingTour.tsx` (only file edited)
-- Possibly a 2-line listener addition in `src/components/poker/EndTableDialog.tsx` *only if* no existing close hook is reusable.
 
 ### Expected result
 
-- Pressing Previous on **Total Payout** closes the End Table modal and lands the user on the **Active Tables / End Table** step (`table-actions`) with the spotlight visible and correctly positioned.
-- Pressing Previous on **Finishing Up** lands the user on the same **table-actions** step without flickering through unreachable modal steps.
-- Tour state, session state, and modal state remain consistent. Next/Done flow is unchanged.
+- The "Finishing Up" tooltip shows **Previous** on the left and **no Done button** on the right.
+- Tapping Previous moves back to the nearest still-visible live-session step (typically `live-session-details`) without freezing, skipping, or closing the tour.
+- Tour continues normally; tapping the real End Session button ends the session and the tour as before.

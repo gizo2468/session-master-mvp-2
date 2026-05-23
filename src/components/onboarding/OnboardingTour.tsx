@@ -119,7 +119,8 @@ export default function OnboardingTour({
   const isEndTableConfirmStep = step?.selector === END_TABLE_CONFIRM_SELECTOR;
   const isModalStep = !!step && MODAL_STEP_SELECTORS.some((selector) => selector === step.selector);
   const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep;
-  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableConfirmStep;
+  const isLiveControlsStep = step?.selector === '[data-tour="live-controls"]';
+  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableConfirmStep || isLiveControlsStep;
   const hidePreviousButton = isGameSetupStep || isLiveOverviewStep;
 
   // Gate: on the Stakes step, require the Buy-in input to have a positive value.
