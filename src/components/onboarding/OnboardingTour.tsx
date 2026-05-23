@@ -794,11 +794,18 @@ export default function OnboardingTour({
     const findIdx = (sel: string) => steps.findIndex((s) => s.selector === sel);
     const tableActionsIdx = findIdx('[data-tour="table-actions"]');
 
-    // Previous from "Finishing Up" (live-controls): the in-between steps live
-    // inside the End Table modal which is gone by now. Jump straight back to
-    // the table-actions step so we don't auto-skip through missing targets.
-    if (step?.selector === '[data-tour="live-controls"]' && tableActionsIdx >= 0) {
-      setStep(tableActionsIdx);
+    // Previous from "Finishing Up" (live-controls): the immediate prior steps
+    // live inside the End Table modal AND the table itself is already gone, so
+    // `table-actions` is also missing. Walk backwards to the first step whose
+    // target element is actually mounted right now and jump there directly.
+    if (step?.selector === '[data-tour="live-controls"]') {
+      for (let i = currentStep - 1; i >= 0; i--) {
+        if (getVisibleElement(steps[i].selector)) {
+          setStep(i);
+          return;
+        }
+      }
+      // Nothing reachable — stay put rather than closing the tour.
       return;
     }
 
