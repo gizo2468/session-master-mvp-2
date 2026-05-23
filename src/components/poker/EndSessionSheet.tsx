@@ -139,7 +139,7 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
               </div>
             )}
             
-            <div className="bg-gray-50 dark:bg-background rounded-lg p-4">
+            <div data-tour="end-session-summary" className="bg-gray-50 dark:bg-background rounded-lg p-4">
               {/* Gold centered title */}
               <div className="flex items-center justify-center gap-2 mb-3">
                 <DollarSign size={20} className="text-poker-gold" />

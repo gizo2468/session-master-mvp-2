@@ -49,7 +49,10 @@ const MODAL_STEP_SELECTORS = [
   '[data-tour="end-table-profit"]',
   '[data-tour="end-table-notes"]',
   END_TABLE_CONFIRM_SELECTOR,
+  '[data-tour="end-session-summary"]',
+  '[data-tour="end-session-confirm"]',
 ] as const;
+
 
 export default function OnboardingTour({
   steps,
@@ -118,10 +121,12 @@ export default function OnboardingTour({
   const isEndTableCashoutStep = step?.selector === END_TABLE_CASHOUT_SELECTOR;
   const isEndTableConfirmStep = step?.selector === END_TABLE_CONFIRM_SELECTOR;
   const isModalStep = !!step && MODAL_STEP_SELECTORS.some((selector) => selector === step.selector);
-  const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep || step?.selector === '[data-tour="live-controls"]';
   const isLiveControlsStep = step?.selector === '[data-tour="live-controls"]';
-  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableConfirmStep || isLiveControlsStep;
-  const hidePreviousButton = isGameSetupStep || isLiveOverviewStep || isLiveControlsStep;
+  const isEndSessionConfirmStep = step?.selector === '[data-tour="end-session-confirm"]';
+  const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep || isLiveControlsStep || isEndSessionConfirmStep;
+  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableConfirmStep || isLiveControlsStep || isEndSessionConfirmStep;
+  const hidePreviousButton = isGameSetupStep || isLiveOverviewStep || isLiveControlsStep || isEndSessionConfirmStep;
+
 
   // Gate: on the Stakes step, require the Buy-in input to have a positive value.
   const [buyInFilled, setBuyInFilled] = useState(false);
@@ -720,6 +725,22 @@ export default function OnboardingTour({
       el.removeEventListener('click', handler);
     };
   }, [isLiveControlsStep, currentStep, setStep, rect, resolveCurrentTarget]);
+
+  // For the END SESSION CONFIRM step (inside the End Session sheet), the
+  // user's tap on the real red button ends the session AND closes the tour.
+  useEffect(() => {
+    if (!isEndSessionConfirmStep) return;
+    const el = resolveCurrentTarget();
+    if (!el) return;
+    const handler = () => {
+      onClose();
+    };
+    el.addEventListener('click', handler, { once: true });
+    return () => {
+      el.removeEventListener('click', handler);
+    };
+  }, [isEndSessionConfirmStep, onClose, rect, resolveCurrentTarget]);
+
 
   // For the TABLE ACTIONS step, advance the tour when the End Table popup
   // actually shows the Total Payout field — regardless of WHICH End Table
