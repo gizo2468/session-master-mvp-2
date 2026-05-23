@@ -1,52 +1,28 @@
-## Add two tour steps inside the End Session sheet
+## Fix Session Summary tutorial step positioning
 
-Replace the current single `end-session-confirm` step with two sequential steps that walk the user through reviewing the summary and then tapping the real End Session button.
+### Problem
+On a 390×540 viewport the End Session sheet's Session Summary card is ~310px tall and occupies almost the entire visible modal area. The current tour step targets the whole card and uses `placement: 'below'`, so:
+- The gold spotlight ring wraps the entire card and visually reads as "the whole modal is highlighted."
+- The tooltip is anchored just below the card, which is off-screen (or hidden behind Cancel/End Session buttons), so the explanation text is not visible.
 
-### 1. `src/components/poker/EndSessionSheet.tsx`
-- Add `data-tour="end-session-summary"` to the Session Summary card wrapper at line 142 (the `<div className="bg-gray-50 dark:bg-background rounded-lg p-4">`).
-- Keep the existing `data-tour="end-session-confirm"` on the red End Session button (line 240) unchanged.
+### Fix (single file change)
 
-### 2. `src/components/onboarding/tourSteps.ts`
-At the end of `TOUR_PATHS['start-session']`, replace the single existing `end-session-confirm` step with two steps in this order:
+`src/components/onboarding/tourSteps.ts` — the `end-session-summary` step:
 
-- **Session Summary review step**
-  - `selector: '[data-tour="end-session-summary"]'`
-  - `title: 'Review Your Session'`
-  - `body: 'This is your final session recap — buy-in, cash-out, duration, and totals. Take a moment to make sure everything looks right before closing.'`
-  - `interactive: true`, `compact: true`, `route: '/session'`, `placement: 'below'`
-  - Shows the default **Next** button so the user advances normally.
+- Change `placement: 'below'` to `placement: 'above'`.
 
-- **End Session confirm step** (kept as the final step)
-  - `selector: '[data-tour="end-session-confirm"]'`
-  - `title: 'Save Your Session'`
-  - `body: 'Tap End Session to save everything to your history and finish the tour.'`
-  - `interactive: true`, `compact: true`, `route: '/session'`, `placement: 'above'`
+That alone is not enough because the card is too tall and the spotlight will still feel like it covers the whole modal. So additionally, in `src/components/poker/EndSessionSheet.tsx`, move the `data-tour="end-session-summary"` attribute off the outer card wrapper (line 142) and onto the inner header row that contains the gold "Session Summary" title (line 144 — the `<div className="flex items-center justify-center gap-2 mb-3">`).
 
-### 3. `src/components/onboarding/OnboardingTour.tsx`
-For the new final `end-session-confirm` step only (mirrors how `live-controls` was wired):
-
-- Add an `isEndSessionConfirmStep` boolean.
-- Include it in `showTapHand` (so the animated hand pulses over the red button).
-- Include it in `hideNextButton` and `hidePreviousButton` (no Next, no Previous — tap-only).
-- Add a `useEffect` that attaches a one-shot capture-phase `click` listener on `[data-tour="end-session-confirm"]`. On click:
-  - Dismiss the tour (call the same `dismiss` path used at tour completion) so the tooltip disappears the moment the user taps.
-  - The button's own `onClick` still fires and ends the session normally.
-- No auto-advance, no mutation observer.
-
-The Session Summary step needs no special handler — it shows the default Next button and progresses to the confirm step in the standard way.
+Result:
+- Spotlight tightly hugs only the "Session Summary" gold title row at the top of the card (a small, unambiguous highlight that clearly identifies the section without swallowing the modal).
+- With `placement: 'above'`, the tooltip floats just above that title row, sitting in the empty space below the sheet header — fully on-screen.
+- The rest of the card (totals, duration, etc.) remains fully visible directly under the highlighted title, so users still see the whole summary they're being asked to review.
 
 ### Out of scope
-- No changes to the End Session sheet layout, copy, totals, or session-ending logic.
-- No changes to any earlier tour step.
-- No styling changes to the tooltip or hand indicator.
+- No changes to the modal layout, copy, totals, or End Session behavior.
+- No changes to tooltip sizing or to any other tour step.
+- No changes to the `end-session-confirm` step.
 
 ### Files touched
-- `src/components/poker/EndSessionSheet.tsx`
-- `src/components/onboarding/tourSteps.ts`
-- `src/components/onboarding/OnboardingTour.tsx`
-
-### Expected result
-- After tapping the real red End Session button on the live session screen, the End Session sheet opens.
-- Step 1 (inside sheet): Session Summary card is spotlighted with a short review message and a Next button.
-- Step 2 (inside sheet): Red End Session button is spotlighted with an animated hand and no Next/Previous — user must physically tap it.
-- Tapping the real button ends the session and the tour closes normally.
+- `src/components/poker/EndSessionSheet.tsx` (move `data-tour` attribute)
+- `src/components/onboarding/tourSteps.ts` (flip placement to `above`)
