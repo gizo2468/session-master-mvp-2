@@ -180,7 +180,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
       interactive: true,
       compact: true,
       route: '/session',
-      placement: 'below',
+      placement: 'above',
     },
     {
       selector: '[data-tour="end-session-confirm"]',
