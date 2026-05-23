@@ -49,7 +49,10 @@ const MODAL_STEP_SELECTORS = [
   '[data-tour="end-table-profit"]',
   '[data-tour="end-table-notes"]',
   END_TABLE_CONFIRM_SELECTOR,
+  '[data-tour="end-session-summary"]',
+  '[data-tour="end-session-confirm"]',
 ] as const;
+
 
 export default function OnboardingTour({
   steps,
