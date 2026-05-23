@@ -726,6 +726,22 @@ export default function OnboardingTour({
     };
   }, [isLiveControlsStep, currentStep, setStep, rect, resolveCurrentTarget]);
 
+  // For the END SESSION CONFIRM step (inside the End Session sheet), the
+  // user's tap on the real red button ends the session AND closes the tour.
+  useEffect(() => {
+    if (!isEndSessionConfirmStep) return;
+    const el = resolveCurrentTarget();
+    if (!el) return;
+    const handler = () => {
+      onClose();
+    };
+    el.addEventListener('click', handler, { once: true });
+    return () => {
+      el.removeEventListener('click', handler);
+    };
+  }, [isEndSessionConfirmStep, onClose, rect, resolveCurrentTarget]);
+
+
   // For the TABLE ACTIONS step, advance the tour when the End Table popup
   // actually shows the Total Payout field — regardless of WHICH End Table
   // button the user tapped (there can be multiple table cards) or whether
