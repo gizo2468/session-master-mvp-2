@@ -118,10 +118,10 @@ export default function OnboardingTour({
   const isEndTableCashoutStep = step?.selector === END_TABLE_CASHOUT_SELECTOR;
   const isEndTableConfirmStep = step?.selector === END_TABLE_CONFIRM_SELECTOR;
   const isModalStep = !!step && MODAL_STEP_SELECTORS.some((selector) => selector === step.selector);
-  const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep;
+  const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep || step?.selector === '[data-tour="live-controls"]';
   const isLiveControlsStep = step?.selector === '[data-tour="live-controls"]';
   const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableConfirmStep || isLiveControlsStep;
-  const hidePreviousButton = isGameSetupStep || isLiveOverviewStep;
+  const hidePreviousButton = isGameSetupStep || isLiveOverviewStep || isLiveControlsStep;
 
   // Gate: on the Stakes step, require the Buy-in input to have a positive value.
   const [buyInFilled, setBuyInFilled] = useState(false);
@@ -703,6 +703,23 @@ export default function OnboardingTour({
       el.removeEventListener('click', handler);
     };
   }, [step, currentStep, setStep, rect, resolveCurrentTarget]);
+
+  // For the FINISHING UP step (live-controls), advance only when the user
+  // actually taps the End Session button. The button's own onClick opens the
+  // End Session sheet, where the next step's selector mounts.
+  useEffect(() => {
+    if (!isLiveControlsStep) return;
+    const el = resolveCurrentTarget();
+    if (!el) return;
+    const handler = () => {
+      directionRef.current = 1;
+      setStep(currentStep + 1);
+    };
+    el.addEventListener('click', handler, { once: true });
+    return () => {
+      el.removeEventListener('click', handler);
+    };
+  }, [isLiveControlsStep, currentStep, setStep, rect, resolveCurrentTarget]);
 
   // For the TABLE ACTIONS step, advance the tour when the End Table popup
   // actually shows the Total Payout field — regardless of WHICH End Table
