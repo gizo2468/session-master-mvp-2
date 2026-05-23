@@ -1,39 +1,52 @@
-## Make the "Finishing Up" step interactive
+## Add two tour steps inside the End Session sheet
 
-Turn the final `live-controls` step into a tap-to-advance step (mirroring how `start-session`, `submit-session`, and `table-actions` already work), and add one closing step inside the End Session sheet.
+Replace the current single `end-session-confirm` step with two sequential steps that walk the user through reviewing the summary and then tapping the real End Session button.
 
 ### 1. `src/components/poker/EndSessionSheet.tsx`
-- Add `data-tour="end-session-confirm"` to the red **End Session** button at line ~239–245 so the new tour step has something to anchor on.
+- Add `data-tour="end-session-summary"` to the Session Summary card wrapper at line 142 (the `<div className="bg-gray-50 dark:bg-background rounded-lg p-4">`).
+- Keep the existing `data-tour="end-session-confirm"` on the red End Session button (line 240) unchanged.
 
 ### 2. `src/components/onboarding/tourSteps.ts`
-- Append one new step to the end of `TOUR_PATHS['start-session']`, right after `live-controls`:
+At the end of `TOUR_PATHS['start-session']`, replace the single existing `end-session-confirm` step with two steps in this order:
+
+- **Session Summary review step**
+  - `selector: '[data-tour="end-session-summary"]'`
+  - `title: 'Review Your Session'`
+  - `body: 'This is your final session recap — buy-in, cash-out, duration, and totals. Take a moment to make sure everything looks right before closing.'`
+  - `interactive: true`, `compact: true`, `route: '/session'`, `placement: 'below'`
+  - Shows the default **Next** button so the user advances normally.
+
+- **End Session confirm step** (kept as the final step)
   - `selector: '[data-tour="end-session-confirm"]'`
   - `title: 'Save Your Session'`
-  - `body: 'Review your cash-out and notes, then tap End Session to save everything to your history.'`
+  - `body: 'Tap End Session to save everything to your history and finish the tour.'`
   - `interactive: true`, `compact: true`, `route: '/session'`, `placement: 'above'`
 
 ### 3. `src/components/onboarding/OnboardingTour.tsx`
+For the new final `end-session-confirm` step only (mirrors how `live-controls` was wired):
 
-For the `live-controls` step only:
+- Add an `isEndSessionConfirmStep` boolean.
+- Include it in `showTapHand` (so the animated hand pulses over the red button).
+- Include it in `hideNextButton` and `hidePreviousButton` (no Next, no Previous — tap-only).
+- Add a `useEffect` that attaches a one-shot capture-phase `click` listener on `[data-tour="end-session-confirm"]`. On click:
+  - Dismiss the tour (call the same `dismiss` path used at tour completion) so the tooltip disappears the moment the user taps.
+  - The button's own `onClick` still fires and ends the session normally.
+- No auto-advance, no mutation observer.
 
-- **Remove Previous button.** Add `isLiveControlsStep` to the `hidePreviousButton` condition on line 124. Next/Done is already hidden via `hideNextButton`, so the tooltip will show only title, body, and progress dots.
-- **Add animated hand indicator.** Extend the `showTapHand` expression (line 121) with `|| isLiveControlsStep`. The existing render block at line 1163 already centers the `<Hand>` over `rect`, which for `live-controls` wraps the End Session button — no extra branch needed.
-- **Require a real tap on End Session to advance.** Add a new `useEffect` next to the existing `start-session` click handler (line 694). When `isLiveControlsStep`, attach a one-shot capture-phase `click` listener on the `[data-tour="live-controls"]` element that calls `setStep(currentStep + 1)` and sets `directionRef.current = 1`. The button's own `onClick` continues to open the End Session sheet, so the next step's selector mounts naturally and the existing retry loop picks it up.
-- **No auto-advance**, no mutation observer for this step — the tour waits for the genuine click.
-
-The new `end-session-confirm` step needs no special handler: when the user taps End Session inside the sheet, the live session route unmounts and the tour terminates as it already does today. The step shows the default **Done** button as its right-side action, matching every other terminal step.
+The Session Summary step needs no special handler — it shows the default Next button and progresses to the confirm step in the standard way.
 
 ### Out of scope
-- No changes to other steps, styling, design, positioning, or the `end-table-cashout-input` Previous special-case.
-- No changes to `EndSessionSheet` layout, copy, or behavior beyond adding the `data-tour` attribute.
+- No changes to the End Session sheet layout, copy, totals, or session-ending logic.
+- No changes to any earlier tour step.
+- No styling changes to the tooltip or hand indicator.
 
 ### Files touched
+- `src/components/poker/EndSessionSheet.tsx`
 - `src/components/onboarding/tourSteps.ts`
 - `src/components/onboarding/OnboardingTour.tsx`
-- `src/components/poker/EndSessionSheet.tsx`
 
 ### Expected result
-- "Finishing Up" tooltip shows only the title, body, and progress dots — no Previous, no Done.
-- An animated hand pulses over the red End Session button.
-- Tapping End Session opens the sheet and advances the tour to one final step anchored on the sheet's red End Session confirm button.
-- Tapping that confirm button ends the session and closes the tour normally.
+- After tapping the real red End Session button on the live session screen, the End Session sheet opens.
+- Step 1 (inside sheet): Session Summary card is spotlighted with a short review message and a Next button.
+- Step 2 (inside sheet): Red End Session button is spotlighted with an animated hand and no Next/Previous — user must physically tap it.
+- Tapping the real button ends the session and the tour closes normally.
