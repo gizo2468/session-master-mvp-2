@@ -121,10 +121,12 @@ export default function OnboardingTour({
   const isEndTableCashoutStep = step?.selector === END_TABLE_CASHOUT_SELECTOR;
   const isEndTableConfirmStep = step?.selector === END_TABLE_CONFIRM_SELECTOR;
   const isModalStep = !!step && MODAL_STEP_SELECTORS.some((selector) => selector === step.selector);
-  const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep || step?.selector === '[data-tour="live-controls"]';
   const isLiveControlsStep = step?.selector === '[data-tour="live-controls"]';
-  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableConfirmStep || isLiveControlsStep;
-  const hidePreviousButton = isGameSetupStep || isLiveOverviewStep || isLiveControlsStep;
+  const isEndSessionConfirmStep = step?.selector === '[data-tour="end-session-confirm"]';
+  const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep || isLiveControlsStep || isEndSessionConfirmStep;
+  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableConfirmStep || isLiveControlsStep || isEndSessionConfirmStep;
+  const hidePreviousButton = isGameSetupStep || isLiveOverviewStep || isLiveControlsStep || isEndSessionConfirmStep;
+
 
   // Gate: on the Stakes step, require the Buy-in input to have a positive value.
   const [buyInFilled, setBuyInFilled] = useState(false);
