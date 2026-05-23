@@ -704,6 +704,23 @@ export default function OnboardingTour({
     };
   }, [step, currentStep, setStep, rect, resolveCurrentTarget]);
 
+  // For the FINISHING UP step (live-controls), advance only when the user
+  // actually taps the End Session button. The button's own onClick opens the
+  // End Session sheet, where the next step's selector mounts.
+  useEffect(() => {
+    if (!isLiveControlsStep) return;
+    const el = resolveCurrentTarget();
+    if (!el) return;
+    const handler = () => {
+      directionRef.current = 1;
+      setStep(currentStep + 1);
+    };
+    el.addEventListener('click', handler, { once: true });
+    return () => {
+      el.removeEventListener('click', handler);
+    };
+  }, [isLiveControlsStep, currentStep, setStep, rect, resolveCurrentTarget]);
+
   // For the TABLE ACTIONS step, advance the tour when the End Table popup
   // actually shows the Total Payout field — regardless of WHICH End Table
   // button the user tapped (there can be multiple table cards) or whether
