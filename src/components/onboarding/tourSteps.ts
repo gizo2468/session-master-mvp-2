@@ -173,6 +173,15 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
       interactive: true,
       route: '/session',
     },
+    {
+      selector: '[data-tour="end-session-confirm"]',
+      title: 'Save Your Session',
+      body: 'Review your cash-out and notes, then tap End Session to save everything to your history.',
+      interactive: true,
+      compact: true,
+      route: '/session',
+      placement: 'above',
+    },
   ],
   'home-guide': [
     {
