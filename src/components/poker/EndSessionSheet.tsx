@@ -237,6 +237,7 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
               Cancel
             </Button>
             <Button
+              data-tour="end-session-confirm"
               onClick={onEndSession}
               disabled={hasActiveTables || tablesWithoutResults.length > 0}
               className="flex-1 bg-red-600 hover:bg-red-700 text-white"
