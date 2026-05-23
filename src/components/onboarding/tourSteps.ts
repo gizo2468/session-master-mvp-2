@@ -174,14 +174,24 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
       route: '/session',
     },
     {
+      selector: '[data-tour="end-session-summary"]',
+      title: 'Review Your Session',
+      body: 'This is your final session recap — buy-in, cash-out, duration, and totals. Take a moment to make sure everything looks right before closing.',
+      interactive: true,
+      compact: true,
+      route: '/session',
+      placement: 'below',
+    },
+    {
       selector: '[data-tour="end-session-confirm"]',
       title: 'Save Your Session',
-      body: 'Review your cash-out and notes, then tap End Session to save everything to your history.',
+      body: 'Tap End Session to save everything to your history and finish the tour.',
       interactive: true,
       compact: true,
       route: '/session',
       placement: 'above',
     },
+
   ],
   'home-guide': [
     {
