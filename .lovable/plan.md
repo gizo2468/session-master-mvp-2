@@ -1,28 +1,23 @@
-## Fix Session Summary tutorial step positioning
+## Fix Session Summary highlight to frame the whole card
 
 ### Problem
-On a 390×540 viewport the End Session sheet's Session Summary card is ~310px tall and occupies almost the entire visible modal area. The current tour step targets the whole card and uses `placement: 'below'`, so:
-- The gold spotlight ring wraps the entire card and visually reads as "the whole modal is highlighted."
-- The tooltip is anchored just below the card, which is off-screen (or hidden behind Cancel/End Session buttons), so the explanation text is not visible.
+`data-tour="end-session-summary"` currently sits on the inner gold-title row (line 144 of `EndSessionSheet.tsx`). The spotlight therefore hugs only the small "Session Summary" header (or, due to layout shifts, a stray middle row), so users don't perceive the summary block as one section.
 
-### Fix (single file change)
+### Fix (single attribute move)
 
-`src/components/onboarding/tourSteps.ts` — the `end-session-summary` step:
+`src/components/poker/EndSessionSheet.tsx`:
+- Remove `data-tour="end-session-summary"` from the inner header row at line 144.
+- Add it to the outer card wrapper at line 142 (`<div className="bg-gray-50 dark:bg-background rounded-lg p-4">`).
 
-- Change `placement: 'below'` to `placement: 'above'`.
+That single change makes the gold spotlight stroke trace the full rounded summary card — title, totals, duration, hands, cashouts — so it visually reads as one cohesive block.
 
-That alone is not enough because the card is too tall and the spotlight will still feel like it covers the whole modal. So additionally, in `src/components/poker/EndSessionSheet.tsx`, move the `data-tour="end-session-summary"` attribute off the outer card wrapper (line 142) and onto the inner header row that contains the gold "Session Summary" title (line 144 — the `<div className="flex items-center justify-center gap-2 mb-3">`).
-
-Result:
-- Spotlight tightly hugs only the "Session Summary" gold title row at the top of the card (a small, unambiguous highlight that clearly identifies the section without swallowing the modal).
-- With `placement: 'above'`, the tooltip floats just above that title row, sitting in the empty space below the sheet header — fully on-screen.
-- The rest of the card (totals, duration, etc.) remains fully visible directly under the highlighted title, so users still see the whole summary they're being asked to review.
+### Tooltip positioning
+Leave `placement: 'above'` for the `end-session-summary` step in `tourSteps.ts`. With the card occupying most of the 540px sheet viewport, the tooltip cannot sit fully outside the card; the existing `OnboardingTour` logic clamps it to `VIEWPORT_MARGIN` at the top so the explanation text stays fully readable above the highlighted card (matching the layout already shown in the user's screenshot). No tooltip code changes needed.
 
 ### Out of scope
-- No changes to the modal layout, copy, totals, or End Session behavior.
-- No changes to tooltip sizing or to any other tour step.
-- No changes to the `end-session-confirm` step.
+- No changes to modal layout, copy, totals, or End Session behavior.
+- No changes to the `end-session-confirm` step or any other tour step.
+- No changes to tooltip sizing or to the OnboardingTour placement engine.
 
 ### Files touched
-- `src/components/poker/EndSessionSheet.tsx` (move `data-tour` attribute)
-- `src/components/onboarding/tourSteps.ts` (flip placement to `above`)
+- `src/components/poker/EndSessionSheet.tsx` (move one `data-tour` attribute)
