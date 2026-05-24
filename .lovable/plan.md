@@ -1,49 +1,23 @@
-## Problem
+## Goal
+Bind the tutorial spotlight to the actual gold “Session Summary” header row (icon + title) so the highlight stays locked to that header only, not the stats below it.
 
-In the End Session sheet, the tutorial spotlight for the **Session Summary** step renders around the first stats row (`Total Buy-in / Total Cash-out`) instead of around the gold “Session Summary” title at the top of the card.
+## Plan
+1. Update the Session Summary header in `src/components/poker/EndSessionSheet.tsx` so the tour target is attached to a dedicated shrink-to-fit title element that wraps the icon and text together.
+2. Keep the existing tooltip configuration and modal layout unchanged.
+3. Verify that the spotlight now measures only the header row and remains visually centered on the title/icon row.
 
-The `data-tour="end-session-summary"` attribute currently lives on the title's flex *row* wrapper (`<div class="flex items-center justify-center gap-2 mb-3">`). That wrapper is a block-level flex container that stretches the full width of the card. On the mobile viewport in question its measured `getBoundingClientRect()` is ending up taller and lower than the visible icon + text, which is why the spotlight rectangle sits over the stats row below.
-
-## Fix
-
-Move the `data-tour="end-session-summary"` anchor off the wrapper row and onto the **`<span>`** that actually renders the words “Session Summary”. A `<span>` is inline by default, so its bounding rect is exactly the text glyphs — narrow, short, and unambiguously centered at the top of the card. With the spotlight's built-in 10px padding this produces a small, balanced pill around the title text, exactly where the user expects.
-
-### Single change
-
-File: `src/components/poker/EndSessionSheet.tsx` (lines 144-147)
-
-Before:
-
-```tsx
-<div data-tour="end-session-summary" className="flex items-center justify-center gap-2 mb-3">
-  <DollarSign size={20} className="text-poker-gold" />
-  <span className="font-medium text-poker-gold">Session Summary</span>
-</div>
-```
-
-After:
-
-```tsx
-<div className="flex items-center justify-center gap-2 mb-3">
-  <DollarSign size={20} className="text-poker-gold" />
-  <span
-    data-tour="end-session-summary"
-    className="font-medium text-poker-gold"
-  >
-    Session Summary
-  </span>
-</div>
-```
-
-## Out of scope
-
-- No changes to `src/components/onboarding/OnboardingTour.tsx` (placement logic stays as-is — `placement: 'above'` is correct).
-- No changes to `src/components/onboarding/tourSteps.ts`.
-- No changes to the modal design, the card layout, the stats grid, the End Session button, or any session-end behavior.
-- No changes to any other tour step.
+## Technical details
+- Replace the current text-only anchor with a dedicated `inline-flex` header target around:
+  - the `DollarSign` icon
+  - the “Session Summary” label
+- Apply the `data-tour="end-session-summary"` attribute to that dedicated header target, not the surrounding full-width container and not the text span alone.
+- Keep spacing balanced with small internal padding so the spotlight box is symmetrical around the row.
+- Do not change:
+  - `src/components/onboarding/tourSteps.ts`
+  - tooltip placement logic in `src/components/onboarding/OnboardingTour.tsx`
+  - modal structure, card content, or stats layout
 
 ## Expected result
-
-- Spotlight rectangle is small and tightly hugs the “Session Summary” title text, centered horizontally inside the card.
-- Tooltip (already set to `placement: 'above'`) continues to sit above the spotlight, fully visible on the 390×540 viewport.
-- The stats grid, totals, notes, and End Session button remain visually untouched and undimmed inside the sheet.
+- The highlight locks directly to the visible Session Summary title/icon row.
+- The rectangle no longer sits too low or catches the stats area.
+- Tooltip layout stays exactly as it is now.
