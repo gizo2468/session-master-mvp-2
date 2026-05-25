@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { TourPathId } from '@/components/onboarding/tourSteps';
+import { markOnboardingCompletionPending } from '@/hooks/useOnboardingTour';
 
 export interface TourStep {
   selector: string;
