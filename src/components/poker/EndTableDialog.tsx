@@ -13,6 +13,15 @@ import {
 } from '@/components/ui/dialog';
 import { TableData } from '@/types/poker';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
+import { useOnboardingTour } from '@/hooks/useOnboardingTour';
+import { TOUR_PATHS } from '@/components/onboarding/tourSteps';
+
+const TOUR_EARLY_END_TABLE_SELECTORS = new Set([
+  '[data-tour="end-table-intro"]',
+  '[data-tour="end-table-cashout-input"]',
+  '[data-tour="end-table-profit"]',
+  '[data-tour="end-table-notes"]',
+]);
 
 interface EndTableDialogProps {
   open: boolean;
