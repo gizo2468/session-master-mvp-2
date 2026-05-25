@@ -61,6 +61,13 @@ export default function Index() {
   const [notesModalOpen, setNotesModalOpen] = useState(false);
   const { connectedCoaches, isCoach, students } = useCoachStudent();
   const [showPlayersModal, setShowPlayersModal] = useState(false);
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+
+  useEffect(() => {
+    if (hasPendingOnboardingCompletion()) {
+      setShowCompletionDialog(true);
+    }
+  }, []);
 
   // Splash screen logic
   const allDataReady = !isLoading && !isRecovering && !statsLoading;
