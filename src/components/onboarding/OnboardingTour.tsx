@@ -741,11 +741,11 @@ export default function OnboardingTour({
     };
   }, [isLiveControlsStep, currentStep, setStep, rect, resolveCurrentTarget]);
 
-  // For the END SESSION CONFIRM step (inside the End Session sheet), the
+  // For the END SESSION SUMMARY/CONFIRM step (inside the End Session sheet), the
   // user's tap on the real red button ends the session AND closes the tour.
   useEffect(() => {
-    if (!isEndSessionConfirmStep) return;
-    const el = resolveCurrentTarget();
+    if (!isEndSessionConfirmStep && !isEndSessionSummaryStep) return;
+    const el = document.querySelector('[data-tour="end-session-confirm"]') as HTMLElement | null;
     if (!el) return;
     const handler = () => {
       onClose();
@@ -754,7 +754,7 @@ export default function OnboardingTour({
     return () => {
       el.removeEventListener('click', handler);
     };
-  }, [isEndSessionConfirmStep, onClose, rect, resolveCurrentTarget]);
+  }, [isEndSessionConfirmStep, isEndSessionSummaryStep, onClose, rect]);
 
 
   // For the TABLE ACTIONS step, advance the tour when the End Table popup
