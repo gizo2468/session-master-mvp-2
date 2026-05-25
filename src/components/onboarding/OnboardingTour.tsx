@@ -1229,6 +1229,14 @@ export default function OnboardingTour({
             cy = ir.top + ir.height / 2;
           }
         }
+        if (isEndSessionSummaryStep) {
+          const btn = document.querySelector('[data-tour="end-session-confirm"]') as HTMLElement | null;
+          if (btn) {
+            const br = btn.getBoundingClientRect();
+            cx = br.left + br.width / 2;
+            cy = br.top + br.height / 2;
+          }
+        }
         return (
           <div
             className="absolute pointer-events-none tour-tap-hand"
