@@ -86,6 +86,7 @@ export default function OnboardingTour({
   const [tooltipHeight, setTooltipHeight] = useState(200);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const measureTimer = useRef<number | null>(null);
+  const settleMeasureTimers = useRef<number[]>([]);
   const rafId = useRef<number | null>(null);
   const hadRectRef = useRef(false);
   // Direction the user last navigated. Used to skip missing/conditional steps
@@ -109,6 +110,14 @@ export default function OnboardingTour({
     if (!selector) return null;
     return getVisibleElement(selector);
   }, [getVisibleElement]);
+  const clearMeasureTimers = useCallback(() => {
+    if (measureTimer.current) {
+      window.clearTimeout(measureTimer.current);
+      measureTimer.current = null;
+    }
+    settleMeasureTimers.current.forEach((timer) => window.clearTimeout(timer));
+    settleMeasureTimers.current = [];
+  }, []);
   const resolveCurrentTarget = useCallback(() => resolveTargetElement(step?.selector), [resolveTargetElement, step]);
   const isLast = currentStep === steps.length - 1;
   const isFirst = currentStep === 0;
@@ -190,7 +199,7 @@ export default function OnboardingTour({
     setTooltipVisible(false);
     hadRectRef.current = false;
     setRect(null);
-    if (measureTimer.current) window.clearTimeout(measureTimer.current);
+    clearMeasureTimers();
 
     let cancelled = false;
     let attempts = 0;
@@ -267,12 +276,13 @@ export default function OnboardingTour({
           if (cancelled) return;
           setTooltipVisible(true);
           if (isModalStep) {
-            // Radix dialog enter animation is ~150ms; re-measure after it settles
-            // so the spotlight snaps onto the post-transform rect.
-            measureTimer.current = window.setTimeout(() => {
-              if (cancelled) return;
-              readRect();
-            }, 220);
+            [120, 300, 550, 850].forEach((delay) => {
+              const timer = window.setTimeout(() => {
+                if (cancelled) return;
+                readRect();
+              }, delay);
+              settleMeasureTimers.current.push(timer);
+            });
           }
         });
       });
@@ -291,9 +301,9 @@ export default function OnboardingTour({
 
     return () => {
       cancelled = true;
-      if (measureTimer.current) window.clearTimeout(measureTimer.current);
+      clearMeasureTimers();
     };
-  }, [currentStep, step, readRect, setStep, isLast, resolveCurrentTarget, isModalStep]);
+  }, [currentStep, step, readRect, setStep, isLast, resolveCurrentTarget, isModalStep, clearMeasureTimers]);
 
   // Track when we have a rect (to enable position transitions only after first paint).
   useEffect(() => {
@@ -458,15 +468,19 @@ export default function OnboardingTour({
     if (!step || typeof ResizeObserver === 'undefined') return;
     const el = resolveCurrentTarget();
     if (!el) return;
+    const dialog = el.closest('[role="dialog"]') as HTMLElement | null;
     const ro = new ResizeObserver(() => {
       if (frozenRef.current) return;
       readRect();
     });
     ro.observe(el);
+    if (dialog) {
+      ro.observe(dialog);
+    }
     // Re-measure when the surrounding Radix dialog finishes its enter animation.
-    const dialog = el.closest('[role="dialog"]') as HTMLElement | null;
-    const onSettle = () => {
+    const onSettle = (event: Event) => {
       if (frozenRef.current) return;
+      if (event.target !== dialog) return;
       readRect();
     };
     if (dialog) {
