@@ -354,6 +354,14 @@ export default function Index() {
       <PlayerCardModal open={playerCardOpen} onOpenChange={setPlayerCardOpen} />
       <ViewAllNotesModal open={notesModalOpen} onOpenChange={setNotesModalOpen} />
 
+      <TourCompletionDialog
+        open={showCompletionDialog}
+        onClose={() => {
+          clearOnboardingCompletionPending();
+          setShowCompletionDialog(false);
+        }}
+      />
+
       {/* Multi-step onboarding spotlight tour */}
       {splashRemoved && showOnboardingTour && isHomeTourStep && (
         <OnboardingTour
