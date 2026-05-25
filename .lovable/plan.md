@@ -1,31 +1,32 @@
-## Root cause
+# Plan
 
-The "Session Summary" target lives inside a Radix Sheet that slides up from the bottom on mobile via a ~500ms CSS animation. `getBoundingClientRect()` returns coordinates **after** the current transform, so any measurement taken mid-animation reports the target's transformed (lower / off) position. Once the animation finishes the rect is correct, but by then the spotlight has already been positioned and is not re-measured.
+Lock the real gold **End Table** button only while the **End Table** tutorial is active, and only unlock it on the **Finalize This Table** step.
 
-Currently `OnboardingTour.tsx` handles modal steps with:
-- a single `setTimeout(readRect, 220)` after the step opens, and
-- an `animationend` / `transitionend` listener on the closest `[role="dialog"]`.
+## What I’ll change
 
-Both are insufficient on mobile because:
-1. 220 ms is shorter than the Sheet's enter animation (~500 ms with shadcn defaults).
-2. `animationend` bubbles up from inner children (overlay, inner divs) and fires **before** the SheetContent's own slide animation completes, so the early event triggers a measurement on a still-transformed target. After that, no further re-measure happens until the user resizes the viewport — which is exactly the bug.
+1. **Read live tutorial state inside `EndTableDialog`**
+   - Use the existing onboarding hook to detect whether the tutorial is currently active.
+   - Check the active tour path and current step so this logic applies only during the guided flow.
 
-A viewport switch works around it because the resize listener calls `readRect()` after the sheet is fully settled.
+2. **Gate the real confirm button by the current tutorial step**
+   - Compute a tutorial-only boolean that is `true` for the earlier End Table steps:
+     - `Total Payout`
+     - `Profit / Loss`
+     - `Notes (Optional)`
+   - Keep that boolean `false` once the user reaches `Finalize This Table`.
 
-## Fix
+3. **Harden the button so early taps do nothing**
+   - Extend the existing `disabled` condition on the real gold button with the tutorial-only gate.
+   - Add a defensive no-op guard on the click handler as well, so even if a click slips through during a transition, it cannot submit, close the modal, advance incorrectly, or break the tutorial.
 
-Update `src/components/onboarding/OnboardingTour.tsx` only — no other files.
+## Result
 
-1. **Multi-checkpoint re-measure for modal steps.** Replace the single 220 ms timeout with a small schedule of re-measurements at roughly 120 / 300 / 550 / 850 ms after the step activates. Cancel all of them on unmount/step change. This guarantees we capture the final rect after the Sheet's slide-in animation has fully completed, regardless of exact duration.
+- During the End Table tutorial, the real gold button is fully blocked on the early steps.
+- On `Finalize This Table`, the same real button becomes clickable and continues the tutorial normally.
+- Outside the tutorial, normal End Table behavior stays exactly the same.
 
-2. **Filter `animationend` to the dialog element itself.** Change the existing `animationend` handler on the closest `[role="dialog"]` to ignore bubbled events from descendants (only react when `event.target === dialog`). This prevents the early false-settle measurement from inner overlay/content animations.
+## Technical details
 
-3. **Observe the dialog's size, not just the target's.** Extend the existing `ResizeObserver` block so that for modal steps it also observes the closest `[role="dialog"]` ancestor. The sheet's height/transform changes during the enter animation will trigger continuous re-measures, keeping the spotlight glued to the final pill position as soon as it stops moving.
-
-No changes to tooltip layout, step content, `EndSessionSheet.tsx`, or `tourSteps.ts`.
-
-## Validation
-
-- Open End Session sheet at mobile viewport with the tour active on the Session Summary step → spotlight should sit centered on the "$ Session Summary" pill from the first frame after the sheet finishes sliding up, with no need to toggle viewport.
-- Desktop and tablet behavior unchanged (the extra re-measures are idempotent).
-- Other modal-step highlights (end-table-intro, cashout-input, etc.) benefit from the same robustness without behavior changes.
+- File to update: `src/components/poker/EndTableDialog.tsx`
+- Reuse existing tour step metadata from `src/components/onboarding/tourSteps.ts`
+- No changes to tutorial copy, layout, modal structure, or non-tutorial behavior

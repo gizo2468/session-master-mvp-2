@@ -13,6 +13,15 @@ import {
 } from '@/components/ui/dialog';
 import { TableData } from '@/types/poker';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
+import { useOnboardingTour } from '@/hooks/useOnboardingTour';
+import { TOUR_PATHS } from '@/components/onboarding/tourSteps';
+
+const TOUR_EARLY_END_TABLE_SELECTORS = new Set([
+  '[data-tour="end-table-intro"]',
+  '[data-tour="end-table-cashout-input"]',
+  '[data-tour="end-table-profit"]',
+  '[data-tour="end-table-notes"]',
+]);
 
 interface EndTableDialogProps {
   open: boolean;
@@ -64,11 +73,24 @@ export default function EndTableDialog({
   currency
 }: EndTableDialogProps) {
   const currencySymbol = getCurrencySymbol(currency);
-  
+
+  // Tutorial-only gate: block the real "End Table" button on early End Table
+  // tour steps (Total Payout, Profit/Loss, Notes). Becomes false on the
+  // "Finalize This Table" step and anytime the tutorial is not running.
+  const { shouldShow: tourShouldShow, activePath: tourActivePath, currentStep: tourCurrentStep } = useOnboardingTour();
+  const tourBlocksConfirm = (() => {
+    if (!tourShouldShow || !tourActivePath) return false;
+    const steps = TOUR_PATHS[tourActivePath];
+    const selector = steps?.[tourCurrentStep]?.selector;
+    return !!selector && TOUR_EARLY_END_TABLE_SELECTORS.has(selector);
+  })();
+
   // Helper function to check if a table is a multi-day tournament
   const isMultiDayTournament = (table: TableData) => {
     return table.format === 'Tournament' && table.isMultiDay === true;
   };
+
+
 
   // Helper function to check if a table is a bounty tournament
   const isBountyTournament = (table: TableData) => {
@@ -307,12 +329,25 @@ export default function EndTableDialog({
           <Button 
             data-tour="end-table-confirm"
             className="bg-poker-gold hover:bg-poker-darkGold text-white"
-            onClick={onConfirm}
-            disabled={(endReason !== 'day-ended' && !cashOutAmount) || 
-                      (endReason === 'day-ended' && !chipsCarryover)}
+            onClick={(e) => {
+              // Defensive: during the early End Table tutorial steps, ignore
+              // any click that slips through (e.g. mid-transition) so the
+              // tutorial flow can't be advanced, submitted, or crashed.
+              if (tourBlocksConfirm) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+              }
+              onConfirm();
+            }}
+            disabled={(endReason !== 'day-ended' && !cashOutAmount) ||
+                      (endReason === 'day-ended' && !chipsCarryover) ||
+                      tourBlocksConfirm}
+            aria-disabled={tourBlocksConfirm || undefined}
           >
             {endReason === 'day-ended' ? 'End Day' : 'End Table'}
           </Button>
+
         </DialogFooter>
       </DialogContent>
     </Dialog>
