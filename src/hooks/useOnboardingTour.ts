@@ -120,3 +120,26 @@ export function triggerOnboardingReset() {
   } catch {}
   window.dispatchEvent(new Event(RESET_EVENT));
 }
+
+const COMPLETION_PENDING_KEY = 'onboarding_tour_show_completion';
+
+export function markOnboardingCompletionPending() {
+  try {
+    localStorage.setItem(COMPLETION_PENDING_KEY, 'true');
+  } catch {}
+}
+
+export function clearOnboardingCompletionPending() {
+  try {
+    localStorage.removeItem(COMPLETION_PENDING_KEY);
+  } catch {}
+}
+
+export function hasPendingOnboardingCompletion(): boolean {
+  try {
+    return localStorage.getItem(COMPLETION_PENDING_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
