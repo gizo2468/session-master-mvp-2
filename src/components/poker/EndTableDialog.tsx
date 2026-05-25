@@ -85,6 +85,12 @@ export default function EndTableDialog({
     return !!selector && TOUR_EARLY_END_TABLE_SELECTORS.has(selector);
   })();
 
+  // Helper function to check if a table is a multi-day tournament
+  const isMultiDayTournament = (table: TableData) => {
+    return table.format === 'Tournament' && table.isMultiDay === true;
+  };
+
+
 
   // Helper function to check if a table is a bounty tournament
   const isBountyTournament = (table: TableData) => {
