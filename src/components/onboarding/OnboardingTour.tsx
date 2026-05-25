@@ -468,15 +468,19 @@ export default function OnboardingTour({
     if (!step || typeof ResizeObserver === 'undefined') return;
     const el = resolveCurrentTarget();
     if (!el) return;
+    const dialog = el.closest('[role="dialog"]') as HTMLElement | null;
     const ro = new ResizeObserver(() => {
       if (frozenRef.current) return;
       readRect();
     });
     ro.observe(el);
+    if (dialog) {
+      ro.observe(dialog);
+    }
     // Re-measure when the surrounding Radix dialog finishes its enter animation.
-    const dialog = el.closest('[role="dialog"]') as HTMLElement | null;
-    const onSettle = () => {
+    const onSettle = (event: Event) => {
       if (frozenRef.current) return;
+      if (event.target !== dialog) return;
       readRect();
     };
     if (dialog) {
