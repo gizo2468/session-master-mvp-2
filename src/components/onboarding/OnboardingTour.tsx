@@ -749,6 +749,7 @@ export default function OnboardingTour({
     const el = document.querySelector('[data-tour="end-session-confirm"]') as HTMLElement | null;
     if (!el) return;
     const handler = () => {
+      markOnboardingCompletionPending();
       onClose();
     };
     el.addEventListener('click', handler, { once: true });
