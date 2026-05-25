@@ -329,12 +329,25 @@ export default function EndTableDialog({
           <Button 
             data-tour="end-table-confirm"
             className="bg-poker-gold hover:bg-poker-darkGold text-white"
-            onClick={onConfirm}
-            disabled={(endReason !== 'day-ended' && !cashOutAmount) || 
-                      (endReason === 'day-ended' && !chipsCarryover)}
+            onClick={(e) => {
+              // Defensive: during the early End Table tutorial steps, ignore
+              // any click that slips through (e.g. mid-transition) so the
+              // tutorial flow can't be advanced, submitted, or crashed.
+              if (tourBlocksConfirm) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+              }
+              onConfirm();
+            }}
+            disabled={(endReason !== 'day-ended' && !cashOutAmount) ||
+                      (endReason === 'day-ended' && !chipsCarryover) ||
+                      tourBlocksConfirm}
+            aria-disabled={tourBlocksConfirm || undefined}
           >
             {endReason === 'day-ended' ? 'End Day' : 'End Table'}
           </Button>
+
         </DialogFooter>
       </DialogContent>
     </Dialog>
