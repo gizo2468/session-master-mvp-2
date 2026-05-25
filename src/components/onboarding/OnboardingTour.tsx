@@ -132,8 +132,9 @@ export default function OnboardingTour({
   const isModalStep = !!step && MODAL_STEP_SELECTORS.some((selector) => selector === step.selector);
   const isLiveControlsStep = step?.selector === '[data-tour="live-controls"]';
   const isEndSessionConfirmStep = step?.selector === '[data-tour="end-session-confirm"]';
-  const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep || isLiveControlsStep || isEndSessionConfirmStep;
-  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableConfirmStep || isLiveControlsStep || isEndSessionConfirmStep;
+  const isEndSessionSummaryStep = step?.selector === '[data-tour="end-session-summary"]';
+  const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep || isLiveControlsStep || isEndSessionConfirmStep || isEndSessionSummaryStep;
+  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableConfirmStep || isLiveControlsStep || isEndSessionConfirmStep || isEndSessionSummaryStep;
   const hidePreviousButton = isGameSetupStep || isLiveOverviewStep || isLiveControlsStep || isEndSessionConfirmStep;
 
 
