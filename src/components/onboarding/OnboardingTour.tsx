@@ -132,8 +132,9 @@ export default function OnboardingTour({
   const isModalStep = !!step && MODAL_STEP_SELECTORS.some((selector) => selector === step.selector);
   const isLiveControlsStep = step?.selector === '[data-tour="live-controls"]';
   const isEndSessionConfirmStep = step?.selector === '[data-tour="end-session-confirm"]';
-  const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep || isLiveControlsStep || isEndSessionConfirmStep;
-  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableConfirmStep || isLiveControlsStep || isEndSessionConfirmStep;
+  const isEndSessionSummaryStep = step?.selector === '[data-tour="end-session-summary"]';
+  const showTapHand = isStartSessionStep || isStakesStep || isSubmitSessionStep || isLiveControlsStep || isEndSessionConfirmStep || isEndSessionSummaryStep;
+  const hideNextButton = isStartSessionStep || isSubmitSessionStep || isTableActionsStep || isEndTableConfirmStep || isLiveControlsStep || isEndSessionConfirmStep || isEndSessionSummaryStep;
   const hidePreviousButton = isGameSetupStep || isLiveOverviewStep || isLiveControlsStep || isEndSessionConfirmStep;
 
 
@@ -740,11 +741,11 @@ export default function OnboardingTour({
     };
   }, [isLiveControlsStep, currentStep, setStep, rect, resolveCurrentTarget]);
 
-  // For the END SESSION CONFIRM step (inside the End Session sheet), the
+  // For the END SESSION SUMMARY/CONFIRM step (inside the End Session sheet), the
   // user's tap on the real red button ends the session AND closes the tour.
   useEffect(() => {
-    if (!isEndSessionConfirmStep) return;
-    const el = resolveCurrentTarget();
+    if (!isEndSessionConfirmStep && !isEndSessionSummaryStep) return;
+    const el = document.querySelector('[data-tour="end-session-confirm"]') as HTMLElement | null;
     if (!el) return;
     const handler = () => {
       onClose();
@@ -753,7 +754,7 @@ export default function OnboardingTour({
     return () => {
       el.removeEventListener('click', handler);
     };
-  }, [isEndSessionConfirmStep, onClose, rect, resolveCurrentTarget]);
+  }, [isEndSessionConfirmStep, isEndSessionSummaryStep, onClose, rect]);
 
 
   // For the TABLE ACTIONS step, advance the tour when the End Table popup
@@ -1226,6 +1227,14 @@ export default function OnboardingTour({
             const ir = input.getBoundingClientRect();
             cx = ir.left + ir.width / 2;
             cy = ir.top + ir.height / 2;
+          }
+        }
+        if (isEndSessionSummaryStep) {
+          const btn = document.querySelector('[data-tour="end-session-confirm"]') as HTMLElement | null;
+          if (btn) {
+            const br = btn.getBoundingClientRect();
+            cx = br.left + br.width / 2;
+            cy = br.top + br.height / 2;
           }
         }
         return (
