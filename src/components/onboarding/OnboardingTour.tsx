@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { TourPathId } from '@/components/onboarding/tourSteps';
+import { markOnboardingCompletionPending } from '@/hooks/useOnboardingTour';
 
 export interface TourStep {
   selector: string;
@@ -748,6 +749,7 @@ export default function OnboardingTour({
     const el = document.querySelector('[data-tour="end-session-confirm"]') as HTMLElement | null;
     if (!el) return;
     const handler = () => {
+      markOnboardingCompletionPending();
       onClose();
     };
     el.addEventListener('click', handler, { once: true });

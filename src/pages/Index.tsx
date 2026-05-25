@@ -24,8 +24,9 @@ import chipMyNotes from '@/assets/chip-my-notes.png';
 import chipCoach from '@/assets/chip-coach.png';
 import ViewAllNotesModal from '@/components/notes/ViewAllNotesModal';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
+import TourCompletionDialog from '@/components/onboarding/TourCompletionDialog';
 import { TOUR_PATHS } from '@/components/onboarding/tourSteps';
-import { useOnboardingTour } from '@/hooks/useOnboardingTour';
+import { useOnboardingTour, hasPendingOnboardingCompletion, clearOnboardingCompletionPending } from '@/hooks/useOnboardingTour';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -60,6 +61,13 @@ export default function Index() {
   const [notesModalOpen, setNotesModalOpen] = useState(false);
   const { connectedCoaches, isCoach, students } = useCoachStudent();
   const [showPlayersModal, setShowPlayersModal] = useState(false);
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+
+  useEffect(() => {
+    if (hasPendingOnboardingCompletion()) {
+      setShowCompletionDialog(true);
+    }
+  }, []);
 
   // Splash screen logic
   const allDataReady = !isLoading && !isRecovering && !statsLoading;
@@ -345,6 +353,14 @@ export default function Index() {
       
       <PlayerCardModal open={playerCardOpen} onOpenChange={setPlayerCardOpen} />
       <ViewAllNotesModal open={notesModalOpen} onOpenChange={setNotesModalOpen} />
+
+      <TourCompletionDialog
+        open={showCompletionDialog}
+        onClose={() => {
+          clearOnboardingCompletionPending();
+          setShowCompletionDialog(false);
+        }}
+      />
 
       {/* Multi-step onboarding spotlight tour */}
       {splashRemoved && showOnboardingTour && isHomeTourStep && (

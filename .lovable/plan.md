@@ -1,29 +1,39 @@
 # Plan
 
-Update the final End Session tutorial flow so the "Review Your Session" step has no Next button and is only advanced by tapping the real red **End Session** button, with the animated hand indicator pointing at that button.
+Show a one-time **Tutorial Complete** modal on the Home screen after the user finishes the End Session step of the tour.
 
 ## What I'll change
 
-1. **`src/components/onboarding/tourSteps.ts`**
-   - Remove the now-redundant `"Save Your Session"` step (selector `end-session-confirm`). The "Review Your Session" step becomes the final step of the End Session flow.
-   - Keep "Review Your Session" copy and its `end-session-summary` selector (so the spotlight still frames the recap panel), keep Previous working.
+1. **`src/hooks/useOnboardingTour.ts`**
+   - Add a small helper `markOnboardingCompletionPending()` that writes a `localStorage` flag (e.g. `onboarding_tour_show_completion = 'true'`).
+   - Add a corresponding `clearOnboardingCompletionPending()` helper.
+   - No change to existing `dismiss()` behavior — the completion flag is independent and set explicitly by the End Session flow.
 
 2. **`src/components/onboarding/OnboardingTour.tsx`**
-   - Treat the `end-session-summary` step as the "tap real End Session to advance" step:
-     - Add it to `hideNextButton` so Next is removed.
-     - Add it to `showTapHand` and anchor the animated hand indicator to the real `[data-tour="end-session-confirm"]` button (not the summary panel spotlight target).
-   - Keep Previous button visible/working (do not add to `hidePreviousButton`).
-   - Ensure the existing "real button click advances tour" wiring (already used by `end-session-confirm`) is applied when on the `end-session-summary` step — clicking the real red End Session button completes the tour as the last step, and the existing End Session flow returns the user to Home as today.
+   - In the existing real End Session button click handler (the one that already calls `onClose()` for the summary/confirm step), also call `markOnboardingCompletionPending()` right before `onClose()` so the Home screen knows to show the celebration modal once the user lands there.
 
-3. **No business-logic changes** to `EndSessionSheet` — the End Session button keeps its current real behavior. The tutorial just hooks into its click to advance/complete the tour.
+3. **New component `src/components/onboarding/TourCompletionDialog.tsx`**
+   - Small `Dialog`-based modal using existing UI primitives and theme tokens (gold accent on dark surface — consistent with premium dark mode).
+   - Content:
+     - Title: "Tutorial Complete"
+     - Body: short congrats line + "You're all set to use Session Master."
+     - Single primary button: **Start Playing**
+   - On button click (or dismiss): call `clearOnboardingCompletionPending()` and close.
+
+4. **`src/pages/Index.tsx`** (Home)
+   - On mount and on focus, read the `onboarding_tour_show_completion` flag.
+   - If set, render `TourCompletionDialog` once. On close, clear the flag so it never re-appears.
+   - Only render after splash removed and only on the Home route (Index already gates Home tour rendering this way).
 
 ## Result
 
-- "Review Your Session" step shows: spotlight on the recap, Previous button, no Next button, animated hand pointing at the real red End Session button.
-- Tapping the real End Session button ends the session and returns to Home (unchanged), and naturally completes the tour because it's now the last step.
-- Outside the tutorial, End Session behavior is unchanged.
+- After tapping the real red End Session button, the session ends and the user lands on Home as today.
+- A single celebration modal appears on Home congratulating the user. Tapping **Start Playing** closes it permanently.
+- Tutorial completion state (`onboarding_tour_completed`) stays `true`, so the tour itself does not re-trigger.
+- Outside the tutorial completion path, nothing changes.
 
 ## Technical notes
 
-- Reuse existing hand-indicator and "hide Next" patterns already used for `end-session-confirm`, just retarget them at the `end-session-summary` step and anchor the hand to the `end-session-confirm` element.
-- No changes to `EndSessionSheet.tsx`, routing, or session-end logic.
+- Flag stored in `localStorage` under `onboarding_tour_show_completion` so it survives the navigation from Session → Home.
+- Cleared on first display + button tap to guarantee one-time appearance.
+- No backend, no routing changes, no changes to End Session business logic.
