@@ -73,11 +73,18 @@ export default function EndTableDialog({
   currency
 }: EndTableDialogProps) {
   const currencySymbol = getCurrencySymbol(currency);
-  
-  // Helper function to check if a table is a multi-day tournament
-  const isMultiDayTournament = (table: TableData) => {
-    return table.format === 'Tournament' && table.isMultiDay === true;
-  };
+
+  // Tutorial-only gate: block the real "End Table" button on early End Table
+  // tour steps (Total Payout, Profit/Loss, Notes). Becomes false on the
+  // "Finalize This Table" step and anytime the tutorial is not running.
+  const { shouldShow: tourShouldShow, activePath: tourActivePath, currentStep: tourCurrentStep } = useOnboardingTour();
+  const tourBlocksConfirm = (() => {
+    if (!tourShouldShow || !tourActivePath) return false;
+    const steps = TOUR_PATHS[tourActivePath];
+    const selector = steps?.[tourCurrentStep]?.selector;
+    return !!selector && TOUR_EARLY_END_TABLE_SELECTORS.has(selector);
+  })();
+
 
   // Helper function to check if a table is a bounty tournament
   const isBountyTournament = (table: TableData) => {
