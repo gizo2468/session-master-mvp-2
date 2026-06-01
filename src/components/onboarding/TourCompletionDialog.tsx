@@ -17,8 +17,13 @@ export default function TourCompletionDialog({ open, onClose }: TourCompletionDi
             <Trophy className="h-7 w-7 text-primary" />
           </div>
           <DialogTitle className="text-primary text-center">Tutorial Complete</DialogTitle>
-          <DialogDescription className="text-center text-foreground/80">
-            Nice work! You've finished the walkthrough and you're all set to use Session Master.
+          <DialogDescription asChild className="text-center text-foreground/80">
+            <div className="space-y-3">
+              <p>Congratulations! You've successfully completed the Session Master walkthrough.</p>
+              <p>Your first session has been saved, and you can view it anytime on the Home screen under Recent Sessions.</p>
+              <p>If you ever want a refresher, you can restart the tutorial at any time from the Settings page.</p>
+              <p>Keep tracking your sessions and improving your game. Good luck at the tables!</p>
+            </div>
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-center">
