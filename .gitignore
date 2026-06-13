@@ -27,3 +27,4 @@ dist-ssr
 # APNS keys
 push_dev.csr
 push_dev.key
+.env

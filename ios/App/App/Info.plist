@@ -2,12 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSCameraUsageDescription</key>
-	<string>SessionMaster needs camera access to take photos of poker hands and update your profile picture.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>SessionMaster needs photo library access to select images for poker hands and your profile.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>SessionMaster needs permission to save photos to your library.</string>
 	<key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -28,8 +22,16 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>SessionMaster needs camera access to take photos of poker hands and update your profile picture.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>SessionMaster needs permission to save photos to your library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SessionMaster needs photo library access to select images for poker hands and your profile.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
