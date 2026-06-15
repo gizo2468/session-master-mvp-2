@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import newSessionIcon from '@/assets/start-session-stopwatch.png';
+import newSessionIcon from '@/assets/start-session-stopwatch.webp';
 
 export default function NewSessionButton() {
   const navigate = useNavigate();
