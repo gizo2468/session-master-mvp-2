@@ -1,19 +1,14 @@
-Add a "Skip Tutorial" button to the "You're All Set!" (`submit-session`) step only.
+Two small changes to the onboarding tour:
 
-**Changes in `src/components/onboarding/OnboardingTour.tsx`:**
-1. Import `useNavigate` from `react-router-dom`.
-2. Instantiate `const navigate = useNavigate()`.
-3. Add a `handleSkipTutorial` callback:
-   - Calls `onClose()` (marks tutorial completed via `dismissOnboardingTour` and prevents re-trigger).
-   - Then `navigate('/', { replace: true })` to return the user to Home.
-4. In the existing buttons row (inside the right `flex items-center gap-2` container), conditionally render the new button only when `isSubmitSessionStep` is true:
-   - Use `variant="ghost"`, `size="sm"`, and the existing muted-foreground styling already used by the `game-setup` Skip button.
-   - Label: "Skip Tutorial".
+1. **Update description text** in `src/components/onboarding/tourSteps.ts` for the `live-overview` step:
+   - Replace: `"Monitor your total session duration and overall investment in real-time."`
+   - With: `"Track your session time, active tables, and saved hands in real-time."`
 
-**Behavior:**
-- Button appears **only** on the "You're All Set!" step.
-- Tapping it ends the tour, marks it completed in localStorage (same end-state as pressing Done on the last step), closes the overlay, and redirects to `/`.
-- No other steps are affected.
-- Existing mobile/desktop responsive layout is preserved.
+2. **Add conditional "Skip Tutorial" button** in `src/components/onboarding/OnboardingTour.tsx`:
+   - Render a ghost-style "Skip Tutorial" button only when `isLiveOverviewStep` is true.
+   - Place it in the right-side button container, before the existing "Next" button.
+   - Wire it to the existing `handleSkipTutorial` handler (`onClose()` + `navigate('/', { replace: true })`).
+   - Use the same muted-foreground styling already used by the game-setup "Skip" and submit-session "Skip Tutorial" buttons.
+   - No changes to other steps. The button is isolated to the Live Session Tracking step only.
 
-No other files change.
+This follows the exact same pattern already implemented for the "You're All Set!" step's Skip Tutorial button.

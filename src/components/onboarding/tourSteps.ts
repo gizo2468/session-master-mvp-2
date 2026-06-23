@@ -84,7 +84,7 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     {
       selector: '[data-tour="live-overview"]',
       title: 'Live Session Tracking',
-      body: 'Monitor your total session duration and overall investment in real-time.',
+      body: 'Track your session time, active tables, and saved hands in real-time.',
       interactive: true,
       route: '/session',
       compact: true,

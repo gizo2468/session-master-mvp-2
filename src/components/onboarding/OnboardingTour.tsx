@@ -1373,7 +1373,7 @@ export default function OnboardingTour({
                   Skip
                 </Button>
               )}
-              {isSubmitSessionStep && (
+              {(isSubmitSessionStep || isLiveOverviewStep) && (
                 <Button
                   variant="ghost"
                   size="sm"
