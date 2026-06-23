@@ -888,6 +888,12 @@ export default function OnboardingTour({
 
   const handleSkip = () => onClose();
 
+  const navigate = useNavigate();
+  const handleSkipTutorial = () => {
+    onClose();
+    navigate('/', { replace: true });
+  };
+
   // ===== Menu mode: Welcome screen with 3 path-selection buttons =====
   if (isMenu) {
     const TOOLTIP_W = 320;
