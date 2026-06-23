@@ -1,12 +1,19 @@
-Update only the text inside `src/components/onboarding/TourCompletionDialog.tsx`.
+Add a "Skip Tutorial" button to the "You're All Set!" (`submit-session`) step only.
 
-- Title stays: **Tutorial Complete**
-- Replace `DialogDescription` body with the new multi-paragraph message:
-  1. "Congratulations! You've successfully completed the Session Master walkthrough."
-  2. "Your first session has been saved, and you can view it anytime on the Home screen under Recent Sessions."
-  3. "If you ever want a refresher, you can restart the tutorial at any time from the Settings page."
-  4. "Keep tracking your sessions and improving your game. Good luck at the tables!"
-- Use stacked `<p>` blocks inside the description for readability (small vertical spacing).
-- Keep trophy icon, gold styling, and **Start Playing** button untouched.
+**Changes in `src/components/onboarding/OnboardingTour.tsx`:**
+1. Import `useNavigate` from `react-router-dom`.
+2. Instantiate `const navigate = useNavigate()`.
+3. Add a `handleSkipTutorial` callback:
+   - Calls `onClose()` (marks tutorial completed via `dismissOnboardingTour` and prevents re-trigger).
+   - Then `navigate('/', { replace: true })` to return the user to Home.
+4. In the existing buttons row (inside the right `flex items-center gap-2` container), conditionally render the new button only when `isSubmitSessionStep` is true:
+   - Use `variant="ghost"`, `size="sm"`, and the existing muted-foreground styling already used by the `game-setup` Skip button.
+   - Label: "Skip Tutorial".
+
+**Behavior:**
+- Button appears **only** on the "You're All Set!" step.
+- Tapping it ends the tour, marks it completed in localStorage (same end-state as pressing Done on the last step), closes the overlay, and redirects to `/`.
+- No other steps are affected.
+- Existing mobile/desktop responsive layout is preserved.
 
 No other files change.
