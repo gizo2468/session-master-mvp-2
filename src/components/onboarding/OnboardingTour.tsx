@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { TourPathId } from '@/components/onboarding/tourSteps';
