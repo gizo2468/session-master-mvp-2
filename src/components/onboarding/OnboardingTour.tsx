@@ -1373,6 +1373,16 @@ export default function OnboardingTour({
                   Skip
                 </Button>
               )}
+              {isSubmitSessionStep && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSkipTutorial}
+                  className="text-muted-foreground hover:text-foreground hover:bg-transparent"
+                >
+                  Skip Tutorial
+                </Button>
+              )}
               {!hideNextButton && (
                 <Button size="sm" onClick={handleNext} disabled={nextDisabled} aria-disabled={nextDisabled}>
                   {isLast ? 'Done' : 'Next'}
