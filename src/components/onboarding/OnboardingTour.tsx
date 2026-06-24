@@ -1380,7 +1380,7 @@ export default function OnboardingTour({
                   onClick={handleSkipTutorial}
                   className="text-muted-foreground hover:text-foreground hover:bg-transparent"
                 >
-                  Skip Tutorial
+                  Skip
                 </Button>
               )}
               {!hideNextButton && (
