@@ -123,8 +123,8 @@ export const TOUR_PATHS: Record<TourPathId, TourStep[]> = {
     },
     {
       selector: '[data-tour="table-actions"]',
-      title: 'Active Tables',
-      body: "Log a Rebuy or Hand History instantly for your records. Note: To end your session later, you must first close all tables individually. Let's try it now—tap End Table to see how it works.",
+      title: 'Manage Table',
+      body: "Add a rebuy when needed, save hands, or end the table when you're done playing.",
       interactive: true,
       route: '/session',
       compact: true,
