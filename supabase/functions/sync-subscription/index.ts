@@ -6,6 +6,39 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const APPLE_VERIFY_PROD = "https://buy.itunes.apple.com/verifyReceipt";
+const APPLE_VERIFY_SANDBOX = "https://sandbox.itunes.apple.com/verifyReceipt";
+
+interface AppleReceiptResult {
+  status: number;
+  latest_receipt_info?: Array<{
+    product_id: string;
+    expires_date_ms?: string;
+    original_transaction_id: string;
+  }>;
+  pending_renewal_info?: Array<{ auto_renew_status?: string }>;
+}
+
+async function verifyAppleReceipt(receiptData: string): Promise<AppleReceiptResult | null> {
+  const sharedSecret = Deno.env.get("APPLE_SHARED_SECRET") ?? "";
+  const body = JSON.stringify({
+    "receipt-data": receiptData,
+    password: sharedSecret,
+    "exclude-old-transactions": true,
+  });
+
+  // Try production first
+  let res = await fetch(APPLE_VERIFY_PROD, { method: "POST", body });
+  let json = (await res.json()) as AppleReceiptResult;
+
+  // Status 21007 → sandbox receipt sent to production, retry sandbox
+  if (json.status === 21007) {
+    res = await fetch(APPLE_VERIFY_SANDBOX, { method: "POST", body });
+    json = (await res.json()) as AppleReceiptResult;
+  }
+  return json ?? null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -38,30 +71,76 @@ Deno.serve(async (req) => {
 
     const userId = claimsData.claims.sub as string;
 
-    // Validate input
     const body = await req.json();
-    const { isPremium, expiryDate, productId } = body;
+    const { receiptData, isPremium: rawIsPremium } = body;
 
-    if (typeof isPremium !== "boolean") {
+    // Deactivation path: client can only request deactivation (never self-grant premium)
+    if (rawIsPremium === false) {
+      const serviceClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      await serviceClient
+        .from("profiles")
+        .update({ is_premium: false, updated_at: new Date().toISOString() })
+        .eq("id", userId);
+      await serviceClient
+        .from("user_subscriptions")
+        .update({
+          status: "expired",
+          is_active: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId)
+        .eq("is_active", true);
       return new Response(
-        JSON.stringify({ error: "isPremium must be a boolean" }),
+        JSON.stringify({ success: true, isPremium: false }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Activation path: MUST provide a valid Apple receipt — never trust a client boolean.
+    if (typeof receiptData !== "string" || receiptData.length < 20) {
+      return new Response(
+        JSON.stringify({ error: "receiptData (Apple transaction receipt) is required to activate premium." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Use service_role client for writes (bypasses RLS)
+    const verification = await verifyAppleReceipt(receiptData);
+    if (!verification || verification.status !== 0) {
+      console.warn("[sync-subscription] Receipt verification failed:", verification?.status);
+      return new Response(
+        JSON.stringify({ error: "Receipt could not be verified with Apple." }),
+        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Find the latest still-active transaction
+    const now = Date.now();
+    const active = (verification.latest_receipt_info ?? [])
+      .filter((t) => t.expires_date_ms && Number(t.expires_date_ms) > now)
+      .sort((a, b) => Number(b.expires_date_ms) - Number(a.expires_date_ms))[0];
+
+    if (!active) {
+      return new Response(
+        JSON.stringify({ error: "No active subscription found on receipt." }),
+        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const verifiedProductId = active.product_id;
+    const verifiedExpiryIso = new Date(Number(active.expires_date_ms)).toISOString();
+    const planType = verifiedProductId.includes("yearly") ? "ios_yearly" : "ios_monthly";
+
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Update profiles.is_premium
     const { error: profileError } = await serviceClient
       .from("profiles")
-      .update({
-        is_premium: isPremium,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ is_premium: true, updated_at: new Date().toISOString() })
       .eq("id", userId);
 
     if (profileError) {
@@ -72,52 +151,32 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (isPremium) {
-      // Activating — upsert subscription record
-      const planType = typeof productId === "string" && productId.includes("yearly")
-        ? "ios_yearly"
-        : "ios_monthly";
-
-      const { error: subError } = await serviceClient
-        .from("user_subscriptions")
-        .upsert(
-          {
-            user_id: userId,
-            plan_type: planType,
-            status: "active",
-            is_active: true,
-            start_date: new Date().toISOString(),
-            end_date: expiryDate || null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id", ignoreDuplicates: false }
-        );
-
-      if (subError) {
-        console.warn("[sync-subscription] Subscription upsert warning:", subError);
-        // Non-fatal — profile update is more important
-      }
-    } else {
-      // Deactivating — expire active subscriptions
-      const { error: subError } = await serviceClient
-        .from("user_subscriptions")
-        .update({
-          status: "expired",
-          is_active: false,
+    const { error: subError } = await serviceClient
+      .from("user_subscriptions")
+      .upsert(
+        {
+          user_id: userId,
+          plan_type: planType,
+          status: "active",
+          is_active: true,
+          start_date: new Date().toISOString(),
+          end_date: verifiedExpiryIso,
           updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", userId)
-        .eq("is_active", true);
+        },
+        { onConflict: "user_id", ignoreDuplicates: false }
+      );
 
-      if (subError) {
-        console.warn("[sync-subscription] Subscription deactivation warning:", subError);
-      }
+    if (subError) {
+      console.warn("[sync-subscription] Subscription upsert warning:", subError);
     }
 
-    console.log("[sync-subscription] Synced for user:", userId, "isPremium:", isPremium);
-
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({
+        success: true,
+        isPremium: true,
+        productId: verifiedProductId,
+        expiryDate: verifiedExpiryIso,
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
