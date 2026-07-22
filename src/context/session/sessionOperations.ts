@@ -99,8 +99,6 @@ export const createSessionOperations = (
           description: "The session has been permanently deleted from your records."
         });
         
-        // Trigger statistics refresh
-        await refreshSessionsFromDatabase();
         
       } catch (error) {
         console.error('Failed to delete session from database:', error);
