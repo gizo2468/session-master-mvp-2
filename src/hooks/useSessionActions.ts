@@ -57,11 +57,7 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
         title: "Session Ended",
         description: "Your poker session has been successfully recorded."
       });
-      
-      // Force refresh sessions before navigating
-      if (refreshSessionsFromDatabase) {
-        await refreshSessionsFromDatabase();
-      }
+
       
       navigate('/');
     } catch (error) {
