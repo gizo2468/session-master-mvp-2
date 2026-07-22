@@ -171,10 +171,7 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
     // Persist to database immediately when user clicks Save
     await updateSessionDuration(currentSession.id, durationSeconds);
     
-    // Refresh session data to update all UI consumers
-    if (refreshSessionsFromDatabase) {
-      await refreshSessionsFromDatabase();
-    }
+
   };
 
   return {
