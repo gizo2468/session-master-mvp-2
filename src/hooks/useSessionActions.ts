@@ -7,15 +7,7 @@ import { PokerSession, TableData } from '@/types/poker';
 
 export const useSessionActions = (currentSession: PokerSession | null) => {
   const navigate = useNavigate();
-  const { 
-    endSession, 
-    addRebuy,
-    addTable,
-    endTable,
-    addTableRebuy,
-    refreshSessionsFromDatabase,
-    updateSessionDuration
-  } = useSessionContext();
+
   const { toast } = useToast();
 
   const [showEndSessionSheet, setShowEndSessionSheet] = useState(false);
