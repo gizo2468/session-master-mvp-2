@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionContext } from '@/context/SessionContext';
@@ -7,6 +6,15 @@ import { PokerSession, TableData } from '@/types/poker';
 
 export const useSessionActions = (currentSession: PokerSession | null) => {
   const navigate = useNavigate();
+
+  const { 
+    endSession, 
+    addRebuy,
+    addTable,
+    endTable,
+    addTableRebuy,
+    updateSessionDuration
+  } = useSessionContext();
 
   const { toast } = useToast();
 
@@ -49,7 +57,6 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
         title: "Session Ended",
         description: "Your poker session has been successfully recorded."
       });
-
       
       navigate('/');
     } catch (error) {
@@ -162,8 +169,6 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
     
     // Persist to database immediately when user clicks Save
     await updateSessionDuration(currentSession.id, durationSeconds);
-    
-
   };
 
   return {
