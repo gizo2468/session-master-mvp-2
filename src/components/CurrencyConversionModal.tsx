@@ -161,7 +161,6 @@ const CurrencyConversionModal: React.FC<CurrencyConversionModalProps> = ({
 
       if (error) throw error;
 
-      toast.success('Conversion saved successfully');
       onConversionComplete();
       onOpenChange(false);
     } catch (error) {
@@ -181,7 +180,6 @@ const CurrencyConversionModal: React.FC<CurrencyConversionModalProps> = ({
 
       if (error) throw error;
 
-      toast.success('Conversion removed');
       onConversionComplete();
     } catch (error) {
       console.error('Error deleting conversion:', error);

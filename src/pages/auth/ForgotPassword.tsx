@@ -38,10 +38,6 @@ const ForgotPassword: React.FC = () => {
       }
 
       setIsEmailSent(true);
-      toast({
-        title: "Reset email sent",
-        description: "Check your email for the password reset link.",
-      });
     } catch (error: any) {
       console.error('Password reset error:', error);
       setError(error.message || 'Failed to send reset email. Please try again.');

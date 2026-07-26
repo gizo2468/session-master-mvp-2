@@ -22,10 +22,6 @@ const CoachSettings: React.FC = () => {
     navigator.clipboard.writeText(connectionCode);
     setCopied(true);
     
-    toast({
-      title: t('success'),
-      description: "Connection code copied to clipboard",
-    });
     
     // Reset copied state after 2 seconds
     setTimeout(() => setCopied(false), 2000);

@@ -244,17 +244,9 @@ const Signup: React.FC = () => {
         console.log("Email confirmation required for user:", user.id);
         setUserEmail(values.email);
         setShowEmailConfirmation(true);
-        toast({
-          title: "Account Created!",
-          description: "Please check your email to confirm your account before signing in.",
-        });
       } else {
         // User is immediately confirmed (auto-confirm is enabled)
         console.log("User immediately confirmed, redirecting to home");
-        toast({
-          title: "Account Created!",
-          description: "Welcome to Session Master! You can now start tracking your poker sessions.",
-        });
         navigate('/');
       }
     } catch (error) {
@@ -290,10 +282,6 @@ const Signup: React.FC = () => {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Verification Email Sent",
-          description: "We've sent another verification email to your inbox.",
-        });
       }
     } catch (error) {
       console.error("Error resending verification email:", error);

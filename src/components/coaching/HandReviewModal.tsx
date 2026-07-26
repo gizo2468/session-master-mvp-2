@@ -208,10 +208,6 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
 
       setFeedbackEntries(prev => prev.filter(entry => entry.id !== feedbackId));
       
-      toast({
-        title: "Feedback deleted",
-        description: "The feedback has been successfully removed.",
-      });
     } catch (error) {
       console.error('Error deleting feedback:', error);
       toast({
@@ -252,10 +248,6 @@ export const HandReviewModal: React.FC<HandReviewModalProps> = ({
 
       setFeedback('');
       
-      toast({
-        title: "Feedback saved",
-        description: "Your feedback has been saved successfully."
-      });
     } catch (error) {
       console.error('Error saving feedback:', error);
       toast({

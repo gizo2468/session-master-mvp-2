@@ -53,10 +53,6 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
       setShowEndSessionSheet(false);
       setCustomSessionDuration(null);
       
-      toast({
-        title: "Session Ended",
-        description: "Your poker session has been successfully recorded."
-      });
       
       navigate('/');
     } catch (error) {
@@ -74,10 +70,6 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
     
     try {
       addRebuy(currentSession.id, amount);
-      toast({
-        title: "Rebuy Added",
-        description: `$${amount.toFixed(2)} rebuy has been added to your session.`
-      });
     } catch (error) {
       console.error("Error adding rebuy:", error);
       toast({
@@ -93,10 +85,6 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
     
     try {
       addTable(currentSession.id, tableData);
-      toast({
-        title: "Table Added",
-        description: `${tableData.name} has been added to your session.`
-      });
     } catch (error) {
       console.error("Error adding table:", error);
       toast({
@@ -126,12 +114,6 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
     
     try {
       endTable(currentSession.id, tableId, cashOut, notes, bounty, multiDayInfo);
-      toast({
-        title: multiDayInfo?.dayEndedWithoutElimination ? "Day Ended" : "Table Ended",
-        description: multiDayInfo?.dayEndedWithoutElimination 
-          ? "Your tournament progress has been saved for the next day." 
-          : "The table has been successfully ended."
-      });
     } catch (error) {
       console.error("Error ending table:", error);
       toast({
@@ -147,10 +129,6 @@ export const useSessionActions = (currentSession: PokerSession | null) => {
     
     try {
       addTableRebuy(currentSession.id, tableId, amount);
-      toast({
-        title: "Rebuy Added",
-        description: `$${amount.toFixed(2)} rebuy has been added to the table.`
-      });
     } catch (error) {
       console.error("Error adding table rebuy:", error);
       toast({

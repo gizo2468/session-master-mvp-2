@@ -204,10 +204,6 @@ const Settings: React.FC = () => {
           experience: editForm.experience
         } : null);
         setIsEditing(false);
-        toast({
-          title: "Success",
-          description: "Profile updated successfully.",
-        });
       }
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -245,10 +241,6 @@ const Settings: React.FC = () => {
         });
       } else {
         setProfile(prev => prev ? { ...prev, default_currency: currencyCode } : null);
-        toast({
-          title: "Success",
-          description: "Default currency updated successfully.",
-        });
       }
     } catch (error) {
       console.error('Error updating currency:', error);
@@ -528,10 +520,6 @@ const Settings: React.FC = () => {
                           const newInterval = value === 'never' ? null : parseInt(value, 10);
                           updateStackCheckInterval(newInterval).then((success) => {
                             if (success) {
-                              toast({
-                                title: "Success",
-                                description: "Stack check interval updated.",
-                              });
                             } else {
                               toast({
                                 title: "Error",
@@ -605,10 +593,6 @@ const Settings: React.FC = () => {
                     size="sm"
                     onClick={() => {
                       triggerOnboardingReset();
-                      toast({
-                        title: 'Onboarding reset',
-                        description: 'The guided tour will replay next time you visit Home.',
-                      });
                     }}
                   >
                     <Icon name="RotateCcw" className="mr-2 h-4 w-4" />

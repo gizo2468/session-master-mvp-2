@@ -53,10 +53,6 @@ const SupportSettings: React.FC = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Feedback submitted",
-        description: "Thank you for your feedback! We'll review it soon."
-      });
 
       setFeedbackText('');
       setShowFeedbackForm(false);

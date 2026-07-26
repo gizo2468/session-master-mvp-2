@@ -230,10 +230,6 @@ export default function SessionForm() {
       console.log('✅ Session started successfully with ID:', finalSessionId);
 
       // Show success message
-      toast({
-        title: "Session Started",
-        description: "Your poker session has been successfully created with the initial table."
-      });
 
       // FIXED: Wait longer and add better verification
       await new Promise(resolve => setTimeout(resolve, 1000));

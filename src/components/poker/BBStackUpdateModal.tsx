@@ -404,10 +404,6 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       
       updateLiveState({ bbStackUpdates });
       
-      toast({
-        title: "BB/Stack Updates Saved",
-        description: "Your table settings have been updated successfully.",
-      });
       
       console.log('BB/Stack Update Data saved to database and live state');
       

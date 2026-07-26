@@ -405,10 +405,6 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
         return;
       }
 
-      toast({
-        title: "Connection approved!",
-        description: `Connection approved for ${studentUsername}.`,
-      });
 
       // Refresh both lists
       loadPendingRequests();
@@ -440,10 +436,6 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
         return;
       }
 
-      toast({
-        title: "Request rejected",
-        description: `Connection request from ${studentUsername} was rejected.`,
-      });
 
       // Refresh pending requests
       loadPendingRequests();
@@ -560,10 +552,6 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
         return;
       }
 
-      toast({
-        title: "Request sent!",
-        description: `Request sent to ${coachUsername}.`,
-      });
 
       setCoachUsername('');
       setConnectDialogOpen(false);
@@ -686,10 +674,6 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
         return;
       }
 
-      toast({
-        title: "Request sent!",
-        description: `Request sent to ${playerUsername}.`,
-      });
 
       setPlayerUsername('');
       setConnectPlayerDialogOpen(false);
@@ -802,10 +786,6 @@ const MyCoachingNetwork: React.FC<MyCoachingNetworkProps> = ({ highlightIncoming
         return;
       }
 
-      toast({
-        title: "Request sent!",
-        description: `Request sent to ${coachAsCoachUsername}.`,
-      });
 
       setCoachAsCoachUsername('');
       setConnectCoachDialogOpen(false);

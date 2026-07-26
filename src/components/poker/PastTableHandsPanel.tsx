@@ -50,10 +50,6 @@ const PastTableHandsPanel: React.FC<PastTableHandsPanelProps> = ({
       const updatedHands = [...hands, newHand];
       onTableUpdate(updatedHands);
       
-      toast({
-        title: 'Hand Added',
-        description: 'Your hand has been successfully added.',
-      });
       setIsAddHandOpen(false);
     } catch (error) {
       toast({
@@ -84,10 +80,6 @@ const PastTableHandsPanel: React.FC<PastTableHandsPanelProps> = ({
         
         onTableUpdate(updatedHands);
         
-        toast({
-          title: 'Hand Updated',
-          description: 'Your hand has been successfully updated.',
-        });
       } catch (error) {
         toast({
           title: 'Error Updating Hand',
@@ -117,10 +109,6 @@ const PastTableHandsPanel: React.FC<PastTableHandsPanelProps> = ({
         onTableUpdate(updatedHands);
         
         setHandToDelete(null);
-        toast({
-          title: 'Hand Deleted',
-          description: 'Your hand has been successfully deleted.',
-        });
       } catch (error) {
         toast({
           title: 'Error Deleting Hand',

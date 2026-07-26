@@ -154,11 +154,6 @@ function ActiveSessionsList({ sessions, onResume }: ActiveSessionsListProps) {
     
     try {
       await deleteSession(sessionToDelete.id);
-      toast({
-        title: "Session Deleted",
-        description: "The active session has been successfully deleted.",
-        variant: "default"
-      });
     } catch (error) {
       console.error('Error deleting session:', error);
       toast({

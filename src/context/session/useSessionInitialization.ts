@@ -224,11 +224,6 @@ export const useSessionInitialization = () => {
                 });
               } else if (lastError?.message?.includes('timeout') && navigator.onLine) {
                 // Just slow, not actually offline
-                toast({
-                  title: "Loading from Cache",
-                  description: "Using locally stored data while connecting to database.",
-                  variant: "default"
-                });
               }
             } catch (localStorageError) {
               console.error('❌ Failed to load from localStorage:', localStorageError);

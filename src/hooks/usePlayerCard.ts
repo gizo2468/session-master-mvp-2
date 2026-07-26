@@ -272,10 +272,6 @@ export function usePlayerCard() {
       // Update local state with public URL + cache-bust for immediate display
       setPrivateData(prev => prev ? { ...prev, profile_picture: buildAvatarPublicUrl(filePath, true) } : null);
 
-      toast({
-        title: 'Photo updated',
-        description: 'Your profile photo has been saved'
-      });
     } catch (error) {
       console.error('Error uploading photo:', error);
       toast({
@@ -315,10 +311,6 @@ export function usePlayerCard() {
       // Update local state with public URL + cache-bust for immediate display
       setPrivateData(prev => prev ? { ...prev, profile_picture: buildAvatarPublicUrl(filePath, true) } : null);
 
-      toast({
-        title: 'Photo updated',
-        description: 'Your profile photo has been saved'
-      });
     } catch (error) {
       console.error('Error uploading photo from data URL:', error);
       toast({

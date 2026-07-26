@@ -78,7 +78,6 @@ const CreateSolutionSheet: React.FC<CreateSolutionSheetProps> = ({
         spot_label: spotLabel,
         range_data: rangeData,
       });
-      toast.success('Solution created');
       onOpenChange(false);
     } catch {
       toast.error('Failed to create solution');

@@ -44,10 +44,6 @@ const HandTableSelectionModal: React.FC<HandTableSelectionModalProps> = ({
         restHandData as Omit<HandData, 'id' | 'createdAt' | 'tableId'>
       );
       
-      toast({
-        title: 'Hand Added',
-        description: 'Your hand has been successfully added to the table.',
-      });
       setShowHandForm(false);
       setSelectedTableId(null);
     } catch (error) {

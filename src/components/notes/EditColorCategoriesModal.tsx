@@ -65,7 +65,6 @@ const EditColorCategoriesModal: React.FC<EditColorCategoriesModalProps> = ({
       });
 
       await Promise.all(savePromises);
-      toast.success('Color categories saved');
       onOpenChange(false);
     } catch (error) {
       console.error('Error saving labels:', error);
