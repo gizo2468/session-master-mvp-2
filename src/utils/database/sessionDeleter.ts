@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { markSessionAsDeleted } from './deletedSessionsTracker';
 
 export const deleteTableFromDatabase = async (tableId: string): Promise<boolean> => {
   try {
@@ -35,6 +36,7 @@ export const deleteSessionFromDatabase = async (sessionId: string): Promise<bool
       console.error('❌ Delete affected 0 rows — session was not actually removed:', sessionId);
       return false;
     }
+    markSessionAsDeleted(sessionId);
     console.log('✅ Session deleted successfully from database');
     return true;
   } catch (error) {
