@@ -85,7 +85,6 @@ export const useAIHandAnalyzer = () => {
       }));
       
       if (optimizedSize < file.size * 0.5) {
-        toast.success(`Image optimized (${Math.round(optimizedSize / 1024)}KB)`);
       }
     } catch (error) {
       console.error('Image optimization error:', error);
@@ -173,7 +172,6 @@ export const useAIHandAnalyzer = () => {
         analysis: result
       }));
 
-      toast.success(`Hand analyzed in ${(result.metadata.processingTimeMs / 1000).toFixed(1)}s`);
 
     } catch (err: any) {
       console.error('Analysis error:', err);

@@ -139,10 +139,6 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
     form.setValue('buyIn', '');
     form.setValue('payout', '');
     
-    toast({
-      title: 'Table Added',
-      description: `Table ${tables.length + 1} has been added to the session.`,
-    });
   };
 
   const updateTable = (tableId: string, updatedTable: TableData) => {
@@ -291,16 +287,8 @@ const PastSessionForm: React.FC<PastSessionFormProps> = ({ onClose }) => {
             }
           }
           
-          toast({
-            title: 'Past Session Added',
-            description: 'Your past session has been successfully recorded and synced to the cloud.',
-          });
         }
       } else {
-        toast({
-          title: 'Past Session Added',
-          description: 'Your past session has been successfully recorded locally.',
-        });
       }
       
       onClose();

@@ -174,10 +174,6 @@ export default function EditSession() {
       // Update session in context - this will immediately update all UI components
       await updateSession(updatedSession);
       
-      toast({
-        title: "Session Updated",
-        description: "Your session has been successfully updated."
-      });
       
       navigate('/', { replace: true });
       

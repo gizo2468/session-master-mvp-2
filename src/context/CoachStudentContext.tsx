@@ -324,10 +324,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       await loadUserProfile();
       
       console.log('🎉 Coach profile creation completed successfully');
-      toast({
-        title: "Coach Profile Created",
-        description: "You can now generate a connection code for students."
-      });
     } catch (error) {
       console.error('❌ Error in createCoachProfile:', error);
       
@@ -378,10 +374,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       setConnectionCode(code);
       
-      toast({
-        title: "Code Generated",
-        description: `Your connection code: ${code}`
-      });
       
       return code;
     } catch (error) {
@@ -413,10 +405,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       setConnectionCode(null);
       
-      toast({
-        title: "Code Disabled",
-        description: "Your connection code has been disabled."
-      });
     } catch (error) {
       console.error('❌ Error disabling connection code:', error);
       toast({
@@ -433,10 +421,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setLoading(true);
     try {
       // Connection system not implemented yet
-      toast({
-        title: "Feature Coming Soon",
-        description: "Coach-student connections will be available soon."
-      });
     } catch (error) {
       console.error('❌ Error approving connection request:', error);
       toast({
@@ -453,10 +437,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setLoading(true);
     try {
       // Connection system not implemented yet
-      toast({
-        title: "Feature Coming Soon",
-        description: "Coach-student connections will be available soon."
-      });
     } catch (error) {
       console.error('❌ Error declining connection request:', error);
       toast({
@@ -487,7 +467,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Optimistically update local state
       setStudents((prev) => prev.filter((s) => s.id !== studentId));
 
-      toast({ title: 'Disconnected', description: 'The player has been removed from your connections.' });
 
       // Trigger downstream reloads
       await loadStudents();
@@ -522,10 +501,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       await loadUserProfile();
       
-      toast({
-        title: "Player Profile Created",
-        description: "You can now connect with coaches using their codes."
-      });
     } catch (error) {
       console.error('❌ Error creating student profile:', error);
       toast({
@@ -551,10 +526,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setLoading(true);
     try {
       // Connection system not implemented yet
-      toast({
-        title: "Feature Coming Soon",
-        description: "Coach-student connections will be available soon."
-      });
     } catch (error) {
       console.error('❌ Error connecting with coach:', error);
       toast({
@@ -584,7 +555,6 @@ export const CoachStudentProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Optimistically update local state
       setConnectedCoaches((prev) => prev.filter((c) => c.id !== coachId));
 
-      toast({ title: 'Disconnected', description: 'You have been disconnected from this coach.' });
 
       await loadConnectedCoaches();
     } catch (error) {

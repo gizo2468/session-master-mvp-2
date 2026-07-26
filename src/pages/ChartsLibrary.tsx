@@ -85,10 +85,8 @@ const ChartsLibrary: React.FC = () => {
     try {
       if (showDeleteConfirm.type === 'folder') {
         await deleteFolder.mutateAsync(showDeleteConfirm.id);
-        toast.success('Folder deleted');
       } else {
         await deleteCollection.mutateAsync(showDeleteConfirm.id);
-        toast.success('Collection deleted');
       }
       setView({ type: 'root' });
     } catch {

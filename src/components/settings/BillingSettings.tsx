@@ -50,11 +50,6 @@ const BillingSettings: React.FC = () => {
     try {
       await cancelCoachSubscription();
       setCancelDialogOpen(false);
-      toast({
-        title: t('subscription_cancelled'),
-        description: t('subscription_cancelled_description'),
-        variant: "default",
-      });
     } catch (error) {
       console.error("Error cancelling subscription:", error);
       toast({

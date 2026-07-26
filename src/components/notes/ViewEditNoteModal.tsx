@@ -283,10 +283,6 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
         color: selectedColor,
       });
 
-      toast({
-        title: 'Profile updated',
-        description: 'Opponent profile has been updated.',
-      });
 
       setIsEditingProfile(false);
       setImageFile(null);
@@ -325,10 +321,6 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
 
       if (noteError) throw noteError;
 
-      toast({
-        title: 'Note updated',
-        description: 'Your note has been updated.',
-      });
 
       setEditingNoteId(null);
       setEditingNoteBody('');
@@ -360,10 +352,6 @@ const ViewEditNoteModal: React.FC<ViewEditNoteModalProps> = ({
 
       if (error) throw error;
 
-      toast({
-        title: 'Note deleted',
-        description: 'Your note has been deleted.',
-      });
 
       // If this was the last note, close the modal
       if (notes.length === 1) {

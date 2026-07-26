@@ -61,7 +61,6 @@ const HandHistoryExportModal: React.FC<HandHistoryExportModalProps> = ({ open, o
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success(`Exported ${totalHands} hands successfully`);
       onOpenChange(false);
     } catch (e: any) {
       console.error('Export failed:', e);

@@ -33,7 +33,6 @@ export default function Notifications() {
     for (const n of unread) {
       await markAsRead(n.id);
     }
-    toast({ title: 'All notifications marked as read' });
   };
 
   // Deduplicate stack_check notifications: show only the most recent one
@@ -311,7 +310,6 @@ export default function Notifications() {
           });
         } else {
           // Session ended - remove stale notification and redirect to details
-          toast({ title: 'This session has ended' });
           await removeNotification(notification.id);
           navigate(`/session/${notification.session_id}/details`);
         }
@@ -338,7 +336,6 @@ export default function Notifications() {
           navigate(`/session/${notification.session_id}`);
         } else {
           // Session ended - remove stale notification and redirect to details
-          toast({ title: 'This session has ended' });
           await removeNotification(notification.id);
           navigate(`/session/${notification.session_id}/details`);
         }
@@ -354,7 +351,6 @@ export default function Notifications() {
           navigate(`/session/${notification.session_id}`);
         } else {
           // Session ended - remove stale notification and redirect to details
-          toast({ title: 'This session has ended' });
           await removeNotification(notification.id);
           navigate(`/session/${notification.session_id}/details`);
         }
@@ -517,7 +513,6 @@ export default function Notifications() {
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 await markAsUnread(notification.id);
-                                toast({ title: 'Marked as unread' });
                               }}
                             >
                               <Icon name="MailOpen" size={16} className="mr-2" />
@@ -527,7 +522,6 @@ export default function Notifications() {
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 await removeNotification(notification.id);
-                                toast({ title: 'Notification deleted' });
                               }}
                               className="text-red-600 focus:text-red-600"
                             >

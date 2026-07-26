@@ -187,10 +187,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // 1. It's a fresh login (not a session restore) OR
     // 2. It's been at least 10 seconds since the last toast
     if (isFreshLogin.current || (now - lastToastTime.current > 10000)) {
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${userName}!`,
-      });
       lastToastTime.current = now;
       isFreshLogin.current = false; // Reset the fresh login flag
     }
@@ -532,10 +528,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error("Error during Supabase signout:", error);
       });
       
-      toast({
-        title: "Logged out",
-        description: `${currentUser} has been successfully logged out`,
-      });
       
       // Force redirect to login page
       setTimeout(() => {
@@ -548,11 +540,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clear local state even if there's an error
       clearUserState();
       
-      toast({
-        title: "Logged out",
-        description: "You have been logged out",
-        variant: "default",
-      });
       
       // Force redirect even on error
       setTimeout(() => {
@@ -606,10 +593,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const updatedUser = { ...user, ...optimizedUserData };
       setUser(updatedUser);
       
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been successfully updated",
-      });
     } catch (error: any) {
       console.error("Error updating user:", error);
       toast({
@@ -647,10 +630,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw updateError;
       }
       
-      toast({
-        title: "Password changed",
-        description: "Your password has been successfully updated",
-      });
     } catch (error: any) {
       toast({
         title: "Password change failed",
@@ -676,10 +655,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     await updateUser({ coachTier: tier });
 
-    toast({
-      title: "Tier upgraded",
-      description: `Your account has been upgraded to ${tier} tier!`,
-    });
   };
 
   // Function to cancel coach subscription
@@ -698,10 +673,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await updateUser({ coachTier: 'free' });
       
       // Return success
-      toast({
-        title: "Subscription canceled",
-        description: "Your subscription has been successfully canceled",
-      });
       return;
     } catch (error: any) {
       console.error("Error cancelling subscription:", error);

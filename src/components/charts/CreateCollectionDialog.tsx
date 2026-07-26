@@ -38,7 +38,6 @@ const CreateCollectionDialog: React.FC<CreateCollectionDialogProps> = ({ open, o
         game_type: gameType,
         folder_id: folderId || null,
       });
-      toast.success('Collection created');
       onCreated?.(result.id);
       onOpenChange(false);
       setName('');

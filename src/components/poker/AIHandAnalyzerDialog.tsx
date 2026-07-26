@@ -676,7 +676,6 @@ const AIHandAnalyzerDialog: React.FC<AIHandAnalyzerDialogProps> = ({
         addHand(sessionId, handData);
       }
 
-      toast.success('Hand added successfully');
       
       // Close both dialogs
       handleClose();

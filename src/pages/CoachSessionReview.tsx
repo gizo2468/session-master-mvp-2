@@ -215,10 +215,6 @@ const CoachSessionReview = () => {
 
     try {
       // Comments system not implemented yet
-      toast({
-        title: "Feature Coming Soon",
-        description: "Session comments will be available soon."
-      });
       
       setIsCommentFormOpen(false);
       setSelectedHandId(undefined);

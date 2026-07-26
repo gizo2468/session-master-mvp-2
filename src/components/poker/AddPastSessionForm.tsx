@@ -136,16 +136,8 @@ const AddPastSessionForm: React.FC<AddPastSessionFormProps> = ({ onClose }) => {
           });
         } else {
           console.log('✅ Past session synced with ID:', sessionData.id, 'for user:', user.id, 'email:', user.email);
-          toast({
-            title: 'Past Session Added',
-            description: 'Your past session has been successfully recorded and synced to the cloud.',
-          });
         }
       } else {
-        toast({
-          title: 'Past Session Added',
-          description: 'Your past session has been successfully recorded locally.',
-        });
       }
       
       onClose();

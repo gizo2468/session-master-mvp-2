@@ -18,10 +18,6 @@ export const syncSessionToSupabase = async (session: PokerSession, user: User, t
       console.log('✅ Session synced successfully for user:', user.id, 'email:', user.email);
       
       if (!session.isActive && session.endTime) {
-        toast({
-          title: "Session saved to cloud",
-          description: "Your session has been backed up to your account.",
-        });
       }
     } else {
       throw new Error('Failed to save session to database');

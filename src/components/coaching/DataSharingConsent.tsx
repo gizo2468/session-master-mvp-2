@@ -87,7 +87,6 @@ export const DataSharingConsent: React.FC<DataSharingConsentProps> = ({
       if (error) throw error;
 
       setConsents(prev => ({ ...prev, [dataField]: granted }));
-      toast.success(`Data sharing ${granted ? 'enabled' : 'disabled'} for ${DATA_FIELDS.find(f => f.key === dataField)?.label}`);
       onConsentChange?.();
     } catch (error) {
       console.error('Error updating consent:', error);
