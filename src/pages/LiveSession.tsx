@@ -154,7 +154,7 @@ export default function LiveSession() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-background bg-poker-texture flex flex-col">
       <LiveSessionHeader />
       
       <main className="flex-1 pt-4">
