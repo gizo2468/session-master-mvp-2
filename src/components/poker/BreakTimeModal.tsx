@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { Clock } from 'lucide-react';
+import { Clock, Coffee } from 'lucide-react';
 
 interface BreakTimeModalProps {
   open: boolean;
