@@ -633,6 +633,47 @@ export type Database = {
         }
         Relationships: []
       }
+      session_breaks: {
+        Row: {
+          created_at: string
+          end_time_utc: number | null
+          id: string
+          notes: string | null
+          planned_duration_seconds: number
+          session_id: string
+          start_time_utc: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_time_utc?: number | null
+          id?: string
+          notes?: string | null
+          planned_duration_seconds: number
+          session_id: string
+          start_time_utc: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_time_utc?: number | null
+          id?: string
+          notes?: string | null
+          planned_duration_seconds?: number
+          session_id?: string
+          start_time_utc?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_breaks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_hands: {
         Row: {
           amount_invested: number | null

@@ -8,7 +8,11 @@ import { useStackCheckReminder } from '@/hooks/useStackCheckReminder';
 import { useAuth } from '@/context/AuthContext';
 import BBStackUpdateModal from './BBStackUpdateModal';
 import HandTableSelectionModal from './HandTableSelectionModal';
+import BreakTimeModal from './BreakTimeModal';
+import MyNotesModal from './MyNotesModal';
+import { useSessionBreak } from '@/hooks/useSessionBreak';
 import { TableData } from '@/types/poker';
+
 
 interface SessionTimerCardProps {
   startTime: Date;
@@ -44,8 +48,19 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showBBStackModal, setShowBBStackModal] = useState(false);
   const [showHandTableModal, setShowHandTableModal] = useState(false);
+  const [showBreakModal, setShowBreakModal] = useState(false);
+  const [showNotesModal, setShowNotesModal] = useState(false);
   const { updateSessionDuration, activeSession } = useSessionContext();
   const { user } = useAuth();
+
+  const {
+    activeBreak,
+    activeBreakRemaining,
+    totalBreakSecondsToSubtract,
+    startBreak,
+    endBreakEarly,
+  } = useSessionBreak(sessionId);
+
 
   // Store stable refs — avoids re-creating interval when these change
   const startTimeUTCRef = useRef(startTimeUTC);
@@ -53,12 +68,14 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   const updateSessionDurationRef = useRef(updateSessionDuration);
   const activeSessionRef = useRef(activeSession);
   const updateCounterRef = useRef(0);
+  const breakSubtractRef = useRef(totalBreakSecondsToSubtract);
 
   // Keep refs in sync with latest props/values without causing re-renders
   useEffect(() => { startTimeUTCRef.current = startTimeUTC; }, [startTimeUTC]);
   useEffect(() => { startTimeRef.current = startTime; }, [startTime]);
   useEffect(() => { updateSessionDurationRef.current = updateSessionDuration; }, [updateSessionDuration]);
   useEffect(() => { activeSessionRef.current = activeSession; }, [activeSession]);
+  useEffect(() => { breakSubtractRef.current = totalBreakSecondsToSubtract; }, [totalBreakSecondsToSubtract]);
 
   useStackCheckReminder(true, startTimeUTC, sessionId, user?.id);
 
@@ -71,8 +88,10 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   // Calculate elapsed time from refs — no dependencies needed
   const getElapsed = () => {
     const utc = startTimeUTCRef.current;
-    if (utc) return Math.max(0, Math.floor((Date.now() - utc) / 1000));
-    return Math.max(0, Math.floor((Date.now() - startTimeRef.current.getTime()) / 1000));
+    const raw = utc
+      ? Math.max(0, Math.floor((Date.now() - utc) / 1000))
+      : Math.max(0, Math.floor((Date.now() - startTimeRef.current.getTime()) / 1000));
+    return Math.max(0, raw - (breakSubtractRef.current || 0));
   };
 
   useEffect(() => {
@@ -97,6 +116,12 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
 
     return () => clearInterval(timer);
   }, []); // ← empty deps: interval created once, never recreated
+
+  // When break subtract changes (start/end), refresh displayed value immediately
+  useEffect(() => {
+    setElapsedTime(getElapsed());
+  }, [totalBreakSecondsToSubtract]);
+
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -154,7 +179,9 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
               ].join(', '),
             }}
           >
-            <div className="mb-2 text-sm text-center" style={{ color: 'hsl(43, 40%, 45%)' }}>Session Time</div>
+            <div className="mb-2 text-sm text-center" style={{ color: 'hsl(43, 40%, 45%)' }}>
+              {activeBreak ? 'On Break' : 'Session Time'}
+            </div>
             <div className="relative">
               <div
                 aria-hidden="true"
@@ -166,23 +193,40 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
                   paddingRight: '0.03em',
                 }}
               >
-                {formatTime(elapsedTime).replace(/[0-9]/g, '8')}
+                {formatTime(activeBreak ? activeBreakRemaining : elapsedTime).replace(/[0-9]/g, '8')}
               </div>
               <div
                 className="text-5xl font-bold"
                 style={{
                   fontFamily: "'DSEG7Classic', monospace",
-                  color: 'hsl(43, 80%, 48%)',
-                  WebkitTextStroke: '0.5px hsl(45, 78%, 55%)',
-                  textShadow: '0 0 6px hsla(45, 85%, 55%, 0.5), 0 0 2px hsla(45, 85%, 58%, 0.3)',
+                  color: activeBreak ? 'hsl(0, 75%, 55%)' : 'hsl(43, 80%, 48%)',
+                  WebkitTextStroke: activeBreak ? '0.5px hsl(0, 78%, 60%)' : '0.5px hsl(45, 78%, 55%)',
+                  textShadow: activeBreak
+                    ? '0 0 6px hsla(0, 85%, 55%, 0.5), 0 0 2px hsla(0, 85%, 58%, 0.3)'
+                    : '0 0 6px hsla(45, 85%, 55%, 0.5), 0 0 2px hsla(45, 85%, 58%, 0.3)',
                   letterSpacing: '-0.03em',
                   paddingRight: '0.03em',
                 }}
               >
-                {formatTime(elapsedTime)}
+                {formatTime(activeBreak ? activeBreakRemaining : elapsedTime)}
               </div>
             </div>
+            {activeBreak && (
+              <div className="mt-3 flex flex-col items-center gap-2">
+                <div className="text-xs text-red-600 dark:text-red-400 font-semibold uppercase tracking-wide">
+                  Session paused
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => endBreakEarly()}
+                  className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+                >
+                  <Icon name="Play" size={14} /> End Break & Resume
+                </Button>
+              </div>
+            )}
           </div>
+
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6 w-full">
@@ -239,6 +283,27 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
               <Icon name="Hand" size={14} /> Upload Hand
             </Button>
           </div>
+          <div className="w-full">
+            <Button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowBreakModal(true); }}
+              variant="outline"
+              disabled={!!activeBreak}
+              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
+              size="sm"
+            >
+              <Icon name="Coffee" size={14} /> {activeBreak ? 'On Break…' : 'Break Time'}
+            </Button>
+          </div>
+          <div className="w-full">
+            <Button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowNotesModal(true); }}
+              variant="outline"
+              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
+              size="sm"
+            >
+              <Icon name="StickyNote" size={14} /> My Notes
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -258,6 +323,18 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         tables={activeTables}
         sessionId={sessionId}
       />
+
+      <BreakTimeModal
+        open={showBreakModal}
+        onOpenChange={setShowBreakModal}
+        onStart={async (minutes, notes) => await startBreak(minutes, notes)}
+      />
+
+      <MyNotesModal
+        open={showNotesModal}
+        onOpenChange={setShowNotesModal}
+      />
+
     </div>
   );
 };
