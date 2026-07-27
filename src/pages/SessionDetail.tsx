@@ -8,6 +8,7 @@ import { useSwipeBack } from '@/hooks/useSwipeBack';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import TableDetailsCard from '@/components/poker/TableDetailsCard';
 import { TablesPlayedSection } from '@/components/poker/TablesPlayedSection';
+import SessionBreaksSection from '@/components/poker/SessionBreaksSection';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TableData, HandData } from '@/types/poker';
 import SessionDetailHeader, { ShareWithCoachButton } from '@/components/poker/SessionDetailHeader';
