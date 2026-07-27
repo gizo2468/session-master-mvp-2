@@ -48,8 +48,19 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showBBStackModal, setShowBBStackModal] = useState(false);
   const [showHandTableModal, setShowHandTableModal] = useState(false);
+  const [showBreakModal, setShowBreakModal] = useState(false);
+  const [showNotesModal, setShowNotesModal] = useState(false);
   const { updateSessionDuration, activeSession } = useSessionContext();
   const { user } = useAuth();
+
+  const {
+    activeBreak,
+    activeBreakRemaining,
+    totalBreakSecondsToSubtract,
+    startBreak,
+    endBreakEarly,
+  } = useSessionBreak(sessionId);
+
 
   // Store stable refs — avoids re-creating interval when these change
   const startTimeUTCRef = useRef(startTimeUTC);
