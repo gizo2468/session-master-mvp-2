@@ -152,6 +152,35 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session, onEndS
             </div>
           )}
 
+          {/* Session Sharing Status - only show if shared */}
+          {isShared && sharedCoaches.length > 0 && (
+            <div className="flex justify-center">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Share2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-gray-500 dark:text-muted-foreground">Shared With:</span>
+                </div>
+                <div className="font-medium text-amber-700">
+                  {sharedCoaches.map((coachId, index) => {
+                    const coach = connectedCoaches.find(c => c.id === coachId);
+                    if (!coach) return null;
+                    return (
+                      <span key={coachId}>
+                        <span 
+                          className="cursor-pointer hover:underline"
+                          onClick={() => navigate(`/coach/${coachId}`)}
+                        >
+                          {coach.displayName}
+                        </span>
+                        {index < sharedCoaches.length - 1 && ', '}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* End Session button (moved from top action row) */}
           {onEndSession && (
             <div data-tour="live-controls" className="flex justify-center pt-1">
@@ -166,34 +195,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session, onEndS
               >
                 <CircleStop className="h-4 w-4" /> End Session
               </Button>
-            </div>
-          )}
-
-          
-          {/* Session Sharing Status - only show if shared */}
-          {isShared && sharedCoaches.length > 0 && (
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-1.5">
-                <Share2 className="h-4 w-4 text-muted-foreground" />
-                <span className="text-gray-500 dark:text-muted-foreground">Shared With:</span>
-              </div>
-              <div className="font-medium text-amber-700">
-                {sharedCoaches.map((coachId, index) => {
-                  const coach = connectedCoaches.find(c => c.id === coachId);
-                  if (!coach) return null;
-                  return (
-                    <span key={coachId}>
-                      <span 
-                        className="cursor-pointer hover:underline"
-                        onClick={() => navigate(`/coach/${coachId}`)}
-                      >
-                        {coach.displayName}
-                      </span>
-                      {index < sharedCoaches.length - 1 && ', '}
-                    </span>
-                  );
-                })}
-              </div>
             </div>
           )}
           
