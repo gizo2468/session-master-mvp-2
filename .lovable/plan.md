@@ -1,27 +1,19 @@
-## Add brand icons to three popup titles
+Visual update to the START and DURATION values inside the Active Table card in the Live Session view.
 
-Match the "My Notes" title pattern (icon + text, gold color, centered) in three dialogs. Reuse icons from the corresponding Live Session action buttons.
+**Files to change**
+1. `src/components/poker/TableTimerDisplay.tsx` — render the duration value without a `<Badge>` wrapper.
+2. `src/components/poker/TableCard.tsx` — update the START value’s typography and align the duration row so the two values look balanced.
 
-### Icon mapping (from `SessionTimerCard.tsx` action buttons)
-- **BB / Stack Update** → `CircleDot` (same as BB/Stack Update button)
-- **Select Table for Hand** → `Hand` (same as Upload Hand button)
-- **Take a Break** → `Coffee` (same as Break Time button)
+**What will change**
+- Remove the yellow pill/background currently shown around the duration (`variant="timeStarted"` on the `Badge`).
+- Keep the small `Clock` icon directly beside the duration digits, with no surrounding container.
+- Apply a slightly stronger font weight and a clean number style to the duration text so values like "21h 54m" are easy to scan.
+- Update the start time digits (e.g. "04:13") with a cleaner, slightly more prominent font style that matches the upgraded duration.
+- Keep the START / DURATION labels, their centered alignment, the vertical divider, and the rest of the card layout exactly as-is.
+- No changes to timer calculations, saved values, or functionality.
 
-### Files to change
-
-**`src/components/poker/BBStackUpdateModal.tsx`**
-- Import `CircleDot` from `lucide-react`.
-- Wrap the existing `DialogTitle` text in an inline-flex row with `CircleDot` (`h-5 w-5`) on the left, `gap-2`, centered. Keep `text-primary` on both icon and title.
-
-**`src/components/poker/HandTableSelectionModal.tsx`**
-- Import `Hand` from `lucide-react`.
-- Same treatment: `Hand` icon (`h-5 w-5`) + "Select Table for Hand" text, gold, centered as one group.
-
-**`src/components/poker/BreakTimeModal.tsx`**
-- Import `Coffee` from `lucide-react`.
-- Same treatment: `Coffee` icon (`h-5 w-5`) + "Take a Break" text, gold, centered as one group.
-
-### Constraints
-- No changes to wording, close button, fields, layout, or behavior.
-- Icon size (`h-5 w-5`) and `gap-2` match the `MyNotesCard` "My Notes" header pattern.
-- Both icon and title use `text-primary` (existing gold token).
+**Implementation details**
+- In `TableTimerDisplay`, replace the `Badge` with a plain `inline-flex` span containing the `Clock` icon and the formatted time.
+- Use the app’s existing font tokens (`font-mono` for digit clarity, `font-semibold` for weight).
+- In `TableCard`, apply matching styling to the start time value and ensure the duration and start time values sit evenly on either side of the divider.
+- The icon remains the same `Clock` icon and the same size already in use.

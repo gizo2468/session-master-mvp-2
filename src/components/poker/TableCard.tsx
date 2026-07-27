@@ -199,7 +199,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onIn
           <div className="flex flex-1 justify-center items-center">
             <div className="text-center">
               <div className="text-gray-500 dark:text-muted-foreground font-medium text-xs uppercase mb-1">Start</div>
-              <div className="font-medium">{formattedStartTime}</div>
+              <div className="font-mono font-semibold text-sm text-gray-900 dark:text-foreground">{formattedStartTime}</div>
             </div>
           </div>
           
