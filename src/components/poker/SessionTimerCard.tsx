@@ -111,11 +111,6 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   const shouldShowBlinds = format === 'Cash' && smallBlind !== undefined && bigBlind !== undefined;
   const currencySymbol = getCurrencySymbol(currency);
 
-  const handleEndSession = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (typeof onEndSession === 'function') onEndSession();
-  };
 
   const handleAddTable = (e: React.MouseEvent) => {
     e.preventDefault();
