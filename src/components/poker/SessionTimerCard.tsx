@@ -8,7 +8,11 @@ import { useStackCheckReminder } from '@/hooks/useStackCheckReminder';
 import { useAuth } from '@/context/AuthContext';
 import BBStackUpdateModal from './BBStackUpdateModal';
 import HandTableSelectionModal from './HandTableSelectionModal';
+import BreakTimeModal from './BreakTimeModal';
+import MyNotesModal from './MyNotesModal';
+import { useSessionBreak } from '@/hooks/useSessionBreak';
 import { TableData } from '@/types/poker';
+
 
 interface SessionTimerCardProps {
   startTime: Date;
