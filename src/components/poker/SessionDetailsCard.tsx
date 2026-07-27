@@ -82,7 +82,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session, onEndS
   return (
     <Card className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
       <CardHeader className="pb-2 text-center">
-        <CardTitle className="text-xl font-bold text-poker-gold">Session Details</CardTitle>
+        <CardTitle className="text-2xl font-bold text-poker-gold">Session Details</CardTitle>
       </CardHeader>
       <div data-tour="live-session-details">
         <div className="px-6 pb-2">
