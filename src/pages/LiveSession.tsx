@@ -4,6 +4,7 @@ import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
 import AddTableForm from '@/components/poker/AddTableForm';
 import EndSessionSheet from '@/components/poker/EndSessionSheet';
+import EndTableTapHint from '@/components/poker/EndTableTapHint';
 import RebuyConfirmationDialog from '@/components/poker/RebuyConfirmationDialog';
 import EndTableDialog from '@/components/poker/EndTableDialog';
 import LiveSessionHeader from '@/components/poker/LiveSessionHeader';
