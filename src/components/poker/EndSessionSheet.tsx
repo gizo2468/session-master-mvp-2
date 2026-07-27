@@ -121,8 +121,18 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
           
           <div className="flex-1 overflow-y-auto py-6 space-y-6">
             {hasActiveTables && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-yellow-800 mb-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenChange(false);
+                  setTimeout(() => {
+                    const el = document.querySelector('[data-tour="live-active-tables"]');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 250);
+                }}
+                className="w-full text-center bg-yellow-50 border border-yellow-200 rounded-lg p-4 cursor-pointer hover:bg-yellow-100 transition-colors"
+              >
+                <div className="flex items-center justify-center gap-2 text-yellow-800 mb-2">
                   <AlertTriangle size={20} />
                   <span className="font-medium">Active Tables Detected</span>
                 </div>
@@ -131,12 +141,12 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
                 </p>
                 <ul className="mt-2 text-sm text-yellow-700">
                   {activeTables.map((table, index) => (
-                    <li key={table.id} className="ml-4">
+                    <li key={table.id}>
                       • {table.name || table.location || `Table ${index + 1}`}
                     </li>
                   ))}
                 </ul>
-              </div>
+              </button>
             )}
             
             <div className="bg-gray-50 dark:bg-background rounded-lg p-4">
