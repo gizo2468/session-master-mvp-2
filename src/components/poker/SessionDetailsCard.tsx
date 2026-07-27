@@ -156,6 +156,24 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session, onEndS
               </Button>
             </div>
           )}
+
+          {/* End Session button (moved from top action row) */}
+          {onEndSession && (
+            <div data-tour="live-controls" className="flex justify-center pt-1">
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEndSession();
+                }}
+                variant="destructive"
+                className="flex items-center justify-center gap-2 w-full max-w-[220px]"
+              >
+                <CircleStop className="h-4 w-4" /> End Session
+              </Button>
+            </div>
+          )}
+
           
           {/* Session Sharing Status - only show if shared */}
           {isShared && sharedCoaches.length > 0 && (
