@@ -62,7 +62,10 @@ const HandTableSelectionModal: React.FC<HandTableSelectionModalProps> = ({
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-primary">Select Table for Hand</DialogTitle>
+            <DialogTitle className="text-primary flex items-center justify-center gap-2">
+              <Hand className="h-5 w-5" />
+              Select Table for Hand
+            </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-3">
