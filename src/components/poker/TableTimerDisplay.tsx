@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { format as dateFormat } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/Lucide';
 
 interface TableTimerDisplayProps {
