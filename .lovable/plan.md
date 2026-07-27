@@ -1,17 +1,17 @@
-Plan: Update the "Add Hand" button icon in the Active Table card.
+Plan: Increase the font size of the "Session Details" and "Active Tables" headings on the Live Session page.
 
 Verified current state:
-- The "Add Hand" button is rendered by `src/components/poker/HandManagementPanel.tsx` at lines 208–215.
-- It currently imports and uses `<Plus className="h-4 w-4 mr-2" />` with the text "Add Hand".
-- The "Upload Hand" button in `src/components/poker/SessionTimerCard.tsx` uses `<Icon name="Hand" size={14} />`, confirming the hand icon is available from `lucide-react`.
+- `src/components/poker/SessionDetailsCard.tsx` line 85 renders the "Session Details" heading with `text-xl font-bold text-poker-gold`.
+- `src/components/poker/LiveSessionTables.tsx` line 32 renders the "Active Tables (n)" heading with `text-xl font-bold mb-2 text-poker-gold`.
+- Both headings are currently the same size and must stay at the same size.
 
 Implementation:
-- In `src/components/poker/HandManagementPanel.tsx`:
-  1. Add `Hand` to the `lucide-react` import (currently imports `Plus, FileText, ChevronRight`).
-  2. Replace `<Plus className="h-4 w-4 mr-2" />` with `<Hand className="h-4 w-4 mr-2" />` on the Add Hand button.
-- Keep the "Add Hand" text unchanged.
-- Keep button size, colors, spacing, position, and functionality unchanged.
+- In `src/components/poker/SessionDetailsCard.tsx`: Change the `CardTitle` class from `text-xl` to `text-2xl` (keep `font-bold text-poker-gold`).
+- In `src/components/poker/LiveSessionTables.tsx`: Change the `h4` class from `text-xl` to `text-2xl` (keep `font-bold mb-2 text-poker-gold`).
+- Keep color, font weight, alignment, wording, and surrounding spacing unchanged.
+- Do not adjust container padding, margins, width, or layout.
 
 Validation:
-- Run the TypeScript/typecheck and/or a quick build check to ensure the import and icon are valid.
+- Verify the headings render without wrapping on mobile viewport widths.
+- Run a quick type/build check to ensure no class errors.
 - No other files need modification.
