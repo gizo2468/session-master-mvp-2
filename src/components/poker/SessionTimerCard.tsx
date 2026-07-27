@@ -68,12 +68,14 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   const updateSessionDurationRef = useRef(updateSessionDuration);
   const activeSessionRef = useRef(activeSession);
   const updateCounterRef = useRef(0);
+  const breakSubtractRef = useRef(totalBreakSecondsToSubtract);
 
   // Keep refs in sync with latest props/values without causing re-renders
   useEffect(() => { startTimeUTCRef.current = startTimeUTC; }, [startTimeUTC]);
   useEffect(() => { startTimeRef.current = startTime; }, [startTime]);
   useEffect(() => { updateSessionDurationRef.current = updateSessionDuration; }, [updateSessionDuration]);
   useEffect(() => { activeSessionRef.current = activeSession; }, [activeSession]);
+  useEffect(() => { breakSubtractRef.current = totalBreakSecondsToSubtract; }, [totalBreakSecondsToSubtract]);
 
   useStackCheckReminder(true, startTimeUTC, sessionId, user?.id);
 
@@ -86,8 +88,10 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
   // Calculate elapsed time from refs — no dependencies needed
   const getElapsed = () => {
     const utc = startTimeUTCRef.current;
-    if (utc) return Math.max(0, Math.floor((Date.now() - utc) / 1000));
-    return Math.max(0, Math.floor((Date.now() - startTimeRef.current.getTime()) / 1000));
+    const raw = utc
+      ? Math.max(0, Math.floor((Date.now() - utc) / 1000))
+      : Math.max(0, Math.floor((Date.now() - startTimeRef.current.getTime()) / 1000));
+    return Math.max(0, raw - (breakSubtractRef.current || 0));
   };
 
   useEffect(() => {
@@ -112,6 +116,12 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
 
     return () => clearInterval(timer);
   }, []); // ← empty deps: interval created once, never recreated
+
+  // When break subtract changes (start/end), refresh displayed value immediately
+  useEffect(() => {
+    setElapsedTime(getElapsed());
+  }, [totalBreakSecondsToSubtract]);
+
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
