@@ -94,37 +94,37 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session, onEndS
                 const formatDisplay = formats.length ? formats.join(', ') : session.format;
                 return (
                   <>
-                    <span className="text-gray-500 dark:text-muted-foreground">Format:</span>
-                    <span className="font-medium">{formatDisplay}</span>
+                    <span className="text-gray-500 dark:text-muted-foreground text-right justify-self-end">Format</span>
+                    <span className="font-medium justify-self-start">{formatDisplay}</span>
                   </>
                 );
               })()}
 
               {/* Game Type */}
-              <span className="text-gray-500 dark:text-muted-foreground">Game Type:</span>
-              <span className="font-medium">{session.gameType}</span>
+              <span className="text-gray-500 dark:text-muted-foreground text-right justify-self-end">Game Type</span>
+              <span className="font-medium justify-self-start">{session.gameType}</span>
 
               {/* Currency */}
               {session.currency && (
                 <>
-                  <span className="text-gray-500 dark:text-muted-foreground">Currency:</span>
-                  <span className="font-medium">{session.currency} ({currencySymbol})</span>
+                  <span className="text-gray-500 dark:text-muted-foreground text-right justify-self-end">Currency</span>
+                  <span className="font-medium justify-self-start">{session.currency} ({currencySymbol})</span>
                 </>
               )}
 
               {/* Online physical location */}
               {session.isOnline && session.physicalLocation?.trim() && (
                 <>
-                  <span className="text-gray-500 dark:text-muted-foreground">Location:</span>
-                  <span className="font-medium">{session.physicalLocation.trim()}</span>
+                  <span className="text-gray-500 dark:text-muted-foreground text-right justify-self-end">Location</span>
+                  <span className="font-medium justify-self-start">{session.physicalLocation.trim()}</span>
                 </>
               )}
 
               {/* Festival Name */}
               {session.festivalName?.trim() && (
                 <>
-                  <span className="text-gray-500 dark:text-muted-foreground">Festival:</span>
-                  <span className="font-medium">{session.festivalName.trim()}</span>
+                  <span className="text-gray-500 dark:text-muted-foreground text-right justify-self-end">Festival</span>
+                  <span className="font-medium justify-self-start">{session.festivalName.trim()}</span>
                 </>
               )}
             </div>
