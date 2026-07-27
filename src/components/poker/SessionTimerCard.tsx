@@ -215,16 +215,16 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
             <Button
               data-tour="live-add-table"
               onClick={handleAddTable}
-              className="bg-poker-gold hover:bg-poker-darkGold text-white flex items-center gap-2"
+              className="bg-poker-gold hover:bg-poker-darkGold text-white flex-1 w-full flex items-center justify-center gap-2"
             >
               <Icon name="Plus" size={16} /> Add Table
             </Button>
           )}
-          <div data-tour="live-controls">
+          <div data-tour="live-controls" className="flex-1">
             <Button
               onClick={handleEndSession}
               variant="destructive"
-              className="flex items-center gap-2"
+              className="w-full flex items-center justify-center gap-2"
             >
               <Icon name="CircleStop" size={16} /> End Session
             </Button>
@@ -236,7 +236,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
             <Button
               onClick={handleBBStackUpdate}
               variant="outline"
-              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground flex items-center gap-2"
+              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
               size="sm"
             >
               <Icon name="CircleDot" size={14} /> BB/Stack Update
@@ -246,7 +246,7 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
             <Button
               onClick={handleUploadHand}
               variant="outline"
-              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground flex items-center gap-2"
+              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
               size="sm"
             >
               <Icon name="Hand" size={14} /> Upload Hand
