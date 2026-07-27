@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import Icon from '@/components/Icon';
+import Icon from '@/components/ui/Lucide';
 
 interface SessionBreakRow {
   id: string;
