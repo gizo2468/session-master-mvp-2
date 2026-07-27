@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Hand } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { TableData, HandData } from '@/types/poker';
@@ -61,7 +62,10 @@ const HandTableSelectionModal: React.FC<HandTableSelectionModalProps> = ({
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-primary">Select Table for Hand</DialogTitle>
+            <DialogTitle className="text-primary flex items-center justify-center gap-2">
+              <Hand className="h-5 w-5" />
+              Select Table for Hand
+            </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-3">

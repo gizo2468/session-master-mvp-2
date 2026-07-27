@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { Clock } from 'lucide-react';
+import { Clock, Coffee } from 'lucide-react';
 
 interface BreakTimeModalProps {
   open: boolean;
@@ -42,7 +42,10 @@ const BreakTimeModal: React.FC<BreakTimeModalProps> = ({ open, onOpenChange, onS
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-primary">Take a Break</DialogTitle>
+          <DialogTitle className="text-primary flex items-center justify-center gap-2">
+            <Coffee className="h-5 w-5" />
+            Take a Break
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
