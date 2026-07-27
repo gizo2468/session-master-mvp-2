@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText, ChevronRight } from 'lucide-react';
+import { Plus, FileText, ChevronRight, Hand } from 'lucide-react';
 import { HandData, TableData } from '@/types/poker';
 import HandsList from './HandsList';
 import HandForm from './HandForm';
@@ -210,7 +210,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
             variant="lightyellow"
             size="sm"
           >
-            <Plus className="h-4 w-4 mr-2" /> 
+            <Hand className="h-4 w-4 mr-2" /> 
             Add Hand
           </Button>
         )}
