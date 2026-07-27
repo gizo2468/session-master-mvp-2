@@ -1,40 +1,25 @@
-Plan: Subtle Poker-Themed Background Texture on Live Session Page
+The current button group in `src/components/poker/SessionTimerCard.tsx` stretches the bottom buttons to the full card width and makes the top-row widths slightly uneven. This plan adjusts only the layout, spacing, and symmetry — text, icons, colors, and click behavior stay unchanged.
 
-Goal
-Add a low-contrast, repeating, poker-themed texture behind the white content cards on the Live Session page, using only the existing soft mustard/gold and light gray palette. No other UI changes.
+### What to change
+1. **Top row (Add Table / End Session)**
+   - Replace the flex row with a `grid grid-cols-2 gap-2` so the two buttons are guaranteed equal width and equal height.
+   - Set both buttons (and the End Session wrapper) to `w-full` so each fills its grid cell.
+   - Keep icon + text centered inside each button.
 
-What will change
-- `src/pages/LiveSession.tsx` — apply a new CSS background class to the light-mode page wrapper only.
-- `src/index.css` — add a new utility class that defines an inline, repeating SVG pattern.
+2. **Bottom column (BB/Stack Update / Upload Hand)**
+   - Wrap the stacked buttons in a compact, content-width container (`w-fit mx-auto`) so they are not stretched across the card.
+   - Set both buttons to `w-full` inside that container so the shorter button grows to match the wider one, keeping them equal width.
+   - Keep the vertical `gap-2` spacing and centered icon/text.
 
-What will not change
-- Card colors, button colors, icons, text, spacing, or functionality.
-- Dark mode background (remains unchanged).
-- Any other page.
+### Technical details
+- File: `src/components/poker/SessionTimerCard.tsx`
+- Classes to update:
+  - Top row container: `grid grid-cols-2 gap-2`
+  - Add Table button: `w-full flex items-center justify-center gap-2` (remove `flex-1`)
+  - End Session wrapper: `w-full` (button remains `w-full`)
+  - Bottom actions container: `flex flex-col gap-2 w-fit mx-auto`
+  - BB/Stack Update and Upload Hand buttons: `w-full flex items-center justify-center gap-2`
+- `data-tour` attributes remain on their existing elements.
+- No `size` variant changes, so the top buttons stay default height and the bottom buttons stay `sm` height.
 
-Implementation details
-
-1. Create an inline SVG background pattern
-- Define a small square tile (e.g. 120 × 120 px) as a CSS `background-image` using a data-URI SVG.
-- The tile will contain tiny, cartoon-style, stroke-only poker elements: a chip, a playing card, a suit symbol, and a dealer button “D”.
-- Use only the existing color tokens: `poker-gold` / `#D4AF37` and a very light gray (`gray-200` / `#E5E7EB` tone).
-- Set opacity to ~8–12% so it reads as a texture, not an illustration.
-- Keep all shapes simple and geometric; no realistic shading, no dark fills, no bright colors.
-- The tile will repeat seamlessly across the background area.
-
-2. Add a CSS utility class
-- Add a class such as `.bg-poker-texture` to `src/index.css` (or a Tailwind `@layer utilities` entry).
-- Class: `background-image: url("data:image/svg+xml,..."); background-repeat: repeat; background-size: 120px 120px;`
-- Apply only on light backgrounds. To avoid hardcoding white/dark, use a light variant class and apply it only to the light mode wrapper.
-
-3. Apply to Live Session page
-- In `src/pages/LiveSession.tsx`, wrap the main page content in a container with the new texture class.
-- Apply only when the light theme is active (e.g. use `className="... bg-gray-50 ... bg-poker-texture"` and leave the existing `dark:bg-background` untouched).
-- Ensure the pattern sits behind the white cards (`bg-white` cards will cover it naturally).
-- Confirm the loading, error, and no-session states do not gain the texture, or if they do, that they remain clean and readable.
-
-Verification
-- Build and typecheck the project.
-- Visually inspect the Live Session page in light mode at mobile and desktop widths to confirm the texture is subtle, evenly repeating, and does not distract from the cards.
-- Confirm dark mode still shows the original dark background.
-- Confirm no text contrast or readability issues.
+After the change, the top row will be a symmetrical pair of equal, larger buttons, while the bottom two will be a compact, equal-width column centered underneath them.
