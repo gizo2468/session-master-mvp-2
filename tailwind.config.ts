@@ -131,6 +131,10 @@ export default {
 				'modal-slide-out': {
 					'0%': { opacity: '1', transform: 'translateY(0) scale(1)' },
 					'100%': { opacity: '0', transform: 'translateY(20px) scale(0.95)' }
+				},
+				'pulse-subtle': {
+					'0%, 100%': { boxShadow: '0 0 0 0 rgba(220, 38, 38, 0.15)' },
+					'50%': { boxShadow: '0 0 0 5px rgba(220, 38, 38, 0.05)' }
 				}
 			},
 			animation: {
@@ -141,7 +145,8 @@ export default {
 				'card-unflip-front': 'card-unflip-front 0.6s ease-in-out forwards',
 				'card-unflip-back': 'card-unflip-back 0.6s ease-in-out forwards',
 				'modal-slide-in': 'modal-slide-in 0.3s ease-out forwards',
-				'modal-slide-out': 'modal-slide-out 0.3s ease-in forwards'
+				'modal-slide-out': 'modal-slide-out 0.3s ease-in forwards',
+				'pulse-subtle': 'pulse-subtle 2.5s ease-in-out infinite'
 			}
 		}
 	},
