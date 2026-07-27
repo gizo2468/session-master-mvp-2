@@ -83,11 +83,6 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session, onEndS
     <Card className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
       <CardHeader className="pb-2 text-center">
         <CardTitle className="text-lg font-bold text-poker-gold">Session Details</CardTitle>
-        {session.location?.trim() && (
-          <p className="text-base font-semibold text-foreground mt-1">
-            {session.location.trim()}
-          </p>
-        )}
       </CardHeader>
       <div data-tour="live-session-details">
         <div className="px-6 pb-2">
@@ -97,7 +92,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session, onEndS
               const formats = Array.from(new Set((session.tables ?? []).map(t => t.format))).filter(Boolean);
               const formatDisplay = formats.length ? formats.join(', ') : session.format;
               return (
-                <div className="flex justify-between">
+                <div className="flex items-center gap-2">
                   <span className="text-gray-500 dark:text-muted-foreground">Format:</span>
                   <span className="font-medium">{formatDisplay}</span>
                 </div>
@@ -105,14 +100,14 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session, onEndS
             })()}
 
             {/* Game Type */}
-            <div className="flex justify-between">
+            <div className="flex items-center gap-2">
               <span className="text-gray-500 dark:text-muted-foreground">Game Type:</span>
               <span className="font-medium">{session.gameType}</span>
             </div>
 
             {/* Currency */}
             {session.currency && (
-              <div className="flex justify-between">
+              <div className="flex items-center gap-2">
                 <span className="text-gray-500 dark:text-muted-foreground">Currency:</span>
                 <span className="font-medium">{session.currency} ({currencySymbol})</span>
               </div>
