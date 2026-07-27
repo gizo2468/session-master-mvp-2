@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession, TableData } from '@/types/poker';
 import { Badge } from "@/components/ui/badge";
 import { Button } from '@/components/ui/button';
-import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe, Calendar, CreditCard, Share2, Loader2 } from "lucide-react";
+import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe, Calendar, CreditCard, Share2, Loader2, CircleStop } from "lucide-react";
 import { format } from 'date-fns';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useSessionSharing } from '@/hooks/useSessionSharing';
@@ -14,9 +14,10 @@ import CoachSelectionModal from '@/components/coaching/CoachSelectionModal';
 
 interface SessionDetailsCardProps {
   session: PokerSession;
+  onEndSession?: () => void;
 }
 
-const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
+const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session, onEndSession }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const tables = session.tables || [];
@@ -155,6 +156,24 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               </Button>
             </div>
           )}
+
+          {/* End Session button (moved from top action row) */}
+          {onEndSession && (
+            <div data-tour="live-controls" className="flex justify-center pt-1">
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEndSession();
+                }}
+                variant="destructive"
+                className="flex items-center justify-center gap-2 w-full max-w-[220px]"
+              >
+                <CircleStop className="h-4 w-4" /> End Session
+              </Button>
+            </div>
+          )}
+
           
           {/* Session Sharing Status - only show if shared */}
           {isShared && sharedCoaches.length > 0 && (

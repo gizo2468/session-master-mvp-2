@@ -178,7 +178,10 @@ export default function LiveSession() {
             autoOpenBBStackModal={shouldOpenBBStackModal}
           />
           
-          <SessionDetailsCard session={currentSession} />
+          <SessionDetailsCard
+            session={currentSession}
+            onEndSession={() => sessionActions.setShowEndSessionSheet(true)}
+          />
           
           <LiveSessionTables
             currentSession={currentSession}
