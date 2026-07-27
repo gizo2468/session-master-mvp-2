@@ -374,6 +374,9 @@ export default function SessionDetail() {
             sessionCurrency={session.currency} 
           />
         )}
+
+        <SessionBreaksSection sessionId={session.id} />
+
         
         <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6">
           <HandManagementPanel 
