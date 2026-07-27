@@ -130,16 +130,16 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
                     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }, 250);
                 }}
-                className="w-full text-center bg-yellow-50 border border-yellow-200 rounded-lg p-4 cursor-pointer hover:bg-yellow-100 transition-colors"
+                className="w-full text-center bg-red-50 border border-red-200 rounded-lg p-4 cursor-pointer hover:bg-red-100 transition-colors animate-pulse-subtle"
               >
-                <div className="flex items-center justify-center gap-2 text-yellow-800 mb-2">
+                <div className="flex items-center justify-center gap-2 text-red-600 mb-2">
                   <AlertTriangle size={20} />
                   <span className="font-medium">Active Tables Detected</span>
                 </div>
-                <p className="text-yellow-700 text-sm">
+                <p className="text-red-700 text-sm">
                   You have {activeTables.length} active table(s) that need to be ended before you can close this session.
                 </p>
-                <ul className="mt-2 text-sm text-yellow-700">
+                <ul className="mt-2 text-sm text-red-700">
                   {activeTables.map((table, index) => (
                     <li key={table.id}>
                       • {table.name || table.location || `Table ${index + 1}`}

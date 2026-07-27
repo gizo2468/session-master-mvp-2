@@ -1,21 +1,25 @@
-## Update Active Tables Detected warning in End Session sheet
+Change the "Active Tables Detected" warning card in the End Session sheet from yellow to red, matching the End Session button's red family, and add a very subtle continuous pulse animation.
 
-**File:** `src/components/poker/EndSessionSheet.tsx` (lines 123-140)
+### Changes
+1. **`src/components/poker/EndSessionSheet.tsx`** (warning button at lines 133-149)
+   - Replace yellow color classes with red equivalents:
+     - Background: `bg-red-50` (was `bg-yellow-50`)
+     - Hover: `hover:bg-red-100` (was `hover:bg-yellow-100`)
+     - Border: `border-red-200` (was `border-yellow-200`)
+     - Title/icon text: `text-red-600` (was `text-yellow-800`)
+     - Body/list text: `text-red-700` (was `text-yellow-700`)
+   - Add a subtle pulse animation class `animate-pulse-subtle` to the warning card.
+   - Keep layout, text, spacing, and click behavior exactly as-is.
 
-### 1. Center the content
-- Add `text-center` to the outer warning `<div>`.
-- Change the title row from `flex items-center gap-2` to `flex items-center justify-center gap-2` so the icon + "Active Tables Detected" label sit centered.
-- Remove `ml-4` from the `<li>` and rely on the parent's centered text so bullet items align to center.
-
-### 2. Make the box clickable (only when there are active tables)
-The condition `hasActiveTables &&` already guarantees the box only renders when there are active tables — no change needed there.
-
-Convert the outer `<div>` into a `<button type="button">` with the same classes plus `w-full text-left`-free centering, `cursor-pointer`, `hover:bg-yellow-100`, and `transition-colors`. On click:
-1. Call `onOpenChange(false)` to close the End Session sheet.
-2. Scroll to the active tables section on the current Live Session page by querying `document.querySelector('[data-tour="live-active-tables"]')` and calling `scrollIntoView({ behavior: 'smooth', block: 'start' })` inside a short `setTimeout` (so it runs after the sheet close animation).
-
-No navigation is needed — the user is already on `/session/:id` (LiveSession), which renders `LiveSessionTables` with the `data-tour="live-active-tables"` anchor.
+2. **`tailwind.config.ts`**
+   - Add a new `pulse-subtle` keyframe and animation entry under `theme.extend`.
+   - The animation should be soft and non-distracting — a gentle red shadow-ring pulse:
+     ```text
+     0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.15); }
+     50% { box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.05); }
+     ```
+     Duration ~2.5s, ease-in-out, infinite.
 
 ### Out of scope
-- Colors, icon, spacing, typography, and all other styles remain unchanged.
-- No changes to logic elsewhere (session state, routing, other modals).
+- No changes to text, padding, margins, centering, or click behavior.
+- No changes to the End Session button, Session Summary section, or other parts of the sheet.
