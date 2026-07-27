@@ -128,6 +128,9 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
                   setTimeout(() => {
                     const el = document.querySelector('[data-tour="live-active-tables"]');
                     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    setTimeout(() => {
+                      window.dispatchEvent(new CustomEvent('sm:show-end-table-hint'));
+                    }, 450);
                   }, 250);
                 }}
                 className="w-full text-center bg-red-50 border border-red-200 rounded-lg p-4 cursor-pointer hover:bg-red-100 transition-colors animate-pulse-red-breathe"
