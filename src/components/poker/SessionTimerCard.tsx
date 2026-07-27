@@ -283,6 +283,27 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
               <Icon name="Hand" size={14} /> Upload Hand
             </Button>
           </div>
+          <div className="w-full">
+            <Button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowBreakModal(true); }}
+              variant="outline"
+              disabled={!!activeBreak}
+              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
+              size="sm"
+            >
+              <Icon name="Coffee" size={14} /> {activeBreak ? 'On Break…' : 'Break Time'}
+            </Button>
+          </div>
+          <div className="w-full">
+            <Button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowNotesModal(true); }}
+              variant="outline"
+              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
+              size="sm"
+            >
+              <Icon name="StickyNote" size={14} /> My Notes
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -302,6 +323,18 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         tables={activeTables}
         sessionId={sessionId}
       />
+
+      <BreakTimeModal
+        open={showBreakModal}
+        onOpenChange={setShowBreakModal}
+        onStart={async (minutes, notes) => await startBreak(minutes, notes)}
+      />
+
+      <MyNotesModal
+        open={showNotesModal}
+        onOpenChange={setShowNotesModal}
+      />
+
     </div>
   );
 };
