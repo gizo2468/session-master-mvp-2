@@ -1,29 +1,18 @@
-Refactor the "Duration (minutes)" input in the Break Time popup into a polished, custom mobile-app field.
+Rebuild the five information rows in the Session Details card so they share one consistent, centered two-column layout.
 
-### What we'll change
-- File: `src/components/poker/BreakTimeModal.tsx`
-- Replace the default `<Input type="number">` with a custom input wrapper built from a plain text input + left/right adornments.
-- Keep numeric-only mobile keyboard via `inputMode="numeric"` and `pattern="[0-9]*"`.
-- Keep existing validation logic (numbers only, 1–240 minutes).
-- Left adornment: small `Clock` icon from `lucide-react`.
-- Right adornment: fixed "minutes" suffix text.
-- Increase vertical padding for a taller, more comfortable touch target.
-- Use a dark input background, subtle border, rounded corners, and a soft yellow/gold focus glow matching the app theme.
-- Change placeholder from "e.g. 15" to "15".
-- No functional change to the break start flow or notes field.
+### What will change
+- In `src/components/poker/SessionDetailsCard.tsx`, wrap the Format, Game Type, Currency, Location, and Festival rows in a centered grid with fixed column widths.
+- Left column: label (e.g., "Format:", "Game Type:")
+- Right column: value (e.g., "Tournament", "NLH")
+- Use a `grid grid-cols-[auto_1fr]` or similar fixed/fixed-width layout inside a centered container, with a consistent `gap-x` between the two columns.
+- Remove `flex justify-between` from the Location and Festival rows so their values are no longer pushed to the far right.
+- Keep the first three rows from using `gap-2` that makes labels and values touch.
+- Preserve current font sizes, colors, and text exactly as they are.
+- Leave the Share with Coach button, Shared With row, End Session button, Total Buy-Ins badge, and all other card content unchanged.
 
-### Visual target
-- Clean, symmetrical inline-flex row: icon | input | suffix.
-- Text remains prominent and centered/left-aligned.
-- Focus state: ring glow in `hsl(var(--primary))` (gold accent).
-- Dark background matches card/popover surfaces (`bg-card`/dark `bg-popover`).
+### Why this approach
+A centered grid with fixed column widths keeps every row visually aligned regardless of content length, avoids the space-between problem, and looks polished on mobile without changing the card's overall structure.
 
-### Validation preserved
-- `onChange` still strips non-digit characters.
-- `parsed` / `valid` checks remain unchanged.
-- `handleStart` behavior unchanged.
-
-### Files to edit
-1. `src/components/poker/BreakTimeModal.tsx` — replace the duration input with the custom styled component.
-
-No other files need changes unless a global CSS rule for hiding number spinners is required; we will avoid the issue entirely by using `type="text"` with numeric input mode.
+### Verification
+- Run a TypeScript typecheck/build to ensure no errors.
+- Optionally capture a screenshot of the Live Session view to confirm the rows are centered and evenly spaced.
