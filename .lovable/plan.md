@@ -1,8 +1,10 @@
-Update `src/components/poker/SessionDetailsCard.tsx` only:
+## Plan
 
-1. Move the "Shared With:" row (including the Share2 icon, label, and coach username) from its current position below the red "End Session" button to directly above it, within the same centered vertical stack.
-2. Change the row's layout from `flex justify-between` to `flex items-center gap-2` so the label and coach username sit close together and left-aligned instead of being spread across the full width.
-3. Keep the Share2 icon, label text, amber username color, hover underline, and all other styling unchanged.
-4. Ensure the row remains centered on mobile by keeping it inside the existing centered card content container.
+Update `src/components/poker/HandTableSelectionModal.tsx` so each tournament table row in the "Select Table for Hand" modal displays its buy-in on the right.
 
-Verify by checking the Session Details card in the preview for the current live session.
+### Changes
+- Convert each table row into a two-column flex layout inside the existing `Button`: left = current name/details block (unchanged), right = buy-in block, vertically centered (`flex items-center justify-between gap-3`).
+- For tournament tables only (`table.format === 'Tournament'` and `table.buyIn != null`), render `Buy-In: {symbol}{amount.toFixed(2)}` using `table.buyIn` and `table.currency`.
+- Add a small currency-symbol helper (USD `$`, EUR `€`, GBP `£`, ILS `₪`, default `$`) or import from `src/utils/statisticsCalculator.ts`.
+- Prevent mobile overlap: wrap left block with `min-w-0 flex-1` and add `truncate` to the name line; right block gets `shrink-0 text-right text-sm`.
+- Keep existing styling, border, colors, click behavior, and cash-table rendering unchanged.
