@@ -1,16 +1,29 @@
-Update the secondary action buttons in `src/components/poker/SessionTimerCard.tsx` so the four buttons below "Add Table" are arranged in a 2×2 grid instead of a single vertical column.
+Refactor the "Duration (minutes)" input in the Break Time popup into a polished, custom mobile-app field.
 
-### Changes
-- **`src/components/poker/SessionTimerCard.tsx`**:
-  - Change the `data-tour="live-actions"` container from `flex flex-col gap-2 w-fit mx-auto` to a 2-column grid (`grid grid-cols-2 gap-2`) that fills the available width.
-  - Reorder the buttons into the requested layout:
-    - Row 1: **Upload Hand** | **My Notes**
-    - Row 2: **Break Time** | **BB/Stack Update**
-  - Keep each button's existing styling, icons, text, size (`size="sm"`), variant, `onClick`, disabled state, and `data-tour` behavior unchanged.
-  - Ensure the grid wrapper is full-width within the card so the four buttons share equal widths automatically.
+### What we'll change
+- File: `src/components/poker/BreakTimeModal.tsx`
+- Replace the default `<Input type="number">` with a custom input wrapper built from a plain text input + left/right adornments.
+- Keep numeric-only mobile keyboard via `inputMode="numeric"` and `pattern="[0-9]*"`.
+- Keep existing validation logic (numbers only, 1–240 minutes).
+- Left adornment: small `Clock` icon from `lucide-react`.
+- Right adornment: fixed "minutes" suffix text.
+- Increase vertical padding for a taller, more comfortable touch target.
+- Use a dark input background, subtle border, rounded corners, and a soft yellow/gold focus glow matching the app theme.
+- Change placeholder from "e.g. 15" to "15".
+- No functional change to the break start flow or notes field.
 
-### Verification
-- Confirm the four buttons render in the correct 2×2 order on mobile and desktop views.
-- Confirm button icons, labels, and click handlers remain unchanged.
-- Confirm the "Add Table" button above the grid is not modified.
-- Check for any visual overflow on narrow mobile viewports by viewing the live preview.
+### Visual target
+- Clean, symmetrical inline-flex row: icon | input | suffix.
+- Text remains prominent and centered/left-aligned.
+- Focus state: ring glow in `hsl(var(--primary))` (gold accent).
+- Dark background matches card/popover surfaces (`bg-card`/dark `bg-popover`).
+
+### Validation preserved
+- `onChange` still strips non-digit characters.
+- `parsed` / `valid` checks remain unchanged.
+- `handleStart` behavior unchanged.
+
+### Files to edit
+1. `src/components/poker/BreakTimeModal.tsx` — replace the duration input with the custom styled component.
+
+No other files need changes unless a global CSS rule for hiding number spinners is required; we will avoid the issue entirely by using `type="text"` with numeric input mode.
