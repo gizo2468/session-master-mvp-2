@@ -42,7 +42,7 @@ const BreakTimeModal: React.FC<BreakTimeModalProps> = ({ open, onOpenChange, onS
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Take a Break</DialogTitle>
+          <DialogTitle className="text-primary">Take a Break</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
