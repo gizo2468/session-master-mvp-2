@@ -262,48 +262,40 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
         )}
 
 
-        <div data-tour="live-actions" className="flex flex-col gap-2 w-fit mx-auto">
-          <div className="w-full">
-            <Button
-              onClick={handleBBStackUpdate}
-              variant="outline"
-              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
-              size="sm"
-            >
-              <Icon name="CircleDot" size={14} /> BB/Stack Update
-            </Button>
-          </div>
-          <div className="w-full">
-            <Button
-              onClick={handleUploadHand}
-              variant="outline"
-              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
-              size="sm"
-            >
-              <Icon name="Hand" size={14} /> Upload Hand
-            </Button>
-          </div>
-          <div className="w-full">
-            <Button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowBreakModal(true); }}
-              variant="outline"
-              disabled={!!activeBreak}
-              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
-              size="sm"
-            >
-              <Icon name="Coffee" size={14} /> {activeBreak ? 'On Break…' : 'Break Time'}
-            </Button>
-          </div>
-          <div className="w-full">
-            <Button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowNotesModal(true); }}
-              variant="outline"
-              className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
-              size="sm"
-            >
-              <Icon name="StickyNote" size={14} /> My Notes
-            </Button>
-          </div>
+        <div data-tour="live-actions" className="grid grid-cols-2 gap-2 w-full">
+          <Button
+            onClick={handleUploadHand}
+            variant="outline"
+            className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
+            size="sm"
+          >
+            <Icon name="Hand" size={14} /> Upload Hand
+          </Button>
+          <Button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowNotesModal(true); }}
+            variant="outline"
+            className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
+            size="sm"
+          >
+            <Icon name="StickyNote" size={14} /> My Notes
+          </Button>
+          <Button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowBreakModal(true); }}
+            variant="outline"
+            disabled={!!activeBreak}
+            className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
+            size="sm"
+          >
+            <Icon name="Coffee" size={14} /> {activeBreak ? 'On Break…' : 'Break Time'}
+          </Button>
+          <Button
+            onClick={handleBBStackUpdate}
+            variant="outline"
+            className="bg-white dark:bg-card/50 border border-gray-200 dark:border-border text-gray-700 dark:text-gray-300 hover:bg-white dark:bg-card hover:text-gray-900 dark:text-foreground w-full flex items-center justify-center gap-2"
+            size="sm"
+          >
+            <Icon name="CircleDot" size={14} /> BB/Stack Update
+          </Button>
         </div>
       </div>
 
