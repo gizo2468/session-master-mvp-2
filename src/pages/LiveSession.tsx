@@ -199,6 +199,9 @@ export default function LiveSession() {
         currency={currentSession.currency}
         onCustomDurationChange={sessionActions.handleCustomDurationChange}
       />
+
+      <EndTableTapHint />
+
       
       <RebuyConfirmationDialog
         open={rebuyActions.showRebuyConfirmDialog}
