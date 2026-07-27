@@ -75,29 +75,46 @@ const HandTableSelectionModal: React.FC<HandTableSelectionModalProps> = ({
                   Choose which table you want to add a hand to:
                 </p>
                 
-                {activeTables.map((table) => (
-                  <Button
-                    key={table.id}
-                    onClick={() => handleTableSelect(table.id)}
-                    variant="outline"
-                    className="w-full justify-start h-auto p-4"
-                  >
-                    <div className="text-left">
-                      <div className="font-medium">
-                        {table.name || `Table ${table.id.slice(-4)}`}
+                {activeTables.map((table) => {
+                  const currencySymbol = (() => {
+                    switch ((table.currency || 'USD').toUpperCase()) {
+                      case 'EUR': return '€';
+                      case 'GBP': return '£';
+                      case 'ILS': return '₪';
+                      default: return '$';
+                    }
+                  })();
+                  const showBuyIn = table.format === 'Tournament' && table.buyIn != null;
+                  return (
+                    <Button
+                      key={table.id}
+                      onClick={() => handleTableSelect(table.id)}
+                      variant="outline"
+                      className="w-full h-auto p-4 flex items-center justify-between gap-3"
+                    >
+                      <div className="text-left min-w-0 flex-1">
+                        <div className="font-medium truncate">
+                          {table.name || `Table ${table.id.slice(-4)}`}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-muted-foreground mt-1">
+                          {table.gameType} • {table.format}
+                          {table.format === 'Tournament' && table.tournamentTypes && table.tournamentTypes.length > 0 && (
+                            <span> • {table.tournamentTypes[0]}</span>
+                          )}
+                          {table.format === 'Cash' && table.smallBlind && table.bigBlind && (
+                            <span> • ${table.smallBlind}/${table.bigBlind}</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-muted-foreground mt-1">
-                        {table.gameType} • {table.format}
-                        {table.format === 'Tournament' && table.tournamentTypes && table.tournamentTypes.length > 0 && (
-                          <span> • {table.tournamentTypes[0]}</span>
-                        )}
-                        {table.format === 'Cash' && table.smallBlind && table.bigBlind && (
-                          <span> • ${table.smallBlind}/${table.bigBlind}</span>
-                        )}
-                      </div>
-                    </div>
-                  </Button>
-                ))}
+                      {showBuyIn && (
+                        <div className="shrink-0 text-right text-sm font-medium text-gray-700 dark:text-muted-foreground">
+                          Buy-In: {currencySymbol}{Number(table.buyIn).toFixed(2)}
+                        </div>
+                      )}
+                    </Button>
+                  );
+                })}
+
               </>
             )}
             
