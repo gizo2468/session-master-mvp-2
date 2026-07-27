@@ -1,17 +1,15 @@
-Plan: Increase the font size of the "Session Details" and "Active Tables" headings on the Live Session page.
+Plan: Revert only the "Active Tables (n)" heading to its previous font size while leaving "Session Details" enlarged.
 
 Verified current state:
-- `src/components/poker/SessionDetailsCard.tsx` line 85 renders the "Session Details" heading with `text-xl font-bold text-poker-gold`.
-- `src/components/poker/LiveSessionTables.tsx` line 32 renders the "Active Tables (n)" heading with `text-xl font-bold mb-2 text-poker-gold`.
-- Both headings are currently the same size and must stay at the same size.
+- `src/components/poker/LiveSessionTables.tsx` line 32 currently renders "Active Tables (n)" with `text-2xl font-bold mb-2 text-poker-gold`.
+- Its previous size was `text-xl`.
+- `src/components/poker/SessionDetailsCard.tsx` line 85 remains at `text-2xl` and should not be changed.
 
 Implementation:
-- In `src/components/poker/SessionDetailsCard.tsx`: Change the `CardTitle` class from `text-xl` to `text-2xl` (keep `font-bold text-poker-gold`).
-- In `src/components/poker/LiveSessionTables.tsx`: Change the `h4` class from `text-xl` to `text-2xl` (keep `font-bold mb-2 text-poker-gold`).
-- Keep color, font weight, alignment, wording, and surrounding spacing unchanged.
-- Do not adjust container padding, margins, width, or layout.
+- In `src/components/poker/LiveSessionTables.tsx`: Change the `h4` class from `text-2xl` back to `text-xl`.
+- Keep `font-bold mb-2 text-poker-gold` unchanged.
+- Do not modify `SessionDetailsCard.tsx` or any other file.
 
 Validation:
-- Verify the headings render without wrapping on mobile viewport widths.
+- Confirm the heading text remains on one line at mobile viewport widths.
 - Run a quick type/build check to ensure no class errors.
-- No other files need modification.
