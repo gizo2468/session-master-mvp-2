@@ -179,7 +179,9 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
               ].join(', '),
             }}
           >
-            <div className="mb-2 text-sm text-center" style={{ color: 'hsl(43, 40%, 45%)' }}>Session Time</div>
+            <div className="mb-2 text-sm text-center" style={{ color: 'hsl(43, 40%, 45%)' }}>
+              {activeBreak ? 'On Break' : 'Session Time'}
+            </div>
             <div className="relative">
               <div
                 aria-hidden="true"
@@ -191,23 +193,40 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
                   paddingRight: '0.03em',
                 }}
               >
-                {formatTime(elapsedTime).replace(/[0-9]/g, '8')}
+                {formatTime(activeBreak ? activeBreakRemaining : elapsedTime).replace(/[0-9]/g, '8')}
               </div>
               <div
                 className="text-5xl font-bold"
                 style={{
                   fontFamily: "'DSEG7Classic', monospace",
-                  color: 'hsl(43, 80%, 48%)',
-                  WebkitTextStroke: '0.5px hsl(45, 78%, 55%)',
-                  textShadow: '0 0 6px hsla(45, 85%, 55%, 0.5), 0 0 2px hsla(45, 85%, 58%, 0.3)',
+                  color: activeBreak ? 'hsl(0, 75%, 55%)' : 'hsl(43, 80%, 48%)',
+                  WebkitTextStroke: activeBreak ? '0.5px hsl(0, 78%, 60%)' : '0.5px hsl(45, 78%, 55%)',
+                  textShadow: activeBreak
+                    ? '0 0 6px hsla(0, 85%, 55%, 0.5), 0 0 2px hsla(0, 85%, 58%, 0.3)'
+                    : '0 0 6px hsla(45, 85%, 55%, 0.5), 0 0 2px hsla(45, 85%, 58%, 0.3)',
                   letterSpacing: '-0.03em',
                   paddingRight: '0.03em',
                 }}
               >
-                {formatTime(elapsedTime)}
+                {formatTime(activeBreak ? activeBreakRemaining : elapsedTime)}
               </div>
             </div>
+            {activeBreak && (
+              <div className="mt-3 flex flex-col items-center gap-2">
+                <div className="text-xs text-red-600 dark:text-red-400 font-semibold uppercase tracking-wide">
+                  Session paused
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => endBreakEarly()}
+                  className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+                >
+                  <Icon name="Play" size={14} /> End Break & Resume
+                </Button>
+              </div>
+            )}
           </div>
+
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6 w-full">
