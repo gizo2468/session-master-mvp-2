@@ -474,7 +474,8 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md w-full max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-primary">
+          <DialogTitle className="text-primary flex items-center justify-center gap-2">
+            <CircleDot className="h-5 w-5" />
             {editingLevel ? `Edit Level ${editingLevel}` : 'BB / Stack Update'}
           </DialogTitle>
           {validationError && (
