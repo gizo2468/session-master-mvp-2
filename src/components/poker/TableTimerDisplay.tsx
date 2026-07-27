@@ -93,10 +93,10 @@ const TableTimerDisplay: React.FC<TableTimerDisplayProps> = ({
   
   return (
     <div className={`flex items-center gap-1 ${className}`}>
-      <Badge variant={isActive ? "timeStarted" : "timeEnded"} className="px-2 py-1 font-mono font-medium flex items-center gap-1.5">
-        <Icon name="Clock" className="h-3 w-3" />
+      <span className="inline-flex items-center gap-1.5 font-mono font-semibold text-sm text-gray-900 dark:text-foreground">
+        <Icon name="Clock" className="h-3.5 w-3.5 text-muted-foreground" />
         <span>{formatTime(elapsedTime)}</span>
-      </Badge>
+      </span>
     </div>
   );
 };
