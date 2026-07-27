@@ -1,9 +1,7 @@
-Make a small, targeted adjustment inside the Session Details card (`src/components/poker/SessionDetailsCard.tsx`).
+Make a small, targeted typography change in two files to make the two section titles slightly larger.
 
-1. Remove the colon after each of these five labels only: `Format`, `Game Type`, `Currency`, `Location`, `Festival`. Leave other colons in the card untouched (e.g., `Shared With:` and `Profit/Loss:`).
-2. Keep the label/value group rendered in a centered two-column grid using the existing `flex justify-center` wrapper.
-3. Align the label cells to the right end of the first column so every label’s text terminates at the same vertical line. This gives a consistent, equal gap between each label and its value on every row.
-4. Leave the values left-aligned in the second column so they share a single clean vertical alignment.
-5. Keep row spacing, font sizes, font colors, text content, and overall card spacing exactly as they are.
+1. In `src/components/poker/SessionDetailsCard.tsx`, update the "Session Details" `<CardTitle>` from `text-lg` to `text-xl` (or an equivalent size) while keeping its `font-bold`, `text-poker-gold`, and `text-center` styling unchanged.
+2. In `src/components/poker/LiveSessionTables.tsx`, update the "Active Tables (n)" heading from `text-lg` to the same new size as above, preserving its `font-bold`, `text-poker-gold`, and margin/spacing classes.
+3. Leave every other text element, button, card, table content, and surrounding spacing untouched.
 
-No other files need to change. After editing, verify the build/typecheck passes and the visual result is centered and balanced.
+After the change, the two titles will share a larger, consistent size and stand out more clearly without changing color, weight, alignment, or layout.
