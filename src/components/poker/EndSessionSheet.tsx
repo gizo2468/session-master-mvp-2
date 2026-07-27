@@ -130,7 +130,7 @@ const EndSessionSheet: React.FC<EndSessionSheetProps> = ({
                     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }, 250);
                 }}
-                className="w-full text-center bg-red-50 border border-red-200 rounded-lg p-4 cursor-pointer hover:bg-red-100 transition-colors animate-pulse-subtle"
+                className="w-full text-center bg-red-50 border border-red-200 rounded-lg p-4 cursor-pointer hover:bg-red-100 transition-colors animate-pulse-red-breathe"
               >
                 <div className="flex items-center justify-center gap-2 text-red-600 mb-2">
                   <AlertTriangle size={20} />
