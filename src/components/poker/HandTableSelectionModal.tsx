@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Hand } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { TableData, HandData } from '@/types/poker';
