@@ -210,26 +210,18 @@ const SessionTimerCard: React.FC<SessionTimerCardProps> = ({
       </div>
 
       <div className="flex flex-col gap-2 w-full">
-        <div className="grid grid-cols-2 gap-2">
-          {onAddTable && (
+        {onAddTable && (
+          <div className="flex justify-center">
             <Button
               data-tour="live-add-table"
               onClick={handleAddTable}
-              className="bg-poker-gold hover:bg-poker-darkGold text-white w-full flex items-center justify-center gap-2"
+              className="bg-poker-gold hover:bg-poker-darkGold text-white w-full max-w-[220px] flex items-center justify-center gap-2"
             >
               <Icon name="Plus" size={16} /> Add Table
             </Button>
-          )}
-          <div data-tour="live-controls" className="w-full">
-            <Button
-              onClick={handleEndSession}
-              variant="destructive"
-              className="w-full flex items-center justify-center gap-2"
-            >
-              <Icon name="CircleStop" size={16} /> End Session
-            </Button>
           </div>
-        </div>
+        )}
+
 
         <div data-tour="live-actions" className="flex flex-col gap-2 w-fit mx-auto">
           <div className="w-full">
