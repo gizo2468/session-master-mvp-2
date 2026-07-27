@@ -1,25 +1,37 @@
-The current button group in `src/components/poker/SessionTimerCard.tsx` stretches the bottom buttons to the full card width and makes the top-row widths slightly uneven. This plan adjusts only the layout, spacing, and symmetry — text, icons, colors, and click behavior stay unchanged.
+## Move "End Session" Button to Session Details Card
 
-### What to change
-1. **Top row (Add Table / End Session)**
-   - Replace the flex row with a `grid grid-cols-2 gap-2` so the two buttons are guaranteed equal width and equal height.
-   - Set both buttons (and the End Session wrapper) to `w-full` so each fills its grid cell.
-   - Keep icon + text centered inside each button.
+Relocate the red **End Session** button from the top action row inside `SessionTimerCard` to the `SessionDetailsCard`, placed directly below the **Share with Coach** button. All tutorial hooks, tap targets, click handlers, and disabled logic stay wired to the same button — just at its new location.
 
-2. **Bottom column (BB/Stack Update / Upload Hand)**
-   - Wrap the stacked buttons in a compact, content-width container (`w-fit mx-auto`) so they are not stretched across the card.
-   - Set both buttons to `w-full` inside that container so the shorter button grows to match the wider one, keeping them equal width.
-   - Keep the vertical `gap-2` spacing and centered icon/text.
+### Files to change
 
-### Technical details
-- File: `src/components/poker/SessionTimerCard.tsx`
-- Classes to update:
-  - Top row container: `grid grid-cols-2 gap-2`
-  - Add Table button: `w-full flex items-center justify-center gap-2` (remove `flex-1`)
-  - End Session wrapper: `w-full` (button remains `w-full`)
-  - Bottom actions container: `flex flex-col gap-2 w-fit mx-auto`
-  - BB/Stack Update and Upload Hand buttons: `w-full flex items-center justify-center gap-2`
-- `data-tour` attributes remain on their existing elements.
-- No `size` variant changes, so the top buttons stay default height and the bottom buttons stay `sm` height.
+**1. `src/components/poker/SessionDetailsCard.tsx`**
+- Add an optional `onEndSession?: () => void` prop.
+- Directly below the existing "Share with Coach" block, add a centered container rendering the End Session button:
+  - Reuse the exact same markup as today: `variant="destructive"`, `CircleStop` icon, label "End Session".
+  - Wrap it in the existing `data-tour="live-controls"` div so the tour anchor moves with it.
+  - Center it in the card with matching spacing (`flex justify-center pt-1`) so it aligns visually with the Share button above.
+  - Click handler calls `onEndSession?.()` (same behavior as before — opens the End Session sheet).
 
-After the change, the top row will be a symmetrical pair of equal, larger buttons, while the bottom two will be a compact, equal-width column centered underneath them.
+**2. `src/components/poker/SessionTimerCard.tsx`**
+- Remove the End Session `<Button>` and its `data-tour="live-controls"` wrapper from the top action row.
+- Rebalance the top row so **Add Table** looks intentional on its own:
+  - Replace the `grid grid-cols-2` with a centered layout (`flex justify-center`) and constrain Add Table width (`w-full max-w-[220px]`) so it matches the visual weight of the bottom BB/Stack + Upload Hand column.
+- Keep `onEndSession` prop on `SessionTimerCard` but no longer render a button for it (prop still forwarded from `LiveSession` for backward compatibility — will be unused here).
+- `handleEndSession` local handler can be removed.
+
+**3. `src/pages/LiveSession.tsx`**
+- Pass `onEndSession={() => sessionActions.setShowEndSessionSheet(true)}` to `<SessionDetailsCard>` (in addition to / instead of the timer card).
+- Keep everything else identical: `EndSessionSheet` mount, `sessionActions.handleEndSession`, and the `EndTableTapHint` are unchanged.
+
+### What is intentionally NOT changed
+
+- Button text, color, icon, size, and behavior — identical.
+- `EndSessionSheet` component and all its tour steps/tap-hand logic on `[data-tour="end-session-summary"]` / `[data-tour="end-session-confirm"]` — those live inside the sheet, not on the trigger button, so they continue to work.
+- Tour step `live-controls` in `tourSteps.ts` — selector `[data-tour="live-controls"]` still resolves correctly because the attribute travels with the button.
+- Any dialog, navigation, active-table validation, or session-end flow — all downstream of `onEndSession`, unchanged.
+
+### Verification
+
+- `tsgo` typecheck and build.
+- Manual visual check: End Session sits centered under Share with Coach; top area shows a single centered Add Table above the BB/Stack + Upload Hand column.
+- Run the End Session tutorial once — the highlight should now spotlight the button inside Session Details, and completing the flow still returns to Home and shows the completion dialog.
