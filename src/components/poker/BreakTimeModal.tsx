@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { Clock } from 'lucide-react';
 
 interface BreakTimeModalProps {
   open: boolean;
@@ -48,18 +48,21 @@ const BreakTimeModal: React.FC<BreakTimeModalProps> = ({ open, onOpenChange, onS
         <div className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="break-minutes">Duration (minutes)</Label>
-            <Input
-              id="break-minutes"
-              type="number"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              min={1}
-              max={240}
-              placeholder="e.g. 15"
-              value={minutes}
-              onChange={(e) => setMinutes(e.target.value.replace(/[^0-9]/g, ''))}
-              autoFocus
-            />
+            <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30">
+              <Clock className="shrink-0 text-muted-foreground" size={18} />
+              <input
+                id="break-minutes"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="15"
+                value={minutes}
+                onChange={(e) => setMinutes(e.target.value.replace(/[^0-9]/g, ''))}
+                autoFocus
+                className="w-full bg-transparent text-lg font-medium text-foreground placeholder:text-muted-foreground/70 outline-none"
+              />
+              <span className="shrink-0 text-sm text-muted-foreground">minutes</span>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="break-notes">Notes (optional)</Label>
