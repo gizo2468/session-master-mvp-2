@@ -198,11 +198,32 @@ body.onboarding-pulse-active .tour-pulse-target {
     @apply border-border;
   }
 
+  /* Prevent white flashes at safe-area edges and during rubber-band overscroll.
+     html never inherited a themed background before — only body did — so the
+     native WKWebView's default white showed through at the top/bottom safe areas. */
+  html {
+    height: 100%;
+    background-color: hsl(var(--background));
+    overscroll-behavior-y: none;
+  }
+
+  /* Tell iOS which native UI (incl. the on-screen keyboard) to render.
+     Previously only a handful of inputs set color-scheme:dark manually,
+     so every other field (e.g. login password) fell back to a light keyboard. */
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
 
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
     font-weight: 400;
+    height: 100%;
+    overscroll-behavior-y: none;
   }
   
   h1 {

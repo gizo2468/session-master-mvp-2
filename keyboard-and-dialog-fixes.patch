@@ -1,0 +1,407 @@
+diff --git a/capacitor.config.ts b/capacitor.config.ts
+index eb56afc9..b7d61faa 100644
+--- a/capacitor.config.ts
++++ b/capacitor.config.ts
+@@ -5,6 +5,7 @@ const config: CapacitorConfig = {
+   appId: 'com.guyzohar.sessionmaster',
+   appName: 'session-master-mvp',
+   webDir: 'dist',
++  backgroundColor: '#121212',
+ 
+   android: {
+     buildOptions: {
+@@ -19,6 +20,15 @@ const config: CapacitorConfig = {
+   plugins: {
+     CapacitorHttp: {
+       enabled: true
++    },
++    StatusBar: {
++      overlaysWebView: false,
++      style: 'LIGHT',
++      backgroundColor: '#ffffff'
++    },
++    Keyboard: {
++      resize: 'body',
++      resizeOnFullScreen: true
+     }
+   },
+   ios: {
+diff --git a/ios/App/App/Base.lproj/LaunchScreen.storyboard b/ios/App/App/Base.lproj/LaunchScreen.storyboard
+index e7ae5d78..9007d1e1 100644
+--- a/ios/App/App/Base.lproj/LaunchScreen.storyboard
++++ b/ios/App/App/Base.lproj/LaunchScreen.storyboard
+@@ -15,7 +15,7 @@
+                     <imageView key="view" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Splash" id="snD-IY-ifK">
+                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                         <autoresizingMask key="autoresizingMask"/>
+-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
++                        <color key="backgroundColor" red="0.0706" green="0.0706" blue="0.0706" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                     </imageView>
+                 </viewController>
+                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
+diff --git a/src/components/poker/EndTableDialog.tsx b/src/components/poker/EndTableDialog.tsx
+index d21fc6a5..8db58e43 100644
+--- a/src/components/poker/EndTableDialog.tsx
++++ b/src/components/poker/EndTableDialog.tsx
+@@ -2,6 +2,7 @@
+ import React from 'react';
+ import { Button } from '@/components/ui/button';
+ import { Textarea } from '@/components/ui/textarea';
++import { Input } from '@/components/ui/input';
+ import Icon from '@/components/ui/Lucide';
+ import { 
+   Dialog,
+@@ -157,10 +158,11 @@ export default function EndTableDialog({
+                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                     <span className="text-gray-500 dark:text-muted-foreground">{currencySymbol}</span>
+                   </div>
+-                  <input
++                  <Input
+                     data-tour="end-table-cashout-input"
+                     id="tableCashout"
+                     type="number"
++                    inputMode="decimal"
+                     min="0"
+                     step="0.01"
+                     className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
+@@ -177,9 +179,10 @@ export default function EndTableDialog({
+                   <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
+                     Final Position (Optional)
+                   </label>
+-                  <input
++                  <Input
+                     id="finalPosition"
+                     type="number"
++                    inputMode="numeric"
+                     min="1"
+                     className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
+                     placeholder="Enter your final position (e.g. 3 for 3rd)"
+@@ -195,9 +198,10 @@ export default function EndTableDialog({
+                     <label htmlFor="bountyCount" className="block text-sm font-medium mb-1">
+                       Players Eliminated (Optional)
+                     </label>
+-                    <input
++                    <Input
+                       id="bountyCount"
+                       type="number"
++                      inputMode="numeric"
+                       min="0"
+                         className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
+                       placeholder="Number of players eliminated"
+@@ -214,12 +218,13 @@ export default function EndTableDialog({
+                       <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-background border border-r-0 border-gray-300 dark:border-border rounded-l-md">
+                         {currencySymbol}
+                       </span>
+-                      <input
++                      <Input
+                         id="bountyAmount"
+                         type="number"
++                        inputMode="decimal"
+                         min="0"
+                         step="0.01"
+-                        className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-border rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
++                        className="flex-1 min-w-0 px-3 py-2 border border-gray-300 dark:border-border rounded-r-md rounded-l-none focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
+                         placeholder="0.00"
+                         value={bountyAmount}
+                         onChange={(e) => onBountyAmountChange(e.target.value)}
+@@ -289,7 +294,7 @@ export default function EndTableDialog({
+                 <label htmlFor="nextDayStart" className="block text-sm font-medium mb-1">
+                   Next Day Start (Optional)
+                 </label>
+-                <input
++                <Input
+                   id="nextDayStart"
+                   type="datetime-local"
+                   className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
+@@ -305,9 +310,10 @@ export default function EndTableDialog({
+                 <label htmlFor="chipsCarryover" className="block text-sm font-medium mb-1">
+                   Chips Carryover
+                 </label>
+-                <input
++                <Input
+                   id="chipsCarryover"
+                   type="number"
++                  inputMode="numeric"
+                   min="0"
+                   className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
+                   placeholder="Enter chip count"
+diff --git a/src/components/poker/SessionModals.tsx b/src/components/poker/SessionModals.tsx
+index 69fcb365..6ced7d4f 100644
+--- a/src/components/poker/SessionModals.tsx
++++ b/src/components/poker/SessionModals.tsx
+@@ -5,6 +5,8 @@ import TableSelectionModal from './TableSelectionModal';
+ import EditTableForm from './EditTableForm';
+ import AddTableForm from './AddTableForm';
+ import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
++import { Input } from '@/components/ui/input';
++import { Textarea } from '@/components/ui/textarea';
+ 
+ interface SessionModalsProps {
+   session: PokerSession;
+@@ -128,7 +130,7 @@ const SessionModals: React.FC<SessionModalsProps> = ({
+       {/* End Session Modal - Only show for active sessions */}
+       {showEndSessionModal && session.isActive && (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+-          <div className="bg-white dark:bg-card rounded-lg shadow-xl p-6 max-w-md w-full">
++          <div className="bg-white dark:bg-card rounded-lg shadow-xl p-6 max-w-md w-full max-h-[85dvh] overflow-y-auto">
+             <h2 className="text-xl font-bold mb-4">End Session</h2>
+             <p className="mb-4">Please enter your cash out amount:</p>
+             
+@@ -137,8 +139,9 @@ const SessionModals: React.FC<SessionModalsProps> = ({
+                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                   <span className="text-gray-500 dark:text-muted-foreground">{getCurrencySymbol(session.currency)}</span>
+                 </div>
+-                <input
++                <Input
+                   type="number"
++                  inputMode="decimal"
+                   placeholder="0.00"
+                   className="w-full p-3 pl-8 border border-gray-300 dark:border-border rounded-md"
+                   value={cashOutAmount}
+@@ -152,13 +155,13 @@ const SessionModals: React.FC<SessionModalsProps> = ({
+             
+             <div className="mb-6">
+               <label className="block text-gray-700 dark:text-gray-300 mb-2" htmlFor="notes">Session Notes</label>
+-              <textarea
++              <Textarea
+                 id="notes"
+                 placeholder="How did your session go? Note any significant hands, reads, or things to improve..."
+                 className="w-full p-3 border border-gray-300 dark:border-border rounded-md min-h-[100px]"
+                 value={session.notes || ''}
+                 onChange={(e) => onNotesChange(e.target.value)}
+-              ></textarea>
++              />
+             </div>
+             
+             <div className="flex gap-4">
+diff --git a/src/components/poker/TableCard.tsx b/src/components/poker/TableCard.tsx
+index 6c24fc78..ecc4da01 100644
+--- a/src/components/poker/TableCard.tsx
++++ b/src/components/poker/TableCard.tsx
+@@ -15,6 +15,7 @@ import {
+   DialogTitle
+ } from '@/components/ui/dialog';
+ import { Textarea } from '@/components/ui/textarea';
++import { Input } from '@/components/ui/input';
+ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+ import TableTimerDisplay from './TableTimerDisplay';
+ import { Badge } from '@/components/ui/badge';
+@@ -598,9 +599,10 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onIn
+                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                       <span className="text-gray-500 dark:text-muted-foreground">{currencySymbol}</span>
+                     </div>
+-                    <input
++                    <Input
+                       id="tableCashout"
+                       type="number"
++                      inputMode="decimal"
+                       min="0"
+                       step="0.01"
+                       className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
+@@ -617,9 +619,10 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onIn
+                     <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
+                       Final Position
+                     </label>
+-                    <input
++                    <Input
+                       id="finalPosition"
+                       type="number"
++                      inputMode="numeric"
+                       min="1"
+                       className="w-full px-4 py-2 border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
+                       placeholder="Enter your final position (e.g. 3 for 3rd)"
+@@ -636,9 +639,10 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onIn
+                       <label htmlFor="bountyCount" className="block text-sm font-medium mb-1">
+                         Players Eliminated (Optional)
+                       </label>
+-                      <input
++                      <Input
+                         id="bountyCount"
+                         type="number"
++                        inputMode="numeric"
+                         min="0"
+                         className="w-full px-4 py-2 border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
+                         placeholder="Number of players eliminated"
+@@ -655,12 +659,13 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onIn
+                         <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-[#1C1C1E] border border-r-0 border-gray-300 dark:border-[#2C2C2E] rounded-l-md">
+                           {currencySymbol}
+                         </span>
+-                        <input
++                        <Input
+                           id="bountyAmount"
+                           type="number"
++                          inputMode="decimal"
+                           min="0"
+                           step="0.01"
+-                          className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-[#2C2C2E] rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
++                          className="flex-1 min-w-0 px-3 py-2 border border-gray-300 dark:border-[#2C2C2E] rounded-r-md rounded-l-none focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
+                           placeholder="0.00"
+                           value={bountyAmount}
+                           onChange={(e) => setBountyAmount(e.target.value)}
+@@ -714,7 +719,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onIn
+                   <label htmlFor="nextDayStart" className="block text-sm font-medium mb-1">
+                     Next Day Start (Optional)
+                   </label>
+-                  <input
++                  <Input
+                     id="nextDayStart"
+                     type="datetime-local"
+                     className="w-full px-4 py-2 border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
+@@ -728,9 +733,10 @@ const TableCard: React.FC<TableCardProps> = ({ table, currency, onEndTable, onIn
+                   <label htmlFor="chipsCarryover" className="block text-sm font-medium mb-1">
+                     Chips Carryover
+                   </label>
+-                  <input
++                  <Input
+                     id="chipsCarryover"
+                     type="number"
++                    inputMode="numeric"
+                     min="0"
+                     className="w-full px-4 py-2 border border-gray-300 dark:border-[#2C2C2E] rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen dark:bg-[#1C1C1E] dark:text-white dark:placeholder:text-[#8E8E93] dark:focus:border-[#D4AF37] dark:focus:ring-[#D4AF37] dark:[color-scheme:dark]"
+                     placeholder="Number of chips"
+diff --git a/src/components/ui/dialog.tsx b/src/components/ui/dialog.tsx
+index 8cc43091..e0eedcc6 100644
+--- a/src/components/ui/dialog.tsx
++++ b/src/components/ui/dialog.tsx
+@@ -38,7 +38,7 @@ const DialogContent = React.forwardRef<
+       data-form-type="other"
+       data-credential="false"
+       className={cn(
+-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg dark:bg-popover dark:shadow-[0_0px_20px_0_rgba(212,175,55,0.08)]",
++        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg max-h-[85dvh] overflow-y-auto translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg dark:bg-popover dark:shadow-[0_0px_20px_0_rgba(212,175,55,0.08)]",
+         className
+       )}
+       {...props}
+diff --git a/src/components/ui/textarea.tsx b/src/components/ui/textarea.tsx
+index 3f5e6731..40244917 100644
+--- a/src/components/ui/textarea.tsx
++++ b/src/components/ui/textarea.tsx
+@@ -23,7 +23,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps & { enableA
+     return (
+       <textarea
+         className={cn(
+-          "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:shadow-lg focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200",
++          "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:shadow-lg focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200",
+           className
+         )}
+         onFocus={handleTextareaFocus}
+diff --git a/src/context/ThemeContext.tsx b/src/context/ThemeContext.tsx
+index cf57aea0..6002aedd 100644
+--- a/src/context/ThemeContext.tsx
++++ b/src/context/ThemeContext.tsx
+@@ -1,4 +1,6 @@
+ import React, { createContext, useContext, useEffect, useState } from 'react';
++import { Capacitor } from '@capacitor/core';
++import { StatusBar, Style } from '@capacitor/status-bar';
+ 
+ type Theme = 'light' | 'dark';
+ 
+@@ -23,6 +25,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
+       root.classList.remove('dark');
+     }
+     localStorage.setItem('theme', theme);
++
++    if (Capacitor.isNativePlatform()) {
++      StatusBar.setStyle({ style: theme === 'dark' ? Style.Dark : Style.Light }).catch(() => {});
++      StatusBar.setBackgroundColor({
++        color: theme === 'dark' ? '#121212' : '#ffffff',
++      }).catch(() => {});
++    }
+   }, [theme]);
+ 
+   const toggleTheme = () => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+diff --git a/src/hooks/useFocusScroll.ts b/src/hooks/useFocusScroll.ts
+index a3d4e1fd..80b6ee2d 100644
+--- a/src/hooks/useFocusScroll.ts
++++ b/src/hooks/useFocusScroll.ts
+@@ -1,17 +1,24 @@
+ 
+ import { useRef, useCallback } from 'react';
+ 
++function getScrollContainer(el: HTMLElement): HTMLElement | Window {
++  return (el.closest('[data-app-scroll-root]') as HTMLElement | null) ?? window;
++}
++
+ export const useFocusScroll = () => {
+-  const originalScrollPositionRef = useRef<{ x: number; y: number } | null>(null);
++  const originalScrollPositionRef = useRef<number | null>(null);
++  const containerRef = useRef<HTMLElement | Window | null>(null);
+ 
+   const handleFocus = useCallback((element: HTMLElement) => {
++    const container = getScrollContainer(element);
++    containerRef.current = container;
++
+     // Store the current scroll position before scrolling
+-    originalScrollPositionRef.current = {
+-      x: window.scrollX,
+-      y: window.scrollY
+-    };
++    originalScrollPositionRef.current =
++      container instanceof Window ? window.scrollY : container.scrollTop;
+ 
+-    // Small delay to ensure the element is fully focused
++    // Small delay to ensure the element is fully focused and the native
++    // keyboard has finished resizing the viewport before we scroll.
+     setTimeout(() => {
+       element.scrollIntoView({
+         behavior: 'smooth',
+@@ -22,14 +29,15 @@ export const useFocusScroll = () => {
+   }, []);
+ 
+   const handleBlur = useCallback(() => {
+-    // Restore the original scroll position
+-    if (originalScrollPositionRef.current) {
+-      window.scrollTo({
+-        left: originalScrollPositionRef.current.x,
+-        top: originalScrollPositionRef.current.y,
+-        behavior: 'smooth'
+-      });
++    const container = containerRef.current;
++    if (container && originalScrollPositionRef.current !== null) {
++      if (container instanceof Window) {
++        window.scrollTo({ top: originalScrollPositionRef.current, behavior: 'smooth' });
++      } else {
++        container.scrollTo({ top: originalScrollPositionRef.current, behavior: 'smooth' });
++      }
+       originalScrollPositionRef.current = null;
++      containerRef.current = null;
+     }
+   }, []);
+ 
+diff --git a/src/index.css b/src/index.css
+index 47e6ae3a..ce045a3c 100644
+--- a/src/index.css
++++ b/src/index.css
+@@ -198,11 +198,32 @@ body.onboarding-pulse-active .tour-pulse-target {
+     @apply border-border;
+   }
+ 
++  /* Prevent white flashes at safe-area edges and during rubber-band overscroll.
++     html never inherited a themed background before — only body did — so the
++     native WKWebView's default white showed through at the top/bottom safe areas. */
++  html {
++    height: 100%;
++    background-color: hsl(var(--background));
++    overscroll-behavior-y: none;
++  }
++
++  /* Tell iOS which native UI (incl. the on-screen keyboard) to render.
++     Previously only a handful of inputs set color-scheme:dark manually,
++     so every other field (e.g. login password) fell back to a light keyboard. */
++  :root {
++    color-scheme: light;
++  }
++
++  .dark {
++    color-scheme: dark;
++  }
+ 
+   body {
+     @apply bg-background text-foreground;
+     font-family: 'Inter', sans-serif;
+     font-weight: 400;
++    height: 100%;
++    overscroll-behavior-y: none;
+   }
+   
+   h1 {

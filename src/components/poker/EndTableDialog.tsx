@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/Lucide';
 import { 
   Dialog,
@@ -157,10 +158,11 @@ export default function EndTableDialog({
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span className="text-gray-500 dark:text-muted-foreground">{currencySymbol}</span>
                   </div>
-                  <input
+                  <Input
                     data-tour="end-table-cashout-input"
                     id="tableCashout"
                     type="number"
+                    inputMode="decimal"
                     min="0"
                     step="0.01"
                     className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
@@ -177,9 +179,10 @@ export default function EndTableDialog({
                   <label htmlFor="finalPosition" className="block text-sm font-medium mb-1">
                     Final Position (Optional)
                   </label>
-                  <input
+                  <Input
                     id="finalPosition"
                     type="number"
+                    inputMode="numeric"
                     min="1"
                     className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                     placeholder="Enter your final position (e.g. 3 for 3rd)"
@@ -195,9 +198,10 @@ export default function EndTableDialog({
                     <label htmlFor="bountyCount" className="block text-sm font-medium mb-1">
                       Players Eliminated (Optional)
                     </label>
-                    <input
+                    <Input
                       id="bountyCount"
                       type="number"
+                      inputMode="numeric"
                       min="0"
                         className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                       placeholder="Number of players eliminated"
@@ -214,12 +218,13 @@ export default function EndTableDialog({
                       <span className="inline-flex items-center px-3 py-2 text-sm text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-background border border-r-0 border-gray-300 dark:border-border rounded-l-md">
                         {currencySymbol}
                       </span>
-                      <input
+                      <Input
                         id="bountyAmount"
                         type="number"
+                        inputMode="decimal"
                         min="0"
                         step="0.01"
-                        className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-border rounded-r-md focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
+                        className="flex-1 min-w-0 px-3 py-2 border border-gray-300 dark:border-border rounded-r-md rounded-l-none focus:ring-poker-feltGreen focus:border-poker-feltGreen focus:outline-none bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                         placeholder="0.00"
                         value={bountyAmount}
                         onChange={(e) => onBountyAmountChange(e.target.value)}
@@ -289,7 +294,7 @@ export default function EndTableDialog({
                 <label htmlFor="nextDayStart" className="block text-sm font-medium mb-1">
                   Next Day Start (Optional)
                 </label>
-                <input
+                <Input
                   id="nextDayStart"
                   type="datetime-local"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
@@ -305,9 +310,10 @@ export default function EndTableDialog({
                 <label htmlFor="chipsCarryover" className="block text-sm font-medium mb-1">
                   Chips Carryover
                 </label>
-                <input
+                <Input
                   id="chipsCarryover"
                   type="number"
+                  inputMode="numeric"
                   min="0"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-border rounded-md focus:ring-poker-feltGreen focus:border-poker-feltGreen bg-white dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
                   placeholder="Enter chip count"

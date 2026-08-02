@@ -1,17 +1,24 @@
 
 import { useRef, useCallback } from 'react';
 
+function getScrollContainer(el: HTMLElement): HTMLElement | Window {
+  return (el.closest('[data-app-scroll-root]') as HTMLElement | null) ?? window;
+}
+
 export const useFocusScroll = () => {
-  const originalScrollPositionRef = useRef<{ x: number; y: number } | null>(null);
+  const originalScrollPositionRef = useRef<number | null>(null);
+  const containerRef = useRef<HTMLElement | Window | null>(null);
 
   const handleFocus = useCallback((element: HTMLElement) => {
-    // Store the current scroll position before scrolling
-    originalScrollPositionRef.current = {
-      x: window.scrollX,
-      y: window.scrollY
-    };
+    const container = getScrollContainer(element);
+    containerRef.current = container;
 
-    // Small delay to ensure the element is fully focused
+    // Store the current scroll position before scrolling
+    originalScrollPositionRef.current =
+      container instanceof Window ? window.scrollY : container.scrollTop;
+
+    // Small delay to ensure the element is fully focused and the native
+    // keyboard has finished resizing the viewport before we scroll.
     setTimeout(() => {
       element.scrollIntoView({
         behavior: 'smooth',
@@ -22,14 +29,15 @@ export const useFocusScroll = () => {
   }, []);
 
   const handleBlur = useCallback(() => {
-    // Restore the original scroll position
-    if (originalScrollPositionRef.current) {
-      window.scrollTo({
-        left: originalScrollPositionRef.current.x,
-        top: originalScrollPositionRef.current.y,
-        behavior: 'smooth'
-      });
+    const container = containerRef.current;
+    if (container && originalScrollPositionRef.current !== null) {
+      if (container instanceof Window) {
+        window.scrollTo({ top: originalScrollPositionRef.current, behavior: 'smooth' });
+      } else {
+        container.scrollTo({ top: originalScrollPositionRef.current, behavior: 'smooth' });
+      }
       originalScrollPositionRef.current = null;
+      containerRef.current = null;
     }
   }, []);
 
