@@ -1,10 +1,10 @@
-
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.guyzohar.sessionmaster',
   appName: 'session-master-mvp',
   webDir: 'dist',
+  backgroundColor: '#121212',
 
   android: {
     buildOptions: {
@@ -19,6 +19,14 @@ const config: CapacitorConfig = {
   plugins: {
     CapacitorHttp: {
       enabled: true
+    },
+    StatusBar: {
+      overlaysWebView: true,
+      style: 'LIGHT'
+    },
+    Keyboard: {
+      resize: 'native',
+      resizeOnFullScreen: true
     }
   },
   ios: {
