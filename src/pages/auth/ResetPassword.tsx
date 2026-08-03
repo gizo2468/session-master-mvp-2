@@ -143,10 +143,6 @@ const ResetPassword: React.FC = () => {
         throw error;
       }
       
-      toast({
-        title: "Success",
-        description: "Your password has been reset successfully!",
-      });
 
       // Redirect to login page after successful password reset
       setTimeout(() => {

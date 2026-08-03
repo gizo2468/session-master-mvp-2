@@ -67,7 +67,6 @@ export const useIAP = () => {
         // Refresh user profile to update premium status in app
         await refreshUserProfile();
         
-        toast.success('Welcome to Premium! 🎉');
         return true;
       } else if (result.error === 'USER_CANCELLED') {
         // User cancelled - no error message needed
@@ -109,10 +108,8 @@ export const useIAP = () => {
         // Refresh user profile
         await refreshUserProfile();
         
-        toast.success('Purchases restored successfully!');
         return true;
       } else {
-        toast.info('No active purchases found.');
         return false;
       }
     } catch (err: any) {

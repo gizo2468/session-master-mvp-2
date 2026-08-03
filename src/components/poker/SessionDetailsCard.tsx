@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokerSession, TableData } from '@/types/poker';
 import { Badge } from "@/components/ui/badge";
 import { Button } from '@/components/ui/button';
-import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe, Calendar, CreditCard, Share2, Loader2 } from "lucide-react";
+import { DollarSign, CircleDollarSign, TrendingUp, TrendingDown, Globe, Calendar, CreditCard, Share2, Loader2, CircleStop } from "lucide-react";
 import { format } from 'date-fns';
 import { getCurrencySymbol } from '@/hooks/useDefaultCurrency';
 import { useSessionSharing } from '@/hooks/useSessionSharing';
@@ -14,9 +14,10 @@ import CoachSelectionModal from '@/components/coaching/CoachSelectionModal';
 
 interface SessionDetailsCardProps {
   session: PokerSession;
+  onEndSession?: () => void;
 }
 
-const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
+const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session, onEndSession }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const tables = session.tables || [];
@@ -81,57 +82,52 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
   return (
     <Card className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 mb-6">
       <CardHeader className="pb-2 text-center">
-        <CardTitle className="text-lg font-bold text-poker-gold">Session Details</CardTitle>
-        {session.location?.trim() && (
-          <p className="text-base font-semibold text-foreground mt-1">
-            {session.location.trim()}
-          </p>
-        )}
+        <CardTitle className="text-2xl font-bold text-poker-gold">Session Details</CardTitle>
       </CardHeader>
       <div data-tour="live-session-details">
         <div className="px-6 pb-2">
-          <div className="space-y-3">
-            {/* Format (dynamic from tables) */}
-            {(() => {
-              const formats = Array.from(new Set((session.tables ?? []).map(t => t.format))).filter(Boolean);
-              const formatDisplay = formats.length ? formats.join(', ') : session.format;
-              return (
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-muted-foreground">Format:</span>
-                  <span className="font-medium">{formatDisplay}</span>
-                </div>
-              );
-            })()}
+          <div className="flex justify-center">
+            <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 items-center">
+              {/* Format (dynamic from tables) */}
+              {(() => {
+                const formats = Array.from(new Set((session.tables ?? []).map(t => t.format))).filter(Boolean);
+                const formatDisplay = formats.length ? formats.join(', ') : session.format;
+                return (
+                  <>
+                    <span className="text-gray-500 dark:text-muted-foreground text-right justify-self-end">Format</span>
+                    <span className="font-medium justify-self-start">{formatDisplay}</span>
+                  </>
+                );
+              })()}
 
-            {/* Game Type */}
-            <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-muted-foreground">Game Type:</span>
-              <span className="font-medium">{session.gameType}</span>
+              {/* Game Type */}
+              <span className="text-gray-500 dark:text-muted-foreground text-right justify-self-end">Game Type</span>
+              <span className="font-medium justify-self-start">{session.gameType}</span>
+
+              {/* Currency */}
+              {session.currency && (
+                <>
+                  <span className="text-gray-500 dark:text-muted-foreground text-right justify-self-end">Currency</span>
+                  <span className="font-medium justify-self-start">{session.currency} ({currencySymbol})</span>
+                </>
+              )}
+
+              {/* Online physical location */}
+              {session.isOnline && session.physicalLocation?.trim() && (
+                <>
+                  <span className="text-gray-500 dark:text-muted-foreground text-right justify-self-end">Location</span>
+                  <span className="font-medium justify-self-start">{session.physicalLocation.trim()}</span>
+                </>
+              )}
+
+              {/* Festival Name */}
+              {session.festivalName?.trim() && (
+                <>
+                  <span className="text-gray-500 dark:text-muted-foreground text-right justify-self-end">Festival</span>
+                  <span className="font-medium justify-self-start">{session.festivalName.trim()}</span>
+                </>
+              )}
             </div>
-
-            {/* Currency */}
-            {session.currency && (
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-muted-foreground">Currency:</span>
-                <span className="font-medium">{session.currency} ({currencySymbol})</span>
-              </div>
-            )}
-
-            {/* Online physical location */}
-            {session.isOnline && session.physicalLocation?.trim() && (
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-muted-foreground">Location:</span>
-                <span className="font-medium">{session.physicalLocation.trim()}</span>
-              </div>
-            )}
-
-            {/* Festival Name */}
-            {session.festivalName?.trim() && (
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-muted-foreground">Festival:</span>
-                <span className="font-medium">{session.festivalName.trim()}</span>
-              </div>
-            )}
           </div>
         </div>
       <CardContent className="pt-3">
@@ -155,31 +151,50 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session }) => {
               </Button>
             </div>
           )}
-          
+
           {/* Session Sharing Status - only show if shared */}
           {isShared && sharedCoaches.length > 0 && (
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-1.5">
-                <Share2 className="h-4 w-4 text-muted-foreground" />
-                <span className="text-gray-500 dark:text-muted-foreground">Shared With:</span>
-              </div>
-              <div className="font-medium text-amber-700">
-                {sharedCoaches.map((coachId, index) => {
-                  const coach = connectedCoaches.find(c => c.id === coachId);
-                  if (!coach) return null;
-                  return (
-                    <span key={coachId}>
-                      <span 
-                        className="cursor-pointer hover:underline"
-                        onClick={() => navigate(`/coach/${coachId}`)}
-                      >
-                        {coach.displayName}
+            <div className="flex justify-center">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Share2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-gray-500 dark:text-muted-foreground">Shared With:</span>
+                </div>
+                <div className="font-medium text-amber-700">
+                  {sharedCoaches.map((coachId, index) => {
+                    const coach = connectedCoaches.find(c => c.id === coachId);
+                    if (!coach) return null;
+                    return (
+                      <span key={coachId}>
+                        <span 
+                          className="cursor-pointer hover:underline"
+                          onClick={() => navigate(`/coach/${coachId}`)}
+                        >
+                          {coach.displayName}
+                        </span>
+                        {index < sharedCoaches.length - 1 && ', '}
                       </span>
-                      {index < sharedCoaches.length - 1 && ', '}
-                    </span>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
+            </div>
+          )}
+
+          {/* End Session button (moved from top action row) */}
+          {onEndSession && (
+            <div data-tour="live-controls" className="flex justify-center pt-1">
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEndSession();
+                }}
+                variant="destructive"
+                className="flex items-center justify-center gap-2 w-full max-w-[220px]"
+              >
+                <CircleStop className="h-4 w-4" /> End Session
+              </Button>
             </div>
           )}
           

@@ -40,11 +40,6 @@ const CoachUpgrade = () => {
     try {
       await cancelCoachSubscription();
       setCancelDialogOpen(false);
-      toast({
-        title: "Subscription cancelled",
-        description: "Your subscription has been cancelled. You'll have access until the end of your billing period.",
-        variant: "default",
-      });
     } catch (error) {
       console.error("Error cancelling subscription:", error);
       toast({

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { CircleDot } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -404,10 +405,6 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
       
       updateLiveState({ bbStackUpdates });
       
-      toast({
-        title: "BB/Stack Updates Saved",
-        description: "Your table settings have been updated successfully.",
-      });
       
       console.log('BB/Stack Update Data saved to database and live state');
       
@@ -477,7 +474,8 @@ const BBStackUpdateModal: React.FC<BBStackUpdateModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md w-full max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-primary flex items-center justify-center gap-2">
+            <CircleDot className="h-5 w-5" />
             {editingLevel ? `Edit Level ${editingLevel}` : 'BB / Stack Update'}
           </DialogTitle>
           {validationError && (

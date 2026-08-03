@@ -54,12 +54,6 @@ export const useEndTableActions = (currentSession: PokerSession | null) => {
         },
         multiDayInfo
       );
-      toast({
-        title: endReason === 'day-ended' ? "Day Ended" : "Table Ended",
-        description: endReason === 'day-ended' 
-          ? "Your tournament progress has been saved for the next day." 
-          : "The table has been successfully ended."
-      });
     } catch (error) {
       console.error("Error ending table:", error);
       toast({

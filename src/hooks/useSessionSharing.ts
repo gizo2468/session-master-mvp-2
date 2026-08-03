@@ -67,10 +67,6 @@ export const useSessionSharing = (sessionId: string) => {
       // If no coaches selected, just update state and return
       if (coachIds.length === 0) {
         setSharedCoaches([]);
-        toast({
-          title: "Session Unshared",
-          description: "Session is no longer shared with any coaches."
-        });
         return true;
       }
 
@@ -131,10 +127,6 @@ export const useSessionSharing = (sessionId: string) => {
         });
       }
 
-      toast({
-        title: "Session Shared",
-        description: `Session has been shared with ${coachIds.length} coach${coachIds.length > 1 ? 'es' : ''}.`
-      });
       
       return true;
     } catch (error) {
@@ -173,10 +165,6 @@ export const useSessionSharing = (sessionId: string) => {
 
       setSharedCoaches([]);
       
-      toast({
-        title: "Session Unshared",
-        description: "Session is no longer shared with coaches."
-      });
       
       return true;
     } catch (error) {

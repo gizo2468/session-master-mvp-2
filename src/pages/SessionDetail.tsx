@@ -8,6 +8,7 @@ import { useSwipeBack } from '@/hooks/useSwipeBack';
 import HandManagementPanel from '@/components/poker/HandManagementPanel';
 import TableDetailsCard from '@/components/poker/TableDetailsCard';
 import { TablesPlayedSection } from '@/components/poker/TablesPlayedSection';
+import SessionBreaksSection from '@/components/poker/SessionBreaksSection';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TableData, HandData } from '@/types/poker';
 import SessionDetailHeader, { ShareWithCoachButton } from '@/components/poker/SessionDetailHeader';
@@ -256,10 +257,6 @@ export default function SessionDetail() {
     addTable(session.id, tableData);
     setShowAddTable(false);
     
-    toast({
-      title: "Table Added",
-      description: "New table has been added to your session.",
-    });
   };
 
   const handleDeleteTable = async (tableId: string) => {
@@ -267,10 +264,6 @@ export default function SessionDetail() {
     
     try {
       await deleteTable(session.id, tableId);
-      toast({
-        title: "Table Deleted",
-        description: "Table has been removed from your session.",
-      });
     } catch (error) {
       toast({
         title: "Error",
@@ -285,10 +278,6 @@ export default function SessionDetail() {
     
     try {
       await addTableHand(session.id, tableId, handData);
-      toast({
-        title: "Hand Added",
-        description: "Hand has been successfully added to the table.",
-      });
     } catch (error) {
       toast({
         title: "Error",
@@ -303,10 +292,6 @@ export default function SessionDetail() {
     
     try {
       await updateTableHand(session.id, tableId, handData);
-      toast({
-        title: "Hand Updated",
-        description: "Hand has been successfully updated.",
-      });
     } catch (error) {
       toast({
         title: "Error",
@@ -321,10 +306,6 @@ export default function SessionDetail() {
     
     try {
       await deleteTableHand(session.id, tableId, handId);
-      toast({
-        title: "Hand Deleted",
-        description: "Hand has been successfully deleted.",
-      });
     } catch (error) {
       toast({
         title: "Error",
@@ -393,6 +374,9 @@ export default function SessionDetail() {
             sessionCurrency={session.currency} 
           />
         )}
+
+        <SessionBreaksSection sessionId={session.id} />
+
         
         <div className="bg-white dark:bg-card rounded-lg shadow-md dark:shadow-black/30 p-6">
           <HandManagementPanel 

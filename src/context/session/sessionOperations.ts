@@ -94,13 +94,7 @@ export const createSessionOperations = (
         }
         
         // Success: Show confirmation and trigger statistics refresh
-        toast({
-          title: "Session Deleted",
-          description: "The session has been permanently deleted from your records."
-        });
         
-        // Trigger statistics refresh
-        await refreshSessionsFromDatabase();
         
       } catch (error) {
         console.error('Failed to delete session from database:', error);
@@ -131,10 +125,6 @@ export const createSessionOperations = (
       }
     } else {
       // No user logged in, just show success for local deletion
-      toast({
-        title: "Session Deleted",
-        description: "The session has been removed from your local records."
-      });
     }
   };
 

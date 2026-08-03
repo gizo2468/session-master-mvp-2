@@ -109,10 +109,6 @@ const Login: React.FC = () => {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Verification Email Sent",
-          description: "We've sent another verification email to your inbox.",
-        });
         setShowResendEmail(false);
       }
     } catch (error) {

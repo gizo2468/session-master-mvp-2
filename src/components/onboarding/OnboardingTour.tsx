@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { TourPathId } from '@/components/onboarding/tourSteps';
@@ -887,6 +888,12 @@ export default function OnboardingTour({
 
   const handleSkip = () => onClose();
 
+  const navigate = useNavigate();
+  const handleSkipTutorial = () => {
+    onClose();
+    navigate('/', { replace: true });
+  };
+
   // ===== Menu mode: Welcome screen with 3 path-selection buttons =====
   if (isMenu) {
     const TOOLTIP_W = 320;
@@ -1361,6 +1368,16 @@ export default function OnboardingTour({
                   variant="ghost"
                   size="sm"
                   onClick={handleSkip}
+                  className="text-muted-foreground hover:text-foreground hover:bg-transparent"
+                >
+                  Skip
+                </Button>
+              )}
+              {(isSubmitSessionStep || isLiveOverviewStep || isTableActionsStep) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSkipTutorial}
                   className="text-muted-foreground hover:text-foreground hover:bg-transparent"
                 >
                   Skip

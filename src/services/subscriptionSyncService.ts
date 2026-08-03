@@ -1,19 +1,21 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Sync premium status to Supabase via secure edge function
+ * Sync premium status to Supabase via secure edge function.
+ * Activation requires a valid Apple transaction receipt (verified server-side).
+ * Deactivation does not need a receipt.
  */
 export const syncPremiumStatus = async (
   isPremium: boolean,
-  expiryDate?: Date,
-  productId?: string
+  _expiryDate?: Date,
+  _productId?: string,
+  receiptData?: string
 ): Promise<boolean> => {
   try {
-    const { data, error } = await supabase.functions.invoke('sync-subscription', {
+    const { error } = await supabase.functions.invoke('sync-subscription', {
       body: {
         isPremium,
-        expiryDate: expiryDate?.toISOString() || null,
-        productId: productId || null,
+        receiptData: isPremium ? receiptData ?? null : null,
       },
     });
 
@@ -22,7 +24,6 @@ export const syncPremiumStatus = async (
       return false;
     }
 
-    console.log('[SubscriptionSync] Premium status synced:', isPremium);
     return true;
   } catch (error) {
     console.error('[SubscriptionSync] Sync failed:', error);
@@ -31,22 +32,19 @@ export const syncPremiumStatus = async (
 };
 
 /**
- * Verify and sync subscription status on app launch
+ * Verify and sync subscription status on app launch.
+ * Activation requires a valid Apple receipt — never trust local entitlement alone.
  */
 export const verifyAndSyncSubscription = async (
   hasActiveEntitlement: boolean,
   currentIsPremium: boolean,
   expiryDate?: Date,
-  productId?: string
+  productId?: string,
+  receiptData?: string
 ): Promise<boolean> => {
-  // Only sync if there's a mismatch
   if (hasActiveEntitlement !== currentIsPremium) {
-    console.log('[SubscriptionSync] Status mismatch detected, syncing...', {
-      hasActiveEntitlement,
-      currentIsPremium
-    });
-    return await syncPremiumStatus(hasActiveEntitlement, expiryDate, productId);
+    return await syncPremiumStatus(hasActiveEntitlement, expiryDate, productId, receiptData);
   }
-  
   return true;
 };
+

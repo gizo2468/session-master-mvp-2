@@ -27,10 +27,6 @@ const ConnectionCodeDisplay = () => {
     try {
       await navigator.clipboard.writeText(connectionCode);
       setCopied(true);
-      toast({
-        title: "Copied to clipboard",
-        description: "Connection code copied to clipboard"
-      });
       
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
@@ -44,10 +40,6 @@ const ConnectionCodeDisplay = () => {
       document.body.removeChild(textArea);
       
       setCopied(true);
-      toast({
-        title: "Copied to clipboard",
-        description: "Connection code copied to clipboard"
-      });
       
       setTimeout(() => setCopied(false), 2000);
     }

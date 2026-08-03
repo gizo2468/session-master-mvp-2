@@ -267,10 +267,6 @@ const AddNoteModal: React.FC<AddNoteModalProps> = ({
 
       if (error) throw error;
 
-      toast({
-        title: 'Note saved',
-        description: 'Your note has been saved successfully.',
-      });
 
       // Reset form and close
       setOpponentName('');

@@ -10,11 +10,6 @@ const ConnectionNotification: React.FC = () => {
   // Check for pending requests on component mount
   React.useEffect(() => {
     if (pendingRequests.length > 0) {
-      toast({
-        title: `${pendingRequests.length} Pending Request${pendingRequests.length > 1 ? 's' : ''}`,
-        description: "You have players waiting to connect with you",
-        duration: 2000, // Using the standard 2 second duration
-      });
     }
   }, []);
 

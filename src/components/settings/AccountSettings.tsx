@@ -101,10 +101,6 @@ const AccountSettings: React.FC = () => {
         throw error;
       }
       
-      toast({
-        title: t('success'),
-        description: 'Password reset email sent. Please check your inbox.',
-      });
     } catch (error) {
       console.error('Error sending password reset email:', error);
       toast({

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText, ChevronRight } from 'lucide-react';
+import { Plus, FileText, ChevronRight, Hand } from 'lucide-react';
 import { HandData, TableData } from '@/types/poker';
 import HandsList from './HandsList';
 import HandForm from './HandForm';
@@ -112,10 +112,6 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
         addHand(sessionId, handData as Omit<HandData, 'id' | 'createdAt'>);
       }
       
-      toast({
-        title: 'Hand Added',
-        description: 'Your hand has been successfully added.',
-      });
       setIsAddHandOpen(false);
     } catch (error) {
       toast({
@@ -146,10 +142,6 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
           updateHand(sessionId, updatedHandData);
         }
         
-        toast({
-          title: 'Hand Updated',
-          description: 'Your hand has been successfully updated.',
-        });
       } catch (error) {
         toast({
           title: 'Error Updating Hand',
@@ -186,10 +178,6 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
         }
         
         setHandToDelete(null);
-        toast({
-          title: 'Hand Deleted',
-          description: 'Your hand has been successfully deleted.',
-        });
       } catch (error) {
         toast({
           title: 'Error Deleting Hand',
@@ -222,7 +210,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
             variant="lightyellow"
             size="sm"
           >
-            <Plus className="h-4 w-4 mr-2" /> 
+            <Hand className="h-4 w-4 mr-2" /> 
             Add Hand
           </Button>
         )}

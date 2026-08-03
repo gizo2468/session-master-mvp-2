@@ -1,12 +1,15 @@
-Update only the text inside `src/components/onboarding/TourCompletionDialog.tsx`.
+Plan: Revert only the "Active Tables (n)" heading to its previous font size while leaving "Session Details" enlarged.
 
-- Title stays: **Tutorial Complete**
-- Replace `DialogDescription` body with the new multi-paragraph message:
-  1. "Congratulations! You've successfully completed the Session Master walkthrough."
-  2. "Your first session has been saved, and you can view it anytime on the Home screen under Recent Sessions."
-  3. "If you ever want a refresher, you can restart the tutorial at any time from the Settings page."
-  4. "Keep tracking your sessions and improving your game. Good luck at the tables!"
-- Use stacked `<p>` blocks inside the description for readability (small vertical spacing).
-- Keep trophy icon, gold styling, and **Start Playing** button untouched.
+Verified current state:
+- `src/components/poker/LiveSessionTables.tsx` line 32 currently renders "Active Tables (n)" with `text-2xl font-bold mb-2 text-poker-gold`.
+- Its previous size was `text-xl`.
+- `src/components/poker/SessionDetailsCard.tsx` line 85 remains at `text-2xl` and should not be changed.
 
-No other files change.
+Implementation:
+- In `src/components/poker/LiveSessionTables.tsx`: Change the `h4` class from `text-2xl` back to `text-xl`.
+- Keep `font-bold mb-2 text-poker-gold` unchanged.
+- Do not modify `SessionDetailsCard.tsx` or any other file.
+
+Validation:
+- Confirm the heading text remains on one line at mobile viewport widths.
+- Run a quick type/build check to ensure no class errors.

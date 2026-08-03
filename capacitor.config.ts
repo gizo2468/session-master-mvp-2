@@ -1,4 +1,3 @@
-
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -22,12 +21,11 @@ const config: CapacitorConfig = {
       enabled: true
     },
     StatusBar: {
-      overlaysWebView: false,
-      style: 'LIGHT',
-      backgroundColor: '#ffffff'
+      overlaysWebView: true,
+      style: 'LIGHT'
     },
     Keyboard: {
-      resize: 'body',
+      resize: 'native',
       resizeOnFullScreen: true
     }
   },

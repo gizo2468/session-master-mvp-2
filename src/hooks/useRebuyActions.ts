@@ -22,10 +22,6 @@ export const useRebuyActions = (sessionId: string | undefined) => {
     
     try {
       addTableRebuy(sessionId, pendingRebuyTableId, pendingRebuyAmount);
-      toast({
-        title: "Rebuy Added",
-        description: `$${pendingRebuyAmount.toFixed(2)} rebuy has been added to the table.`
-      });
     } catch (error) {
       console.error("Error adding table rebuy:", error);
       toast({

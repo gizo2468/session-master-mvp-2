@@ -4,6 +4,7 @@ import SessionTimerCard from '@/components/poker/SessionTimerCard';
 import SessionDetailsCard from '@/components/poker/SessionDetailsCard';
 import AddTableForm from '@/components/poker/AddTableForm';
 import EndSessionSheet from '@/components/poker/EndSessionSheet';
+import EndTableTapHint from '@/components/poker/EndTableTapHint';
 import RebuyConfirmationDialog from '@/components/poker/RebuyConfirmationDialog';
 import EndTableDialog from '@/components/poker/EndTableDialog';
 import LiveSessionHeader from '@/components/poker/LiveSessionHeader';
@@ -177,7 +178,10 @@ export default function LiveSession() {
             autoOpenBBStackModal={shouldOpenBBStackModal}
           />
           
-          <SessionDetailsCard session={currentSession} />
+          <SessionDetailsCard
+            session={currentSession}
+            onEndSession={() => sessionActions.setShowEndSessionSheet(true)}
+          />
           
           <LiveSessionTables
             currentSession={currentSession}
@@ -198,6 +202,9 @@ export default function LiveSession() {
         currency={currentSession.currency}
         onCustomDurationChange={sessionActions.handleCustomDurationChange}
       />
+
+      <EndTableTapHint />
+
       
       <RebuyConfirmationDialog
         open={rebuyActions.showRebuyConfirmDialog}

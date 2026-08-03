@@ -1,9 +1,14 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { PokerSession } from '@/types/poker';
+import { isSessionDeleted } from './deletedSessionsTracker';
 
 export const saveSessionToDatabase = async (session: PokerSession): Promise<boolean> => {
   try {
+    if (isSessionDeleted(session.id)) {
+      console.log('⏭️ Skipping save — session was already deleted:', session.id);
+      return true;
+    }
+
     console.log('💾 Saving session to database:', session.id);
     
     const { data: { user } } = await supabase.auth.getUser();

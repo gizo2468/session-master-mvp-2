@@ -23,7 +23,6 @@ const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({ open, onOpenCha
 
     try {
       await createFolder.mutateAsync(name.trim());
-      toast.success('Folder created');
       onOpenChange(false);
       setName('');
     } catch {

@@ -56,10 +56,6 @@ export const useStackCheckReminder = (
         globalReminderState.set(sessionId, reminderCount);
 
         // Show stack check reminder toast
-        toast.success('🔔 Time to check your stack!', {
-          description: 'Update your chip count for accurate session tracking.',
-          duration: 8000,
-        });
 
         // Also create a notification for the Notifications screen
         createNotification({

@@ -68,10 +68,6 @@ const AppSettings = () => {
               size="sm"
               onClick={() => {
                 triggerOnboardingReset();
-                toast({
-                  title: 'Onboarding reset',
-                  description: 'The guided tour will replay next time you visit Home.',
-                });
               }}
             >
               <RotateCcw className="h-4 w-4" />

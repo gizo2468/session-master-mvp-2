@@ -95,10 +95,6 @@ export default function ConfirmSession() {
     endSession(activeSession.id, parseFloat(cashOutAmount), completeNotes);
     setShowEndSessionSheet(false);
     
-    toast({
-      title: "Session Ended",
-      description: "Your poker session has been successfully recorded."
-    });
     navigate('/', { replace: true });
   };
   
@@ -111,10 +107,6 @@ export default function ConfirmSession() {
     if (!activeSession) return;
     
     addRebuy(activeSession.id, rebuyAmount);
-    toast({
-      title: "Rebuy Added",
-      description: `${currencySymbol}${rebuyAmount.toFixed(2)} rebuy has been added to your session.`
-    });
     setShowRebuyConfirmDialog(false);
   };
   
@@ -137,12 +129,6 @@ export default function ConfirmSession() {
     
     try {
       endTable(activeSession.id, tableId, cashOut, notes, bounty, multiDayInfo);
-      toast({
-        title: multiDayInfo?.dayEndedWithoutElimination ? "Day Ended" : "Table Ended",
-        description: multiDayInfo?.dayEndedWithoutElimination 
-          ? "Your tournament progress has been saved for the next day." 
-          : "The table has been successfully ended."
-      });
     } catch (error) {
       console.error("Error ending table:", error);
       toast({
@@ -158,10 +144,6 @@ export default function ConfirmSession() {
     
     try {
       addTableRebuy(activeSession.id, tableId, amount);
-      toast({
-        title: "Rebuy Added",
-        description: `${currencySymbol}${amount.toFixed(2)} rebuy has been added to the table.`
-      });
     } catch (error) {
       console.error("Error adding table rebuy:", error);
       toast({
