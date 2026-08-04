@@ -270,21 +270,21 @@ body.onboarding-pulse-active .tour-pulse-target {
 
   /* Safe area padding for notched devices (iPhone X+) */
   .pb-safe {
-    padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem)) !important;
   }
   
   .pt-safe {
-    padding-top: env(safe-area-inset-top, 0);
+    padding-top: env(safe-area-inset-top, 0) !important;
   }
 
   /* Header-safe: for full-width top bars (bg extends into safe area, content padded below it) */
   .header-safe {
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: env(safe-area-inset-top, 0px) !important;
   }
 
   /* Content-safe: for standard page containers with back button / content start */
   .content-safe {
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: env(safe-area-inset-top, 0px) !important;
   }
 }
 
