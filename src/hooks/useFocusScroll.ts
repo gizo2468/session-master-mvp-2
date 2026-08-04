@@ -1,45 +1,20 @@
+import { useCallback } from 'react';
 
-import { useRef, useCallback } from 'react';
-
-function getScrollContainer(el: HTMLElement): HTMLElement | Window {
-  return (el.closest('[data-app-scroll-root]') as HTMLElement | null) ?? window;
-}
-
+/**
+ * Historically this hook manually scrolled focused fields into view above
+ * the keyboard. Now that Keyboard.resize is set to 'native' (the WebView's
+ * own viewport shrinks when the keyboard opens) and scrollable containers
+ * (Dialog, AppLayout) size themselves off that same viewport, the browser's
+ * own default "scroll focused element into view" behavior already handles
+ * this correctly on its own. Our manual scrollIntoView was firing ~1 frame
+ * after the native resize and moving things a second time, which is what
+ * caused the visible jump/glitch when switching between fields. Left as a
+ * no-op (rather than deleted) so existing onFocus/onBlur call sites don't
+ * need to change if we ever need to reintroduce a targeted fix.
+ */
 export const useFocusScroll = () => {
-  const originalScrollPositionRef = useRef<number | null>(null);
-  const containerRef = useRef<HTMLElement | Window | null>(null);
-
-  const handleFocus = useCallback((element: HTMLElement) => {
-    const container = getScrollContainer(element);
-    containerRef.current = container;
-
-    // Store the current scroll position before scrolling
-    originalScrollPositionRef.current =
-      container instanceof Window ? window.scrollY : container.scrollTop;
-
-    // Small delay to ensure the element is fully focused and the native
-    // keyboard has finished resizing the viewport before we scroll.
-    setTimeout(() => {
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'nearest'
-      });
-    }, 100);
-  }, []);
-
-  const handleBlur = useCallback(() => {
-    const container = containerRef.current;
-    if (container && originalScrollPositionRef.current !== null) {
-      if (container instanceof Window) {
-        window.scrollTo({ top: originalScrollPositionRef.current, behavior: 'smooth' });
-      } else {
-        container.scrollTo({ top: originalScrollPositionRef.current, behavior: 'smooth' });
-      }
-      originalScrollPositionRef.current = null;
-      containerRef.current = null;
-    }
-  }, []);
+  const handleFocus = useCallback((_element: HTMLElement) => {}, []);
+  const handleBlur = useCallback(() => {}, []);
 
   return { handleFocus, handleBlur };
 };
