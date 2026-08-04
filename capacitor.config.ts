@@ -4,7 +4,7 @@ const config: CapacitorConfig = {
   appId: 'com.guyzohar.sessionmaster',
   appName: 'session-master-mvp',
   webDir: 'dist',
-  backgroundColor: '#121212',
+  backgroundColor: '#ffffff',
 
   android: {
     buildOptions: {
