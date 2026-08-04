@@ -28,9 +28,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     if (Capacitor.isNativePlatform()) {
       StatusBar.setStyle({ style: theme === 'dark' ? Style.Dark : Style.Light }).catch(() => {});
-      StatusBar.setBackgroundColor({
-        color: theme === 'dark' ? '#121212' : '#ffffff',
-      }).catch(() => {});
+      // setBackgroundColor is Android-only; iOS silently ignores it, so we
+      // only bother calling it on Android to avoid a pointless no-op there.
+      if (Capacitor.getPlatform() === 'android') {
+        StatusBar.setBackgroundColor({
+          color: theme === 'dark' ? '#121212' : '#ffffff',
+        }).catch(() => {});
+      }
     }
   }, [theme]);
 
