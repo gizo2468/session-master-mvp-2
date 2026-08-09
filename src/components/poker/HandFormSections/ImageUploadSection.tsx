@@ -118,8 +118,8 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
             />
           )}
 
-          {/* Edit button */}
-          <div className="absolute bottom-8 left-0 right-0 flex justify-center" onClick={(e) => e.stopPropagation()}>
+          {/* Edit / Delete buttons */}
+          <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-3" onClick={(e) => e.stopPropagation()}>
             <Button
               onClick={handleEditPhoto}
               className="bg-primary text-primary-foreground hover:bg-primary/90 backdrop-blur-md px-6"
@@ -128,7 +128,17 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
               <Pencil className="w-4 h-4 mr-2" />
               Edit Photo
             </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeletePhoto}
+              className="backdrop-blur-md px-6"
+              style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Image
+            </Button>
           </div>
+
         </DialogContent>
       </Dialog>
     </div>
