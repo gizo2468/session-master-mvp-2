@@ -188,7 +188,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
       {/* Display selected cards as card placeholders */}
       <div className="mb-4">
         {/* Card slots container with responsive sizing */}
-        <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center justify-center">
           <div className="flex gap-1.5 sm:gap-2 items-center">
             {Array.from({ length: visibleSlots }, (_, index) => {
               const card = selectedCardObjects[index];
@@ -198,7 +198,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                 <button
                   key={index}
                   type="button"
-                  className="w-10 h-14 sm:w-12 sm:h-16 border-2 rounded-md flex flex-col items-center justify-center transition-all cursor-default flex-shrink-0"
+                  className="w-12 h-16 sm:w-14 sm:h-18 border-2 rounded-md flex flex-col items-center justify-center transition-all cursor-default flex-shrink-0"
                 >
                   {card ? (
                     /* Filled card slot with white background and border */
