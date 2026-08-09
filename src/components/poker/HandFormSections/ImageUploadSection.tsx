@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, Loader2, Pencil, X } from 'lucide-react';
+import { Camera, Loader2, Pencil, Trash2, X } from 'lucide-react';
 import { useNativeImagePicker } from '@/hooks/useNativeImagePicker';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,16 @@ interface ImageUploadSectionProps {
   imagePreview: string | null;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onImageDataUrl?: (dataUrl: string) => void;
+  onImageRemove?: () => void;
 }
 
 const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
   imagePreview,
   onImageChange,
-  onImageDataUrl
+  onImageDataUrl,
+  onImageRemove
 }) => {
+
   const { pickImage, isLoading, isNative } = useNativeImagePicker();
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
