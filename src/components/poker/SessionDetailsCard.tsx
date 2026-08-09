@@ -205,7 +205,7 @@ const SessionDetailsCard: React.FC<SessionDetailsCardProps> = ({ session, onEndS
               variant="outline"
               className="flex items-center gap-1 border-amber-400 bg-amber-50 dark:bg-poker-cream dark:border-amber-700/60 text-amber-800 px-4 py-1.5 font-normal text-sm w-full mt-2 justify-center"
             >
-              <span className="font-bold text-amber-700 dark:text-amber-300 text-base">Total Buy-Ins: {currencySymbol}{totalBuyIn.toFixed(2)}</span>
+              <span className="font-bold text-amber-700 dark:text-poker-black text-base">Total Buy-Ins: {currencySymbol}{totalBuyIn.toFixed(2)}</span>
             </Badge>
             
             {/* Total Payouts Badge - only show if there are completed tables with payouts */}
