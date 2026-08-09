@@ -198,7 +198,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                 <button
                   key={index}
                   type="button"
-                  className="w-12 h-16 sm:w-14 sm:h-18 border-2 rounded-md flex flex-col items-center justify-center transition-all cursor-default flex-shrink-0"
+                  className="w-12 h-16 sm:w-14 sm:h-20 border-2 rounded-md flex flex-col items-center justify-center transition-all cursor-default flex-shrink-0"
                 >
                   {card ? (
                     /* Filled card slot with white background and border */
