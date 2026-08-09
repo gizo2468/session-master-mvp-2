@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Control, UseFormSetValue } from 'react-hook-form';
+import { Control, UseFormSetValue, Controller } from 'react-hook-form';
 import { FormValues } from '@/utils/handFormHelpers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,9 @@ interface SetBlindsSectionProps {
   bigBlind?: number;
 }
 
+
 const SetBlindsSection: React.FC<SetBlindsSectionProps> = ({
+  control,
   setValue,
   smallBlind,
   bigBlind,
@@ -51,18 +53,58 @@ const SetBlindsSection: React.FC<SetBlindsSectionProps> = ({
   const hasBlindsSet = smallBlind !== undefined || bigBlind !== undefined;
 
   return (
-    <div className="flex flex-col items-center space-y-2">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={handleOpenModal}
-        className="flex items-center gap-2"
-      >
-        <Settings2 className="h-4 w-4" />
-        Set Blinds
-      </Button>
-      
+    <div className="flex flex-col items-start space-y-1">
+      <div className="flex items-center gap-1.5 mt-1">
+        <span className="text-sm text-muted-foreground">Hero Stack:</span>
+        <Controller
+          name="heroStackBB"
+          control={control}
+          render={({ field: stackField }) => (
+            <Input
+              type="number"
+              inputMode="decimal"
+              step="0.5"
+              min="0.5"
+              placeholder="0"
+              aria-label="Hero stack in BB"
+              autoComplete="off"
+              data-lpignore="true"
+              data-1p-ignore="true"
+              data-bwignore="true"
+              name="hero-stack-bb"
+              spellCheck={false}
+              autoCapitalize="off"
+              autoCorrect="off"
+              {...stackField}
+              value={stackField.value ?? ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '') {
+                  stackField.onChange(undefined);
+                } else {
+                  const num = parseFloat(value);
+                  if (!isNaN(num) && isFinite(num) && num >= 0) {
+                    stackField.onChange(num);
+                  }
+                }
+              }}
+              className="w-20 h-8 text-sm"
+            />
+          )}
+        />
+        <span className="text-sm text-muted-foreground font-medium">BB</span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleOpenModal}
+          className="flex items-center gap-2"
+        >
+          <Settings2 className="h-4 w-4" />
+          Set Blinds
+        </Button>
+      </div>
+
       {hasBlindsSet && (
         <p className="text-xs text-muted-foreground">
           Blinds set: SB {smallBlind ?? '-'} / BB {bigBlind ?? '-'}
