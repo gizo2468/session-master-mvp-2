@@ -152,7 +152,7 @@ const HandForm: React.FC<HandFormProps> = ({
                 villains={villains}
               />
               
-              {/* Set Blinds Button */}
+              {/* Set Blinds / Hero Stack row */}
               <SetBlindsSection 
                 control={form.control}
                 setValue={form.setValue}
