@@ -209,6 +209,7 @@ const HandManagementPanel: React.FC<HandManagementPanelProps> = ({
             onClick={() => setIsAddHandOpen(true)}
             variant="lightyellow"
             size="sm"
+            className="bg-amber-50 hover:bg-amber-50/90 dark:bg-poker-cream dark:hover:bg-poker-cream/90"
           >
             <Hand className="h-4 w-4 mr-2" /> 
             Add Hand
