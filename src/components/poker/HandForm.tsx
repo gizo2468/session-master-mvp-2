@@ -13,7 +13,6 @@ import ActionSection from './HandFormSections/ActionSection';
 import StreetByStreetSection from './HandFormSections/StreetByStreetSection';
 import NotesSection from './HandFormSections/NotesSection';
 import HandResultSection from './HandFormSections/HandResultSection';
-import SetBlindsSection from './HandFormSections/SetBlindsSection';
 import AIHandAnalyzerBanner from './AIHandAnalyzerBanner';
 import AIHandAnalyzerDialog from './AIHandAnalyzerDialog';
 import OpponentLinkSection from './HandFormSections/OpponentLinkSection';

@@ -3,7 +3,6 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { AdaptiveTooltip } from '@/components/ui/adaptive-tooltip';
 import { CircleHelp } from 'lucide-react';
 import { Control } from 'react-hook-form';
-import { Input } from '@/components/ui/input';
 import CardSelector from '../CardSelector';
 import { FormValues, getMaxCards, getExcludedCardsForMain, tooltipContent } from '@/utils/handFormHelpers';
 
