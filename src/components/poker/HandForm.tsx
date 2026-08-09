@@ -124,7 +124,12 @@ const HandForm: React.FC<HandFormProps> = ({
                   setImagePreview(dataUrl);
                   form.setValue('image', dataUrl);
                 }}
+                onImageRemove={() => {
+                  setImagePreview(null);
+                  form.setValue('image', undefined);
+                }}
               />
+
 
               {/* AI Hand Analyzer - only show when adding new hand, not editing */}
               {!isEditing && (

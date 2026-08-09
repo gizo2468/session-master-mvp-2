@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, Loader2, Pencil, X } from 'lucide-react';
+import { Camera, Loader2, Pencil, Trash2, X } from 'lucide-react';
 import { useNativeImagePicker } from '@/hooks/useNativeImagePicker';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,16 @@ interface ImageUploadSectionProps {
   imagePreview: string | null;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onImageDataUrl?: (dataUrl: string) => void;
+  onImageRemove?: () => void;
 }
 
 const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
   imagePreview,
   onImageChange,
-  onImageDataUrl
+  onImageDataUrl,
+  onImageRemove
 }) => {
+
   const { pickImage, isLoading, isNative } = useNativeImagePicker();
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
@@ -42,6 +45,15 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
     setIsLightboxOpen(false);
     setTimeout(() => handlePickImage(), 200);
   };
+
+  const handleDeletePhoto = () => {
+    setIsLightboxOpen(false);
+    const input = document.getElementById('image-upload') as HTMLInputElement | null;
+    if (input) input.value = '';
+    onImageRemove?.();
+  };
+
+
 
   return (
     <div className="flex flex-col items-center gap-3 py-4">
@@ -106,8 +118,8 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
             />
           )}
 
-          {/* Edit button */}
-          <div className="absolute bottom-8 left-0 right-0 flex justify-center" onClick={(e) => e.stopPropagation()}>
+          {/* Edit / Delete buttons */}
+          <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-3" onClick={(e) => e.stopPropagation()}>
             <Button
               onClick={handleEditPhoto}
               className="bg-primary text-primary-foreground hover:bg-primary/90 backdrop-blur-md px-6"
@@ -116,7 +128,17 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
               <Pencil className="w-4 h-4 mr-2" />
               Edit Photo
             </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeletePhoto}
+              className="backdrop-blur-md px-6"
+              style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Image
+            </Button>
           </div>
+
         </DialogContent>
       </Dialog>
     </div>
