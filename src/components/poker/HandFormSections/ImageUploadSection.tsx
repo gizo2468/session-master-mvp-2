@@ -46,6 +46,15 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
     setTimeout(() => handlePickImage(), 200);
   };
 
+  const handleDeletePhoto = () => {
+    setIsLightboxOpen(false);
+    const input = document.getElementById('image-upload') as HTMLInputElement | null;
+    if (input) input.value = '';
+    onImageRemove?.();
+  };
+
+
+
   return (
     <div className="flex flex-col items-center gap-3 py-4">
       <div 
