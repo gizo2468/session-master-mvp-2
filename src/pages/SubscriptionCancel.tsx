@@ -8,7 +8,7 @@ const SubscriptionCancel: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center content-safe">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">

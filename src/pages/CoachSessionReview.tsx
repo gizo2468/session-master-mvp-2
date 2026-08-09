@@ -277,7 +277,7 @@ const CoachSessionReview = () => {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-background">
+      <div className="min-h-screen bg-gray-50 dark:bg-background content-safe">
         <div className="container mx-auto max-w-4xl px-4 py-8">
           <div className="text-center py-12">
             <Icon name="Loader" className="mx-auto mb-4 h-8 w-8 animate-spin text-poker-feltGreen" />
@@ -290,7 +290,7 @@ const CoachSessionReview = () => {
 
   if (error || !sessionData) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-background">
+      <div className="min-h-screen bg-gray-50 dark:bg-background content-safe">
         <div className="container mx-auto max-w-4xl px-4 py-8">
           <header className="mb-8">
             <button 
@@ -323,7 +323,7 @@ const CoachSessionReview = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-background">
+    <div className="min-h-screen bg-gray-50 dark:bg-background content-safe">
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <header className="mb-8">
           <button 

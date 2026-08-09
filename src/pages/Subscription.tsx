@@ -65,7 +65,7 @@ const Subscription: React.FC = () => {
   }, []);
 
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <div ref={swipeBackRef} className="min-h-screen bg-gradient-to-br from-background to-muted content-safe">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">

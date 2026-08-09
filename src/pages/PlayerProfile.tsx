@@ -338,7 +338,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-background">
+      <div className="min-h-screen bg-gray-50 dark:bg-background content-safe">
         <div className="container mx-auto max-w-4xl px-4 py-8">
           <div className="text-center py-12">
             <Icon name="Loader" className="mx-auto mb-4 h-8 w-8 animate-spin text-muted-foreground" />
@@ -351,7 +351,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-background">
+      <div className="min-h-screen bg-gray-50 dark:bg-background content-safe">
         <div className="container mx-auto max-w-4xl px-4 py-8">
           <div className="text-center py-12">
             <Icon name="AlertCircle" className="mx-auto mb-4 h-12 w-12 text-red-500" />
@@ -369,7 +369,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
 
   if (!player) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-background">
+      <div className="min-h-screen bg-gray-50 dark:bg-background content-safe">
         <div className="container mx-auto max-w-4xl px-4 py-8">
           <div className="text-center py-12">
             <p className="text-muted-foreground">Player not found.</p>
@@ -386,7 +386,7 @@ const calculateSummary = (sessions: SharedSession[]) => {
   const currencySymbol = getCurrencySymbol(player.default_currency);
 
   return (
-    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background">
+    <div ref={swipeBackRef} className="min-h-screen bg-gray-50 dark:bg-background content-safe">
       <div className="container mx-auto max-w-4xl px-4 py-8">
         {/* Header */}
         <header className="mb-8">

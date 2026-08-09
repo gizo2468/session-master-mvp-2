@@ -23,7 +23,7 @@ const SubscriptionSuccess: React.FC = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center content-safe">
       <Card className="w-full max-w-md">
         <CardContent className="flex flex-col items-center space-y-4 pt-6">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
