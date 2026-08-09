@@ -265,7 +265,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
       </div>
       
       {/* Card selection keyboard layout */}
-      <div className="bg-gray-100 dark:bg-muted rounded-lg p-3">
+      <div className="bg-gray-100 dark:bg-black/40 dark:border dark:border-white/10 rounded-lg p-3">
         {/* Card ranks section - two rows for better spacing */}
         <div className="space-y-1.5 mb-3">
           {/* First row of ranks */}
@@ -283,8 +283,8 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                          currentSelection.rank === rank 
                            ? "bg-poker-gold text-white shadow-md dark:shadow-black/30" 
                            : suits.every(suit => isCardUnavailable(rank, suit.symbol))
-                             ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
-                             : "bg-gray-300 hover:bg-gray-200 dark:bg-muted text-gray-800 dark:text-foreground"
+                             ? "bg-gray-100 dark:bg-muted/40 text-gray-400 dark:text-muted-foreground cursor-not-allowed opacity-50"
+                             : "bg-gray-300 hover:bg-gray-200 dark:bg-card dark:hover:bg-white/10 dark:border dark:border-white/10 text-gray-800 dark:text-foreground"
                        )}
                     >
                       {rank}
@@ -320,8 +320,8 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                          currentSelection.rank === rank 
                            ? "bg-poker-gold text-white shadow-md dark:shadow-black/30" 
                            : suits.every(suit => isCardUnavailable(rank, suit.symbol))
-                             ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
-                             : "bg-gray-300 hover:bg-gray-200 dark:bg-muted text-gray-800 dark:text-foreground"
+                             ? "bg-gray-100 dark:bg-muted/40 text-gray-400 dark:text-muted-foreground cursor-not-allowed opacity-50"
+                             : "bg-gray-300 hover:bg-gray-200 dark:bg-card dark:hover:bg-white/10 dark:border dark:border-white/10 text-gray-800 dark:text-foreground"
                        )}
                     >
                       {rank}
@@ -358,8 +358,8 @@ const CardSelector: React.FC<CardSelectorProps> = ({
                        currentSelection.suit === suit.symbol
                          ? "bg-poker-gold text-white shadow-md dark:shadow-black/30" 
                          : ranks.every(rank => isCardUnavailable(rank, suit.symbol))
-                           ? "bg-gray-100 dark:bg-muted text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
-                           : "bg-gray-300 hover:bg-gray-200 dark:bg-muted",
+                           ? "bg-gray-100 dark:bg-muted/40 text-gray-400 dark:text-muted-foreground cursor-not-allowed opacity-50"
+                           : "bg-gray-300 hover:bg-gray-200 dark:bg-card dark:hover:bg-white/10 dark:border dark:border-white/10",
                        // Only apply suit color if not disabled
                        !ranks.every(rank => isCardUnavailable(rank, suit.symbol)) && 
                        currentSelection.suit !== suit.symbol && suit.color
