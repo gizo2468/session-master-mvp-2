@@ -23,8 +23,8 @@ const DonationCard = () => {
       const platform = detectPlatform();
       
       // Log donation click to Supabase
-      await supabase.from('donation_logs').insert({
-        user_id: user?.id, // Will be null if user is not logged in
+      if (user?.id) await supabase.from('donation_logs').insert({
+        user_id: user.id,
         session_id: activeSession?.id, // Will be null if no active session
         platform,
         // We don't include IP address as it's better handled server-side
