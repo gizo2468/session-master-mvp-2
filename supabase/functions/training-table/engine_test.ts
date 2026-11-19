@@ -241,7 +241,7 @@ Deno.test('full lesson flow: 2 students, 1 bot, 1 coach seat, 3 hands incl. all-
     const p = st.seats[st.to_act!];
     if (p.type === 'coach') return ['fold'];
     if (p.type === 'bot' && st.street === 'preflop') return ['raise', p.bet + p.stack];
-    if (st.street === 'preflop' && p.seat === 1 && st.current_bet < 100) return ['raise', 100];
+    if (st.street === 'preflop' && p.seat === 1 && !p.all_in && st.current_bet < p.bet + p.stack) return ['raise', p.bet + p.stack];
     return passive(st);
   });
   assertEquals(total(s), start); // chips conserved across the 3 hands
