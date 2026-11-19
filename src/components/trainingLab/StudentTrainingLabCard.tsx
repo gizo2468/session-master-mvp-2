@@ -1,16 +1,34 @@
-import { Component, ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/Lucide';
-import { useStudentTrainingData } from '@/hooks/useTrainingLessons';
+import { useStudentTrainingData, useStudentAllTrainingData } from '@/hooks/useTrainingLessons';
+import { useCoachStudent } from '@/context/CoachStudentContext';
+import TrainingLabBoundary from './TrainingLabBoundary';
 import { useTL } from './i18n';
 
-function StudentTrainingLabCardInner({ studentId, coachId }: { studentId: string; coachId: string }) {
+interface Props { studentId: string; coachId?: string }
+
+function Inner({ studentId, coachId }: Props) {
   const { t, dir } = useTL();
   const navigate = useNavigate();
-  const { data } = useStudentTrainingData(studentId, coachId);
+  const single = useStudentTrainingData(studentId, coachId);
+  const all = useStudentAllTrainingData(coachId ? undefined : studentId);
+  const data = coachId ? single.data : all.data;
+  const { connectedCoaches = [] } = useCoachStudent();
   const [comingSoon, setComingSoon] = useState(false);
+  const [filter, setFilter] = useState('all');
+
+  const coachName = (id?: string) => {
+    const c = connectedCoaches.find((c) => c.userId === id || c.id === id);
+    return c?.displayName || '';
+  };
+  const showCoach = !coachId;
+  const keep = (cid?: string) => filter === 'all' || cid === filter;
+  const live = (data?.liveLessons || []).filter((l) => keep(l.coach_id));
+  const summaries = (data?.summaries || []).filter((s) => keep(s.training_lessons?.coach_id));
 
   return (
     <Card dir={dir} className="mb-6 border-poker-gold/40">
@@ -20,13 +38,23 @@ function StudentTrainingLabCardInner({ studentId, coachId }: { studentId: string
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {data?.liveLessons.map((l) => (
+        {showCoach && connectedCoaches.length > 1 && (
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="min-h-[44px]" aria-label={t('coach')}><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('all_coaches')}</SelectItem>
+              {connectedCoaches.map((c) => <SelectItem key={c.userId} value={c.userId}>{c.displayName}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+        {live.map((l) => (
           <div key={l.id} className="rounded-lg bg-[#35654D] p-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase text-poker-gold">
                 <span className="h-2 w-2 rounded-full bg-destructive animate-pulse" /> {t('live_lesson')}
               </div>
               <p className="truncate font-medium text-[#F5F5F0]">{l.title}</p>
+              {showCoach && coachName(l.coach_id) && <p className="truncate text-xs text-[#F5F5F0]/70">{coachName(l.coach_id)}</p>}
             </div>
             <Button className="min-h-[44px] bg-poker-gold hover:bg-poker-darkGold text-poker-black shrink-0" onClick={() => setComingSoon(true)}>
               {t('join_table')}
@@ -36,15 +64,20 @@ function StudentTrainingLabCardInner({ studentId, coachId }: { studentId: string
         {comingSoon && <p className="text-center text-sm text-muted-foreground">{t('table_coming')}</p>}
         <div>
           <h4 className="mb-2 font-semibold">{t('my_summaries')}</h4>
-          {!data?.summaries.length ? (
+          {!summaries.length ? (
             <p className="text-sm text-muted-foreground">{t('no_summaries')}</p>
           ) : (
             <div className="space-y-2">
-              {data.summaries.map((s) => (
+              {summaries.map((s) => (
                 <button key={s.id} onClick={() => navigate(`/training-lab/summary/${s.id}`)}
-                  className="flex w-full min-h-[44px] items-center justify-between rounded-md border border-border px-3 py-2 text-start hover:bg-muted/50">
-                  <span className="truncate">{s.training_lessons?.title}</span>
-                  <span className="text-xs text-muted-foreground">{new Date(s.created_at).toLocaleDateString()}</span>
+                  className="flex w-full min-h-[44px] items-center justify-between gap-2 rounded-md border border-border px-3 py-2 text-start hover:bg-muted/50">
+                  <span className="min-w-0">
+                    <span className="block truncate">{s.training_lessons?.title}</span>
+                    {showCoach && coachName(s.training_lessons?.coach_id) && (
+                      <span className="block truncate text-xs text-muted-foreground">{coachName(s.training_lessons?.coach_id)}</span>
+                    )}
+                  </span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{new Date(s.created_at).toLocaleDateString()}</span>
                 </button>
               ))}
             </div>
@@ -55,23 +88,6 @@ function StudentTrainingLabCardInner({ studentId, coachId }: { studentId: string
   );
 }
 
-class CardBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() { return { failed: true }; }
-  componentDidCatch(e: unknown) { console.error('Training Lab card failed', e); }
-  render() {
-    if (this.state.failed) {
-      return (
-        <Card className="mb-6 border-poker-gold/40">
-          <CardHeader className="pb-3"><CardTitle className="text-center text-poker-gold">Training Lab</CardTitle></CardHeader>
-          <CardContent><p className="text-center text-sm text-muted-foreground">No lesson summaries yet.</p></CardContent>
-        </Card>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-export default function StudentTrainingLabCard(props: { studentId: string; coachId: string }) {
-  return <CardBoundary><StudentTrainingLabCardInner {...props} /></CardBoundary>;
+export default function StudentTrainingLabCard(props: Props) {
+  return <TrainingLabBoundary><Inner {...props} /></TrainingLabBoundary>;
 }

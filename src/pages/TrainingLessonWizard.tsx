@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,8 @@ interface Preset { dealer_seat: number | null; board: string; seats: Record<numb
 
 export default function TrainingLessonWizard() {
   const { id } = useParams();
+  const [search] = useSearchParams();
+  const preStudent = search.get('student');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { students } = useCoachStudent();
@@ -61,6 +63,12 @@ export default function TrainingLessonWizard() {
       prev.find((s) => s.seat_number === i + 1) ||
       { seat_number: i + 1, seat_type: 'bot' as SeatType, student_id: null, bot_name: BOT_NAMES[i], bot_style: STYLES[i % 4] }));
   }, [f.max_seats]);
+
+  // Pre-assign a student to seat 1 when coming from a student's profile
+  useEffect(() => {
+    if (id || !preStudent || !students.some((s) => s.userId === preStudent)) return;
+    setSeats((p) => p.map((s) => s.seat_number === 1 ? { ...s, seat_type: 'student', student_id: preStudent, bot_name: null, bot_style: null } : s));
+  }, [id, preStudent, students]);
 
   const studentCount = seats.filter((s) => s.seat_type === 'student').length;
   const studentName = (uid: string | null) => students.find((s) => s.userId === uid)?.displayName || '—';

@@ -18,6 +18,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
+import CoachStudentTrainingLabCard from '@/components/trainingLab/CoachStudentTrainingLabCard';
 import { IconMenuButton } from '@/components/ui/IconMenuButton';
 import { resolveProfilePicture } from '@/hooks/usePlayerCard';
 import { ViewOnlyCardBack } from '@/components/PlayerCard/ViewOnlyCardBack';
@@ -581,6 +582,8 @@ const calculateSummary = (sessions: SharedSession[]) => {
           </Card>
         )}
 
+        {/* Training Lab */}
+        {playerId && <CoachStudentTrainingLabCard studentId={playerId} />}
 
         {/* Shared Session Modal */}
         {selectedSessionId && (

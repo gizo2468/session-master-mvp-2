@@ -23,6 +23,7 @@ const en = {
   live_lesson: 'Live lesson', join_table: 'Join table', table_coming: 'The live table is coming soon.',
   my_summaries: 'My Lesson Summaries', no_summaries: 'No lesson summaries yet.',
   lesson_summary: 'Lesson Summary', summary_placeholder: 'Detailed lesson summaries are coming soon.',
+  create_with_student: 'Create lesson with this student', hands: 'hands', all_coaches: 'All coaches', coach: 'Coach', summary_none: 'The summary for this lesson is coming soon.',
   delete: 'Delete', back: 'Back', no_students: 'No connected students yet.', invalid_cards: 'Check the card format.',
 };
 type Key = keyof typeof en;
@@ -49,6 +50,7 @@ const he: Record<Key, string> = {
   live_lesson: 'שיעור חי', join_table: 'הצטרף לשולחן', table_coming: 'השולחן החי יגיע בקרוב.',
   my_summaries: 'סיכומי השיעורים שלי', no_summaries: 'אין עדיין סיכומי שיעורים.',
   lesson_summary: 'סיכום שיעור', summary_placeholder: 'סיכומי שיעור מפורטים יגיעו בקרוב.',
+  create_with_student: 'צור שיעור עם התלמיד הזה', hands: 'ידיים', all_coaches: 'כל המאמנים', coach: 'מאמן', summary_none: 'הסיכום לשיעור הזה יגיע בקרוב.',
   delete: 'מחק', back: 'חזור', no_students: 'אין עדיין תלמידים מחוברים.', invalid_cards: 'בדוק את פורמט הקלפים.',
 };
 

@@ -58,3 +58,50 @@ export const useInvalidateLessons = () => {
 };
 
 export const CARD_RE = /^([2-9TJQKA][shdc])+$/i;
+
+export interface StudentLessonRow extends TrainingLesson { hand_count: number; summary_id: string | null }
+
+export const useCoachStudentLessons = (coachId?: string, studentId?: string) =>
+  useQuery({
+    queryKey: ['training-coach-student', coachId, studentId],
+    enabled: !!coachId && !!studentId,
+    retry: 1,
+    queryFn: async (): Promise<StudentLessonRow[]> => {
+      try {
+        const { data: seats } = await tl.from('training_lesson_participants').select('lesson_id').eq('student_id', studentId);
+        const ids = [...new Set(((seats || []) as any[]).map((s) => s.lesson_id))];
+        if (!ids.length) return [];
+        const [{ data: lessons }, { data: hands }, { data: sums }] = await Promise.all([
+          tl.from('training_lessons').select('*').in('id', ids).eq('coach_id', coachId).order('created_at', { ascending: false }),
+          tl.from('training_hands').select('lesson_id').in('lesson_id', ids),
+          tl.from('training_lesson_summaries').select('id,lesson_id').in('lesson_id', ids).eq('student_id', studentId),
+        ]);
+        return ((lessons || []) as TrainingLesson[]).map((l) => ({
+          ...l,
+          hand_count: ((hands || []) as any[]).filter((h) => h.lesson_id === l.id).length,
+          summary_id: ((sums || []) as any[]).find((s) => s.lesson_id === l.id)?.id ?? null,
+        }));
+      } catch {
+        return [];
+      }
+    },
+  });
+
+export const useStudentAllTrainingData = (studentId?: string) =>
+  useQuery({
+    queryKey: ['training-student-all', studentId],
+    enabled: !!studentId,
+    refetchInterval: 30000,
+    retry: 1,
+    queryFn: async () => {
+      try {
+        const { data: lessons } = await tl.from('training_lessons').select('id,title,status,coach_id').eq('status', 'live');
+        const { data: summaries } = await tl.from('training_lesson_summaries')
+          .select('id,lesson_id,created_at,training_lessons(title,coach_id)')
+          .eq('student_id', studentId).eq('published', true).order('created_at', { ascending: false });
+        return { liveLessons: (lessons || []) as TrainingLesson[], summaries: (summaries || []) as any[] };
+      } catch {
+        return { liveLessons: [] as TrainingLesson[], summaries: [] as any[] };
+      }
+    },
+  });

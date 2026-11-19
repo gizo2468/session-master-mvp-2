@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { supabase } from '@/integrations/supabase/client';
 import Icon from '@/components/ui/Lucide';
+import StudentTrainingLabCard from '@/components/trainingLab/StudentTrainingLabCard';
 import PlayerReviewForm from '@/components/coaching/PlayerReviewForm';
 
 interface PlayerReview {
@@ -196,7 +197,8 @@ const PlayerDashboard = () => {
               </div>
             </CardContent>
           </Card>
-          
+
+          {user?.id && <StudentTrainingLabCard studentId={user.id} />}
         </div>
       </div>
     </div>
