@@ -247,7 +247,7 @@ Deno.test('full lesson flow: 2 students, 1 bot, 1 coach seat, 3 hands incl. all-
   assertEquals(total(s), start); // chips conserved across the 3 hands
   const winners3 = s.results!;
   assert(winners3.length >= 1);
-  assert(buildPots(s).length >= 1);
+  assertEquals(buildPots(s).length, 2); // main pot + side pot
   // Seat 1 (AA, full house? no: aces set) wins the main pot; side pot also to seat 1 over seat 2.
   assert(winners3.some((w) => w.seat === 1));
   // Public log: revealed cards only on "show" at showdown; folded coach's 9s8s never appears.
