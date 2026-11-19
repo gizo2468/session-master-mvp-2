@@ -185,28 +185,6 @@ export default function Notifications() {
     return true;
   };
 
-  // Helper to validate player goal still exists
-  const validateGoalExists = async (notificationId: string, goalId?: string | null): Promise<boolean> => {
-    if (!goalId) {
-      return true;
-    }
-    
-    const { data } = await supabase
-      .from('player_goals')
-      .select('id')
-      .eq('id', goalId)
-      .maybeSingle();
-    
-    if (!data) {
-      toast({ 
-        title: 'This focus point is no longer available',
-        variant: 'destructive'
-      });
-      await removeNotification(notificationId);
-      return false;
-    }
-    return true;
-  };
 
   const handleNotificationClick = async (notification: typeof notifications[0]) => {
     // First, verify the notification row itself still exists in DB
@@ -317,16 +295,6 @@ export default function Notifications() {
       return;
     }
     
-    // For key_focus_point_created notifications, validate goal exists
-    if (notification.type === 'key_focus_point_created') {
-      const notifWithGoal = notification as typeof notification & { player_goal_id?: string };
-      const exists = await validateGoalExists(notification.id, notifWithGoal.player_goal_id);
-      if (exists) {
-        navigate('/player-dashboard', { state: { scrollToFocusPoints: true } });
-      }
-      return;
-    }
-    
     // For live_session_still_active notifications, validate session exists AND is active
     if (notification.type === 'live_session_still_active' && notification.session_id) {
       const result = await validateSessionExists(notification.session_id, notification.id);
@@ -375,8 +343,6 @@ export default function Notifications() {
         return 'UserCheck';
       case 'stack_check':
         return 'Clock';
-      case 'key_focus_point_created':
-        return 'Target';
       case 'live_session_still_active':
         return 'Timer';
       case 'multi_day_tournament_reminder':

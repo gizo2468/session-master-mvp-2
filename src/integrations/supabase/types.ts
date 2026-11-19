@@ -299,7 +299,6 @@ export type Database = {
           hand_id: string | null
           id: string
           is_read: boolean
-          player_goal_id: string | null
           recipient_user_id: string
           sender_user_id: string | null
           session_id: string | null
@@ -314,7 +313,6 @@ export type Database = {
           hand_id?: string | null
           id?: string
           is_read?: boolean
-          player_goal_id?: string | null
           recipient_user_id: string
           sender_user_id?: string | null
           session_id?: string | null
@@ -329,7 +327,6 @@ export type Database = {
           hand_id?: string | null
           id?: string
           is_read?: boolean
-          player_goal_id?: string | null
           recipient_user_id?: string
           sender_user_id?: string | null
           session_id?: string | null
@@ -415,48 +412,6 @@ export type Database = {
           updated_at?: string
           user_id?: string
           year_started_playing?: number | null
-        }
-        Relationships: []
-      }
-      player_goals: {
-        Row: {
-          coach_id: string
-          color: string | null
-          created_at: string
-          details: string | null
-          due_date: string | null
-          id: string
-          image_url: string | null
-          status: string
-          student_id: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          coach_id: string
-          color?: string | null
-          created_at?: string
-          details?: string | null
-          due_date?: string | null
-          id?: string
-          image_url?: string | null
-          status?: string
-          student_id: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          coach_id?: string
-          color?: string | null
-          created_at?: string
-          details?: string | null
-          due_date?: string | null
-          id?: string
-          image_url?: string | null
-          status?: string
-          student_id?: string
-          title?: string
-          updated_at?: string
         }
         Relationships: []
       }

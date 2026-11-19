@@ -10,7 +10,6 @@ export interface Notification {
   hand_id: string | null;
   session_id: string | null;
   connection_id: string | null;
-  player_goal_id: string | null;
   feedback_id: string | null;
   is_read: boolean;
   created_at: string;
@@ -24,7 +23,6 @@ export interface CreateNotificationData {
   body?: string | null;
   hand_id?: string | null;
   session_id?: string | null;
-  player_goal_id?: string | null;
   feedback_id?: string | null;
 }
 
@@ -274,16 +272,6 @@ export const validateNotificationTarget = async (notification: Notification): Pr
         .from('coach_student_connections')
         .select('id')
         .eq('id', notification.connection_id)
-        .maybeSingle();
-      if (error || !data) return false;
-    }
-
-    // Check player goal if player_goal_id exists
-    if (notification.player_goal_id) {
-      const { data, error } = await supabase
-        .from('player_goals')
-        .select('id')
-        .eq('id', notification.player_goal_id)
         .maybeSingle();
       if (error || !data) return false;
     }
