@@ -35,6 +35,8 @@ const Body = z.object({
 
 const cfgOf = (l: any): Config => ({ game_type: l.game_type, small_blind: Number(l.small_blind), big_blind: Number(l.big_blind), ante: Number(l.ante) });
 
+class Conflict extends Error { constructor() { super('Table changed, try again'); } }
+
 async function loadState(lessonId: string): Promise<{ state: TableState; version: number }> {
   const { data } = await admin.from('training_table_state').select('state, version').eq('lesson_id', lessonId).maybeSingle();
   if (!data) return { state: emptyState(), version: -1 };
@@ -121,7 +123,7 @@ async function doDeal(lesson: any, cur: { state: TableState; version: number }) 
     hand_id: hand.id, seat_number: Number(seat), player_id: state.seats[seat].player_id, hole_cards: c.join(''),
   })));
   withDeadline(state);
-  if (!(await commit(lesson.id, state, cur.version))) throw new Error('Table changed, try again');
+  if (!(await commit(lesson.id, state, cur.version))) throw new Conflict();
   await logActions(hand.id, state, actions);
   if (state.status === 'hand_over') await finalizeHand(lesson.id, state);
   return state;
@@ -133,7 +135,7 @@ async function doAct(lesson: any, cur: { state: TableState; version: number }, s
   const { deck, holes } = await loadHand(s.hand_id);
   const res = applyAction(s, seat, type, amount, cfgOf(lesson), deck, holes);
   withDeadline(res.state);
-  if (!(await commit(lesson.id, res.state, cur.version))) throw new Error('Table changed, try again');
+  if (!(await commit(lesson.id, res.state, cur.version))) throw new Conflict();
   await admin.from('training_hand_secrets').update({ deck }).eq('hand_id', s.hand_id);
   await logActions(s.hand_id, res.state, res.actions);
   if (res.handEnded) await finalizeHand(lesson.id, res.state);
@@ -199,115 +201,124 @@ Deno.serve(async (req) => {
       if (!seat) return json({ error: 'You are not seated in this lesson' }, 403);
     }
 
-    let cur = await loadState(lesson.id);
-    const s = structuredClone(cur.state);
-    const save = async (st: TableState) => {
-      if (!(await commit(lesson.id, st, cur.version))) throw new Error('Table changed, try again');
-      return st;
-    };
-    const betweenHands = () => { if (s.status === 'in_hand') throw new Error('Only between hands'); };
+    // The bot loop and other players commit concurrently; retry on a version conflict.
+    let out: any = null;
+    for (let attempt = 0; attempt < 4 && !out; attempt++) {
+     try { out = await (async (): Promise<TableState | Response> => {
+      const cur = await loadState(lesson.id);
+      const s = structuredClone(cur.state);
+      const save = async (st: TableState) => {
+        if (!(await commit(lesson.id, st, cur.version))) throw new Conflict();
+        return st;
+      };
+      const betweenHands = () => { if (s.status === 'in_hand') throw new Error('Only between hands'); };
 
-    let out: TableState = s;
-    switch (b.cmd) {
-      case 'start': {
-        if (lesson.status === 'ended') throw new Error('Lesson has ended');
-        await admin.from('training_lessons').update({ status: 'live', started_at: lesson.started_at ?? new Date().toISOString() }).eq('id', lesson.id);
-        if (s.status !== 'in_hand') s.seats = await buildSeats(lesson, s);
-        if (s.status === 'ended') s.status = 'waiting';
-        s.paused = false; s.discuss = null;
-        out = await save(withDeadline(s));
-        if (lesson.status === 'draft') {
-          const students = Object.values(s.seats).filter((p) => p.type === 'student' && p.player_id);
-          if (students.length) await admin.from('notifications').insert(students.map((p) => ({
-            recipient_user_id: p.player_id, sender_user_id: uid, type: 'training_lesson_live',
-            title: 'Live lesson started', body: `${lesson.title} – join the table now`, training_lesson_id: lesson.id,
-          })));
+      let out: TableState = s;
+      switch (b.cmd) {
+        case 'start': {
+          if (lesson.status === 'ended') throw new Error('Lesson has ended');
+          await admin.from('training_lessons').update({ status: 'live', started_at: lesson.started_at ?? new Date().toISOString() }).eq('id', lesson.id);
+          if (s.status !== 'in_hand') s.seats = await buildSeats(lesson, s);
+          if (s.status === 'ended') s.status = 'waiting';
+          s.paused = false; s.discuss = null;
+          out = await save(withDeadline(s));
+          if (lesson.status === 'draft') {
+            const students = Object.values(s.seats).filter((p) => p.type === 'student' && p.player_id);
+            if (students.length) await admin.from('notifications').insert(students.map((p) => ({
+              recipient_user_id: p.player_id, sender_user_id: uid, type: 'training_lesson_live',
+              title: 'Live lesson started', body: `${lesson.title} – join the table now`, training_lesson_id: lesson.id,
+            })));
+          }
+          break;
         }
-        break;
-      }
-      case 'pause':
-      case 'discuss':
-        await admin.from('training_lessons').update({ status: 'paused' }).eq('id', lesson.id);
-        s.paused = true; s.discuss = b.cmd === 'discuss' ? (b.message || null) : null; s.deadline = null;
-        out = await save(s);
-        break;
-      case 'resume':
-        await admin.from('training_lessons').update({ status: 'live' }).eq('id', lesson.id);
-        s.paused = false; s.discuss = null;
-        out = await save(withDeadline(s));
-        break;
-      case 'end':
-        await admin.from('training_lessons').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', lesson.id);
-        s.status = 'ended'; s.to_act = null; s.deadline = null; s.paused = false; s.discuss = null;
-        out = await save(s);
-        break;
-      case 'set_settings':
-        s.settings = { ...s.settings, ...(b.settings || {}) };
-        out = await save(withDeadline(s));
-        break;
-      case 'set_preset':
-        s.preset = b.preset ?? null;
-        out = await save(s);
-        break;
-      case 'deal':
-        if (lesson.status !== 'live') throw new Error('Start or resume the lesson first');
-        out = await doDeal(lesson, cur);
-        break;
-      case 'act': {
-        if (!b.seat || !b.action) throw new Error('Missing action');
-        const seat = s.seats[b.seat];
-        if (!seat) throw new Error('Unknown seat');
-        const owns = seat.type === 'student' ? seat.player_id === uid : seat.type === 'coach' ? isCoach : false;
-        if (!owns) throw new Error('This is not your seat');
-        out = await doAct(lesson, cur, b.seat, b.action, b.amount ?? 0);
-        break;
-      }
-      case 'timeout': {
-        if (s.status !== 'in_hand' || !s.deadline || Date.now() < s.deadline - 500 || s.to_act == null) return json({ ok: true, state: s });
-        const to = s.to_act;
-        const canCheck = s.current_bet - s.seats[to].bet <= 0;
-        out = await doAct(lesson, cur, to, canCheck ? 'check' : 'fold', 0);
-        break;
-      }
-      case 'adjust_stack': {
-        betweenHands();
-        if (!b.seat || b.stack_bb == null || !s.seats[b.seat]) throw new Error('Missing seat');
-        const chips = r2(b.stack_bb * Number(lesson.big_blind));
-        s.seats[b.seat].stack = chips;
-        await admin.from('training_lesson_participants').update({ current_stack: chips }).eq('lesson_id', lesson.id).eq('seat_number', b.seat);
-        out = await save(s);
-        break;
-      }
-      case 'seat_change': {
-        betweenHands();
-        if (!b.seat || !b.seat_type || b.seat > lesson.max_seats) throw new Error('Missing seat');
-        const stack = s.seats[b.seat]?.stack ?? r2(Number(lesson.default_stack_bb) * Number(lesson.big_blind));
-        await admin.from('training_lesson_participants').delete().eq('lesson_id', lesson.id).eq('seat_number', b.seat);
-        const { error } = await admin.from('training_lesson_participants').insert({
-          lesson_id: lesson.id, seat_number: b.seat, seat_type: b.seat_type,
-          student_id: b.seat_type === 'student' ? b.student_id : null,
-          bot_name: b.seat_type === 'bot' ? (b.bot_name || 'Bot') : null,
-          bot_style: b.seat_type === 'bot' ? (b.bot_style || 'tight_aggressive') : null,
-          starting_stack: stack, current_stack: stack,
-        });
-        if (error) throw new Error(error.message.includes('limit') ? 'Student limit reached' : error.message.includes('approved') ? 'Not an approved student' : 'Could not change seat');
-        s.seats = await buildSeats(lesson, s);
-        out = await save(s);
-        break;
-      }
-      case 'note': {
-        if (!b.note) throw new Error('Empty note');
-        let actionId: string | null = null;
-        if (b.attach === 'action' && s.hand_id) {
-          const { data } = await admin.from('training_hand_actions').select('id').eq('hand_id', s.hand_id).order('sequence', { ascending: false }).limit(1).maybeSingle();
-          actionId = data?.id ?? null;
+        case 'pause':
+        case 'discuss':
+          await admin.from('training_lessons').update({ status: 'paused' }).eq('id', lesson.id);
+          s.paused = true; s.discuss = b.cmd === 'discuss' ? (b.message || null) : null; s.deadline = null;
+          out = await save(s);
+          break;
+        case 'resume':
+          await admin.from('training_lessons').update({ status: 'live' }).eq('id', lesson.id);
+          s.paused = false; s.discuss = null;
+          out = await save(withDeadline(s));
+          break;
+        case 'end':
+          await admin.from('training_lessons').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', lesson.id);
+          s.status = 'ended'; s.to_act = null; s.deadline = null; s.paused = false; s.discuss = null;
+          out = await save(s);
+          break;
+        case 'set_settings':
+          s.settings = { ...s.settings, ...(b.settings || {}) };
+          out = await save(withDeadline(s));
+          break;
+        case 'set_preset':
+          s.preset = b.preset ?? null;
+          out = await save(s);
+          break;
+        case 'deal':
+          if (lesson.status !== 'live') throw new Error('Start or resume the lesson first');
+          out = await doDeal(lesson, cur);
+          break;
+        case 'act': {
+          if (!b.seat || !b.action) throw new Error('Missing action');
+          const seat = s.seats[b.seat];
+          if (!seat) throw new Error('Unknown seat');
+          const owns = seat.type === 'student' ? seat.player_id === uid : seat.type === 'coach' ? isCoach : false;
+          if (!owns) throw new Error('This is not your seat');
+          out = await doAct(lesson, cur, b.seat, b.action, b.amount ?? 0);
+          break;
         }
-        await admin.from('training_notes').insert({
-          lesson_id: lesson.id, coach_id: uid, note: b.note, student_id: b.student_id ?? null,
-          hand_id: b.attach !== 'lesson' ? s.hand_id : null, action_id: actionId,
-        });
-        return json({ ok: true });
+        case 'timeout': {
+          if (s.status !== 'in_hand' || !s.deadline || Date.now() < s.deadline - 500 || s.to_act == null) return json({ ok: true, state: s });
+          const to = s.to_act;
+          const canCheck = s.current_bet - s.seats[to].bet <= 0;
+          out = await doAct(lesson, cur, to, canCheck ? 'check' : 'fold', 0);
+          break;
+        }
+        case 'adjust_stack': {
+          betweenHands();
+          if (!b.seat || b.stack_bb == null || !s.seats[b.seat]) throw new Error('Missing seat');
+          const chips = r2(b.stack_bb * Number(lesson.big_blind));
+          s.seats[b.seat].stack = chips;
+          await admin.from('training_lesson_participants').update({ current_stack: chips }).eq('lesson_id', lesson.id).eq('seat_number', b.seat);
+          out = await save(s);
+          break;
+        }
+        case 'seat_change': {
+          betweenHands();
+          if (!b.seat || !b.seat_type || b.seat > lesson.max_seats) throw new Error('Missing seat');
+          const stack = s.seats[b.seat]?.stack ?? r2(Number(lesson.default_stack_bb) * Number(lesson.big_blind));
+          await admin.from('training_lesson_participants').delete().eq('lesson_id', lesson.id).eq('seat_number', b.seat);
+          const { error } = await admin.from('training_lesson_participants').insert({
+            lesson_id: lesson.id, seat_number: b.seat, seat_type: b.seat_type,
+            student_id: b.seat_type === 'student' ? b.student_id : null,
+            bot_name: b.seat_type === 'bot' ? (b.bot_name || 'Bot') : null,
+            bot_style: b.seat_type === 'bot' ? (b.bot_style || 'tight_aggressive') : null,
+            starting_stack: stack, current_stack: stack,
+          });
+          if (error) throw new Error(error.message.includes('limit') ? 'Student limit reached' : error.message.includes('approved') ? 'Not an approved student' : 'Could not change seat');
+          s.seats = await buildSeats(lesson, s);
+          out = await save(s);
+          break;
+        }
+        case 'note': {
+          if (!b.note) throw new Error('Empty note');
+          let actionId: string | null = null;
+          if (b.attach === 'action' && s.hand_id) {
+            const { data } = await admin.from('training_hand_actions').select('id').eq('hand_id', s.hand_id).order('sequence', { ascending: false }).limit(1).maybeSingle();
+            actionId = data?.id ?? null;
+          }
+          await admin.from('training_notes').insert({
+            lesson_id: lesson.id, coach_id: uid, note: b.note, student_id: b.student_id ?? null,
+            hand_id: b.attach !== 'lesson' ? s.hand_id : null, action_id: actionId,
+          });
+          return json({ ok: true });
+        }
       }
+      return out;
+     })(); }
+     catch (e) { if (!(e instanceof Conflict) || attempt === 3) throw e; await sleep(80 + Math.random() * 150); }
+     if (out instanceof Response) return out;
     }
     background(runAuto(lesson.id));
     return json({ ok: true, state: out });
