@@ -15,7 +15,7 @@ const ROW = 'h-[clamp(48px,7.2cqh,66px)]';
 
 /** My-turn controls pinned to the bottom of the table: Fold / Call row, four raise presets, slider and keypad. */
 export default function ActionBar({ state, seat, bigBlind, plo, disabled, onAct }: Props) {
-  const { t, dir } = useTL();
+  const { t } = useTL();
   const showBB = useTableStore((s) => s.showBB);
   const fmt = (v: number) => fmtAmount(v, bigBlind, showBB);
   const me = state.seats[seat];
@@ -89,7 +89,7 @@ export default function ActionBar({ state, seat, bigBlind, plo, disabled, onAct 
       </div>
 
       <Drawer open={sheet != null} onOpenChange={(o) => !o && setSheet(null)}>
-        <DrawerContent dir={dir}>
+        <DrawerContent>
           <DrawerHeader><DrawerTitle className="text-primary">{sheet === 'keypad' ? t('custom_amount') : t(verb)}</DrawerTitle></DrawerHeader>
           <div className="space-y-4 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]" dir="ltr">
             {sheet === 'slider' ? (

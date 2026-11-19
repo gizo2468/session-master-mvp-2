@@ -13,7 +13,7 @@ import { useTL } from './i18n';
 interface Props { studentId: string; coachId?: string }
 
 function Inner({ studentId, coachId }: Props) {
-  const { t, dir } = useTL();
+  const { t } = useTL();
   const navigate = useNavigate();
   const single = useStudentTrainingData(studentId, coachId);
   const all = useStudentAllTrainingData(coachId ? undefined : studentId);
@@ -31,7 +31,7 @@ function Inner({ studentId, coachId }: Props) {
   const summaries = (data?.summaries || []).filter((s) => keep(s.training_lessons?.coach_id));
 
   return (
-    <Card dir={dir} className="mb-6 border-poker-gold/40">
+    <Card className="mb-6 border-poker-gold/40">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-center gap-2 text-poker-gold">
           <Icon name="FlaskConical" size={20} /> {t('training_lab')}
@@ -62,7 +62,10 @@ function Inner({ studentId, coachId }: Props) {
           </div>
         ))}
         <div>
-          <h4 className="mb-2 font-semibold">{t('my_summaries')}</h4>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h4 className="font-semibold">{t('my_summaries')}</h4>
+            <Button variant="ghost" size="sm" className="min-h-[44px] text-poker-gold" onClick={() => navigate('/training-lab/summaries')}>{t('view_summaries')}<Icon name="ChevronRight" size={16} /></Button>
+          </div>
           {!summaries.length ? (
             <p className="text-sm text-muted-foreground">{t('no_summaries')}</p>
           ) : (
@@ -76,7 +79,7 @@ function Inner({ studentId, coachId }: Props) {
                       <span className="block truncate text-xs text-muted-foreground">{coachName(s.training_lessons?.coach_id)}</span>
                     )}
                   </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{new Date(s.created_at).toLocaleDateString()}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{new Date(s.created_at).toLocaleDateString()}{s.stats?.hands != null ? ` · ${s.stats.hands} ${t('hands')}` : ''}</span>
                 </button>
               ))}
             </div>

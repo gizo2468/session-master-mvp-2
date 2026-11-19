@@ -204,6 +204,16 @@ export default function Notifications() {
       return;
     }
 
+    // Training Lab: summary published (student) / note reply (coach or student)
+    if (notification.type === 'training_summary' || notification.type === 'training_note_reply') {
+      const lessonId = (notification as typeof notification & { training_lesson_id?: string }).training_lesson_id;
+      if (!notification.is_read) await markAsRead(notification.id);
+      if (!lessonId) return;
+      const { data: l } = await (supabase as any).from('training_lessons').select('coach_id').eq('id', lessonId).maybeSingle();
+      navigate(l?.coach_id === user?.id ? `/coach/training-lab/${lessonId}/wrap-up` : `/training-lab/summary/none?lesson=${lessonId}`);
+      return;
+    }
+
     // Training Lab: lesson went live -> open the live table
     if (notification.type === 'training_lesson_live') {
       const lessonId = (notification as typeof notification & { training_lesson_id?: string }).training_lesson_id;
@@ -357,6 +367,10 @@ export default function Notifications() {
         return 'Calendar';
       case 'training_lesson_live':
         return 'FlaskConical';
+      case 'training_summary':
+        return 'FileText';
+      case 'training_note_reply':
+        return 'MessageSquare';
       default:
         return 'Bell';
     }

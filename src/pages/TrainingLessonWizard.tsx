@@ -29,7 +29,7 @@ export default function TrainingLessonWizard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { students } = useCoachStudent();
-  const { t, dir } = useTL();
+  const { t } = useTL();
   const invalidate = useInvalidateLessons();
   const tier = user?.coachTier || 'free';
   const maxStudents = getTrainingLabStudentLimit(tier);
@@ -146,10 +146,10 @@ export default function TrainingLessonWizard() {
 
   return (
     <PageContainer>
-      <div dir={dir} className="mx-auto max-w-2xl p-4 content-safe">
+      <div className="mx-auto max-w-2xl p-4 content-safe">
         <div className="mb-4 flex items-center gap-2">
           <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => navigate('/coach/training-lab', { replace: true })}>
-            <Icon name={dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft'} size={20} />
+            <Icon name={'ArrowLeft'} size={20} />
           </Button>
           <h1 className="text-xl font-bold text-poker-gold">{id ? t('edit_lesson') : t('create_lesson')}</h1>
         </div>
@@ -262,7 +262,7 @@ export default function TrainingLessonWizard() {
           {step === 4 && (<div className="space-y-2 text-sm">
             <p className="text-lg font-semibold">{f.title}</p>
             {f.description && <p className="text-muted-foreground">{f.description}</p>}
-            <p dir="ltr" className={dir === 'rtl' ? 'text-right' : ''}>{f.game_type} · {f.small_blind}/{f.big_blind}{f.ante ? ` (${f.ante})` : ''} · {f.default_stack_bb}BB</p>
+            <p dir="ltr" className={''}>{f.game_type} · {f.small_blind}/{f.big_blind}{f.ante ? ` (${f.ante})` : ''} · {f.default_stack_bb}BB</p>
             <p>{t(f.format as 'cash')} · {f.max_seats} {t('seats')}</p>
             <div className="space-y-1 pt-2">
               {seats.map((s) => (

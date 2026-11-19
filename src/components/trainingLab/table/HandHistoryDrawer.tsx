@@ -20,7 +20,7 @@ interface Props { lessonId: string; mySeat?: number; seatNames: Record<number, s
 
 /** In-game hand history for everyone at the table. Access rules in the database limit what each person sees. */
 export default function HandHistoryDrawer({ lessonId, mySeat, seatNames, isCoach, refreshKey }: Props) {
-  const { t, dir } = useTL();
+  const { t } = useTL();
   const [open, setOpen] = useState(false);
   const [hands, setHands] = useState<Hand[]>([]);
   const [acts, setActs] = useState<Act[]>([]);
@@ -75,11 +75,11 @@ export default function HandHistoryDrawer({ lessonId, mySeat, seatNames, isCoach
     <>
       <button type="button" aria-label={t('hand_history')} className="tl-icon-btn" onClick={() => setOpen(true)}><Icon name="History" size={20} /></button>
       <Sheet open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSel(null); }}>
-        <SheetContent side={dir === 'rtl' ? 'left' : 'right'} dir={dir} className="w-[92vw] max-w-md overflow-y-auto p-4">
+        <SheetContent side={'right'} className="w-[92vw] max-w-md overflow-y-auto p-4">
           <SheetHeader><SheetTitle className="text-primary">{selHand ? `${t('hand')} #${selHand.hand_number}` : t('hand_history')}</SheetTitle></SheetHeader>
           {selHand ? (
             <div className="mt-3 space-y-3">
-              <Button variant="ghost" className="min-h-[44px]" onClick={() => setSel(null)}><Icon name={dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft'} size={16} />{t('back')}</Button>
+              <Button variant="ghost" className="min-h-[44px]" onClick={() => setSel(null)}><Icon name={'ArrowLeft'} size={16} />{t('back')}</Button>
               <div className="flex gap-1" dir="ltr">{split(selHand.board_cards).map((c) => <PlayingCard key={c} card={c} size="sm" />)}</div>
               {streets.map((st) => {
                 const list = acts.filter((a) => a.hand_id === selHand.id && a.street === st);

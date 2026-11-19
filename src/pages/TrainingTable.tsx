@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ function TableInner() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { students: myStudents = [] } = useCoachStudent();
-  const { t, dir } = useTL();
+  const { t } = useTL();
   const { lesson, state, cards, online, error, setError, busy, send } = useTrainingTable(id, user?.id);
   // Opening the table (from a notification or the Join button) clears its "lesson is live" notification.
   useEffect(() => {
@@ -42,6 +42,15 @@ function TableInner() {
       .then(() => {}, () => {});
   }, [id, user?.id]);
   const [godView, setGodView] = useState(false);
+  // When the coach ends the lesson from this table, go straight to the wrap-up.
+  const prevStatus = useRef<string | undefined>();
+  useEffect(() => {
+    const st = lesson?.status;
+    if (lesson && lesson.coach_id === user?.id && st === 'ended' && prevStatus.current && prevStatus.current !== 'ended') {
+      navigate(`/coach/training-lab/${lesson.id}/wrap-up`, { replace: true });
+    }
+    prevStatus.current = st;
+  }, [lesson?.status, lesson?.id, lesson?.coach_id, user?.id, navigate]);
   const [seatMenu, setSeatMenu] = useState<number | null>(null);
 
   const isCoach = !!lesson && lesson.coach_id === user?.id;
@@ -114,11 +123,11 @@ function TableInner() {
   const showWaiting = state?.status === 'in_hand' && !state.paused && !!actingSeat && !canActNow;
 
   return (
-    <div dir={dir} className="tl-stage-bg fixed inset-0 z-50 overflow-hidden overscroll-none touch-manipulation">
+    <div className="tl-stage-bg fixed inset-0 z-50 overflow-hidden overscroll-none touch-manipulation">
       <div className="relative mx-auto flex h-full w-full max-w-[min(480px,62dvh)] flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
         {/* Thin top bar */}
         <div className="flex h-12 shrink-0 items-center gap-1 px-2">
-          <button type="button" className="tl-icon-btn" aria-label={t('exit_table')} onClick={back}><Icon name={dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft'} size={20} /></button>
+          <button type="button" className="tl-icon-btn" aria-label={t('exit_table')} onClick={back}><Icon name={'ArrowLeft'} size={20} /></button>
           <p className="min-w-0 flex-1 truncate px-1 text-center text-xs text-white/50" dir="ltr">
             {isCoach && live ? `${connected}/${studentSeats} ${t('connected')}` : ''}
           </p>
@@ -157,7 +166,9 @@ function TableInner() {
             {error && (
               <button type="button" className="pointer-events-auto rounded-full bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground" onClick={() => setError(null)}>{error}</button>
             )}
-            {lesson.status === 'ended' && <p className="rounded-full bg-black/70 px-3 py-1 text-xs tl-ink">{t('lesson_ended')}</p>}
+            {lesson.status === 'ended' && (isCoach
+              ? <button type="button" className="pointer-events-auto rounded-full bg-poker-gold px-4 py-2 text-xs font-bold text-poker-black" onClick={() => navigate(`/coach/training-lab/${lesson.id}/wrap-up`)}>{t('open_wrap_up')}</button>
+              : <p className="rounded-full bg-black/70 px-3 py-1 text-xs tl-ink">{t('lesson_ended')}</p>)}
           </div>
 
           {canActNow && state && actingSeat ? (
@@ -188,7 +199,7 @@ function TableInner() {
 
       {/* Table menu */}
       <Drawer open={menuOpen} onOpenChange={setMenuOpen}>
-        <DrawerContent dir={dir} className="max-h-[85dvh]">
+        <DrawerContent className="max-h-[85dvh]">
           <DrawerHeader><DrawerTitle className="text-primary">{t('table_menu')}</DrawerTitle></DrawerHeader>
           <div className="space-y-3 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             {([['muted', !muted, t('mute'), (v: boolean) => setPref('muted', !v)], ['fourColor', fourColor, t('four_color'), (v: boolean) => setPref('fourColor', v)], ['showBB', showBB, t('show_bb'), (v: boolean) => setPref('showBB', v)]] as const).map(([k, v, label, on]) => (
@@ -208,7 +219,7 @@ function TableInner() {
       {/* Coach controls */}
       {isCoach && (
         <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
-          <DrawerContent dir={dir} className="max-h-[88dvh]">
+          <DrawerContent className="max-h-[88dvh]">
             <DrawerHeader><DrawerTitle className="text-primary">{t('controls')}</DrawerTitle></DrawerHeader>
             <div className="space-y-3 overflow-y-auto px-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
               {live && !mySeat && between && coachFreeSeats.length > 0 && (
