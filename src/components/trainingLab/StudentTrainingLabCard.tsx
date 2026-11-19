@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Component, ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import Icon from '@/components/ui/Lucide';
 import { useStudentTrainingData } from '@/hooks/useTrainingLessons';
 import { useTL } from './i18n';
 
-export default function StudentTrainingLabCard({ studentId, coachId }: { studentId: string; coachId: string }) {
+function StudentTrainingLabCardInner({ studentId, coachId }: { studentId: string; coachId: string }) {
   const { t, dir } = useTL();
   const navigate = useNavigate();
   const { data } = useStudentTrainingData(studentId, coachId);
@@ -53,4 +53,25 @@ export default function StudentTrainingLabCard({ studentId, coachId }: { student
       </CardContent>
     </Card>
   );
+}
+
+class CardBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(e: unknown) { console.error('Training Lab card failed', e); }
+  render() {
+    if (this.state.failed) {
+      return (
+        <Card className="mb-6 border-poker-gold/40">
+          <CardHeader className="pb-3"><CardTitle className="text-center text-poker-gold">Training Lab</CardTitle></CardHeader>
+          <CardContent><p className="text-center text-sm text-muted-foreground">No lesson summaries yet.</p></CardContent>
+        </Card>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function StudentTrainingLabCard(props: { studentId: string; coachId: string }) {
+  return <CardBoundary><StudentTrainingLabCardInner {...props} /></CardBoundary>;
 }

@@ -35,7 +35,9 @@ export const useStudentTrainingData = (studentId?: string, coachId?: string) =>
     queryKey: ['training-student', studentId, coachId],
     enabled: !!studentId && !!coachId,
     refetchInterval: 30000,
+    retry: 1,
     queryFn: async () => {
+      try {
       const { data: lessons } = await tl.from('training_lessons').select('id,title,status,coach_id').eq('coach_id', coachId);
       const { data: summaries } = await tl.from('training_lesson_summaries')
         .select('id,lesson_id,created_at,training_lessons(title,coach_id)')
@@ -44,6 +46,9 @@ export const useStudentTrainingData = (studentId?: string, coachId?: string) =>
         liveLessons: ((lessons || []) as TrainingLesson[]).filter((l) => l.status === 'live'),
         summaries: ((summaries || []) as any[]).filter((s) => s.training_lessons?.coach_id === coachId),
       };
+      } catch {
+        return { liveLessons: [] as TrainingLesson[], summaries: [] as any[] };
+      }
     },
   });
 

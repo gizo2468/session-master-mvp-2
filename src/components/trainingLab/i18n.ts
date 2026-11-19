@@ -1,4 +1,4 @@
-import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 
 const en = {
   training_lab: 'Training Lab',
@@ -53,7 +53,8 @@ const he: Record<Key, string> = {
 };
 
 export const useTL = () => {
-  const { language } = useLanguage();
+  const { user } = useAuth();
+  const language = (user as any)?.language === 'he' ? 'he' : 'en';
   const dict = language === 'he' ? he : en;
   return {
     t: (k: Key, vars?: Record<string, string | number>) =>
