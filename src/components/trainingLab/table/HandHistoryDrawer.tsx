@@ -92,7 +92,7 @@ export default function HandHistoryDrawer({ lessonId, mySeat, seatNames, isCoach
           {selHand ? (
             <div className="mt-3 space-y-3">
               <div className="flex gap-2"><Button variant="ghost" className="min-h-[44px]" onClick={() => setSel(null)}><Icon name="ArrowLeft" size={16} />{t('back')}</Button>
-              <Button className="min-h-[44px] flex-1" onClick={() => setReplay(selHand.id)}><Icon name="Play" size={16} />{t('replay')}</Button></div>
+              <Button className="min-h-[44px] flex-1" onClick={() => { setReplay(selHand.id); setOpen(false); }}><Icon name="Play" size={16} />{t('replay')}</Button></div>
               <div className="flex gap-1" dir="ltr">{split(selHand.board_cards).map((c) => <PlayingCard key={c} card={c} size="sm" />)}</div>
               {streets.map((st) => {
                 const list = acts.filter((a) => a.hand_id === selHand.id && a.street === st);
