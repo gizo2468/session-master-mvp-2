@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { tl } from '@/hooks/useTrainingLessons';
+import { projectAction, useTableStore } from '@/stores/useTableStore';
 
 export interface TSeat {
   seat: number; type: 'student' | 'bot' | 'coach' | 'closed'; player_id: string | null; name: string; style: string | null;
@@ -19,7 +20,9 @@ export interface TState {
 
 export const useTrainingTable = (lessonId?: string, userId?: string) => {
   const [lesson, setLesson] = useState<any>(null);
-  const [state, setState] = useState<TState | null>(null);
+  const state = useTableStore((s) => s.state);
+  const setState = useTableStore((s) => s.setState);
+  useEffect(() => () => setState(null), [lessonId, setState]);
   const [cards, setCards] = useState<Record<string, string[]>>({});
   const [online, setOnline] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
@@ -29,8 +32,9 @@ export const useTrainingTable = (lessonId?: string, userId?: string) => {
   const applyRow = useCallback((row: any) => {
     if (!row || row.version < versionRef.current) return;
     versionRef.current = row.version;
+    useTableStore.setState({ rollback: null });
     setState(row.state as TState);
-  }, []);
+  }, [setState]);
 
   const reload = useCallback(async () => {
     if (!lessonId) return;
@@ -88,19 +92,29 @@ export const useTrainingTable = (lessonId?: string, userId?: string) => {
 
   const send = useCallback(async (cmd: string, payload: Record<string, unknown> = {}) => {
     if (!lessonId) return null;
-    setBusy(true);
+    // Actions are optimistic: show them instantly, never block the UI with a spinner.
+    const optimistic = cmd === 'act';
+    const cur = useTableStore.getState().state;
+    if (optimistic && cur) {
+      useTableStore.setState({ rollback: cur });
+      setState(projectAction(cur, Number(payload.seat), String(payload.action), Number(payload.amount || 0)));
+    } else setBusy(true);
     setError(null);
     try {
       const { data, error } = await supabase.functions.invoke('training-table', { body: { cmd, lesson_id: lessonId, ...payload } });
       const msg = (data as any)?.error || (error ? await (error as any).context?.json?.().then((j: any) => j?.error).catch(() => null) || error.message : null);
-      if (msg) { setError(msg); return null; }
+      if (msg) {
+        const rb = useTableStore.getState().rollback;
+        if (optimistic && rb) { useTableStore.setState({ rollback: null }); setState(rb); }
+        setError(msg); return null;
+      }
       if ((data as any)?.state) applyRow({ state: (data as any).state, version: versionRef.current + 1 });
       if (['start', 'pause', 'resume', 'end', 'discuss'].includes(cmd)) reload();
       return data;
     } finally {
-      setBusy(false);
+      if (!optimistic) setBusy(false);
     }
-  }, [lessonId, applyRow, reload]);
+  }, [lessonId, applyRow, reload, setState]);
 
   // Action timer: when the deadline passes, ask the server to apply the timeout (server re-checks).
   const timeoutKey = useRef('');

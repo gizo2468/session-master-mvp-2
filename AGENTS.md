@@ -2,3 +2,4 @@
 - Training Lab access rules are enforced in the database (lesson coach / seated participant helpers, seat validation trigger), so the frontend only reflects them and never acts as the guard.
 - Training Lab live play is server-authoritative: all dealing, betting validation, showdown and bot moves run in the `training-table` edge function (engine in `engine.ts`, covered by `engine_test.ts`); clients only send commands and render `training_table_state`, so game rules can never be bypassed from a device.
 - Training Lab seat connectivity comes from server-recorded heartbeats (`last_seen` in table state), not Realtime presence: the edge function must decide deal-in and disconnect folds, and it cannot read client presence.
+- Training Lab live table UI state lives in the zustand `useTableStore` (state, optimistic rollback, sound/deck prefs); motion is CSS transform/opacity only, so seats re-render independently and play stays smooth on phones.

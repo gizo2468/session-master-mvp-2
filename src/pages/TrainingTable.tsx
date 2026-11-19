@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,26 +8,17 @@ import { useCoachStudent } from '@/context/CoachStudentContext';
 import { useTrainingTable } from '@/hooks/useTrainingTable';
 import { useTL } from '@/components/trainingLab/i18n';
 import TrainingLabBoundary from '@/components/trainingLab/TrainingLabBoundary';
-import PlayingCard from '@/components/trainingLab/table/PlayingCard';
-import TableSeat from '@/components/trainingLab/table/TableSeat';
+import TableFelt from '@/components/trainingLab/table/TableFelt';
+import HandHistoryDrawer from '@/components/trainingLab/table/HandHistoryDrawer';
+import { playSound } from '@/components/trainingLab/table/sounds';
+import { useTableStore } from '@/stores/useTableStore';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import ActionBar from '@/components/trainingLab/table/ActionBar';
 import CoachControls from '@/components/trainingLab/table/CoachControls';
 import SeatMenu from '@/components/trainingLab/table/SeatMenu';
 import ActionLog from '@/components/trainingLab/table/ActionLog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-/** Short beep + vibration when it becomes the viewer's turn. */
-const turnAlert = () => {
-  try { navigator.vibrate?.([120, 60, 120]); } catch { /* not supported */ }
-  try {
-    const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
-    if (!Ctx) return;
-    const ctx = new Ctx(); const o = ctx.createOscillator(); const g = ctx.createGain();
-    o.frequency.value = 880; g.gain.setValueAtTime(0.15, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-    o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.35);
-    setTimeout(() => ctx.close?.(), 600);
-  } catch { /* audio blocked */ }
-};
 
 const POS_LABELS: Record<number, string[]> = {
   2: ['BTN/SB', 'BB'], 3: ['BTN', 'SB', 'BB'], 4: ['BTN', 'SB', 'BB', 'UTG'], 5: ['BTN', 'SB', 'BB', 'UTG', 'CO'],
@@ -62,8 +53,14 @@ function TableInner() {
 
   // Alert once each time it becomes my turn.
   const turnKey = canActNow ? `${state?.hand_id}-${state?.seq}` : '';
-  useEffect(() => { if (turnKey) turnAlert(); }, [turnKey]);
+  useEffect(() => { if (turnKey) playSound('turn'); }, [turnKey]);
   const [coachPick, setCoachPick] = useState<string>('');
+  const [coachOpen, setCoachOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const muted = useTableStore((s) => s.muted);
+  const fourColor = useTableStore((s) => s.fourColor);
+  const setPref = useTableStore((s) => s.setPref);
+  const onSeatClick = useCallback((n: number) => setSeatMenu(n), []);
 
   const labels = useMemo(() => {
     const out: Record<number, string> = {};
@@ -80,22 +77,15 @@ function TableInner() {
   if (!lesson) return <div className="p-8 text-center text-muted-foreground">{t('table_coming')}</div>;
   if (!isCoach && state && !mySeat) return <div className="p-8 text-center text-muted-foreground">{t('not_seated')}</div>;
 
-  // Rotate so the viewer's seat is at the bottom of the table.
   const total = Math.max(lesson.max_seats, seats.length || 2);
   const anchor = mySeat?.seat ?? 1;
-  const posFor = (seatNo: number) => {
-    const idx = (seatNo - anchor + total) % total;
-    const angle = Math.PI / 2 + (idx / total) * 2 * Math.PI;
-    return { left: `${50 + 42 * Math.cos(angle)}%`, top: `${50 + 40 * Math.sin(angle)}%` };
-  };
   const holeCount = lesson.game_type === 'PLO' ? 4 : 2;
-  const cardsFor = (seatNo: number, playerId: string | null) => {
+  const cardsFor = (seatNo: number) => {
     if (state?.shown?.[seatNo]) return state.shown[seatNo];
     if (seatNo === mySeat?.seat) return cards[seatNo];
     if (isCoach && (godView || state?.seats[seatNo]?.type === 'coach')) return cards[seatNo];
     return undefined;
   };
-  const winners = Object.fromEntries((state?.results || []).map((r) => [r.seat, r.amount]));
   const studentsList = myStudents.map((s) => ({ id: s.userId, name: s.displayName }));
   const connected = seats.filter((s) => s.type === 'student' && s.player_id && online.has(s.player_id)).length;
   const studentSeats = seats.filter((s) => s.type === 'student').length;
@@ -163,28 +153,25 @@ function TableInner() {
       )}
       {lesson.status === 'ended' && <p className="text-center text-muted-foreground">{t('lesson_ended')}</p>}
 
-      {/* Table: always LTR */}
-      <div dir="ltr" className="relative mx-auto aspect-[4/3] w-full max-w-2xl sm:aspect-[16/9]">
-        <div className="absolute inset-[12%] rounded-[50%] border-8 border-[#5a3d22] bg-[#35654D] shadow-inner" />
-        <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
-          <div className="flex gap-1">{(state?.board || []).map((c) => <PlayingCard key={c} card={c} />)}</div>
-          <div className="rounded-full bg-black/40 px-3 py-1 text-sm font-bold text-[#F5F5F0]">{t('pot')}: {state?.pot_total ?? 0}</div>
-          {state?.status === 'hand_over' && state.results?.map((r) => (
-            <p key={r.seat} className="text-center text-xs text-[#F5F5F0]">{state.seats[r.seat]?.name} {t('wins')} {r.amount}{r.desc ? ` · ${r.desc}` : ''}</p>
-          ))}
-          {(!state || state.status === 'waiting') && lesson.status !== 'ended' && <p className="text-xs text-[#F5F5F0]/80">{t('waiting_deal')}</p>}
-        </div>
-        {seats.map((s) => (
-          <div key={s.seat} className="absolute -translate-x-1/2 -translate-y-1/2" style={posFor(s.seat)}>
-            <TableSeat seat={s} label={labels[s.seat]} isDealer={state?.dealer_seat === s.seat && state?.status !== 'waiting'}
-              isTurn={state?.to_act === s.seat && state?.status === 'in_hand'} deadline={state?.deadline ?? null} timer={state?.settings.timer || 0}
-              cards={cardsFor(s.seat, s.player_id)} holeCount={holeCount} connected={isOnline(s)} isMe={s.seat === mySeat?.seat} youText={t('you')}
-              sittingOut={(s.type === 'student' || s.type === 'coach') && (!s.ready || !!s.sitting_out)} sitOutText={t('sat_out')}
-              waitingText={t('waiting_player')} foldedText={t('folded')} winner={state?.status === 'hand_over' ? winners[s.seat] : undefined}
-              onClick={isCoach && state?.status !== 'in_hand' && lesson.status !== 'ended' ? () => setSeatMenu(s.seat) : undefined} />
-          </div>
-        ))}
+      {/* Table toolbar */}
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <HandHistoryDrawer lessonId={lesson.id} mySeat={mySeat?.seat} isCoach={isCoach} refreshKey={state?.hand_number || 0}
+          seatNames={Object.fromEntries(seats.map((x) => [x.seat, x.name]))} />
+        <Button variant="outline" size="sm" className="min-h-[44px]" aria-label={muted ? t('unmute') : t('mute')} onClick={() => setPref('muted', !muted)}>
+          <Icon name={muted ? 'VolumeX' : 'Volume2'} size={16} />
+        </Button>
+        <Button variant={fourColor ? 'default' : 'outline'} size="sm" className="min-h-[44px]" onClick={() => setPref('fourColor', !fourColor)}>
+          <Icon name="Palette" size={16} />{t('four_color')}
+        </Button>
+        {isCoach && state && isMobile && lesson.status !== 'ended' && (
+          <Button size="sm" className="min-h-[44px]" onClick={() => setCoachOpen(true)}><Icon name="SlidersHorizontal" size={16} />{t('coach_panel')}</Button>
+        )}
       </div>
+
+      <TableFelt state={state} seats={seats} total={total} anchor={anchor} holeCount={holeCount} bigBlind={Number(lesson.big_blind)}
+        labels={labels} mySeat={mySeat?.seat} cardsFor={cardsFor} isOnline={isOnline}
+        onSeatClick={isCoach && state?.status !== 'in_hand' && lesson.status !== 'ended' ? onSeatClick : undefined}
+        waitingDeal={(!state || state.status === 'waiting') && lesson.status !== 'ended'} />
 
       {state && <ActionLog state={state} />}
 
@@ -198,10 +185,21 @@ function TableInner() {
         </div>
       </>)}
 
-      {isCoach && state && (
-        <CoachControls state={state} lessonStatus={lesson.status} busy={busy} godView={godView} setGodView={setGodView} send={send} students={studentsList}
-          dealLabel={humans.length && readyCount < humans.length ? t('deal_anyway') : undefined} />
-      )}
+      {isCoach && state && (() => {
+        const panel = (
+          <CoachControls state={state} lessonStatus={lesson.status} busy={busy} godView={godView} setGodView={setGodView} send={send} students={studentsList}
+            dealLabel={humans.length && readyCount < humans.length ? t('deal_anyway') : undefined} />
+        );
+        if (!isMobile) return panel;
+        return (
+          <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
+            <DrawerContent dir={dir} className="max-h-[85dvh]">
+              <DrawerHeader><DrawerTitle className="text-primary">{t('controls')}</DrawerTitle></DrawerHeader>
+              <div className="overflow-y-auto px-3 pb-[max(1rem,env(safe-area-inset-bottom))]">{panel}</div>
+            </DrawerContent>
+          </Drawer>
+        );
+      })()}
       {isCoach && !state && lesson.status !== 'ended' && (
         <Button className="w-full min-h-[52px] text-lg" disabled={busy} onClick={() => send('start')}><Icon name="Play" size={18} />{t('start_lesson')}</Button>
       )}
