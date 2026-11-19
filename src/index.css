@@ -341,3 +341,18 @@ body.onboarding-pulse-active .tour-pulse-target {
 @keyframes tl-pop { from { transform: translate(-50%, -50%) scale(.6); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
 .tl-pop { animation: tl-pop 120ms ease-out both; }
 @media (prefers-reduced-motion: reduce) { .tl-deal, .tl-flip, .tl-fly-pot, .tl-fly-win, .tl-pop { animation-duration: 1ms !important; } }
+/* Live table (mobile game view) */
+:root { --tl-bg: 0 0% 7%; --tl-felt2: 150 31% 30%; --tl-rail2: 0 0% 9%; --tl-plate: 0 0% 8%; --tl-stack: 186 85% 58%; --tl-ink: 60 20% 96%; }
+.tl-stage-bg { background: radial-gradient(ellipse at 50% 45%, hsl(0 0% 13%) 0%, hsl(var(--tl-bg)) 60%, hsl(0 0% 3%) 100%), repeating-linear-gradient(45deg, hsl(0 0% 100% / .015) 0 2px, transparent 2px 14px); background-blend-mode: normal; color: hsl(var(--tl-ink)); }
+.tl-stadium { border-radius: 9999px; background: radial-gradient(ellipse at 50% 45%, hsl(150 30% 38%) 0%, hsl(var(--tl-felt2)) 45%, hsl(152 34% 20%) 100%); box-shadow: 0 0 0 2.4cqw hsl(var(--tl-rail2)), 0 0 0 calc(2.4cqw + 1px) hsl(0 0% 100% / .08), inset 0 0 6cqw hsl(0 0% 0% / .45), 0 2cqw 6cqw hsl(0 0% 0% / .6); }
+.tl-stadium::after { content: ''; position: absolute; inset: 3.2cqw; border-radius: 9999px; border: 1px solid hsl(0 0% 100% / .08); pointer-events: none; }
+.tl-plate { background: hsl(var(--tl-plate) / .92); color: hsl(var(--tl-ink)); }
+.tl-stack { color: hsl(var(--tl-stack)); }
+.tl-ink { color: hsl(var(--tl-ink)); }
+.tl-act-btn { background: linear-gradient(180deg, hsl(0 0% 16%), hsl(0 0% 9%)); color: hsl(var(--tl-ink)); border: 1px solid hsl(0 0% 100% / .08); box-shadow: 0 3px 0 hsl(0 0% 0% / .6); border-radius: 8px; transition: transform 80ms; min-height: 48px; }
+.tl-act-btn:active { transform: translateY(2px); }
+.tl-act-btn:disabled { opacity: .5; }
+.tl-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 9999px; background: hsl(0 0% 100% / .06); color: hsl(var(--tl-ink)); }
+@keyframes tl-slide-up { from { transform: translateY(110%); opacity: 0; } to { transform: none; opacity: 1; } }
+.tl-slide-up { animation: tl-slide-up 220ms cubic-bezier(.2,.8,.3,1) both; }
+@keyframes tl-bar { from { transform: scaleX(var(--from, 1)); } to { transform: scaleX(0); } }

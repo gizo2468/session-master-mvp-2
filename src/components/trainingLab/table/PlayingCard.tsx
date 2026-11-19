@@ -17,6 +17,8 @@ export const SuitIcon = ({ suit, className }: { suit: string; className?: string
 
 const DIMS = {
   xs: 'w-[22px] h-[31px] text-[10px]', sm: 'w-7 h-10 text-xs', md: 'w-10 h-14 text-sm', lg: 'w-12 h-[68px] text-base',
+  // Scale with the table (container units) on the live game view.
+  opp: 'w-[5.6cqw] h-[7.8cqw] text-[2.8cqw]', board: 'w-[11.4cqw] h-[16cqw] text-[5cqw]', hero: 'w-[13cqw] h-[18.2cqw] text-[5.6cqw]', hero4: 'w-[10cqw] h-[14cqw] text-[4.4cqw]',
 } as const;
 
 interface Props { card?: string | null; size?: keyof typeof DIMS; faded?: boolean; className?: string; style?: React.CSSProperties }

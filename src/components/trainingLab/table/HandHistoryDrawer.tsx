@@ -73,7 +73,7 @@ export default function HandHistoryDrawer({ lessonId, mySeat, seatNames, isCoach
 
   return (
     <>
-      <Button variant="outline" size="sm" className="min-h-[44px]" onClick={() => setOpen(true)}><Icon name="History" size={16} />{t('hand_history')}</Button>
+      <button type="button" aria-label={t('hand_history')} className="tl-icon-btn" onClick={() => setOpen(true)}><Icon name="History" size={20} /></button>
       <Sheet open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSel(null); }}>
         <SheetContent side={dir === 'rtl' ? 'left' : 'right'} dir={dir} className="w-[92vw] max-w-md overflow-y-auto p-4">
           <SheetHeader><SheetTitle className="text-primary">{selHand ? `${t('hand')} #${selHand.hand_number}` : t('hand_history')}</SheetTitle></SheetHeader>

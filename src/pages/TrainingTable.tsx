@@ -12,7 +12,7 @@ import TableFelt from '@/components/trainingLab/table/TableFelt';
 import HandHistoryDrawer from '@/components/trainingLab/table/HandHistoryDrawer';
 import { playSound } from '@/components/trainingLab/table/sounds';
 import { useTableStore } from '@/stores/useTableStore';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Switch } from '@/components/ui/switch';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import ActionBar from '@/components/trainingLab/table/ActionBar';
 import CoachControls from '@/components/trainingLab/table/CoachControls';
@@ -56,7 +56,10 @@ function TableInner() {
   useEffect(() => { if (turnKey) playSound('turn'); }, [turnKey]);
   const [coachPick, setCoachPick] = useState<string>('');
   const [coachOpen, setCoachOpen] = useState(false);
-  const isMobile = useIsMobile();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const showBB = useTableStore((s) => s.showBB);
+  // Try to keep phones in portrait (works in the installed app; browsers fall back to the rotate notice).
+  useEffect(() => { (screen.orientation as any)?.lock?.('portrait')?.catch?.(() => {}); }, []);
   const muted = useTableStore((s) => s.muted);
   const fourColor = useTableStore((s) => s.fourColor);
   const setPref = useTableStore((s) => s.setPref);
@@ -74,8 +77,13 @@ function TableInner() {
   }, [state?.dealer_seat, state?.status, seats]);
 
   const back = () => navigate(isCoach ? '/coach/training-lab' : '/player-dashboard', { replace: true });
-  if (!lesson) return <div className="p-8 text-center text-muted-foreground">{t('table_coming')}</div>;
-  if (!isCoach && state && !mySeat) return <div className="p-8 text-center text-muted-foreground">{t('not_seated')}</div>;
+  const blank = (msg: string) => (
+    <div className="tl-stage-bg fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-8 text-center">
+      <p className="text-white/70">{msg}</p><Button variant="outline" onClick={back}>{t('back')}</Button>
+    </div>
+  );
+  if (!lesson) return blank(t('table_coming'));
+  if (!isCoach && state && !mySeat) return blank(t('not_seated'));
 
   const total = Math.max(lesson.max_seats, seats.length || 2);
   const anchor = mySeat?.seat ?? 1;
@@ -97,111 +105,132 @@ function TableInner() {
   const coachFreeSeats = seats.filter((s) => s.type === 'bot' || s.type === 'closed');
   const meReady = !!mySeat && !!mySeat.ready && !mySeat.sitting_out;
 
+  const info = [
+    `${lesson.small_blind}/${lesson.big_blind}${Number(lesson.ante) ? ` (${lesson.ante})` : ''} · ${t('hand')} #${state?.hand_number || 0}`,
+    lesson.title,
+  ];
+  const showWaiting = state?.status === 'in_hand' && !state.paused && !!actingSeat && !canActNow;
+
   return (
-    <div dir={dir} className="mx-auto min-h-screen max-w-3xl space-y-3 p-3 content-safe">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={back}><Icon name={dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft'} size={20} /></Button>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-lg font-bold text-primary">{lesson.title}</h1>
-          <p className="text-xs text-muted-foreground" dir="ltr">
-            {lesson.game_type} {lesson.small_blind}/{lesson.big_blind}{Number(lesson.ante) ? ` (${lesson.ante})` : ''} · {t('hand')} #{state?.hand_number || 0} · {connected}/{studentSeats} {t('connected')}
+    <div dir={dir} className="tl-stage-bg fixed inset-0 z-50 overflow-hidden overscroll-none touch-manipulation">
+      <div className="relative mx-auto flex h-full w-full max-w-[min(480px,62dvh)] flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+        {/* Thin top bar */}
+        <div className="flex h-12 shrink-0 items-center gap-1 px-2">
+          <button type="button" className="tl-icon-btn" aria-label={t('exit_table')} onClick={back}><Icon name={dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft'} size={20} /></button>
+          <p className="min-w-0 flex-1 truncate px-1 text-center text-xs text-white/50" dir="ltr">
+            {isCoach && live ? `${connected}/${studentSeats} ${t('connected')}` : ''}
           </p>
+          <HandHistoryDrawer lessonId={lesson.id} mySeat={mySeat?.seat} isCoach={isCoach} refreshKey={state?.hand_number || 0}
+            seatNames={Object.fromEntries(seats.map((x) => [x.seat, x.name]))} />
+          <button type="button" className="tl-icon-btn" aria-label={t('table_menu')} onClick={() => setMenuOpen(true)}><Icon name="Menu" size={20} /></button>
+          {isCoach && lesson.status !== 'ended' && (
+            <button type="button" aria-label={t('controls')} onClick={() => setCoachOpen(true)}
+              className="ml-1 flex h-11 min-w-11 items-center justify-center gap-1 rounded-full bg-poker-gold px-3 text-xs font-black text-poker-black shadow-lg">
+              <Icon name="SlidersHorizontal" size={16} />{t('coach_short')}
+            </button>
+          )}
         </div>
-      </div>
 
-      {state?.paused && (
-        <div className="rounded-lg border border-primary bg-primary/10 p-3 text-center">
-          <p className="font-semibold text-primary">{t('table_paused')}</p>
-          {state.discuss && <p className="mt-1 whitespace-pre-wrap text-sm">{state.discuss}</p>}
-        </div>
-      )}
-      {/* Who am I at this table */}
-      {isCoach && !mySeat && live && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 p-2 text-sm">
-          <Icon name="Eye" size={16} /><span className="flex-1 font-semibold">{t('watching_coach')}</span>
-          {between && coachFreeSeats.length > 0 && (<>
-            <Select value={coachPick} onValueChange={setCoachPick}>
-              <SelectTrigger className="h-11 w-28"><SelectValue placeholder={t('coach_seat_pick')} /></SelectTrigger>
-              <SelectContent>{coachFreeSeats.map((s) => <SelectItem key={s.seat} value={String(s.seat)}>{t('seat_n', { n: s.seat })}</SelectItem>)}</SelectContent>
-            </Select>
-            <Button className="min-h-[44px]" disabled={busy || !coachPick} onClick={() => send('set_coach_seat', { coach_seat: Number(coachPick) })}>{t('play_seat')}</Button>
-          </>)}
-        </div>
-      )}
-      {mySeat && live && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/50 bg-primary/5 p-2 text-sm">
-          <span className="flex-1">{meReady ? `${t('you')} · ${t('seat_n', { n: mySeat.seat })}` : t('not_ready_hint')}</span>
-          {meReady
-            ? <Button variant="outline" className="min-h-[44px]" disabled={busy} onClick={() => send('sit_out')}>{t('sit_out')}</Button>
-            : <Button className="min-h-[44px] bg-poker-gold text-poker-black hover:bg-poker-darkGold" disabled={busy} onClick={() => send('sit_in')}>{t('sit_in')}</Button>}
-          {isCoach && between && <Button variant="ghost" className="min-h-[44px]" disabled={busy} onClick={() => send('set_coach_seat', { coach_seat: null })}>{t('leave_seat')}</Button>}
-        </div>
-      )}
-      {isCoach && live && between && humans.length > 0 && (
-        <p className={`rounded-md p-2 text-center text-sm font-semibold ${readyCount < humans.length ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
-          {t(readyCount < humans.length ? 'players_ready' : 'all_ready', { r: readyCount, n: humans.length })}
-        </p>
-      )}
-      {state?.status === 'in_hand' && !state.paused && actingSeat && (
-        canActNow
-          ? <div className="rounded-lg bg-primary p-2 text-center text-lg font-black text-primary-foreground animate-pulse">{t('your_turn')}</div>
-          : <p className="text-center text-sm text-muted-foreground">{t('waiting_for', { name: actingSeat.name })}</p>
-      )}
+        {/* Game stage */}
+        <div className="relative min-h-0 flex-1 [container-type:size]">
+          <TableFelt state={state} seats={seats} total={total} anchor={anchor} holeCount={holeCount} bigBlind={Number(lesson.big_blind)}
+            labels={labels} mySeat={mySeat?.seat} cardsFor={cardsFor} isOnline={isOnline} gameType={lesson.game_type} info={info}
+            onSeatClick={isCoach && state?.status !== 'in_hand' && lesson.status !== 'ended' ? onSeatClick : undefined}
+            waitingDeal={(!state || state.status === 'waiting') && lesson.status !== 'ended'}>
+            {isCoach && !state && lesson.status !== 'ended' && (
+              <div className="absolute left-1/2 top-[48%] z-40 -translate-x-1/2 -translate-y-1/2">
+                <Button className="min-h-[52px] px-6 text-lg shadow-xl" disabled={busy} onClick={() => send('start')}><Icon name="Play" size={18} />{t('start_lesson')}</Button>
+              </div>
+            )}
+          </TableFelt>
 
-      {error && (
-        <button className="w-full rounded-md bg-destructive/10 p-2 text-sm text-destructive" onClick={() => setError(null)}>{error}</button>
-      )}
-      {lesson.status === 'ended' && <p className="text-center text-muted-foreground">{t('lesson_ended')}</p>}
-
-      {/* Table toolbar */}
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <HandHistoryDrawer lessonId={lesson.id} mySeat={mySeat?.seat} isCoach={isCoach} refreshKey={state?.hand_number || 0}
-          seatNames={Object.fromEntries(seats.map((x) => [x.seat, x.name]))} />
-        <Button variant="outline" size="sm" className="min-h-[44px]" aria-label={muted ? t('unmute') : t('mute')} onClick={() => setPref('muted', !muted)}>
-          <Icon name={muted ? 'VolumeX' : 'Volume2'} size={16} />
-        </Button>
-        <Button variant={fourColor ? 'default' : 'outline'} size="sm" className="min-h-[44px]" onClick={() => setPref('fourColor', !fourColor)}>
-          <Icon name="Palette" size={16} />{t('four_color')}
-        </Button>
-        {isCoach && state && isMobile && lesson.status !== 'ended' && (
-          <Button size="sm" className="min-h-[44px]" onClick={() => setCoachOpen(true)}><Icon name="SlidersHorizontal" size={16} />{t('coach_panel')}</Button>
-        )}
-      </div>
-
-      <TableFelt state={state} seats={seats} total={total} anchor={anchor} holeCount={holeCount} bigBlind={Number(lesson.big_blind)}
-        labels={labels} mySeat={mySeat?.seat} cardsFor={cardsFor} isOnline={isOnline}
-        onSeatClick={isCoach && state?.status !== 'in_hand' && lesson.status !== 'ended' ? onSeatClick : undefined}
-        waitingDeal={(!state || state.status === 'waiting') && lesson.status !== 'ended'} />
-
-      {state && <ActionLog state={state} />}
-
-      {canActNow && state && actingSeat && (<>
-        <div className="h-56" aria-hidden />
-        <div className="fixed inset-x-0 bottom-0 z-50 border-t-2 border-primary bg-background/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-2xl backdrop-blur animate-in slide-in-from-bottom duration-300">
-          <div className="mx-auto max-w-3xl">
-            <ActionBar state={state} seat={actingSeat.seat} bigBlind={Number(lesson.big_blind)} plo={lesson.game_type === 'PLO'} disabled={busy}
-              onAct={(action, amount) => send('act', { seat: actingSeat.seat, action, amount })} />
+          {/* Top notices (overlay, never pushes the table) */}
+          <div className="pointer-events-none absolute inset-x-[4cqw] top-[1cqw] z-40 flex flex-col items-center gap-[1cqw]">
+            {state?.paused && (
+              <div className="pointer-events-auto max-w-full rounded-xl border border-primary bg-black/80 px-3 py-2 text-center">
+                <p className="text-sm font-bold text-primary">{t('table_paused')}</p>
+                {state.discuss && <p className="mt-0.5 line-clamp-3 whitespace-pre-wrap text-xs tl-ink">{state.discuss}</p>}
+              </div>
+            )}
+            {error && (
+              <button type="button" className="pointer-events-auto rounded-full bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground" onClick={() => setError(null)}>{error}</button>
+            )}
+            {lesson.status === 'ended' && <p className="rounded-full bg-black/70 px-3 py-1 text-xs tl-ink">{t('lesson_ended')}</p>}
           </div>
-        </div>
-      </>)}
 
-      {isCoach && state && (() => {
-        const panel = (
-          <CoachControls state={state} lessonStatus={lesson.status} busy={busy} godView={godView} setGodView={setGodView} send={send} students={studentsList}
-            dealLabel={humans.length && readyCount < humans.length ? t('deal_anyway') : undefined} />
-        );
-        if (!isMobile) return panel;
-        return (
-          <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
-            <DrawerContent dir={dir} className="max-h-[85dvh]">
-              <DrawerHeader><DrawerTitle className="text-primary">{t('controls')}</DrawerTitle></DrawerHeader>
-              <div className="overflow-y-auto px-3 pb-[max(1rem,env(safe-area-inset-bottom))]">{panel}</div>
-            </DrawerContent>
-          </Drawer>
-        );
-      })()}
-      {isCoach && !state && lesson.status !== 'ended' && (
-        <Button className="w-full min-h-[52px] text-lg" disabled={busy} onClick={() => send('start')}><Icon name="Play" size={18} />{t('start_lesson')}</Button>
+          {canActNow && state && actingSeat ? (
+            <ActionBar key={`${state.hand_id}-${state.street}`} state={state} seat={actingSeat.seat} bigBlind={Number(lesson.big_blind)} plo={lesson.game_type === 'PLO'} disabled={busy}
+              onAct={(action, amount) => send('act', { seat: actingSeat.seat, action, amount })} />
+          ) : (
+            <div className="absolute bottom-[max(2.5cqw,env(safe-area-inset-bottom))] left-[40cqw] right-[3cqw] z-40 flex flex-col items-end gap-[1.5cqw] text-right">
+              {isCoach && live && between && humans.length > 0 && (
+                <p className={`rounded-full bg-black/60 px-3 py-1 text-xs font-semibold ${readyCount < humans.length ? 'text-destructive' : 'text-primary'}`}>
+                  {t(readyCount < humans.length ? 'players_ready' : 'all_ready', { r: readyCount, n: humans.length })}
+                </p>
+              )}
+              {isCoach && !mySeat && live && <p className="flex items-center gap-1 text-xs text-white/60"><Icon name="Eye" size={14} />{t('watching_coach')}</p>}
+              {showWaiting && <p className="text-xs text-white/60">{t('waiting_for', { name: actingSeat!.name })}</p>}
+              {mySeat && live && !meReady && (
+                <Button className="min-h-[52px] bg-poker-gold px-6 text-base font-black text-poker-black hover:bg-poker-darkGold" disabled={busy} onClick={() => send('sit_in')}>{t('sit_in')}</Button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Portrait only on small screens */}
+      <div className="tl-stage-bg fixed inset-0 z-[70] hidden flex-col items-center justify-center gap-3 p-6 text-center [@media(orientation:landscape)_and_(max-height:500px)]:flex">
+        <Icon name="Smartphone" size={40} className="text-poker-gold" />
+        <p className="text-lg font-bold tl-ink">{t('rotate_phone')}</p>
+      </div>
+
+      {/* Table menu */}
+      <Drawer open={menuOpen} onOpenChange={setMenuOpen}>
+        <DrawerContent dir={dir} className="max-h-[85dvh]">
+          <DrawerHeader><DrawerTitle className="text-primary">{t('table_menu')}</DrawerTitle></DrawerHeader>
+          <div className="space-y-3 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            {([['muted', !muted, t('mute'), (v: boolean) => setPref('muted', !v)], ['fourColor', fourColor, t('four_color'), (v: boolean) => setPref('fourColor', v)], ['showBB', showBB, t('show_bb'), (v: boolean) => setPref('showBB', v)]] as const).map(([k, v, label, on]) => (
+              <label key={k} className="flex min-h-[44px] items-center justify-between gap-3 text-sm font-medium">
+                <span>{k === 'muted' ? (muted ? t('unmute') : label) : label}</span>
+                <Switch checked={v} onCheckedChange={on} />
+              </label>
+            ))}
+            {mySeat && live && meReady && (
+              <Button variant="outline" className="min-h-[44px] w-full" disabled={busy} onClick={() => { send('sit_out'); setMenuOpen(false); }}>{t('sit_out')}</Button>
+            )}
+            {state && <ActionLog state={state} />}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Coach controls */}
+      {isCoach && (
+        <Drawer open={coachOpen} onOpenChange={setCoachOpen}>
+          <DrawerContent dir={dir} className="max-h-[88dvh]">
+            <DrawerHeader><DrawerTitle className="text-primary">{t('controls')}</DrawerTitle></DrawerHeader>
+            <div className="space-y-3 overflow-y-auto px-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              {live && !mySeat && between && coachFreeSeats.length > 0 && (
+                <div className="flex items-center gap-2 rounded-lg border border-border p-2 text-sm">
+                  <span className="flex-1 font-semibold">{t('watching_coach')}</span>
+                  <Select value={coachPick} onValueChange={setCoachPick}>
+                    <SelectTrigger className="h-11 w-28"><SelectValue placeholder={t('coach_seat_pick')} /></SelectTrigger>
+                    <SelectContent>{coachFreeSeats.map((s) => <SelectItem key={s.seat} value={String(s.seat)}>{t('seat_n', { n: s.seat })}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Button className="min-h-[44px]" disabled={busy || !coachPick} onClick={() => send('set_coach_seat', { coach_seat: Number(coachPick) })}>{t('play_seat')}</Button>
+                </div>
+              )}
+              {live && mySeat && between && (
+                <Button variant="outline" className="min-h-[44px] w-full" disabled={busy} onClick={() => send('set_coach_seat', { coach_seat: null })}>{t('leave_seat')}</Button>
+              )}
+              {state ? (
+                <CoachControls state={state} lessonStatus={lesson.status} busy={busy} godView={godView} setGodView={setGodView} send={send} students={studentsList}
+                  dealLabel={humans.length && readyCount < humans.length ? t('deal_anyway') : undefined} />
+              ) : lesson.status !== 'ended' && (
+                <Button className="min-h-[52px] w-full text-lg" disabled={busy} onClick={() => { send('start'); setCoachOpen(false); }}><Icon name="Play" size={18} />{t('start_lesson')}</Button>
+              )}
+            </div>
+          </DrawerContent>
+        </Drawer>
       )}
       {isCoach && (
         <SeatMenu seatNo={seatMenu} seat={seatMenu != null ? state?.seats[seatMenu] : undefined} bigBlind={Number(lesson.big_blind)}

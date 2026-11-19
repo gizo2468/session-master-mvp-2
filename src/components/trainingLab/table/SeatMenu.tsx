@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import type { TSeat } from '@/hooks/useTrainingTable';
 import { useTL } from '../i18n';
 
@@ -30,9 +30,9 @@ export default function SeatMenu({ seatNo, seat, bigBlind, students, onClose, se
   }, [seat, seatNo, bigBlind]);
 
   return (
-    <Dialog open={seatNo != null} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader><DialogTitle className="text-primary">{t('seat')} {seatNo}</DialogTitle></DialogHeader>
+    <Drawer open={seatNo != null} onOpenChange={(o) => !o && onClose()}>
+      <DrawerContent className="max-h-[85dvh]"><div className="space-y-3 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <DrawerHeader><DrawerTitle className="text-primary">{t('seat')} {seatNo}</DrawerTitle></DrawerHeader>
         <p className="text-xs text-muted-foreground">{t('seat_menu_between')}</p>
         {seat && seat.type !== 'closed' && (
           <div className="flex items-end gap-2">
@@ -71,7 +71,7 @@ export default function SeatMenu({ seatNo, seat, bigBlind, students, onClose, se
             onClose();
           }}>{t('apply')}</Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div></DrawerContent>
+    </Drawer>
   );
 }

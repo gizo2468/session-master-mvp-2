@@ -3,8 +3,8 @@ import type { TState } from '@/hooks/useTrainingTable';
 
 const PREFS_KEY = 'tl-table-prefs';
 const loadPrefs = () => {
-  try { return { muted: false, fourColor: false, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; }
-  catch { return { muted: false, fourColor: false }; }
+  try { return { muted: false, fourColor: false, showBB: true, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; }
+  catch { return { muted: false, fourColor: false, showBB: true }; }
 };
 
 interface TableStore {
@@ -13,8 +13,10 @@ interface TableStore {
   rollback: TState | null;
   muted: boolean;
   fourColor: boolean;
+  /** Show amounts in big blinds (default) or chips. */
+  showBB: boolean;
   setState: (s: TState | null) => void;
-  setPref: (k: 'muted' | 'fourColor', v: boolean) => void;
+  setPref: (k: 'muted' | 'fourColor' | 'showBB', v: boolean) => void;
 }
 
 /** Lightweight live-table store: seats subscribe to their own slice so one move re-renders only what changed. */
@@ -25,8 +27,8 @@ export const useTableStore = create<TableStore>((set, get) => ({
   setState: (state) => set({ state }),
   setPref: (k, v) => {
     set({ [k]: v } as any);
-    const { muted, fourColor } = get();
-    try { localStorage.setItem(PREFS_KEY, JSON.stringify({ muted, fourColor })); } catch { /* private mode */ }
+    const { muted, fourColor, showBB } = get();
+    try { localStorage.setItem(PREFS_KEY, JSON.stringify({ muted, fourColor, showBB })); } catch { /* private mode */ }
   },
 }));
 
@@ -52,4 +54,10 @@ export const projectAction = (s: TState, seat: number, action: string, amount = 
   n.last_action = { seat, action: p.all_in ? 'all-in' : action, amount: p.bet };
   n.recent_actions = [...(n.recent_actions || []), { seat, name: p.name, action, amount: action === 'fold' || action === 'check' ? 0 : p.bet }].slice(-5);
   return n;
+};
+
+/** Format a chip amount in BB ("2.5BB") or chips, per the player's preference. */
+export const fmtAmount = (chips: number, bb: number, showBB: boolean) => {
+  if (!showBB || !bb) return String(Math.round(chips * 100) / 100);
+  return `${+(chips / bb).toFixed(1)}BB`;
 };
