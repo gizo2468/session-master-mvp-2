@@ -1299,6 +1299,93 @@ export type Database = {
           },
         ]
       }
+      training_bot_configs: {
+        Row: {
+          lesson_id: string
+          mode: string
+          ranges: Json | null
+          seat_number: number
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          lesson_id: string
+          mode?: string
+          ranges?: Json | null
+          seat_number: number
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          lesson_id?: string
+          mode?: string
+          ranges?: Json | null
+          seat_number?: number
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_bot_configs_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "training_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_bot_configs_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "training_range_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_bot_decisions: {
+        Row: {
+          created_at: string
+          hand_id: string
+          id: string
+          lesson_id: string
+          meta: Json
+          seat_number: number
+          sequence: number
+        }
+        Insert: {
+          created_at?: string
+          hand_id: string
+          id?: string
+          lesson_id: string
+          meta: Json
+          seat_number: number
+          sequence: number
+        }
+        Update: {
+          created_at?: string
+          hand_id?: string
+          id?: string
+          lesson_id?: string
+          meta?: Json
+          seat_number?: number
+          sequence?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_bot_decisions_hand_id_fkey"
+            columns: ["hand_id"]
+            isOneToOne: false
+            referencedRelation: "training_hands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_bot_decisions_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "training_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_hand_actions: {
         Row: {
           action: string
@@ -1418,6 +1505,7 @@ export type Database = {
           pot_total: number
           scenario_preset: Json | null
           started_at: string
+          starting_stacks: Json | null
           status: string
           winners: Json | null
         }
@@ -1431,6 +1519,7 @@ export type Database = {
           pot_total?: number
           scenario_preset?: Json | null
           started_at?: string
+          starting_stacks?: Json | null
           status?: string
           winners?: Json | null
         }
@@ -1444,6 +1533,7 @@ export type Database = {
           pot_total?: number
           scenario_preset?: Json | null
           started_at?: string
+          starting_stacks?: Json | null
           status?: string
           winners?: Json | null
         }
@@ -1529,6 +1619,7 @@ export type Database = {
           lesson_id: string
           published: boolean
           published_at: string | null
+          reveal_bot_ranges: boolean
           stats: Json | null
           student_id: string
           summary_text: string | null
@@ -1541,6 +1632,7 @@ export type Database = {
           lesson_id: string
           published?: boolean
           published_at?: string | null
+          reveal_bot_ranges?: boolean
           stats?: Json | null
           student_id: string
           summary_text?: string | null
@@ -1553,6 +1645,7 @@ export type Database = {
           lesson_id?: string
           published?: boolean
           published_at?: string | null
+          reveal_bot_ranges?: boolean
           stats?: Json | null
           student_id?: string
           summary_text?: string | null
@@ -1742,6 +1835,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      training_range_templates: {
+        Row: {
+          coach_id: string
+          created_at: string
+          id: string
+          name: string
+          ranges: Json
+          updated_at: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          id?: string
+          name: string
+          ranges?: Json
+          updated_at?: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          ranges?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       training_table_state: {
         Row: {

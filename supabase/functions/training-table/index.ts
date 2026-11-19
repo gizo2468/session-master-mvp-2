@@ -4,7 +4,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
 import { applyAction, dueAction, dueTimeout, scheduleNext, emptyState, isConnected, isDealable, isHuman, r2, startHand, type ActionType, type Config, type LoggedAction, type SeatState, type TableState } from './engine.ts';
-import { decideBot } from './bots.ts';
+import { cryptoRnd, decideStrategy, type BotConfig, type BotMeta } from './strategy/index.ts';
 import { Conflict, persistDeal } from './dealPersistence.ts';
 
 const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
@@ -143,11 +143,15 @@ async function doDeal(lesson: any, cur: { state: TableState; version: number }) 
   withDeadline(state);
   scheduleNext(state);
   await persistDeal((name, args) => admin.rpc(name, args), lesson.id, cur.version, state, deck, holes, actions);
+  // Exact starting stacks for replays (stack before blinds/antes of this hand).
+  const starting: Record<string, number> = {};
+  for (const p of Object.values(state.seats)) if (p.in_hand) starting[p.seat] = r2(p.stack + p.committed);
+  await admin.from('training_hands').update({ starting_stacks: starting }).eq('id', state.hand_id);
   if (state.status === 'hand_over') await finalizeHand(lesson.id, state);
   return state;
 }
 
-async function doAct(lesson: any, cur: { state: TableState; version: number }, seat: number, type: ActionType, amount: number, mutate?: (s: TableState) => void) {
+async function doAct(lesson: any, cur: { state: TableState; version: number }, seat: number, type: ActionType, amount: number, mutate?: (s: TableState) => void, botMeta?: BotMeta) {
   const s = cur.state;
   if (!s.hand_id) throw new Error('No hand in progress');
   const { deck, holes } = await loadHand(s.hand_id);
@@ -157,6 +161,8 @@ async function doAct(lesson: any, cur: { state: TableState; version: number }, s
   if (!(await commit(lesson.id, res.state, cur.version))) throw new Conflict();
   await admin.from('training_hand_secrets').update({ deck }).eq('hand_id', s.hand_id);
   await logActions(s.hand_id, res.state, res.actions);
+  const mine = botMeta && res.actions.find((a) => a.seat === seat && a.action !== 'show');
+  if (mine) await admin.from('training_bot_decisions').insert({ lesson_id: lesson.id, hand_id: s.hand_id, seat_number: seat, sequence: mine.sequence, meta: botMeta });
   if (res.handEnded) await finalizeHand(lesson.id, res.state);
   return res.state;
 }
@@ -171,6 +177,12 @@ async function applyTimeout(lesson: any, cur: { state: TableState; version: numb
   });
 }
 
+async function loadBotConfig(lessonId: string, seat: number): Promise<BotConfig> {
+  const { data } = await admin.from('training_bot_configs').select('mode, ranges, template_id').eq('lesson_id', lessonId).eq('seat_number', seat).maybeSingle();
+  const mode = (data?.mode === 'ranges' || data?.mode === 'gto') ? data.mode : 'style';
+  return { mode, ranges: (data?.ranges as any) || null };
+}
+
 /** Run the automatic step (bot move / auto-deal) if its stored time has come. Idempotent: the version check lets only one caller act. */
 async function runDue(lesson: any, cur: { state: TableState; version: number }, now = Date.now()): Promise<TableState | null> {
   if (lesson.status !== 'live') return null;
@@ -179,8 +191,9 @@ async function runDue(lesson: any, cur: { state: TableState; version: number }, 
   if (due.kind === 'bot') {
     const s = cur.state;
     const { holes } = await loadHand(s.hand_id!);
-    const d = decideBot(s, due.seat, holes[due.seat] || [], cfgOf(lesson));
-    try { return await doAct(lesson, cur, due.seat, d.action, d.amount); }
+    const bot = await loadBotConfig(lesson.id, due.seat);
+    const d = await decideStrategy({ s, seat: due.seat, hole: holes[due.seat] || [], cfg: cfgOf(lesson), bot, rnd: cryptoRnd });
+    try { return await doAct(lesson, cur, due.seat, d.action, d.amount, undefined, d.meta); }
     catch (e) { if (e instanceof Conflict) throw e; return await doAct(lesson, cur, due.seat, 'fold', 0); }
   }
   // Auto-deal only with a ready human and at least 2 dealable players; otherwise keep waiting (UI shows why).
