@@ -7,7 +7,7 @@ import Icon from '@/components/ui/Lucide';
 import PageContainer from '@/components/ui/PageContainer';
 import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
 import { useAuth } from '@/context/AuthContext';
-import { hasFeatureAccess } from '@/utils/coachTiers';
+import { hasTrainingLabAccess } from '@/utils/coachTiers';
 import { useCoachLessons, useInvalidateLessons, tl, LessonStatus } from '@/hooks/useTrainingLessons';
 import { useTL } from '@/components/trainingLab/i18n';
 
@@ -21,7 +21,7 @@ export default function TrainingLab() {
   const navigate = useNavigate();
   const { t, dir } = useTL();
   const tier = user?.coachTier || 'free';
-  const unlocked = hasFeatureAccess(user?.role, tier, 'Training Lab');
+  const unlocked = hasTrainingLabAccess(user?.role, tier);
   const { data: lessons = [] } = useCoachLessons(unlocked ? user?.id : undefined);
   const invalidate = useInvalidateLessons();
   const [tab, setTab] = useState<'draft' | 'live' | 'ended'>('draft');

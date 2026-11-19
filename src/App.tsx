@@ -39,6 +39,7 @@ const AddPastSession = lazyWithRetry(() => import("./pages/AddPastSession"), "Ad
 const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"), "CoachDashboard");
 const PlayerDashboard = lazyWithRetry(() => import("./pages/PlayerDashboard"), "PlayerDashboard");
 const ConnectCoach = lazyWithRetry(() => import("./pages/ConnectCoach"), "ConnectCoach");
+const CoachUpgrade = lazyWithRetry(() => import("./pages/CoachUpgrade"), "CoachUpgrade");
 const TrainingLab = lazyWithRetry(() => import("./pages/TrainingLab"), "TrainingLab");
 const TrainingLessonWizard = lazyWithRetry(() => import("./pages/TrainingLessonWizard"), "TrainingLessonWizard");
 const TrainingLessonSummary = lazyWithRetry(() => import("./pages/TrainingLessonSummary"), "TrainingLessonSummary");
@@ -101,6 +102,7 @@ const App = () => {
                         <Route path="/notifications" element={<Notifications />} />
                         <Route path="/add-past-session" element={<AddPastSession />} />
                         <Route path="/coach-dashboard" element={<CoachDashboard />} />
+                        <Route path="/coach-upgrade" element={<CoachUpgrade />} />
                         <Route path="/player-dashboard" element={<PlayerDashboard />} />
                         <Route path="/connect-coach" element={<ConnectCoach />} />
                         <Route path="/charts-library" element={<ChartsLibrary />} />

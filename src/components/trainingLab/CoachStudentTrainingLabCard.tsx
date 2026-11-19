@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
 import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
 import { useAuth } from '@/context/AuthContext';
-import { hasFeatureAccess } from '@/utils/coachTiers';
+import { hasTrainingLabAccess } from '@/utils/coachTiers';
 import { useCoachStudentLessons, StudentLessonRow, LessonStatus } from '@/hooks/useTrainingLessons';
 import TrainingLabBoundary from './TrainingLabBoundary';
 import { useTL } from './i18n';
@@ -19,7 +19,7 @@ function Inner({ studentId }: { studentId: string }) {
   const { user } = useAuth();
   const { t, dir } = useTL();
   const navigate = useNavigate();
-  const unlocked = hasFeatureAccess(user?.role, user?.coachTier || 'free', 'Training Lab');
+  const unlocked = hasTrainingLabAccess(user?.role, user?.coachTier || 'free');
   const { data = [] } = useCoachStudentLessons(unlocked ? user?.id : undefined, studentId);
   const [comingSoon, setComingSoon] = useState(false);
   const lessons = unlocked ? data : PREVIEW;

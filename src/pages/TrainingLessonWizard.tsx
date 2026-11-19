@@ -11,7 +11,7 @@ import PageContainer from '@/components/ui/PageContainer';
 import { useAuth } from '@/context/AuthContext';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { toast } from '@/hooks/use-toast';
-import { getMaxStudents, hasFeatureAccess } from '@/utils/coachTiers';
+import { getTrainingLabStudentLimit, hasTrainingLabAccess } from '@/utils/coachTiers';
 import { tl, SeatDraft, SeatType, BotStyle, CARD_RE, useInvalidateLessons } from '@/hooks/useTrainingLessons';
 import { useTL } from '@/components/trainingLab/i18n';
 
@@ -30,7 +30,7 @@ export default function TrainingLessonWizard() {
   const { t, dir } = useTL();
   const invalidate = useInvalidateLessons();
   const tier = user?.coachTier || 'free';
-  const maxStudents = getMaxStudents(tier);
+  const maxStudents = getTrainingLabStudentLimit(tier);
   const steps = ['step_basics', 'step_game', 'step_seats', 'step_presets', 'step_review'] as const;
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -41,7 +41,7 @@ export default function TrainingLessonWizard() {
   const seatsEditable = status === 'draft' || status === 'paused';
 
   useEffect(() => {
-    if (user && !hasFeatureAccess(user.role, tier, 'Training Lab')) navigate('/coach/training-lab', { replace: true });
+    if (user && !hasTrainingLabAccess(user.role, tier)) navigate('/coach/training-lab', { replace: true });
   }, [user, tier, navigate]);
 
   useEffect(() => {

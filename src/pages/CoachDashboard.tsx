@@ -9,7 +9,7 @@ import Icon from '@/components/ui/Lucide';
 import StudentList from '@/components/coaching/StudentList';
 import { Separator } from '@/components/ui/separator';
 import FeatureLockOverlay from '@/components/coaching/FeatureLockOverlay';
-import { coachTiers, hasFeatureAccess, getMaxStudents } from '@/utils/coachTiers';
+import { coachTiers, hasFeatureAccess, getMaxStudents, hasTrainingLabAccess } from '@/utils/coachTiers';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -219,7 +219,7 @@ const CoachDashboard = () => {
                 <p className="font-semibold text-poker-gold">Training Lab</p>
                 <p className="text-xs text-[#F5F5F0]/80">Run live practice tables with your students</p>
               </div>
-              {!hasFeatureAccess(user?.role, coachTier, 'Training Lab') && <Icon name="lock" size={18} className="text-poker-gold" />}
+              {!hasTrainingLabAccess(user?.role, coachTier) && <Icon name="lock" size={18} className="text-poker-gold" />}
               <Icon name="ChevronRight" size={18} className="text-poker-gold rtl:rotate-180" />
             </button>
 

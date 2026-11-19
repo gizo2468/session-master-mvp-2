@@ -62,7 +62,11 @@ const CoachUpgrade = () => {
       <div className="container mx-auto max-w-5xl px-4 pb-8">
         <header className="mb-8">
           <Button 
-            onClick={() => navigate(-1)} 
+            onClick={() => {
+              const prev = localStorage.getItem('previousLocation');
+              localStorage.removeItem('previousLocation');
+              navigate(prev && prev.startsWith('/') && prev !== '/coach-upgrade' ? prev : '/coach-dashboard', { replace: true });
+            }} 
             variant="ghost"
             className="text-poker-feltGreen mb-4 flex items-center gap-1 hover:bg-transparent hover:text-poker-green"
           >

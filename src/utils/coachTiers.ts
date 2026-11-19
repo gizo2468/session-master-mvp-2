@@ -99,3 +99,18 @@ export const getAvailableTiers = (currentTier: CoachTier | undefined): CoachTier
     tier => tier.tier !== currentTier && tier.tier !== 'free'
   );
 };
+
+/**
+ * TEMPORARY: Training Lab is free for every coach while the feature is being built.
+ * To re-lock it to Starter/Pro/Elite, set this to false AND set the Free-tier
+ * limit back to 0 in the database seat check (validate_training_seat).
+ */
+export const TRAINING_LAB_FREE_FOR_ALL = true;
+
+export const hasTrainingLabAccess = (userRole: UserRole | undefined, userTier: CoachTier | undefined): boolean => {
+  if (TRAINING_LAB_FREE_FOR_ALL) return userRole === 'coach';
+  return hasFeatureAccess(userRole, userTier, 'Training Lab');
+};
+
+export const getTrainingLabStudentLimit = (userTier: CoachTier | undefined): number =>
+  coachTiers[userTier || 'free']?.maxStudents ?? coachTiers.free.maxStudents;
