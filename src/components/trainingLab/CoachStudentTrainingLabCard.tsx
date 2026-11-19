@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,14 +20,13 @@ function Inner({ studentId }: { studentId: string }) {
   const navigate = useNavigate();
   const unlocked = hasTrainingLabAccess(user?.role, user?.coachTier || 'free');
   const { data = [] } = useCoachStudentLessons(unlocked ? user?.id : undefined, studentId);
-  const [comingSoon, setComingSoon] = useState(false);
   const lessons = unlocked ? data : PREVIEW;
   const live = lessons.filter((l) => l.status === 'live');
   const back = encodeURIComponent(`/player/${studentId}`);
 
   const open = (l: StudentLessonRow) => {
     if (!unlocked) return;
-    if (l.status === 'live') return setComingSoon(true);
+    if (l.status === 'live' || l.status === 'paused') return navigate(`/training-lab/table/${l.id}`);
     if (l.status === 'ended') return navigate(`/training-lab/summary/${l.summary_id || 'none'}?lesson=${l.id}&back=${back}`);
     navigate(`/coach/training-lab/${l.id}/edit`);
   };
@@ -49,7 +47,6 @@ function Inner({ studentId }: { studentId: string }) {
             <p className="truncate font-medium text-[#F5F5F0]">{l.title}</p>
           </div>
         ))}
-        {comingSoon && <p className="text-center text-sm text-muted-foreground">{t('table_coming')}</p>}
         {!lessons.length ? (
           <p className="py-4 text-center text-sm text-muted-foreground">{t('no_lessons')}</p>
         ) : (

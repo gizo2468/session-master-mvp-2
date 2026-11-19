@@ -1,2 +1,3 @@
 - Training Lab lives in `src/components/trainingLab`, `src/hooks/useTrainingLessons.ts` and `src/pages/TrainingLab*.tsx`, with its own EN/HE text in `trainingLab/i18n.ts`; this keeps the feature self-contained while the table engine is added later.
 - Training Lab access rules are enforced in the database (lesson coach / seated participant helpers, seat validation trigger), so the frontend only reflects them and never acts as the guard.
+- Training Lab live play is server-authoritative: all dealing, betting validation, showdown and bot moves run in the `training-table` edge function (engine in `engine.ts`, covered by `engine_test.ts`); clients only send commands and render `training_table_state`, so game rules can never be bypassed from a device.

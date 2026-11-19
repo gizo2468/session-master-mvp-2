@@ -76,7 +76,12 @@ export default function TrainingLab() {
                       </p>
                     </div>
                     {unlocked && (
-                      <div className="flex shrink-0 gap-1">
+                      <div className="flex shrink-0 items-center gap-1">
+                        {l.status !== 'ended' && (
+                          <Button className="min-h-[44px] bg-poker-gold hover:bg-poker-darkGold text-poker-black" onClick={() => navigate(`/training-lab/table/${l.id}`)}>
+                            <Icon name="Play" size={16} /> {l.status === 'draft' ? t('start_lesson') : t('return_to_table')}
+                          </Button>
+                        )}
                         {l.status !== 'live' && l.status !== 'ended' && (
                           <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => navigate(`/coach/training-lab/${l.id}/edit`)}>
                             <Icon name="Pencil" size={18} />

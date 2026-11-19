@@ -203,6 +203,13 @@ export default function Notifications() {
       });
       return;
     }
+
+    // Training Lab: lesson went live -> open the live table
+    if (notification.type === 'training_lesson_live') {
+      const lessonId = (notification as typeof notification & { training_lesson_id?: string }).training_lesson_id;
+      if (lessonId) navigate(`/training-lab/table/${lessonId}`);
+      return;
+    }
     
     // Mark as read
     if (!notification.is_read) {
@@ -347,6 +354,8 @@ export default function Notifications() {
         return 'Timer';
       case 'multi_day_tournament_reminder':
         return 'Calendar';
+      case 'training_lesson_live':
+        return 'FlaskConical';
       default:
         return 'Bell';
     }

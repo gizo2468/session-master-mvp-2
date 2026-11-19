@@ -303,6 +303,7 @@ export type Database = {
           sender_user_id: string | null
           session_id: string | null
           title: string
+          training_lesson_id: string | null
           type: string
         }
         Insert: {
@@ -317,6 +318,7 @@ export type Database = {
           sender_user_id?: string | null
           session_id?: string | null
           title: string
+          training_lesson_id?: string | null
           type: string
         }
         Update: {
@@ -331,6 +333,7 @@ export type Database = {
           sender_user_id?: string | null
           session_id?: string | null
           title?: string
+          training_lesson_id?: string | null
           type?: string
         }
         Relationships: [
@@ -339,6 +342,13 @@ export type Database = {
             columns: ["feedback_id"]
             isOneToOne: false
             referencedRelation: "hand_feedback"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_training_lesson_id_fkey"
+            columns: ["training_lesson_id"]
+            isOneToOne: false
+            referencedRelation: "training_lessons"
             referencedColumns: ["id"]
           },
         ]
@@ -1371,6 +1381,32 @@ export type Database = {
           },
         ]
       }
+      training_hand_secrets: {
+        Row: {
+          created_at: string
+          deck: string[]
+          hand_id: string
+        }
+        Insert: {
+          created_at?: string
+          deck: string[]
+          hand_id: string
+        }
+        Update: {
+          created_at?: string
+          deck?: string[]
+          hand_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_hand_secrets_hand_id_fkey"
+            columns: ["hand_id"]
+            isOneToOne: true
+            referencedRelation: "training_hands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_hands: {
         Row: {
           board_cards: string | null
@@ -1651,6 +1687,35 @@ export type Database = {
             foreignKeyName: "training_notes_lesson_id_fkey"
             columns: ["lesson_id"]
             isOneToOne: false
+            referencedRelation: "training_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_table_state: {
+        Row: {
+          lesson_id: string
+          state: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          lesson_id: string
+          state?: Json
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          lesson_id?: string
+          state?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_table_state_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: true
             referencedRelation: "training_lessons"
             referencedColumns: ["id"]
           },

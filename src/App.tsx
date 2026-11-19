@@ -40,6 +40,7 @@ const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"), "Co
 const PlayerDashboard = lazyWithRetry(() => import("./pages/PlayerDashboard"), "PlayerDashboard");
 const ConnectCoach = lazyWithRetry(() => import("./pages/ConnectCoach"), "ConnectCoach");
 const CoachUpgrade = lazyWithRetry(() => import("./pages/CoachUpgrade"), "CoachUpgrade");
+const TrainingTable = lazyWithRetry(() => import("./pages/TrainingTable"), "TrainingTable");
 const TrainingLab = lazyWithRetry(() => import("./pages/TrainingLab"), "TrainingLab");
 const TrainingLessonWizard = lazyWithRetry(() => import("./pages/TrainingLessonWizard"), "TrainingLessonWizard");
 const TrainingLessonSummary = lazyWithRetry(() => import("./pages/TrainingLessonSummary"), "TrainingLessonSummary");
@@ -88,6 +89,7 @@ const App = () => {
                         <Route path="/coach/training-lab" element={<TrainingLab />} />
                         <Route path="/coach/training-lab/new" element={<TrainingLessonWizard />} />
                         <Route path="/coach/training-lab/:id/edit" element={<TrainingLessonWizard />} />
+                        <Route path="/training-lab/table/:id" element={<TrainingTable />} />
                         <Route path="/training-lab/summary/:id" element={<TrainingLessonSummary />} />
                         <Route path="/coach/:coachId" element={<CoachProfile />} />
                         <Route path="/legal/privacy" element={<PrivacyPolicy />} />

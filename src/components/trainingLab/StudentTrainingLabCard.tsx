@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,6 @@ function Inner({ studentId, coachId }: Props) {
   const all = useStudentAllTrainingData(coachId ? undefined : studentId);
   const data = coachId ? single.data : all.data;
   const { connectedCoaches = [] } = useCoachStudent();
-  const [comingSoon, setComingSoon] = useState(false);
   const [filter, setFilter] = useState('all');
 
   const coachName = (id?: string) => {
@@ -56,12 +56,11 @@ function Inner({ studentId, coachId }: Props) {
               <p className="truncate font-medium text-[#F5F5F0]">{l.title}</p>
               {showCoach && coachName(l.coach_id) && <p className="truncate text-xs text-[#F5F5F0]/70">{coachName(l.coach_id)}</p>}
             </div>
-            <Button className="min-h-[44px] bg-poker-gold hover:bg-poker-darkGold text-poker-black shrink-0" onClick={() => setComingSoon(true)}>
+            <Button className="min-h-[44px] bg-poker-gold hover:bg-poker-darkGold text-poker-black shrink-0" onClick={() => navigate(`/training-lab/table/${l.id}`)}>
               {t('join_table')}
             </Button>
           </div>
         ))}
-        {comingSoon && <p className="text-center text-sm text-muted-foreground">{t('table_coming')}</p>}
         <div>
           <h4 className="mb-2 font-semibold">{t('my_summaries')}</h4>
           {!summaries.length ? (

@@ -36,3 +36,7 @@ verify_jwt = false
 # This is a background job, not user-callable.
 [functions.session-reminders]
 verify_jwt = false
+
+# training-table: live Training Lab game server. JWT validated in code.
+[functions.training-table]
+verify_jwt = false
