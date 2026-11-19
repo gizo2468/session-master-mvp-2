@@ -5,6 +5,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
 import { applyAction, dueTimeout, emptyState, isConnected, isDealable, isHuman, r2, startHand, type ActionType, type Config, type LoggedAction, type SeatState, type TableState } from './engine.ts';
 import { decideBot } from './bots.ts';
+import { Conflict, persistDeal } from './dealPersistence.ts';
 
 const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 const json = (body: unknown, status = 200) =>
@@ -35,8 +36,6 @@ const Body = z.object({
 });
 
 const cfgOf = (l: any): Config => ({ game_type: l.game_type, small_blind: Number(l.small_blind), big_blind: Number(l.big_blind), ante: Number(l.ante) });
-
-class Conflict extends Error { constructor() { super('Table changed, try again'); } }
 
 async function loadState(lessonId: string): Promise<{ state: TableState; version: number }> {
   const { data } = await admin.from('training_table_state').select('state, version').eq('lesson_id', lessonId).maybeSingle();
@@ -139,19 +138,9 @@ async function doDeal(lesson: any, cur: { state: TableState; version: number }) 
   if (cur.state.paused) throw new Error('Table is paused');
   const base = { ...cur.state, seats: await buildSeats(lesson, cur.state) };
   const { state, holes, deck, actions } = startHand(base, cfgOf(lesson));
-  const { data: hand, error } = await admin.from('training_hands').insert({
-    lesson_id: lesson.id, hand_number: state.hand_number, dealer_seat: state.dealer_seat, status: 'in_progress',
-    scenario_preset: cur.state.preset,
-  }).select('id').single();
-  if (error) throw new Error('Could not create hand');
-  state.hand_id = hand.id;
-  await admin.from('training_hand_secrets').insert({ hand_id: hand.id, deck });
-  await admin.from('training_hand_private_cards').insert(Object.entries(holes).map(([seat, c]) => ({
-    hand_id: hand.id, seat_number: Number(seat), player_id: state.seats[seat].player_id, hole_cards: c.join(''),
-  })));
+  state.hand_id = crypto.randomUUID();
   withDeadline(state);
-  if (!(await commit(lesson.id, state, cur.version))) throw new Conflict();
-  await logActions(hand.id, state, actions);
+  await persistDeal((name, args) => admin.rpc(name, args), lesson.id, cur.version, state, deck, holes, actions);
   if (state.status === 'hand_over') await finalizeHand(lesson.id, state);
   return state;
 }

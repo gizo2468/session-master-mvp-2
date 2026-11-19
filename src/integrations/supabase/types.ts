@@ -2021,6 +2021,17 @@ export type Database = {
         Args: { p_username: string }
         Returns: boolean
       }
+      commit_training_deal: {
+        Args: {
+          p_actions: Json
+          p_deck: string[]
+          p_holes: Json
+          p_lesson_id: string
+          p_state: Json
+          p_version: number
+        }
+        Returns: boolean
+      }
       connection_exists: {
         Args: { p_coach_id: string; p_student_id: string }
         Returns: boolean
