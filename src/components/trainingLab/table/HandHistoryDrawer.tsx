@@ -5,6 +5,17 @@ import Icon from '@/components/ui/Lucide';
 import { tl } from '@/hooks/useTrainingLessons';
 import PlayingCard from './PlayingCard';
 import { useTL } from '../i18n';
+import { useAuth } from '@/context/AuthContext';
+import { useLessonReview } from '@/hooks/useLessonReview';
+import HandReplayer from '../replay/HandReplayer';
+
+/** Loads the lesson for the replayer on demand; read-only, so the live game keeps running. */
+function LiveReplay({ lessonId, handId, isCoach, onClose }: { lessonId: string; handId: string; isCoach: boolean; onClose: () => void }) {
+  const { user } = useAuth();
+  const { data } = useLessonReview(lessonId);
+  if (!data) return null;
+  return <HandReplayer review={data} handId={handId} viewerId={user?.id} isCoach={isCoach} onClose={onClose} />;
+}
 
 const POS: Record<number, string[]> = {
   2: ['BTN/SB', 'BB'], 3: ['BTN', 'SB', 'BB'], 4: ['BTN', 'SB', 'BB', 'UTG'], 5: ['BTN', 'SB', 'BB', 'UTG', 'CO'],
@@ -27,6 +38,7 @@ export default function HandHistoryDrawer({ lessonId, mySeat, seatNames, isCoach
   const [holes, setHoles] = useState<Record<string, Record<number, string[]>>>({});
   const [sel, setSel] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [replay, setReplay] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -79,7 +91,8 @@ export default function HandHistoryDrawer({ lessonId, mySeat, seatNames, isCoach
           <SheetHeader><SheetTitle className="text-primary">{selHand ? `${t('hand')} #${selHand.hand_number}` : t('hand_history')}</SheetTitle></SheetHeader>
           {selHand ? (
             <div className="mt-3 space-y-3">
-              <Button variant="ghost" className="min-h-[44px]" onClick={() => setSel(null)}><Icon name={'ArrowLeft'} size={16} />{t('back')}</Button>
+              <div className="flex gap-2"><Button variant="ghost" className="min-h-[44px]" onClick={() => setSel(null)}><Icon name="ArrowLeft" size={16} />{t('back')}</Button>
+              <Button className="min-h-[44px] flex-1" onClick={() => setReplay(selHand.id)}><Icon name="Play" size={16} />{t('replay')}</Button></div>
               <div className="flex gap-1" dir="ltr">{split(selHand.board_cards).map((c) => <PlayingCard key={c} card={c} size="sm" />)}</div>
               {streets.map((st) => {
                 const list = acts.filter((a) => a.hand_id === selHand.id && a.street === st);
@@ -130,6 +143,7 @@ export default function HandHistoryDrawer({ lessonId, mySeat, seatNames, isCoach
           )}
         </SheetContent>
       </Sheet>
+    {replay && <LiveReplay lessonId={lessonId} handId={replay} isCoach={isCoach} onClose={() => setReplay(null)} />}
     </>
   );
 }
