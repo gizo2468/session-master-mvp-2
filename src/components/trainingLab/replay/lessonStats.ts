@@ -23,7 +23,7 @@ export function computeStats(playerId: string, hands: RHand[], actions: RAction[
       const p = a.pot_after ?? pot; const put = Math.max(0, r2(p - pot)); pot = p;
       if (a.action === 'show') continue;
       bets[a.seat_number] = r2((bets[a.seat_number] || 0) + put);
-      const isRaise = (a.action === 'bet' || a.action === 'raise' || a.action === 'all-in') && bets[a.seat_number] > currentBet && a.action !== 'post_blind';
+      const isRaise = (a.action === 'bet' || a.action === 'raise' || a.action === 'all-in') && bets[a.seat_number] > currentBet;
       if (a.seat_number === seat) {
         invested = r2(invested + put);
         if (street === 'preflop' && a.action !== 'post_blind') {
