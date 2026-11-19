@@ -11,11 +11,12 @@ import type { TState } from '@/hooks/useTrainingTable';
 import { useTL } from '../i18n';
 
 interface Props {
+  dealLabel?: string;
   state: TState; lessonStatus: string; busy: boolean; godView: boolean; setGodView: (v: boolean) => void;
   send: (cmd: string, payload?: Record<string, unknown>) => Promise<unknown>; students: { id: string; name: string }[];
 }
 
-export default function CoachControls({ state, lessonStatus, busy, godView, setGodView, send, students }: Props) {
+export default function CoachControls({ state, lessonStatus, busy, godView, setGodView, send, students, dealLabel }: Props) {
   const { t } = useTL();
   const [dialog, setDialog] = useState<null | 'discuss' | 'note' | 'preset'>(null);
   const [msg, setMsg] = useState('');
@@ -43,7 +44,7 @@ export default function CoachControls({ state, lessonStatus, busy, godView, setG
         {lessonStatus !== 'live'
           ? <Button className="min-h-[44px]" disabled={busy} onClick={() => send(lessonStatus === 'draft' ? 'start' : 'resume')}><Icon name="Play" size={16} />{lessonStatus === 'draft' ? t('start_lesson') : t('resume')}</Button>
           : <Button variant="outline" className="min-h-[44px]" disabled={busy} onClick={() => send('pause')}><Icon name="Pause" size={16} />{t('pause')}</Button>}
-        <Button className="min-h-[44px]" disabled={busy || !between || lessonStatus !== 'live'} onClick={() => send('deal')}><Icon name="Layers" size={16} />{t('deal_next')}</Button>
+        <Button className="min-h-[44px]" disabled={busy || !between || lessonStatus !== 'live'} onClick={() => send('deal')}><Icon name="Layers" size={16} />{dealLabel || t('deal_next')}</Button>
         <Button variant="outline" className="min-h-[44px]" disabled={busy} onClick={() => setDialog('discuss')}><Icon name="MessageSquare" size={16} />{t('discuss')}</Button>
         <Button variant="outline" className="min-h-[44px]" onClick={() => setDialog('note')}><Icon name="StickyNote" size={16} />{t('quick_note')}</Button>
         <Button variant="outline" className="min-h-[44px]" onClick={() => setDialog('preset')}><Icon name="Wand2" size={16} />{t('presets_next')}{state.preset ? ' •' : ''}</Button>

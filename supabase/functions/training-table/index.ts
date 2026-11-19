@@ -3,7 +3,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
-import { applyAction, emptyState, r2, startHand, type ActionType, type Config, type LoggedAction, type SeatState, type TableState } from './engine.ts';
+import { applyAction, dueTimeout, emptyState, isConnected, isDealable, isHuman, r2, startHand, type ActionType, type Config, type LoggedAction, type SeatState, type TableState } from './engine.ts';
 import { decideBot } from './bots.ts';
 
 const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
@@ -12,7 +12,7 @@ const json = (body: unknown, status = 200) =>
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const Body = z.object({
-  cmd: z.enum(['start', 'pause', 'resume', 'end', 'discuss', 'deal', 'act', 'timeout', 'set_settings', 'set_preset', 'adjust_stack', 'seat_change', 'note']),
+  cmd: z.enum(['start', 'pause', 'resume', 'end', 'discuss', 'deal', 'act', 'timeout', 'set_settings', 'set_preset', 'adjust_stack', 'seat_change', 'note', 'heartbeat', 'sit_in', 'sit_out', 'set_coach_seat']),
   lesson_id: z.string().uuid(),
   seat: z.number().int().min(1).max(9).optional(),
   action: z.enum(['fold', 'check', 'call', 'bet', 'raise', 'all-in']).optional(),
@@ -30,6 +30,7 @@ const Body = z.object({
   bot_name: z.string().max(30).nullable().optional(),
   bot_style: z.enum(['tight_passive', 'tight_aggressive', 'loose_passive', 'loose_aggressive']).nullable().optional(),
   note: z.string().min(1).max(2000).optional(),
+  coach_seat: z.number().int().min(1).max(9).nullable().optional(),
   attach: z.enum(['lesson', 'hand', 'action']).optional(),
 });
 
@@ -43,8 +44,19 @@ async function loadState(lessonId: string): Promise<{ state: TableState; version
   return { state: { ...emptyState(), ...(data.state as any) }, version: data.version };
 }
 
+const markSitOut = (seat: number, auto: boolean) => (st: TableState) => {
+  const p = st.seats[seat];
+  if (p) Object.assign(p, { ready: false, sitting_out: true, auto_out: auto });
+};
+
+const humansReady = (s: TableState, now = Date.now()) => {
+  const humans = Object.values(s.seats).filter(isHuman);
+  return { ready: humans.filter((p) => isDealable(p, now)).length, total: humans.length };
+};
+
 function withDeadline(s: TableState) {
   s.deadline = s.status === 'in_hand' && s.to_act != null && s.settings.timer > 0 && !s.paused ? Date.now() + s.settings.timer * 1000 : null;
+  s.turn_started = s.status === 'in_hand' && s.to_act != null ? Date.now() : null;
   return s;
 }
 
@@ -76,9 +88,24 @@ async function buildSeats(lesson: any, prev: TableState): Promise<Record<string,
       name: p.seat_type === 'student' ? name(p.student_id) : p.seat_type === 'bot' ? (p.bot_name || 'Bot') : p.seat_type === 'coach' ? 'Coach' : '',
       style: p.bot_style, stack: sameOccupant ? old.stack : Number(p.current_stack ?? p.starting_stack ?? defaultStack),
       bet: 0, committed: 0, folded: false, all_in: false, acted: false, in_hand: false,
-    };
+      ...(sameOccupant ? { ready: old.ready, sitting_out: old.sitting_out, last_seen: old.last_seen, auto_out: (old as any).auto_out } : {}),
+    } as SeatState;
   }
   return seats;
+}
+
+/** Replace one seat's participant row (validated by the seat trigger in the database). */
+async function replaceSeat(lesson: any, s: TableState, seatNo: number, type: string, b: any = {}) {
+  const stack = s.seats[seatNo]?.stack ?? r2(Number(lesson.default_stack_bb) * Number(lesson.big_blind));
+  await admin.from('training_lesson_participants').delete().eq('lesson_id', lesson.id).eq('seat_number', seatNo);
+  const { error } = await admin.from('training_lesson_participants').insert({
+    lesson_id: lesson.id, seat_number: seatNo, seat_type: type,
+    student_id: type === 'student' ? b.student_id : null,
+    bot_name: type === 'bot' ? (b.bot_name || 'Bot') : null,
+    bot_style: type === 'bot' ? (b.bot_style || 'tight_aggressive') : null,
+    starting_stack: stack, current_stack: stack,
+  });
+  if (error) throw new Error(error.message.includes('limit') ? 'Student limit reached' : error.message.includes('approved') ? 'Not an approved student' : 'Could not change seat');
 }
 
 async function loadHand(handId: string) {
@@ -129,17 +156,28 @@ async function doDeal(lesson: any, cur: { state: TableState; version: number }) 
   return state;
 }
 
-async function doAct(lesson: any, cur: { state: TableState; version: number }, seat: number, type: ActionType, amount: number) {
+async function doAct(lesson: any, cur: { state: TableState; version: number }, seat: number, type: ActionType, amount: number, mutate?: (s: TableState) => void) {
   const s = cur.state;
   if (!s.hand_id) throw new Error('No hand in progress');
   const { deck, holes } = await loadHand(s.hand_id);
   const res = applyAction(s, seat, type, amount, cfgOf(lesson), deck, holes);
+  mutate?.(res.state);
   withDeadline(res.state);
   if (!(await commit(lesson.id, res.state, cur.version))) throw new Conflict();
   await admin.from('training_hand_secrets').update({ deck }).eq('hand_id', s.hand_id);
   await logActions(s.hand_id, res.state, res.actions);
   if (res.handEnded) await finalizeHand(lesson.id, res.state);
   return res.state;
+}
+
+/** Apply an overdue timeout: check if free, otherwise fold; disconnected players also sit out. */
+async function applyTimeout(lesson: any, cur: { state: TableState; version: number }, due: { seat: number; sitOut: boolean }, extra?: (s: TableState) => void) {
+  const p = cur.state.seats[due.seat];
+  const canCheck = !due.sitOut && cur.state.current_bet - p.bet <= 0;
+  return doAct(lesson, cur, due.seat, canCheck ? 'check' : 'fold', 0, (st) => {
+    extra?.(st);
+    if (due.sitOut) markSitOut(due.seat, !p.sitting_out || !!(p as any).auto_out)(st);
+  });
 }
 
 /** Background loop: bots act with a natural delay; auto-deal the next hand. */
@@ -155,6 +193,8 @@ async function runAuto(lessonId: string) {
       await sleep(600 + Math.random() * 900);
       cur = await loadState(lessonId);
       if (cur.version !== v) continue;
+      // Re-check: a bot only ever acts for its own bot seat.
+      if (cur.state.to_act !== seat || cur.state.seats[seat]?.type !== 'bot') continue;
       const { holes } = await loadHand(s.hand_id!);
       const d = decideBot(cur.state, seat, holes[seat] || [], cfgOf(lesson));
       try { await doAct(lesson, cur, seat, d.action, d.amount); }
@@ -166,6 +206,10 @@ async function runAuto(lessonId: string) {
       await sleep(4000);
       cur = await loadState(lessonId);
       if (cur.version !== v || !cur.state.settings.auto_deal) return;
+      // Never auto-deal unless a human is seated and ready, and at least 2 players can be dealt in.
+      const now = Date.now();
+      if (humansReady(cur.state, now).ready < 1) return;
+      if (Object.values(cur.state.seats).filter((p) => isDealable(p, now)).length < 2) return;
       try { await doDeal(lesson, cur); } catch { return; }
       continue;
     }
@@ -194,7 +238,7 @@ Deno.serve(async (req) => {
     const { data: lesson } = await admin.from('training_lessons').select('*').eq('id', b.lesson_id).maybeSingle();
     if (!lesson) return json({ error: 'Lesson not found' }, 404);
     const isCoach = lesson.coach_id === uid;
-    const coachOnly = !['act', 'timeout'].includes(b.cmd);
+    const coachOnly = !['act', 'timeout', 'heartbeat', 'sit_in', 'sit_out'].includes(b.cmd);
     if (coachOnly && !isCoach) return json({ error: 'Only the coach can do this' }, 403);
     if (!isCoach) {
       const { data: seat } = await admin.from('training_lesson_participants').select('id').eq('lesson_id', lesson.id).eq('student_id', uid).maybeSingle();
@@ -269,10 +313,61 @@ Deno.serve(async (req) => {
           break;
         }
         case 'timeout': {
-          if (s.status !== 'in_hand' || !s.deadline || Date.now() < s.deadline - 500 || s.to_act == null) return json({ ok: true, state: s });
-          const to = s.to_act;
-          const canCheck = s.current_bet - s.seats[to].bet <= 0;
-          out = await doAct(lesson, cur, to, canCheck ? 'check' : 'fold', 0);
+          const due = dueTimeout(s);
+          if (!due) return json({ ok: true, state: s });
+          out = await applyTimeout(lesson, cur, due);
+          break;
+        }
+        case 'heartbeat': {
+          const now = Date.now();
+          const mine = Object.values(s.seats).find((p) => (p.type === 'student' && p.player_id === uid) || (p.type === 'coach' && isCoach));
+          const touch = (st: TableState) => {
+            const m = mine && st.seats[mine.seat];
+            if (!m) return;
+            m.last_seen = now;
+            // Back after an automatic sit-out caused by a disconnect: deal them in again.
+            if ((m as any).auto_out) Object.assign(m, { sitting_out: false, ready: true, auto_out: false });
+          };
+          touch(cur.state); touch(s);
+          const due = dueTimeout(cur.state, now);
+          if (due) { out = await applyTimeout(lesson, cur, due); break; }
+          if (!mine) return json({ ok: true });
+          out = await save(s);
+          return json({ ok: true, state: out });
+        }
+        case 'sit_in':
+        case 'sit_out': {
+          const target = isCoach && b.seat ? b.seat
+            : Object.values(s.seats).find((p) => (p.type === 'student' && p.player_id === uid) || (p.type === 'coach' && isCoach))?.seat;
+          const p = target != null ? s.seats[target] : undefined;
+          if (!p || !isHuman(p)) throw new Error('No seat to sit in');
+          const own = (p.type === 'student' && p.player_id === uid) || (p.type === 'coach' && isCoach);
+          if (b.cmd === 'sit_in') {
+            Object.assign(p, { ready: true, sitting_out: false, auto_out: false });
+            if (own) p.last_seen = Date.now();
+            out = await save(s);
+          } else if (s.status === 'in_hand' && s.to_act === p.seat && !s.paused) {
+            out = await doAct(lesson, cur, p.seat, 'fold', 0, markSitOut(p.seat, false));
+          } else {
+            markSitOut(p.seat, false)(s);
+            out = await save(s);
+          }
+          break;
+        }
+        case 'set_coach_seat': {
+          betweenHands();
+          const target = b.coach_seat ?? null;
+          if (target != null) {
+            if (target > lesson.max_seats) throw new Error('Unknown seat');
+            if (s.seats[target]?.type === 'student') throw new Error('That seat is taken by a student');
+          }
+          for (const p of Object.values(s.seats)) {
+            if (p.type === 'coach' && p.seat !== target) await replaceSeat(lesson, s, p.seat, 'closed');
+          }
+          if (target != null && s.seats[target]?.type !== 'coach') await replaceSeat(lesson, s, target, 'coach');
+          s.seats = await buildSeats(lesson, s);
+          if (target != null) Object.assign(s.seats[target], { ready: true, sitting_out: false, last_seen: Date.now() });
+          out = await save(s);
           break;
         }
         case 'adjust_stack': {
@@ -287,16 +382,7 @@ Deno.serve(async (req) => {
         case 'seat_change': {
           betweenHands();
           if (!b.seat || !b.seat_type || b.seat > lesson.max_seats) throw new Error('Missing seat');
-          const stack = s.seats[b.seat]?.stack ?? r2(Number(lesson.default_stack_bb) * Number(lesson.big_blind));
-          await admin.from('training_lesson_participants').delete().eq('lesson_id', lesson.id).eq('seat_number', b.seat);
-          const { error } = await admin.from('training_lesson_participants').insert({
-            lesson_id: lesson.id, seat_number: b.seat, seat_type: b.seat_type,
-            student_id: b.seat_type === 'student' ? b.student_id : null,
-            bot_name: b.seat_type === 'bot' ? (b.bot_name || 'Bot') : null,
-            bot_style: b.seat_type === 'bot' ? (b.bot_style || 'tight_aggressive') : null,
-            starting_stack: stack, current_stack: stack,
-          });
-          if (error) throw new Error(error.message.includes('limit') ? 'Student limit reached' : error.message.includes('approved') ? 'Not an approved student' : 'Could not change seat');
+          await replaceSeat(lesson, s, b.seat, b.seat_type, b);
           s.seats = await buildSeats(lesson, s);
           out = await save(s);
           break;

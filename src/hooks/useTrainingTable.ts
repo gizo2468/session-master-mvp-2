@@ -5,6 +5,7 @@ import { tl } from '@/hooks/useTrainingLessons';
 export interface TSeat {
   seat: number; type: 'student' | 'bot' | 'coach' | 'closed'; player_id: string | null; name: string; style: string | null;
   stack: number; bet: number; committed: number; folded: boolean; all_in: boolean; acted: boolean; in_hand: boolean;
+  ready?: boolean; sitting_out?: boolean; last_seen?: number; auto_out?: boolean;
 }
 export interface TState {
   status: 'waiting' | 'in_hand' | 'hand_over' | 'ended';
@@ -13,6 +14,7 @@ export interface TState {
   pot_total: number; deadline: number | null; seq: number; last_action: { seat: number; action: string; amount: number } | null;
   results: { seat: number; amount: number; desc: string }[] | null; shown: Record<string, string[]>;
   paused: boolean; discuss: string | null; settings: { auto_deal: boolean; timer: number }; preset: any;
+  turn_started?: number | null; recent_actions?: { seat: number; name: string; action: string; amount: number }[];
 }
 
 export const useTrainingTable = (lessonId?: string, userId?: string) => {
@@ -113,6 +115,22 @@ export const useTrainingTable = (lessonId?: string, userId?: string) => {
     }, Math.max(0, ms));
     return () => clearTimeout(t);
   }, [state?.deadline, state?.hand_id, state?.seq, state?.status, send]);
+
+  // Heartbeat: tells the server this player is at the table (deal-in, disconnect handling).
+  useEffect(() => {
+    if (!lessonId || !userId) return;
+    const beat = () => {
+      if (document.visibilityState !== 'visible') return;
+      supabase.functions.invoke('training-table', { body: { cmd: 'heartbeat', lesson_id: lessonId } })
+        .then(({ data }) => { if ((data as any)?.state) applyRow({ state: (data as any).state, version: versionRef.current + 1 }); }, () => {});
+    };
+    beat();
+    const iv = setInterval(beat, 10_000);
+    const onVis = () => beat();
+    document.addEventListener('visibilitychange', onVis);
+    window.addEventListener('focus', onVis);
+    return () => { clearInterval(iv); document.removeEventListener('visibilitychange', onVis); window.removeEventListener('focus', onVis); };
+  }, [lessonId, userId, applyRow]);
 
   return { lesson, state, cards, online, error, setError, busy, send, reload };
 };

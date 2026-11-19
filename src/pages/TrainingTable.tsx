@@ -13,6 +13,21 @@ import TableSeat from '@/components/trainingLab/table/TableSeat';
 import ActionBar from '@/components/trainingLab/table/ActionBar';
 import CoachControls from '@/components/trainingLab/table/CoachControls';
 import SeatMenu from '@/components/trainingLab/table/SeatMenu';
+import ActionLog from '@/components/trainingLab/table/ActionLog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+/** Short beep + vibration when it becomes the viewer's turn. */
+const turnAlert = () => {
+  try { navigator.vibrate?.([120, 60, 120]); } catch { /* not supported */ }
+  try {
+    const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx(); const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.frequency.value = 880; g.gain.setValueAtTime(0.15, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.35);
+    setTimeout(() => ctx.close?.(), 600);
+  } catch { /* audio blocked */ }
+};
 
 const POS_LABELS: Record<number, string[]> = {
   2: ['BTN/SB', 'BB'], 3: ['BTN', 'SB', 'BB'], 4: ['BTN', 'SB', 'BB', 'UTG'], 5: ['BTN', 'SB', 'BB', 'UTG', 'CO'],
@@ -40,10 +55,15 @@ function TableInner() {
 
   const isCoach = !!lesson && lesson.coach_id === user?.id;
   const seats = useMemo(() => Object.values(state?.seats || {}).sort((a, b) => a.seat - b.seat), [state?.seats]);
-  const mySeat = seats.find((s) => s.type === 'student' && s.player_id === user?.id);
+  const mySeat = seats.find((s) => (s.type === 'student' && s.player_id === user?.id) || (s.type === 'coach' && isCoach));
   const actingSeat = state?.to_act != null ? state.seats[state.to_act] : null;
   const canActNow = !!actingSeat && state?.status === 'in_hand' && !state.paused &&
     ((actingSeat.type === 'student' && actingSeat.player_id === user?.id) || (actingSeat.type === 'coach' && isCoach));
+
+  // Alert once each time it becomes my turn.
+  const turnKey = canActNow ? `${state?.hand_id}-${state?.seq}` : '';
+  useEffect(() => { if (turnKey) turnAlert(); }, [turnKey]);
+  const [coachPick, setCoachPick] = useState<string>('');
 
   const labels = useMemo(() => {
     const out: Record<number, string> = {};
@@ -71,7 +91,7 @@ function TableInner() {
   const holeCount = lesson.game_type === 'PLO' ? 4 : 2;
   const cardsFor = (seatNo: number, playerId: string | null) => {
     if (state?.shown?.[seatNo]) return state.shown[seatNo];
-    if (playerId === user?.id && !isCoach) return cards[seatNo];
+    if (seatNo === mySeat?.seat) return cards[seatNo];
     if (isCoach && (godView || state?.seats[seatNo]?.type === 'coach')) return cards[seatNo];
     return undefined;
   };
@@ -79,6 +99,13 @@ function TableInner() {
   const studentsList = myStudents.map((s) => ({ id: s.userId, name: s.displayName }));
   const connected = seats.filter((s) => s.type === 'student' && s.player_id && online.has(s.player_id)).length;
   const studentSeats = seats.filter((s) => s.type === 'student').length;
+  const humans = seats.filter((s) => s.type === 'student' || s.type === 'coach');
+  const isOnline = (s: typeof seats[number]) => !!s.player_id && online.has(s.player_id);
+  const readyCount = humans.filter((s) => s.ready && !s.sitting_out && isOnline(s)).length;
+  const between = state?.status !== 'in_hand';
+  const live = lesson.status === 'live' || lesson.status === 'paused';
+  const coachFreeSeats = seats.filter((s) => s.type === 'bot' || s.type === 'closed');
+  const meReady = !!mySeat && !!mySeat.ready && !mySeat.sitting_out;
 
   return (
     <div dir={dir} className="mx-auto min-h-screen max-w-3xl space-y-3 p-3 content-safe">
@@ -98,6 +125,39 @@ function TableInner() {
           {state.discuss && <p className="mt-1 whitespace-pre-wrap text-sm">{state.discuss}</p>}
         </div>
       )}
+      {/* Who am I at this table */}
+      {isCoach && !mySeat && live && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 p-2 text-sm">
+          <Icon name="Eye" size={16} /><span className="flex-1 font-semibold">{t('watching_coach')}</span>
+          {between && coachFreeSeats.length > 0 && (<>
+            <Select value={coachPick} onValueChange={setCoachPick}>
+              <SelectTrigger className="h-11 w-28"><SelectValue placeholder={t('coach_seat_pick')} /></SelectTrigger>
+              <SelectContent>{coachFreeSeats.map((s) => <SelectItem key={s.seat} value={String(s.seat)}>{t('seat_n', { n: s.seat })}</SelectItem>)}</SelectContent>
+            </Select>
+            <Button className="min-h-[44px]" disabled={busy || !coachPick} onClick={() => send('set_coach_seat', { coach_seat: Number(coachPick) })}>{t('play_seat')}</Button>
+          </>)}
+        </div>
+      )}
+      {mySeat && live && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/50 bg-primary/5 p-2 text-sm">
+          <span className="flex-1">{meReady ? `${t('you')} · ${t('seat_n', { n: mySeat.seat })}` : t('not_ready_hint')}</span>
+          {meReady
+            ? <Button variant="outline" className="min-h-[44px]" disabled={busy} onClick={() => send('sit_out')}>{t('sit_out')}</Button>
+            : <Button className="min-h-[44px] bg-poker-gold text-poker-black hover:bg-poker-darkGold" disabled={busy} onClick={() => send('sit_in')}>{t('sit_in')}</Button>}
+          {isCoach && between && <Button variant="ghost" className="min-h-[44px]" disabled={busy} onClick={() => send('set_coach_seat', { coach_seat: null })}>{t('leave_seat')}</Button>}
+        </div>
+      )}
+      {isCoach && live && between && humans.length > 0 && (
+        <p className={`rounded-md p-2 text-center text-sm font-semibold ${readyCount < humans.length ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
+          {t(readyCount < humans.length ? 'players_ready' : 'all_ready', { r: readyCount, n: humans.length })}
+        </p>
+      )}
+      {state?.status === 'in_hand' && !state.paused && actingSeat && (
+        canActNow
+          ? <div className="rounded-lg bg-primary p-2 text-center text-lg font-black text-primary-foreground animate-pulse">{t('your_turn')}</div>
+          : <p className="text-center text-sm text-muted-foreground">{t('waiting_for', { name: actingSeat.name })}</p>
+      )}
+
       {error && (
         <button className="w-full rounded-md bg-destructive/10 p-2 text-sm text-destructive" onClick={() => setError(null)}>{error}</button>
       )}
@@ -118,21 +178,29 @@ function TableInner() {
           <div key={s.seat} className="absolute -translate-x-1/2 -translate-y-1/2" style={posFor(s.seat)}>
             <TableSeat seat={s} label={labels[s.seat]} isDealer={state?.dealer_seat === s.seat && state?.status !== 'waiting'}
               isTurn={state?.to_act === s.seat && state?.status === 'in_hand'} deadline={state?.deadline ?? null} timer={state?.settings.timer || 0}
-              cards={cardsFor(s.seat, s.player_id)} holeCount={holeCount} connected={!!s.player_id && online.has(s.player_id)}
+              cards={cardsFor(s.seat, s.player_id)} holeCount={holeCount} connected={isOnline(s)} isMe={s.seat === mySeat?.seat} youText={t('you')}
+              sittingOut={(s.type === 'student' || s.type === 'coach') && (!s.ready || !!s.sitting_out)} sitOutText={t('sat_out')}
               waitingText={t('waiting_player')} foldedText={t('folded')} winner={state?.status === 'hand_over' ? winners[s.seat] : undefined}
-              highlight={s.seat === mySeat?.seat}
               onClick={isCoach && state?.status !== 'in_hand' && lesson.status !== 'ended' ? () => setSeatMenu(s.seat) : undefined} />
           </div>
         ))}
       </div>
 
-      {canActNow && state && actingSeat && (
-        <ActionBar state={state} seat={actingSeat.seat} bigBlind={Number(lesson.big_blind)} plo={lesson.game_type === 'PLO'} disabled={busy}
-          onAct={(action, amount) => send('act', { seat: actingSeat.seat, action, amount })} />
-      )}
+      {state && <ActionLog state={state} />}
+
+      {canActNow && state && actingSeat && (<>
+        <div className="h-56" aria-hidden />
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t-2 border-primary bg-background/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-2xl backdrop-blur animate-in slide-in-from-bottom duration-300">
+          <div className="mx-auto max-w-3xl">
+            <ActionBar state={state} seat={actingSeat.seat} bigBlind={Number(lesson.big_blind)} plo={lesson.game_type === 'PLO'} disabled={busy}
+              onAct={(action, amount) => send('act', { seat: actingSeat.seat, action, amount })} />
+          </div>
+        </div>
+      </>)}
 
       {isCoach && state && (
-        <CoachControls state={state} lessonStatus={lesson.status} busy={busy} godView={godView} setGodView={setGodView} send={send} students={studentsList} />
+        <CoachControls state={state} lessonStatus={lesson.status} busy={busy} godView={godView} setGodView={setGodView} send={send} students={studentsList}
+          dealLabel={humans.length && readyCount < humans.length ? t('deal_anyway') : undefined} />
       )}
       {isCoach && !state && lesson.status !== 'ended' && (
         <Button className="w-full min-h-[52px] text-lg" disabled={busy} onClick={() => send('start')}><Icon name="Play" size={18} />{t('start_lesson')}</Button>

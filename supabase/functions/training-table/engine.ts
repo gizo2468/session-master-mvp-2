@@ -21,7 +21,19 @@ export interface SeatState {
   all_in: boolean;
   acted: boolean;
   in_hand: boolean;
+  ready?: boolean;       // human pressed "Sit in / I'm ready"
+  sitting_out?: boolean; // human is out until they sit in again
+  last_seen?: number;    // last heartbeat (ms epoch) from this seat's owner
+  auto_out?: boolean;    // sat out automatically after a disconnect
 }
+
+/** A human seat is connected if its owner sent a heartbeat recently. */
+export const CONNECTED_MS = 25_000;
+export const isHuman = (p: SeatState) => p.type === 'student' || p.type === 'coach';
+export const isConnected = (p: SeatState, now = Date.now()) => !!p.last_seen && now - p.last_seen < CONNECTED_MS;
+/** Who gets dealt into the next hand: bots, and humans that are connected, ready and not sitting out. */
+export const isDealable = (p: SeatState, now = Date.now()) =>
+  p.type !== 'closed' && p.stack > 0 && (p.type === 'bot' || (isHuman(p) && !!p.ready && !p.sitting_out && isConnected(p, now)));
 
 export interface Config { game_type: 'NLH' | 'PLO'; small_blind: number; big_blind: number; ante: number }
 
@@ -48,6 +60,8 @@ export interface TableState {
   discuss: string | null;
   settings: { auto_deal: boolean; timer: number };
   preset: Preset | null;
+  turn_started?: number | null;
+  recent_actions?: { seat: number; name: string; action: string; amount: number }[];
 }
 
 export interface Preset { dealer_seat?: number | null; board?: string; seats?: Record<string, { cards?: string; stack?: number }> }
@@ -60,7 +74,7 @@ export const emptyState = (): TableState => ({
   status: 'waiting', hand_id: null, hand_number: 0, dealer_seat: null, sb_seat: null, bb_seat: null,
   street: 'preflop', board: [], seats: {}, to_act: null, current_bet: 0, min_raise: 0, pot_total: 0,
   deadline: null, seq: 0, last_action: null, results: null, shown: {}, paused: false, discuss: null,
-  settings: { auto_deal: false, timer: 0 }, preset: null,
+  settings: { auto_deal: false, timer: 0 }, preset: null, turn_started: null, recent_actions: [],
 });
 
 const seatList = (s: TableState) => Object.values(s.seats).sort((a, b) => a.seat - b.seat);
@@ -88,6 +102,7 @@ const put = (s: TableState, p: SeatState, amt: number) => {
 const log = (s: TableState, out: LoggedAction[], seat: number, action: string, amount: number, extra: Partial<LoggedAction> = {}) => {
   s.seq += 1;
   out.push({ seat, street: s.street, action, amount: r2(amount), pot_after: s.pot_total, sequence: s.seq, ...extra });
+  if (action !== 'show') s.recent_actions = [...(s.recent_actions || []), { seat, name: s.seats[seat]?.name || '', action, amount: r2(amount) }].slice(-5);
 };
 
 /** Position labels by seat for the current hand. */
@@ -115,16 +130,16 @@ export const positionLabels = (s: TableState): Record<string, string> => {
 export interface DealResult { state: TableState; holes: Record<string, string[]>; deck: string[]; actions: LoggedAction[] }
 
 /** Start a new hand. Applies preset (cards/board/stacks/dealer) then fills from a secure shuffle. */
-export const startHand = (prev: TableState, cfg: Config, rand?: (n: number) => number): DealResult => {
+export const startHand = (prev: TableState, cfg: Config, rand?: (n: number) => number, now = Date.now()): DealResult => {
   const s: TableState = structuredClone(prev);
   const preset = s.preset || {};
   for (const p of seatList(s)) {
     const ps = preset.seats?.[p.seat];
     if (ps?.stack && ps.stack > 0) p.stack = r2(ps.stack * cfg.big_blind);
-    Object.assign(p, { bet: 0, committed: 0, folded: false, all_in: false, acted: false, in_hand: p.type !== 'closed' && p.stack > 0 });
+    Object.assign(p, { bet: 0, committed: 0, folded: false, all_in: false, acted: false, in_hand: isDealable(p, now) });
   }
   const players = seatList(s).filter((p) => p.in_hand);
-  if (players.length < 2) throw new Error('Need at least 2 players with chips');
+  if (players.length < 2) throw new Error('Need at least 2 players ready to play');
 
   const holeCount = cfg.game_type === 'PLO' ? 4 : 2;
   const used = new Set<string>();
@@ -153,7 +168,7 @@ export const startHand = (prev: TableState, cfg: Config, rand?: (n: number) => n
 
   Object.assign(s, {
     status: 'in_hand', hand_number: s.hand_number + 1, street: 'preflop', board: [], pot_total: 0,
-    current_bet: 0, min_raise: cfg.big_blind, results: null, shown: {}, last_action: null, preset: null, seq: 0,
+    current_bet: 0, min_raise: cfg.big_blind, results: null, shown: {}, last_action: null, preset: null, seq: 0, recent_actions: [],
   });
   const actions: LoggedAction[] = [];
   if (cfg.ante > 0) {
@@ -353,3 +368,23 @@ const finish = (s: TableState, cfg: Config, holes: Record<string, string[]>, act
   s.deadline = null;
   return s;
 };
+
+/** Grace period before a disconnected player is folded when the action timer is off. */
+export const DISCONNECT_GRACE_MS = 30_000;
+
+/** Is the player to act overdue? Only ever for human seats; bots are driven by runAuto. */
+export function dueTimeout(s: TableState, now = Date.now()): { seat: number; sitOut: boolean } | null {
+  if (s.status !== 'in_hand' || s.paused || s.to_act == null) return null;
+  const p = s.seats[s.to_act];
+  if (!p || !isHuman(p)) return null;
+  if (p.sitting_out) return { seat: p.seat, sitOut: true };
+  const connected = isConnected(p, now);
+  if (s.settings.timer > 0) {
+    if (s.deadline && now >= s.deadline - 500) return { seat: p.seat, sitOut: !connected };
+    return null;
+  }
+  if (connected) return null;
+  const since = Math.max(s.turn_started || 0, p.last_seen || 0);
+  return now - since >= DISCONNECT_GRACE_MS ? { seat: p.seat, sitOut: true } : null;
+}
+

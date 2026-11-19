@@ -1,3 +1,4 @@
+import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -82,6 +83,14 @@ export default function TrainingLessonWizard() {
     }
     updateSeat(n, { seat_type: type, student_id: null, bot_name: type === 'bot' ? BOT_NAMES[n - 1] : null, bot_style: type === 'bot' ? STYLES[(n - 1) % 4] : null });
   };
+
+  const coachSeat = seats.find((s) => s.seat_type === 'coach')?.seat_number ?? null;
+  const setCoachSeat = (n: number | null) => setSeats((p) => p.map((s) => {
+    if (s.seat_number === n) return { ...s, seat_type: 'coach' as SeatType, student_id: null, bot_name: null, bot_style: null };
+    if (s.seat_type === 'coach') return { ...s, seat_type: 'bot' as SeatType, bot_name: BOT_NAMES[s.seat_number - 1], bot_style: STYLES[(s.seat_number - 1) % 4] };
+    return s;
+  }));
+  const freeCoachSeats = seats.filter((s) => s.seat_type !== 'student');
 
   const presetValid = useMemo(() => {
     if (preset.board && !CARD_RE.test(preset.board)) return false;
@@ -178,6 +187,19 @@ export default function TrainingLessonWizard() {
             <p className="text-xs text-muted-foreground">{t('student_limit', { n: maxStudents })} ({studentCount}/{maxStudents})</p>
             {!seatsEditable && <p className="text-sm text-destructive">{t('seats_locked')}</p>}
             {students.length === 0 && <p className="text-sm text-muted-foreground">{t('no_students')}</p>}
+            <div className="space-y-2 rounded-lg border border-poker-gold/50 bg-poker-gold/5 p-3">
+              <label className="flex min-h-[44px] items-center justify-between gap-2">
+                <span className="font-semibold">{t('coach_playing')}</span>
+                <Switch checked={coachSeat != null} disabled={!seatsEditable || freeCoachSeats.length === 0}
+                  onCheckedChange={(on) => setCoachSeat(on ? (freeCoachSeats[freeCoachSeats.length - 1]?.seat_number ?? null) : null)} />
+              </label>
+              {coachSeat != null && (
+                <Select value={String(coachSeat)} disabled={!seatsEditable} onValueChange={(v) => setCoachSeat(Number(v))}>
+                  <SelectTrigger aria-label={t('coach_seat_pick')}><SelectValue /></SelectTrigger>
+                  <SelectContent>{freeCoachSeats.map((s) => <SelectItem key={s.seat_number} value={String(s.seat_number)}>{t('seat_n', { n: s.seat_number })}</SelectItem>)}</SelectContent>
+                </Select>
+              )}
+            </div>
             {seats.map((s) => (
               <div key={s.seat_number} className="space-y-2 rounded-lg border border-border p-3">
                 <div className="flex items-center gap-2">
@@ -187,7 +209,7 @@ export default function TrainingLessonWizard() {
                     <SelectContent>
                       <SelectItem value="student" disabled={students.length === 0}>{t('student')}</SelectItem>
                       <SelectItem value="bot">{t('bot')}</SelectItem>
-                      <SelectItem value="coach">{t('coach_seat')}</SelectItem>
+                      {s.seat_type === 'coach' && <SelectItem value="coach">{t('coach_seat')}</SelectItem>}
                       <SelectItem value="closed">{t('closed')}</SelectItem>
                     </SelectContent>
                   </Select>

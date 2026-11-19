@@ -1,8 +1,8 @@
 import { assert, assertEquals, assertThrows } from 'jsr:@std/assert@1';
-import { applyAction, buildPots, emptyState, startHand, type Config, type TableState } from './engine.ts';
+import { applyAction, buildPots, dueTimeout, emptyState, isDealable, startHand, type Config, type TableState } from './engine.ts';
 
 const cfg: Config = { game_type: 'NLH', small_blind: 1, big_blind: 2, ante: 0 };
-const seat = (n: number, stack = 200) => ({ seat: n, type: 'student' as const, player_id: `p${n}`, name: `P${n}`, style: null, stack, bet: 0, committed: 0, folded: false, all_in: false, acted: false, in_hand: false });
+const seat = (n: number, stack = 200) => ({ seat: n, type: 'student' as const, player_id: `p${n}`, name: `P${n}`, style: null, stack, bet: 0, committed: 0, folded: false, all_in: false, acted: false, in_hand: false, ready: true, last_seen: 9e15 });
 const table = (stacks: number[], preset?: TableState['preset']): TableState => {
   const s = emptyState();
   stacks.forEach((st, i) => { s.seats[i + 1] = seat(i + 1, st); });
@@ -126,3 +126,52 @@ const botsPlay = (game: 'NLH' | 'PLO') => {
 
 Deno.test('bots only make legal moves and chips are conserved (NLH, 150 hands)', () => botsPlay('NLH'));
 Deno.test('bots only make legal moves and chips are conserved (PLO, 150 hands)', () => botsPlay('PLO'));
+
+Deno.test('seats not ready, sitting out or disconnected are not dealt and post no blinds', () => {
+  const s = table([100, 100, 100, 100], { dealer_seat: 1 });
+  s.seats[2].ready = false;               // never pressed Sit in
+  s.seats[3].sitting_out = true;          // sitting out
+  s.seats[4].last_seen = 1;               // disconnected long ago
+  assertThrows(() => startHand(s, cfg, undefined, 1e15));
+  s.seats[4].last_seen = 1e15 - 1000;     // connected again
+  const { state, holes } = startHand(s, cfg, undefined, 1e15);
+  assertEquals(Object.keys(holes).sort(), ['1', '4']);
+  assertEquals(state.seats[2].committed + state.seats[3].committed, 0);
+  assertEquals(state.seats[2].in_hand || state.seats[3].in_hand, false);
+});
+
+Deno.test('bots are always dealable; closed seats never', () => {
+  const b = { ...seat(1), type: 'bot' as const, ready: false, last_seen: undefined };
+  assert(isDealable(b));
+  assert(!isDealable({ ...seat(2), type: 'closed' as const }));
+});
+
+Deno.test('recent actions keep the last 5 with names', () => {
+  const d = startHand(table([200, 200, 200], { dealer_seat: 1 }), cfg);
+  let st = d.state;
+  st = applyAction(st, 1, 'call', 0, cfg, d.deck, d.holes).state;
+  st = applyAction(st, 2, 'call', 0, cfg, d.deck, d.holes).state;
+  st = applyAction(st, 3, 'check', 0, cfg, d.deck, d.holes).state;
+  assert((st.recent_actions || []).length <= 5);
+  assertEquals(st.recent_actions!.at(-1)!.name, 'P3');
+});
+
+Deno.test('timeouts: only human seats, disconnected players folded after grace, never bots', () => {
+  const now = 1e15;
+  const s = table([100, 100], { dealer_seat: 1 });
+  s.seats[1].last_seen = now; s.seats[2].last_seen = now;
+  const d = startHand(s, cfg, undefined, now);
+  const st = structuredClone(d.state);
+  st.turn_started = now; st.settings.timer = 0;
+  assertEquals(dueTimeout(st, now + 60_000 - 1), { seat: 1, sitOut: true }); // last_seen 60s old => disconnected
+  st.seats[1].last_seen = now + 50_000;
+  assertEquals(dueTimeout(st, now + 60_000), null);                         // connected, no timer: never auto-acts
+  st.seats[1].last_seen = now; st.turn_started = now + 50_000;
+  assertEquals(dueTimeout(st, now + 60_000), null);                         // disconnected but grace not over
+  assertEquals(dueTimeout(st, now + 80_001), { seat: 1, sitOut: true });
+  st.seats[1].type = 'bot';
+  assertEquals(dueTimeout(st, now + 80_001), null);                         // bots are never timed out
+  st.seats[1].type = 'student'; st.settings.timer = 15; st.deadline = now + 100_000; st.seats[1].last_seen = now + 99_000;
+  assertEquals(dueTimeout(st, now + 99_000), null);
+  assertEquals(dueTimeout(st, now + 100_000), { seat: 1, sitOut: false });  // connected: normal timer check/fold
+});
