@@ -100,6 +100,8 @@ function TableInner() {
   const humans = seats.filter((s) => s.type === 'student' || s.type === 'coach');
   const isOnline = (s: typeof seats[number]) => !!s.player_id && online.has(s.player_id);
   const readyCount = humans.filter((s) => s.ready && !s.sitting_out && isOnline(s)).length;
+  const dealableCount = readyCount + Object.values(state?.seats ?? {}).filter((s) => s.type === 'bot' && s.stack > 0).length;
+  const autoBlocked = readyCount < 1 || dealableCount < 2;
   const between = state?.status !== 'in_hand';
   const live = lesson.status === 'live' || lesson.status === 'paused';
   const coachFreeSeats = seats.filter((s) => s.type === 'bot' || s.type === 'closed');
@@ -164,8 +166,8 @@ function TableInner() {
           ) : (
             <div className="absolute bottom-[max(2.5cqw,env(safe-area-inset-bottom))] left-[40cqw] right-[3cqw] z-40 flex flex-col items-end gap-[1.5cqw] text-right">
               {isCoach && live && between && humans.length > 0 && (
-                <p className={`rounded-full bg-black/60 px-3 py-1 text-xs font-semibold ${readyCount < humans.length ? 'text-destructive' : 'text-primary'}`}>
-                  {t(readyCount < humans.length ? 'players_ready' : 'all_ready', { r: readyCount, n: humans.length })}
+                <p className={`rounded-full bg-black/60 px-3 py-1 text-xs font-semibold ${readyCount < humans.length || (state?.settings.auto_deal && autoBlocked) ? 'text-destructive' : 'text-primary'}`}>
+                  {t(state?.settings.auto_deal && state.status === 'hand_over' && autoBlocked ? 'auto_waiting' : readyCount < humans.length ? 'players_ready' : 'all_ready', { r: readyCount, n: humans.length })}
                 </p>
               )}
               {isCoach && !mySeat && live && <p className="flex items-center gap-1 text-xs text-white/60"><Icon name="Eye" size={14} />{t('watching_coach')}</p>}

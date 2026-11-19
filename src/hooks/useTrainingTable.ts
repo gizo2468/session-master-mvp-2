@@ -15,6 +15,7 @@ export interface TState {
   pot_total: number; deadline: number | null; seq: number; last_action: { seat: number; action: string; amount: number } | null;
   results: { seat: number; amount: number; desc: string }[] | null; shown: Record<string, string[]>;
   paused: boolean; discuss: string | null; settings: { auto_deal: boolean; timer: number }; preset: any;
+  next_deal_at?: number | null; bot_act_at?: number | null;
   turn_started?: number | null; recent_actions?: { seat: number; name: string; action: string; amount: number }[];
 }
 
@@ -129,6 +130,21 @@ export const useTrainingTable = (lessonId?: string, userId?: string) => {
     }, Math.max(0, ms));
     return () => clearTimeout(t);
   }, [state?.deadline, state?.hand_id, state?.seq, state?.status, send]);
+
+  // Scheduled steps (auto-deal / bot move): every open device asks the server to run them when due; the server acts once.
+  useEffect(() => {
+    if (!lessonId || !state) return;
+    const at = state.status === 'in_hand' ? state.bot_act_at : state.status === 'hand_over' ? state.next_deal_at : null;
+    if (!at || state.paused) return;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const fire = () => {
+      supabase.functions.invoke('training-table', { body: { cmd: 'tick', lesson_id: lessonId } })
+        .then(({ data }) => { if ((data as any)?.state) applyRow({ state: (data as any).state, version: versionRef.current + 1 }); }, () => {});
+      retry = setTimeout(fire, 2500); // still waiting (e.g. not enough players): keep checking
+    };
+    const t = setTimeout(fire, Math.max(0, at - Date.now()) + 50 + Math.random() * 250);
+    return () => { clearTimeout(t); if (retry) clearTimeout(retry); };
+  }, [lessonId, state?.next_deal_at, state?.bot_act_at, state?.status, state?.paused, state?.seq, state?.hand_id, applyRow]);
 
   // Heartbeat: tells the server this player is at the table (deal-in, disconnect handling).
   useEffect(() => {

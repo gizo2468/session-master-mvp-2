@@ -5,3 +5,5 @@
 - Training Lab seat connectivity comes from server-recorded heartbeats (`last_seen` in table state), not Realtime presence: the edge function must decide deal-in and disconnect folds, and it cannot read client presence.
 - Training Lab live table UI state lives in the zustand `useTableStore` (state, optimistic rollback, sound/deck prefs); motion is CSS transform/opacity only, so seats re-render independently and play stays smooth on phones.
 - Training Lab live table is a fixed full-screen portrait stage (container-query units, hand-tuned seat spots in `seatLayouts.ts`); all extra panels open as overlays/bottom sheets so the table never scrolls or shifts.
+
+- Training Lab automatic steps (auto-deal, bot moves) are stored as due times (`next_deal_at`, `bot_act_at`) in table state and run by an idempotent `tick` command from any client/heartbeat; a sleeping background loop alone gets killed or aborted by heartbeat saves.

@@ -37,7 +37,10 @@ function TableSeat(p: Props) {
   const waiting = human && !p.connected;
   const out = p.sittingOut && !s.in_hand;
   const dim = s.folded || out;
-  const showCards = s.in_hand && !s.folded;
+  const known = !!p.cards?.some(Boolean);
+  // Folded: the owner (and coach in God view) keeps seeing their cards, faded; others only ever got backs, which disappear.
+  const foldedKnown = s.in_hand && s.folded && known;
+  const showCards = (s.in_hand && !s.folded) || foldedKnown;
   const size = big ? (p.holeCount > 2 ? 'hero4' : 'hero') : 'opp';
   const status = waiting ? p.waitingText : out ? p.sitOutText : s.folded ? p.foldedText : s.all_in ? 'ALL-IN' : null;
 
@@ -52,12 +55,12 @@ function TableSeat(p: Props) {
           {initials(s.name)}
         </span>
         {showCards && (
-          <div className={`absolute flex ${big
+          <div className={`absolute flex ${foldedKnown ? 'scale-[0.85] rotate-[-8deg] grayscale-[60%]' : ''} ${big
             ? `bottom-[35%] left-1/2 -translate-x-1/2 ${p.holeCount > 2 ? '-space-x-[5cqw]' : '-space-x-[3.5cqw]'}`
             : `-top-[2cqw] left-[55%] ${p.holeCount > 2 ? '-space-x-[3.6cqw]' : '-space-x-[2.6cqw]'}`}`}>
             {Array.from({ length: p.holeCount }).map((_, i) => (
               <PlayingCard key={`${p.handKey}-${i}-${p.cards?.[i] ?? 'x'}`} size={size as any} card={p.cards?.[i] ?? null}
-                className={`${p.cards?.[i] ? 'tl-flip' : 'tl-deal'} shadow-md`}
+                className={`${foldedKnown ? '' : p.cards?.[i] ? 'tl-flip' : 'tl-deal'} shadow-md`}
                 style={{ rotate: big ? `${(i - (p.holeCount - 1) / 2) * 6}deg` : undefined, animationDelay: `${((p.dealIndex ?? 0) + i * 4) * 40}ms`, ['--dx' as any]: p.dealFrom?.dx, ['--dy' as any]: p.dealFrom?.dy }} />
             ))}
           </div>

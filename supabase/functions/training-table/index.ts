@@ -3,7 +3,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
-import { applyAction, dueTimeout, emptyState, isConnected, isDealable, isHuman, r2, startHand, type ActionType, type Config, type LoggedAction, type SeatState, type TableState } from './engine.ts';
+import { applyAction, dueAction, dueTimeout, scheduleNext, emptyState, isConnected, isDealable, isHuman, r2, startHand, type ActionType, type Config, type LoggedAction, type SeatState, type TableState } from './engine.ts';
 import { decideBot } from './bots.ts';
 import { Conflict, persistDeal } from './dealPersistence.ts';
 
@@ -13,7 +13,7 @@ const json = (body: unknown, status = 200) =>
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const Body = z.object({
-  cmd: z.enum(['start', 'pause', 'resume', 'end', 'discuss', 'deal', 'act', 'timeout', 'set_settings', 'set_preset', 'adjust_stack', 'seat_change', 'note', 'heartbeat', 'sit_in', 'sit_out', 'set_coach_seat']),
+  cmd: z.enum(['start', 'pause', 'resume', 'end', 'discuss', 'deal', 'act', 'timeout', 'set_settings', 'set_preset', 'adjust_stack', 'seat_change', 'note', 'heartbeat', 'tick', 'sit_in', 'sit_out', 'set_coach_seat']),
   lesson_id: z.string().uuid(),
   seat: z.number().int().min(1).max(9).optional(),
   action: z.enum(['fold', 'check', 'call', 'bet', 'raise', 'all-in']).optional(),
@@ -61,6 +61,7 @@ function withDeadline(s: TableState) {
 
 /** Optimistic-concurrency save. Returns false if someone else changed the state first. */
 async function commit(lessonId: string, s: TableState, version: number): Promise<boolean> {
+  scheduleNext(s);
   if (version < 0) {
     const { error } = await admin.from('training_table_state').insert({ lesson_id: lessonId, state: s, version: 1 });
     return !error;
@@ -140,6 +141,7 @@ async function doDeal(lesson: any, cur: { state: TableState; version: number }) 
   const { state, holes, deck, actions } = startHand(base, cfgOf(lesson));
   state.hand_id = crypto.randomUUID();
   withDeadline(state);
+  scheduleNext(state);
   await persistDeal((name, args) => admin.rpc(name, args), lesson.id, cur.version, state, deck, holes, actions);
   if (state.status === 'hand_over') await finalizeHand(lesson.id, state);
   return state;
@@ -169,40 +171,41 @@ async function applyTimeout(lesson: any, cur: { state: TableState; version: numb
   });
 }
 
-/** Background loop: bots act with a natural delay; auto-deal the next hand. */
+/** Run the automatic step (bot move / auto-deal) if its stored time has come. Idempotent: the version check lets only one caller act. */
+async function runDue(lesson: any, cur: { state: TableState; version: number }, now = Date.now()): Promise<TableState | null> {
+  if (lesson.status !== 'live') return null;
+  const due = dueAction(cur.state, now);
+  if (!due) return null;
+  if (due.kind === 'bot') {
+    const s = cur.state;
+    const { holes } = await loadHand(s.hand_id!);
+    const d = decideBot(s, due.seat, holes[due.seat] || [], cfgOf(lesson));
+    try { return await doAct(lesson, cur, due.seat, d.action, d.amount); }
+    catch (e) { if (e instanceof Conflict) throw e; return await doAct(lesson, cur, due.seat, 'fold', 0); }
+  }
+  // Auto-deal only with a ready human and at least 2 dealable players; otherwise keep waiting (UI shows why).
+  if (humansReady(cur.state, now).ready < 1) return null;
+  if (Object.values(cur.state.seats).filter((p) => isDealable(p, now)).length < 2) return null;
+  return await doDeal(lesson, cur);
+}
+
+/** Best-effort speed-up: sleep until the next stored step and run it. Clients' tick commands are the real driver. */
 async function runAuto(lessonId: string) {
-  for (let i = 0; i < 300; i++) {
+  for (let i = 0; i < 60; i++) {
     const { data: lesson } = await admin.from('training_lessons').select('*').eq('id', lessonId).single();
     if (!lesson || lesson.status !== 'live') return;
-    let cur = await loadState(lessonId);
+    const cur = await loadState(lessonId);
     const s = cur.state;
-    if (s.paused) return;
-    if (s.status === 'in_hand' && s.to_act != null && s.seats[s.to_act]?.type === 'bot') {
-      const seat = s.to_act, v = cur.version;
-      await sleep(600 + Math.random() * 900);
-      cur = await loadState(lessonId);
-      if (cur.version !== v) continue;
-      // Re-check: a bot only ever acts for its own bot seat.
-      if (cur.state.to_act !== seat || cur.state.seats[seat]?.type !== 'bot') continue;
-      const { holes } = await loadHand(s.hand_id!);
-      const d = decideBot(cur.state, seat, holes[seat] || [], cfgOf(lesson));
-      try { await doAct(lesson, cur, seat, d.action, d.amount); }
-      catch { try { await doAct(lesson, await loadState(lessonId), seat, 'fold', 0); } catch { return; } }
-      continue;
+    const at = s.status === 'in_hand' ? s.bot_act_at : s.status === 'hand_over' ? s.next_deal_at : null;
+    if (!at || s.paused) return;
+    const wait = at - Date.now();
+    if (wait > 8000) return;
+    if (wait > 0) await sleep(wait + 20);
+    try { await runDue(lesson, await loadState(lessonId)); } catch { /* another caller won or rules refused; re-read */ }
+    const after = await loadState(lessonId);
+    if (!dueAction(after.state, Date.now() + 10_000)) {
+      if (!(after.state.bot_act_at || after.state.next_deal_at)) return;
     }
-    if (s.status === 'hand_over' && s.settings.auto_deal) {
-      const v = cur.version;
-      await sleep(4000);
-      cur = await loadState(lessonId);
-      if (cur.version !== v || !cur.state.settings.auto_deal) return;
-      // Never auto-deal unless a human is seated and ready, and at least 2 players can be dealt in.
-      const now = Date.now();
-      if (humansReady(cur.state, now).ready < 1) return;
-      if (Object.values(cur.state.seats).filter((p) => isDealable(p, now)).length < 2) return;
-      try { await doDeal(lesson, cur); } catch { return; }
-      continue;
-    }
-    return;
   }
 }
 
@@ -227,7 +230,7 @@ Deno.serve(async (req) => {
     const { data: lesson } = await admin.from('training_lessons').select('*').eq('id', b.lesson_id).maybeSingle();
     if (!lesson) return json({ error: 'Lesson not found' }, 404);
     const isCoach = lesson.coach_id === uid;
-    const coachOnly = !['act', 'timeout', 'heartbeat', 'sit_in', 'sit_out'].includes(b.cmd);
+    const coachOnly = !['act', 'timeout', 'heartbeat', 'tick', 'sit_in', 'sit_out'].includes(b.cmd);
     if (coachOnly && !isCoach) return json({ error: 'Only the coach can do this' }, 403);
     if (!isCoach) {
       const { data: seat } = await admin.from('training_lesson_participants').select('id').eq('lesson_id', lesson.id).eq('student_id', uid).maybeSingle();
@@ -320,9 +323,18 @@ Deno.serve(async (req) => {
           touch(cur.state); touch(s);
           const due = dueTimeout(cur.state, now);
           if (due) { out = await applyTimeout(lesson, cur, due); break; }
-          if (!mine) return json({ ok: true });
+          if (!mine) { const r = await runDue(lesson, cur, now); return json({ ok: true, state: r ?? undefined }); }
           out = await save(s);
+          // Heartbeats never cancel scheduled steps; they also run any that are due.
+          try { const r = await runDue(lesson, { state: structuredClone(out), version: cur.version + 1 }, now); if (r) out = r; } catch { /* someone else acted */ }
+          background(runAuto(lesson.id));
           return json({ ok: true, state: out });
+        }
+        case 'tick': {
+          const r = await runDue(lesson, cur);
+          if (!r) return json({ ok: true, state: s });
+          out = r;
+          break;
         }
         case 'sit_in':
         case 'sit_out': {

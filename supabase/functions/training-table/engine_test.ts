@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertThrows } from 'jsr:@std/assert@1';
-import { applyAction, buildPots, dueTimeout, emptyState, isDealable, startHand, type Config, type TableState } from './engine.ts';
+import { applyAction, buildPots, dueAction, dueTimeout, emptyState, scheduleNext, isDealable, startHand, type Config, type TableState } from './engine.ts';
 
 const cfg: Config = { game_type: 'NLH', small_blind: 1, big_blind: 2, ante: 0 };
 const seat = (n: number, stack = 200) => ({ seat: n, type: 'student' as const, player_id: `p${n}`, name: `P${n}`, style: null, stack, bet: 0, committed: 0, folded: false, all_in: false, acted: false, in_hand: false, ready: true, last_seen: 9e15 });
@@ -174,4 +174,37 @@ Deno.test('timeouts: only human seats, disconnected players folded after grace, 
   st.seats[1].type = 'student'; st.settings.timer = 15; st.deadline = now + 100_000; st.seats[1].last_seen = now + 99_000;
   assertEquals(dueTimeout(st, now + 99_000), null);
   assertEquals(dueTimeout(st, now + 100_000), { seat: 1, sitOut: false });  // connected: normal timer check/fold
+});
+
+Deno.test('auto-deal is scheduled 3s after a hand ends and not due early', () => {
+  const s = table([100, 100]); s.status = 'hand_over'; s.settings.auto_deal = true;
+  scheduleNext(s, 1000);
+  assertEquals(s.next_deal_at, 4000);
+  assertEquals(dueAction(s, 3999), null);
+  assertEquals(dueAction(s, 4000), { kind: 'deal' });
+});
+
+Deno.test('a heartbeat-style save keeps the schedule', () => {
+  const s = table([100, 100]); s.status = 'hand_over'; s.settings.auto_deal = true;
+  scheduleNext(s, 1000);
+  s.seats[1].last_seen = 5000; scheduleNext(s, 2500);
+  assertEquals(s.next_deal_at, 4000);
+});
+
+Deno.test('bot move is scheduled 0.6-1.5s ahead, only for the bot to act', () => {
+  const s = table([100, 100]); s.status = 'in_hand'; s.seats[2].type = 'bot' as any; s.to_act = 2;
+  scheduleNext(s, 0, () => 0.5);
+  assertEquals(s.bot_act_at, 1050);
+  assertEquals(dueAction(s, 1049), null);
+  assertEquals(dueAction(s, 1050), { kind: 'bot', seat: 2 });
+  s.to_act = 1; scheduleNext(s, 1100);
+  assertEquals(s.bot_act_at, null);
+  assertEquals(dueAction(s, 9999), null);
+});
+
+Deno.test('auto-deal off or paused schedules nothing', () => {
+  const s = table([100, 100]); s.status = 'hand_over';
+  scheduleNext(s, 0); assertEquals(s.next_deal_at, null);
+  s.settings.auto_deal = true; s.paused = true; scheduleNext(s, 0);
+  assertEquals(dueAction(s, 1e9), null);
 });

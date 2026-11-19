@@ -62,6 +62,9 @@ export interface TableState {
   preset: Preset | null;
   turn_started?: number | null;
   recent_actions?: { seat: number; name: string; action: string; amount: number }[];
+  next_deal_at?: number | null; // auto-deal schedule (ms epoch)
+  bot_act_at?: number | null;   // when the bot to act should move
+  bot_seat?: number | null;     // which bot seat bot_act_at belongs to
 }
 
 export interface Preset { dealer_seat?: number | null; board?: string; seats?: Record<string, { cards?: string; stack?: number }> }
@@ -388,3 +391,22 @@ export function dueTimeout(s: TableState, now = Date.now()): { seat: number; sit
   return now - since >= DISCONNECT_GRACE_MS ? { seat: p.seat, sitOut: true } : null;
 }
 
+
+export const AUTO_DEAL_DELAY_MS = 3000;
+/** Store when the next automatic step is due. Keeps an existing schedule that is still valid. */
+export function scheduleNext(s: TableState, now = Date.now(), rand = Math.random): TableState {
+  const botTurn = s.status === 'in_hand' && !s.paused && s.to_act != null && s.seats[s.to_act]?.type === 'bot';
+  if (botTurn) {
+    if (s.bot_seat !== s.to_act || !s.bot_act_at) { s.bot_seat = s.to_act; s.bot_act_at = now + 600 + Math.floor(rand() * 900); }
+  } else { s.bot_seat = null; s.bot_act_at = null; }
+  if (s.status === 'hand_over' && s.settings.auto_deal && !s.paused) { if (!s.next_deal_at) s.next_deal_at = now + AUTO_DEAL_DELAY_MS; }
+  else s.next_deal_at = null;
+  return s;
+}
+/** Which automatic step is due right now, if any. */
+export function dueAction(s: TableState, now = Date.now()): { kind: 'bot'; seat: number } | { kind: 'deal' } | null {
+  if (s.paused) return null;
+  if (s.status === 'in_hand' && s.to_act != null && s.bot_seat === s.to_act && s.seats[s.to_act]?.type === 'bot' && s.bot_act_at && now >= s.bot_act_at) return { kind: 'bot', seat: s.to_act };
+  if (s.status === 'hand_over' && s.settings.auto_deal && s.next_deal_at && now >= s.next_deal_at) return { kind: 'deal' };
+  return null;
+}

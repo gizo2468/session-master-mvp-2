@@ -39,12 +39,11 @@ export default function CoachControls({ state, lessonStatus, busy, godView, setG
   if (ended) return null;
   return (
     <div className="space-y-3 rounded-xl border border-border bg-card p-3">
-      <p className="text-center text-sm font-semibold text-primary">{t('controls')}</p>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {lessonStatus !== 'live'
           ? <Button className="min-h-[44px]" disabled={busy} onClick={() => send(lessonStatus === 'draft' ? 'start' : 'resume')}><Icon name="Play" size={16} />{lessonStatus === 'draft' ? t('start_lesson') : t('resume')}</Button>
           : <Button variant="outline" className="min-h-[44px]" disabled={busy} onClick={() => send('pause')}><Icon name="Pause" size={16} />{t('pause')}</Button>}
-        <Button className="min-h-[44px]" disabled={busy || !between || lessonStatus !== 'live'} onClick={() => send('deal')}><Icon name="Layers" size={16} />{dealLabel || t('deal_next')}</Button>
+        <Button variant={state.settings.auto_deal ? 'outline' : 'default'} className={`min-h-[44px] ${state.settings.auto_deal ? 'opacity-50' : ''}`} disabled={busy || !between || lessonStatus !== 'live' || state.settings.auto_deal} onClick={() => send('deal')}><Icon name="Layers" size={16} />{dealLabel || t('deal_next')}</Button>
         <Button variant="outline" className="min-h-[44px]" disabled={busy} onClick={() => setDialog('discuss')}><Icon name="MessageSquare" size={16} />{t('discuss')}</Button>
         <Button variant="outline" className="min-h-[44px]" onClick={() => setDialog('note')}><Icon name="StickyNote" size={16} />{t('quick_note')}</Button>
         <Button variant="outline" className="min-h-[44px]" onClick={() => setDialog('preset')}><Icon name="Wand2" size={16} />{t('presets_next')}{state.preset ? ' •' : ''}</Button>
