@@ -1,4 +1,4 @@
-- Training Lab lives in `src/components/trainingLab`, `src/hooks/useTrainingLessons.ts` and `src/pages/TrainingLab*.tsx`, with its own EN/HE text in `trainingLab/i18n.ts`; this keeps the feature self-contained while the table engine is added later.
+- Training Lab lives in `src/components/trainingLab`, `src/hooks/useTrainingLessons.ts` and `src/pages/TrainingLab*.tsx`, with its own English-only text in `trainingLab/i18n.ts` (no Hebrew/RTL); this keeps the feature self-contained.
 - Training Lab access rules are enforced in the database (lesson coach / seated participant helpers, seat validation trigger), so the frontend only reflects them and never acts as the guard.
 - Training Lab live play is server-authoritative: all dealing, betting validation, showdown and bot moves run in the `training-table` edge function (engine in `engine.ts`, covered by `engine_test.ts`); clients only send commands and render `training_table_state`, so game rules can never be bypassed from a device.
 - Training Lab deals publish the hand, deck, private cards, opening actions and versioned table state through a service-role-only atomic RPC; this prevents overlapping heartbeats/deals from leaving orphan hands or duplicate hand numbers.
@@ -7,3 +7,5 @@
 - Training Lab live table is a fixed full-screen portrait stage (container-query units, hand-tuned seat spots in `seatLayouts.ts`); all extra panels open as overlays/bottom sheets so the table never scrolls or shifts.
 
 - Training Lab automatic steps (auto-deal, bot moves) are stored as due times (`next_deal_at`, `bot_act_at`) in table state and run by an idempotent `tick` command from any client/heartbeat; a sleeping background loop alone gets killed or aborted by heartbeat saves.
+- Training Lab replays and lesson stats are built client-side from saved hand actions (`trainingLab/replay/`, pot growth per action = chips put in) and read through RLS, so a student can only ever load their own hole cards; the replayer never sends commands, so it can't disturb a live game.
+- Training Lab summary/reply notifications are created by database triggers on `training_lesson_summaries` and `training_note_replies`, keeping notification inserts server-side.

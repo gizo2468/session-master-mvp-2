@@ -1525,8 +1525,10 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          key_hand_ids: string[]
           lesson_id: string
           published: boolean
+          published_at: string | null
           stats: Json | null
           student_id: string
           summary_text: string | null
@@ -1535,8 +1537,10 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          key_hand_ids?: string[]
           lesson_id: string
           published?: boolean
+          published_at?: string | null
           stats?: Json | null
           student_id: string
           summary_text?: string | null
@@ -1545,8 +1549,10 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          key_hand_ids?: string[]
           lesson_id?: string
           published?: boolean
+          published_at?: string | null
           stats?: Json | null
           student_id?: string
           summary_text?: string | null
@@ -1637,11 +1643,54 @@ export type Database = {
           },
         ]
       }
+      training_note_replies: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          lesson_id: string
+          note_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          note_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          note_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_note_replies_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "training_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_note_replies_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "training_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_notes: {
         Row: {
           action_id: string | null
           coach_id: string
           created_at: string
+          flag: string | null
           hand_id: string | null
           id: string
           lesson_id: string
@@ -1652,6 +1701,7 @@ export type Database = {
           action_id?: string | null
           coach_id: string
           created_at?: string
+          flag?: string | null
           hand_id?: string | null
           id?: string
           lesson_id: string
@@ -1662,6 +1712,7 @@ export type Database = {
           action_id?: string | null
           coach_id?: string
           created_at?: string
+          flag?: string | null
           hand_id?: string | null
           id?: string
           lesson_id?: string
@@ -2296,6 +2347,7 @@ export type Database = {
             }
             Returns: string
           }
+      training_note_student: { Args: { p_note_id: string }; Returns: string }
       update_terms_acceptance: {
         Args: { accepted: boolean; user_id: string }
         Returns: boolean

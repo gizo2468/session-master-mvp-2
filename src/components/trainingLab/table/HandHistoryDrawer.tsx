@@ -5,6 +5,17 @@ import Icon from '@/components/ui/Lucide';
 import { tl } from '@/hooks/useTrainingLessons';
 import PlayingCard from './PlayingCard';
 import { useTL } from '../i18n';
+import { useAuth } from '@/context/AuthContext';
+import { useLessonReview } from '@/hooks/useLessonReview';
+import HandReplayer from '../replay/HandReplayer';
+
+/** Loads the lesson for the replayer on demand; read-only, so the live game keeps running. */
+function LiveReplay({ lessonId, handId, isCoach, onClose }: { lessonId: string; handId: string; isCoach: boolean; onClose: () => void }) {
+  const { user } = useAuth();
+  const { data } = useLessonReview(lessonId);
+  if (!data) return null;
+  return <HandReplayer review={data} handId={handId} viewerId={user?.id} isCoach={isCoach} onClose={onClose} />;
+}
 
 const POS: Record<number, string[]> = {
   2: ['BTN/SB', 'BB'], 3: ['BTN', 'SB', 'BB'], 4: ['BTN', 'SB', 'BB', 'UTG'], 5: ['BTN', 'SB', 'BB', 'UTG', 'CO'],
@@ -20,13 +31,14 @@ interface Props { lessonId: string; mySeat?: number; seatNames: Record<number, s
 
 /** In-game hand history for everyone at the table. Access rules in the database limit what each person sees. */
 export default function HandHistoryDrawer({ lessonId, mySeat, seatNames, isCoach, refreshKey }: Props) {
-  const { t, dir } = useTL();
+  const { t } = useTL();
   const [open, setOpen] = useState(false);
   const [hands, setHands] = useState<Hand[]>([]);
   const [acts, setActs] = useState<Act[]>([]);
   const [holes, setHoles] = useState<Record<string, Record<number, string[]>>>({});
   const [sel, setSel] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [replay, setReplay] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -75,11 +87,12 @@ export default function HandHistoryDrawer({ lessonId, mySeat, seatNames, isCoach
     <>
       <button type="button" aria-label={t('hand_history')} className="tl-icon-btn" onClick={() => setOpen(true)}><Icon name="History" size={20} /></button>
       <Sheet open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSel(null); }}>
-        <SheetContent side={dir === 'rtl' ? 'left' : 'right'} dir={dir} className="w-[92vw] max-w-md overflow-y-auto p-4">
+        <SheetContent side={'right'} className="w-[92vw] max-w-md overflow-y-auto p-4">
           <SheetHeader><SheetTitle className="text-primary">{selHand ? `${t('hand')} #${selHand.hand_number}` : t('hand_history')}</SheetTitle></SheetHeader>
           {selHand ? (
             <div className="mt-3 space-y-3">
-              <Button variant="ghost" className="min-h-[44px]" onClick={() => setSel(null)}><Icon name={dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft'} size={16} />{t('back')}</Button>
+              <div className="flex gap-2"><Button variant="ghost" className="min-h-[44px]" onClick={() => setSel(null)}><Icon name="ArrowLeft" size={16} />{t('back')}</Button>
+              <Button className="min-h-[44px] flex-1" onClick={() => { setReplay(selHand.id); setOpen(false); }}><Icon name="Play" size={16} />{t('replay')}</Button></div>
               <div className="flex gap-1" dir="ltr">{split(selHand.board_cards).map((c) => <PlayingCard key={c} card={c} size="sm" />)}</div>
               {streets.map((st) => {
                 const list = acts.filter((a) => a.hand_id === selHand.id && a.street === st);
@@ -130,6 +143,7 @@ export default function HandHistoryDrawer({ lessonId, mySeat, seatNames, isCoach
           )}
         </SheetContent>
       </Sheet>
+    {replay && <LiveReplay lessonId={lessonId} handId={replay} isCoach={isCoach} onClose={() => setReplay(null)} />}
     </>
   );
 }

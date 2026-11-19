@@ -19,7 +19,7 @@ const PREVIEW = [
 export default function TrainingLab() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { t, dir } = useTL();
+  const { t } = useTL();
   const tier = user?.coachTier || 'free';
   const unlocked = hasTrainingLabAccess(user?.role, tier);
   const { data: lessons = [] } = useCoachLessons(unlocked ? user?.id : undefined);
@@ -36,10 +36,10 @@ export default function TrainingLab() {
 
   return (
     <PageContainer>
-      <div dir={dir} className="mx-auto max-w-2xl p-4 content-safe">
+      <div className="mx-auto max-w-2xl p-4 content-safe">
         <div className="mb-4 flex items-center gap-2">
           <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => navigate('/coach-dashboard', { replace: true })}>
-            <Icon name={dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft'} size={20} />
+            <Icon name={'ArrowLeft'} size={20} />
           </Button>
           <div className="flex-1">
             <h1 className="flex items-center gap-2 text-2xl font-bold text-poker-gold"><Icon name="FlaskConical" size={22} />{t('training_lab')}</h1>
@@ -80,6 +80,11 @@ export default function TrainingLab() {
                         {l.status !== 'ended' && (
                           <Button className="min-h-[44px] bg-poker-gold hover:bg-poker-darkGold text-poker-black" onClick={() => navigate(`/training-lab/table/${l.id}`)}>
                             <Icon name="Play" size={16} /> {l.status === 'draft' ? t('start_lesson') : t('return_to_table')}
+                          </Button>
+                        )}
+                        {l.status === 'ended' && (
+                          <Button className="min-h-[44px] bg-poker-gold hover:bg-poker-darkGold text-poker-black" onClick={() => navigate(`/coach/training-lab/${l.id}/wrap-up`)}>
+                            <Icon name="ClipboardList" size={16} /> {t('wrap_up')}
                           </Button>
                         )}
                         {l.status !== 'live' && l.status !== 'ended' && (

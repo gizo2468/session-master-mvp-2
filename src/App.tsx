@@ -44,6 +44,8 @@ const TrainingTable = lazyWithRetry(() => import("./pages/TrainingTable"), "Trai
 const TrainingLab = lazyWithRetry(() => import("./pages/TrainingLab"), "TrainingLab");
 const TrainingLessonWizard = lazyWithRetry(() => import("./pages/TrainingLessonWizard"), "TrainingLessonWizard");
 const TrainingLessonSummary = lazyWithRetry(() => import("./pages/TrainingLessonSummary"), "TrainingLessonSummary");
+const TrainingLessonWrapUp = lazyWithRetry(() => import("./pages/TrainingLessonWrapUp"), "TrainingLessonWrapUp");
+const TrainingSummaries = lazyWithRetry(() => import("./pages/TrainingSummaries"), "TrainingSummaries");
 const ChartsLibrary = lazyWithRetry(() => import("./pages/ChartsLibrary"), "ChartsLibrary");
 
 const queryClient = new QueryClient({
@@ -91,6 +93,8 @@ const App = () => {
                         <Route path="/coach/training-lab/:id/edit" element={<TrainingLessonWizard />} />
                         <Route path="/training-lab/table/:id" element={<TrainingTable />} />
                         <Route path="/training-lab/summary/:id" element={<TrainingLessonSummary />} />
+                        <Route path="/training-lab/summaries" element={<TrainingSummaries />} />
+                        <Route path="/coach/training-lab/:id/wrap-up" element={<TrainingLessonWrapUp />} />
                         <Route path="/coach/:coachId" element={<CoachProfile />} />
                         <Route path="/legal/privacy" element={<PrivacyPolicy />} />
                         <Route path="/help" element={<Help />} />

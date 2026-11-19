@@ -16,23 +16,22 @@ const PREVIEW = [
 
 function Inner({ studentId }: { studentId: string }) {
   const { user } = useAuth();
-  const { t, dir } = useTL();
+  const { t } = useTL();
   const navigate = useNavigate();
   const unlocked = hasTrainingLabAccess(user?.role, user?.coachTier || 'free');
   const { data = [] } = useCoachStudentLessons(unlocked ? user?.id : undefined, studentId);
   const lessons = unlocked ? data : PREVIEW;
   const live = lessons.filter((l) => l.status === 'live');
-  const back = encodeURIComponent(`/player/${studentId}`);
 
   const open = (l: StudentLessonRow) => {
     if (!unlocked) return;
     if (l.status === 'live' || l.status === 'paused') return navigate(`/training-lab/table/${l.id}`);
-    if (l.status === 'ended') return navigate(`/training-lab/summary/${l.summary_id || 'none'}?lesson=${l.id}&back=${back}`);
+    if (l.status === 'ended') return navigate(`/coach/training-lab/${l.id}/wrap-up`);
     navigate(`/coach/training-lab/${l.id}/edit`);
   };
 
   return (
-    <Card dir={dir} className="mb-6 border-poker-gold/40">
+    <Card className="mb-6 border-poker-gold/40">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-center gap-2 text-poker-gold">
           <Icon name="FlaskConical" size={20} /> {t('training_lab')}
@@ -64,6 +63,11 @@ function Inner({ studentId }: { studentId: string }) {
               </button>
             ))}
           </div>
+        )}
+        {unlocked && (
+          <Button variant="outline" className="w-full min-h-[44px]" onClick={() => navigate(`/training-lab/summaries?student=${studentId}`)}>
+            <Icon name="FileText" size={16} /> {t('view_summaries')}
+          </Button>
         )}
         <Button className="w-full min-h-[44px] bg-poker-gold hover:bg-poker-darkGold text-poker-black" disabled={!unlocked}
           onClick={() => navigate(`/coach/training-lab/new?student=${studentId}`)}>
