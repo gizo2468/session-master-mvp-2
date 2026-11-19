@@ -1334,6 +1334,373 @@ export type Database = {
           },
         ]
       }
+      training_hand_actions: {
+        Row: {
+          action: string
+          amount: number
+          created_at: string
+          hand_id: string
+          id: string
+          player_id: string | null
+          pot_after: number | null
+          revealed_cards: string | null
+          seat_number: number
+          sequence: number
+          street: string
+        }
+        Insert: {
+          action: string
+          amount?: number
+          created_at?: string
+          hand_id: string
+          id?: string
+          player_id?: string | null
+          pot_after?: number | null
+          revealed_cards?: string | null
+          seat_number: number
+          sequence: number
+          street: string
+        }
+        Update: {
+          action?: string
+          amount?: number
+          created_at?: string
+          hand_id?: string
+          id?: string
+          player_id?: string | null
+          pot_after?: number | null
+          revealed_cards?: string | null
+          seat_number?: number
+          sequence?: number
+          street?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_hand_actions_hand_id_fkey"
+            columns: ["hand_id"]
+            isOneToOne: false
+            referencedRelation: "training_hands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_hand_private_cards: {
+        Row: {
+          hand_id: string
+          hole_cards: string
+          id: string
+          player_id: string | null
+          seat_number: number
+        }
+        Insert: {
+          hand_id: string
+          hole_cards: string
+          id?: string
+          player_id?: string | null
+          seat_number: number
+        }
+        Update: {
+          hand_id?: string
+          hole_cards?: string
+          id?: string
+          player_id?: string | null
+          seat_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_hand_private_cards_hand_id_fkey"
+            columns: ["hand_id"]
+            isOneToOne: false
+            referencedRelation: "training_hands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_hands: {
+        Row: {
+          board_cards: string | null
+          dealer_seat: number | null
+          ended_at: string | null
+          hand_number: number
+          id: string
+          lesson_id: string
+          pot_total: number
+          scenario_preset: Json | null
+          started_at: string
+          status: string
+          winners: Json | null
+        }
+        Insert: {
+          board_cards?: string | null
+          dealer_seat?: number | null
+          ended_at?: string | null
+          hand_number: number
+          id?: string
+          lesson_id: string
+          pot_total?: number
+          scenario_preset?: Json | null
+          started_at?: string
+          status?: string
+          winners?: Json | null
+        }
+        Update: {
+          board_cards?: string | null
+          dealer_seat?: number | null
+          ended_at?: string | null
+          hand_number?: number
+          id?: string
+          lesson_id?: string
+          pot_total?: number
+          scenario_preset?: Json | null
+          started_at?: string
+          status?: string
+          winners?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_hands_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "training_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_lesson_participants: {
+        Row: {
+          bot_name: string | null
+          bot_style: string | null
+          created_at: string
+          current_stack: number | null
+          id: string
+          joined_at: string | null
+          lesson_id: string
+          seat_number: number
+          seat_type: string
+          starting_stack: number | null
+          student_id: string | null
+        }
+        Insert: {
+          bot_name?: string | null
+          bot_style?: string | null
+          created_at?: string
+          current_stack?: number | null
+          id?: string
+          joined_at?: string | null
+          lesson_id: string
+          seat_number: number
+          seat_type: string
+          starting_stack?: number | null
+          student_id?: string | null
+        }
+        Update: {
+          bot_name?: string | null
+          bot_style?: string | null
+          created_at?: string
+          current_stack?: number | null
+          id?: string
+          joined_at?: string | null
+          lesson_id?: string
+          seat_number?: number
+          seat_type?: string
+          starting_stack?: number | null
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_lesson_participants_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "training_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_lesson_participants_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_lesson_participants_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "user_overview"
+            referencedColumns: ["uid"]
+          },
+        ]
+      }
+      training_lesson_summaries: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_id: string
+          published: boolean
+          stats: Json | null
+          student_id: string
+          summary_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_id: string
+          published?: boolean
+          stats?: Json | null
+          student_id: string
+          summary_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          published?: boolean
+          stats?: Json | null
+          student_id?: string
+          summary_text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_lesson_summaries_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "training_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_lessons: {
+        Row: {
+          ante: number
+          big_blind: number
+          coach_id: string
+          created_at: string
+          default_stack_bb: number
+          description: string | null
+          ended_at: string | null
+          format: string
+          game_type: string
+          id: string
+          max_seats: number
+          scenario_preset: Json | null
+          small_blind: number
+          started_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ante?: number
+          big_blind?: number
+          coach_id: string
+          created_at?: string
+          default_stack_bb?: number
+          description?: string | null
+          ended_at?: string | null
+          format?: string
+          game_type?: string
+          id?: string
+          max_seats?: number
+          scenario_preset?: Json | null
+          small_blind?: number
+          started_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ante?: number
+          big_blind?: number
+          coach_id?: string
+          created_at?: string
+          default_stack_bb?: number
+          description?: string | null
+          ended_at?: string | null
+          format?: string
+          game_type?: string
+          id?: string
+          max_seats?: number
+          scenario_preset?: Json | null
+          small_blind?: number
+          started_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_lessons_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_lessons_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "user_overview"
+            referencedColumns: ["uid"]
+          },
+        ]
+      }
+      training_notes: {
+        Row: {
+          action_id: string | null
+          coach_id: string
+          created_at: string
+          hand_id: string | null
+          id: string
+          lesson_id: string
+          note: string
+          student_id: string | null
+        }
+        Insert: {
+          action_id?: string | null
+          coach_id: string
+          created_at?: string
+          hand_id?: string | null
+          id?: string
+          lesson_id: string
+          note: string
+          student_id?: string | null
+        }
+        Update: {
+          action_id?: string | null
+          coach_id?: string
+          created_at?: string
+          hand_id?: string | null
+          id?: string
+          lesson_id?: string
+          note?: string
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_notes_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "training_hand_actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_notes_hand_id_fkey"
+            columns: ["hand_id"]
+            isOneToOne: false
+            referencedRelation: "training_hands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_notes_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "training_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ui_state: {
         Row: {
           created_at: string
@@ -1829,10 +2196,13 @@ export type Database = {
               win_ratio: number
             }[]
           }
+      hand_lesson_id: { Args: { p_hand_id: string }; Returns: string }
       is_coach_for_student: {
         Args: { coach_user_id: string; student_user_id: string }
         Returns: boolean
       }
+      is_lesson_coach: { Args: { p_lesson_id: string }; Returns: boolean }
+      is_lesson_participant: { Args: { p_lesson_id: string }; Returns: boolean }
       log_security_event: {
         Args: {
           p_action: string

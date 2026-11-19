@@ -39,6 +39,9 @@ const AddPastSession = lazyWithRetry(() => import("./pages/AddPastSession"), "Ad
 const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"), "CoachDashboard");
 const PlayerDashboard = lazyWithRetry(() => import("./pages/PlayerDashboard"), "PlayerDashboard");
 const ConnectCoach = lazyWithRetry(() => import("./pages/ConnectCoach"), "ConnectCoach");
+const TrainingLab = lazyWithRetry(() => import("./pages/TrainingLab"), "TrainingLab");
+const TrainingLessonWizard = lazyWithRetry(() => import("./pages/TrainingLessonWizard"), "TrainingLessonWizard");
+const TrainingLessonSummary = lazyWithRetry(() => import("./pages/TrainingLessonSummary"), "TrainingLessonSummary");
 const ChartsLibrary = lazyWithRetry(() => import("./pages/ChartsLibrary"), "ChartsLibrary");
 
 const queryClient = new QueryClient({
@@ -81,6 +84,10 @@ const App = () => {
                         <Route path="/settings" element={<Settings />} />
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/player/:playerId" element={<PlayerProfile />} />
+                        <Route path="/coach/training-lab" element={<TrainingLab />} />
+                        <Route path="/coach/training-lab/new" element={<TrainingLessonWizard />} />
+                        <Route path="/coach/training-lab/:id/edit" element={<TrainingLessonWizard />} />
+                        <Route path="/training-lab/summary/:id" element={<TrainingLessonSummary />} />
                         <Route path="/coach/:coachId" element={<CoachProfile />} />
                         <Route path="/legal/privacy" element={<PrivacyPolicy />} />
                         <Route path="/help" element={<Help />} />

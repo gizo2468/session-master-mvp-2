@@ -1,0 +1,2 @@
+- Training Lab lives in `src/components/trainingLab`, `src/hooks/useTrainingLessons.ts` and `src/pages/TrainingLab*.tsx`, with its own EN/HE text in `trainingLab/i18n.ts`; this keeps the feature self-contained while the table engine is added later.
+- Training Lab access rules are enforced in the database (lesson coach / seated participant helpers, seat validation trigger), so the frontend only reflects them and never acts as the guard.

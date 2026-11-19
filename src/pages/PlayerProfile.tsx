@@ -18,7 +18,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useCoachStudent } from '@/context/CoachStudentContext';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
-import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
 import { IconMenuButton } from '@/components/ui/IconMenuButton';
 import { resolveProfilePicture } from '@/hooks/usePlayerCard';
 import { ViewOnlyCardBack } from '@/components/PlayerCard/ViewOnlyCardBack';
@@ -582,8 +581,6 @@ const calculateSummary = (sessions: SharedSession[]) => {
           </Card>
         )}
 
-        {/* Player Goals & Tasks */}
-        <PlayerGoalsTasks studentId={playerId!} mode="coach" />
 
         {/* Shared Session Modal */}
         {selectedSessionId && (

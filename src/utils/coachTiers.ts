@@ -20,7 +20,8 @@ export const coachTiers: Record<CoachTier, CoachTierDetails> = {
       'Session Feedback',
       'Advanced Analytics',
       'Comment Tagging',
-      'Student History View'
+      'Student History View',
+      'Training Lab'
     ],
   },
   pro: {
@@ -35,7 +36,8 @@ export const coachTiers: Record<CoachTier, CoachTierDetails> = {
       'Comment Tagging',
       'Student History View',
       'Notification System',
-      'Priority Support'
+      'Priority Support',
+      'Training Lab'
     ],
   },
   elite: {
@@ -52,7 +54,8 @@ export const coachTiers: Record<CoachTier, CoachTierDetails> = {
       'Notification System',
       'Priority Support',
       'Custom Branding',
-      'Export Tools'
+      'Export Tools',
+      'Training Lab'
     ],
   },
 };

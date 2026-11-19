@@ -13,7 +13,7 @@ import CoachProfileCard from '@/components/coaching/CoachProfileCard';
 import PageContainer from '@/components/ui/PageContainer';
 import ProfitLossBadge from '@/components/poker/ProfitLossBadge';
 import { SharedSessionModal } from '@/components/coaching/SharedSessionModal';
-import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
+import StudentTrainingLabCard from '@/components/trainingLab/StudentTrainingLabCard';
 import { HandReviewModal } from '@/components/coaching/HandReviewModal';
 import CardDisplay from '@/components/poker/CardDisplay';
 import { resolveProfilePicture } from '@/hooks/usePlayerCard';
@@ -588,8 +588,8 @@ const CoachProfile: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Coach Goals & Tasks */}
-        {user?.id && coachId && <PlayerGoalsTasks studentId={user.id} mode="player" coachId={coachId} />}
+        {/* Training Lab */}
+        {user?.id && coachId && <StudentTrainingLabCard studentId={user.id} coachId={coachId} />}
 
         {/* Hand Review Modal with Coach Feedback - opens instantly with loading skeleton */}
         <HandReviewModal

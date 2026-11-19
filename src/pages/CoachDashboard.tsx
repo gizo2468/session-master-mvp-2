@@ -210,6 +210,19 @@ const CoachDashboard = () => {
               </CardContent>
             </Card>
             
+            <button
+              onClick={() => navigate('/coach/training-lab')}
+              className="mb-6 flex w-full min-h-[56px] items-center gap-3 rounded-lg border border-poker-gold/40 bg-[#35654D] p-4 text-start transition-transform active:scale-[0.99]"
+            >
+              <Icon name="FlaskConical" size={22} className="text-poker-gold" />
+              <div className="flex-1">
+                <p className="font-semibold text-poker-gold">Training Lab</p>
+                <p className="text-xs text-[#F5F5F0]/80">Run live practice tables with your students</p>
+              </div>
+              {!hasFeatureAccess(user?.role, coachTier, 'Training Lab') && <Icon name="lock" size={18} className="text-poker-gold" />}
+              <Icon name="ChevronRight" size={18} className="text-poker-gold rtl:rotate-180" />
+            </button>
+
             <div className="grid grid-cols-1 gap-6 mb-6">
               {/* Student Management - Always available */}
               <Card>

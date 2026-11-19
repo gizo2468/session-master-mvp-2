@@ -8,7 +8,6 @@ import { useSwipeBack } from '@/hooks/useSwipeBack';
 import { supabase } from '@/integrations/supabase/client';
 import Icon from '@/components/ui/Lucide';
 import PlayerReviewForm from '@/components/coaching/PlayerReviewForm';
-import PlayerGoalsTasks from '@/components/coaching/PlayerGoalsTasks';
 
 interface PlayerReview {
   id: string;
@@ -198,7 +197,6 @@ const PlayerDashboard = () => {
             </CardContent>
           </Card>
           
-          {user?.id && <PlayerGoalsTasks studentId={user.id} mode="player" />}
         </div>
       </div>
     </div>

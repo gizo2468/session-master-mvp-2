@@ -1,0 +1,10 @@
+REVOKE EXECUTE ON FUNCTION public.validate_training_seat() FROM anon, authenticated, public;
+CREATE INDEX IF NOT EXISTS idx_tl_coach ON public.training_lessons(coach_id);
+CREATE INDEX IF NOT EXISTS idx_tlp_student ON public.training_lesson_participants(student_id);
+CREATE INDEX IF NOT EXISTS idx_th_lesson ON public.training_hands(lesson_id);
+CREATE INDEX IF NOT EXISTS idx_tha_hand ON public.training_hand_actions(hand_id);
+CREATE INDEX IF NOT EXISTS idx_thpc_player ON public.training_hand_private_cards(player_id);
+CREATE INDEX IF NOT EXISTS idx_tn_lesson ON public.training_notes(lesson_id);
+CREATE INDEX IF NOT EXISTS idx_tn_hand ON public.training_notes(hand_id);
+CREATE INDEX IF NOT EXISTS idx_tn_action ON public.training_notes(action_id);
+CREATE INDEX IF NOT EXISTS idx_tls_student ON public.training_lesson_summaries(student_id);
