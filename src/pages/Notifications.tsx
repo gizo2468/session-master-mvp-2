@@ -207,6 +207,7 @@ export default function Notifications() {
     // Training Lab: lesson went live -> open the live table
     if (notification.type === 'training_lesson_live') {
       const lessonId = (notification as typeof notification & { training_lesson_id?: string }).training_lesson_id;
+      if (!notification.is_read) await markAsRead(notification.id);
       if (lessonId) navigate(`/training-lab/table/${lessonId}`);
       return;
     }

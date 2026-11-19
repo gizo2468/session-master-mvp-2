@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/Lucide';
@@ -26,6 +27,14 @@ function TableInner() {
   const { students: myStudents = [] } = useCoachStudent();
   const { t, dir } = useTL();
   const { lesson, state, cards, online, error, setError, busy, send } = useTrainingTable(id, user?.id);
+  // Opening the table (from a notification or the Join button) clears its "lesson is live" notification.
+  useEffect(() => {
+    if (!id || !user?.id) return;
+    (supabase as any).from('notifications').update({ is_read: true })
+      .eq('recipient_user_id', user.id).eq('type', 'training_lesson_live')
+      .eq('training_lesson_id', id).eq('is_read', false)
+      .then(() => {}, () => {});
+  }, [id, user?.id]);
   const [godView, setGodView] = useState(false);
   const [seatMenu, setSeatMenu] = useState<number | null>(null);
 

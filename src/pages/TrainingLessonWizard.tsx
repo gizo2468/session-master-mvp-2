@@ -1,3 +1,4 @@
+import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -94,7 +95,7 @@ export default function TrainingLessonWizard() {
     return true;
   };
 
-  const save = async () => {
+  const save = async (start = false) => {
     if (!user) return;
     setSaving(true);
     try {
@@ -115,6 +116,13 @@ export default function TrainingLessonWizard() {
         const rows = seats.map((s) => ({ ...s, lesson_id: lessonId, starting_stack: stack, current_stack: stack }));
         const { error } = await tl.from('training_lesson_participants').insert(rows);
         if (error) throw error;
+      }
+      if (start) {
+        const { data, error } = await supabase.functions.invoke('training-table', { body: { cmd: 'start', lesson_id: lessonId } });
+        if (error || (data as any)?.error) throw new Error((data as any)?.error || t('startFailed'));
+        invalidate();
+        navigate(`/training-lab/table/${lessonId}`, { replace: true });
+        return;
       }
       invalidate();
       navigate('/coach/training-lab', { replace: true });
@@ -252,7 +260,12 @@ export default function TrainingLessonWizard() {
           {step < 4 ? (
             <Button className="min-h-[44px] bg-poker-gold hover:bg-poker-darkGold text-poker-black" disabled={!canNext()} onClick={() => setStep(step + 1)}>{t('next')}</Button>
           ) : (
-            <Button className="min-h-[44px] bg-poker-gold hover:bg-poker-darkGold text-poker-black" disabled={saving} onClick={save}>{saving ? t('saving') : t('save')}</Button>
+            <div className="flex gap-2">
+            {seatsEditable && (
+              <Button variant="outline" className="min-h-[44px] border-poker-gold text-poker-gold" disabled={saving} onClick={() => save(true)}>{t('saveAndStart')}</Button>
+            )}
+            <Button className="min-h-[44px] bg-poker-gold hover:bg-poker-darkGold text-poker-black" disabled={saving} onClick={() => save()}>{saving ? t('saving') : t('save')}</Button>
+            </div>
           )}
         </div>
       </div>
