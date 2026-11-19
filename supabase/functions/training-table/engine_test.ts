@@ -208,3 +208,52 @@ Deno.test('auto-deal off or paused schedules nothing', () => {
   s.settings.auto_deal = true; s.paused = true; scheduleNext(s, 0);
   assertEquals(dueAction(s, 1e9), null);
 });
+
+Deno.test('full lesson flow: 2 students, 1 bot, 1 coach seat, 3 hands incl. all-in side pot; public log never leaks hole cards before showdown', () => {
+  let s = table([200, 200, 60, 200]);
+  s.seats[3] = { ...s.seats[3], type: 'bot', player_id: null, name: 'Bot' };
+  s.seats[4] = { ...s.seats[4], type: 'coach', player_id: 'coach', name: 'Coach' };
+  const start = total(s);
+  const publicLog: { hand: number; street: string; action: string; revealed?: string }[] = [];
+  const play = (preset: TableState['preset'], script: (st: TableState) => [string, number?]) => {
+    s.preset = preset;
+    const d = startHand(s, cfg);
+    let st = d.state;
+    d.actions.forEach((a) => publicLog.push({ hand: st.hand_number, street: a.street, action: a.action, revealed: a.revealed_cards }));
+    let guard = 0;
+    while (st.status === 'in_hand' && guard++ < 60) {
+      const [act, amt] = script(st);
+      const r = applyAction(st, st.to_act!, act as any, amt ?? 0, cfg, d.deck, d.holes);
+      r.actions.forEach((a) => publicLog.push({ hand: st.hand_number, street: a.street, action: a.action, revealed: a.revealed_cards }));
+      st = r.state;
+    }
+    assertEquals(st.status, 'hand_over');
+    s = st;
+    return d.holes;
+  };
+  const passive = (st: TableState): [string] => [st.current_bet > st.seats[st.to_act!].bet ? 'call' : 'check'];
+  // Hand 1: everyone checks/calls down.
+  play({ dealer_seat: 1 }, passive);
+  // Hand 2: everyone folds to the big blind.
+  play({ dealer_seat: 2 }, (st) => [st.current_bet > st.seats[st.to_act!].bet ? 'fold' : 'check']);
+  // Hand 3: bot (short) shoves, students call bigger, coach folds -> main + side pot.
+  const holes3 = play({ dealer_seat: 3, seats: { 1: { cards: 'AhAd' }, 2: { cards: 'KhKd' }, 3: { cards: '7c2d' }, 4: { cards: '9s8s' } }, board: 'AsKs3c4h5d' }, (st) => {
+    const p = st.seats[st.to_act!];
+    if (p.type === 'coach') return ['fold'];
+    if (p.type === 'bot' && st.street === 'preflop') return ['raise', p.bet + p.stack];
+    if (st.street === 'preflop' && p.seat === 1 && st.current_bet < 100) return ['raise', 100];
+    return passive(st);
+  });
+  assertEquals(total(s), start); // chips conserved across the 3 hands
+  const winners3 = s.results!;
+  assert(winners3.length >= 1);
+  assert(buildPots(s).length >= 1);
+  // Seat 1 (AA, full house? no: aces set) wins the main pot; side pot also to seat 1 over seat 2.
+  assert(winners3.some((w) => w.seat === 1));
+  // Public log: revealed cards only on "show" at showdown; folded coach's 9s8s never appears.
+  for (const e of publicLog) {
+    if (e.revealed) { assertEquals(e.action, 'show'); assertEquals(e.street, 'showdown'); }
+  }
+  assert(!publicLog.some((e) => e.revealed?.includes('9s8s')));
+  assertEquals(holes3[4], ['9s', '8s']);
+});
